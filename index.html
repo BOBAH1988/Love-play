@@ -24,21 +24,37 @@
     --btn-height:52px;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{
+  html{
     height:100%;
+    height:100dvh;
+    width:100%;
+    overflow:hidden;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    overscroll-behavior:none;
+  }
+  body{
+    position:fixed;
+    inset:0;
+    height:100%;
+    height:100dvh;
+    width:100%;
     margin:0;
     font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
     color:#fff;
     overflow:hidden;
+    overscroll-behavior:none;
+    -webkit-overflow-scrolling:auto;
   }
   #app{
+    height:100%;
     height:100dvh;
-    width:100vw;
+    width:100%;
     display:flex;
     flex-direction:column;
     padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
     position:relative;
+    overscroll-behavior:none;
   }
   .screen{
     flex:1;
@@ -46,6 +62,8 @@
     flex-direction:column;
     height:100%;
     overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
   }
   .screen.active{display:flex;}
 
@@ -154,9 +172,20 @@
     box-shadow:0 20px 50px rgba(0,0,0,.45);
     position:relative;
     transform-style:preserve-3d;
-    transition:transform .5s cubic-bezier(.4,.2,.2,1);
   }
-  .card.flip{transform:rotateY(360deg);}
+  .card-inner{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    min-height:0;
+    opacity:1;
+    transform:translateY(0);
+    transition:opacity .22s ease, transform .22s ease;
+  }
+  .card-inner.card-hidden{
+    opacity:0;
+    transform:translateY(6px);
+  }
   .card-header{
     display:flex;
     justify-content:space-between;
@@ -198,9 +227,50 @@
   .card-text{
     font-size:19px; font-weight:700; line-height:1.4;
   }
-  .card-empty{align-items:center; justify-content:center;}
+  .card-empty .card-inner{align-items:center; justify-content:center;}
   .card-empty .card-icon{font-size:52px;}
   .card-empty .card-text{font-size:16px; color:#7a5a72; font-weight:600;}
+
+  .card-timer{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding-top:12px; margin-top:8px;
+    border-top:2px solid rgba(43,15,46,.08);
+  }
+  .timer-durations{display:flex; gap:8px;}
+  .timer-dur-btn{
+    background:rgba(0,0,0,.06); border:none; border-radius:16px;
+    padding:5px 12px; font-size:12px; font-weight:800; cursor:pointer; color:#7a5a72;
+  }
+  .timer-dur-btn.on{background:var(--accent); color:#2b0f2e;}
+  .timer-controls{display:flex; align-items:center; justify-content:center; gap:12px;}
+  .timer-display{
+    font-size:20px; font-weight:800; color:#2b0f2e;
+    font-variant-numeric:tabular-nums; min-width:58px; text-align:center;
+  }
+  .timer-btn{
+    background:rgba(0,0,0,.06); border:none; border-radius:20px;
+    padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; color:#2b0f2e;
+  }
+  .timer-btn.running{background:var(--accent);}
+  .timer-btn:active{transform:scale(.96);}
+
+  @keyframes timerPulse{
+    0%,100%{ transform:scale(1); color:#2b0f2e; }
+    50%{ transform:scale(1.35); color:var(--accent); }
+  }
+  .timer-display.done{
+    animation: timerPulse .5s ease-in-out 4;
+  }
+  @keyframes cardShake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-8px); }
+    40%{ transform:translateX(8px); }
+    60%{ transform:translateX(-6px); }
+    80%{ transform:translateX(6px); }
+  }
+  .card.done-shake{
+    animation: cardShake .4s ease-in-out 1;
+  }
 
   .controls{
     margin-top:8px;
@@ -233,6 +303,7 @@
   .modal-card{
     background:var(--card-bg); color:#2b0f2e; border-radius:22px;
     padding:26px 22px; max-width:360px; width:100%; max-height:80vh; overflow-y:auto;
+    overscroll-behavior:contain;
     box-shadow:0 20px 50px rgba(0,0,0,.5);
   }
   .modal-title{font-size:20px; font-weight:800; text-align:center; margin-bottom:16px;}
@@ -289,7 +360,6 @@
     <button class="btn btn-primary" id="startBtn">Начать игру →</button>
     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:10px;">
       <span class="btn-ghost" id="rulesBtn">Правила игры</span>
-      <span class="btn-ghost" id="resetProgressBtn">Сбросить прогресс</span>
       <span class="btn-ghost" id="resetHiddenBtn">Вернуть скрытые карточки</span>
     </div>
   </section>
@@ -554,12 +624,6 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
   goToGame();
 });
 
-document.getElementById('resetProgressBtn').addEventListener('click', ()=>{
-  state.usedIndexes = [];
-  state.score1 = 0; state.score2 = 0;
-  saveState();
-  showToast('Прогресс колоды сброшен');
-});
 
 document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.hiddenIndexes = [];
@@ -606,6 +670,9 @@ function goToGame(){
   drawCard();
 }
 function goToSetup(){
+  state.usedIndexes = [];
+  state.score1 = 0; state.score2 = 0;
+  saveState();
   document.getElementById('game').classList.remove('active');
   document.getElementById('setup').classList.add('active');
   document.getElementById('name1').value = state.name1 || '';
@@ -644,11 +711,122 @@ function levelUp(){
   }
 }
 
+function fadeSwapCard(paintFn){
+  const el = document.getElementById('card');
+  const inner = el.querySelector('.card-inner');
+  const doPaint = ()=>{
+    paintFn(el); // задаёт className карточки и innerHTML, обёрнутый в .card-inner
+    const newInner = el.querySelector('.card-inner');
+    if(newInner){
+      newInner.classList.add('card-hidden');
+      void newInner.offsetWidth; // форсируем перерасчёт стилей перед снятием класса
+      requestAnimationFrame(()=>{
+        newInner.classList.remove('card-hidden');
+      });
+    }
+  };
+  if(inner){
+    inner.classList.add('card-hidden');
+    setTimeout(doPaint, 220);
+  } else {
+    doPaint();
+  }
+}
+
 function renderNoCards(){
-  const card = document.getElementById('card');
-  card.className = 'card card-empty';
-  card.style.borderTop = '';
-  card.innerHTML = `<div class="card-icon">🃏</div><div class="card-text">Нет доступных заданий — выберите уровень в настройках</div>`;
+  clearInterval(timerInterval);
+  timerInterval = null;
+  fadeSwapCard((card)=>{
+    card.className = 'card card-empty';
+    card.style.borderTop = '';
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🃏</div><div class="card-text">Нет доступных заданий — выберите уровень в настройках</div></div>`;
+  });
+}
+
+/* ============ ТАЙМЕР ЗАДАНИЯ ============ */
+let timerInterval = null;
+let timerDuration = 60; // по умолчанию 1 минута
+let timerSeconds = timerDuration;
+
+function formatTime(s){
+  const m = Math.floor(s/60);
+  const sec = s%60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function resetTimer(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timerSeconds = timerDuration;
+  const disp = document.getElementById('timerDisplay');
+  const btn = document.getElementById('timerBtn');
+  if(disp) disp.textContent = formatTime(timerSeconds);
+  if(btn){ btn.textContent = '▶ Старт'; btn.classList.remove('running'); }
+}
+
+function playTimerAlarm(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const beepTimes = [0, 0.22, 0.44];
+    beepTimes.forEach(t=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.18);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.2);
+    });
+    setTimeout(()=>ctx.close(), 900);
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([150,80,150,80,150]);
+}
+
+function selectTimerDuration(sec, btnEl){
+  timerDuration = sec;
+  document.querySelectorAll('.timer-dur-btn').forEach(b=>b.classList.toggle('on', b===btnEl));
+  resetTimer();
+}
+
+function toggleTimer(){
+  const btn = document.getElementById('timerBtn');
+  const disp = document.getElementById('timerDisplay');
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+    btn.textContent = '▶ Продолжить';
+    btn.classList.remove('running');
+    return;
+  }
+  btn.textContent = '⏸ Пауза';
+  btn.classList.add('running');
+  timerInterval = setInterval(()=>{
+    timerSeconds--;
+    if(disp) disp.textContent = formatTime(timerSeconds);
+    if(timerSeconds<=0){
+      clearInterval(timerInterval);
+      timerInterval = null;
+      showToast('Время вышло! ⏰');
+      playTimerAlarm();
+      const cardEl = document.getElementById('card');
+      if(disp){
+        disp.classList.add('done');
+        setTimeout(()=>disp.classList.remove('done'), 2000);
+      }
+      if(cardEl){
+        cardEl.classList.add('done-shake');
+        setTimeout(()=>cardEl.classList.remove('done-shake'), 400);
+      }
+      timerSeconds = timerDuration;
+      if(disp) disp.textContent = formatTime(timerSeconds);
+      if(btn){ btn.textContent = '▶ Старт'; btn.classList.remove('running'); }
+    }
+  }, 1000);
 }
 
 function drawCard(){
@@ -681,27 +859,43 @@ function renderCard(card){
   const lvl = levelById(card.level);
   const turnName = state.currentPlayer===1 ? state.name1 : state.name2;
   const genderColor = GENDER_COLORS[currentGender()];
-  const el = document.getElementById('card');
   currentCard = card;
-  el.className = 'card';
-  el.style.borderTop = `10px solid ${genderColor}`;
-  el.innerHTML = `
-    <div class="card-header">
-      <div class="badge">
-        <span class="type-pill">${card.type==='truth' ? '💬 Правда' : '⚡ Действие'}</span>
+  fadeSwapCard((el)=>{
+    el.className = 'card';
+    el.style.borderTop = `10px solid ${genderColor}`;
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="badge">
+            <span class="type-pill">${card.type==='truth' ? '💬 Правда' : '⚡ Действие'}</span>
+          </div>
+          <div class="card-turn">
+            <div class="card-turn-label">Ход игрока</div>
+            <div class="card-turn-name">${turnName}</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-text">${card.text}</div>
+        </div>
+        <div class="card-timer">
+          <div class="timer-durations">
+            <button type="button" class="timer-dur-btn ${timerDuration===30 ? 'on' : ''}" data-sec="30">30 сек</button>
+            <button type="button" class="timer-dur-btn ${timerDuration===60 ? 'on' : ''}" data-sec="60">1 мин</button>
+            <button type="button" class="timer-dur-btn ${timerDuration===120 ? 'on' : ''}" data-sec="120">2 мин</button>
+          </div>
+          <div class="timer-controls">
+            <div class="timer-display" id="timerDisplay">${formatTime(timerDuration)}</div>
+            <button type="button" class="timer-btn" id="timerBtn">▶ Старт</button>
+          </div>
+        </div>
       </div>
-      <div class="card-turn">
-        <div class="card-turn-label">Ход игрока</div>
-        <div class="card-turn-name">${turnName}</div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="card-icon">${card.type==='truth' ? '💬' : '⚡'}</div>
-      <div class="card-text">${card.text}</div>
-    </div>
-  `;
-  el.classList.add('flip');
-  setTimeout(()=>el.classList.remove('flip'), 500);
+    `;
+    resetTimer();
+    document.getElementById('timerBtn').addEventListener('click', toggleTimer);
+    document.querySelectorAll('.timer-dur-btn').forEach(b=>{
+      b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
+    });
+  });
 }
 
 function nextTurn(completed){
