@@ -250,6 +250,10 @@
     position:relative;
     transform-style:preserve-3d;
   }
+  /* В "Видеорулетке" карточка шире на 30% (если позволяет ширина экрана) — видео крупнее */
+  #game.video-mode .card{
+    max-width:442px;
+  }
   .card-inner{
     display:flex;
     flex-direction:column;
@@ -326,20 +330,49 @@
   .card-split-title{
     font-size:17px; font-weight:800; color:#2b0f2e;
   }
+  .video-layout{display:flex; flex-direction:column; height:100%;}
+  .video-layout .card-split-media{flex:1; min-height:0;}
+  .video-caption{
+    flex:0 0 auto; text-align:center; font-size:16px; font-weight:800;
+    color:#2b0f2e; padding-top:10px;
+  }
 
-  #game.placeholder-mode .score-row{display:none;}
-  #game.placeholder-mode #skipBtn{display:none;}
-  #game.placeholder-mode #refreshBtn{display:none;}
-  #game.placeholder-mode #favoriteBtn{
+  #game.placeholder-mode .score-row, #game.video-mode .score-row{display:none;}
+  #game.placeholder-mode #skipBtn, #game.video-mode #skipBtn{display:none;}
+  #game.placeholder-mode #refreshBtn, #game.video-mode #refreshBtn{display:none;}
+  #game.placeholder-mode #favoriteBtn, #game.video-mode #favoriteBtn{
     flex:0 0 auto; width:auto; padding:0 16px; font-size:20px;
   }
-  #game.placeholder-mode #favoriteBtn.active{
+  #game.placeholder-mode #favoriteBtn.active, #game.video-mode #favoriteBtn.active{
     background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25);
   }
   #levelDownBtn{display:none;}
   #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
   #shareBtn{display:none;}
-  #game.placeholder-mode #shareBtn{display:flex;}
+  #game.placeholder-mode #shareBtn, #game.video-mode #shareBtn{display:flex;}
+  #videoMuteBtn, #videoLoopBtn, #videoFavoritesBtn, #videoFullscreenBtn{display:none;}
+  #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoFavoritesBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
+  /* В "Видеорулетке" пока нет уровней — прячем кнопки уровня */
+  #game.video-mode #levelUpBtn, #game.video-mode #levelDownBtn{display:none;}
+  /* В "Видеорулетке" два ряда: сверху "Следующее" + лайк,
+     снизу — "Смотреть избранное" + звук/автопереключение/дизлайк/поделиться/выход */
+  #game.video-mode .controls{flex-direction:row; flex-wrap:wrap; align-items:stretch; gap:6px;}
+  #game.video-mode .row1, #game.video-mode .row2{display:contents;}
+  #game.video-mode .controls::before{content:''; flex-basis:100%; order:3;}
+  #game.video-mode .controls .btn{height:44px;}
+  #game.video-mode #doneBtn{order:1; flex:1; min-width:0; font-size:14px; padding:0 8px;}
+  #game.video-mode #favoriteBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
+  #game.video-mode #videoFavoritesBtn{order:4; flex:1; width:auto; padding:0 10px; font-size:13px; text-transform:none;}
+  #game.video-mode #videoMuteBtn{order:5; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #videoLoopBtn{order:6; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #videoFullscreenBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #dislikeBtn{order:8; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
+  #game.video-mode #shareBtn{order:9; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
+  #game.video-mode #pauseBtn{order:10; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
+  #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active{
+    background:rgba(255,255,255,.35); border-color:rgba(255,255,255,.5);
+  }
+  .card-split-media video{width:100%; height:100%; object-fit:cover; display:block;}
 
   .card-timer{
     display:flex; flex-direction:column; align-items:center; gap:8px;
@@ -529,7 +562,7 @@
       <div class="placeholder-label" id="placeholderToggle">Дополнительные игры <span class="placeholder-arrow">▾</span></div>
       <div class="placeholder-row">
         <button type="button" class="btn btn-placeholder-a" id="placeholderBtn1">Давай попробуем</button>
-        <button type="button" class="btn btn-placeholder-b" id="placeholderBtn2">В разработке</button>
+        <button type="button" class="btn btn-placeholder-b" id="placeholderBtn2">Видеорулетка</button>
       </div>
     </div>
     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:10px;">
@@ -566,6 +599,10 @@
         <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Понизить уровень">Легче</button>
         <button type="button" class="btn btn-secondary btn-square" id="refreshBtn" aria-label="Новое задание для этого же игрока">🔄</button>
         <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">👎</button>
+        <button type="button" class="btn btn-secondary btn-square" id="videoMuteBtn" aria-label="Включить звук видео">🔇</button>
+        <button type="button" class="btn btn-secondary btn-square" id="videoLoopBtn" aria-label="Автопереключение на следующее видео">🔁</button>
+        <button type="button" class="btn btn-secondary btn-square" id="videoFullscreenBtn" aria-label="Видео на весь экран">⛶</button>
+        <button type="button" class="btn btn-secondary btn-square btn-text-square" id="videoFavoritesBtn" aria-label="Смотреть избранное">Смотреть избранное</button>
         <button type="button" class="btn btn-secondary btn-square" id="shareBtn" aria-label="Поделиться">⤴️</button>
         <button type="button" class="btn btn-secondary btn-square btn-text-square" id="pauseBtn" aria-label="Пауза">Пауза</button>
       </div>
@@ -667,6 +704,7 @@
 <script src="cards.js"></script>
 <script src="user_cards.js"></script>
 <script src="photo-mode/photo_cards.js"></script>
+<script src="video-roulette/video_cards.js"></script>
 <script>
 /* ============ ДАННЫЕ КАРТ ============ */
 const LEVELS = [
@@ -688,7 +726,8 @@ let state = {
   levelCap:1, usedIndexes:[], hiddenIndexes:[],
   muted:false, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
-  photoUsed:{}, photoHidden:[], photoDone:[]
+  photoUsed:{}, photoHidden:[], photoDone:[],
+  videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -864,7 +903,8 @@ document.getElementById('placeholderBtn1').addEventListener('click', ()=>{
   goToPlaceholderGame();
 });
 document.getElementById('placeholderBtn2').addEventListener('click', ()=>{
-  showToast('В разработке — скоро будет доступно');
+  playSuccessSound();
+  goToVideoGame();
 });
 
 document.getElementById('resumeBtn').addEventListener('click', ()=>{
@@ -935,6 +975,7 @@ function goToGame(){
   saveState();
   document.getElementById('setup').classList.remove('active');
   document.getElementById('game').classList.remove('placeholder-mode');
+  document.getElementById('game').classList.remove('video-mode');
   document.getElementById('game').classList.add('active');
   document.getElementById('doneBtn').textContent = '💕 Готово';
   document.getElementById('pauseBtn').textContent = 'Пауза';
@@ -1024,7 +1065,7 @@ document.getElementById('muteBtn').addEventListener('click', ()=>{
 
 function updateLevelUI(){
   const btn = document.getElementById('levelUpBtn');
-  if(isPlaceholderMode()){
+  if(isPlaceholderMode() || isVideoMode()){
     btn.disabled = false;
     btn.textContent = 'Сложнее';
     const el = document.getElementById('levelProgress');
@@ -1260,6 +1301,251 @@ function closeImageZoom(){
   if(modal) modal.classList.remove('show');
 }
 document.getElementById('imageZoomModal').addEventListener('click', closeImageZoom);
+
+/* ============ ВИДЕОРУЛЕТКА (видео берутся онлайн из папки на Яндекс.Диске) ============ */
+const YANDEX_VIDEO_PUBLIC_KEY = 'https://disk.yandex.ru/d/Ck3JhH3fWTK5Ng';
+let onlineVideoList = null; // кэш последнего успешного списка видео с Яндекс.Диска
+
+async function fetchOnlineVideoList(){
+  try{
+    const url = 'https://cloud-api.yandex.net/v1/disk/public/resources?public_key='
+      + encodeURIComponent(YANDEX_VIDEO_PUBLIC_KEY) + '&limit=200';
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('yandex status ' + res.status);
+    const data = await res.json();
+    const items = (data._embedded && data._embedded.items) || [];
+    const list = items
+      .filter(it => it.type === 'file' && /\.webm$/i.test(it.name) && it.file)
+      .map(it => ({ level: 1, id: it.name, video: it.file }));
+    onlineVideoList = list.length > 0 ? list : null;
+  } catch(err){
+    // нет интернета или Яндекс.Диск недоступен — используем локальный резерв
+    onlineVideoList = null;
+  }
+}
+
+// Заглушка: показывается, если видео нет ни онлайн, ни локально
+function renderVideoPlaceholderCard(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  fadeSwapCard((card)=>{
+    card.className = 'card card-empty';
+    card.style.borderTop = '';
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">Видео недоступны — проверьте интернет или добавьте их в video-roulette/video_cards.js</div></div>`;
+  });
+}
+
+function renderVideoLoadingCard(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  fadeSwapCard((card)=>{
+    card.className = 'card card-empty';
+    card.style.borderTop = '';
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">⏳</div><div class="card-text">Загружаем видео…</div></div>`;
+  });
+}
+
+function videoCardId(c){
+  return c && (c.id || c.video);
+}
+
+function getVideoCardsList(){
+  if(onlineVideoList && onlineVideoList.length > 0) return onlineVideoList;
+  if(typeof VIDEO_CARDS === 'undefined' || !Array.isArray(VIDEO_CARDS)) return [];
+  return VIDEO_CARDS;
+}
+
+const VIDEO_MAX_LEVEL = 4;
+let videoLevel = 1;
+let currentVideoCard = null;
+let videoSoundOn = false;
+function updateVideoMuteBtn(){
+  const btn = document.getElementById('videoMuteBtn');
+  if(!btn) return;
+  btn.textContent = videoSoundOn ? '🔊' : '🔇';
+  btn.setAttribute('aria-label', videoSoundOn ? 'Выключить звук видео' : 'Включить звук видео');
+}
+document.getElementById('videoMuteBtn').addEventListener('click', ()=>{
+  videoSoundOn = !videoSoundOn;
+  const video = document.getElementById('videoPlayer');
+  if(video) video.muted = !videoSoundOn;
+  updateVideoMuteBtn();
+});
+
+function updateVideoLoopBtn(){
+  const btn = document.getElementById('videoLoopBtn');
+  if(!btn) return;
+  btn.classList.toggle('active', !!state.videoAutoAdvance);
+  btn.setAttribute('aria-label', state.videoAutoAdvance
+    ? 'Выключить автопереключение на следующее видео'
+    : 'Включить автопереключение на следующее видео');
+}
+document.getElementById('videoLoopBtn').addEventListener('click', ()=>{
+  state.videoAutoAdvance = !state.videoAutoAdvance;
+  saveState();
+  updateVideoLoopBtn();
+  const video = document.getElementById('videoPlayer');
+  if(video) video.loop = !state.videoAutoAdvance;
+  showToast(state.videoAutoAdvance
+    ? 'Автопереключение включено 🔁'
+    : 'Видео будет повторяться само');
+});
+
+function toggleVideoFullscreen(){
+  const video = document.getElementById('videoPlayer');
+  if(!video) return;
+  if(video.webkitEnterFullscreen){
+    // iOS Safari: у <video> есть свой нативный полноэкранный режим
+    video.webkitEnterFullscreen();
+    return;
+  }
+  if(document.fullscreenElement){
+    document.exitFullscreen();
+  } else if(video.requestFullscreen){
+    video.requestFullscreen();
+  } else if(video.webkitRequestFullscreen){
+    video.webkitRequestFullscreen();
+  } else {
+    showToast('Полный экран не поддерживается на этом устройстве');
+  }
+}
+document.getElementById('videoFullscreenBtn').addEventListener('click', toggleVideoFullscreen);
+
+function updateVideoFavoritesBtn(){
+  const btn = document.getElementById('videoFavoritesBtn');
+  if(!btn) return;
+  btn.classList.toggle('active', !!state.videoFavoritesOnly);
+  btn.setAttribute('aria-label', state.videoFavoritesOnly ? 'Показывать все видео' : 'Только избранное');
+}
+document.getElementById('videoFavoritesBtn').addEventListener('click', ()=>{
+  if(!state.videoFavoritesOnly && (state.videoLiked||[]).length===0){
+    playErrorSound();
+    showToast('Сначала добавьте видео в избранное сердечком 🤍');
+    return;
+  }
+  state.videoFavoritesOnly = !state.videoFavoritesOnly;
+  saveState();
+  updateVideoFavoritesBtn();
+  showToast(state.videoFavoritesOnly ? 'Показываю только избранное ⭐' : 'Показываю все видео');
+  drawVideoCard(videoLevel || 1);
+});
+
+async function drawVideoCard(level){
+  videoLevel = level;
+  renderVideoLoadingCard();
+  await fetchOnlineVideoList();
+  const hidden = state.videoHidden || [];
+  const liked = state.videoLiked || [];
+  let all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
+  if(state.videoFavoritesOnly){
+    all = all.filter(c=>liked.includes(videoCardId(c)));
+  }
+  if(all.length===0){
+    currentVideoCard = null;
+    if(state.videoFavoritesOnly){
+      showToast('В избранном пока нет видео');
+      state.videoFavoritesOnly = false;
+      saveState();
+      updateVideoFavoritesBtn();
+      all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
+      if(all.length===0){ renderVideoPlaceholderCard(); return; }
+    } else {
+      renderVideoPlaceholderCard();
+      return;
+    }
+  }
+  if(!state.videoUsed) state.videoUsed = {};
+  let used = state.videoUsed[level] || [];
+  let pool = all.filter(c=>!used.includes(videoCardId(c)));
+  if(pool.length===0){
+    pool = all;
+    used = [];
+    showToast('Видео этого уровня показаны заново 🔀');
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  used.push(videoCardId(card));
+  state.videoUsed[level] = used;
+  currentVideoCard = card;
+  saveState();
+  renderVideoCard(card, level);
+}
+
+function renderVideoCard(card, level){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  fadeSwapCard((el)=>{
+    el.className = 'card card-empty';
+    el.style.borderTop = '';
+    el.innerHTML = `
+      <div class="card-inner video-layout">
+        <div class="card-split-media" id="videoMedia">
+          <video src="${card.video}" id="videoPlayer" controls playsinline autoplay></video>
+        </div>
+        <div class="video-caption">Повторяй за видео</div>
+      </div>
+    `;
+    const video = document.getElementById('videoPlayer');
+    if(video){
+      video.muted = !videoSoundOn;
+      video.loop = !state.videoAutoAdvance;
+      video.addEventListener('error', ()=>{
+        const media = document.getElementById('videoMedia');
+        if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+      });
+      video.addEventListener('ended', ()=>{
+        if(state.videoAutoAdvance) drawVideoCard(videoLevel);
+      });
+    }
+    updateVideoMuteBtn();
+    updateVideoLoopBtn();
+    updateVideoFavoritesBtn();
+  });
+  updateFavoriteBtn();
+}
+
+function goToVideoGame(){
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  state.name1 = n1raw || 'Men';
+  state.name2 = n2raw || 'Sexy';
+  state.currentPlayer = pickStartingPlayer();
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.inProgress = true;
+  videoLevel = 1;
+  state.videoUsed = {};
+  state.videoHidden = [];
+  saveState();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('game').classList.add('video-mode');
+  document.getElementById('doneBtn').textContent = 'Следующее';
+  document.getElementById('pauseBtn').textContent = 'Выход';
+  updateTurnUI();
+  updateLevelUI();
+  updateMuteBtn();
+  requestWakeLock();
+  drawVideoCard(videoLevel);
+}
+
+function exitVideoGame(){
+  state.inProgress = false;
+  saveState();
+  document.getElementById('game').classList.remove('video-mode');
+  document.getElementById('doneBtn').textContent = '💕 Готово';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
+  returnToSetupUI();
+}
+
+function isVideoMode(){
+  const el = document.getElementById('game');
+  return !!(el && el.classList.contains('video-mode'));
+}
 
 function goToPlaceholderGame(){
   const n1raw = document.getElementById('name1').value.trim();
@@ -1623,12 +1909,20 @@ document.getElementById('doneBtn').addEventListener('click', ()=>{
     drawPhotoCard(photoLevel || 1);
     return;
   }
+  if(isVideoMode()){
+    drawVideoCard(videoLevel || 1);
+    return;
+  }
   nextTurn(true);
 });
 document.getElementById('skipBtn').addEventListener('click', ()=>{ playFailSound(); nextTurn(false); });
 document.getElementById('pauseBtn').addEventListener('click', ()=>{
   if(isPlaceholderMode()){
     exitPlaceholderGame();
+    return;
+  }
+  if(isVideoMode()){
+    exitVideoGame();
     return;
   }
   pauseGame();
@@ -1684,16 +1978,37 @@ document.getElementById('levelUpBtn').addEventListener('click', ()=>{
     }
     return;
   }
+  if(isVideoMode()){
+    if(videoLevel < VIDEO_MAX_LEVEL){
+      playLevelUpSound();
+      drawVideoCard(videoLevel + 1);
+      showToast(`Уровень повышен: ${videoLevel}`);
+    } else {
+      showToast('Это максимальный уровень 🔥');
+    }
+    return;
+  }
   levelUp();
 });
 document.getElementById('levelDownBtn').addEventListener('click', ()=>{
-  if(!isPlaceholderMode()) return;
-  if(photoLevel > 1){
-    playNeutralSound();
-    drawPhotoCard(photoLevel - 1);
-    showToast(`Уровень понижен: ${photoLevel}`);
-  } else {
-    showToast('Это минимальный уровень');
+  if(isPlaceholderMode()){
+    if(photoLevel > 1){
+      playNeutralSound();
+      drawPhotoCard(photoLevel - 1);
+      showToast(`Уровень понижен: ${photoLevel}`);
+    } else {
+      showToast('Это минимальный уровень');
+    }
+    return;
+  }
+  if(isVideoMode()){
+    if(videoLevel > 1){
+      playNeutralSound();
+      drawVideoCard(videoLevel - 1);
+      showToast(`Уровень понижен: ${videoLevel}`);
+    } else {
+      showToast('Это минимальный уровень');
+    }
   }
 });
 document.getElementById('refreshBtn').addEventListener('click', refreshCard);
@@ -1710,16 +2025,46 @@ document.getElementById('dislikeBtn').addEventListener('click', ()=>{
     drawPhotoCard(photoLevel);
     return;
   }
+  if(isVideoMode()){
+    if(!currentVideoCard) return;
+    playErrorSound();
+    if(!state.videoHidden) state.videoHidden = [];
+    const vid = videoCardId(currentVideoCard);
+    if(!state.videoHidden.includes(vid)){
+      state.videoHidden.push(vid);
+    }
+    saveState();
+    showToast('Видео скрыто 👎');
+    drawVideoCard(videoLevel);
+    return;
+  }
   dislikeCurrentCard();
 });
 
 function shareCurrentPhotoCard(){
-  if(!currentPhotoCard) return;
-  const text = currentPhotoCard.title
-    ? `${currentPhotoCard.title}\n${currentPhotoCard.text}`
-    : currentPhotoCard.text;
+  if(isVideoMode()){
+    if(!currentVideoCard) return;
+    const text = 'Повторяй за видео';
+    if(navigator.share){
+      navigator.share({ title: 'Задание', text }).catch(()=>{});
+      return;
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text)
+        .then(()=> showToast('Скопировано — вставьте другу 📋'))
+        .catch(()=> showToast('Не удалось поделиться'));
+      return;
+    }
+    showToast('Поделиться не поддерживается на этом устройстве');
+    return;
+  }
+  const card = currentPhotoCard;
+  if(!card) return;
+  const text = card.title
+    ? `${card.title}\n${card.text}`
+    : card.text;
   if(navigator.share){
-    navigator.share({ title: currentPhotoCard.title || 'Карточка', text }).catch(()=>{});
+    navigator.share({ title: card.title || 'Карточка', text }).catch(()=>{});
     return;
   }
   if(navigator.clipboard && navigator.clipboard.writeText){
@@ -1743,6 +2088,13 @@ function updateFavoriteBtn(){
     btn.classList.toggle('active', isDone);
     return;
   }
+  if(isVideoMode()){
+    if(!currentVideoCard){ btn.textContent = '🤍'; btn.classList.remove('active'); return; }
+    const isLiked = (state.videoLiked||[]).includes(videoCardId(currentVideoCard));
+    btn.textContent = isLiked ? '❤️' : '🤍';
+    btn.classList.toggle('active', isLiked);
+    return;
+  }
   if(!currentCard) return;
   const isFav = state.favoriteIndexes.includes(currentCard.idx);
   btn.textContent = isFav ? '⭐' : '☆';
@@ -1760,6 +2112,23 @@ function toggleFavorite(){
       state.photoDone.push(currentPhotoCard.image);
       playSuccessSound();
       showToast('Отмечено как сделано ✅');
+    }
+    saveState();
+    updateFavoriteBtn();
+    return;
+  }
+  if(isVideoMode()){
+    if(!currentVideoCard) return;
+    if(!state.videoLiked) state.videoLiked = [];
+    const vid = videoCardId(currentVideoCard);
+    const pos = state.videoLiked.indexOf(vid);
+    if(pos>=0){
+      state.videoLiked.splice(pos,1);
+      showToast('Убрано из избранного');
+    } else {
+      state.videoLiked.push(vid);
+      playSuccessSound();
+      showToast('Добавлено в избранное ❤️');
     }
     saveState();
     updateFavoriteBtn();
