@@ -1307,10 +1307,12 @@ const YANDEX_VIDEO_PUBLIC_KEY = 'https://disk.yandex.ru/d/Ck3JhH3fWTK5Ng';
 let onlineVideoList = null; // кэш последнего успешного списка видео с Яндекс.Диска
 
 async function fetchOnlineVideoList(){
+  const controller = new AbortController();
+  const timeoutId = setTimeout(()=>controller.abort(), 6000); // не ждём Яндекс дольше 6 секунд
   try{
     const url = 'https://cloud-api.yandex.net/v1/disk/public/resources?public_key='
       + encodeURIComponent(YANDEX_VIDEO_PUBLIC_KEY) + '&limit=200';
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: controller.signal });
     if(!res.ok) throw new Error('yandex status ' + res.status);
     const data = await res.json();
     const items = (data._embedded && data._embedded.items) || [];
@@ -1319,8 +1321,10 @@ async function fetchOnlineVideoList(){
       .map(it => ({ level: 1, id: it.name, video: it.file }));
     onlineVideoList = list.length > 0 ? list : null;
   } catch(err){
-    // нет интернета или Яндекс.Диск недоступен — используем локальный резерв
+    // нет интернета, Яндекс.Диск недоступен или не ответил вовремя — используем локальный резерв
     onlineVideoList = null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -1435,41 +1439,47 @@ document.getElementById('videoFavoritesBtn').addEventListener('click', ()=>{
 async function drawVideoCard(level){
   videoLevel = level;
   renderVideoLoadingCard();
-  await fetchOnlineVideoList();
-  const hidden = state.videoHidden || [];
-  const liked = state.videoLiked || [];
-  let all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
-  if(state.videoFavoritesOnly){
-    all = all.filter(c=>liked.includes(videoCardId(c)));
-  }
-  if(all.length===0){
-    currentVideoCard = null;
+  try{
+    await fetchOnlineVideoList();
+    const hidden = state.videoHidden || [];
+    const liked = state.videoLiked || [];
+    let all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
     if(state.videoFavoritesOnly){
-      showToast('В избранном пока нет видео');
-      state.videoFavoritesOnly = false;
-      saveState();
-      updateVideoFavoritesBtn();
-      all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
-      if(all.length===0){ renderVideoPlaceholderCard(); return; }
-    } else {
-      renderVideoPlaceholderCard();
-      return;
+      all = all.filter(c=>liked.includes(videoCardId(c)));
     }
+    if(all.length===0){
+      currentVideoCard = null;
+      if(state.videoFavoritesOnly){
+        showToast('В избранном пока нет видео');
+        state.videoFavoritesOnly = false;
+        saveState();
+        updateVideoFavoritesBtn();
+        all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
+        if(all.length===0){ renderVideoPlaceholderCard(); return; }
+      } else {
+        renderVideoPlaceholderCard();
+        return;
+      }
+    }
+    if(!state.videoUsed) state.videoUsed = {};
+    let used = state.videoUsed[level] || [];
+    let pool = all.filter(c=>!used.includes(videoCardId(c)));
+    if(pool.length===0){
+      pool = all;
+      used = [];
+      showToast('Видео этого уровня показаны заново 🔀');
+    }
+    const card = pool[Math.floor(Math.random()*pool.length)];
+    used.push(videoCardId(card));
+    state.videoUsed[level] = used;
+    currentVideoCard = card;
+    saveState();
+    renderVideoCard(card, level);
+  } catch(err){
+    // Что бы ни пошло не так — не оставляем экран висеть на "Загружаем видео…"
+    currentVideoCard = null;
+    renderVideoPlaceholderCard();
   }
-  if(!state.videoUsed) state.videoUsed = {};
-  let used = state.videoUsed[level] || [];
-  let pool = all.filter(c=>!used.includes(videoCardId(c)));
-  if(pool.length===0){
-    pool = all;
-    used = [];
-    showToast('Видео этого уровня показаны заново 🔀');
-  }
-  const card = pool[Math.floor(Math.random()*pool.length)];
-  used.push(videoCardId(card));
-  state.videoUsed[level] = used;
-  currentVideoCard = card;
-  saveState();
-  renderVideoCard(card, level);
 }
 
 function renderVideoCard(card, level){
