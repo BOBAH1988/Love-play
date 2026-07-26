@@ -250,10 +250,19 @@
     position:relative;
     transform-style:preserve-3d;
   }
-  /* В "Видеорулетке" карточка шире на 30% (если позволяет ширина экрана) — видео крупнее */
+  /* В "Видеорулетке" карточка по ширине совпадает с блоком кнопок под ней */
   #game.video-mode .card{
-    max-width:442px;
+    max-width:none;
+    padding:0;
+    overflow:hidden;
+    /* Отступ сверху сокращён, чтобы был как отступ снизу до кнопки "Следующее" */
+    margin-top:18px;
   }
+  #game.video-mode .card-split-media{
+    border-radius:24px;
+  }
+  /* В "Видеорулетке" уровней нет — прячем пустую полоску прогресса над карточкой */
+  #game.video-mode #levelProgress{display:none;}
   .card-inner{
     display:flex;
     flex-direction:column;
@@ -329,12 +338,6 @@
   }
   .card-split-title{
     font-size:17px; font-weight:800; color:#2b0f2e;
-  }
-  .video-layout{display:flex; flex-direction:column; height:100%;}
-  .video-layout .card-split-media{flex:1; min-height:0;}
-  .video-caption{
-    flex:0 0 auto; text-align:center; font-size:16px; font-weight:800;
-    color:#2b0f2e; padding-top:10px;
   }
 
   #game.placeholder-mode .score-row, #game.video-mode .score-row{display:none;}
@@ -704,7 +707,7 @@
 <script src="cards.js"></script>
 <script src="user_cards.js"></script>
 <script src="photo-mode/photo_cards.js"></script>
-<script src="video-roulette/video_cards.js"></script>
+<script src="video_cards.js"></script>
 <script>
 /* ============ ДАННЫЕ КАРТ ============ */
 const LEVELS = [
@@ -1302,33 +1305,14 @@ function closeImageZoom(){
 }
 document.getElementById('imageZoomModal').addEventListener('click', closeImageZoom);
 
-/* ============ ВИДЕОРУЛЕТКА (видео берутся онлайн из папки на Яндекс.Диске) ============ */
-const YANDEX_VIDEO_PUBLIC_KEY = 'https://disk.yandex.ru/d/Ck3JhH3fWTK5Ng';
-let onlineVideoList = null; // кэш последнего успешного списка видео с Яндекс.Диска
+/* ============ ВИДЕОРУЛЕТКА (видео из папки video/, см. video_cards.js) ============ */
+// Прямая потоковая загрузка видео с Яндекс.Диска не работает: сервер Яндекса
+// не разрешает браузеру читать видео с чужого домена (нет CORS-заголовков ни
+// у списка файлов, ни у самих видео) — это ограничение на стороне Яндекса,
+// обойти его без собственного сервера-прокси нельзя. Поэтому видео снова
+// берутся только локально, из папки video/.
 
-async function fetchOnlineVideoList(){
-  const controller = new AbortController();
-  const timeoutId = setTimeout(()=>controller.abort(), 6000); // не ждём Яндекс дольше 6 секунд
-  try{
-    const url = 'https://cloud-api.yandex.net/v1/disk/public/resources?public_key='
-      + encodeURIComponent(YANDEX_VIDEO_PUBLIC_KEY) + '&limit=200';
-    const res = await fetch(url, { signal: controller.signal });
-    if(!res.ok) throw new Error('yandex status ' + res.status);
-    const data = await res.json();
-    const items = (data._embedded && data._embedded.items) || [];
-    const list = items
-      .filter(it => it.type === 'file' && /\.webm$/i.test(it.name) && it.file)
-      .map(it => ({ level: 1, id: it.name, video: it.file }));
-    onlineVideoList = list.length > 0 ? list : null;
-  } catch(err){
-    // нет интернета, Яндекс.Диск недоступен или не ответил вовремя — используем локальный резерв
-    onlineVideoList = null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-// Заглушка: показывается, если видео нет ни онлайн, ни локально
+// Заглушка: показывается, если видео нет
 function renderVideoPlaceholderCard(){
   clearInterval(timerInterval);
   timerInterval = null;
@@ -1336,18 +1320,7 @@ function renderVideoPlaceholderCard(){
   fadeSwapCard((card)=>{
     card.className = 'card card-empty';
     card.style.borderTop = '';
-    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">Видео недоступны — проверьте интернет или добавьте их в video-roulette/video_cards.js</div></div>`;
-  });
-}
-
-function renderVideoLoadingCard(){
-  clearInterval(timerInterval);
-  timerInterval = null;
-  currentCard = null;
-  fadeSwapCard((card)=>{
-    card.className = 'card card-empty';
-    card.style.borderTop = '';
-    card.innerHTML = `<div class="card-inner"><div class="card-icon">⏳</div><div class="card-text">Загружаем видео…</div></div>`;
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">Скоро здесь появятся видео — добавьте их в video_cards.js</div></div>`;
   });
 }
 
@@ -1356,7 +1329,6 @@ function videoCardId(c){
 }
 
 function getVideoCardsList(){
-  if(onlineVideoList && onlineVideoList.length > 0) return onlineVideoList;
   if(typeof VIDEO_CARDS === 'undefined' || !Array.isArray(VIDEO_CARDS)) return [];
   return VIDEO_CARDS;
 }
@@ -1364,6 +1336,8 @@ function getVideoCardsList(){
 const VIDEO_MAX_LEVEL = 4;
 let videoLevel = 1;
 let currentVideoCard = null;
+let videoHistory = []; // для свайпов влево/вправо между уже показанными видео
+let videoHistoryPos = -1;
 let videoSoundOn = false;
 function updateVideoMuteBtn(){
   const btn = document.getElementById('videoMuteBtn');
@@ -1400,19 +1374,39 @@ document.getElementById('videoLoopBtn').addEventListener('click', ()=>{
 function toggleVideoFullscreen(){
   const video = document.getElementById('videoPlayer');
   if(!video) return;
-  if(video.webkitEnterFullscreen){
-    // iOS Safari: у <video> есть свой нативный полноэкранный режим
-    video.webkitEnterFullscreen();
-    return;
+  // На десктопном Safari у <video> тоже есть webkitEnterFullscreen, но вызов
+  // на не-iOS устройстве может тихо упасть с ошибкой — используем его только
+  // когда мы реально на iPhone/iPad, иначе идём по стандартному пути ниже.
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if(isIOS && video.webkitEnterFullscreen){
+    try{
+      video.webkitEnterFullscreen();
+      return;
+    } catch(err){ /* падаем ниже на стандартный способ */ }
   }
-  if(document.fullscreenElement){
-    document.exitFullscreen();
-  } else if(video.requestFullscreen){
-    video.requestFullscreen();
-  } else if(video.webkitRequestFullscreen){
-    video.webkitRequestFullscreen();
-  } else {
+  try{
+    if(document.fullscreenElement){
+      document.exitFullscreen();
+      return;
+    }
+    if(video.requestFullscreen){
+      const result = video.requestFullscreen();
+      if(result && typeof result.catch === 'function'){
+        result.catch(()=>{
+          if(video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+          else showToast('Не удалось открыть полноэкранный режим');
+        });
+      }
+      return;
+    }
+    if(video.webkitRequestFullscreen){
+      video.webkitRequestFullscreen();
+      return;
+    }
     showToast('Полный экран не поддерживается на этом устройстве');
+  } catch(err){
+    showToast('Не удалось открыть полноэкранный режим');
   }
 }
 document.getElementById('videoFullscreenBtn').addEventListener('click', toggleVideoFullscreen);
@@ -1436,49 +1430,69 @@ document.getElementById('videoFavoritesBtn').addEventListener('click', ()=>{
   drawVideoCard(videoLevel || 1);
 });
 
-async function drawVideoCard(level){
+function drawVideoCard(level){
   videoLevel = level;
-  renderVideoLoadingCard();
-  try{
-    await fetchOnlineVideoList();
-    const hidden = state.videoHidden || [];
-    const liked = state.videoLiked || [];
-    let all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
-    if(state.videoFavoritesOnly){
-      all = all.filter(c=>liked.includes(videoCardId(c)));
-    }
-    if(all.length===0){
-      currentVideoCard = null;
-      if(state.videoFavoritesOnly){
-        showToast('В избранном пока нет видео');
-        state.videoFavoritesOnly = false;
-        saveState();
-        updateVideoFavoritesBtn();
-        all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
-        if(all.length===0){ renderVideoPlaceholderCard(); return; }
-      } else {
-        renderVideoPlaceholderCard();
-        return;
-      }
-    }
-    if(!state.videoUsed) state.videoUsed = {};
-    let used = state.videoUsed[level] || [];
-    let pool = all.filter(c=>!used.includes(videoCardId(c)));
-    if(pool.length===0){
-      pool = all;
-      used = [];
-      showToast('Видео этого уровня показаны заново 🔀');
-    }
-    const card = pool[Math.floor(Math.random()*pool.length)];
-    used.push(videoCardId(card));
-    state.videoUsed[level] = used;
-    currentVideoCard = card;
-    saveState();
-    renderVideoCard(card, level);
-  } catch(err){
-    // Что бы ни пошло не так — не оставляем экран висеть на "Загружаем видео…"
+  const hidden = state.videoHidden || [];
+  const liked = state.videoLiked || [];
+  let all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
+  if(state.videoFavoritesOnly){
+    all = all.filter(c=>liked.includes(videoCardId(c)));
+  }
+  if(all.length===0){
     currentVideoCard = null;
-    renderVideoPlaceholderCard();
+    if(state.videoFavoritesOnly){
+      showToast('В избранном пока нет видео');
+      state.videoFavoritesOnly = false;
+      saveState();
+      updateVideoFavoritesBtn();
+      all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
+      if(all.length===0){ renderVideoPlaceholderCard(); return; }
+    } else {
+      renderVideoPlaceholderCard();
+      return;
+    }
+  }
+  if(!state.videoUsed) state.videoUsed = {};
+  let used = state.videoUsed[level] || [];
+  let pool = all.filter(c=>!used.includes(videoCardId(c)));
+  if(pool.length===0){
+    pool = all;
+    used = [];
+    showToast('Видео этого уровня показаны заново 🔀');
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  used.push(videoCardId(card));
+  state.videoUsed[level] = used;
+  currentVideoCard = card;
+  saveState();
+  // Новое видео — обрезаем историю "вперёд" (если до этого свайпали назад) и добавляем его
+  videoHistory = videoHistory.slice(0, videoHistoryPos + 1);
+  videoHistory.push(card);
+  videoHistoryPos = videoHistory.length - 1;
+  renderVideoCard(card, level);
+}
+
+// Показать видео из истории (свайпы влево/вправо), не трогая "показанные"/избранное
+function renderVideoCardFromHistory(pos){
+  if(pos < 0 || pos >= videoHistory.length) return;
+  videoHistoryPos = pos;
+  currentVideoCard = videoHistory[pos];
+  renderVideoCard(currentVideoCard, videoLevel);
+}
+
+function videoSwipePrev(){
+  if(videoHistoryPos <= 0){
+    showToast('Это первое видео');
+    return;
+  }
+  renderVideoCardFromHistory(videoHistoryPos - 1);
+}
+
+function videoSwipeNext(){
+  if(videoHistoryPos < videoHistory.length - 1){
+    renderVideoCardFromHistory(videoHistoryPos + 1);
+  } else {
+    drawVideoCard(videoLevel);
   }
 }
 
@@ -1486,20 +1500,14 @@ function renderVideoCard(card, level){
   clearInterval(timerInterval);
   timerInterval = null;
   currentCard = null;
-  // Ссылки с Яндекс.Диска помечены как "скачать файлом" (Content-Disposition: attachment) —
-  // браузер отказывается проигрывать такой src напрямую в <video>. Поэтому для онлайн-видео
-  // сначала докачиваем файл через fetch (ему заголовок Content-Disposition не мешает) и
-  // проигрываем уже из blob-ссылки. Локальные файлы из video-roulette/ ставим в src как раньше.
-  const isOnline = /^https?:\/\//.test(card.video);
   fadeSwapCard((el)=>{
     el.className = 'card card-empty';
     el.style.borderTop = '';
     el.innerHTML = `
-      <div class="card-inner video-layout">
+      <div class="card-inner">
         <div class="card-split-media" id="videoMedia">
-          <video id="videoPlayer" controls playsinline autoplay${isOnline ? '' : ` src="${card.video}"`}></video>
+          <video src="${card.video}" id="videoPlayer" controls playsinline autoplay></video>
         </div>
-        <div class="video-caption">Повторяй за видео</div>
       </div>
     `;
     const video = document.getElementById('videoPlayer');
@@ -1513,18 +1521,6 @@ function renderVideoCard(card, level){
       video.addEventListener('ended', ()=>{
         if(state.videoAutoAdvance) drawVideoCard(videoLevel);
       });
-      if(isOnline){
-        fetch(card.video)
-          .then(res => { if(!res.ok) throw new Error('status ' + res.status); return res.blob(); })
-          .then(blob => {
-            video.src = URL.createObjectURL(blob);
-            video.play().catch(()=>{});
-          })
-          .catch(()=>{
-            const media = document.getElementById('videoMedia');
-            if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
-          });
-      }
     }
     updateVideoMuteBtn();
     updateVideoLoopBtn();
@@ -1547,6 +1543,8 @@ function goToVideoGame(){
   videoLevel = 1;
   state.videoUsed = {};
   state.videoHidden = [];
+  videoHistory = [];
+  videoHistoryPos = -1;
   saveState();
   document.getElementById('setup').classList.remove('active');
   document.getElementById('game').classList.add('active');
@@ -2363,7 +2361,7 @@ document.getElementById('addCardModal').addEventListener('click', (e)=>{
     tracking = true;
   }, {passive:true});
   cardEl.addEventListener('touchend', (e)=>{
-    if(!tracking || !currentCard) return;
+    if(!tracking) return;
     tracking = false;
     const touch = e.changedTouches[0];
     const dx = touch.clientX - startX;
@@ -2371,6 +2369,20 @@ document.getElementById('addCardModal').addEventListener('click', (e)=>{
     const absX = Math.abs(dx), absY = Math.abs(dy);
     const threshold = 70;
     if(absX < threshold && absY < threshold) return; // обычный тап — игнорируем
+
+    if(isVideoMode()){
+      if(!currentVideoCard) return;
+      if(absX > absY){
+        if(dx > 0) videoSwipeNext(); // вправо — следующее видео
+        else videoSwipePrev(); // влево — предыдущее видео
+      } else if(dy < 0){
+        const vid = videoCardId(currentVideoCard);
+        if(!(state.videoLiked||[]).includes(vid)) toggleFavorite();
+      }
+      return;
+    }
+
+    if(!currentCard) return;
     if(absX > absY){
       if(dx > 0){ playSuccessSound(); nextTurn(true); }
       else { playFailSound(); nextTurn(false); }
