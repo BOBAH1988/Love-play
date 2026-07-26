@@ -371,7 +371,7 @@
   .resume-row.show{display:flex;}
   .resume-row .btn{flex:1;}
 
-  .locked-settings{opacity:.4; pointer-events:none;}
+  .locked-settings{opacity:.4; cursor:not-allowed;}
 
   .modal-overlay{
     position:fixed; inset:0; background:rgba(20,6,20,.7);
@@ -874,6 +874,16 @@ function updateSettingsLockUI(){
     if(el) el.classList.toggle('locked-settings', locked);
   });
 }
+// Клик по заблокированным во время паузы настройкам — подсказка вместо тишины
+document.addEventListener('click', (e)=>{
+  const lockedEl = e.target.closest('.locked-settings');
+  if(lockedEl){
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    showToast('Завершите игру, чтобы изменить настройки', 2000);
+  }
+}, true);
 function updateResumeUI(){
   const row = document.getElementById('resumeRow');
   if(row) row.classList.toggle('show', !!state.inProgress);
