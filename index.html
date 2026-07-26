@@ -100,10 +100,10 @@
 
   /* ---- Setup screen ---- */
   .field{margin-bottom:16px;}
-  .names-row{display:flex; flex-direction:column;}
+  .names-row{display:flex; flex-direction:row; gap:10px;}
+  .names-row .field{flex:1; min-width:0;}
   @media (min-width:700px){
-    .names-row{flex-direction:row; gap:16px;}
-    .names-row .field{flex:1;}
+    .names-row{gap:16px;}
   }
   .field label{
     display:block; font-size:13px; color:#e8c9dd; margin-bottom:6px; font-weight:600;
@@ -127,6 +127,9 @@
   }
   .modal-card .starter-btn.on{
     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
+  .modal-card .btn-secondary{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
   }
   .textarea-input{resize:vertical;}
 
@@ -346,14 +349,14 @@
   #favoriteBtn.active{
     background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00; border-color:transparent;
   }
-  .row2{display:flex; gap:8px;}
-  .row2 .btn{flex:1;}
-  .row2 #levelUpBtn{flex:1; font-size:15px;}
+  .row2{display:flex; gap:8px; align-items:stretch;}
+  .row2 .btn{flex:1; height:40px; padding:0 10px;}
+  .row2 #levelUpBtn{flex:1; font-size:14px;}
   .row2 .btn.btn-square{
-    flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:20px;
+    flex:0 0 40px; width:40px; height:40px; padding:0; font-size:17px;
   }
   .row2 .btn.btn-square.btn-text-square{
-    font-size:11px; font-weight:800; letter-spacing:.3px; padding:0 2px;
+    font-size:10px; font-weight:800; letter-spacing:.3px; padding:0 2px;
     text-transform:uppercase;
     background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
   }
@@ -443,12 +446,12 @@
       </div>
     </div>
 
-    <div class="field">
+    <div class="field" id="levelsField">
       <label>Уровни заданий</label>
       <div class="levels" id="levelToggles"></div>
     </div>
 
-    <div class="field">
+    <div class="field" id="starterField">
       <label>Первым начинает</label>
       <div class="starter-group" id="starterGroup">
         <button type="button" class="starter-btn" data-value="M">М</button>
@@ -584,12 +587,16 @@
       </div>
       <button class="btn btn-primary" id="saveCardBtn">Сохранить</button>
       <div class="custom-cards-list" id="customCardsList"></div>
-      <button class="btn btn-secondary" id="closeAddCardBtn" style="margin-top:12px;">Закрыть</button>
+      <button class="btn btn-secondary" id="exportCardsBtn" style="margin-top:12px;">Скачать свои задания</button>
+      <button class="btn btn-secondary" id="importCardsBtn" style="margin-top:10px;">Загрузить свои задания</button>
+      <input type="file" id="importCardsInput" accept=".js,.txt,text/plain,application/javascript" style="display:none;">
+      <button class="btn btn-primary" id="closeAddCardBtn" style="margin-top:12px;">Закрыть</button>
     </div>
   </div>
 </div>
 
 <script src="cards.js"></script>
+<script src="user_cards.js"></script>
 <script>
 /* ============ ДАННЫЕ КАРТ ============ */
 const LEVELS = [
@@ -793,7 +800,11 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
 
 /* ============ ПОДБОР КАРТ ============ */
 function getAllCards(){
-  return CARDS.concat(state.customCards||[]);
+  // Порядок важен: customCards идут сразу за CARDS (как и раньше), чтобы не сбить уже
+  // сохранённые индексы usedIndexes/hiddenIndexes/favoriteIndexes. USER_CARDS — новые,
+  // добавляются в конец и ни на что старое не влияют.
+  const userCards = (typeof USER_CARDS !== 'undefined' && Array.isArray(USER_CARDS)) ? USER_CARDS : [];
+  return CARDS.concat(state.customCards||[]).concat(userCards);
 }
 function scopeIndexes(forceLevel){
   const all = getAllCards();
@@ -869,9 +880,15 @@ function goToSetup(){
 }
 function updateSettingsLockUI(){
   const locked = !!state.inProgress;
-  ['modeGroup','levelToggles','starterGroup','favoritesOnlyBtn'].forEach(id=>{
+  ['modeGroup','favoritesOnlyBtn'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.classList.toggle('locked-settings', locked);
+  });
+  // «Уровни заданий» и «Первым начинает» не относятся к уже идущей партии — во время
+  // паузы просто скрываем их, а не блокируем (нечего блокировать, если их не видно).
+  ['levelsField','starterField'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = locked ? 'none' : '';
   });
 }
 // Клик по заблокированным во время паузы настройкам — подсказка вместо тишины
@@ -1044,11 +1061,29 @@ function resetTimer(){
   if(btn){ btn.textContent = '▶ Старт'; btn.classList.remove('running'); }
 }
 
+// Один общий AudioContext на всё приложение вместо нового на каждый звук —
+// iOS Safari ограничивает число одновременно живых AudioContext, и при частых
+// звуках (например, быстрые свайпы подряд) более старый подход мог "тихо" не срабатывать.
+let sharedAudioCtx = null;
+function getAudioCtx(){
+  try{
+    if(!sharedAudioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      sharedAudioCtx = new Ctx();
+    }
+    if(sharedAudioCtx.state === 'suspended'){
+      sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  }catch(e){ return null; }
+}
+
 function playTimerAlarm(){
   if(state.muted) return;
   try{
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new Ctx();
+    const ctx = getAudioCtx();
+    if(!ctx) return;
     const beepTimes = [0, 0.22, 0.44];
     beepTimes.forEach(t=>{
       const osc = ctx.createOscillator();
@@ -1063,7 +1098,6 @@ function playTimerAlarm(){
       osc.start(ctx.currentTime + t);
       osc.stop(ctx.currentTime + t + 0.2);
     });
-    setTimeout(()=>ctx.close(), 900);
   }catch(e){}
   if(navigator.vibrate) navigator.vibrate([150,80,150,80,150]);
 }
@@ -1071,8 +1105,8 @@ function playTimerAlarm(){
 function playSuccessSound(){
   if(state.muted) return;
   try{
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new Ctx();
+    const ctx = getAudioCtx();
+    if(!ctx) return;
     const notes = [523.25, 659.25]; // приятный восходящий перезвон (до — ми)
     notes.forEach((freq, i)=>{
       const t = i*0.09;
@@ -1088,15 +1122,14 @@ function playSuccessSound(){
       osc.start(ctx.currentTime + t);
       osc.stop(ctx.currentTime + t + 0.4);
     });
-    setTimeout(()=>ctx.close(), 600);
   }catch(e){}
 }
 
 function playLevelUpSound(){
   if(state.muted) return;
   try{
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new Ctx();
+    const ctx = getAudioCtx();
+    if(!ctx) return;
     const notes = [523.25, 659.25, 783.99, 1046.50]; // до-ми-соль-до, торжествующее трезвучие
     notes.forEach((freq, i)=>{
       const t = i*0.08;
@@ -1112,7 +1145,6 @@ function playLevelUpSound(){
       osc.start(ctx.currentTime + t);
       osc.stop(ctx.currentTime + t + 0.5);
     });
-    setTimeout(()=>ctx.close(), 900);
   }catch(e){}
   if(navigator.vibrate) navigator.vibrate([60,40,60,40,120]);
 }
@@ -1120,8 +1152,8 @@ function playLevelUpSound(){
 function playFailSound(){
   if(state.muted) return;
   try{
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new Ctx();
+    const ctx = getAudioCtx();
+    if(!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sawtooth';
@@ -1134,15 +1166,14 @@ function playFailSound(){
     gain.connect(ctx.destination);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.42);
-    setTimeout(()=>ctx.close(), 500);
   }catch(e){}
 }
 
 function playErrorSound(){
   if(state.muted) return;
   try{
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new Ctx();
+    const ctx = getAudioCtx();
+    if(!ctx) return;
     const beepTimes = [0, 0.14];
     beepTimes.forEach(t=>{
       const osc = ctx.createOscillator();
@@ -1157,7 +1188,6 @@ function playErrorSound(){
       osc.start(ctx.currentTime + t);
       osc.stop(ctx.currentTime + t + 0.13);
     });
-    setTimeout(()=>ctx.close(), 400);
   }catch(e){}
   if(navigator.vibrate) navigator.vibrate([80,60,80]);
 }
@@ -1457,6 +1487,87 @@ document.getElementById('saveCardBtn').addEventListener('click', ()=>{
   renderCustomCardsList();
   playSuccessSound();
   showToast('Задание добавлено ✓');
+});
+// Экспорт своих заданий в текст для файла user_cards.js (сохраняются в git отдельно от cards.js)
+function buildUserCardsExportText(){
+  const items = (state.customCards||[]).filter(c=>!c.deleted);
+  const lines = items.map(c=>{
+    const parts = [`level:${c.level}`, `type:${JSON.stringify(c.type)}`, `text:${JSON.stringify(c.text)}`];
+    if(c.for) parts.push(`for:${JSON.stringify(c.for)}`);
+    return `  {${parts.join(', ')}},`;
+  });
+  return `// user_cards.js — задания, добавленные через приложение.\n// Замените этот файл в репозитории (GitHub), чтобы сохранить их навсегда.\nconst USER_CARDS = [\n${lines.join('\n')}\n];`;
+}
+document.getElementById('exportCardsBtn').addEventListener('click', ()=>{
+  const items = (state.customCards||[]).filter(c=>!c.deleted);
+  if(items.length===0){
+    showToast('Нет своих заданий для скачивания');
+    return;
+  }
+  const text = buildUserCardsExportText();
+  const blob = new Blob([text], {type:'application/javascript'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'user_cards.js';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  showToast('Файл user_cards.js скачан', 2200);
+});
+// Загрузка заданий из файла (например, ранее скачанного user_cards.js) — добавляет их в игру на этом устройстве
+function parseCardsFromText(text){
+  const matches = text.match(/\{[^{}]*\}/g) || [];
+  const cards = [];
+  matches.forEach(m=>{
+    try{
+      const obj = Function('"use strict"; return (' + m + ')')();
+      if(obj && typeof obj.level === 'number' && (obj.type==='truth'||obj.type==='dare') && typeof obj.text === 'string' && obj.text.trim()){
+        const card = { level: obj.level, type: obj.type, text: obj.text };
+        if(obj.for === 'M' || obj.for === 'F') card.for = obj.for;
+        cards.push(card);
+      }
+    }catch(e){}
+  });
+  return cards;
+}
+document.getElementById('importCardsBtn').addEventListener('click', ()=>{
+  document.getElementById('importCardsInput').click();
+});
+document.getElementById('importCardsInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const parsed = parseCardsFromText(String(reader.result||''));
+    if(parsed.length===0){
+      playErrorSound();
+      showToast('Не нашлось заданий для загрузки');
+      e.target.value = '';
+      return;
+    }
+    const existing = new Set((state.customCards||[]).filter(c=>!c.deleted).map(c=>`${c.level}|${c.type}|${c.text}|${c.for||''}`));
+    let added = 0;
+    parsed.forEach(c=>{
+      const key = `${c.level}|${c.type}|${c.text}|${c.for||''}`;
+      if(!existing.has(key)){
+        state.customCards.push(c);
+        existing.add(key);
+        added++;
+      }
+    });
+    saveState();
+    renderCustomCardsList();
+    e.target.value = '';
+    if(added>0){
+      playSuccessSound();
+      showToast(`Загружено заданий: ${added}`);
+    } else {
+      showToast('Все задания уже есть в списке');
+    }
+  };
+  reader.readAsText(file);
 });
 document.getElementById('addCardBtn').addEventListener('click', ()=>{
   populateNewCardLevelSelect();
