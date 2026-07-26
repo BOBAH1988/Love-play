@@ -100,6 +100,11 @@
 
   /* ---- Setup screen ---- */
   .field{margin-bottom:16px;}
+  .names-row{display:flex; flex-direction:column;}
+  @media (min-width:700px){
+    .names-row{flex-direction:row; gap:16px;}
+    .names-row .field{flex:1;}
+  }
   .field label{
     display:block; font-size:13px; color:#e8c9dd; margin-bottom:6px; font-weight:600;
   }
@@ -109,6 +114,32 @@
     outline:none; border:1px solid rgba(255,255,255,.2);
   }
   .field input[type=text]::placeholder{color:rgba(255,255,255,.5);}
+  .select-input, .textarea-input{
+    width:100%; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,.12); color:#fff; font-size:15px;
+    outline:none; border:1px solid rgba(255,255,255,.2); font-family:inherit;
+  }
+  .modal-card .select-input, .modal-card .textarea-input{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .modal-card .starter-btn{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .modal-card .starter-btn.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
+  .textarea-input{resize:vertical;}
+
+  .toggle-row{display:flex; gap:8px; margin-bottom:16px;}
+  .toggle-pill{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    color:#fff; border-radius:12px; padding:10px 8px; font-size:13px; font-weight:700;
+    cursor:pointer; text-align:center;
+  }
+  .toggle-pill.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
 
   .levels{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
   .level-toggle{
@@ -140,6 +171,7 @@
   .starter-btn.on{
     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
   }
+  .mode-btn{font-size:11.5px; padding:12px 4px; letter-spacing:-.1px;}
 
   .btn{
     display:flex; align-items:center; justify-content:center;
@@ -166,7 +198,9 @@
     font-size:25px; color:#cba0bf; margin-bottom:4px;
   }
   .score-row #score1, .score-row #score2{white-space:nowrap;}
-  .score-row .level-pill{font-size:18px; padding:8px 16px; flex-shrink:0;}
+  .level-progress{
+    text-align:center; font-size:11px; color:#cba0bf; min-height:14px; margin-bottom:6px;
+  }
 
   .card-area{
     flex:1;
@@ -228,12 +262,15 @@
     font-size:19px; font-weight:800; color:#2b0f2e;
   }
   .level-pill{
-    font-size:11px; font-weight:800; padding:5px 10px; border-radius:20px; color:#fff;
+    font-size:13px; font-weight:800; padding:6px 12px; border-radius:20px; color:#fff;
     letter-spacing:.3px;
   }
   .type-pill{
     font-size:15px; font-weight:800; padding:7px 13px; border-radius:20px;
     background:rgba(0,0,0,.08); color:#2b0f2e;
+  }
+  .card-type-row{
+    display:flex; justify-content:center; margin-bottom:14px;
   }
   .card-body{
     flex:1;
@@ -296,30 +333,45 @@
     margin-top:8px;
     display:flex; flex-direction:column; gap:10px;
   }
+  .row1{display:flex; gap:10px;}
+  .row1 #doneBtn{flex:1;}
+  .row1 #skipBtn{
+    flex:0 0 auto; width:auto; padding:0 14px; font-size:14px;
+    background:linear-gradient(135deg,#0f3d63,#1c6ea4); color:#fff; border-color:transparent;
+    box-shadow:0 8px 20px rgba(15,61,99,.35);
+  }
+  .row1 .btn.btn-square{
+    flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:22px;
+  }
+  #favoriteBtn.active{
+    background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00; border-color:transparent;
+  }
   .row2{display:flex; gap:8px;}
   .row2 .btn{flex:1;}
   .row2 #levelUpBtn{flex:1; font-size:15px;}
-  .row2 #skipBtn{flex:0 0 auto; width:auto; padding:0 14px; font-size:14px;}
   .row2 .btn.btn-square{
     flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:20px;
   }
   .row2 .btn.btn-square.btn-text-square{
     font-size:11px; font-weight:800; letter-spacing:.3px; padding:0 2px;
     text-transform:uppercase;
-    background:#d32f2f; color:#fff; border-color:#d32f2f;
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
   }
 
   .toast{
-    position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+    position:fixed; left:50%; top:calc(env(safe-area-inset-top, 0px) + 16px);
+    transform:translateX(-50%) translateY(-20px);
     background:rgba(0,0,0,.85); color:#fff; padding:10px 18px; border-radius:20px;
-    font-size:13px; opacity:0; transition:all .3s ease; pointer-events:none; z-index:50;
+    font-size:13px; opacity:0; transition:all .3s ease; pointer-events:none; z-index:250;
     white-space:nowrap;
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
-  .top-actions{
-    display:flex; justify-content:flex-start; align-items:center; margin-bottom:6px;
-  }
+  .resume-row{display:none; gap:10px; margin-bottom:10px;}
+  .resume-row.show{display:flex;}
+  .resume-row .btn{flex:1;}
+
+  .locked-settings{opacity:.4; pointer-events:none;}
 
   .modal-overlay{
     position:fixed; inset:0; background:rgba(20,6,20,.7);
@@ -334,12 +386,27 @@
     box-shadow:0 20px 50px rgba(0,0,0,.5);
   }
   .modal-title{font-size:20px; font-weight:800; text-align:center; margin-bottom:16px;}
+  .modal-card .intro-text{color:#5c3a52; max-width:none;}
   .modal-rules{
     margin:0 0 20px; padding-left:20px;
     display:flex; flex-direction:column; gap:11px;
     font-size:14px; line-height:1.5; text-align:left; color:#3a2438;
   }
   .modal-rules li{padding-left:4px;}
+  .summary-stats{
+    display:flex; flex-direction:column; gap:10px; margin-bottom:22px; text-align:center;
+  }
+  .summary-row{font-size:16px; font-weight:700; color:#3a2438;}
+  .custom-cards-list{margin-top:16px; display:flex; flex-direction:column; gap:8px;}
+  .custom-cards-empty{font-size:13px; color:#8a6a80; text-align:center; padding:8px 0;}
+  .custom-card-row{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(43,15,46,.06); border-radius:12px; padding:8px 10px;
+  }
+  .custom-card-text{flex:1; font-size:13px; color:#3a2438; line-height:1.35; text-align:left;}
+  .custom-card-del{
+    flex:0 0 auto; background:none; border:none; font-size:16px; cursor:pointer; padding:4px;
+  }
   .icon-btn{
     background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
     color:#fff; border-radius:12px; padding:8px 12px; font-size:13px; font-weight:700; cursor:pointer;
@@ -354,16 +421,26 @@
   <!-- ===== SETUP SCREEN ===== -->
   <section id="setup" class="screen active">
     <h1 class="title">💕 Игра для двоих</h1>
-    <div class="intro-text">Игра подходит для любого уровня отношений — от самого знакомства до самых смелых исполнений желаний, а можно просто внести немного новизны в семейную жизнь.</div>
     <div class="subtitle">Настройте игру перед началом</div>
 
-    <div class="field">
-      <label>Имя мужчины</label>
-      <input type="text" id="name1" placeholder="Men" maxlength="20">
+    <div class="names-row">
+      <div class="field">
+        <label>Имя мужчины</label>
+        <input type="text" id="name1" placeholder="Men" minlength="2" maxlength="10">
+      </div>
+      <div class="field">
+        <label>Имя женщины</label>
+        <input type="text" id="name2" placeholder="Sexy" minlength="2" maxlength="10">
+      </div>
     </div>
+
     <div class="field">
-      <label>Имя женщины</label>
-      <input type="text" id="name2" placeholder="Sexy" maxlength="20">
+      <label>Режим игры</label>
+      <div class="starter-group" id="modeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="romantic">Романтический</button>
+        <button type="button" class="starter-btn mode-btn" data-value="hot">Страстный</button>
+        <button type="button" class="starter-btn mode-btn" data-value="custom">Пользовательский</button>
+      </div>
     </div>
 
     <div class="field">
@@ -380,10 +457,21 @@
       </div>
     </div>
 
-    <button class="btn btn-primary" id="startBtn">Начать игру →</button>
+    <div class="toggle-row">
+      <button type="button" class="toggle-pill" id="muteBtn" aria-label="Выключить звук">🔊 Звук включён</button>
+      <button type="button" class="toggle-pill" id="favoritesOnlyBtn" aria-pressed="false">⭐ Только избранное</button>
+    </div>
+
+    <div class="resume-row" id="resumeRow">
+      <button class="btn btn-primary" id="resumeBtn">Продолжить игру</button>
+      <button class="btn btn-secondary" id="finishGameBtn">Закончить игру</button>
+    </div>
+    <button class="btn btn-primary" id="startBtn">Начать новую игру</button>
     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:10px;">
       <span class="btn-ghost" id="rulesBtn">Правила игры</span>
-      <span class="btn-ghost" id="resetHiddenBtn">Вернуть скрытые карточки</span>
+      <span class="btn-ghost" id="addCardBtn">Своё задание</span>
+      <span class="btn-ghost" id="resetHiddenBtn">Сбросить прогресс</span>
+      <span class="btn-ghost" id="installBtn">⬇ Установить</span>
     </div>
   </section>
 
@@ -391,9 +479,9 @@
   <section id="game" class="screen">
     <div class="score-row">
       <span id="score1">Men: 0</span>
-      <span class="level-pill" id="levelBadge">💗 Романтика</span>
       <span id="score2">Sexy: 0</span>
     </div>
+    <div class="level-progress" id="levelProgress"></div>
 
     <div class="card-area">
       <div class="card card-empty" id="card">
@@ -403,12 +491,16 @@
     </div>
 
     <div class="controls">
-      <button class="btn btn-primary" id="doneBtn">💕 Готово</button>
+      <div class="row1">
+        <button class="btn btn-primary" id="doneBtn">💕 Готово</button>
+        <button class="btn btn-secondary" id="skipBtn">❄️ Отказ</button>
+        <button type="button" class="btn btn-secondary btn-square" id="favoriteBtn" aria-label="В избранное">☆</button>
+      </div>
       <div class="row2">
-        <button class="btn btn-secondary" id="levelUpBtn">Повысить уровень</button>
-        <button class="btn btn-secondary" id="skipBtn">Пропуск</button>
+        <button class="btn btn-secondary" id="levelUpBtn">🔥 Повысить уровень</button>
+        <button type="button" class="btn btn-secondary btn-square" id="refreshBtn" aria-label="Новое задание для этого же игрока">🔄</button>
         <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">👎</button>
-        <button type="button" class="btn btn-secondary btn-square btn-text-square" id="settingsBtn">EXIT</button>
+        <button type="button" class="btn btn-secondary btn-square btn-text-square" id="pauseBtn" aria-label="Пауза">Пауза</button>
       </div>
     </div>
   </section>
@@ -419,17 +511,80 @@
   <div class="modal-overlay" id="rulesModal">
     <div class="modal-card">
       <div class="modal-title">💕 Правила игры</div>
+      <div class="intro-text">Игра подходит для любого уровня отношений — от самого знакомства до самых смелых исполнений желаний, а можно просто внести немного новизны в семейную жизнь.</div>
       <ol class="modal-rules">
-        <li>Перед игрой примите душ и подготовьте всё необходимое.</li>
-        <li>Откройте бутылку вина, чтобы расслабиться и настроиться на нужный лад.</li>
-        <li>Отключите телефоны и создайте обстановку, в которой ничто не будет отвлекать.</li>
-        <li>Приглушите свет и включите чувственную музыку.</li>
-        <li>Выполняйте задания по очереди и получайте удовольствие от процесса.</li>
-        <li>Если партнёр отказывается от задания — ему минус балл.</li>
-        <li>Нет нужного предмета под рукой? Включите фантазию и замените его тем, что есть.</li>
-        <li>Общайтесь открыто и уважайте границы друг друга — в любой момент можно остановиться или пропустить задание.</li>
+        <li>Примите душ и разложите под рукой всё самое интересное — взбитые сливки, повязку на глаза, лубрикант, любимые игрушки. Пусть искушение будет на расстоянии вытянутой руки.</li>
+        <li>Откупорьте бутылку вина, приглушите свет и включите чувственную музыку — пусть атмосфера сама подталкивает вас друг к другу.</li>
+        <li>Отключите телефоны — сегодня вечер только для вас двоих.</li>
+        <li>Тяните карточки по очереди и раскрывайтесь друг перед другом: «Правда» — для откровенных признаний, «Действие» — для смелых поступков.</li>
+        <li>Задание смущает или пока не по силам? Смело жмите «Отказ» — колода подкинет следующее, но балл за этот ход упущен.</li>
+        <li>Задание совсем не ваше? Нажмите 👎 — и оно исчезнет из игры навсегда, никаких неловких повторений.</li>
+        <li>Что-то особенно зацепило? Нажмите ☆ — сохраните находку в избранном и вернитесь к ней в другой раз.</li>
+        <li>Чувствуете, как разгорается огонёк? Жмите «Повысить уровень» — и игра станет ещё смелее.</li>
+        <li>Нужна передышка? «Пауза» сохранит счёт и уровень — вернётесь и продолжите с того же места. А захотите завершить вечер — «Закончить игру» покажет итог.</li>
+        <li>Говорите друг с другом открыто и берегите границы партнёра — остановиться можно в любой момент, и это нормально.</li>
       </ol>
       <button class="btn btn-primary" id="closeRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="summaryModal">
+    <div class="modal-card">
+      <div class="modal-title">Игра завершена</div>
+      <div class="summary-stats">
+        <div class="summary-row" id="summaryWinner"></div>
+        <div class="summary-row" id="summaryScore"></div>
+        <div class="summary-row" id="summaryCounts"></div>
+      </div>
+      <button class="btn btn-primary" id="closeSummaryBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== УСТАНОВКА НА ЭКРАН ДОМОЙ ===== -->
+  <div class="modal-overlay" id="installModal">
+    <div class="modal-card">
+      <div class="modal-title">Установка на телефон</div>
+      <ol class="modal-rules">
+        <li>Откройте это приложение в Safari (не в другом браузере).</li>
+        <li>Нажмите кнопку «Поделиться» внизу экрана — квадрат со стрелкой вверх.</li>
+        <li>В списке выберите «На экран «Домой»».</li>
+        <li>Нажмите «Добавить» — иконка появится на главном экране и будет открываться как обычное приложение.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeInstallBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== СВОЁ ЗАДАНИЕ ===== -->
+  <div class="modal-overlay" id="addCardModal">
+    <div class="modal-card">
+      <div class="modal-title">➕ Своё задание</div>
+      <div class="field">
+        <label>Уровень</label>
+        <select id="newCardLevel" class="select-input"></select>
+      </div>
+      <div class="field">
+        <label>Тип</label>
+        <div class="starter-group" id="newCardTypeGroup">
+          <button type="button" class="starter-btn on" data-value="truth">Правда</button>
+          <button type="button" class="starter-btn" data-value="dare">Действие</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Для кого</label>
+        <div class="starter-group" id="newCardForGroup">
+          <button type="button" class="starter-btn on" data-value="">Общее</button>
+          <button type="button" class="starter-btn" data-value="M">Мужчине</button>
+          <button type="button" class="starter-btn" data-value="F">Женщине</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Текст задания</label>
+        <textarea id="newCardText" class="textarea-input" rows="3" maxlength="300" placeholder="Напишите вопрос или задание..."></textarea>
+      </div>
+      <button class="btn btn-primary" id="saveCardBtn">Сохранить</button>
+      <div class="custom-cards-list" id="customCardsList"></div>
+      <button class="btn btn-secondary" id="closeAddCardBtn" style="margin-top:12px;">Закрыть</button>
     </div>
   </div>
 </div>
@@ -451,8 +606,11 @@ const STORAGE_KEY = 'couple-game-state-v1';
 let state = {
   name1:'', name2:'', activeLevels:[1,2,3,4,5],
   starter:'random',
+  gameMode:'custom', autoMilestone:0, turnsPlayed:0, turnsAtLastLevelUp:0,
   currentPlayer:1, score1:0, score2:0,
-  levelCap:1, usedIndexes:[], hiddenIndexes:[]
+  levelCap:1, usedIndexes:[], hiddenIndexes:[],
+  muted:false, inProgress:false, completedCount:0, skippedCount:0,
+  customCards:[], favoriteIndexes:[], favoritesOnly:false
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -483,14 +641,47 @@ function shuffle(arr){
   }
   return a;
 }
-function showToast(msg){
+function showToast(msg, duration){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(showToast._tm);
-  showToast._tm = setTimeout(()=>t.classList.remove('show'), 1800);
+  showToast._tm = setTimeout(()=>t.classList.remove('show'), duration || 1800);
+}
+// Правило для «Только избранное»: либо 10+ карточек на двоих, либо минимум по 5 карточек,
+// доступных каждому партнёру отдельно (общая карточка засчитывается обоим).
+function favoritesEligibility(){
+  const all = getAllCards();
+  const favs = (state.favoriteIndexes||[]).map(i=>all[i]).filter(Boolean);
+  const total = favs.length;
+  const forM = favs.filter(c=>!c.for || c.for==='M').length;
+  const forF = favs.filter(c=>!c.for || c.for==='F').length;
+  const ok = total>=10 || (forM>=5 && forF>=5);
+  return { ok, total, forM, forF };
 }
 function levelById(id){ return LEVELS.find(l=>l.id===id); }
+
+/* ============ WAKE LOCK (экран не гаснет во время игры) ============ */
+let wakeLock = null;
+async function requestWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  }catch(e){ /* недоступно — просто игнорируем */ }
+}
+function releaseWakeLockNow(){
+  if(wakeLock){
+    try{ wakeLock.release(); }catch(e){}
+    wakeLock = null;
+  }
+}
+document.addEventListener('visibilitychange', ()=>{
+  const gameScreen = document.getElementById('game');
+  if(document.visibilityState === 'visible' && gameScreen && gameScreen.classList.contains('active')){
+    requestWakeLock();
+  }
+});
 
 /* ============ SETUP SCREEN ============ */
 function renderLevelToggles(){
@@ -532,6 +723,21 @@ document.querySelectorAll('#starterGroup .starter-btn').forEach(btn=>{
   });
 });
 
+function renderModeGroup(){
+  document.querySelectorAll('#modeGroup .mode-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === state.gameMode);
+  });
+}
+document.querySelectorAll('#modeGroup .mode-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.gameMode = btn.dataset.value;
+    if(state.gameMode === 'romantic') state.activeLevels = [1,2,3,4];
+    else if(state.gameMode === 'hot') state.activeLevels = [3,4,5,6];
+    renderModeGroup();
+    renderLevelToggles();
+  });
+});
+
 function updateStarterLabels(){
   const n1 = document.getElementById('name1');
   const n2 = document.getElementById('name2');
@@ -544,39 +750,69 @@ document.getElementById('name1').addEventListener('input', updateStarterLabels);
 document.getElementById('name2').addEventListener('input', updateStarterLabels);
 
 document.getElementById('startBtn').addEventListener('click', ()=>{
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  if((n1raw && n1raw.length<2) || (n2raw && n2raw.length<2)){
+    playErrorSound();
+    showToast('Имя должно быть не короче 2 символов');
+    return;
+  }
+  if(state.favoritesOnly){
+    const elig = favoritesEligibility();
+    if(!elig.ok){
+      playErrorSound();
+      showToast(`Добавьте больше карточек: М добавлено ${elig.forM}, Ж добавлено ${elig.forF}`, 2000);
+      return;
+    }
+  }
   playSuccessSound();
-  state.name1 = document.getElementById('name1').value.trim() || 'Men';
-  state.name2 = document.getElementById('name2').value.trim() || 'Sexy';
+  state.name1 = n1raw || 'Men';
+  state.name2 = n2raw || 'Sexy';
   state.currentPlayer = pickStartingPlayer();
   state.score1 = 0; state.score2 = 0;
-  state.usedIndexes = [];
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.completedCount = 0; state.skippedCount = 0;
   state.levelCap = getSortedActiveLevels()[0];
+  state.inProgress = true;
   saveState();
+  goToGame();
+});
+
+document.getElementById('resumeBtn').addEventListener('click', ()=>{
   goToGame();
 });
 
 
 document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.hiddenIndexes = [];
+  state.usedIndexes = [];
   saveState();
-  showToast('Скрытые карточки возвращены');
+  showToast('Прогресс сброшен: скрытые карточки возвращены');
 });
 
 /* ============ ПОДБОР КАРТ ============ */
+function getAllCards(){
+  return CARDS.concat(state.customCards||[]);
+}
 function scopeIndexes(forceLevel){
-  return CARDS
+  const all = getAllCards();
+  return all
     .map((c,i)=>i)
     .filter(i=>{
-      const c = CARDS[i];
+      const c = all[i];
+      if(c.deleted) return false;
+      if(state.favoritesOnly && !state.favoriteIndexes.includes(i)) return false;
       if(forceLevel) return c.level === forceLevel;
-      return state.activeLevels.includes(c.level) && c.level <= state.levelCap;
+      return c.level === state.levelCap;
     });
 }
 function drawFromPool(forceLevel){
+  const all = getAllCards();
   const gender = currentGender();
   const scope = scopeIndexes(forceLevel).filter(i=>!state.hiddenIndexes.includes(i));
   let pool = scope
-    .map(i=>({...CARDS[i], idx:i}))
+    .map(i=>({...all[i], idx:i}))
     .filter(c => !c.for || c.for===gender)
     .filter(c => !state.usedIndexes.includes(c.idx));
 
@@ -585,7 +821,7 @@ function drawFromPool(forceLevel){
     const scopeSet = new Set(scope);
     state.usedIndexes = state.usedIndexes.filter(i=>!scopeSet.has(i));
     pool = scope
-      .map(i=>({...CARDS[i], idx:i}))
+      .map(i=>({...all[i], idx:i}))
       .filter(c => !c.for || c.for===gender);
     if(pool.length>0) showToast('Колода перемешана заново 🔀');
   }
@@ -595,42 +831,107 @@ function drawFromPool(forceLevel){
 
 /* ============ GAME SCREEN ============ */
 function goToGame(){
+  state.inProgress = true;
+  saveState();
   document.getElementById('setup').classList.remove('active');
   document.getElementById('game').classList.add('active');
   updateTurnUI();
   updateLevelUI();
+  updateMuteBtn();
+  requestWakeLock();
   drawCard();
 }
-function goToSetup(){
-  state.usedIndexes = [];
-  state.score1 = 0; state.score2 = 0;
-  saveState();
+function returnToSetupUI(){
   document.getElementById('game').classList.remove('active');
   document.getElementById('setup').classList.add('active');
   document.getElementById('name1').value = state.name1 || '';
   document.getElementById('name2').value = state.name2 || '';
   updateStarterLabels();
+  renderModeGroup();
   renderLevelToggles();
+  updateResumeUI();
+  releaseWakeLockNow();
+}
+// Пауза: выйти в настройки, не сбрасывая счёт и прогресс — можно продолжить позже
+function pauseGame(){
+  saveState();
+  returnToSetupUI();
+}
+// Полный сброс (после завершения игры и просмотра итогов)
+function goToSetup(){
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.inProgress = false;
+  saveState();
+  returnToSetupUI();
+}
+function updateSettingsLockUI(){
+  const locked = !!state.inProgress;
+  ['modeGroup','levelToggles','starterGroup','favoritesOnlyBtn'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('locked-settings', locked);
+  });
+}
+function updateResumeUI(){
+  const row = document.getElementById('resumeRow');
+  if(row) row.classList.toggle('show', !!state.inProgress);
+  updateSettingsLockUI();
 }
 
 function updateTurnUI(){
   document.getElementById('score1').textContent = `${state.name1}: ${state.score1}`;
   document.getElementById('score2').textContent = `${state.name2}: ${state.score2}`;
+  updateLevelProgressUI();
 }
 
+function updateMuteBtn(){
+  const btn = document.getElementById('muteBtn');
+  if(!btn) return;
+  btn.textContent = state.muted ? '🔇 Звук выключен' : '🔊 Звук включён';
+  btn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
+  btn.classList.toggle('on', !!state.muted);
+}
+document.getElementById('muteBtn').addEventListener('click', ()=>{
+  state.muted = !state.muted;
+  saveState();
+  updateMuteBtn();
+});
+
 function updateLevelUI(){
-  const lvl = levelById(state.levelCap);
-  const badge = document.getElementById('levelBadge');
-  badge.textContent = `${lvl.icon} ${lvl.name}`;
-  badge.style.background = lvl.color;
   const levels = getSortedActiveLevels();
   const isMax = levels.indexOf(state.levelCap) === levels.length-1;
   const btn = document.getElementById('levelUpBtn');
   btn.disabled = isMax;
-  btn.textContent = isMax ? 'Максимальный уровень' : 'Повысить уровень';
+  btn.textContent = isMax ? 'Максимальный уровень' : '🔥 Повысить уровень';
+  updateLevelProgressUI();
 }
 
-function levelUp(){
+function updateLevelProgressUI(){
+  const el = document.getElementById('levelProgress');
+  if(!el) return;
+  const levels = getSortedActiveLevels();
+  const isMax = levels.indexOf(state.levelCap) === levels.length-1;
+  if(isMax){ el.textContent = ''; return; }
+  if(state.gameMode === 'romantic'){
+    const target = ((state.autoMilestone||0)+1)*10;
+    const cur = Math.min(state.score1, state.score2);
+    el.textContent = `До след. уровня: ${Math.max(0, target-cur)} очк. (у обоих партнёров)`;
+  } else if(state.gameMode === 'hot'){
+    if(!state.autoMilestone){
+      const cur = Math.max(state.score1, state.score2);
+      el.textContent = `До след. уровня: ${Math.max(0, 5-cur)} очк.`;
+    } else {
+      const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
+      el.textContent = `До след. уровня: ${Math.max(0, 10-since)} карт`;
+    }
+  } else {
+    el.textContent = '';
+  }
+}
+
+function advanceLevel(){
   const levels = getSortedActiveLevels();
   const idx = levels.indexOf(state.levelCap);
   if(idx>=0 && idx<levels.length-1){
@@ -639,10 +940,44 @@ function levelUp(){
     saveState();
     updateLevelUI();
     const lvl = levelById(state.levelCap);
-    showToast(`Уровень повышен: ${lvl.icon} ${lvl.name}`);
+    showToast(`Уровень повышен для обоих: ${lvl.icon} ${lvl.name}`);
+    return true;
+  }
+  return false;
+}
+function levelUp(){
+  if(advanceLevel()){
     drawCard(state.levelCap);
   } else {
     showToast('Это максимальный уровень 🔥');
+  }
+}
+function checkAutoLevelUp(){
+  if(state.gameMode === 'romantic'){
+    const milestone = Math.floor(Math.min(state.score1, state.score2)/10);
+    if(milestone > (state.autoMilestone||0)){
+      state.autoMilestone = milestone;
+      advanceLevel();
+    }
+  } else if(state.gameMode === 'hot'){
+    if(!state.autoMilestone){
+      // первое повышение — как только любой игрок набирает 5 очков
+      if(Math.max(state.score1, state.score2) >= 5){
+        if(advanceLevel()){
+          state.autoMilestone = 1;
+          state.turnsAtLastLevelUp = state.turnsPlayed||0;
+        }
+      }
+    } else {
+      // далее — каждое следующее повышение через 10 сыгранных карт
+      const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
+      if(since >= 10){
+        if(advanceLevel()){
+          state.autoMilestone++;
+          state.turnsAtLastLevelUp = state.turnsPlayed||0;
+        }
+      }
+    }
   }
 }
 
@@ -700,6 +1035,7 @@ function resetTimer(){
 }
 
 function playTimerAlarm(){
+  if(state.muted) return;
   try{
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
@@ -723,6 +1059,7 @@ function playTimerAlarm(){
 }
 
 function playSuccessSound(){
+  if(state.muted) return;
   try{
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
@@ -746,6 +1083,7 @@ function playSuccessSound(){
 }
 
 function playLevelUpSound(){
+  if(state.muted) return;
   try{
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
@@ -770,6 +1108,7 @@ function playLevelUpSound(){
 }
 
 function playFailSound(){
+  if(state.muted) return;
   try{
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
@@ -790,6 +1129,7 @@ function playFailSound(){
 }
 
 function playErrorSound(){
+  if(state.muted) return;
   try{
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
@@ -869,6 +1209,12 @@ function drawCard(forceLevel){
   renderCard(card);
 }
 
+function refreshCard(){
+  if(!currentCard) return;
+  showToast('Новое задание 🔄');
+  drawCard();
+}
+
 function dislikeCurrentCard(){
   if(!currentCard) return;
   playErrorSound();
@@ -900,8 +1246,11 @@ function renderCard(card){
             <div class="card-turn-name">${turnName}</div>
           </div>
           <div class="badge">
-            <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
+            <span class="level-pill" style="background:${lvl.color}">${lvl.icon} ${lvl.name}</span>
           </div>
+        </div>
+        <div class="card-type-row">
+          <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
         </div>
         <div class="card-body">
           <div class="card-text">${card.text}</div>
@@ -925,12 +1274,18 @@ function renderCard(card){
       b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
     });
   });
+  updateFavoriteBtn();
 }
 
 function nextTurn(completed){
   if(completed){
     if(state.currentPlayer===1) state.score1++; else state.score2++;
+    state.completedCount = (state.completedCount||0) + 1;
+  } else {
+    state.skippedCount = (state.skippedCount||0) + 1;
   }
+  state.turnsPlayed = (state.turnsPlayed||0) + 1;
+  checkAutoLevelUp();
   state.currentPlayer = state.currentPlayer===1 ? 2 : 1;
   saveState();
   updateTurnUI();
@@ -939,10 +1294,29 @@ function nextTurn(completed){
 
 document.getElementById('doneBtn').addEventListener('click', ()=>{ playSuccessSound(); nextTurn(true); });
 document.getElementById('skipBtn').addEventListener('click', ()=>{ playFailSound(); nextTurn(false); });
-document.getElementById('settingsBtn').addEventListener('click', ()=>{
-  if(confirm('Точно выйти из игры')){
-    goToSetup();
+document.getElementById('pauseBtn').addEventListener('click', ()=>{
+  pauseGame();
+  showToast('Игра на паузе — прогресс сохранён');
+});
+document.getElementById('finishGameBtn').addEventListener('click', ()=>{
+  showSummary();
+});
+
+function showSummary(){
+  const winnerEl = document.getElementById('summaryWinner');
+  if(state.score1 === state.score2){
+    winnerEl.textContent = '🤝 Ничья!';
+  } else {
+    const winnerName = state.score1 > state.score2 ? state.name1 : state.name2;
+    winnerEl.textContent = `🏆 Победил ${winnerName}`;
   }
+  document.getElementById('summaryScore').textContent = `${state.name1}: ${state.score1}  ·  ${state.name2}: ${state.score2}`;
+  document.getElementById('summaryCounts').textContent = `Выполнено: ${state.completedCount||0}  ·  Пропущено: ${state.skippedCount||0}`;
+  document.getElementById('summaryModal').classList.add('show');
+}
+document.getElementById('closeSummaryBtn').addEventListener('click', ()=>{
+  document.getElementById('summaryModal').classList.remove('show');
+  goToSetup();
 });
 
 document.getElementById('rulesBtn').addEventListener('click', ()=>{
@@ -954,17 +1328,179 @@ document.getElementById('closeRulesBtn').addEventListener('click', ()=>{
 document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'rulesModal') e.currentTarget.classList.remove('show');
 });
+document.getElementById('installBtn').addEventListener('click', ()=>{
+  document.getElementById('installModal').classList.add('show');
+});
+document.getElementById('closeInstallBtn').addEventListener('click', ()=>{
+  document.getElementById('installModal').classList.remove('show');
+});
+document.getElementById('installModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'installModal') e.currentTarget.classList.remove('show');
+});
 document.getElementById('levelUpBtn').addEventListener('click', levelUp);
+document.getElementById('refreshBtn').addEventListener('click', refreshCard);
 document.getElementById('dislikeBtn').addEventListener('click', dislikeCurrentCard);
+
+/* ============ ИЗБРАННОЕ ============ */
+function updateFavoriteBtn(){
+  const btn = document.getElementById('favoriteBtn');
+  if(!btn || !currentCard) return;
+  const isFav = state.favoriteIndexes.includes(currentCard.idx);
+  btn.textContent = isFav ? '⭐' : '☆';
+  btn.classList.toggle('active', isFav);
+}
+function toggleFavorite(){
+  if(!currentCard) return;
+  const idx = currentCard.idx;
+  const pos = state.favoriteIndexes.indexOf(idx);
+  if(pos>=0){
+    state.favoriteIndexes.splice(pos,1);
+    showToast('Убрано из избранного');
+  } else {
+    state.favoriteIndexes.push(idx);
+    playSuccessSound();
+    showToast('Добавлено в избранное ⭐');
+  }
+  saveState();
+  updateFavoriteBtn();
+}
+document.getElementById('favoriteBtn').addEventListener('click', toggleFavorite);
+function updateFavoritesOnlyBtn(){
+  const btn = document.getElementById('favoritesOnlyBtn');
+  if(!btn) return;
+  btn.classList.toggle('on', !!state.favoritesOnly);
+  btn.setAttribute('aria-pressed', state.favoritesOnly ? 'true' : 'false');
+}
+document.getElementById('favoritesOnlyBtn').addEventListener('click', ()=>{
+  if(!state.favoritesOnly){
+    const elig = favoritesEligibility();
+    if(!elig.ok){
+      playErrorSound();
+      showToast(`Добавьте больше карточек: М добавлено ${elig.forM}, Ж добавлено ${elig.forF}`, 2000);
+      return;
+    }
+  }
+  state.favoritesOnly = !state.favoritesOnly;
+  saveState();
+  updateFavoritesOnlyBtn();
+});
+
+/* ============ СВОИ ЗАДАНИЯ ============ */
+let newCardType = 'truth';
+let newCardFor = '';
+function populateNewCardLevelSelect(){
+  const sel = document.getElementById('newCardLevel');
+  sel.innerHTML = LEVELS.map(l=>`<option value="${l.id}">${l.icon} ${l.name}</option>`).join('');
+}
+document.querySelectorAll('#newCardTypeGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    newCardType = btn.dataset.value;
+    document.querySelectorAll('#newCardTypeGroup .starter-btn').forEach(b=>b.classList.toggle('on', b===btn));
+  });
+});
+document.querySelectorAll('#newCardForGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    newCardFor = btn.dataset.value;
+    document.querySelectorAll('#newCardForGroup .starter-btn').forEach(b=>b.classList.toggle('on', b===btn));
+  });
+});
+function renderCustomCardsList(){
+  const wrap = document.getElementById('customCardsList');
+  const items = (state.customCards||[])
+    .map((c,i)=>({c,i}))
+    .filter(x=>!x.c.deleted);
+  if(items.length===0){ wrap.innerHTML = '<div class="custom-cards-empty">Своих заданий пока нет</div>'; return; }
+  wrap.innerHTML = items.map(({c,i})=>{
+    const lvl = levelById(c.level);
+    const forLabel = c.for==='M' ? ' · Мужчине' : c.for==='F' ? ' · Женщине' : '';
+    return `<div class="custom-card-row" data-i="${i}">
+      <div class="custom-card-text">${lvl ? lvl.icon : ''} ${c.text}${forLabel}</div>
+      <button type="button" class="custom-card-del" data-i="${i}" aria-label="Удалить">🗑</button>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.custom-card-del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const i = parseInt(btn.dataset.i, 10);
+      if(state.customCards[i]){
+        state.customCards[i].deleted = true;
+        saveState();
+        renderCustomCardsList();
+        showToast('Задание удалено');
+      }
+    });
+  });
+}
+document.getElementById('saveCardBtn').addEventListener('click', ()=>{
+  const textEl = document.getElementById('newCardText');
+  const text = textEl.value.trim();
+  if(text.length<3){
+    playErrorSound();
+    showToast('Напишите текст задания');
+    return;
+  }
+  const level = parseInt(document.getElementById('newCardLevel').value, 10);
+  const card = { level, type:newCardType, text };
+  if(newCardFor) card.for = newCardFor;
+  state.customCards.push(card);
+  saveState();
+  textEl.value = '';
+  renderCustomCardsList();
+  playSuccessSound();
+  showToast('Задание добавлено ✓');
+});
+document.getElementById('addCardBtn').addEventListener('click', ()=>{
+  populateNewCardLevelSelect();
+  renderCustomCardsList();
+  document.getElementById('addCardModal').classList.add('show');
+});
+document.getElementById('closeAddCardBtn').addEventListener('click', ()=>{
+  document.getElementById('addCardModal').classList.remove('show');
+});
+document.getElementById('addCardModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'addCardModal') e.currentTarget.classList.remove('show');
+});
+
+/* ============ СВАЙПЫ НА КАРТОЧКЕ ============ */
+(function setupSwipe(){
+  const cardEl = document.getElementById('card');
+  let startX = 0, startY = 0, tracking = false;
+  cardEl.addEventListener('touchstart', (e)=>{
+    if(e.touches.length!==1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, {passive:true});
+  cardEl.addEventListener('touchend', (e)=>{
+    if(!tracking || !currentCard) return;
+    tracking = false;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    const absX = Math.abs(dx), absY = Math.abs(dy);
+    const threshold = 70;
+    if(absX < threshold && absY < threshold) return; // обычный тап — игнорируем
+    if(absX > absY){
+      if(dx > 0){ playSuccessSound(); nextTurn(true); }
+      else { playFailSound(); nextTurn(false); }
+    } else {
+      if(dy < 0) dislikeCurrentCard();
+    }
+  }, {passive:true});
+})();
 
 /* ============ ИНИЦИАЛИЗАЦИЯ ============ */
 loadState();
 if(!getSortedActiveLevels().includes(state.levelCap)) state.levelCap = getSortedActiveLevels()[0];
 renderLevelToggles();
 renderStarterGroup();
+renderModeGroup();
 document.getElementById('name1').value = state.name1 || '';
 document.getElementById('name2').value = state.name2 || '';
 updateStarterLabels();
+updateMuteBtn();
+updateResumeUI();
+updateFavoritesOnlyBtn();
+populateNewCardLevelSelect();
 </script>
 </body>
 </html>
