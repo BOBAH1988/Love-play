@@ -1103,6 +1103,34 @@ function checkAutoLevelUp(){
   }
 }
 
+// Разбивает текст на предложения по точкам; если в конце остался кусок без
+// точки — он тоже считается отдельным "предложением" (обрежется первым).
+function splitIntoSentences(text){
+  const sentences = text.match(/[^.]+\.+/g) || [];
+  const matchedLength = sentences.join('').length;
+  if(matchedLength < text.length){
+    const rest = text.slice(matchedLength);
+    if(rest.trim()) sentences.push(rest);
+  }
+  return sentences;
+}
+
+// Если текст не влезает в контейнер — обрезает его с конца до ближайшей
+// точки (конца предложения), а не посреди слова/предложения.
+function fitTextToContainer(containerEl, textEl, fullText){
+  if(!containerEl || !textEl) return;
+  textEl.textContent = fullText;
+  if(containerEl.scrollHeight <= containerEl.clientHeight + 1) return;
+  const sentences = splitIntoSentences(fullText);
+  if(sentences.length <= 1) return; // обрезать некуда — точек нет
+  for(let count = sentences.length - 1; count >= 1; count--){
+    const truncated = sentences.slice(0, count).join('').trim();
+    textEl.textContent = truncated;
+    if(containerEl.scrollHeight <= containerEl.clientHeight + 1) return;
+  }
+  textEl.textContent = sentences[0].trim();
+}
+
 function fadeSwapCard(paintFn){
   const el = document.getElementById('card');
   const inner = el.querySelector('.card-inner');
@@ -1189,9 +1217,9 @@ function renderPhotoCard(card, level){
         <div class="card-split-media" id="placeholderMedia">
           <img src="${card.image}" alt="" id="placeholderImg">
         </div>
-        <div class="card-split-desc">
+        <div class="card-split-desc" id="placeholderDesc">
           ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
-          <div class="card-text">${card.text}</div>
+          <div class="card-text" id="placeholderText"></div>
         </div>
       </div>
     `;
@@ -1203,6 +1231,11 @@ function renderPhotoCard(card, level){
       });
       img.addEventListener('click', ()=>openImageZoom(card.image));
     }
+    fitTextToContainer(
+      document.getElementById('placeholderDesc'),
+      document.getElementById('placeholderText'),
+      card.text
+    );
   });
   updateFavoriteBtn();
 }
@@ -1531,8 +1564,8 @@ function renderCard(card){
         <div class="card-type-row">
           <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
         </div>
-        <div class="card-body">
-          <div class="card-text">${card.text}</div>
+        <div class="card-body" id="cardBody">
+          <div class="card-text" id="cardText"></div>
         </div>
         <div class="card-timer">
           <div class="timer-durations">
@@ -1552,6 +1585,11 @@ function renderCard(card){
     document.querySelectorAll('.timer-dur-btn').forEach(b=>{
       b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
     });
+    fitTextToContainer(
+      document.getElementById('cardBody'),
+      document.getElementById('cardText'),
+      card.text
+    );
   });
   updateFavoriteBtn();
 }
