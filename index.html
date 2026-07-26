@@ -1486,13 +1486,18 @@ function renderVideoCard(card, level){
   clearInterval(timerInterval);
   timerInterval = null;
   currentCard = null;
+  // Ссылки с Яндекс.Диска помечены как "скачать файлом" (Content-Disposition: attachment) —
+  // браузер отказывается проигрывать такой src напрямую в <video>. Поэтому для онлайн-видео
+  // сначала докачиваем файл через fetch (ему заголовок Content-Disposition не мешает) и
+  // проигрываем уже из blob-ссылки. Локальные файлы из video-roulette/ ставим в src как раньше.
+  const isOnline = /^https?:\/\//.test(card.video);
   fadeSwapCard((el)=>{
     el.className = 'card card-empty';
     el.style.borderTop = '';
     el.innerHTML = `
       <div class="card-inner video-layout">
         <div class="card-split-media" id="videoMedia">
-          <video src="${card.video}" id="videoPlayer" controls playsinline autoplay></video>
+          <video id="videoPlayer" controls playsinline autoplay${isOnline ? '' : ` src="${card.video}"`}></video>
         </div>
         <div class="video-caption">Повторяй за видео</div>
       </div>
@@ -1508,6 +1513,18 @@ function renderVideoCard(card, level){
       video.addEventListener('ended', ()=>{
         if(state.videoAutoAdvance) drawVideoCard(videoLevel);
       });
+      if(isOnline){
+        fetch(card.video)
+          .then(res => { if(!res.ok) throw new Error('status ' + res.status); return res.blob(); })
+          .then(blob => {
+            video.src = URL.createObjectURL(blob);
+            video.play().catch(()=>{});
+          })
+          .catch(()=>{
+            const media = document.getElementById('videoMedia');
+            if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+          });
+      }
     }
     updateVideoMuteBtn();
     updateVideoLoopBtn();
