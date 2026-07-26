@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Игра для двоих</title>
+
+<!-- iOS "как приложение": полноэкранный режим без сафари-панели -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Игра для двоих">
+<meta name="theme-color" content="#3a1030">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" href="data:image/png;base64,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">
+
+<style>
+  :root{
+    --bg1:#2b0f2e;
+    --bg2:#4a1240;
+    --card-bg:#fff;
+    --accent:#ff5e8e;
+    --gold:#ffd27a;
+    --btn-height:52px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{
+    height:100%;
+    height:100dvh;
+    width:100%;
+    overflow:hidden;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    overscroll-behavior:none;
+  }
+  body{
+    position:fixed;
+    inset:0;
+    height:100%;
+    height:100dvh;
+    width:100%;
+    margin:0;
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    color:#fff;
+    overflow:hidden;
+    overscroll-behavior:none;
+    -webkit-overflow-scrolling:auto;
+  }
+  /* Подстраховка от белой полосы под home indicator в standalone-режиме iOS:
+     фон растянут чуть за пределы экрана, чтобы перекрыть любые зазоры от dvh/safe-area */
+  body::before{
+    content:'';
+    position:fixed;
+    top:-4px; left:-4px; right:-4px; bottom:-4px;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    z-index:-1;
+  }
+  #app{
+    height:100%;
+    height:100dvh;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    position:relative;
+    overscroll-behavior:none;
+  }
+  .screen{
+    flex:1;
+    display:none;
+    flex-direction:column;
+    height:100%;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .screen.active{display:flex;}
+
+  h1.title{
+    text-align:center;
+    font-size:26px;
+    font-weight:800;
+    margin: 6px 0 2px;
+    letter-spacing:.3px;
+  }
+  .subtitle{
+    text-align:center;
+    color:#e8c9dd;
+    font-size:14px;
+    margin-bottom:18px;
+  }
+  .intro-text{
+    text-align:center;
+    color:#e8c9dd;
+    font-size:13px;
+    line-height:1.5;
+    margin:0 auto 16px;
+    max-width:320px;
+  }
+
+  /* ---- Setup screen ---- */
+  .field{margin-bottom:16px;}
+  .names-row{display:flex; flex-direction:row; gap:10px;}
+  .names-row .field{flex:1; min-width:0;}
+  @media (min-width:700px){
+    .names-row{gap:16px;}
+  }
+  .field label{
+    display:block; font-size:13px; color:#e8c9dd; margin-bottom:6px; font-weight:600;
+  }
+  .field input[type=text]{
+    width:100%; padding:12px 14px; border-radius:12px; border:none;
+    background:rgba(255,255,255,.12); color:#fff; font-size:16px;
+    outline:none; border:1px solid rgba(255,255,255,.2);
+  }
+  .field input[type=text]::placeholder{color:rgba(255,255,255,.5);}
+  .select-input, .textarea-input{
+    width:100%; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,.12); color:#fff; font-size:15px;
+    outline:none; border:1px solid rgba(255,255,255,.2); font-family:inherit;
+  }
+  .modal-card .select-input, .modal-card .textarea-input{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .modal-card .starter-btn{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .modal-card .starter-btn.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
+  .modal-card .btn-secondary{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .textarea-input{resize:vertical;}
+
+  .toggle-row{display:flex; gap:8px; margin-bottom:16px;}
+  .toggle-pill{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    color:#fff; border-radius:12px; padding:10px 8px; font-size:13px; font-weight:700;
+    cursor:pointer; text-align:center;
+  }
+  .toggle-pill.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
+
+  .levels{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
+  .level-toggle{
+    display:flex; flex-direction:column; align-items:flex-start;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:14px; padding:12px; cursor:pointer;
+    position:relative; min-height:82px;
+  }
+  .level-toggle.on{border-color:var(--accent); background:rgba(255,94,142,.18);}
+  .level-toggle .lname{font-weight:700; font-size:14px; padding-right:22px;}
+  .level-toggle .ldesc{font-size:11px; color:#e8c9dd; margin-top:3px; line-height:1.3;}
+  .level-check{
+    position:absolute; top:10px; right:10px; width:18px; height:18px; border-radius:50%;
+    border:2px solid rgba(255,255,255,.3); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .level-toggle.on .level-check{background:var(--accent); border-color:var(--accent);}
+  .level-toggle.on .level-check::after{
+    content:'✓'; font-size:11px; font-weight:900; color:#2b0f2e; line-height:1;
+  }
+
+  .starter-group{display:flex; gap:8px;}
+  .starter-btn{
+    flex:1; padding:12px 8px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);
+    color:#fff; font-weight:800; font-size:14px; cursor:pointer;
+  }
+  .starter-btn.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
+  .mode-btn{font-size:11.5px; padding:12px 4px; letter-spacing:-.1px;}
+
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    width:100%; text-align:center; padding:15px;
+    border-radius:16px; border:1px solid transparent; font-size:17px; font-weight:800; line-height:1.2;
+    cursor:pointer; -webkit-appearance:none; box-sizing:border-box;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,#ff5e8e,#ff8a5e);
+    color:#2b0f2e;
+    box-shadow:0 8px 20px rgba(255,94,142,.35);
+  }
+  .btn-secondary{
+    background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25);
+  }
+  .placeholder-label{
+    text-align:center; font-size:12px; font-weight:700; color:#cba0bf;
+    text-transform:uppercase; letter-spacing:.5px; margin-top:14px; margin-bottom:8px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .placeholder-label .placeholder-arrow{
+    display:inline-block; font-size:10px; transition:transform .2s ease;
+  }
+  #placeholderBlock.open .placeholder-arrow{transform:rotate(180deg);}
+  .placeholder-row{display:none; gap:10px;}
+  #placeholderBlock.open .placeholder-row{display:flex;}
+  .placeholder-row .btn{flex:1; padding:10px; font-size:14px;}
+  .btn-placeholder-a{
+    background:linear-gradient(135deg,#2fd4c4,#1fa8b8); color:#0a2b2e;
+    box-shadow:0 8px 20px rgba(47,212,196,.35);
+  }
+  .btn-placeholder-b{
+    background:linear-gradient(135deg,#8a6bff,#c07bff); color:#22103f;
+    box-shadow:0 8px 20px rgba(138,107,255,.35);
+  }
+  .btn-ghost{
+    background:transparent; color:#e8c9dd; text-decoration:underline; font-weight:600; font-size:14px;
+  }
+  .btn:active{transform:scale(.98);}
+
+  /* ---- Game screen ---- */
+  .score-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-size:25px; color:#cba0bf; margin-bottom:4px;
+  }
+  .score-row #score1, .score-row #score2{white-space:nowrap;}
+  .level-progress{
+    text-align:center; font-size:11px; color:#cba0bf; min-height:14px; margin-bottom:6px;
+  }
+
+  .card-area{
+    flex:1;
+    display:flex;
+    align-items:stretch;
+    justify-content:center;
+    perspective:1200px;
+    min-height:0;
+  }
+  .card{
+    width:100%;
+    max-width:340px;
+    margin:calc(var(--btn-height) / 2) 0;
+    border-radius:24px;
+    background:var(--card-bg);
+    color:#2b0f2e;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:flex-start;
+    padding:20px 22px 26px;
+    text-align:center;
+    box-shadow:0 20px 50px rgba(0,0,0,.45);
+    position:relative;
+    transform-style:preserve-3d;
+  }
+  .card-inner{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    min-height:0;
+    opacity:1;
+    transform:translateY(0);
+    transition:opacity .22s ease, transform .22s ease;
+  }
+  .card-inner.card-hidden{
+    opacity:0;
+    transform:translateY(6px);
+  }
+  .card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding-bottom:10px;
+    margin-bottom:10px;
+    border-bottom:2px solid rgba(43,15,46,.1);
+  }
+  .card .badge{
+    display:flex; flex-direction:column; align-items:flex-end;
+    gap:6px;
+  }
+  .card-turn{
+    text-align:left;
+  }
+  .card-turn-label{
+    font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:#9b7a92;
+  }
+  .card-turn-name{
+    font-size:19px; font-weight:800; color:#2b0f2e;
+  }
+  .level-pill{
+    font-size:13px; font-weight:800; padding:6px 12px; border-radius:20px; color:#fff;
+    letter-spacing:.3px;
+  }
+  .type-pill{
+    font-size:15px; font-weight:800; padding:7px 13px; border-radius:20px;
+    background:rgba(0,0,0,.08); color:#2b0f2e;
+  }
+  .card-type-row{
+    display:flex; justify-content:center; margin-bottom:14px;
+  }
+  .card-body{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:0;
+  }
+  .card-icon{font-size:38px; margin-bottom:10px; margin-top:10px;}
+  .card-text{
+    font-size:19px; font-weight:700; line-height:1.4;
+  }
+  .card-empty .card-inner{align-items:center; justify-content:center;}
+  .card-empty .card-icon{font-size:52px;}
+  .card-empty .card-text{font-size:16px; color:#7a5a72; font-weight:600;}
+
+  .card-split{display:flex; flex-direction:column; height:100%; gap:14px;}
+  .card-split-media{
+    flex:1; min-height:0; border-radius:16px; overflow:hidden;
+    background:rgba(43,15,46,.06);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card-split-media img{width:100%; height:100%; object-fit:cover; display:block;}
+  .card-split-media .card-icon{margin:0; font-size:48px;}
+  .card-split-desc{
+    flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:0 4px; gap:6px; overflow-y:auto;
+  }
+  .card-split-title{
+    font-size:17px; font-weight:800; color:#2b0f2e;
+  }
+
+  #game.placeholder-mode .score-row{display:none;}
+  #game.placeholder-mode #skipBtn{display:none;}
+  #game.placeholder-mode #refreshBtn{display:none;}
+  #game.placeholder-mode #favoriteBtn{
+    flex:0 0 auto; width:auto; padding:0 16px; font-size:20px;
+  }
+  #game.placeholder-mode #favoriteBtn.active{
+    background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25);
+  }
+  #levelDownBtn{display:none;}
+  #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
+  #shareBtn{display:none;}
+  #game.placeholder-mode #shareBtn{display:flex;}
+
+  .card-timer{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding-top:12px; margin-top:8px;
+    border-top:2px solid rgba(43,15,46,.08);
+  }
+  .timer-durations{display:flex; gap:8px;}
+  .timer-dur-btn{
+    background:rgba(0,0,0,.06); border:none; border-radius:16px;
+    padding:5px 12px; font-size:12px; font-weight:800; cursor:pointer; color:#7a5a72;
+  }
+  .timer-dur-btn.on{background:var(--accent); color:#2b0f2e;}
+  .timer-controls{display:flex; align-items:center; justify-content:center; gap:12px;}
+  .timer-display{
+    font-size:20px; font-weight:800; color:#2b0f2e;
+    font-variant-numeric:tabular-nums; min-width:58px; text-align:center;
+  }
+  .timer-btn{
+    background:rgba(0,0,0,.06); border:none; border-radius:20px;
+    padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; color:#2b0f2e;
+  }
+  .timer-btn.running{background:var(--accent);}
+  .timer-btn:active{transform:scale(.96);}
+
+  @keyframes timerPulse{
+    0%,100%{ transform:scale(1); color:#2b0f2e; }
+    50%{ transform:scale(1.35); color:var(--accent); }
+  }
+  .timer-display.done{
+    animation: timerPulse .5s ease-in-out 4;
+  }
+  @keyframes cardShake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-8px); }
+    40%{ transform:translateX(8px); }
+    60%{ transform:translateX(-6px); }
+    80%{ transform:translateX(6px); }
+  }
+  .card.done-shake{
+    animation: cardShake .4s ease-in-out 1;
+  }
+
+  .controls{
+    margin-top:8px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .row1{display:flex; gap:10px;}
+  .row1 #doneBtn{flex:1;}
+  .row1 #skipBtn{
+    flex:0 0 auto; width:auto; padding:0 14px; font-size:14px;
+    background:linear-gradient(135deg,#0f3d63,#1c6ea4); color:#fff; border-color:transparent;
+    box-shadow:0 8px 20px rgba(15,61,99,.35);
+  }
+  .row1 .btn.btn-square{
+    flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:22px;
+  }
+  #favoriteBtn.active{
+    background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00; border-color:transparent;
+  }
+  .row2{display:flex; gap:8px; align-items:stretch;}
+  .row2 .btn{flex:1; height:40px; padding:0 10px;}
+  .row2 #levelUpBtn{flex:1; font-size:14px;}
+  .row2 .btn.btn-square{
+    flex:0 0 40px; width:40px; height:40px; padding:0; font-size:17px;
+  }
+  .row2 .btn.btn-square.btn-text-square{
+    font-size:10px; font-weight:800; letter-spacing:.3px; padding:0 2px;
+    text-transform:uppercase;
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  .row2 #pauseBtn{
+    flex:0 0 auto; width:auto; padding:0 12px; font-size:11px; text-transform:none;
+  }
+
+  .toast{
+    position:fixed; left:50%; top:calc(env(safe-area-inset-top, 0px) + 16px);
+    transform:translateX(-50%) translateY(-20px);
+    background:rgba(0,0,0,.85); color:#fff; padding:10px 18px; border-radius:20px;
+    font-size:13px; opacity:0; transition:all .3s ease; pointer-events:none; z-index:250;
+    white-space:nowrap;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .resume-row{display:none; gap:10px; margin-bottom:10px;}
+  .resume-row.show{display:flex;}
+  .resume-row .btn{flex:1;}
+
+  .locked-settings{opacity:.4; cursor:not-allowed;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(20,6,20,.7);
+    display:none; align-items:center; justify-content:center;
+    padding:20px; z-index:200;
+  }
+  .modal-overlay.show{display:flex;}
+  #imageZoomModal{background:rgba(10,3,10,.95); padding:20px; z-index:260;}
+  #imageZoomModal img{max-width:100%; max-height:100%; object-fit:contain; border-radius:12px;}
+  .modal-card{
+    background:var(--card-bg); color:#2b0f2e; border-radius:22px;
+    padding:26px 22px; max-width:360px; width:100%; max-height:80vh; overflow-y:auto;
+    overscroll-behavior:contain;
+    box-shadow:0 20px 50px rgba(0,0,0,.5);
+  }
+  .modal-title{font-size:20px; font-weight:800; text-align:center; margin-bottom:16px;}
+  .modal-card .intro-text{color:#5c3a52; max-width:none;}
+  .modal-rules{
+    margin:0 0 20px; padding-left:20px;
+    display:flex; flex-direction:column; gap:11px;
+    font-size:14px; line-height:1.5; text-align:left; color:#3a2438;
+  }
+  .modal-rules li{padding-left:4px;}
+  .summary-stats{
+    display:flex; flex-direction:column; gap:10px; margin-bottom:22px; text-align:center;
+  }
+  .summary-row{font-size:16px; font-weight:700; color:#3a2438;}
+  .custom-cards-list{margin-top:16px; display:flex; flex-direction:column; gap:8px;}
+  .custom-cards-empty{font-size:13px; color:#8a6a80; text-align:center; padding:8px 0;}
+  .custom-card-row{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(43,15,46,.06); border-radius:12px; padding:8px 10px;
+  }
+  .custom-card-text{flex:1; font-size:13px; color:#3a2438; line-height:1.35; text-align:left;}
+  .custom-card-del{
+    flex:0 0 auto; background:none; border:none; font-size:16px; cursor:pointer; padding:4px;
+  }
+  .icon-btn{
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    color:#fff; border-radius:12px; padding:8px 12px; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .icon-btn:disabled{opacity:.5; cursor:default;}
+  .btn:disabled{opacity:.5; cursor:default;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== SETUP SCREEN ===== -->
+  <section id="setup" class="screen active">
+    <h1 class="title">💕 Игра для двоих</h1>
+    <div class="subtitle">Разожгите страсть и почувствуйте друг друга заново</div>
+
+    <div class="names-row">
+      <div class="field">
+        <label>Имя мужчины</label>
+        <input type="text" id="name1" placeholder="Men" minlength="2" maxlength="10">
+      </div>
+      <div class="field">
+        <label>Имя женщины</label>
+        <input type="text" id="name2" placeholder="Sexy" minlength="2" maxlength="10">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Режим игры</label>
+      <div class="starter-group" id="modeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="romantic">Романтический</button>
+        <button type="button" class="starter-btn mode-btn" data-value="hot">Страстный</button>
+        <button type="button" class="starter-btn mode-btn" data-value="custom">Пользовательский</button>
+      </div>
+    </div>
+
+    <div class="field" id="levelsField">
+      <label>Уровни заданий</label>
+      <div class="levels" id="levelToggles"></div>
+    </div>
+
+    <div class="field" id="starterField">
+      <label>Первым начинает</label>
+      <div class="starter-group" id="starterGroup">
+        <button type="button" class="starter-btn" data-value="M">М</button>
+        <button type="button" class="starter-btn" data-value="F">Ж</button>
+        <button type="button" class="starter-btn" data-value="random">Случайно</button>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <button type="button" class="toggle-pill" id="muteBtn" aria-label="Выключить звук">🔊 Звук включён</button>
+      <button type="button" class="toggle-pill" id="favoritesOnlyBtn" aria-pressed="false">⭐ Только избранное</button>
+    </div>
+
+    <div class="resume-row" id="resumeRow">
+      <button class="btn btn-primary" id="resumeBtn">Продолжить игру</button>
+      <button class="btn btn-secondary" id="finishGameBtn">Закончить игру</button>
+    </div>
+    <button class="btn btn-primary" id="startBtn">Начать новую игру</button>
+    <div id="placeholderBlock">
+      <div class="placeholder-label" id="placeholderToggle">Дополнительные игры <span class="placeholder-arrow">▾</span></div>
+      <div class="placeholder-row">
+        <button type="button" class="btn btn-placeholder-a" id="placeholderBtn1">Давай попробуем</button>
+        <button type="button" class="btn btn-placeholder-b" id="placeholderBtn2">В разработке</button>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:10px;">
+      <span class="btn-ghost" id="rulesBtn">Правила игры</span>
+      <span class="btn-ghost" id="addCardBtn">Своё задание</span>
+      <span class="btn-ghost" id="resetHiddenBtn">Сбросить прогресс</span>
+      <span class="btn-ghost" id="installBtn">⬇ Установить</span>
+    </div>
+  </section>
+
+  <!-- ===== GAME SCREEN ===== -->
+  <section id="game" class="screen">
+    <div class="score-row">
+      <span id="score1">Men: 0</span>
+      <span id="score2">Sexy: 0</span>
+    </div>
+    <div class="level-progress" id="levelProgress"></div>
+
+    <div class="card-area">
+      <div class="card card-empty" id="card">
+        <div class="card-icon">🃏</div>
+        <div class="card-text">Загрузка задания…</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="row1">
+        <button class="btn btn-primary" id="doneBtn">💕 Готово</button>
+        <button class="btn btn-secondary" id="skipBtn">❄️ Отказ</button>
+        <button type="button" class="btn btn-secondary btn-square" id="favoriteBtn" aria-label="В избранное">☆</button>
+      </div>
+      <div class="row2">
+        <button class="btn btn-secondary" id="levelUpBtn">🔥 Повысить уровень</button>
+        <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Понизить уровень">Легче</button>
+        <button type="button" class="btn btn-secondary btn-square" id="refreshBtn" aria-label="Новое задание для этого же игрока">🔄</button>
+        <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">👎</button>
+        <button type="button" class="btn btn-secondary btn-square" id="shareBtn" aria-label="Поделиться">⤴️</button>
+        <button type="button" class="btn btn-secondary btn-square btn-text-square" id="pauseBtn" aria-label="Пауза">Пауза</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ===== ПРАВИЛА ИГРЫ ===== -->
+  <div class="modal-overlay" id="rulesModal">
+    <div class="modal-card">
+      <div class="modal-title">💕 Правила игры</div>
+      <div class="intro-text">Игра подходит для любого уровня отношений — от самого знакомства до самых смелых исполнений желаний, а можно просто внести немного новизны в семейную жизнь.</div>
+      <ol class="modal-rules">
+        <li>Примите душ и разложите под рукой всё самое интересное — взбитые сливки, повязку на глаза, лубрикант, любимые игрушки. Пусть искушение будет на расстоянии вытянутой руки.</li>
+        <li>Откупорьте бутылку вина, приглушите свет и включите чувственную музыку — пусть атмосфера сама подталкивает вас друг к другу.</li>
+        <li>Отключите телефоны — сегодня вечер только для вас двоих.</li>
+        <li>Тяните карточки по очереди и раскрывайтесь друг перед другом: «Правда» — для откровенных признаний, «Действие» — для смелых поступков.</li>
+        <li>Задание смущает или пока не по силам? Смело жмите «Отказ» — колода подкинет следующее, но балл за этот ход упущен.</li>
+        <li>Задание совсем не ваше? Нажмите 👎 — и оно исчезнет из игры навсегда, никаких неловких повторений.</li>
+        <li>Что-то особенно зацепило? Нажмите ☆ — сохраните находку в избранном и вернитесь к ней в другой раз.</li>
+        <li>Чувствуете, как разгорается огонёк? Жмите «Повысить уровень» — и игра станет ещё смелее.</li>
+        <li>Нужна передышка? «Пауза» сохранит счёт и уровень — вернётесь и продолжите с того же места. А захотите завершить вечер — «Закончить игру» покажет итог.</li>
+        <li>Говорите друг с другом открыто и берегите границы партнёра — остановиться можно в любой момент, и это нормально.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="summaryModal">
+    <div class="modal-card">
+      <div class="modal-title">Игра завершена</div>
+      <div class="summary-stats">
+        <div class="summary-row" id="summaryWinner"></div>
+        <div class="summary-row" id="summaryScore"></div>
+        <div class="summary-row" id="summaryCounts"></div>
+      </div>
+      <button class="btn btn-primary" id="closeSummaryBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== УСТАНОВКА НА ЭКРАН ДОМОЙ ===== -->
+  <div class="modal-overlay" id="installModal">
+    <div class="modal-card">
+      <div class="modal-title">Установка на телефон</div>
+      <ol class="modal-rules">
+        <li>Откройте это приложение в Safari (не в другом браузере).</li>
+        <li>Нажмите кнопку «Поделиться» внизу экрана — квадрат со стрелкой вверх.</li>
+        <li>В списке выберите «На экран «Домой»».</li>
+        <li>Нажмите «Добавить» — иконка появится на главном экране и будет открываться как обычное приложение.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeInstallBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== СВОЁ ЗАДАНИЕ ===== -->
+  <div class="modal-overlay" id="addCardModal">
+    <div class="modal-card">
+      <div class="modal-title">➕ Своё задание</div>
+      <div class="field">
+        <label>Уровень</label>
+        <select id="newCardLevel" class="select-input"></select>
+      </div>
+      <div class="field">
+        <label>Тип</label>
+        <div class="starter-group" id="newCardTypeGroup">
+          <button type="button" class="starter-btn on" data-value="truth">Правда</button>
+          <button type="button" class="starter-btn" data-value="dare">Действие</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Для кого</label>
+        <div class="starter-group" id="newCardForGroup">
+          <button type="button" class="starter-btn on" data-value="">Общее</button>
+          <button type="button" class="starter-btn" data-value="M">Мужчине</button>
+          <button type="button" class="starter-btn" data-value="F">Женщине</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Текст задания</label>
+        <textarea id="newCardText" class="textarea-input" rows="3" maxlength="300" placeholder="Напишите вопрос или задание..."></textarea>
+      </div>
+      <button class="btn btn-primary" id="saveCardBtn">Сохранить</button>
+      <div class="custom-cards-list" id="customCardsList"></div>
+      <button class="btn btn-secondary" id="exportCardsBtn" style="margin-top:12px;">Скачать свои задания</button>
+      <button class="btn btn-secondary" id="importCardsBtn" style="margin-top:10px;">Загрузить свои задания</button>
+      <input type="file" id="importCardsInput" accept=".js,.txt,text/plain,application/javascript" style="display:none;">
+      <button class="btn btn-primary" id="closeAddCardBtn" style="margin-top:12px;">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРОСМОТР ФОТО НА ВЕСЬ ЭКРАН ===== -->
+  <div class="modal-overlay" id="imageZoomModal">
+    <img src="" alt="" id="zoomedImage">
+  </div>
+</div>
+
+<script src="cards.js"></script>
+<script src="user_cards.js"></script>
+<script src="photo-mode/photo_cards.js"></script>
+<script>
+/* ============ ДАННЫЕ КАРТ ============ */
+const LEVELS = [
+  {id:1, key:'meet', name:'Знакомство', desc:'Лёгкие вопросы для начала', color:'#8fd9c4', icon:'🤝'},
+  {id:2, key:'romance', name:'Романтика', desc:'Нежность и тёплые слова', color:'#ff9fb0', icon:'💗'},
+  {id:3, key:'sensual', name:'Сближение', desc:'Прикосновения и близость', color:'#b07bff', icon:'🔥'},
+  {id:4, key:'flirt', name:'Разогрев', desc:'Игривые поддразнивания', color:'#ff9a5e', icon:'💋'},
+  {id:5, key:'hot', name:'Откровенно 18+', desc:'Самое смелое', color:'#ff3b5c', icon:'🌶️'},
+  {id:6, key:'fantasy', name:'Фантазии', desc:'Самые смелые мечты', color:'#7a5cff', icon:'💫'},
+];
+
+/* ============ СОСТОЯНИЕ ============ */
+const STORAGE_KEY = 'couple-game-state-v1';
+let state = {
+  name1:'', name2:'', activeLevels:[1,2,3,4,5],
+  starter:'random',
+  gameMode:'custom', autoMilestone:0, turnsPlayed:0, turnsAtLastLevelUp:0,
+  currentPlayer:1, score1:0, score2:0,
+  levelCap:1, usedIndexes:[], hiddenIndexes:[],
+  muted:false, inProgress:false, completedCount:0, skippedCount:0,
+  customCards:[], favoriteIndexes:[], favoritesOnly:false,
+  photoUsed:{}, photoHidden:[], photoDone:[]
+};
+
+/* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
+function pickStartingPlayer(){
+  if(state.starter==='M') return 1;
+  if(state.starter==='F') return 2;
+  return Math.random() < 0.5 ? 1 : 2;
+}
+function currentGender(){ return state.currentPlayer===1 ? 'M' : 'F'; }
+function getSortedActiveLevels(){ return [...state.activeLevels].sort((a,b)=>a-b); }
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ const s = JSON.parse(raw); state = Object.assign(state, s); }
+  }catch(e){}
+}
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+/* ============ УТИЛИТЫ ============ */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function showToast(msg, duration){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(()=>t.classList.remove('show'), duration || 1800);
+}
+// Правило для «Только избранное»: либо 10+ карточек на двоих, либо минимум по 5 карточек,
+// доступных каждому партнёру отдельно (общая карточка засчитывается обоим).
+function favoritesEligibility(){
+  const all = getAllCards();
+  const favs = (state.favoriteIndexes||[]).map(i=>all[i]).filter(Boolean);
+  const total = favs.length;
+  const forM = favs.filter(c=>!c.for || c.for==='M').length;
+  const forF = favs.filter(c=>!c.for || c.for==='F').length;
+  const ok = total>=10 || (forM>=5 && forF>=5);
+  return { ok, total, forM, forF };
+}
+function levelById(id){ return LEVELS.find(l=>l.id===id); }
+
+/* ============ WAKE LOCK (экран не гаснет во время игры) ============ */
+let wakeLock = null;
+async function requestWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  }catch(e){ /* недоступно — просто игнорируем */ }
+}
+function releaseWakeLockNow(){
+  if(wakeLock){
+    try{ wakeLock.release(); }catch(e){}
+    wakeLock = null;
+  }
+}
+document.addEventListener('visibilitychange', ()=>{
+  const gameScreen = document.getElementById('game');
+  if(document.visibilityState === 'visible' && gameScreen && gameScreen.classList.contains('active')){
+    requestWakeLock();
+  }
+});
+
+/* ============ SETUP SCREEN ============ */
+function renderLevelToggles(){
+  const wrap = document.getElementById('levelToggles');
+  wrap.innerHTML = '';
+  LEVELS.forEach(l=>{
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (state.activeLevels.includes(l.id) ? ' on' : '');
+    div.dataset.id = l.id;
+    div.innerHTML = `
+      <div class="lname">${l.icon} ${l.name}</div>
+      <div class="ldesc">${l.desc}</div>
+      <div class="level-check"></div>
+    `;
+    div.addEventListener('click', ()=>{
+      const id = l.id;
+      const idx = state.activeLevels.indexOf(id);
+      if(idx>=0){
+        if(state.activeLevels.length>1) state.activeLevels.splice(idx,1);
+        else showToast('Нужен хотя бы один уровень');
+      } else {
+        state.activeLevels.push(id);
+      }
+      renderLevelToggles();
+    });
+    wrap.appendChild(div);
+  });
+}
+
+function renderStarterGroup(){
+  document.querySelectorAll('#starterGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === state.starter);
+  });
+}
+document.querySelectorAll('#starterGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.starter = btn.dataset.value;
+    renderStarterGroup();
+  });
+});
+
+function renderModeGroup(){
+  document.querySelectorAll('#modeGroup .mode-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === state.gameMode);
+  });
+}
+document.querySelectorAll('#modeGroup .mode-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.gameMode = btn.dataset.value;
+    if(state.gameMode === 'romantic') state.activeLevels = [1,2,3,4];
+    else if(state.gameMode === 'hot') state.activeLevels = [3,4,5,6];
+    renderModeGroup();
+    renderLevelToggles();
+  });
+});
+
+function updateStarterLabels(){
+  const n1 = document.getElementById('name1');
+  const n2 = document.getElementById('name2');
+  const label1 = (n1.value.trim() || n1.placeholder || 'М');
+  const label2 = (n2.value.trim() || n2.placeholder || 'Ж');
+  document.querySelector('#starterGroup .starter-btn[data-value="M"]').textContent = label1;
+  document.querySelector('#starterGroup .starter-btn[data-value="F"]').textContent = label2;
+}
+document.getElementById('name1').addEventListener('input', updateStarterLabels);
+document.getElementById('name2').addEventListener('input', updateStarterLabels);
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  if((n1raw && n1raw.length<2) || (n2raw && n2raw.length<2)){
+    playErrorSound();
+    showToast('Имя должно быть не короче 2 символов');
+    return;
+  }
+  if(state.favoritesOnly){
+    const elig = favoritesEligibility();
+    if(!elig.ok){
+      playErrorSound();
+      showToast(`Добавьте больше карточек: М добавлено ${elig.forM}, Ж добавлено ${elig.forF}`, 2000);
+      return;
+    }
+  }
+  playSuccessSound();
+  state.name1 = n1raw || 'Men';
+  state.name2 = n2raw || 'Sexy';
+  state.currentPlayer = pickStartingPlayer();
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.levelCap = getSortedActiveLevels()[0];
+  state.inProgress = true;
+  saveState();
+  goToGame();
+});
+document.getElementById('placeholderToggle').addEventListener('click', ()=>{
+  document.getElementById('placeholderBlock').classList.toggle('open');
+});
+document.getElementById('placeholderBtn1').addEventListener('click', ()=>{
+  playSuccessSound();
+  goToPlaceholderGame();
+});
+document.getElementById('placeholderBtn2').addEventListener('click', ()=>{
+  showToast('В разработке — скоро будет доступно');
+});
+
+document.getElementById('resumeBtn').addEventListener('click', ()=>{
+  goToGame();
+});
+
+
+document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
+  state.hiddenIndexes = [];
+  state.usedIndexes = [];
+  saveState();
+  showToast('Прогресс сброшен: скрытые карточки возвращены');
+});
+
+/* ============ ПОДБОР КАРТ ============ */
+function getAllCards(){
+  // Порядок важен: customCards идут сразу за CARDS (как и раньше), чтобы не сбить уже
+  // сохранённые индексы usedIndexes/hiddenIndexes/favoriteIndexes. USER_CARDS — новые,
+  // добавляются в конец и ни на что старое не влияют.
+  const userCards = (typeof USER_CARDS !== 'undefined' && Array.isArray(USER_CARDS)) ? USER_CARDS : [];
+  return CARDS.concat(state.customCards||[]).concat(userCards);
+}
+function scopeIndexes(forceLevel){
+  const all = getAllCards();
+  return all
+    .map((c,i)=>i)
+    .filter(i=>{
+      const c = all[i];
+      if(c.deleted) return false;
+      if(state.favoritesOnly && !state.favoriteIndexes.includes(i)) return false;
+      if(forceLevel) return c.level === forceLevel;
+      return c.level === state.levelCap;
+    });
+}
+function drawFromPool(forceLevel){
+  const all = getAllCards();
+  const gender = currentGender();
+  const scope = scopeIndexes(forceLevel).filter(i=>!state.hiddenIndexes.includes(i));
+  let pool = scope
+    .map(i=>({...all[i], idx:i}))
+    .filter(c => !c.for || c.for===gender)
+    .filter(c => !state.usedIndexes.includes(c.idx));
+
+  if(pool.length===0){
+    // сбрасываем "использованные" только в рамках текущей области видимости (уровни + пол)
+    const scopeSet = new Set(scope);
+    state.usedIndexes = state.usedIndexes.filter(i=>!scopeSet.has(i));
+    pool = scope
+      .map(i=>({...all[i], idx:i}))
+      .filter(c => !c.for || c.for===gender);
+    if(pool.length>0) showToast('Колода перемешана заново 🔀');
+  }
+  if(pool.length===0) return null;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+/* ============ GAME SCREEN ============ */
+function goToGame(){
+  state.inProgress = true;
+  saveState();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.remove('placeholder-mode');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('doneBtn').textContent = '💕 Готово';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
+  updateTurnUI();
+  updateLevelUI();
+  updateMuteBtn();
+  requestWakeLock();
+  drawCard();
+}
+function isPlaceholderMode(){
+  const el = document.getElementById('game');
+  return !!(el && el.classList.contains('placeholder-mode'));
+}
+function returnToSetupUI(){
+  document.getElementById('game').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  document.getElementById('name1').value = state.name1 || '';
+  document.getElementById('name2').value = state.name2 || '';
+  updateStarterLabels();
+  renderModeGroup();
+  renderLevelToggles();
+  updateResumeUI();
+  releaseWakeLockNow();
+}
+// Пауза: выйти в настройки, не сбрасывая счёт и прогресс — можно продолжить позже
+function pauseGame(){
+  saveState();
+  returnToSetupUI();
+}
+// Полный сброс (после завершения игры и просмотра итогов)
+function goToSetup(){
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.inProgress = false;
+  saveState();
+  returnToSetupUI();
+}
+function updateSettingsLockUI(){
+  const locked = !!state.inProgress;
+  ['modeGroup','favoritesOnlyBtn'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('locked-settings', locked);
+  });
+  // «Уровни заданий», «Первым начинает» и «Дополнительные игры» не относятся к уже идущей
+  // партии — во время паузы просто скрываем их, а не блокируем.
+  ['levelsField','starterField','placeholderBlock'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = locked ? 'none' : '';
+  });
+}
+// Клик по заблокированным во время паузы настройкам — подсказка вместо тишины
+document.addEventListener('click', (e)=>{
+  const lockedEl = e.target.closest('.locked-settings');
+  if(lockedEl){
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    showToast('Завершите игру, чтобы изменить настройки', 2000);
+  }
+}, true);
+function updateResumeUI(){
+  const row = document.getElementById('resumeRow');
+  if(row) row.classList.toggle('show', !!state.inProgress);
+  updateSettingsLockUI();
+}
+
+function updateTurnUI(){
+  document.getElementById('score1').textContent = `${state.name1}: ${state.score1}`;
+  document.getElementById('score2').textContent = `${state.name2}: ${state.score2}`;
+  updateLevelProgressUI();
+}
+
+function updateMuteBtn(){
+  const btn = document.getElementById('muteBtn');
+  if(!btn) return;
+  btn.textContent = state.muted ? '🔇 Звук выключен' : '🔊 Звук включён';
+  btn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
+  btn.classList.toggle('on', !!state.muted);
+}
+document.getElementById('muteBtn').addEventListener('click', ()=>{
+  state.muted = !state.muted;
+  saveState();
+  updateMuteBtn();
+});
+
+function updateLevelUI(){
+  const btn = document.getElementById('levelUpBtn');
+  if(isPlaceholderMode()){
+    btn.disabled = false;
+    btn.textContent = 'Сложнее';
+    const el = document.getElementById('levelProgress');
+    if(el) el.textContent = '';
+    return;
+  }
+  const levels = getSortedActiveLevels();
+  const isMax = levels.indexOf(state.levelCap) === levels.length-1;
+  btn.disabled = isMax;
+  btn.textContent = isMax ? 'Максимальный уровень' : '🔥 Повысить уровень';
+  updateLevelProgressUI();
+}
+
+function updateLevelProgressUI(){
+  const el = document.getElementById('levelProgress');
+  if(!el) return;
+  const levels = getSortedActiveLevels();
+  const isMax = levels.indexOf(state.levelCap) === levels.length-1;
+  if(isMax){ el.textContent = ''; return; }
+  if(state.gameMode === 'romantic'){
+    const target = ((state.autoMilestone||0)+1)*10;
+    const cur = Math.min(state.score1, state.score2);
+    el.textContent = `До след. уровня: ${Math.max(0, target-cur)} очк. (у обоих партнёров)`;
+  } else if(state.gameMode === 'hot'){
+    if(!state.autoMilestone){
+      const cur = Math.max(state.score1, state.score2);
+      el.textContent = `До след. уровня: ${Math.max(0, 5-cur)} очк.`;
+    } else {
+      const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
+      el.textContent = `До след. уровня: ${Math.max(0, 10-since)} карт`;
+    }
+  } else {
+    el.textContent = '';
+  }
+}
+
+function advanceLevel(){
+  const levels = getSortedActiveLevels();
+  const idx = levels.indexOf(state.levelCap);
+  if(idx>=0 && idx<levels.length-1){
+    playLevelUpSound();
+    state.levelCap = levels[idx+1];
+    saveState();
+    updateLevelUI();
+    const lvl = levelById(state.levelCap);
+    showToast(`Уровень повышен для обоих: ${lvl.icon} ${lvl.name}`);
+    return true;
+  }
+  return false;
+}
+function levelUp(){
+  if(advanceLevel()){
+    drawCard(state.levelCap);
+  } else {
+    showToast('Это максимальный уровень 🔥');
+  }
+}
+function checkAutoLevelUp(){
+  if(state.gameMode === 'romantic'){
+    const milestone = Math.floor(Math.min(state.score1, state.score2)/10);
+    if(milestone > (state.autoMilestone||0)){
+      state.autoMilestone = milestone;
+      advanceLevel();
+    }
+  } else if(state.gameMode === 'hot'){
+    if(!state.autoMilestone){
+      // первое повышение — как только любой игрок набирает 5 очков
+      if(Math.max(state.score1, state.score2) >= 5){
+        if(advanceLevel()){
+          state.autoMilestone = 1;
+          state.turnsAtLastLevelUp = state.turnsPlayed||0;
+        }
+      }
+    } else {
+      // далее — каждое следующее повышение через 10 сыгранных карт
+      const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
+      if(since >= 10){
+        if(advanceLevel()){
+          state.autoMilestone++;
+          state.turnsAtLastLevelUp = state.turnsPlayed||0;
+        }
+      }
+    }
+  }
+}
+
+// Разбивает текст на предложения по точкам; если в конце остался кусок без
+// точки — он тоже считается отдельным "предложением" (обрежется первым).
+function splitIntoSentences(text){
+  const sentences = text.match(/[^.]+\.+/g) || [];
+  const matchedLength = sentences.join('').length;
+  if(matchedLength < text.length){
+    const rest = text.slice(matchedLength);
+    if(rest.trim()) sentences.push(rest);
+  }
+  return sentences;
+}
+
+// Если текст не влезает в контейнер — обрезает его с конца до ближайшей
+// точки (конца предложения), а не посреди слова/предложения.
+function fitTextToContainer(containerEl, textEl, fullText){
+  if(!containerEl || !textEl) return;
+  textEl.textContent = fullText;
+  if(containerEl.scrollHeight <= containerEl.clientHeight + 1) return;
+  const sentences = splitIntoSentences(fullText);
+  if(sentences.length <= 1) return; // обрезать некуда — точек нет
+  for(let count = sentences.length - 1; count >= 1; count--){
+    const truncated = sentences.slice(0, count).join('').trim();
+    textEl.textContent = truncated;
+    if(containerEl.scrollHeight <= containerEl.clientHeight + 1) return;
+  }
+  textEl.textContent = sentences[0].trim();
+}
+
+function fadeSwapCard(paintFn){
+  const el = document.getElementById('card');
+  const inner = el.querySelector('.card-inner');
+  const doPaint = ()=>{
+    paintFn(el); // задаёт className карточки и innerHTML, обёрнутый в .card-inner
+    const newInner = el.querySelector('.card-inner');
+    if(newInner){
+      newInner.classList.add('card-hidden');
+      void newInner.offsetWidth; // форсируем перерасчёт стилей перед снятием класса
+      requestAnimationFrame(()=>{
+        newInner.classList.remove('card-hidden');
+      });
+    }
+  };
+  if(inner){
+    inner.classList.add('card-hidden');
+    setTimeout(doPaint, 220);
+  } else {
+    doPaint();
+  }
+}
+
+function renderNoCards(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  fadeSwapCard((card)=>{
+    card.className = 'card card-empty';
+    card.style.borderTop = '';
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🃏</div><div class="card-text">Нет доступных заданий — выберите уровень в настройках</div></div>`;
+  });
+}
+
+// Заглушка: показывается, если photo_cards.js ещё не заполнен реальными карточками
+function renderPlaceholderCard(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  fadeSwapCard((card)=>{
+    card.className = 'card card-empty';
+    card.style.borderTop = '';
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🃏</div><div class="card-text">Скоро здесь появятся карточки — добавьте их в photo-mode/photo_cards.js</div></div>`;
+  });
+}
+
+function getPhotoCardsList(){
+  if(typeof PHOTO_CARDS === 'undefined' || !Array.isArray(PHOTO_CARDS)) return [];
+  return PHOTO_CARDS;
+}
+
+const PHOTO_MAX_LEVEL = 4;
+let photoLevel = 1;
+let currentPhotoCard = null;
+
+function drawPhotoCard(level){
+  photoLevel = level;
+  const hidden = state.photoHidden || [];
+  const all = getPhotoCardsList().filter(c=>c.level===level && !hidden.includes(c.image));
+  if(all.length===0){ currentPhotoCard = null; renderPlaceholderCard(); return; }
+  if(!state.photoUsed) state.photoUsed = {};
+  let used = state.photoUsed[level] || [];
+  let pool = all.filter(c=>!used.includes(c.image));
+  if(pool.length===0){
+    pool = all;
+    used = [];
+    showToast('Карточки этого уровня показаны заново 🔀');
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  used.push(card.image);
+  state.photoUsed[level] = used;
+  currentPhotoCard = card;
+  saveState();
+  renderPhotoCard(card, level);
+}
+
+function renderPhotoCard(card, level){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  fadeSwapCard((el)=>{
+    el.className = 'card card-empty';
+    el.style.borderTop = '';
+    el.innerHTML = `
+      <div class="card-inner card-split">
+        <div class="card-split-media" id="placeholderMedia">
+          <img src="${card.image}" alt="" id="placeholderImg">
+        </div>
+        <div class="card-split-desc" id="placeholderDesc">
+          ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
+          <div class="card-text" id="placeholderText"></div>
+        </div>
+      </div>
+    `;
+    const img = document.getElementById('placeholderImg');
+    if(img){
+      img.addEventListener('error', ()=>{
+        const media = document.getElementById('placeholderMedia');
+        if(media) media.innerHTML = '<div class="card-icon">🃏</div>';
+      });
+      img.addEventListener('click', ()=>openImageZoom(card.image));
+    }
+    fitTextToContainer(
+      document.getElementById('placeholderDesc'),
+      document.getElementById('placeholderText'),
+      card.text
+    );
+  });
+  updateFavoriteBtn();
+}
+
+function openImageZoom(src){
+  const modal = document.getElementById('imageZoomModal');
+  const img = document.getElementById('zoomedImage');
+  if(!modal || !img) return;
+  img.src = src;
+  modal.classList.add('show');
+}
+function closeImageZoom(){
+  const modal = document.getElementById('imageZoomModal');
+  if(modal) modal.classList.remove('show');
+}
+document.getElementById('imageZoomModal').addEventListener('click', closeImageZoom);
+
+function goToPlaceholderGame(){
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  state.name1 = n1raw || 'Men';
+  state.name2 = n2raw || 'Sexy';
+  state.currentPlayer = pickStartingPlayer();
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.inProgress = true;
+  photoLevel = 1;
+  state.photoUsed = {};
+  state.photoHidden = [];
+  saveState();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('game').classList.add('placeholder-mode');
+  document.getElementById('doneBtn').textContent = 'Следующая';
+  document.getElementById('pauseBtn').textContent = 'Выход';
+  updateTurnUI();
+  updateLevelUI();
+  updateMuteBtn();
+  requestWakeLock();
+  if(getPhotoCardsList().length>0){
+    drawPhotoCard(photoLevel);
+  } else {
+    renderPlaceholderCard();
+  }
+}
+
+function exitPlaceholderGame(){
+  state.inProgress = false;
+  saveState();
+  document.getElementById('game').classList.remove('placeholder-mode');
+  document.getElementById('doneBtn').textContent = '💕 Готово';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
+  returnToSetupUI();
+}
+
+/* ============ ТАЙМЕР ЗАДАНИЯ ============ */
+let timerInterval = null;
+let timerDuration = 60; // по умолчанию 1 минута
+let timerSeconds = timerDuration;
+
+function formatTime(s){
+  const m = Math.floor(s/60);
+  const sec = s%60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function resetTimer(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timerSeconds = timerDuration;
+  const disp = document.getElementById('timerDisplay');
+  const btn = document.getElementById('timerBtn');
+  if(disp) disp.textContent = formatTime(timerSeconds);
+  if(btn){ btn.textContent = '▶ Старт'; btn.classList.remove('running'); }
+}
+
+// Один общий AudioContext на всё приложение вместо нового на каждый звук —
+// iOS Safari ограничивает число одновременно живых AudioContext, и при частых
+// звуках (например, быстрые свайпы подряд) более старый подход мог "тихо" не срабатывать.
+let sharedAudioCtx = null;
+function getAudioCtx(){
+  try{
+    if(!sharedAudioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      sharedAudioCtx = new Ctx();
+    }
+    if(sharedAudioCtx.state === 'suspended'){
+      sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  }catch(e){ return null; }
+}
+
+function playTimerAlarm(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const beepTimes = [0, 0.22, 0.44];
+    beepTimes.forEach(t=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.18);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.2);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([150,80,150,80,150]);
+}
+
+function playSuccessSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const notes = [523.25, 659.25]; // приятный восходящий перезвон (до — ми)
+    notes.forEach((freq, i)=>{
+      const t = i*0.09;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.4);
+    });
+  }catch(e){}
+}
+
+function playLevelUpSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // до-ми-соль-до, торжествующее трезвучие
+    notes.forEach((freq, i)=>{
+      const t = i*0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.45);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.5);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([60,40,60,40,120]);
+}
+
+function playFailSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.35);
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.42);
+  }catch(e){}
+}
+
+function playNeutralSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 440;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+  }catch(e){}
+}
+
+function playErrorSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const beepTimes = [0, 0.14];
+    beepTimes.forEach(t=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 180;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.13);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([80,60,80]);
+}
+
+function selectTimerDuration(sec, btnEl){
+  timerDuration = sec;
+  document.querySelectorAll('.timer-dur-btn').forEach(b=>b.classList.toggle('on', b===btnEl));
+  resetTimer();
+}
+
+function toggleTimer(){
+  const btn = document.getElementById('timerBtn');
+  const disp = document.getElementById('timerDisplay');
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+    btn.textContent = '▶ Продолжить';
+    btn.classList.remove('running');
+    return;
+  }
+  btn.textContent = '⏸ Пауза';
+  btn.classList.add('running');
+  timerInterval = setInterval(()=>{
+    timerSeconds--;
+    if(disp) disp.textContent = formatTime(timerSeconds);
+    if(timerSeconds<=0){
+      clearInterval(timerInterval);
+      timerInterval = null;
+      showToast('Время вышло! ⏰');
+      playTimerAlarm();
+      const cardEl = document.getElementById('card');
+      if(disp){
+        disp.classList.add('done');
+        setTimeout(()=>disp.classList.remove('done'), 2000);
+      }
+      if(cardEl){
+        cardEl.classList.add('done-shake');
+        setTimeout(()=>cardEl.classList.remove('done-shake'), 400);
+      }
+      timerSeconds = timerDuration;
+      if(disp) disp.textContent = formatTime(timerSeconds);
+      if(btn){ btn.textContent = '▶ Старт'; btn.classList.remove('running'); }
+    }
+  }, 1000);
+}
+
+function drawCard(forceLevel){
+  let card = drawFromPool(forceLevel);
+  if(!card && forceLevel){
+    card = drawFromPool(); // если у нового уровня карточек нет — берём из общего пула
+  }
+  if(!card){
+    renderNoCards();
+    showToast('Выберите хотя бы один уровень в настройках');
+    return;
+  }
+  state.usedIndexes.push(card.idx);
+  saveState();
+  renderCard(card);
+}
+
+function refreshCard(){
+  if(!currentCard) return;
+  showToast('Новое задание 🔄');
+  drawCard();
+}
+
+function dislikeCurrentCard(){
+  if(!currentCard) return;
+  playErrorSound();
+  if(!state.hiddenIndexes.includes(currentCard.idx)){
+    state.hiddenIndexes.push(currentCard.idx);
+  }
+  saveState();
+  showToast('Карточка скрыта навсегда 👎');
+  drawCard();
+}
+
+const GENDER_COLORS = { M:'#6ec6ff', F:'#ff9fb0' };
+
+let currentCard = null;
+
+function renderCard(card){
+  const lvl = levelById(card.level);
+  const turnName = state.currentPlayer===1 ? state.name1 : state.name2;
+  const genderColor = GENDER_COLORS[currentGender()];
+  currentCard = card;
+  fadeSwapCard((el)=>{
+    el.className = 'card';
+    el.style.borderTop = `10px solid ${genderColor}`;
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-turn">
+            <div class="card-turn-label">Ход игрока</div>
+            <div class="card-turn-name">${turnName}</div>
+          </div>
+          <div class="badge">
+            <span class="level-pill" style="background:${lvl.color}">${lvl.icon} ${lvl.name}</span>
+          </div>
+        </div>
+        <div class="card-type-row">
+          <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
+        </div>
+        <div class="card-body" id="cardBody">
+          <div class="card-text" id="cardText"></div>
+        </div>
+        <div class="card-timer">
+          <div class="timer-durations">
+            <button type="button" class="timer-dur-btn ${timerDuration===30 ? 'on' : ''}" data-sec="30">30 сек</button>
+            <button type="button" class="timer-dur-btn ${timerDuration===60 ? 'on' : ''}" data-sec="60">1 мин</button>
+            <button type="button" class="timer-dur-btn ${timerDuration===120 ? 'on' : ''}" data-sec="120">2 мин</button>
+          </div>
+          <div class="timer-controls">
+            <div class="timer-display" id="timerDisplay">${formatTime(timerDuration)}</div>
+            <button type="button" class="timer-btn" id="timerBtn">▶ Старт</button>
+          </div>
+        </div>
+      </div>
+    `;
+    resetTimer();
+    document.getElementById('timerBtn').addEventListener('click', toggleTimer);
+    document.querySelectorAll('.timer-dur-btn').forEach(b=>{
+      b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
+    });
+    fitTextToContainer(
+      document.getElementById('cardBody'),
+      document.getElementById('cardText'),
+      card.text
+    );
+  });
+  updateFavoriteBtn();
+}
+
+function nextTurn(completed){
+  if(completed){
+    if(state.currentPlayer===1) state.score1++; else state.score2++;
+    state.completedCount = (state.completedCount||0) + 1;
+  } else {
+    state.skippedCount = (state.skippedCount||0) + 1;
+  }
+  state.turnsPlayed = (state.turnsPlayed||0) + 1;
+  checkAutoLevelUp();
+  state.currentPlayer = state.currentPlayer===1 ? 2 : 1;
+  saveState();
+  updateTurnUI();
+  drawCard();
+}
+
+document.getElementById('doneBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  if(isPlaceholderMode()){
+    drawPhotoCard(photoLevel || 1);
+    return;
+  }
+  nextTurn(true);
+});
+document.getElementById('skipBtn').addEventListener('click', ()=>{ playFailSound(); nextTurn(false); });
+document.getElementById('pauseBtn').addEventListener('click', ()=>{
+  if(isPlaceholderMode()){
+    exitPlaceholderGame();
+    return;
+  }
+  pauseGame();
+  showToast('Игра на паузе — прогресс сохранён');
+});
+document.getElementById('finishGameBtn').addEventListener('click', ()=>{
+  showSummary();
+});
+
+function showSummary(){
+  const winnerEl = document.getElementById('summaryWinner');
+  if(state.score1 === state.score2){
+    winnerEl.textContent = '🤝 Ничья!';
+  } else {
+    const winnerName = state.score1 > state.score2 ? state.name1 : state.name2;
+    winnerEl.textContent = `🏆 Победил ${winnerName}`;
+  }
+  document.getElementById('summaryScore').textContent = `${state.name1}: ${state.score1}  ·  ${state.name2}: ${state.score2}`;
+  document.getElementById('summaryCounts').textContent = `Выполнено: ${state.completedCount||0}  ·  Пропущено: ${state.skippedCount||0}`;
+  document.getElementById('summaryModal').classList.add('show');
+}
+document.getElementById('closeSummaryBtn').addEventListener('click', ()=>{
+  document.getElementById('summaryModal').classList.remove('show');
+  goToSetup();
+});
+
+document.getElementById('rulesBtn').addEventListener('click', ()=>{
+  document.getElementById('rulesModal').classList.add('show');
+});
+document.getElementById('closeRulesBtn').addEventListener('click', ()=>{
+  document.getElementById('rulesModal').classList.remove('show');
+});
+document.getElementById('rulesModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'rulesModal') e.currentTarget.classList.remove('show');
+});
+document.getElementById('installBtn').addEventListener('click', ()=>{
+  document.getElementById('installModal').classList.add('show');
+});
+document.getElementById('closeInstallBtn').addEventListener('click', ()=>{
+  document.getElementById('installModal').classList.remove('show');
+});
+document.getElementById('installModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'installModal') e.currentTarget.classList.remove('show');
+});
+document.getElementById('levelUpBtn').addEventListener('click', ()=>{
+  if(isPlaceholderMode()){
+    if(photoLevel < PHOTO_MAX_LEVEL){
+      playLevelUpSound();
+      drawPhotoCard(photoLevel + 1);
+      showToast(`Уровень повышен: ${photoLevel}`);
+    } else {
+      showToast('Это максимальный уровень 🔥');
+    }
+    return;
+  }
+  levelUp();
+});
+document.getElementById('levelDownBtn').addEventListener('click', ()=>{
+  if(!isPlaceholderMode()) return;
+  if(photoLevel > 1){
+    playNeutralSound();
+    drawPhotoCard(photoLevel - 1);
+    showToast(`Уровень понижен: ${photoLevel}`);
+  } else {
+    showToast('Это минимальный уровень');
+  }
+});
+document.getElementById('refreshBtn').addEventListener('click', refreshCard);
+document.getElementById('dislikeBtn').addEventListener('click', ()=>{
+  if(isPlaceholderMode()){
+    if(!currentPhotoCard) return;
+    playErrorSound();
+    if(!state.photoHidden) state.photoHidden = [];
+    if(!state.photoHidden.includes(currentPhotoCard.image)){
+      state.photoHidden.push(currentPhotoCard.image);
+    }
+    saveState();
+    showToast('Карточка скрыта 👎');
+    drawPhotoCard(photoLevel);
+    return;
+  }
+  dislikeCurrentCard();
+});
+
+function shareCurrentPhotoCard(){
+  if(!currentPhotoCard) return;
+  const text = currentPhotoCard.title
+    ? `${currentPhotoCard.title}\n${currentPhotoCard.text}`
+    : currentPhotoCard.text;
+  if(navigator.share){
+    navigator.share({ title: currentPhotoCard.title || 'Карточка', text }).catch(()=>{});
+    return;
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text)
+      .then(()=> showToast('Скопировано — вставьте другу 📋'))
+      .catch(()=> showToast('Не удалось поделиться'));
+    return;
+  }
+  showToast('Поделиться не поддерживается на этом устройстве');
+}
+document.getElementById('shareBtn').addEventListener('click', shareCurrentPhotoCard);
+
+/* ============ ИЗБРАННОЕ / "СДЕЛАНО" ============ */
+function updateFavoriteBtn(){
+  const btn = document.getElementById('favoriteBtn');
+  if(!btn) return;
+  if(isPlaceholderMode()){
+    if(!currentPhotoCard){ btn.textContent = '🤍'; btn.classList.remove('active'); return; }
+    const isDone = (state.photoDone||[]).includes(currentPhotoCard.image);
+    btn.textContent = isDone ? '❤️' : '🤍';
+    btn.classList.toggle('active', isDone);
+    return;
+  }
+  if(!currentCard) return;
+  const isFav = state.favoriteIndexes.includes(currentCard.idx);
+  btn.textContent = isFav ? '⭐' : '☆';
+  btn.classList.toggle('active', isFav);
+}
+function toggleFavorite(){
+  if(isPlaceholderMode()){
+    if(!currentPhotoCard) return;
+    if(!state.photoDone) state.photoDone = [];
+    const pos = state.photoDone.indexOf(currentPhotoCard.image);
+    if(pos>=0){
+      state.photoDone.splice(pos,1);
+      showToast('Отметка «сделано» снята');
+    } else {
+      state.photoDone.push(currentPhotoCard.image);
+      playSuccessSound();
+      showToast('Отмечено как сделано ✅');
+    }
+    saveState();
+    updateFavoriteBtn();
+    return;
+  }
+  if(!currentCard) return;
+  const idx = currentCard.idx;
+  const pos = state.favoriteIndexes.indexOf(idx);
+  if(pos>=0){
+    state.favoriteIndexes.splice(pos,1);
+    showToast('Убрано из избранного');
+  } else {
+    state.favoriteIndexes.push(idx);
+    playSuccessSound();
+    showToast('Добавлено в избранное ⭐');
+  }
+  saveState();
+  updateFavoriteBtn();
+}
+document.getElementById('favoriteBtn').addEventListener('click', toggleFavorite);
+function updateFavoritesOnlyBtn(){
+  const btn = document.getElementById('favoritesOnlyBtn');
+  if(!btn) return;
+  btn.classList.toggle('on', !!state.favoritesOnly);
+  btn.setAttribute('aria-pressed', state.favoritesOnly ? 'true' : 'false');
+}
+document.getElementById('favoritesOnlyBtn').addEventListener('click', ()=>{
+  if(!state.favoritesOnly){
+    const elig = favoritesEligibility();
+    if(!elig.ok){
+      playErrorSound();
+      showToast(`Добавьте больше карточек: М добавлено ${elig.forM}, Ж добавлено ${elig.forF}`, 2000);
+      return;
+    }
+  }
+  state.favoritesOnly = !state.favoritesOnly;
+  saveState();
+  updateFavoritesOnlyBtn();
+});
+
+/* ============ СВОИ ЗАДАНИЯ ============ */
+let newCardType = 'truth';
+let newCardFor = '';
+function populateNewCardLevelSelect(){
+  const sel = document.getElementById('newCardLevel');
+  sel.innerHTML = LEVELS.map(l=>`<option value="${l.id}">${l.icon} ${l.name}</option>`).join('');
+}
+document.querySelectorAll('#newCardTypeGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    newCardType = btn.dataset.value;
+    document.querySelectorAll('#newCardTypeGroup .starter-btn').forEach(b=>b.classList.toggle('on', b===btn));
+  });
+});
+document.querySelectorAll('#newCardForGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    newCardFor = btn.dataset.value;
+    document.querySelectorAll('#newCardForGroup .starter-btn').forEach(b=>b.classList.toggle('on', b===btn));
+  });
+});
+function renderCustomCardsList(){
+  const wrap = document.getElementById('customCardsList');
+  const items = (state.customCards||[])
+    .map((c,i)=>({c,i}))
+    .filter(x=>!x.c.deleted);
+  if(items.length===0){ wrap.innerHTML = '<div class="custom-cards-empty">Своих заданий пока нет</div>'; return; }
+  wrap.innerHTML = items.map(({c,i})=>{
+    const lvl = levelById(c.level);
+    const forLabel = c.for==='M' ? ' · Мужчине' : c.for==='F' ? ' · Женщине' : '';
+    return `<div class="custom-card-row" data-i="${i}">
+      <div class="custom-card-text">${lvl ? lvl.icon : ''} ${c.text}${forLabel}</div>
+      <button type="button" class="custom-card-del" data-i="${i}" aria-label="Удалить">🗑</button>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.custom-card-del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const i = parseInt(btn.dataset.i, 10);
+      if(state.customCards[i]){
+        state.customCards[i].deleted = true;
+        saveState();
+        renderCustomCardsList();
+        showToast('Задание удалено');
+      }
+    });
+  });
+}
+document.getElementById('saveCardBtn').addEventListener('click', ()=>{
+  const textEl = document.getElementById('newCardText');
+  const text = textEl.value.trim();
+  if(text.length<3){
+    playErrorSound();
+    showToast('Напишите текст задания');
+    return;
+  }
+  const level = parseInt(document.getElementById('newCardLevel').value, 10);
+  const card = { level, type:newCardType, text };
+  if(newCardFor) card.for = newCardFor;
+  state.customCards.push(card);
+  saveState();
+  textEl.value = '';
+  renderCustomCardsList();
+  playSuccessSound();
+  showToast('Задание добавлено ✓');
+});
+// Экспорт своих заданий в текст для файла user_cards.js (сохраняются в git отдельно от cards.js)
+function buildUserCardsExportText(){
+  const items = (state.customCards||[]).filter(c=>!c.deleted);
+  const lines = items.map(c=>{
+    const parts = [`level:${c.level}`, `type:${JSON.stringify(c.type)}`, `text:${JSON.stringify(c.text)}`];
+    if(c.for) parts.push(`for:${JSON.stringify(c.for)}`);
+    return `  {${parts.join(', ')}},`;
+  });
+  return `// user_cards.js — задания, добавленные через приложение.\n// Замените этот файл в репозитории (GitHub), чтобы сохранить их навсегда.\nconst USER_CARDS = [\n${lines.join('\n')}\n];`;
+}
+document.getElementById('exportCardsBtn').addEventListener('click', ()=>{
+  const items = (state.customCards||[]).filter(c=>!c.deleted);
+  if(items.length===0){
+    showToast('Нет своих заданий для скачивания');
+    return;
+  }
+  const text = buildUserCardsExportText();
+  const blob = new Blob([text], {type:'application/javascript'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'user_cards.js';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  showToast('Файл user_cards.js скачан', 2200);
+});
+// Загрузка заданий из файла (например, ранее скачанного user_cards.js) — добавляет их в игру на этом устройстве
+function parseCardsFromText(text){
+  const matches = text.match(/\{[^{}]*\}/g) || [];
+  const cards = [];
+  matches.forEach(m=>{
+    try{
+      const obj = Function('"use strict"; return (' + m + ')')();
+      if(obj && typeof obj.level === 'number' && (obj.type==='truth'||obj.type==='dare') && typeof obj.text === 'string' && obj.text.trim()){
+        const card = { level: obj.level, type: obj.type, text: obj.text };
+        if(obj.for === 'M' || obj.for === 'F') card.for = obj.for;
+        cards.push(card);
+      }
+    }catch(e){}
+  });
+  return cards;
+}
+document.getElementById('importCardsBtn').addEventListener('click', ()=>{
+  document.getElementById('importCardsInput').click();
+});
+document.getElementById('importCardsInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const parsed = parseCardsFromText(String(reader.result||''));
+    if(parsed.length===0){
+      playErrorSound();
+      showToast('Не нашлось заданий для загрузки');
+      e.target.value = '';
+      return;
+    }
+    const existing = new Set((state.customCards||[]).filter(c=>!c.deleted).map(c=>`${c.level}|${c.type}|${c.text}|${c.for||''}`));
+    let added = 0;
+    parsed.forEach(c=>{
+      const key = `${c.level}|${c.type}|${c.text}|${c.for||''}`;
+      if(!existing.has(key)){
+        state.customCards.push(c);
+        existing.add(key);
+        added++;
+      }
+    });
+    saveState();
+    renderCustomCardsList();
+    e.target.value = '';
+    if(added>0){
+      playSuccessSound();
+      showToast(`Загружено заданий: ${added}`);
+    } else {
+      showToast('Все задания уже есть в списке');
+    }
+  };
+  reader.readAsText(file);
+});
+document.getElementById('addCardBtn').addEventListener('click', ()=>{
+  populateNewCardLevelSelect();
+  renderCustomCardsList();
+  document.getElementById('addCardModal').classList.add('show');
+});
+document.getElementById('closeAddCardBtn').addEventListener('click', ()=>{
+  document.getElementById('addCardModal').classList.remove('show');
+});
+document.getElementById('addCardModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'addCardModal') e.currentTarget.classList.remove('show');
+});
+
+/* ============ СВАЙПЫ НА КАРТОЧКЕ ============ */
+(function setupSwipe(){
+  const cardEl = document.getElementById('card');
+  let startX = 0, startY = 0, tracking = false;
+  cardEl.addEventListener('touchstart', (e)=>{
+    if(e.touches.length!==1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, {passive:true});
+  cardEl.addEventListener('touchend', (e)=>{
+    if(!tracking || !currentCard) return;
+    tracking = false;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    const absX = Math.abs(dx), absY = Math.abs(dy);
+    const threshold = 70;
+    if(absX < threshold && absY < threshold) return; // обычный тап — игнорируем
+    if(absX > absY){
+      if(dx > 0){ playSuccessSound(); nextTurn(true); }
+      else { playFailSound(); nextTurn(false); }
+    } else {
+      if(dy < 0) dislikeCurrentCard();
+    }
+  }, {passive:true});
+})();
+
+/* ============ ИНИЦИАЛИЗАЦИЯ ============ */
+loadState();
+if(!getSortedActiveLevels().includes(state.levelCap)) state.levelCap = getSortedActiveLevels()[0];
+renderLevelToggles();
+renderStarterGroup();
+renderModeGroup();
+document.getElementById('name1').value = state.name1 || '';
+document.getElementById('name2').value = state.name2 || '';
+updateStarterLabels();
+updateMuteBtn();
+updateResumeUI();
+updateFavoritesOnlyBtn();
+populateNewCardLevelSelect();
+</script>
+</body>
+</html>
