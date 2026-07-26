@@ -190,6 +190,26 @@
   .btn-secondary{
     background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25);
   }
+  .placeholder-label{
+    text-align:center; font-size:12px; font-weight:700; color:#cba0bf;
+    text-transform:uppercase; letter-spacing:.5px; margin-top:14px; margin-bottom:8px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .placeholder-label .placeholder-arrow{
+    display:inline-block; font-size:10px; transition:transform .2s ease;
+  }
+  #placeholderBlock.open .placeholder-arrow{transform:rotate(180deg);}
+  .placeholder-row{display:none; gap:10px;}
+  #placeholderBlock.open .placeholder-row{display:flex;}
+  .placeholder-row .btn{flex:1; padding:10px; font-size:14px;}
+  .btn-placeholder-a{
+    background:linear-gradient(135deg,#2fd4c4,#1fa8b8); color:#0a2b2e;
+    box-shadow:0 8px 20px rgba(47,212,196,.35);
+  }
+  .btn-placeholder-b{
+    background:linear-gradient(135deg,#8a6bff,#c07bff); color:#22103f;
+    box-shadow:0 8px 20px rgba(138,107,255,.35);
+  }
   .btn-ghost{
     background:transparent; color:#e8c9dd; text-decoration:underline; font-weight:600; font-size:14px;
   }
@@ -291,6 +311,36 @@
   .card-empty .card-icon{font-size:52px;}
   .card-empty .card-text{font-size:16px; color:#7a5a72; font-weight:600;}
 
+  .card-split{display:flex; flex-direction:column; height:100%; gap:14px;}
+  .card-split-media{
+    flex:1; min-height:0; border-radius:16px; overflow:hidden;
+    background:rgba(43,15,46,.06);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card-split-media img{width:100%; height:100%; object-fit:cover; display:block;}
+  .card-split-media .card-icon{margin:0; font-size:48px;}
+  .card-split-desc{
+    flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:0 4px; gap:6px; overflow-y:auto;
+  }
+  .card-split-title{
+    font-size:17px; font-weight:800; color:#2b0f2e;
+  }
+
+  #game.placeholder-mode .score-row{display:none;}
+  #game.placeholder-mode #skipBtn{display:none;}
+  #game.placeholder-mode #refreshBtn{display:none;}
+  #game.placeholder-mode #favoriteBtn{
+    flex:0 0 auto; width:auto; padding:0 16px; font-size:20px;
+  }
+  #game.placeholder-mode #favoriteBtn.active{
+    background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25);
+  }
+  #levelDownBtn{display:none;}
+  #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
+  #shareBtn{display:none;}
+  #game.placeholder-mode #shareBtn{display:flex;}
+
   .card-timer{
     display:flex; flex-direction:column; align-items:center; gap:8px;
     padding-top:12px; margin-top:8px;
@@ -360,6 +410,9 @@
     text-transform:uppercase;
     background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
   }
+  .row2 #pauseBtn{
+    flex:0 0 auto; width:auto; padding:0 12px; font-size:11px; text-transform:none;
+  }
 
   .toast{
     position:fixed; left:50%; top:calc(env(safe-area-inset-top, 0px) + 16px);
@@ -382,6 +435,8 @@
     padding:20px; z-index:200;
   }
   .modal-overlay.show{display:flex;}
+  #imageZoomModal{background:rgba(10,3,10,.95); padding:20px; z-index:260;}
+  #imageZoomModal img{max-width:100%; max-height:100%; object-fit:contain; border-radius:12px;}
   .modal-card{
     background:var(--card-bg); color:#2b0f2e; border-radius:22px;
     padding:26px 22px; max-width:360px; width:100%; max-height:80vh; overflow-y:auto;
@@ -470,6 +525,13 @@
       <button class="btn btn-secondary" id="finishGameBtn">Закончить игру</button>
     </div>
     <button class="btn btn-primary" id="startBtn">Начать новую игру</button>
+    <div id="placeholderBlock">
+      <div class="placeholder-label" id="placeholderToggle">Дополнительные игры <span class="placeholder-arrow">▾</span></div>
+      <div class="placeholder-row">
+        <button type="button" class="btn btn-placeholder-a" id="placeholderBtn1">Давай попробуем</button>
+        <button type="button" class="btn btn-placeholder-b" id="placeholderBtn2">В разработке</button>
+      </div>
+    </div>
     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:10px;">
       <span class="btn-ghost" id="rulesBtn">Правила игры</span>
       <span class="btn-ghost" id="addCardBtn">Своё задание</span>
@@ -501,8 +563,10 @@
       </div>
       <div class="row2">
         <button class="btn btn-secondary" id="levelUpBtn">🔥 Повысить уровень</button>
+        <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Понизить уровень">Легче</button>
         <button type="button" class="btn btn-secondary btn-square" id="refreshBtn" aria-label="Новое задание для этого же игрока">🔄</button>
         <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">👎</button>
+        <button type="button" class="btn btn-secondary btn-square" id="shareBtn" aria-label="Поделиться">⤴️</button>
         <button type="button" class="btn btn-secondary btn-square btn-text-square" id="pauseBtn" aria-label="Пауза">Пауза</button>
       </div>
     </div>
@@ -593,10 +657,16 @@
       <button class="btn btn-primary" id="closeAddCardBtn" style="margin-top:12px;">Закрыть</button>
     </div>
   </div>
+
+  <!-- ===== ПРОСМОТР ФОТО НА ВЕСЬ ЭКРАН ===== -->
+  <div class="modal-overlay" id="imageZoomModal">
+    <img src="" alt="" id="zoomedImage">
+  </div>
 </div>
 
 <script src="cards.js"></script>
 <script src="user_cards.js"></script>
+<script src="Давай попробуем/photo_cards.js"></script>
 <script>
 /* ============ ДАННЫЕ КАРТ ============ */
 const LEVELS = [
@@ -617,7 +687,8 @@ let state = {
   currentPlayer:1, score1:0, score2:0,
   levelCap:1, usedIndexes:[], hiddenIndexes:[],
   muted:false, inProgress:false, completedCount:0, skippedCount:0,
-  customCards:[], favoriteIndexes:[], favoritesOnly:false
+  customCards:[], favoriteIndexes:[], favoritesOnly:false,
+  photoUsed:{}, photoHidden:[], photoDone:[]
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -785,6 +856,16 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
   saveState();
   goToGame();
 });
+document.getElementById('placeholderToggle').addEventListener('click', ()=>{
+  document.getElementById('placeholderBlock').classList.toggle('open');
+});
+document.getElementById('placeholderBtn1').addEventListener('click', ()=>{
+  playSuccessSound();
+  goToPlaceholderGame();
+});
+document.getElementById('placeholderBtn2').addEventListener('click', ()=>{
+  showToast('В разработке — скоро будет доступно');
+});
 
 document.getElementById('resumeBtn').addEventListener('click', ()=>{
   goToGame();
@@ -845,12 +926,19 @@ function goToGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.remove('placeholder-mode');
   document.getElementById('game').classList.add('active');
+  document.getElementById('doneBtn').textContent = '💕 Готово';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
   updateTurnUI();
   updateLevelUI();
   updateMuteBtn();
   requestWakeLock();
   drawCard();
+}
+function isPlaceholderMode(){
+  const el = document.getElementById('game');
+  return !!(el && el.classList.contains('placeholder-mode'));
 }
 function returnToSetupUI(){
   document.getElementById('game').classList.remove('active');
@@ -884,9 +972,9 @@ function updateSettingsLockUI(){
     const el = document.getElementById(id);
     if(el) el.classList.toggle('locked-settings', locked);
   });
-  // «Уровни заданий» и «Первым начинает» не относятся к уже идущей партии — во время
-  // паузы просто скрываем их, а не блокируем (нечего блокировать, если их не видно).
-  ['levelsField','starterField'].forEach(id=>{
+  // «Уровни заданий», «Первым начинает» и «Дополнительные игры» не относятся к уже идущей
+  // партии — во время паузы просто скрываем их, а не блокируем.
+  ['levelsField','starterField','placeholderBlock'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.style.display = locked ? 'none' : '';
   });
@@ -927,9 +1015,16 @@ document.getElementById('muteBtn').addEventListener('click', ()=>{
 });
 
 function updateLevelUI(){
+  const btn = document.getElementById('levelUpBtn');
+  if(isPlaceholderMode()){
+    btn.disabled = false;
+    btn.textContent = 'Сложнее';
+    const el = document.getElementById('levelProgress');
+    if(el) el.textContent = '';
+    return;
+  }
   const levels = getSortedActiveLevels();
   const isMax = levels.indexOf(state.levelCap) === levels.length-1;
-  const btn = document.getElementById('levelUpBtn');
   btn.disabled = isMax;
   btn.textContent = isMax ? 'Максимальный уровень' : '🔥 Повысить уровень';
   updateLevelProgressUI();
@@ -1038,6 +1133,131 @@ function renderNoCards(){
     card.style.borderTop = '';
     card.innerHTML = `<div class="card-inner"><div class="card-icon">🃏</div><div class="card-text">Нет доступных заданий — выберите уровень в настройках</div></div>`;
   });
+}
+
+// Заглушка: показывается, если photo_cards.js ещё не заполнен реальными карточками
+function renderPlaceholderCard(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  fadeSwapCard((card)=>{
+    card.className = 'card card-empty';
+    card.style.borderTop = '';
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🃏</div><div class="card-text">Скоро здесь появятся карточки — добавьте их в Давай попробуем/photo_cards.js</div></div>`;
+  });
+}
+
+function getPhotoCardsList(){
+  if(typeof PHOTO_CARDS === 'undefined' || !Array.isArray(PHOTO_CARDS)) return [];
+  return PHOTO_CARDS;
+}
+
+const PHOTO_MAX_LEVEL = 4;
+let photoLevel = 1;
+let currentPhotoCard = null;
+
+function drawPhotoCard(level){
+  photoLevel = level;
+  const hidden = state.photoHidden || [];
+  const all = getPhotoCardsList().filter(c=>c.level===level && !hidden.includes(c.image));
+  if(all.length===0){ currentPhotoCard = null; renderPlaceholderCard(); return; }
+  if(!state.photoUsed) state.photoUsed = {};
+  let used = state.photoUsed[level] || [];
+  let pool = all.filter(c=>!used.includes(c.image));
+  if(pool.length===0){
+    pool = all;
+    used = [];
+    showToast('Карточки этого уровня показаны заново 🔀');
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  used.push(card.image);
+  state.photoUsed[level] = used;
+  currentPhotoCard = card;
+  saveState();
+  renderPhotoCard(card, level);
+}
+
+function renderPhotoCard(card, level){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  fadeSwapCard((el)=>{
+    el.className = 'card card-empty';
+    el.style.borderTop = '';
+    el.innerHTML = `
+      <div class="card-inner card-split">
+        <div class="card-split-media" id="placeholderMedia">
+          <img src="${card.image}" alt="" id="placeholderImg">
+        </div>
+        <div class="card-split-desc">
+          ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
+          <div class="card-text">${card.text}</div>
+        </div>
+      </div>
+    `;
+    const img = document.getElementById('placeholderImg');
+    if(img){
+      img.addEventListener('error', ()=>{
+        const media = document.getElementById('placeholderMedia');
+        if(media) media.innerHTML = '<div class="card-icon">🃏</div>';
+      });
+      img.addEventListener('click', ()=>openImageZoom(card.image));
+    }
+  });
+  updateFavoriteBtn();
+}
+
+function openImageZoom(src){
+  const modal = document.getElementById('imageZoomModal');
+  const img = document.getElementById('zoomedImage');
+  if(!modal || !img) return;
+  img.src = src;
+  modal.classList.add('show');
+}
+function closeImageZoom(){
+  const modal = document.getElementById('imageZoomModal');
+  if(modal) modal.classList.remove('show');
+}
+document.getElementById('imageZoomModal').addEventListener('click', closeImageZoom);
+
+function goToPlaceholderGame(){
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  state.name1 = n1raw || 'Men';
+  state.name2 = n2raw || 'Sexy';
+  state.currentPlayer = pickStartingPlayer();
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.inProgress = true;
+  photoLevel = 1;
+  state.photoUsed = {};
+  state.photoHidden = [];
+  saveState();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('game').classList.add('placeholder-mode');
+  document.getElementById('doneBtn').textContent = 'Следующая';
+  document.getElementById('pauseBtn').textContent = 'Выход';
+  updateTurnUI();
+  updateLevelUI();
+  updateMuteBtn();
+  requestWakeLock();
+  if(getPhotoCardsList().length>0){
+    drawPhotoCard(photoLevel);
+  } else {
+    renderPlaceholderCard();
+  }
+}
+
+function exitPlaceholderGame(){
+  state.inProgress = false;
+  saveState();
+  document.getElementById('game').classList.remove('placeholder-mode');
+  document.getElementById('doneBtn').textContent = '💕 Готово';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
+  returnToSetupUI();
 }
 
 /* ============ ТАЙМЕР ЗАДАНИЯ ============ */
@@ -1166,6 +1386,25 @@ function playFailSound(){
     gain.connect(ctx.destination);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.42);
+  }catch(e){}
+}
+
+function playNeutralSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 440;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
   }catch(e){}
 }
 
@@ -1332,9 +1571,20 @@ function nextTurn(completed){
   drawCard();
 }
 
-document.getElementById('doneBtn').addEventListener('click', ()=>{ playSuccessSound(); nextTurn(true); });
+document.getElementById('doneBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  if(isPlaceholderMode()){
+    drawPhotoCard(photoLevel || 1);
+    return;
+  }
+  nextTurn(true);
+});
 document.getElementById('skipBtn').addEventListener('click', ()=>{ playFailSound(); nextTurn(false); });
 document.getElementById('pauseBtn').addEventListener('click', ()=>{
+  if(isPlaceholderMode()){
+    exitPlaceholderGame();
+    return;
+  }
   pauseGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
@@ -1377,19 +1627,98 @@ document.getElementById('closeInstallBtn').addEventListener('click', ()=>{
 document.getElementById('installModal').addEventListener('click', (e)=>{
   if(e.target.id === 'installModal') e.currentTarget.classList.remove('show');
 });
-document.getElementById('levelUpBtn').addEventListener('click', levelUp);
+document.getElementById('levelUpBtn').addEventListener('click', ()=>{
+  if(isPlaceholderMode()){
+    if(photoLevel < PHOTO_MAX_LEVEL){
+      playLevelUpSound();
+      drawPhotoCard(photoLevel + 1);
+      showToast(`Уровень повышен: ${photoLevel}`);
+    } else {
+      showToast('Это максимальный уровень 🔥');
+    }
+    return;
+  }
+  levelUp();
+});
+document.getElementById('levelDownBtn').addEventListener('click', ()=>{
+  if(!isPlaceholderMode()) return;
+  if(photoLevel > 1){
+    playNeutralSound();
+    drawPhotoCard(photoLevel - 1);
+    showToast(`Уровень понижен: ${photoLevel}`);
+  } else {
+    showToast('Это минимальный уровень');
+  }
+});
 document.getElementById('refreshBtn').addEventListener('click', refreshCard);
-document.getElementById('dislikeBtn').addEventListener('click', dislikeCurrentCard);
+document.getElementById('dislikeBtn').addEventListener('click', ()=>{
+  if(isPlaceholderMode()){
+    if(!currentPhotoCard) return;
+    playErrorSound();
+    if(!state.photoHidden) state.photoHidden = [];
+    if(!state.photoHidden.includes(currentPhotoCard.image)){
+      state.photoHidden.push(currentPhotoCard.image);
+    }
+    saveState();
+    showToast('Карточка скрыта 👎');
+    drawPhotoCard(photoLevel);
+    return;
+  }
+  dislikeCurrentCard();
+});
 
-/* ============ ИЗБРАННОЕ ============ */
+function shareCurrentPhotoCard(){
+  if(!currentPhotoCard) return;
+  const text = currentPhotoCard.title
+    ? `${currentPhotoCard.title}\n${currentPhotoCard.text}`
+    : currentPhotoCard.text;
+  if(navigator.share){
+    navigator.share({ title: currentPhotoCard.title || 'Карточка', text }).catch(()=>{});
+    return;
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text)
+      .then(()=> showToast('Скопировано — вставьте другу 📋'))
+      .catch(()=> showToast('Не удалось поделиться'));
+    return;
+  }
+  showToast('Поделиться не поддерживается на этом устройстве');
+}
+document.getElementById('shareBtn').addEventListener('click', shareCurrentPhotoCard);
+
+/* ============ ИЗБРАННОЕ / "СДЕЛАНО" ============ */
 function updateFavoriteBtn(){
   const btn = document.getElementById('favoriteBtn');
-  if(!btn || !currentCard) return;
+  if(!btn) return;
+  if(isPlaceholderMode()){
+    if(!currentPhotoCard){ btn.textContent = '🤍'; btn.classList.remove('active'); return; }
+    const isDone = (state.photoDone||[]).includes(currentPhotoCard.image);
+    btn.textContent = isDone ? '❤️' : '🤍';
+    btn.classList.toggle('active', isDone);
+    return;
+  }
+  if(!currentCard) return;
   const isFav = state.favoriteIndexes.includes(currentCard.idx);
   btn.textContent = isFav ? '⭐' : '☆';
   btn.classList.toggle('active', isFav);
 }
 function toggleFavorite(){
+  if(isPlaceholderMode()){
+    if(!currentPhotoCard) return;
+    if(!state.photoDone) state.photoDone = [];
+    const pos = state.photoDone.indexOf(currentPhotoCard.image);
+    if(pos>=0){
+      state.photoDone.splice(pos,1);
+      showToast('Отметка «сделано» снята');
+    } else {
+      state.photoDone.push(currentPhotoCard.image);
+      playSuccessSound();
+      showToast('Отмечено как сделано ✅');
+    }
+    saveState();
+    updateFavoriteBtn();
+    return;
+  }
   if(!currentCard) return;
   const idx = currentCard.idx;
   const pos = state.favoriteIndexes.indexOf(idx);
