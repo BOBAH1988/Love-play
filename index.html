@@ -3,6 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<script>
+  // Реальная высота экрана в standalone-режиме iOS (Добавить на экран «Домой»):
+  // 100dvh иногда считается некорректно, из-за чего снизу остаётся белая полоса
+  // под home indicator. Меряем настоящую высоту через JS и держим её в CSS-переменной.
+  (function(){
+    function setRealVH(){
+      var h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+      document.documentElement.style.setProperty('--real-vh', (h * 0.01) + 'px');
+    }
+    setRealVH();
+    window.addEventListener('resize', setRealVH);
+    window.addEventListener('orientationchange', setRealVH);
+    if(window.visualViewport) window.visualViewport.addEventListener('resize', setRealVH);
+  })();
+</script>
 <title>Игра для двоих</title>
 
 <!-- iOS "как приложение": полноэкранный режим без сафари-панели -->
@@ -27,6 +42,7 @@
   html{
     height:100%;
     height:100dvh;
+    height:calc(var(--real-vh, 1vh) * 100);
     width:100%;
     overflow:hidden;
     background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
@@ -37,6 +53,7 @@
     inset:0;
     height:100%;
     height:100dvh;
+    height:calc(var(--real-vh, 1vh) * 100);
     width:100%;
     margin:0;
     font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -58,6 +75,7 @@
   #app{
     height:100%;
     height:100dvh;
+    height:calc(var(--real-vh, 1vh) * 100);
     width:100%;
     display:flex;
     flex-direction:column;
@@ -261,6 +279,33 @@
   #game.video-mode .card-split-media{
     border-radius:24px;
   }
+  /* Полноэкранный режим карточки с видео: заполняем весь экран целиком —
+     вертикально, если телефон вертикально, и горизонтально, если горизонтально.
+     object-fit:contain, чтобы видео не обрезалось, а просто вписывалось
+     в текущую ориентацию экрана. */
+  #card:fullscreen, #card:-webkit-full-screen{
+    width:100%;
+    height:100%;
+    max-width:none;
+    max-height:none;
+    margin:0;
+    border-radius:0;
+    padding:0;
+    background:#000;
+  }
+  #card:fullscreen .card-inner, #card:-webkit-full-screen .card-inner{
+    width:100%;
+    height:100%;
+  }
+  #card:fullscreen .card-split-media, #card:-webkit-full-screen .card-split-media{
+    width:100%;
+    height:100%;
+    border-radius:0;
+    background:#000;
+  }
+  #card:fullscreen .card-split-media video, #card:-webkit-full-screen .card-split-media video{
+    object-fit:contain;
+  }
   /* В "Видеорулетке" уровней нет — прячем пустую полоску прогресса над карточкой */
   #game.video-mode #levelProgress{display:none;}
   .card-inner{
@@ -355,23 +400,36 @@
   #game.placeholder-mode #shareBtn, #game.video-mode #shareBtn{display:flex;}
   #videoMuteBtn, #videoLoopBtn, #videoFavoritesBtn, #videoFullscreenBtn{display:none;}
   #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoFavoritesBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
-  /* В "Видеорулетке" пока нет уровней — прячем кнопки уровня */
+  /* В "Видеорулетке" обычные кнопки уровня скрыты — вместо них своя "Горячее" */
   #game.video-mode #levelUpBtn, #game.video-mode #levelDownBtn{display:none;}
+  #videoLevelUpBtn{display:none;}
+  #game.video-mode #videoLevelUpBtn{display:flex;}
   /* В "Видеорулетке" два ряда: сверху "Следующее" + лайк,
-     снизу — "Смотреть избранное" + звук/автопереключение/дизлайк/поделиться/выход */
+     снизу — "Смотреть избранное" + звук/автопереключение/дизлайк/поделиться/выход.
+     Нижний ряд скрыт по умолчанию и раскрывается кнопкой "Дополнительно". */
   #game.video-mode .controls{flex-direction:row; flex-wrap:wrap; align-items:stretch; gap:6px;}
-  #game.video-mode .row1, #game.video-mode .row2{display:contents;}
-  #game.video-mode .controls::before{content:''; flex-basis:100%; order:3;}
+  #game.video-mode .row1{display:contents;}
+  #game.video-mode .row2{display:none;}
+  #game.video-mode .controls.video-extra-open .row2{display:contents;}
   #game.video-mode .controls .btn{height:44px;}
+  .video-extra-toggle{display:none;}
+  #game.video-mode .video-extra-toggle{
+    display:flex; order:5; flex-basis:100%; align-items:center; justify-content:center; gap:6px;
+    text-align:center; font-size:12px; font-weight:700; color:#cba0bf;
+    text-transform:uppercase; letter-spacing:.5px; cursor:pointer; padding:4px 0;
+  }
+  .video-extra-toggle .video-extra-arrow{display:inline-block; font-size:10px; transition:transform .2s ease;}
+  .controls.video-extra-open .video-extra-toggle .video-extra-arrow{transform:rotate(180deg);}
   #game.video-mode #doneBtn{order:1; flex:1; min-width:0; font-size:14px; padding:0 8px;}
-  #game.video-mode #favoriteBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
-  #game.video-mode #videoFavoritesBtn{order:4; flex:1; width:auto; padding:0 10px; font-size:13px; text-transform:none;}
-  #game.video-mode #videoMuteBtn{order:5; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #videoLoopBtn{order:6; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #videoFullscreenBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #dislikeBtn{order:8; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
-  #game.video-mode #shareBtn{order:9; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
-  #game.video-mode #pauseBtn{order:10; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
+  #game.video-mode #videoLevelUpBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:13px;}
+  #game.video-mode #favoriteBtn{order:3; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
+  #game.video-mode #pauseBtn{order:4; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
+  #game.video-mode #videoFavoritesBtn{order:6; flex:1; width:auto; padding:0 10px; font-size:13px; text-transform:none;}
+  #game.video-mode #videoMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #videoLoopBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #videoFullscreenBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #dislikeBtn{order:10; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
+  #game.video-mode #shareBtn{order:11; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
   #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active{
     background:rgba(255,255,255,.35); border-color:rgba(255,255,255,.5);
   }
@@ -595,8 +653,10 @@
       <div class="row1">
         <button class="btn btn-primary" id="doneBtn">💕 Готово</button>
         <button class="btn btn-secondary" id="skipBtn">❄️ Отказ</button>
+        <button type="button" class="btn btn-secondary" id="videoLevelUpBtn" aria-label="Повысить уровень видео">Горячее</button>
         <button type="button" class="btn btn-secondary btn-square" id="favoriteBtn" aria-label="В избранное">☆</button>
       </div>
+      <div class="video-extra-toggle" id="videoExtraToggle">Дополнительно <span class="video-extra-arrow">▾</span></div>
       <div class="row2">
         <button class="btn btn-secondary" id="levelUpBtn">🔥 Повысить уровень</button>
         <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Понизить уровень">Легче</button>
@@ -605,7 +665,7 @@
         <button type="button" class="btn btn-secondary btn-square" id="videoMuteBtn" aria-label="Включить звук видео">🔇</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoLoopBtn" aria-label="Автопереключение на следующее видео">🔁</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoFullscreenBtn" aria-label="Видео на весь экран">⛶</button>
-        <button type="button" class="btn btn-secondary btn-square btn-text-square" id="videoFavoritesBtn" aria-label="Смотреть избранное">Смотреть избранное</button>
+        <button type="button" class="btn btn-secondary btn-square btn-text-square" id="videoFavoritesBtn" aria-label="Смотреть избранное">Избранное</button>
         <button type="button" class="btn btn-secondary btn-square" id="shareBtn" aria-label="Поделиться">⤴️</button>
         <button type="button" class="btn btn-secondary btn-square btn-text-square" id="pauseBtn" aria-label="Пауза">Пауза</button>
       </div>
@@ -900,6 +960,9 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
 });
 document.getElementById('placeholderToggle').addEventListener('click', ()=>{
   document.getElementById('placeholderBlock').classList.toggle('open');
+});
+document.getElementById('videoExtraToggle').addEventListener('click', ()=>{
+  document.querySelector('.controls').classList.toggle('video-extra-open');
 });
 document.getElementById('placeholderBtn1').addEventListener('click', ()=>{
   playSuccessSound();
@@ -1371,17 +1434,34 @@ document.getElementById('videoLoopBtn').addEventListener('click', ()=>{
     : 'Видео будет повторяться само');
 });
 
+// Флаги "мы сейчас в полноэкранном режиме видео" — чтобы при переходе на
+// следующее/предыдущее видео (свайп или кнопка) снова включать полный экран
+// автоматически, а не только для одного ролика.
+let videoFullscreenActive = false; // обычный Fullscreen API (карточка целиком)
+let videoNativeFullscreenActive = false; // нативный полноэкранный режим iOS (только видео)
+const isIOSDevice = /iP(hone|ad|od)/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+document.addEventListener('fullscreenchange', ()=>{
+  videoFullscreenActive = !!document.fullscreenElement;
+});
+document.addEventListener('webkitfullscreenchange', ()=>{
+  videoFullscreenActive = !!document.webkitFullscreenElement;
+});
+
 function toggleVideoFullscreen(){
   const video = document.getElementById('videoPlayer');
-  if(!video) return;
-  // На десктопном Safari у <video> тоже есть webkitEnterFullscreen, но вызов
-  // на не-iOS устройстве может тихо упасть с ошибкой — используем его только
-  // когда мы реально на iPhone/iPad, иначе идём по стандартному пути ниже.
-  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent)
-    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if(isIOS && video.webkitEnterFullscreen){
+  const cardEl = document.getElementById('card');
+  if(!video || !cardEl) return;
+  // На iPhone/iPad свайпы во время полного экрана работать не будут — это
+  // системный полноэкранный плеер видео, страница туда "не достаёт" жестами.
+  // На остальных устройствах разворачиваем всю карточку (не только видео),
+  // тогда свайпы продолжают работать и полный экран сохраняется при
+  // переключении на следующее/предыдущее видео.
+  if(isIOSDevice && video.webkitEnterFullscreen){
     try{
       video.webkitEnterFullscreen();
+      videoNativeFullscreenActive = true;
       return;
     } catch(err){ /* падаем ниже на стандартный способ */ }
   }
@@ -1390,18 +1470,18 @@ function toggleVideoFullscreen(){
       document.exitFullscreen();
       return;
     }
-    if(video.requestFullscreen){
-      const result = video.requestFullscreen();
+    if(cardEl.requestFullscreen){
+      const result = cardEl.requestFullscreen();
       if(result && typeof result.catch === 'function'){
         result.catch(()=>{
-          if(video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+          if(cardEl.webkitRequestFullscreen) cardEl.webkitRequestFullscreen();
           else showToast('Не удалось открыть полноэкранный режим');
         });
       }
       return;
     }
-    if(video.webkitRequestFullscreen){
-      video.webkitRequestFullscreen();
+    if(cardEl.webkitRequestFullscreen){
+      cardEl.webkitRequestFullscreen();
       return;
     }
     showToast('Полный экран не поддерживается на этом устройстве');
@@ -1465,8 +1545,9 @@ function drawVideoCard(level){
   state.videoUsed[level] = used;
   currentVideoCard = card;
   saveState();
-  // Новое видео — обрезаем историю "вперёд" (если до этого свайпали назад) и добавляем его
-  videoHistory = videoHistory.slice(0, videoHistoryPos + 1);
+  // Новое видео всегда дописывается в конец истории (ничего не теряем,
+  // даже если до этого свайпали назад) — так свайп влево всегда может
+  // довести обратно до самого первого показанного видео.
   videoHistory.push(card);
   videoHistoryPos = videoHistory.length - 1;
   renderVideoCard(card, level);
@@ -1506,7 +1587,7 @@ function renderVideoCard(card, level){
     el.innerHTML = `
       <div class="card-inner">
         <div class="card-split-media" id="videoMedia">
-          <video src="${card.video}" id="videoPlayer" controls playsinline autoplay></video>
+          <video src="${card.video}" id="videoPlayer" playsinline autoplay></video>
         </div>
       </div>
     `;
@@ -1521,6 +1602,13 @@ function renderVideoCard(card, level){
       video.addEventListener('ended', ()=>{
         if(state.videoAutoAdvance) drawVideoCard(videoLevel);
       });
+      // iOS: если предыдущее видео смотрели в полном экране — открываем
+      // следующее тоже сразу в полном экране (обычный <video> без этого
+      // каждый раз сбрасывается в обычный режим).
+      video.addEventListener('webkitendfullscreen', ()=>{ videoNativeFullscreenActive = false; });
+      if(videoNativeFullscreenActive && video.webkitEnterFullscreen){
+        try{ video.webkitEnterFullscreen(); } catch(err){}
+      }
     }
     updateVideoMuteBtn();
     updateVideoLoopBtn();
@@ -1546,6 +1634,10 @@ function goToVideoGame(){
   videoHistory = [];
   videoHistoryPos = -1;
   saveState();
+  document.querySelector('.controls').classList.remove('video-extra-open');
+  // В "Видеорулетке" кнопка "Выход" всегда на виду — переносим её в верхний
+  // ряд, после сердечка (в других режимах она остаётся в обычном месте).
+  document.querySelector('.row1').appendChild(document.getElementById('pauseBtn'));
   document.getElementById('setup').classList.remove('active');
   document.getElementById('game').classList.add('active');
   document.getElementById('game').classList.add('video-mode');
@@ -1561,6 +1653,19 @@ function goToVideoGame(){
 function exitVideoGame(){
   state.inProgress = false;
   saveState();
+  if(document.fullscreenElement) document.exitFullscreen();
+  videoFullscreenActive = false;
+  videoNativeFullscreenActive = false;
+  // Останавливаем видео полностью, иначе оно продолжает играть в фоне после выхода
+  const video = document.getElementById('videoPlayer');
+  if(video){
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  }
+  currentVideoCard = null;
+  // Возвращаем кнопку "Пауза" на обычное место (конец второго ряда)
+  document.querySelector('.row2').appendChild(document.getElementById('pauseBtn'));
   document.getElementById('game').classList.remove('video-mode');
   document.getElementById('doneBtn').textContent = '💕 Готово';
   document.getElementById('pauseBtn').textContent = 'Пауза';
@@ -1991,6 +2096,15 @@ document.getElementById('closeInstallBtn').addEventListener('click', ()=>{
 });
 document.getElementById('installModal').addEventListener('click', (e)=>{
   if(e.target.id === 'installModal') e.currentTarget.classList.remove('show');
+});
+document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
+  if(videoLevel < VIDEO_MAX_LEVEL){
+    playLevelUpSound();
+    drawVideoCard(videoLevel + 1);
+    showToast(`Уровень повышен: ${videoLevel}`);
+  } else {
+    showToast('Это максимальный уровень 🔥');
+  }
 });
 document.getElementById('levelUpBtn').addEventListener('click', ()=>{
   if(isPlaceholderMode()){
