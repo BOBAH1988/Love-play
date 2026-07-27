@@ -268,16 +268,21 @@
     position:relative;
     transform-style:preserve-3d;
   }
-  /* В "Видеорулетке" карточка по ширине совпадает с блоком кнопок под ней */
+  /* В "Видеорулетке" карточка по высоте занимает доступное место, а по ширине
+     подстраивается под соотношение сторон текущего видео (задаётся в JS через
+     aspect-ratio), чтобы не было пустых полос по бокам. */
   #game.video-mode .card{
-    max-width:none;
+    width:auto;
+    max-width:100%;
     padding:0;
     overflow:hidden;
     /* Отступ сверху сокращён, чтобы был как отступ снизу до кнопки "Следующее" */
     margin-top:18px;
+    background:#000;
   }
   #game.video-mode .card-split-media{
     border-radius:24px;
+    background:#000;
   }
   /* Полноэкранный режим карточки с видео: заполняем весь экран целиком —
      вертикально, если телефон вертикально, и горизонтально, если горизонтально.
@@ -1001,18 +1006,32 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
 
 
 document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
+  // Обычная игра (карточки)
   state.hiddenIndexes = [];
   state.usedIndexes = [];
   state.gameMode = 'custom';
   state.activeLevels = [1,2,3,4,5];
   state.starter = 'random';
   state.favoritesOnly = false;
+  // Давай попробуем (фото)
+  state.photoUsed = {};
+  state.photoHidden = [];
+  state.photoDone = [];
+  // Видеорулетка
+  state.videoUsed = {};
+  state.videoHidden = [];
+  state.videoFavoritesOnly = false;
+  state.videoAutoAdvance = false;
   saveState();
   renderModeGroup();
   renderLevelToggles();
   renderStarterGroup();
   updateFavoritesOnlyBtn();
-  showToast('Прогресс и настройки игры сброшены');
+  clearAllVideoBlobs().then(()=>{
+    importedVideoCards = [];
+    importedVideosLoaded = true;
+  });
+  showToast('Прогресс всех игр сброшен, добавленные видео удалены');
 });
 
 /* ============ ПОДБОР КАРТ ============ */
@@ -1397,8 +1416,22 @@ document.getElementById('imageZoomModal').addEventListener('click', closeImageZo
 // обойти его без собственного сервера-прокси нельзя. Поэтому видео снова
 // берутся только локально, из папки video/.
 
+// Видео-заглушка на случай, если для уровня нет видео или файл не воспроизвёлся —
+// используем образец из video_cards.js (первую запись), а не пустую иконку.
+function getFallbackVideoCard(){
+  if(typeof VIDEO_CARDS !== 'undefined' && Array.isArray(VIDEO_CARDS) && VIDEO_CARDS.length > 0){
+    return VIDEO_CARDS[0];
+  }
+  return null;
+}
 // Заглушка: показывается, если видео нет
 function renderVideoPlaceholderCard(){
+  const fallback = getFallbackVideoCard();
+  if(fallback){
+    currentVideoCard = fallback;
+    renderVideoCard(fallback, videoLevel);
+    return;
+  }
   clearInterval(timerInterval);
   timerInterval = null;
   currentCard = null;
@@ -1414,8 +1447,11 @@ function videoCardId(c){
 }
 
 function getVideoCardsList(){
-  const base = (typeof VIDEO_CARDS !== 'undefined' && Array.isArray(VIDEO_CARDS)) ? VIDEO_CARDS : [];
-  return base.concat(importedVideoCards);
+  // Пока пользователь не добавил свои видео с телефона — показываем образец
+  // из video_cards.js. Как только появилось хотя бы одно своё видео, образец
+  // из общей колоды убирается и используются только добавленные файлы.
+  if(importedVideoCards.length > 0) return importedVideoCards;
+  return (typeof VIDEO_CARDS !== 'undefined' && Array.isArray(VIDEO_CARDS)) ? VIDEO_CARDS : [];
 }
 
 // ===== Свои видео с телефона (хранятся локально в приложении, через IndexedDB) =====
@@ -1457,6 +1493,14 @@ function loadAllVideoBlobs(){
     req.onsuccess = ()=> resolve(req.result || []);
     req.onerror = ()=> reject(req.error);
   }));
+}
+function clearAllVideoBlobs(){
+  return openVideoDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(VIDEO_DB_STORE, 'readwrite');
+    tx.objectStore(VIDEO_DB_STORE).clear();
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  })).catch(()=>{});
 }
 function ensureImportedVideosLoaded(){
   if(importedVideosLoaded) return Promise.resolve();
@@ -1710,7 +1754,22 @@ function renderVideoCard(card, level){
     if(video){
       video.muted = !videoSoundOn;
       video.loop = !state.videoAutoAdvance;
+      // Подгоняем ширину карточки под соотношение сторон текущего видео,
+      // чтобы по бокам не оставалось пустого места.
+      video.addEventListener('loadedmetadata', ()=>{
+        if(video.videoWidth && video.videoHeight){
+          el.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+        }
+      });
       video.addEventListener('error', ()=>{
+        const fallback = getFallbackVideoCard();
+        // Если сломался не сам образец — показываем вместо него образец из
+        // video_cards.js. Если сломался и он тоже — тогда уже просто иконка,
+        // чтобы не зациклиться.
+        if(fallback && card.video !== fallback.video){
+          renderVideoCard(fallback, level);
+          return;
+        }
         const media = document.getElementById('videoMedia');
         if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
       });
@@ -1780,6 +1839,9 @@ function exitVideoGame(){
     video.load();
   }
   currentVideoCard = null;
+  // Сбрасываем подогнанное под видео соотношение сторон карточки, чтобы
+  // оно не осталось висеть в других режимах игры
+  document.getElementById('card').style.aspectRatio = '';
   // Возвращаем кнопку "Пауза" на обычное место (конец второго ряда)
   document.querySelector('.row2').appendChild(document.getElementById('pauseBtn'));
   document.getElementById('game').classList.remove('video-mode');
@@ -2624,6 +2686,18 @@ document.getElementById('addCardModal').addEventListener('click', (e)=>{
 
 /* ============ ИНИЦИАЛИЗАЦИЯ ============ */
 loadState();
+// При полной перезагрузке страницы (не просто переходе между экранами внутри
+// уже открытого приложения) экран "Продолжить игру" не нужен — каждое новое
+// открытие приложения начинается с чистого меню, старая незавершённая партия
+// автоматически считается закрытой.
+if(state.inProgress){
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.inProgress = false;
+  saveState();
+}
 if(!getSortedActiveLevels().includes(state.levelCap)) state.levelCap = getSortedActiveLevels()[0];
 renderLevelToggles();
 renderStarterGroup();
