@@ -398,6 +398,8 @@
   #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
   #shareBtn{display:none;}
   #game.placeholder-mode #shareBtn, #game.video-mode #shareBtn{display:flex;}
+  #videoImportBtn{display:none;}
+  #game.video-mode #videoImportBtn{display:flex;}
   #videoMuteBtn, #videoLoopBtn, #videoFavoritesBtn, #videoFullscreenBtn{display:none;}
   #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoFavoritesBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
   /* В "Видеорулетке" обычные кнопки уровня скрыты — вместо них своя "Горячее" */
@@ -430,6 +432,7 @@
   #game.video-mode #videoFullscreenBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #dislikeBtn{order:10; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
   #game.video-mode #shareBtn{order:11; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
+  #game.video-mode #videoImportBtn{order:12; flex:0 0 40px; width:40px; padding:0; font-size:18px;}
   #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active{
     background:rgba(255,255,255,.35); border-color:rgba(255,255,255,.5);
   }
@@ -667,9 +670,11 @@
         <button type="button" class="btn btn-secondary btn-square" id="videoFullscreenBtn" aria-label="Видео на весь экран">⛶</button>
         <button type="button" class="btn btn-secondary btn-square btn-text-square" id="videoFavoritesBtn" aria-label="Смотреть избранное">Избранное</button>
         <button type="button" class="btn btn-secondary btn-square" id="shareBtn" aria-label="Поделиться">⤴️</button>
+        <button type="button" class="btn btn-secondary btn-square" id="videoImportBtn" aria-label="Добавить видео со своего телефона">➕</button>
         <button type="button" class="btn btn-secondary btn-square btn-text-square" id="pauseBtn" aria-label="Пауза">Пауза</button>
       </div>
     </div>
+    <input type="file" id="videoImportInput" accept="video/*" multiple style="display:none">
   </section>
 
   <div class="toast" id="toast"></div>
@@ -1392,9 +1397,82 @@ function videoCardId(c){
 }
 
 function getVideoCardsList(){
-  if(typeof VIDEO_CARDS === 'undefined' || !Array.isArray(VIDEO_CARDS)) return [];
-  return VIDEO_CARDS;
+  const base = (typeof VIDEO_CARDS !== 'undefined' && Array.isArray(VIDEO_CARDS)) ? VIDEO_CARDS : [];
+  return base.concat(importedVideoCards);
 }
+
+// ===== Свои видео с телефона (хранятся локально в приложении, через IndexedDB) =====
+const VIDEO_DB_NAME = 'LovePlayVideoDB';
+const VIDEO_DB_STORE = 'videos';
+let videoDBPromise = null;
+let importedVideoCards = [];
+let importedVideosLoaded = false;
+
+function openVideoDB(){
+  if(videoDBPromise) return videoDBPromise;
+  videoDBPromise = new Promise((resolve, reject)=>{
+    if(!('indexedDB' in window)){ reject(new Error('IndexedDB не поддерживается')); return; }
+    const req = indexedDB.open(VIDEO_DB_NAME, 1);
+    req.onupgradeneeded = ()=>{
+      const db = req.result;
+      if(!db.objectStoreNames.contains(VIDEO_DB_STORE)){
+        db.createObjectStore(VIDEO_DB_STORE, {keyPath:'id', autoIncrement:true});
+      }
+    };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+  return videoDBPromise;
+}
+function saveVideoBlob(file){
+  return openVideoDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(VIDEO_DB_STORE, 'readwrite');
+    const store = tx.objectStore(VIDEO_DB_STORE);
+    const req = store.add({ name:file.name, blob:file, addedAt:Date.now() });
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  }));
+}
+function loadAllVideoBlobs(){
+  return openVideoDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(VIDEO_DB_STORE, 'readonly');
+    const req = tx.objectStore(VIDEO_DB_STORE).getAll();
+    req.onsuccess = ()=> resolve(req.result || []);
+    req.onerror = ()=> reject(req.error);
+  }));
+}
+function ensureImportedVideosLoaded(){
+  if(importedVideosLoaded) return Promise.resolve();
+  return loadAllVideoBlobs().then(rows => {
+    importedVideoCards = rows.map(r => ({
+      level: 1,
+      video: URL.createObjectURL(r.blob),
+      id: 'imported-' + r.id,
+      imported: true
+    }));
+    importedVideosLoaded = true;
+  }).catch(()=>{
+    importedVideoCards = [];
+    importedVideosLoaded = true;
+  });
+}
+const videoImportInputEl = document.getElementById('videoImportInput');
+document.getElementById('videoImportBtn').addEventListener('click', ()=>{
+  videoImportInputEl.click();
+});
+videoImportInputEl.addEventListener('change', ()=>{
+  const files = Array.from(videoImportInputEl.files || []).filter(f=>f.type.startsWith('video/'));
+  if(files.length === 0){ videoImportInputEl.value = ''; return; }
+  showToast('Добавляем видео…');
+  Promise.all(files.map(f => saveVideoBlob(f).catch(()=>null))).then(results => {
+    const added = results.filter(r => r !== null).length;
+    importedVideosLoaded = false;
+    videoImportInputEl.value = '';
+    ensureImportedVideosLoaded().then(()=>{
+      showToast(added > 0 ? `Добавлено видео: ${added}` : 'Не удалось добавить видео');
+    });
+  });
+});
 
 const VIDEO_MAX_LEVEL = 4;
 let videoLevel = 1;
@@ -1617,7 +1695,7 @@ function renderVideoCard(card, level){
   updateFavoriteBtn();
 }
 
-function goToVideoGame(){
+async function goToVideoGame(){
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -1647,6 +1725,7 @@ function goToVideoGame(){
   updateLevelUI();
   updateMuteBtn();
   requestWakeLock();
+  await ensureImportedVideosLoaded();
   drawVideoCard(videoLevel);
 }
 
