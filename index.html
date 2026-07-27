@@ -426,7 +426,7 @@
   #game.video-mode #videoLevelUpBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:13px;}
   #game.video-mode #favoriteBtn{order:3; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
   #game.video-mode #pauseBtn{order:4; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
-  #game.video-mode #videoFavoritesBtn{order:6; flex:1; width:auto; padding:0 10px; font-size:13px; text-transform:none;}
+  #game.video-mode #videoFavoritesBtn{order:6; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
   #game.video-mode #videoMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #videoLoopBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #videoFullscreenBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
@@ -548,6 +548,8 @@
     font-size:14px; line-height:1.5; text-align:left; color:#3a2438;
   }
   .modal-rules li{padding-left:4px;}
+  .video-level-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .video-level-grid .btn{width:100%;}
   .summary-stats{
     display:flex; flex-direction:column; gap:10px; margin-bottom:22px; text-align:center;
   }
@@ -668,7 +670,7 @@
         <button type="button" class="btn btn-secondary btn-square" id="videoMuteBtn" aria-label="Включить звук видео">🔇</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoLoopBtn" aria-label="Автопереключение на следующее видео">🔁</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoFullscreenBtn" aria-label="Видео на весь экран">⛶</button>
-        <button type="button" class="btn btn-secondary btn-square btn-text-square" id="videoFavoritesBtn" aria-label="Смотреть избранное">Избранное</button>
+        <button type="button" class="btn btn-secondary btn-square" id="videoFavoritesBtn" aria-label="Смотреть избранное">⭐</button>
         <button type="button" class="btn btn-secondary btn-square" id="shareBtn" aria-label="Поделиться">⤴️</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoImportBtn" aria-label="Добавить видео со своего телефона">+</button>
         <button type="button" class="btn btn-secondary btn-square btn-text-square" id="pauseBtn" aria-label="Пауза">Пауза</button>
@@ -766,6 +768,21 @@
   <!-- ===== ПРОСМОТР ФОТО НА ВЕСЬ ЭКРАН ===== -->
   <div class="modal-overlay" id="imageZoomModal">
     <img src="" alt="" id="zoomedImage">
+  </div>
+
+  <!-- ===== УРОВЕНЬ ДЛЯ ДОБАВЛЯЕМЫХ ВИДЕО ===== -->
+  <div class="modal-overlay" id="videoLevelModal">
+    <div class="modal-card">
+      <div class="modal-title">Уровень для новых видео</div>
+      <div class="intro-text" id="videoLevelModalCount" style="text-align:center; margin-bottom:14px;"></div>
+      <div class="video-level-grid">
+        <button type="button" class="btn btn-secondary video-level-choice" data-level="1">Уровень 1</button>
+        <button type="button" class="btn btn-secondary video-level-choice" data-level="2">Уровень 2</button>
+        <button type="button" class="btn btn-secondary video-level-choice" data-level="3">Уровень 3</button>
+        <button type="button" class="btn btn-secondary video-level-choice" data-level="4">Уровень 4</button>
+      </div>
+      <button class="btn btn-secondary" id="cancelVideoLevelBtn" style="margin-top:12px;">Отмена</button>
+    </div>
   </div>
 </div>
 
@@ -1424,11 +1441,11 @@ function openVideoDB(){
   });
   return videoDBPromise;
 }
-function saveVideoBlob(file){
+function saveVideoBlob(file, level){
   return openVideoDB().then(db => new Promise((resolve, reject)=>{
     const tx = db.transaction(VIDEO_DB_STORE, 'readwrite');
     const store = tx.objectStore(VIDEO_DB_STORE);
-    const req = store.add({ name:file.name, blob:file, addedAt:Date.now() });
+    const req = store.add({ name:file.name, blob:file, level:level, addedAt:Date.now() });
     req.onsuccess = ()=> resolve(req.result);
     req.onerror = ()=> reject(req.error);
   }));
@@ -1445,7 +1462,7 @@ function ensureImportedVideosLoaded(){
   if(importedVideosLoaded) return Promise.resolve();
   return loadAllVideoBlobs().then(rows => {
     importedVideoCards = rows.map(r => ({
-      level: 1,
+      level: r.level || 1,
       video: URL.createObjectURL(r.blob),
       id: 'imported-' + r.id,
       imported: true
@@ -1456,20 +1473,40 @@ function ensureImportedVideosLoaded(){
     importedVideosLoaded = true;
   });
 }
+
+// Модалка выбора уровня для только что выбранных файлов
+let pendingImportFiles = [];
 const videoImportInputEl = document.getElementById('videoImportInput');
+const videoLevelModalEl = document.getElementById('videoLevelModal');
 document.getElementById('videoImportBtn').addEventListener('click', ()=>{
   videoImportInputEl.click();
 });
 videoImportInputEl.addEventListener('change', ()=>{
   const files = Array.from(videoImportInputEl.files || []).filter(f=>f.type.startsWith('video/'));
-  if(files.length === 0){ videoImportInputEl.value = ''; return; }
-  showToast('Добавляем видео…');
-  Promise.all(files.map(f => saveVideoBlob(f).catch(()=>null))).then(results => {
-    const added = results.filter(r => r !== null).length;
-    importedVideosLoaded = false;
-    videoImportInputEl.value = '';
-    ensureImportedVideosLoaded().then(()=>{
-      showToast(added > 0 ? `Добавлено видео: ${added}` : 'Не удалось добавить видео');
+  videoImportInputEl.value = '';
+  if(files.length === 0) return;
+  pendingImportFiles = files;
+  document.getElementById('videoLevelModalCount').textContent = `Выбрано файлов: ${files.length}`;
+  videoLevelModalEl.classList.add('show');
+});
+document.getElementById('cancelVideoLevelBtn').addEventListener('click', ()=>{
+  pendingImportFiles = [];
+  videoLevelModalEl.classList.remove('show');
+});
+document.querySelectorAll('.video-level-choice').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const level = parseInt(btn.dataset.level, 10);
+    const files = pendingImportFiles;
+    pendingImportFiles = [];
+    videoLevelModalEl.classList.remove('show');
+    if(files.length === 0) return;
+    showToast('Добавляем видео…');
+    Promise.all(files.map(f => saveVideoBlob(f, level).catch(()=>null))).then(results => {
+      const added = results.filter(r => r !== null).length;
+      importedVideosLoaded = false;
+      ensureImportedVideosLoaded().then(()=>{
+        showToast(added > 0 ? `Добавлено видео (уровень ${level}): ${added}` : 'Не удалось добавить видео');
+      });
     });
   });
 });
