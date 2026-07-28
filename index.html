@@ -268,12 +268,14 @@
     position:relative;
     transform-style:preserve-3d;
   }
-  /* В "Видеорулетке" карточка по высоте занимает доступное место, а по ширине
-     подстраивается под соотношение сторон текущего видео (задаётся в JS через
-     aspect-ratio), чтобы не было пустых полос по бокам. */
+  /* В "Видеорулетке" карточка по высоте всегда занимает всё доступное место.
+     По ширине — на весь экран по умолчанию; JS сужает её под соотношение
+     сторон текущего видео (aspect-ratio), но только если видео "уже" экрана
+     (портретное) — для широких/горизонтальных видео ширина остаётся на весь
+     экран, чтобы высота никогда не уменьшалась. */
   #game.video-mode .card{
-    width:auto;
-    max-width:100%;
+    width:100%;
+    max-width:none;
     padding:0;
     overflow:hidden;
     /* Отступ сверху сокращён, чтобы был как отступ снизу до кнопки "Следующее" */
@@ -1754,11 +1756,25 @@ function renderVideoCard(card, level){
     if(video){
       video.muted = !videoSoundOn;
       video.loop = !state.videoAutoAdvance;
-      // Подгоняем ширину карточки под соотношение сторон текущего видео,
-      // чтобы по бокам не оставалось пустого места.
+      // Высота карточки всегда занимает всё доступное место. Ширину сужаем
+      // под видео, только если оно "уже" доступной области (портретное) —
+      // тогда по бокам не остаётся пустого места. Если видео горизонтальное
+      // и шире экрана, ширину карточки не трогаем (остаётся на весь экран),
+      // чтобы высота не уменьшилась — такое видео просто обрежется по бокам.
       video.addEventListener('loadedmetadata', ()=>{
         if(video.videoWidth && video.videoHeight){
-          el.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+          const area = document.querySelector('.card-area');
+          const availW = area ? area.clientWidth : window.innerWidth;
+          const availH = area ? area.clientHeight : window.innerHeight;
+          const videoRatio = video.videoWidth / video.videoHeight;
+          const areaRatio = availW / (availH || 1);
+          if(videoRatio <= areaRatio){
+            el.style.width = 'auto';
+            el.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+          } else {
+            el.style.width = '100%';
+            el.style.aspectRatio = '';
+          }
         }
       });
       video.addEventListener('error', ()=>{
@@ -1839,9 +1855,10 @@ function exitVideoGame(){
     video.load();
   }
   currentVideoCard = null;
-  // Сбрасываем подогнанное под видео соотношение сторон карточки, чтобы
-  // оно не осталось висеть в других режимах игры
+  // Сбрасываем подогнанные под видео размеры карточки, чтобы они не остались
+  // висеть в других режимах игры
   document.getElementById('card').style.aspectRatio = '';
+  document.getElementById('card').style.width = '';
   // Возвращаем кнопку "Пауза" на обычное место (конец второго ряда)
   document.querySelector('.row2').appendChild(document.getElementById('pauseBtn'));
   document.getElementById('game').classList.remove('video-mode');
