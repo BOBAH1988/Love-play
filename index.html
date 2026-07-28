@@ -1723,8 +1723,10 @@ function renderVideoCardFromHistory(pos){
 }
 
 function videoSwipePrev(){
+  // Бесконечная прокрутка: если в истории раньше некуда — просто показываем
+  // новое случайное видео, а не упираемся в сообщение "это первое видео".
   if(videoHistoryPos <= 0){
-    showToast('Это первое видео');
+    drawVideoCard(videoLevel);
     return;
   }
   renderVideoCardFromHistory(videoHistoryPos - 1);
