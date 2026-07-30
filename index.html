@@ -83,6 +83,30 @@
     position:relative;
     overscroll-behavior:none;
   }
+  /* На компьютере (широкий экран) не растягиваем интерфейс во всю ширину —
+     держим комфортную "мобильную" колонку по центру, с рамкой для наглядности. */
+  @media (min-width:640px){
+    #app{
+      max-width:480px;
+      margin:0 auto;
+      border-left:1px solid rgba(255,255,255,.08);
+      border-right:1px solid rgba(255,255,255,.08);
+      box-shadow:0 0 80px rgba(0,0,0,.55);
+    }
+  }
+  /* Горизонтальная ориентация телефона в "Видеорулетке" и "Давай попробуем":
+     высота экрана резко сокращается, поэтому служебные элементы (имена
+     игроков, шкала прогресса, кнопки) сжимаем, чтобы видео заняло максимум
+     доступного места. */
+  @media (orientation:landscape) and (max-height:600px){
+    #game.video-mode .card, #game.davay-mode .card{margin-top:6px;}
+    #game.davay-mode .davay-player-row{margin-bottom:6px;}
+    #game.davay-mode .davay-player-row .btn{padding:8px;}
+    #game.davay-mode .davay-progress-row{margin-bottom:6px;}
+    #game.video-mode .controls, #game.davay-mode .controls{gap:5px; margin-top:6px;}
+    #game.video-mode .controls .btn, #game.davay-mode .controls .btn{height:36px; font-size:13px;}
+    #game.davay-mode .davay-repeat-label{padding:0 0 2px; font-size:13px;}
+  }
   .screen{
     flex:1;
     display:none;
@@ -161,6 +185,10 @@
   .toggle-pill.on{
     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
   }
+  /* Кнопки блока "Резервная копия" — ниже обычных toggle-pill */
+  #exportDataBtn, #importDataBtn{
+    padding:6px 8px; font-size:12px;
+  }
 
   .levels{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
   .level-toggle{
@@ -217,9 +245,9 @@
     display:inline-block; font-size:10px; transition:transform .2s ease;
   }
   #placeholderBlock.open .placeholder-arrow{transform:rotate(180deg);}
-  .placeholder-row{display:none; gap:10px;}
+  .placeholder-row{display:none; gap:10px; flex-wrap:wrap;}
   #placeholderBlock.open .placeholder-row{display:flex;}
-  .placeholder-row .btn{flex:1; padding:10px; font-size:14px;}
+  .placeholder-row .btn{flex:1 1 140px; padding:10px; font-size:14px;}
   .btn-placeholder-a{
     background:linear-gradient(135deg,#2fd4c4,#1fa8b8); color:#0a2b2e;
     box-shadow:0 8px 20px rgba(47,212,196,.35);
@@ -228,6 +256,13 @@
     background:linear-gradient(135deg,#8a6bff,#c07bff); color:#22103f;
     box-shadow:0 8px 20px rgba(138,107,255,.35);
   }
+  .btn-placeholder-c{
+    background:linear-gradient(135deg,#ff9a5e,#ff6b8b); color:#3a1208;
+    box-shadow:0 8px 20px rgba(255,107,139,.35);
+  }
+  /* Список игр на главной странице */
+  .game-select-list{display:flex; flex-direction:column; gap:12px; margin-top:6px;}
+  .game-select-list .btn{padding:16px; font-size:17px;}
   .btn-ghost{
     background:transparent; color:#e8c9dd; text-decoration:underline; font-weight:600; font-size:14px;
   }
@@ -273,7 +308,7 @@
      сторон текущего видео (aspect-ratio), но только если видео "уже" экрана
      (портретное) — для широких/горизонтальных видео ширина остаётся на весь
      экран, чтобы высота никогда не уменьшалась. */
-  #game.video-mode .card{
+  #game.video-mode .card, #game.davay-mode .card{
     width:100%;
     max-width:none;
     padding:0;
@@ -282,7 +317,7 @@
     margin-top:18px;
     background:#000;
   }
-  #game.video-mode .card-split-media{
+  #game.video-mode .card-split-media, #game.davay-mode .card-split-media{
     border-radius:24px;
     background:#000;
   }
@@ -314,7 +349,7 @@
     object-fit:contain;
   }
   /* В "Видеорулетке" уровней нет — прячем пустую полоску прогресса над карточкой */
-  #game.video-mode #levelProgress{display:none;}
+  #game.video-mode #levelProgress, #game.davay-mode #levelProgress{display:none;}
   .card-inner{
     display:flex;
     flex-direction:column;
@@ -375,6 +410,13 @@
   .card-empty .card-inner{align-items:center; justify-content:center;}
   .card-empty .card-icon{font-size:52px;}
   .card-empty .card-text{font-size:16px; color:#7a5a72; font-weight:600;}
+  /* Карточка "Передайте телефон" — крупнее и светлее, чем обычный плейсхолдер */
+  .card-empty .card-text.davay-handoff-text{
+    font-size:22px; color:var(--accent); font-weight:800;
+  }
+  @media (min-width:380px) and (min-height:640px){
+    .card-empty .card-text.davay-handoff-text{ font-size:26px; }
+  }
 
   .card-split{display:flex; flex-direction:column; height:100%; gap:14px;}
   .card-split-media{
@@ -392,57 +434,163 @@
     font-size:17px; font-weight:800; color:#2b0f2e;
   }
 
-  #game.placeholder-mode .score-row, #game.video-mode .score-row{display:none;}
-  #game.placeholder-mode #skipBtn, #game.video-mode #skipBtn{display:none;}
-  #game.placeholder-mode #refreshBtn, #game.video-mode #refreshBtn{display:none;}
-  #game.placeholder-mode #favoriteBtn, #game.video-mode #favoriteBtn{
+  #game.placeholder-mode .score-row, #game.video-mode .score-row, #game.davay-mode .score-row{display:none;}
+  #game.placeholder-mode #skipBtn, #game.video-mode #skipBtn, #game.davay-mode #skipBtn{display:none;}
+  #game.placeholder-mode #refreshBtn, #game.video-mode #refreshBtn, #game.davay-mode #refreshBtn{display:none;}
+  #game.placeholder-mode #favoriteBtn, #game.video-mode #favoriteBtn, #game.davay-mode #favoriteBtn{
     flex:0 0 auto; width:auto; padding:0 16px; font-size:20px;
   }
-  #game.placeholder-mode #favoriteBtn.active, #game.video-mode #favoriteBtn.active{
+  #game.placeholder-mode #favoriteBtn.active, #game.video-mode #favoriteBtn.active, #game.davay-mode #favoriteBtn.active{
     background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25);
   }
   #levelDownBtn{display:none;}
   #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
-  #shareBtn{display:none;}
-  #game.placeholder-mode #shareBtn, #game.video-mode #shareBtn{display:flex;}
-  #videoImportBtn{display:none;}
+  #videoImportBtn, #davayImportBtn{display:none;}
   #game.video-mode #videoImportBtn{display:flex;}
-  #videoMuteBtn, #videoLoopBtn, #videoFavoritesBtn, #videoFullscreenBtn{display:none;}
+  #game.davay-mode #davayImportBtn{display:flex;}
+  #videoMuteBtn, #videoLoopBtn, #videoFavoritesBtn, #videoFullscreenBtn,
+  #davayMuteBtn, #davayLoopBtn, #davayFavoritesBtn, #davayFullscreenBtn{display:none;}
   #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoFavoritesBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
-  /* В "Видеорулетке" обычные кнопки уровня скрыты — вместо них своя "Горячее" */
-  #game.video-mode #levelUpBtn, #game.video-mode #levelDownBtn{display:none;}
-  #videoLevelUpBtn{display:none;}
+  #game.davay-mode #davayMuteBtn, #game.davay-mode #davayLoopBtn, #game.davay-mode #davayFavoritesBtn, #game.davay-mode #davayFullscreenBtn{display:flex;}
+  /* В "Видеорулетке" и "Давай попробуем" обычные кнопки уровня скрыты — вместо них своя "Горячее" */
+  #game.video-mode #levelUpBtn, #game.video-mode #levelDownBtn,
+  #game.davay-mode #levelUpBtn, #game.davay-mode #levelDownBtn{display:none;}
+  #videoLevelUpBtn, #davayLevelUpBtn{display:none;}
   #game.video-mode #videoLevelUpBtn{display:flex;}
-  /* В "Видеорулетке" два ряда: сверху "Следующее" + лайк,
+  #game.davay-mode #davayLevelUpBtn{display:flex;}
+  /* В "Видеорулетке"/"Давай попробуем" два ряда: сверху "Следующее" + лайк,
      снизу — "Смотреть избранное" + звук/автопереключение/дизлайк/поделиться/выход.
      Нижний ряд скрыт по умолчанию и раскрывается кнопкой "Дополнительно". */
-  #game.video-mode .controls{flex-direction:row; flex-wrap:wrap; align-items:stretch; gap:6px;}
-  #game.video-mode .row1{display:contents;}
-  #game.video-mode .row2{display:none;}
-  #game.video-mode .controls.video-extra-open .row2{display:contents;}
-  #game.video-mode .controls .btn{height:44px;}
+  #game.video-mode .controls, #game.davay-mode .controls{flex-direction:row; flex-wrap:wrap; align-items:stretch; gap:6px;}
+  #game.video-mode .row1, #game.davay-mode .row1{display:contents;}
+  #game.video-mode .row2, #game.davay-mode .row2{display:none;}
+  #game.video-mode .controls.video-extra-open .row2,
+  #game.davay-mode .controls.davay-extra-open .row2{display:contents;}
+  #game.video-mode .controls .btn, #game.davay-mode .controls .btn{height:44px;}
   .video-extra-toggle{display:none;}
-  #game.video-mode .video-extra-toggle{
+  #game.video-mode .video-extra-toggle#videoExtraToggle{
     display:flex; order:5; flex-basis:100%; align-items:center; justify-content:center; gap:6px;
     text-align:center; font-size:12px; font-weight:700; color:#cba0bf;
     text-transform:uppercase; letter-spacing:.5px; cursor:pointer; padding:4px 0;
   }
+  #game.davay-mode .video-extra-toggle#davayExtraToggle{
+    display:flex; order:7; flex-basis:100%; align-items:center; justify-content:center; gap:6px;
+    text-align:center; font-size:12px; font-weight:700; color:#cba0bf;
+    text-transform:uppercase; letter-spacing:.5px; cursor:pointer; padding:4px 0;
+  }
   .video-extra-toggle .video-extra-arrow{display:inline-block; font-size:10px; transition:transform .2s ease;}
-  .controls.video-extra-open .video-extra-toggle .video-extra-arrow{transform:rotate(180deg);}
+  .controls.video-extra-open .video-extra-toggle .video-extra-arrow,
+  .controls.davay-extra-open .video-extra-toggle .video-extra-arrow{transform:rotate(180deg);}
   #game.video-mode #doneBtn{order:1; flex:1; min-width:0; font-size:14px; padding:0 8px;}
   #game.video-mode #videoLevelUpBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:13px;}
+  /* В "Давай попробуем" вместо "Следующее"/"Горячее" — заголовок и три кнопки,
+     "Выход" стоит рядом с этими тремя кнопками, "Избранное" (сердечко) теперь
+     хранит видео, на которые оба игрока независимо ответили "Да". */
+  #game.davay-mode #doneBtn, #game.davay-mode #davayLevelUpBtn{display:none;}
+  /* Ряд с именами игроков над карточкой: кто сейчас отвечает — выбор игрока
+     сделан заранее на странице настройки, кнопки тут только для отображения. */
+  .davay-player-row{display:none;}
+  #game.davay-mode .davay-player-row{
+    display:flex; gap:10px; margin-bottom:10px;
+  }
+  .davay-player-row .btn{
+    flex:1; opacity:.45; background:rgba(255,255,255,.08);
+    pointer-events:none; cursor:default;
+  }
+  .davay-player-row .btn.active{
+    opacity:1; background:linear-gradient(135deg,#ff9a5e,#ff6b8b); color:#3a1208;
+  }
+  .davay-player-row .btn.done{
+    opacity:.3;
+  }
+  /* Графическая шкала прогресса: сколько из 10 видео уже пройдено */
+  .davay-progress-row{display:none;}
+  #game.davay-mode .davay-progress-row{
+    display:flex; align-items:center; gap:8px; margin-bottom:10px;
+  }
+  .davay-progress-track{
+    flex:1; height:8px; border-radius:6px; background:rgba(255,255,255,.15); overflow:hidden;
+  }
+  .davay-progress-fill{
+    height:100%; width:0%; border-radius:6px;
+    background:linear-gradient(135deg,#ff9a5e,#ff6b8b);
+    transition:width .25s ease;
+  }
+  .davay-progress-label{
+    font-size:12px; color:#cba0bf; white-space:nowrap; min-width:44px; text-align:right;
+  }
+  .davay-repeat-label{display:none;}
+  #game.davay-mode .davay-repeat-label{
+    display:flex; order:1; flex-basis:100%; align-items:center; justify-content:center;
+    text-align:center; font-size:14px; font-weight:800; color:#fff; padding:2px 0 4px;
+  }
+  #davayYesBtn, #davayLaterBtn, #davayNoBtn{display:none;}
+  #game.davay-mode #davayYesBtn, #game.davay-mode #davayLaterBtn, #game.davay-mode #davayNoBtn{
+    display:flex; flex:1; min-width:0; font-size:13px; padding:0 6px;
+  }
+  #game.davay-mode #davayYesBtn{order:2;}
+  #game.davay-mode #davayLaterBtn{order:3;}
+  #game.davay-mode #davayNoBtn{order:4;}
+  /* Передача устройства второму игроку: пустая карточка + кнопка "Начать"
+     вместо вопросов Да/Не сейчас/Нет. */
+  #davayHandoffStartBtn{display:none;}
+  #game.davay-mode.davay-handoff #davayYesBtn,
+  #game.davay-mode.davay-handoff #davayLaterBtn,
+  #game.davay-mode.davay-handoff #davayNoBtn,
+  #game.davay-mode.davay-handoff .davay-repeat-label{
+    display:none;
+  }
+  #game.davay-mode.davay-handoff #davayHandoffStartBtn{
+    display:flex; order:1; flex-basis:100%;
+  }
+  /* Просмотр избранного: вместо Да/Не сейчас/Нет — Следующее/Предыдущее для
+     перелистывания совпавших видео этого уровня. */
+  #davayFavPrevBtn, #davayFavNextBtn{display:none;}
+  #game.davay-mode.davay-favview #davayYesBtn,
+  #game.davay-mode.davay-favview #davayLaterBtn,
+  #game.davay-mode.davay-favview #davayNoBtn,
+  #game.davay-mode.davay-favview .davay-repeat-label{
+    display:none;
+  }
+  #game.davay-mode.davay-favview #davayFavPrevBtn,
+  #game.davay-mode.davay-favview #davayFavNextBtn{
+    display:flex; flex:1; min-width:0; font-size:13px; padding:0 6px;
+  }
+  #game.davay-mode #davayFavPrevBtn{order:2;}
+  #game.davay-mode #davayFavNextBtn{order:3;}
+  /* В просмотре избранного не нужны: имена игроков, шкала прогресса квиза,
+     кнопка добавления видео. */
+  #game.davay-mode.davay-favview .davay-player-row,
+  #game.davay-mode.davay-favview .davay-progress-row{
+    display:none;
+  }
+  #game.davay-mode.davay-favview #davayImportBtn{
+    display:none;
+  }
   #game.video-mode #favoriteBtn{order:3; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
+  #game.davay-mode #favoriteBtn{order:5; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
   #game.video-mode #pauseBtn{order:4; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
+  #game.davay-mode #pauseBtn{order:6; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
   #game.video-mode #videoFavoritesBtn{order:6; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
+  #game.davay-mode #davayFavoritesBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
   #game.video-mode #videoMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.davay-mode #davayMuteBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #videoLoopBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.davay-mode #davayLoopBtn{order:10; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #videoFullscreenBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.davay-mode #davayFullscreenBtn{order:11; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #dislikeBtn{order:10; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
-  #game.video-mode #shareBtn{order:11; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
+  #game.davay-mode #dislikeBtn{order:12; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
   #game.video-mode #videoImportBtn{order:12; flex:0 0 40px; width:40px; padding:0; font-size:22px; font-weight:700; color:#3ddc78;}
-  #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active{
+  #game.davay-mode #davayImportBtn{order:14; flex:0 0 40px; width:40px; padding:0; font-size:22px; font-weight:700; color:#3ddc78;}
+  #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active,
+  #game.davay-mode #davayLoopBtn.active, #game.davay-mode #davayFavoritesBtn.active{
     background:rgba(255,255,255,.35); border-color:rgba(255,255,255,.5);
   }
+  /* В "Давай попробуем" из блока "Дополнительно" убраны: дизлайк, избранное,
+     полный экран, поделиться — остаются только звук и автопереключение. */
+  #game.davay-mode #dislikeBtn, #game.davay-mode #davayFavoritesBtn,
+  #game.davay-mode #davayFullscreenBtn{display:none;}
   .card-split-media video{width:100%; height:100%; object-fit:cover; display:block;}
 
   .card-timer{
@@ -582,7 +730,7 @@
 <body>
 <div id="app">
 
-  <!-- ===== SETUP SCREEN ===== -->
+  <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) ===== -->
   <section id="setup" class="screen active">
     <h1 class="title">💕 Игра для двоих</h1>
     <div class="subtitle">Разожгите страсть и почувствуйте друг друга заново</div>
@@ -597,6 +745,41 @@
         <input type="text" id="name2" placeholder="Sexy" minlength="2" maxlength="10">
       </div>
     </div>
+
+    <div class="resume-row" id="resumeRow">
+      <button class="btn btn-primary" id="resumeBtn">Продолжить игру</button>
+      <button class="btn btn-secondary" id="finishGameBtn">Закончить игру</button>
+    </div>
+
+    <div class="field">
+      <label>Выбери игру</label>
+      <div class="game-select-list" id="gameSelectList">
+        <button type="button" class="btn btn-primary" id="gameFantyBtn">💘 Фанты</button>
+        <button type="button" class="btn btn-placeholder-c" id="gameDavayBtn">🎬 Давай попробуем</button>
+        <button type="button" class="btn btn-placeholder-a" id="gamePhotoBtn">💃 Позы любви</button>
+        <button type="button" class="btn btn-placeholder-b" id="gameVideoBtn">🎥 Видеорулетка</button>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:18px;">
+      <label>Резервная копия</label>
+      <div class="toggle-row" style="margin-bottom:0;">
+        <button type="button" class="toggle-pill" id="exportDataBtn">⬆ Экспортировать данные</button>
+        <button type="button" class="toggle-pill" id="importDataBtn">⬇ Импортировать данные</button>
+      </div>
+      <input type="file" id="importDataInput" accept="application/json,.json" style="display:none">
+    </div>
+
+    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:14px;">
+      <span class="btn-ghost" id="resetHiddenBtn">Сбросить прогресс</span>
+      <span class="btn-ghost" id="installBtn">⬇ Установить</span>
+    </div>
+  </section>
+
+  <!-- ===== ФАНТЫ: НАСТРОЙКА ИГРЫ ===== -->
+  <section id="fantySetup" class="screen">
+    <h1 class="title">💘 Фанты</h1>
+    <div class="subtitle">Тяните карточки и раскрывайтесь друг другу</div>
 
     <div class="field">
       <label>Режим игры</label>
@@ -621,28 +804,49 @@
       </div>
     </div>
 
-    <div class="toggle-row">
-      <button type="button" class="toggle-pill" id="muteBtn" aria-label="Выключить звук">🔊 Звук включён</button>
-      <button type="button" class="toggle-pill" id="favoritesOnlyBtn" aria-pressed="false">⭐ Только избранное</button>
-    </div>
-
-    <div class="resume-row" id="resumeRow">
-      <button class="btn btn-primary" id="resumeBtn">Продолжить игру</button>
-      <button class="btn btn-secondary" id="finishGameBtn">Закончить игру</button>
-    </div>
     <button class="btn btn-primary" id="startBtn">Начать новую игру</button>
-    <div id="placeholderBlock">
-      <div class="placeholder-label" id="placeholderToggle">Дополнительные игры <span class="placeholder-arrow">▾</span></div>
-      <div class="placeholder-row">
-        <button type="button" class="btn btn-placeholder-a" id="placeholderBtn1">Давай попробуем</button>
-        <button type="button" class="btn btn-placeholder-b" id="placeholderBtn2">Видеорулетка</button>
+    <button class="btn btn-secondary" id="fantyExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="field" style="margin-top:10px;">
+      <label>Настройки</label>
+      <div class="toggle-row">
+        <button type="button" class="toggle-pill" id="muteBtn" aria-label="Выключить звук">🔊 Звук включён</button>
+        <button type="button" class="toggle-pill" id="favoritesOnlyBtn" aria-pressed="false">⭐ Избранное</button>
+      </div>
+      <div class="toggle-row">
+        <button type="button" class="toggle-pill" id="rulesBtn">Правила</button>
+        <button type="button" class="toggle-pill" id="addCardBtn">Своё задание</button>
       </div>
     </div>
-    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:10px;">
-      <span class="btn-ghost" id="rulesBtn">Правила игры</span>
-      <span class="btn-ghost" id="addCardBtn">Своё задание</span>
-      <span class="btn-ghost" id="resetHiddenBtn">Сбросить прогресс</span>
-      <span class="btn-ghost" id="installBtn">⬇ Установить</span>
+  </section>
+
+  <!-- ===== ДАВАЙ ПОПРОБУЕМ: НАСТРОЙКА ИГРЫ ===== -->
+  <section id="davaySetup" class="screen">
+    <h1 class="title">🎬 Давай попробуем</h1>
+    <div class="subtitle">Поделись фантазиями со своей половинкой</div>
+
+    <div class="field">
+      <label>Первым начинает</label>
+      <div class="starter-group" id="davaySetupStarterGroup">
+        <button type="button" class="starter-btn" data-value="M">Men</button>
+        <button type="button" class="starter-btn" data-value="F">Sexy</button>
+        <button type="button" class="starter-btn" data-value="random">Случайно</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Уровни заданий</label>
+      <div class="levels" id="davaySetupLevels"></div>
+    </div>
+
+    <button class="btn btn-primary" id="davaySetupStartBtn">Начнём</button>
+    <button class="btn btn-secondary" id="davaySetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="davaySetupRulesBtn">Правила</button>
+      <button type="button" class="toggle-pill" id="davaySetupFavoritesBtn">❤️ Избранное</button>
+      <button type="button" class="toggle-pill" id="davaySetupImportBtn">➕ Добавить видео</button>
+      <button type="button" class="toggle-pill" id="davaySetupSoundBtn" aria-label="Включить звук видео">🔇 Звук выключен</button>
     </div>
   </section>
 
@@ -653,6 +857,15 @@
       <span id="score2">Sexy: 0</span>
     </div>
     <div class="level-progress" id="levelProgress"></div>
+
+    <div class="davay-player-row" id="davayPlayerRow">
+      <button type="button" class="btn btn-secondary" id="davayPlayer1Btn">Men</button>
+      <button type="button" class="btn btn-secondary" id="davayPlayer2Btn">Sexy</button>
+    </div>
+    <div class="davay-progress-row" id="davayProgressRow">
+      <div class="davay-progress-track"><div class="davay-progress-fill" id="davayProgressFill"></div></div>
+      <div class="davay-progress-label" id="davayProgressLabel">0 / 10</div>
+    </div>
 
     <div class="card-area">
       <div class="card card-empty" id="card">
@@ -666,9 +879,18 @@
         <button class="btn btn-primary" id="doneBtn">💕 Готово</button>
         <button class="btn btn-secondary" id="skipBtn">❄️ Отказ</button>
         <button type="button" class="btn btn-secondary" id="videoLevelUpBtn" aria-label="Повысить уровень видео">Горячее</button>
+        <button type="button" class="btn btn-secondary" id="davayLevelUpBtn" aria-label="Повысить уровень">Горячее</button>
+        <div class="davay-repeat-label" id="davayRepeatLabel">Готовы повторить?</div>
+        <button type="button" class="btn btn-secondary" id="davayYesBtn">Да</button>
+        <button type="button" class="btn btn-secondary" id="davayLaterBtn">Не сейчас</button>
+        <button type="button" class="btn btn-secondary" id="davayNoBtn">Нет</button>
+        <button type="button" class="btn btn-primary" id="davayHandoffStartBtn">Начать</button>
+        <button type="button" class="btn btn-secondary" id="davayFavPrevBtn">◀ Предыдущее</button>
+        <button type="button" class="btn btn-secondary" id="davayFavNextBtn">Следующее ▶</button>
         <button type="button" class="btn btn-secondary btn-square" id="favoriteBtn" aria-label="В избранное">☆</button>
       </div>
       <div class="video-extra-toggle" id="videoExtraToggle">Дополнительно <span class="video-extra-arrow">▾</span></div>
+      <div class="video-extra-toggle" id="davayExtraToggle">Дополнительно <span class="video-extra-arrow">▾</span></div>
       <div class="row2">
         <button class="btn btn-secondary" id="levelUpBtn">🔥 Повысить уровень</button>
         <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Понизить уровень">Легче</button>
@@ -678,12 +900,17 @@
         <button type="button" class="btn btn-secondary btn-square" id="videoLoopBtn" aria-label="Автопереключение на следующее видео">🔁</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoFullscreenBtn" aria-label="Видео на весь экран">⛶</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoFavoritesBtn" aria-label="Смотреть избранное">⭐</button>
-        <button type="button" class="btn btn-secondary btn-square" id="shareBtn" aria-label="Поделиться">⤴️</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoImportBtn" aria-label="Добавить видео со своего телефона">+</button>
+        <button type="button" class="btn btn-secondary btn-square" id="davayMuteBtn" aria-label="Включить звук видео">🔇</button>
+        <button type="button" class="btn btn-secondary btn-square" id="davayLoopBtn" aria-label="Автопереключение на следующее видео">🔁</button>
+        <button type="button" class="btn btn-secondary btn-square" id="davayFullscreenBtn" aria-label="Видео на весь экран">⛶</button>
+        <button type="button" class="btn btn-secondary btn-square" id="davayFavoritesBtn" aria-label="Смотреть избранное">⭐</button>
+        <button type="button" class="btn btn-secondary btn-square" id="davayImportBtn" aria-label="Добавить видео со своего телефона">+</button>
         <button type="button" class="btn btn-secondary btn-square btn-text-square" id="pauseBtn" aria-label="Пауза">Пауза</button>
       </div>
     </div>
     <input type="file" id="videoImportInput" accept="video/*" multiple style="display:none">
+    <input type="file" id="davayImportInput" accept="video/*" multiple style="display:none">
   </section>
 
   <div class="toast" id="toast"></div>
@@ -709,6 +936,27 @@
     </div>
   </div>
 
+  <!-- ===== ПРАВИЛА "ДАВАЙ ПОПРОБУЕМ" ===== -->
+  <div class="modal-overlay" id="davayRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🎬 Правила игры «Давай попробуем»</div>
+      <div class="intro-text">Игра проверяет, насколько ваши желания совпадают — каждый отвечает честно и наедине с экраном, а видит результат только то, что понравилось обоим.</div>
+      <ol class="modal-rules">
+        <li>На странице настройки выберите, кто начинает первым — вручную или пусть решит случай, и уровень заданий: от 🔥 «Сближение» до 💫 «Фантазии».</li>
+        <li>Если видео этого уровня ещё нет, нажмите «➕ Добавить видео» и загрузите ролики со своего телефона — они сохранятся именно в выбранный уровень.</li>
+        <li>Нажмите «Начнём» — если на выбранном уровне ещё нет ни одного видео, игра попросит сначала их добавить.</li>
+        <li>Первый игрок отвечает на 10 видео: «Да», «Не сейчас» или «Нет». Шкала под именами показывает, сколько уже пройдено.</li>
+        <li>Отвечайте честно и не подглядывайте — партнёр не видит ваши ответы, пока не закончат оба.</li>
+        <li>Когда первый игрок ответит на все 10, появится карточка «Передайте телефон» — второй игрок нажимает «Начать» и отвечает на те же 10 видео в том же порядке.</li>
+        <li>После ответов обоих — экран итогов. «Да» засчитывается, если оба ответили «Да» (видео уходит в ❤️ избранное). «Не сейчас» — если оба ответили «Не сейчас» или один «Не сейчас», а другой «Да» (видео остаётся в игре и может попасться снова). Если хотя бы один ответил «Нет» — видео исключается из игры до кнопки «Сбросить прогресс».</li>
+        <li>Кнопка «❤️ Смотреть совпавшие видео» на итогах или «❤️ Избранное» на странице настройки открывают понравившиеся обоим видео — переключайтесь между ними кнопками «◀ Предыдущее» и «Следующее ▶».</li>
+        <li>«Пауза» во время игры сохранит прогресс — на главном экране появится «Продолжить игру» (с того же места) или «Закончить игру».</li>
+        <li>«Выход» на экране итогов и странице настройки возвращает в меню «Давай попробуем» без сохранения текущего прохождения.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeDavayRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== ИТОГИ ИГРЫ ===== -->
   <div class="modal-overlay" id="summaryModal">
     <div class="modal-card">
@@ -719,6 +967,20 @@
         <div class="summary-row" id="summaryCounts"></div>
       </div>
       <button class="btn btn-primary" id="closeSummaryBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ИТОГИ "ДАВАЙ ПОПРОБУЕМ" ===== -->
+  <div class="modal-overlay" id="davaySummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">💞 Результаты</div>
+      <div class="intro-text" id="davaySummaryIntro"></div>
+      <div class="summary-stats">
+        <div class="summary-row" id="davaySummaryYes"></div>
+        <div class="summary-row" id="davaySummaryLater"></div>
+      </div>
+      <button class="btn btn-primary" id="davaySummaryFavBtn">❤️ Смотреть совпавшие видео</button>
+      <button class="btn btn-secondary" id="closeDavaySummaryBtn" style="margin-top:10px;">Выход</button>
     </div>
   </div>
 
@@ -791,12 +1053,27 @@
       <button class="btn btn-secondary" id="cancelVideoLevelBtn" style="margin-top:12px;">Отмена</button>
     </div>
   </div>
+
+  <!-- ===== УРОВЕНЬ ДЛЯ ВИДЕО "ДАВАЙ ПОПРОБУЕМ" ===== -->
+  <div class="modal-overlay" id="davayLevelModal">
+    <div class="modal-card">
+      <div class="modal-title">Уровень для новых видео</div>
+      <div class="intro-text" id="davayLevelModalCount" style="text-align:center; margin-bottom:14px;"></div>
+      <div class="video-level-grid">
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="1">🔥 Сближение</button>
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="2">💋 Разогрев</button>
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="3">🌶️ Откровенно 18+</button>
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="4">💫 Фантазии</button>
+      </div>
+      <button class="btn btn-secondary" id="cancelDavayLevelBtn" style="margin-top:12px;">Отмена</button>
+    </div>
+  </div>
 </div>
 
-<script src="cards.js"></script>
-<script src="user_cards.js"></script>
-<script src="photo-mode/photo_cards.js"></script>
-<script src="video_cards.js"></script>
+<script src="cards_fants.js"></script>
+<script src="cards_fants_users.js"></script>
+<script src="cards_poses.js"></script>
+<script src="cards_video.js"></script>
 <script>
 /* ============ ДАННЫЕ КАРТ ============ */
 const LEVELS = [
@@ -819,14 +1096,23 @@ let state = {
   muted:false, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
   photoUsed:{}, photoHidden:[], photoDone:[],
-  videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false
+  videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false,
+  davayUsed:{}, davayHidden:[], davayLiked:[], davayFavoritesOnly:false, davayAutoAdvance:false,
+  davayFavYes:[], davayFavLater:[], davayFavNo:[],
+  davayQuizActivePlayer:0, davayQuizQueue:[], davayQuizIndex:0, davayQuizAnswers:{},
+  davayQuizP1Done:false, davayQuizP2Done:false, davayQuizPendingNext:0,
+  davayStarter:'random', davaySelectedLevel:3, davaySoundOn:false,
+  pausedMode:null
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
-function pickStartingPlayer(){
-  if(state.starter==='M') return 1;
-  if(state.starter==='F') return 2;
+function pickStartingPlayerValue(v){
+  if(v==='M') return 1;
+  if(v==='F') return 2;
   return Math.random() < 0.5 ? 1 : 2;
+}
+function pickStartingPlayer(){
+  return pickStartingPlayerValue(state.starter);
 }
 function currentGender(){ return state.currentPlayer===1 ? 'M' : 'F'; }
 function getSortedActiveLevels(){ return [...state.activeLevels].sort((a,b)=>a-b); }
@@ -840,6 +1126,78 @@ function loadState(){
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
 }
+
+// ===== Резервная копия данных (без сервера и регистрации) =====
+// Сохраняет весь прогресс/избранное/настройки в JSON-файл, который можно
+// перенести на другое устройство или сохранить в облако вручную (iCloud,
+// Google Диск и т.п.) и потом загрузить обратно кнопкой "Импортировать".
+// Сами видеофайлы, добавленные с телефона, в бэкап не входят — они хранятся
+// в IndexedDB на устройстве.
+function exportGameData(){
+  saveState();
+  const payload = {
+    app: 'Игра для двоих',
+    backupVersion: 1,
+    exportedAt: new Date().toISOString(),
+    state: state
+  };
+  try{
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `igra-dlya-dvoih-backup-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    showToast('Файл с данными сохранён 📤');
+  }catch(e){
+    playErrorSound();
+    showToast('Не удалось создать файл резервной копии');
+  }
+}
+function importGameDataFromFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const payload = JSON.parse(String(reader.result));
+      const incoming = payload && typeof payload === 'object' && payload.state ? payload.state : payload;
+      if(!incoming || typeof incoming !== 'object' || Array.isArray(incoming)){
+        throw new Error('Некорректный файл');
+      }
+      state = Object.assign({}, state, incoming);
+      saveState();
+      document.getElementById('name1').value = state.name1 || '';
+      document.getElementById('name2').value = state.name2 || '';
+      updateStarterLabels();
+      renderModeGroup();
+      renderLevelToggles();
+      updateResumeUI();
+      updateFavoriteBtn();
+      showToast('Данные восстановлены ✅');
+    }catch(e){
+      playErrorSound();
+      showToast('Не удалось прочитать файл — это не резервная копия игры');
+    }
+  };
+  reader.onerror = ()=>{
+    playErrorSound();
+    showToast('Не удалось прочитать файл');
+  };
+  reader.readAsText(file, 'utf-8');
+}
+document.getElementById('exportDataBtn').addEventListener('click', exportGameData);
+document.getElementById('importDataBtn').addEventListener('click', ()=>{
+  document.getElementById('importDataInput').click();
+});
+document.getElementById('importDataInput').addEventListener('change', (e)=>{
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  importGameDataFromFile(file);
+});
 
 /* ============ УТИЛИТЫ ============ */
 function shuffle(arr){
@@ -987,22 +1345,43 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
   saveState();
   goToGame();
 });
-document.getElementById('placeholderToggle').addEventListener('click', ()=>{
-  document.getElementById('placeholderBlock').classList.toggle('open');
-});
 document.getElementById('videoExtraToggle').addEventListener('click', ()=>{
   document.querySelector('.controls').classList.toggle('video-extra-open');
 });
-document.getElementById('placeholderBtn1').addEventListener('click', ()=>{
+document.getElementById('davayExtraToggle').addEventListener('click', ()=>{
+  document.querySelector('.controls').classList.toggle('davay-extra-open');
+});
+document.getElementById('gameFantyBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  goToFantySetup();
+});
+document.getElementById('gameDavayBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  goToDavaySetup();
+});
+document.getElementById('gamePhotoBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToPlaceholderGame();
 });
-document.getElementById('placeholderBtn2').addEventListener('click', ()=>{
+document.getElementById('gameVideoBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToVideoGame();
 });
+function goToFantySetup(){
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('fantySetup').classList.add('active');
+  updateResumeUI();
+}
+document.getElementById('fantyExitBtn').addEventListener('click', ()=>{
+  document.getElementById('fantySetup').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+});
 
 document.getElementById('resumeBtn').addEventListener('click', ()=>{
+  if(state.pausedMode === 'davay'){
+    resumeDavayGame();
+    return;
+  }
   goToGame();
 });
 
@@ -1015,7 +1394,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.activeLevels = [1,2,3,4,5];
   state.starter = 'random';
   state.favoritesOnly = false;
-  // Давай попробуем (фото)
+  // Позы любви (фото)
   state.photoUsed = {};
   state.photoHidden = [];
   state.photoDone = [];
@@ -1024,14 +1403,47 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.videoHidden = [];
   state.videoFavoritesOnly = false;
   state.videoAutoAdvance = false;
+  // Давай попробуем
+  state.davayUsed = {};
+  state.davayHidden = [];
+  state.davayFavoritesOnly = false;
+  state.davayAutoAdvance = false;
+  state.davayFavYes = [];
+  state.davayFavLater = [];
+  state.davayFavNo = [];
+  state.davayLiked = [];
+  state.davayQuizActivePlayer = 0;
+  state.davayQuizQueue = [];
+  state.davayQuizIndex = 0;
+  state.davayQuizAnswers = {};
+  state.davayQuizP1Done = false;
+  state.davayQuizP2Done = false;
+  state.davayQuizPendingNext = 0;
+  document.getElementById('game').classList.remove('davay-handoff');
+  state.davayStarter = 'random';
+  state.davaySelectedLevel = 3;
+  if(state.pausedMode === 'davay'){
+    state.pausedMode = null;
+    state.inProgress = false;
+    currentDavayCard = null;
+    davayHistory = [];
+    davayHistoryPos = -1;
+  }
   saveState();
   renderModeGroup();
   renderLevelToggles();
   renderStarterGroup();
+  renderDavaySetupStarterGroup();
+  renderDavaySetupLevels();
   updateFavoritesOnlyBtn();
+  updateResumeUI();
   clearAllVideoBlobs().then(()=>{
     importedVideoCards = [];
     importedVideosLoaded = true;
+  });
+  clearAllDavayBlobs().then(()=>{
+    importedDavayCards = [];
+    importedDavayVideosLoaded = true;
   });
   showToast('Прогресс всех игр сброшен, добавленные видео удалены');
 });
@@ -1080,9 +1492,11 @@ function drawFromPool(forceLevel){
 
 /* ============ GAME SCREEN ============ */
 function goToGame(){
+  abandonPausedDavaySession();
   state.inProgress = true;
   saveState();
   document.getElementById('setup').classList.remove('active');
+  document.getElementById('fantySetup').classList.remove('active');
   document.getElementById('game').classList.remove('placeholder-mode');
   document.getElementById('game').classList.remove('video-mode');
   document.getElementById('game').classList.add('active');
@@ -1130,9 +1544,9 @@ function updateSettingsLockUI(){
     const el = document.getElementById(id);
     if(el) el.classList.toggle('locked-settings', locked);
   });
-  // «Уровни заданий», «Первым начинает» и «Дополнительные игры» не относятся к уже идущей
-  // партии — во время паузы просто скрываем их, а не блокируем.
-  ['levelsField','starterField','placeholderBlock'].forEach(id=>{
+  // «Уровни заданий» и «Первым начинает» не относятся к уже идущей партии —
+  // во время паузы просто скрываем их, а не блокируем.
+  ['levelsField','starterField'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.style.display = locked ? 'none' : '';
   });
@@ -1174,7 +1588,7 @@ document.getElementById('muteBtn').addEventListener('click', ()=>{
 
 function updateLevelUI(){
   const btn = document.getElementById('levelUpBtn');
-  if(isPlaceholderMode() || isVideoMode()){
+  if(isPlaceholderMode() || isVideoMode() || isDavayMode()){
     btn.disabled = false;
     btn.textContent = 'Сложнее';
     const el = document.getElementById('levelProgress');
@@ -1321,7 +1735,7 @@ function renderNoCards(){
   });
 }
 
-// Заглушка: показывается, если photo_cards.js ещё не заполнен реальными карточками
+// Заглушка: показывается, если cards_poses.js ещё не заполнен реальными карточками
 function renderPlaceholderCard(){
   clearInterval(timerInterval);
   timerInterval = null;
@@ -1329,7 +1743,7 @@ function renderPlaceholderCard(){
   fadeSwapCard((card)=>{
     card.className = 'card card-empty';
     card.style.borderTop = '';
-    card.innerHTML = `<div class="card-inner"><div class="card-icon">🃏</div><div class="card-text">Скоро здесь появятся карточки — добавьте их в photo-mode/photo_cards.js</div></div>`;
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🃏</div><div class="card-text">Скоро здесь появятся карточки — добавьте их в cards_poses.js</div></div>`;
   });
 }
 
@@ -1411,15 +1825,15 @@ function closeImageZoom(){
 }
 document.getElementById('imageZoomModal').addEventListener('click', closeImageZoom);
 
-/* ============ ВИДЕОРУЛЕТКА (видео из папки video/, см. video_cards.js) ============ */
+/* ============ ВИДЕОРУЛЕТКА (видео из корневой папки проекта, см. cards_video.js) ============ */
 // Прямая потоковая загрузка видео с Яндекс.Диска не работает: сервер Яндекса
 // не разрешает браузеру читать видео с чужого домена (нет CORS-заголовков ни
 // у списка файлов, ни у самих видео) — это ограничение на стороне Яндекса,
 // обойти его без собственного сервера-прокси нельзя. Поэтому видео снова
-// берутся только локально, из папки video/.
+// берутся только локально, из корневой папки проекта.
 
 // Видео-заглушка на случай, если для уровня нет видео или файл не воспроизвёлся —
-// используем образец из video_cards.js (первую запись), а не пустую иконку.
+// используем образец из cards_video.js (первую запись), а не пустую иконку.
 function getFallbackVideoCard(){
   if(typeof VIDEO_CARDS !== 'undefined' && Array.isArray(VIDEO_CARDS) && VIDEO_CARDS.length > 0){
     return VIDEO_CARDS[0];
@@ -1440,7 +1854,7 @@ function renderVideoPlaceholderCard(){
   fadeSwapCard((card)=>{
     card.className = 'card card-empty';
     card.style.borderTop = '';
-    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">Скоро здесь появятся видео — добавьте их в video_cards.js</div></div>`;
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">Скоро здесь появятся видео — добавьте их в cards_video.js</div></div>`;
   });
 }
 
@@ -1450,7 +1864,7 @@ function videoCardId(c){
 
 function getVideoCardsList(){
   // Пока пользователь не добавил свои видео с телефона — показываем образец
-  // из video_cards.js. Как только появилось хотя бы одно своё видео, образец
+  // из cards_video.js. Как только появилось хотя бы одно своё видео, образец
   // из общей колоды убирается и используются только добавленные файлы.
   if(importedVideoCards.length > 0) return importedVideoCards;
   return (typeof VIDEO_CARDS !== 'undefined' && Array.isArray(VIDEO_CARDS)) ? VIDEO_CARDS : [];
@@ -1605,9 +2019,11 @@ const isIOSDevice = /iP(hone|ad|od)/.test(navigator.userAgent)
 
 document.addEventListener('fullscreenchange', ()=>{
   videoFullscreenActive = !!document.fullscreenElement;
+  davayFullscreenActive = !!document.fullscreenElement;
 });
 document.addEventListener('webkitfullscreenchange', ()=>{
   videoFullscreenActive = !!document.webkitFullscreenElement;
+  davayFullscreenActive = !!document.webkitFullscreenElement;
 });
 
 function toggleVideoFullscreen(){
@@ -1670,6 +2086,42 @@ document.getElementById('videoFavoritesBtn').addEventListener('click', ()=>{
   showToast(state.videoFavoritesOnly ? 'Показываю только избранное ⭐' : 'Показываю все видео');
   drawVideoCard(videoLevel || 1);
 });
+
+// Подгоняет ширину/aspect-ratio карточки под текущее видео и доступную
+// область (.card-area). Высота карточки всегда занимает всё доступное
+// место; ширину сужаем только если видео "уже" области (портретное) — для
+// широких видео ширина остаётся на весь экран, чтобы высота не уменьшилась.
+// Вызывается и при загрузке видео, и при повороте экрана (см. ниже), чтобы
+// уже открытое видео корректно перестраивалось под новую ориентацию.
+function fitCardVideoToArea(video, el){
+  if(!video || !el || !(video.videoWidth && video.videoHeight)) return;
+  const area = document.querySelector('.card-area');
+  const availW = area ? area.clientWidth : window.innerWidth;
+  const availH = area ? area.clientHeight : window.innerHeight;
+  const videoRatio = video.videoWidth / video.videoHeight;
+  const areaRatio = availW / (availH || 1);
+  if(videoRatio <= areaRatio){
+    el.style.width = 'auto';
+    el.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+  } else {
+    el.style.width = '100%';
+    el.style.aspectRatio = '';
+  }
+}
+// При повороте телефона пересчитываем размер уже открытого видео в
+// "Видеорулетке"/"Давай попробуем" под новую ориентацию экрана.
+function refitCurrentCardVideo(){
+  const el = document.getElementById('card');
+  if(!el) return;
+  const video = document.getElementById('videoPlayer') || document.getElementById('davayPlayer');
+  if(video) fitCardVideoToArea(video, el);
+}
+window.addEventListener('orientationchange', ()=>{ setTimeout(refitCurrentCardVideo, 250); });
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', refitCurrentCardVideo);
+} else {
+  window.addEventListener('resize', refitCurrentCardVideo);
+}
 
 function drawVideoCard(level){
   videoLevel = level;
@@ -1776,25 +2228,12 @@ function renderVideoCard(card, level){
       // и шире экрана, ширину карточки не трогаем (остаётся на весь экран),
       // чтобы высота не уменьшилась — такое видео просто обрежется по бокам.
       video.addEventListener('loadedmetadata', ()=>{
-        if(video.videoWidth && video.videoHeight){
-          const area = document.querySelector('.card-area');
-          const availW = area ? area.clientWidth : window.innerWidth;
-          const availH = area ? area.clientHeight : window.innerHeight;
-          const videoRatio = video.videoWidth / video.videoHeight;
-          const areaRatio = availW / (availH || 1);
-          if(videoRatio <= areaRatio){
-            el.style.width = 'auto';
-            el.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
-          } else {
-            el.style.width = '100%';
-            el.style.aspectRatio = '';
-          }
-        }
+        fitCardVideoToArea(video, el);
       });
       video.addEventListener('error', ()=>{
         const fallback = getFallbackVideoCard();
         // Если сломался не сам образец — показываем вместо него образец из
-        // video_cards.js. Если сломался и он тоже — тогда уже просто иконка,
+        // cards_video.js. Если сломался и он тоже — тогда уже просто иконка,
         // чтобы не зациклиться.
         if(fallback && card.video !== fallback.video){
           renderVideoCard(fallback, level);
@@ -1822,6 +2261,7 @@ function renderVideoCard(card, level){
 }
 
 async function goToVideoGame(){
+  abandonPausedDavaySession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -1886,7 +2326,658 @@ function isVideoMode(){
   return !!(el && el.classList.contains('video-mode'));
 }
 
+/* ============ ДАВАЙ ПОПРОБУЕМ (независимая копия "Видеорулетки") ============
+   Полный дубликат механики видеорулетки под новую кнопку — своя колода, своё
+   локальное хранилище добавленных видео, свои уровни и настройки. Дальше эту
+   копию будем менять шаг за шагом, не трогая оригинальную "Видеорулетку". */
+
+function renderDavayPlaceholderCard(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  currentDavayCard = null;
+  const msg = state.davayFavoritesOnly
+    ? 'В избранном этого уровня пока нет видео'
+    : 'Пока нет видео этого уровня — добавьте их кнопкой «+»';
+  fadeSwapCard((card)=>{
+    card.className = 'card card-empty';
+    card.style.borderTop = '';
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">${msg}</div></div>`;
+  });
+}
+
+function davayCardId(c){
+  return c && (c.id || c.video);
+}
+
+function getDavayCardsList(){
+  // Встроенные образцы видео в этой игре не показываются — используются
+  // только видео, добавленные игроками со своего устройства.
+  return importedDavayCards;
+}
+
+// ===== Свои видео с телефона для "Давай попробуем" (отдельное хранилище IndexedDB) =====
+const DAVAY_DB_NAME = 'LovePlayDavayDB';
+const DAVAY_DB_STORE = 'davayVideos';
+let davayDBPromise = null;
+let importedDavayCards = [];
+let importedDavayVideosLoaded = false;
+
+function openDavayDB(){
+  if(davayDBPromise) return davayDBPromise;
+  davayDBPromise = new Promise((resolve, reject)=>{
+    if(!('indexedDB' in window)){ reject(new Error('IndexedDB не поддерживается')); return; }
+    const req = indexedDB.open(DAVAY_DB_NAME, 1);
+    req.onupgradeneeded = ()=>{
+      const db = req.result;
+      if(!db.objectStoreNames.contains(DAVAY_DB_STORE)){
+        db.createObjectStore(DAVAY_DB_STORE, {keyPath:'id', autoIncrement:true});
+      }
+    };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+  return davayDBPromise;
+}
+function saveDavayBlob(file, level){
+  return openDavayDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(DAVAY_DB_STORE, 'readwrite');
+    const store = tx.objectStore(DAVAY_DB_STORE);
+    const req = store.add({ name:file.name, blob:file, level:level, addedAt:Date.now() });
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  }));
+}
+function loadAllDavayBlobs(){
+  return openDavayDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(DAVAY_DB_STORE, 'readonly');
+    const req = tx.objectStore(DAVAY_DB_STORE).getAll();
+    req.onsuccess = ()=> resolve(req.result || []);
+    req.onerror = ()=> reject(req.error);
+  }));
+}
+function clearAllDavayBlobs(){
+  return openDavayDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(DAVAY_DB_STORE, 'readwrite');
+    tx.objectStore(DAVAY_DB_STORE).clear();
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  })).catch(()=>{});
+}
+function ensureImportedDavayVideosLoaded(){
+  if(importedDavayVideosLoaded) return Promise.resolve();
+  return loadAllDavayBlobs().then(rows => {
+    importedDavayCards = rows.map(r => ({
+      level: r.level || 1,
+      video: URL.createObjectURL(r.blob),
+      id: 'imported-' + r.id,
+      imported: true
+    }));
+    importedDavayVideosLoaded = true;
+  }).catch(()=>{
+    importedDavayCards = [];
+    importedDavayVideosLoaded = true;
+  });
+}
+
+// Модалка выбора уровня для только что выбранных файлов
+let pendingDavayImportFiles = [];
+const davayImportInputEl = document.getElementById('davayImportInput');
+const davayLevelModalEl = document.getElementById('davayLevelModal');
+document.getElementById('davayImportBtn').addEventListener('click', ()=>{
+  davayImportInputEl.click();
+});
+davayImportInputEl.addEventListener('change', ()=>{
+  const files = Array.from(davayImportInputEl.files || []).filter(f=>f.type.startsWith('video/'));
+  davayImportInputEl.value = '';
+  if(files.length === 0) return;
+  pendingDavayImportFiles = files;
+  document.getElementById('davayLevelModalCount').textContent = `Выбрано файлов: ${files.length}`;
+  davayLevelModalEl.classList.add('show');
+});
+document.getElementById('cancelDavayLevelBtn').addEventListener('click', ()=>{
+  pendingDavayImportFiles = [];
+  davayLevelModalEl.classList.remove('show');
+});
+document.querySelectorAll('.davay-level-choice').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const level = parseInt(btn.dataset.level, 10);
+    const files = pendingDavayImportFiles;
+    pendingDavayImportFiles = [];
+    davayLevelModalEl.classList.remove('show');
+    if(files.length === 0) return;
+    showToast('Добавляем видео…');
+    Promise.all(files.map(f => saveDavayBlob(f, level).catch(()=>null))).then(results => {
+      const added = results.filter(r => r !== null).length;
+      importedDavayVideosLoaded = false;
+      ensureImportedDavayVideosLoaded().then(()=>{
+        showToast(added > 0 ? `Добавлено видео: ${added}` : 'Не удалось добавить видео');
+      });
+    });
+  });
+});
+
+const DAVAY_MAX_LEVEL = 4;
+let davayLevel = 1;
+let currentDavayCard = null;
+let davayHistory = []; // для свайпов влево/вправо между уже показанными видео
+let davayHistoryPos = -1;
+let davaySoundOn = false;
+function updateDavayMuteBtn(){
+  const btn = document.getElementById('davayMuteBtn');
+  if(btn){
+    btn.textContent = davaySoundOn ? '🔊' : '🔇';
+    btn.setAttribute('aria-label', davaySoundOn ? 'Выключить звук видео' : 'Включить звук видео');
+  }
+  updateDavaySetupSoundBtn();
+}
+function updateDavaySetupSoundBtn(){
+  const btn = document.getElementById('davaySetupSoundBtn');
+  if(!btn) return;
+  btn.textContent = davaySoundOn ? '🔊 Звук включён' : '🔇 Звук выключен';
+  btn.classList.toggle('on', davaySoundOn);
+  btn.setAttribute('aria-label', davaySoundOn ? 'Выключить звук видео' : 'Включить звук видео');
+}
+function setDavaySoundOn(on){
+  davaySoundOn = on;
+  state.davaySoundOn = on;
+  saveState();
+  const video = document.getElementById('davayPlayer');
+  if(video) video.muted = !davaySoundOn;
+  updateDavayMuteBtn();
+}
+document.getElementById('davayMuteBtn').addEventListener('click', ()=>{
+  setDavaySoundOn(!davaySoundOn);
+});
+document.getElementById('davaySetupSoundBtn').addEventListener('click', ()=>{
+  setDavaySoundOn(!davaySoundOn);
+});
+
+function updateDavayLoopBtn(){
+  const btn = document.getElementById('davayLoopBtn');
+  if(!btn) return;
+  btn.classList.toggle('active', !!state.davayAutoAdvance);
+  btn.setAttribute('aria-label', state.davayAutoAdvance
+    ? 'Выключить автопереключение на следующее видео'
+    : 'Включить автопереключение на следующее видео');
+}
+document.getElementById('davayLoopBtn').addEventListener('click', ()=>{
+  state.davayAutoAdvance = !state.davayAutoAdvance;
+  saveState();
+  updateDavayLoopBtn();
+  const video = document.getElementById('davayPlayer');
+  if(video) video.loop = !state.davayAutoAdvance;
+  showToast(state.davayAutoAdvance
+    ? 'Автопереключение включено 🔁'
+    : 'Видео будет повторяться само');
+});
+
+let davayFullscreenActive = false; // обычный Fullscreen API (карточка целиком)
+let davayNativeFullscreenActive = false; // нативный полноэкранный режим iOS (только видео)
+
+function toggleDavayFullscreen(){
+  const video = document.getElementById('davayPlayer');
+  const cardEl = document.getElementById('card');
+  if(!video || !cardEl) return;
+  if(isIOSDevice && video.webkitEnterFullscreen){
+    try{
+      video.webkitEnterFullscreen();
+      davayNativeFullscreenActive = true;
+      return;
+    } catch(err){ /* падаем ниже на стандартный способ */ }
+  }
+  try{
+    if(document.fullscreenElement){
+      document.exitFullscreen();
+      return;
+    }
+    if(cardEl.requestFullscreen){
+      const result = cardEl.requestFullscreen();
+      if(result && typeof result.catch === 'function'){
+        result.catch(()=>{
+          if(cardEl.webkitRequestFullscreen) cardEl.webkitRequestFullscreen();
+          else showToast('Не удалось открыть полноэкранный режим');
+        });
+      }
+      return;
+    }
+    if(cardEl.webkitRequestFullscreen){
+      cardEl.webkitRequestFullscreen();
+      return;
+    }
+    showToast('Полный экран не поддерживается на этом устройстве');
+  } catch(err){
+    showToast('Не удалось открыть полноэкранный режим');
+  }
+}
+document.getElementById('davayFullscreenBtn').addEventListener('click', toggleDavayFullscreen);
+
+function updateDavayFavoritesBtn(){
+  const gameEl = document.getElementById('game');
+  if(gameEl) gameEl.classList.toggle('davay-favview', !!state.davayFavoritesOnly);
+  const btn = document.getElementById('davayFavoritesBtn');
+  if(!btn) return;
+  btn.classList.toggle('active', !!state.davayFavoritesOnly);
+  btn.setAttribute('aria-label', state.davayFavoritesOnly ? 'Показывать все видео' : 'Только избранное');
+}
+// Список избранных видео текущего уровня и перелистывание по нему кнопками
+// "Следующее"/"Предыдущее" в режиме просмотра избранного.
+let davayFavIndex = -1;
+function getDavayFavoritesList(){
+  const liked = state.davayLiked || [];
+  return getDavayCardsList().filter(c => c.level === davayLevel && liked.includes(davayCardId(c)));
+}
+function showDavayFavoriteAt(index){
+  const list = getDavayFavoritesList();
+  if(list.length === 0){
+    davayFavIndex = -1;
+    currentDavayCard = null;
+    renderDavayPlaceholderCard();
+    return;
+  }
+  if(index < 0) index = list.length - 1;
+  if(index >= list.length) index = 0;
+  davayFavIndex = index;
+  const card = list[davayFavIndex];
+  currentDavayCard = card;
+  renderDavayCard(card, davayLevel);
+}
+function davayFavNext(){ showDavayFavoriteAt(davayFavIndex + 1); }
+function davayFavPrev(){ showDavayFavoriteAt(davayFavIndex - 1); }
+document.getElementById('davayFavNextBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  davayFavNext();
+});
+document.getElementById('davayFavPrevBtn').addEventListener('click', ()=>{
+  davayFavPrev();
+});
+document.getElementById('davayFavoritesBtn').addEventListener('click', ()=>{
+  if(!state.davayFavoritesOnly && (state.davayLiked||[]).length===0){
+    playErrorSound();
+    showToast('Сначала добавьте видео в избранное сердечком 🤍');
+    return;
+  }
+  state.davayFavoritesOnly = !state.davayFavoritesOnly;
+  saveState();
+  updateDavayFavoritesBtn();
+  showToast(state.davayFavoritesOnly ? 'Показываю только избранное ⭐' : 'Показываю все видео');
+  drawDavayCard(davayLevel || 1);
+});
+
+function drawDavayCard(level){
+  davayLevel = level;
+  const hidden = state.davayHidden || [];
+  const liked = state.davayLiked || [];
+  let all = getDavayCardsList().filter(c=>c.level===level && !hidden.includes(davayCardId(c)));
+  if(state.davayFavoritesOnly){
+    all = all.filter(c=>liked.includes(davayCardId(c)));
+  }
+  if(all.length===0){
+    currentDavayCard = null;
+    if(state.davayFavoritesOnly){
+      showToast('В избранном пока нет видео');
+      state.davayFavoritesOnly = false;
+      saveState();
+      updateDavayFavoritesBtn();
+      all = getDavayCardsList().filter(c=>c.level===level && !hidden.includes(davayCardId(c)));
+      if(all.length===0){ renderDavayPlaceholderCard(); return; }
+    } else {
+      renderDavayPlaceholderCard();
+      return;
+    }
+  }
+  if(!state.davayUsed) state.davayUsed = {};
+  let used = state.davayUsed[level] || [];
+  let pool = all.filter(c=>!used.includes(davayCardId(c)));
+  if(pool.length===0){
+    pool = all;
+    used = [];
+    showToast('Видео этого уровня показаны заново 🔀');
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  used.push(davayCardId(card));
+  state.davayUsed[level] = used;
+  currentDavayCard = card;
+  saveState();
+  davayHistory.push(card);
+  davayHistoryPos = davayHistory.length - 1;
+  renderDavayCard(card, level);
+}
+
+// Показать видео из истории (свайпы влево/вправо), не трогая "показанные"/избранное
+function renderDavayCardFromHistory(pos){
+  if(pos < 0 || pos >= davayHistory.length) return;
+  davayHistoryPos = pos;
+  currentDavayCard = davayHistory[pos];
+  renderDavayCard(currentDavayCard, davayLevel);
+}
+
+function davaySwipePrev(){
+  // Бесконечная прокрутка: если в истории раньше некуда — просто показываем
+  // новое случайное видео.
+  if(davayHistoryPos <= 0){
+    drawDavayCard(davayLevel);
+    return;
+  }
+  renderDavayCardFromHistory(davayHistoryPos - 1);
+}
+
+function davaySwipeNext(){
+  if(davayHistoryPos < davayHistory.length - 1){
+    renderDavayCardFromHistory(davayHistoryPos + 1);
+  } else {
+    drawDavayCard(davayLevel);
+  }
+}
+
+function renderDavayCard(card, level){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  fadeSwapCard((el)=>{
+    el.className = 'card card-empty';
+    el.style.borderTop = '';
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-split-media" id="davayMedia">
+          <video src="${card.video}" id="davayPlayer" playsinline autoplay></video>
+        </div>
+      </div>
+    `;
+    const video = document.getElementById('davayPlayer');
+    if(video){
+      video.muted = !davaySoundOn;
+      video.loop = !state.davayAutoAdvance;
+      const attemptPlay = ()=>{
+        const p = video.play();
+        if(p && typeof p.catch === 'function'){
+          p.catch(()=>{ setTimeout(()=>{ video.play().catch(()=>{}); }, 150); });
+        }
+      };
+      attemptPlay();
+      video.addEventListener('loadedmetadata', ()=>{
+        fitCardVideoToArea(video, el);
+      });
+      video.addEventListener('error', ()=>{
+        const media = document.getElementById('davayMedia');
+        if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+      });
+      video.addEventListener('ended', ()=>{
+        if(state.davayAutoAdvance) drawDavayCard(davayLevel);
+      });
+      video.addEventListener('webkitendfullscreen', ()=>{ davayNativeFullscreenActive = false; });
+      if(davayNativeFullscreenActive && video.webkitEnterFullscreen){
+        try{ video.webkitEnterFullscreen(); } catch(err){}
+      }
+    }
+    updateDavayMuteBtn();
+    updateDavayLoopBtn();
+    updateDavayFavoritesBtn();
+  });
+  updateFavoriteBtn();
+}
+
+// ===== Экран настройки "Давай попробуем" (Первым начинает + Уровни заданий) =====
+// LEVELS id 3..6 ("Сближение","Разогрев","Откровенно 18+","Фантазии") — эти же
+// уровни используются для сортировки добавленных видео (davayLevel = id - 2).
+const DAVAY_SETUP_LEVEL_IDS = [3,4,5,6];
+
+function renderDavaySetupLevels(){
+  const wrap = document.getElementById('davaySetupLevels');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  LEVELS.filter(l=>DAVAY_SETUP_LEVEL_IDS.includes(l.id)).forEach(l=>{
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (state.davaySelectedLevel === l.id ? ' on' : '');
+    div.dataset.id = l.id;
+    div.innerHTML = `
+      <div class="lname">${l.icon} ${l.name}</div>
+      <div class="ldesc">${l.desc}</div>
+      <div class="level-check"></div>
+    `;
+    div.addEventListener('click', ()=>{
+      state.davaySelectedLevel = l.id;
+      saveState();
+      renderDavaySetupLevels();
+    });
+    wrap.appendChild(div);
+  });
+}
+
+function renderDavaySetupStarterGroup(){
+  document.querySelectorAll('#davaySetupStarterGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === state.davayStarter);
+  });
+}
+document.querySelectorAll('#davaySetupStarterGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.davayStarter = btn.dataset.value;
+    saveState();
+    renderDavaySetupStarterGroup();
+  });
+});
+
+function updateDavaySetupStarterLabels(){
+  const n1 = document.getElementById('name1');
+  const n2 = document.getElementById('name2');
+  const label1 = (n1.value.trim() || n1.placeholder || 'М');
+  const label2 = (n2.value.trim() || n2.placeholder || 'Ж');
+  const b1 = document.querySelector('#davaySetupStarterGroup .starter-btn[data-value="M"]');
+  const b2 = document.querySelector('#davaySetupStarterGroup .starter-btn[data-value="F"]');
+  if(b1) b1.textContent = label1;
+  if(b2) b2.textContent = label2;
+}
+document.getElementById('name1').addEventListener('input', updateDavaySetupStarterLabels);
+document.getElementById('name2').addEventListener('input', updateDavaySetupStarterLabels);
+
+function goToDavaySetup(){
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('davaySetup').classList.add('active');
+  renderDavaySetupStarterGroup();
+  renderDavaySetupLevels();
+  updateDavaySetupStarterLabels();
+  updateDavaySetupSoundBtn();
+}
+function exitDavaySetup(){
+  document.getElementById('davaySetup').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+}
+document.getElementById('davaySetupImportBtn').addEventListener('click', ()=>{
+  davayImportInputEl.click();
+});
+document.getElementById('davaySetupStartBtn').addEventListener('click', async ()=>{
+  await ensureImportedDavayVideosLoaded();
+  const level = (state.davaySelectedLevel || 3) - 2;
+  const hasVideos = getDavayCardsList().some(c=>c.level===level);
+  if(!hasVideos){
+    playErrorSound();
+    showToast('Сначала добавьте видео');
+    return;
+  }
+  playSuccessSound();
+  goToDavayGame();
+});
+document.getElementById('davaySetupExitBtn').addEventListener('click', ()=>{
+  exitDavaySetup();
+});
+document.getElementById('davaySetupFavoritesBtn').addEventListener('click', ()=>{
+  goToDavayFavoritesView();
+});
+
+// Просмотр избранных видео (совпавшие "Да" из прошлых раундов) прямо со
+// страницы настройки, без прохождения квиза заново.
+function goToDavayFavoritesView(){
+  if(!(state.davayLiked && state.davayLiked.length)){
+    playErrorSound();
+    showToast('Пока нет избранных видео — сначала пройдите игру');
+    return;
+  }
+  abandonPausedDavaySession();
+  state.pausedMode = null;
+  state.inProgress = true;
+  davayLevel = (state.davaySelectedLevel || 3) - 2;
+  davayHistory = [];
+  davayHistoryPos = -1;
+  saveState();
+  document.querySelector('.controls').classList.remove('davay-extra-open');
+  document.querySelector('.row1').appendChild(document.getElementById('pauseBtn'));
+  document.getElementById('davaySetup').classList.remove('active');
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('game').classList.add('davay-mode');
+  document.getElementById('doneBtn').textContent = 'Следующее';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
+  updateTurnUI();
+  updateLevelUI();
+  updateMuteBtn();
+  requestWakeLock();
+  updateDavayPlayerButtons();
+  if(!state.davayFavoritesOnly){
+    state.davayFavoritesOnly = true;
+    saveState();
+  }
+  updateDavayFavoritesBtn();
+  showDavayFavoriteAt(0);
+}
+
+async function goToDavayGame(){
+  state.pausedMode = null;
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  state.name1 = n1raw || 'Men';
+  state.name2 = n2raw || 'Sexy';
+  state.currentPlayer = pickStartingPlayerValue(state.davayStarter);
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.inProgress = true;
+  davayLevel = (state.davaySelectedLevel || 3) - 2;
+  state.davayUsed = {};
+  state.davayHidden = [];
+  davayHistory = [];
+  davayHistoryPos = -1;
+  // Новая партия — всегда обычный квиз, а не режим "просмотр избранного"
+  // (иначе после однажды открытого избранного игра застревала бы в нём).
+  state.davayFavoritesOnly = false;
+  saveState();
+  document.querySelector('.controls').classList.remove('davay-extra-open');
+  document.querySelector('.row1').appendChild(document.getElementById('pauseBtn'));
+  document.getElementById('davaySetup').classList.remove('active');
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('game').classList.add('davay-mode');
+  document.getElementById('doneBtn').textContent = 'Следующее';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
+  updateTurnUI();
+  updateLevelUI();
+  updateMuteBtn();
+  requestWakeLock();
+  await ensureImportedDavayVideosLoaded();
+  resetDavayQuiz();
+  updateDavayPlayerButtons();
+  updateDavayFavoritesBtn();
+  // Кто начинает первым — уже выбрано на странице настройки, повторный
+  // выбор в самой игре не нужен: сразу запускаем вопросы для этого игрока.
+  startDavayQuizPlayer(pickStartingPlayerValue(state.davayStarter));
+}
+
+// toDavaySetup=true — выйти не на главный экран, а сразу в меню настроек
+// "Давай попробуем" (используется кнопкой "Выход" на экране итогов).
+function exitDavayGame(toDavaySetup){
+  state.inProgress = false;
+  saveState();
+  if(document.fullscreenElement) document.exitFullscreen();
+  davayFullscreenActive = false;
+  davayNativeFullscreenActive = false;
+  const video = document.getElementById('davayPlayer');
+  if(video){
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  }
+  currentDavayCard = null;
+  resetDavayQuiz();
+  document.getElementById('card').style.aspectRatio = '';
+  document.getElementById('card').style.width = '';
+  document.querySelector('.row2').appendChild(document.getElementById('pauseBtn'));
+  document.getElementById('game').classList.remove('active');
+  document.getElementById('game').classList.remove('davay-mode');
+  document.getElementById('doneBtn').textContent = '💕 Готово';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
+  if(toDavaySetup){
+    releaseWakeLockNow();
+    goToDavaySetup();
+  } else {
+    returnToSetupUI();
+  }
+}
+
+function isDavayMode(){
+  const el = document.getElementById('game');
+  return !!(el && el.classList.contains('davay-mode'));
+}
+
+// Пауза (как в основной игре): прогресс квиза сохраняется, экран уходит в
+// настройки, дальше можно продолжить через «Продолжить игру» или завершить
+// через «Закончить игру».
+function pauseDavayGame(){
+  state.pausedMode = 'davay';
+  saveState();
+  if(document.fullscreenElement) document.exitFullscreen();
+  davayFullscreenActive = false;
+  davayNativeFullscreenActive = false;
+  const video = document.getElementById('davayPlayer');
+  if(video) video.pause();
+  document.querySelector('.row2').appendChild(document.getElementById('pauseBtn'));
+  returnToSetupUI();
+  showToast('Игра на паузе — прогресс сохранён');
+}
+
+function resumeDavayGame(){
+  state.pausedMode = null;
+  saveState();
+  document.querySelector('.controls').classList.remove('davay-extra-open');
+  document.querySelector('.row1').appendChild(document.getElementById('pauseBtn'));
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('game').classList.add('davay-mode');
+  document.getElementById('doneBtn').textContent = 'Следующее';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
+  updateTurnUI();
+  updateLevelUI();
+  updateMuteBtn();
+  requestWakeLock();
+  updateDavayPlayerButtons();
+  if(state.davayQuizPendingNext){
+    renderDavayHandoffCard(state.davayQuizPendingNext);
+  } else if(state.davayQuizActivePlayer && state.davayQuizQueue.length){
+    showDavayQuizCurrentCard();
+  } else if(currentDavayCard){
+    renderDavayCard(currentDavayCard, davayLevel);
+  } else {
+    renderDavayPlaceholderCard();
+  }
+}
+
+// Полностью отменить незавершённую паузу "Давай попробуем" — используется,
+// если игрок вместо "Продолжить" запускает какую-то другую игру.
+function abandonPausedDavaySession(){
+  if(state.pausedMode === 'davay'){
+    state.pausedMode = null;
+    state.davayUsed = {};
+    state.davayHidden = [];
+    resetDavayQuiz();
+    currentDavayCard = null;
+    davayHistory = [];
+    davayHistoryPos = -1;
+    saveState();
+  }
+  document.getElementById('game').classList.remove('davay-mode');
+}
+
 function goToPlaceholderGame(){
+  abandonPausedDavaySession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -2252,6 +3343,10 @@ document.getElementById('doneBtn').addEventListener('click', ()=>{
     drawVideoCard(videoLevel || 1);
     return;
   }
+  if(isDavayMode()){
+    drawDavayCard(davayLevel || 1);
+    return;
+  }
   nextTurn(true);
 });
 document.getElementById('skipBtn').addEventListener('click', ()=>{ playFailSound(); nextTurn(false); });
@@ -2264,10 +3359,22 @@ document.getElementById('pauseBtn').addEventListener('click', ()=>{
     exitVideoGame();
     return;
   }
+  if(isDavayMode()){
+    pauseDavayGame();
+    return;
+  }
   pauseGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('finishGameBtn').addEventListener('click', ()=>{
+  if(state.pausedMode === 'davay'){
+    state.inProgress = false;
+    abandonPausedDavaySession();
+    saveState();
+    updateResumeUI();
+    showToast('Игра завершена');
+    return;
+  }
   showSummary();
 });
 
@@ -2297,6 +3404,15 @@ document.getElementById('closeRulesBtn').addEventListener('click', ()=>{
 document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'rulesModal') e.currentTarget.classList.remove('show');
 });
+document.getElementById('davaySetupRulesBtn').addEventListener('click', ()=>{
+  document.getElementById('davayRulesModal').classList.add('show');
+});
+document.getElementById('closeDavayRulesBtn').addEventListener('click', ()=>{
+  document.getElementById('davayRulesModal').classList.remove('show');
+});
+document.getElementById('davayRulesModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'davayRulesModal') e.currentTarget.classList.remove('show');
+});
 document.getElementById('installBtn').addEventListener('click', ()=>{
   document.getElementById('installModal').classList.add('show');
 });
@@ -2315,6 +3431,263 @@ document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
     showToast('Это максимальный уровень 🔥');
   }
 });
+document.getElementById('davayLevelUpBtn').addEventListener('click', ()=>{
+  if(davayLevel < DAVAY_MAX_LEVEL){
+    playLevelUpSound();
+    drawDavayCard(davayLevel + 1);
+    showToast(`Уровень повышен: ${davayLevel}`);
+  } else {
+    showToast('Это максимальный уровень 🔥');
+  }
+});
+// "Готовы повторить?" — игра на двоих: сначала выбирается, кто отвечает
+// первым, ему показывают 10 разных видео, на каждое — Да/Не сейчас/Нет.
+// Затем те же 10 видео в том же порядке показываются второму игроку. После
+// обоих — сколько ответов совпало по каждой категории, и видео, на которые
+// ОБА ответили "Да", попадают в избранное (❤️).
+
+function getDavayQuizPool(){
+  const seen = new Set();
+  const pool = [];
+  const hidden = state.davayHidden || [];
+  getDavayCardsList().filter(c=>c.level===davayLevel && !hidden.includes(davayCardId(c))).forEach(c=>{
+    const id = davayCardId(c);
+    if(seen.has(id)) return;
+    seen.add(id);
+    pool.push(c);
+  });
+  return pool;
+}
+function davayQuizCardById(id){
+  return getDavayCardsList().find(c=>davayCardId(c)===id) || null;
+}
+function updateDavayPlayerButtons(){
+  const p1 = document.getElementById('davayPlayer1Btn');
+  const p2 = document.getElementById('davayPlayer2Btn');
+  if(p1){
+    p1.textContent = state.name1 || 'Игрок 1';
+    p1.classList.toggle('active', state.davayQuizActivePlayer === 1);
+    p1.classList.toggle('done', !!state.davayQuizP1Done);
+  }
+  if(p2){
+    p2.textContent = state.name2 || 'Игрок 2';
+    p2.classList.toggle('active', state.davayQuizActivePlayer === 2);
+    p2.classList.toggle('done', !!state.davayQuizP2Done);
+  }
+  updateDavayProgressBar();
+}
+function updateDavayProgressBar(){
+  const fill = document.getElementById('davayProgressFill');
+  const label = document.getElementById('davayProgressLabel');
+  if(!fill || !label) return;
+  const total = state.davayQuizQueue.length;
+  const done = Math.min(state.davayQuizIndex, total);
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  fill.style.width = pct + '%';
+  label.textContent = total > 0 ? `${done} / ${total}` : '0 / 10';
+}
+function resetDavayQuiz(){
+  state.davayQuizActivePlayer = 0;
+  state.davayQuizQueue = [];
+  state.davayQuizIndex = 0;
+  state.davayQuizAnswers = {};
+  state.davayQuizP1Done = false;
+  state.davayQuizP2Done = false;
+  state.davayQuizPendingNext = 0;
+  const gameEl = document.getElementById('game');
+  if(gameEl) gameEl.classList.remove('davay-handoff');
+  saveState();
+  updateDavayPlayerButtons();
+}
+// Пустая карточка "передайте телефон следующему игроку" между раундами
+function renderDavayHandoffCard(nextPlayerNum){
+  const gameEl = document.getElementById('game');
+  if(gameEl) gameEl.classList.add('davay-handoff');
+  const nextName = nextPlayerNum === 2 ? (state.name2 || 'Игрок 2') : (state.name1 || 'Игрок 1');
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  currentDavayCard = null;
+  fadeSwapCard((card)=>{
+    card.className = 'card card-empty';
+    card.style.borderTop = '';
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">💞</div><div class="card-text davay-handoff-text">Передайте телефон игроку «${nextName}»</div></div>`;
+  });
+  updateFavoriteBtn();
+}
+document.getElementById('davayHandoffStartBtn').addEventListener('click', ()=>{
+  const gameEl = document.getElementById('game');
+  if(gameEl) gameEl.classList.remove('davay-handoff');
+  const next = state.davayQuizPendingNext || 2;
+  state.davayQuizPendingNext = 0;
+  saveState();
+  startDavayQuizPlayer(next);
+});
+function showDavayQuizCurrentCard(){
+  const id = state.davayQuizQueue[state.davayQuizIndex];
+  const card = id ? davayQuizCardById(id) : null;
+  if(card){
+    currentDavayCard = card;
+    renderDavayCard(card, davayLevel);
+  } else {
+    renderDavayPlaceholderCard();
+  }
+}
+function startDavayQuizPlayer(playerNum){
+  if(state.davayQuizActivePlayer !== 0) return; // уже кто-то отвечает
+  if(playerNum === 1 && state.davayQuizP1Done) return;
+  if(playerNum === 2 && state.davayQuizP2Done) return;
+  // Очередь из 10 видео формируется один раз — на старте первого игрока —
+  // и остаётся той же самой для второго.
+  if(state.davayQuizQueue.length === 0){
+    const pool = shuffle(getDavayQuizPool()).slice(0, 10);
+    if(pool.length === 0){
+      showToast('Нет видео для этого уровня — добавьте видео кнопкой «+»');
+      return;
+    }
+    if(pool.length < 10){
+      showToast(`Пока доступно только ${pool.length} видео — используем их`);
+    }
+    state.davayQuizQueue = pool.map(c=>davayCardId(c));
+  }
+  state.davayQuizIndex = 0;
+  state.davayQuizActivePlayer = playerNum;
+  saveState();
+  updateDavayPlayerButtons();
+  showDavayQuizCurrentCard();
+}
+// Ряд с именами игроков теперь только показывает, чей сейчас ход — выбор
+// игрока сделан заранее на странице настройки, кликать по кнопкам не нужно.
+
+function finishDavayQuizSummary(){
+  // "Нет": "Нет" от ЛЮБОГО из игроков — видео исключается из игры до сброса
+  // прогресса (приоритет выше остальных вариантов).
+  // "Да": оба ответили "Да" — в избранное.
+  // "Не сейчас": оба ответили "Не сейчас", ИЛИ один "Не сейчас" а другой "Да" —
+  // видео остаётся в игре и может снова попасться случайно в будущих раундах.
+  let matchYes = 0, matchLater = 0, matchNo = 0;
+  const newFavorites = [];
+  const newLater = [];
+  const newHidden = [];
+  state.davayQuizQueue.forEach(id=>{
+    const a = state.davayQuizAnswers[id];
+    if(!a || !a.p1 || !a.p2) return;
+    if(a.p1 === 'no' || a.p2 === 'no'){
+      matchNo++;
+      newHidden.push(id);
+    } else if(a.p1 === 'yes' && a.p2 === 'yes'){
+      matchYes++;
+      newFavorites.push(id);
+    } else if(
+      (a.p1 === 'later' && a.p2 === 'later') ||
+      (a.p1 === 'later' && a.p2 === 'yes') ||
+      (a.p1 === 'yes' && a.p2 === 'later')
+    ){
+      matchLater++;
+      newLater.push(id);
+    }
+  });
+  if(!state.davayLiked) state.davayLiked = [];
+  newFavorites.forEach(id=>{
+    if(!state.davayLiked.includes(id)) state.davayLiked.push(id);
+  });
+  if(!state.davayFavLater) state.davayFavLater = [];
+  newLater.forEach(id=>{
+    if(!state.davayFavLater.includes(id)) state.davayFavLater.push(id);
+  });
+  if(!state.davayHidden) state.davayHidden = [];
+  newHidden.forEach(id=>{
+    if(!state.davayHidden.includes(id)) state.davayHidden.push(id);
+  });
+  saveState();
+  updateFavoriteBtn();
+  resetDavayQuiz();
+  renderDavayPlaceholderCard();
+  showDavaySummaryModal(matchYes, matchLater, matchNo);
+}
+
+function showDavaySummaryModal(matchYes, matchLater, matchNo){
+  const introEl = document.getElementById('davaySummaryIntro');
+  if(introEl){
+    introEl.textContent = matchYes > 0
+      ? 'Совпавшие «Да» уже добавлены в избранное ❤️'
+      : 'Совпадений «Да» в этот раз нет — попробуйте другой уровень или добавьте ещё видео.';
+  }
+  const yesEl = document.getElementById('davaySummaryYes');
+  if(yesEl) yesEl.textContent = `❤️ Да: ${matchYes}`;
+  const laterEl = document.getElementById('davaySummaryLater');
+  if(laterEl) laterEl.textContent = `🤔 Не сейчас: ${matchLater}`;
+  const favBtn = document.getElementById('davaySummaryFavBtn');
+  if(favBtn) favBtn.style.display = matchYes > 0 ? 'flex' : 'none';
+  const modal = document.getElementById('davaySummaryModal');
+  if(modal) modal.classList.add('show');
+}
+document.getElementById('closeDavaySummaryBtn').addEventListener('click', ()=>{
+  document.getElementById('davaySummaryModal').classList.remove('show');
+  exitDavayGame(true);
+});
+document.getElementById('davaySummaryModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'davaySummaryModal') e.currentTarget.classList.remove('show');
+});
+document.getElementById('davaySummaryFavBtn').addEventListener('click', ()=>{
+  document.getElementById('davaySummaryModal').classList.remove('show');
+  if(!state.davayFavoritesOnly){
+    state.davayFavoritesOnly = true;
+    saveState();
+  }
+  updateDavayFavoritesBtn();
+  showDavayFavoriteAt(0);
+});
+
+function answerDavayQuiz(answer){
+  if(!state.davayQuizActivePlayer){
+    playErrorSound();
+    showToast('Выберите имя игрока, кто начинает первым');
+    return;
+  }
+  const id = state.davayQuizQueue[state.davayQuizIndex];
+  if(!id) return;
+  if(!state.davayQuizAnswers[id]) state.davayQuizAnswers[id] = {};
+  const key = state.davayQuizActivePlayer === 1 ? 'p1' : 'p2';
+  state.davayQuizAnswers[id][key] = answer;
+  state.davayQuizIndex++;
+  if(state.davayQuizIndex < state.davayQuizQueue.length){
+    saveState();
+    updateDavayProgressBar();
+    showDavayQuizCurrentCard();
+    return;
+  }
+  // Игрок ответил на все 10 — переходим к следующему шагу. Кто именно
+  // закончил первым (игрок 1 или 2), зависит от выбора "Первым начинает" на
+  // странице настройки, поэтому нельзя жёстко привязываться к номеру игрока —
+  // переходим к итогам только когда оба отмечены как завершившие.
+  const finishedPlayer = state.davayQuizActivePlayer;
+  if(finishedPlayer === 1) state.davayQuizP1Done = true;
+  else state.davayQuizP2Done = true;
+  state.davayQuizActivePlayer = 0;
+  const otherAlreadyDone = finishedPlayer === 1 ? state.davayQuizP2Done : state.davayQuizP1Done;
+  if(!otherAlreadyDone){
+    const nextPlayer = finishedPlayer === 1 ? 2 : 1;
+    state.davayQuizPendingNext = nextPlayer;
+    saveState();
+    updateDavayPlayerButtons();
+    renderDavayHandoffCard(nextPlayer);
+  } else {
+    saveState();
+    finishDavayQuizSummary();
+  }
+}
+document.getElementById('davayYesBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  answerDavayQuiz('yes');
+});
+document.getElementById('davayLaterBtn').addEventListener('click', ()=>{
+  answerDavayQuiz('later');
+});
+document.getElementById('davayNoBtn').addEventListener('click', ()=>{
+  playFailSound();
+  answerDavayQuiz('no');
+});
 document.getElementById('levelUpBtn').addEventListener('click', ()=>{
   if(isPlaceholderMode()){
     if(photoLevel < PHOTO_MAX_LEVEL){
@@ -2331,6 +3704,16 @@ document.getElementById('levelUpBtn').addEventListener('click', ()=>{
       playLevelUpSound();
       drawVideoCard(videoLevel + 1);
       showToast(`Уровень повышен: ${videoLevel}`);
+    } else {
+      showToast('Это максимальный уровень 🔥');
+    }
+    return;
+  }
+  if(isDavayMode()){
+    if(davayLevel < DAVAY_MAX_LEVEL){
+      playLevelUpSound();
+      drawDavayCard(davayLevel + 1);
+      showToast(`Уровень повышен: ${davayLevel}`);
     } else {
       showToast('Это максимальный уровень 🔥');
     }
@@ -2354,6 +3737,16 @@ document.getElementById('levelDownBtn').addEventListener('click', ()=>{
       playNeutralSound();
       drawVideoCard(videoLevel - 1);
       showToast(`Уровень понижен: ${videoLevel}`);
+    } else {
+      showToast('Это минимальный уровень');
+    }
+    return;
+  }
+  if(isDavayMode()){
+    if(davayLevel > 1){
+      playNeutralSound();
+      drawDavayCard(davayLevel - 1);
+      showToast(`Уровень понижен: ${davayLevel}`);
     } else {
       showToast('Это минимальный уровень');
     }
@@ -2386,44 +3779,21 @@ document.getElementById('dislikeBtn').addEventListener('click', ()=>{
     drawVideoCard(videoLevel);
     return;
   }
+  if(isDavayMode()){
+    if(!currentDavayCard) return;
+    playErrorSound();
+    if(!state.davayHidden) state.davayHidden = [];
+    const vid = davayCardId(currentDavayCard);
+    if(!state.davayHidden.includes(vid)){
+      state.davayHidden.push(vid);
+    }
+    saveState();
+    showToast('Видео скрыто 👎');
+    drawDavayCard(davayLevel);
+    return;
+  }
   dislikeCurrentCard();
 });
-
-function shareCurrentPhotoCard(){
-  if(isVideoMode()){
-    if(!currentVideoCard) return;
-    const text = 'Повторяй за видео';
-    if(navigator.share){
-      navigator.share({ title: 'Задание', text }).catch(()=>{});
-      return;
-    }
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text)
-        .then(()=> showToast('Скопировано — вставьте другу 📋'))
-        .catch(()=> showToast('Не удалось поделиться'));
-      return;
-    }
-    showToast('Поделиться не поддерживается на этом устройстве');
-    return;
-  }
-  const card = currentPhotoCard;
-  if(!card) return;
-  const text = card.title
-    ? `${card.title}\n${card.text}`
-    : card.text;
-  if(navigator.share){
-    navigator.share({ title: card.title || 'Карточка', text }).catch(()=>{});
-    return;
-  }
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text)
-      .then(()=> showToast('Скопировано — вставьте другу 📋'))
-      .catch(()=> showToast('Не удалось поделиться'));
-    return;
-  }
-  showToast('Поделиться не поддерживается на этом устройстве');
-}
-document.getElementById('shareBtn').addEventListener('click', shareCurrentPhotoCard);
 
 /* ============ ИЗБРАННОЕ / "СДЕЛАНО" ============ */
 function updateFavoriteBtn(){
@@ -2439,6 +3809,13 @@ function updateFavoriteBtn(){
   if(isVideoMode()){
     if(!currentVideoCard){ btn.textContent = '🤍'; btn.classList.remove('active'); return; }
     const isLiked = (state.videoLiked||[]).includes(videoCardId(currentVideoCard));
+    btn.textContent = isLiked ? '❤️' : '🤍';
+    btn.classList.toggle('active', isLiked);
+    return;
+  }
+  if(isDavayMode()){
+    if(!currentDavayCard){ btn.textContent = '🤍'; btn.classList.remove('active'); return; }
+    const isLiked = (state.davayLiked||[]).includes(davayCardId(currentDavayCard));
     btn.textContent = isLiked ? '❤️' : '🤍';
     btn.classList.toggle('active', isLiked);
     return;
@@ -2475,6 +3852,23 @@ function toggleFavorite(){
       showToast('Убрано из избранного');
     } else {
       state.videoLiked.push(vid);
+      playSuccessSound();
+      showToast('Добавлено в избранное ❤️');
+    }
+    saveState();
+    updateFavoriteBtn();
+    return;
+  }
+  if(isDavayMode()){
+    if(!currentDavayCard) return;
+    if(!state.davayLiked) state.davayLiked = [];
+    const vid = davayCardId(currentDavayCard);
+    const pos = state.davayLiked.indexOf(vid);
+    if(pos>=0){
+      state.davayLiked.splice(pos,1);
+      showToast('Убрано из избранного');
+    } else {
+      state.davayLiked.push(vid);
       playSuccessSound();
       showToast('Добавлено в избранное ❤️');
     }
@@ -2580,7 +3974,7 @@ document.getElementById('saveCardBtn').addEventListener('click', ()=>{
   playSuccessSound();
   showToast('Задание добавлено ✓');
 });
-// Экспорт своих заданий в текст для файла user_cards.js (сохраняются в git отдельно от cards.js)
+// Экспорт своих заданий в текст для файла cards_fants_users.js (сохраняются в git отдельно от cards_fants.js)
 function buildUserCardsExportText(){
   const items = (state.customCards||[]).filter(c=>!c.deleted);
   const lines = items.map(c=>{
@@ -2588,7 +3982,7 @@ function buildUserCardsExportText(){
     if(c.for) parts.push(`for:${JSON.stringify(c.for)}`);
     return `  {${parts.join(', ')}},`;
   });
-  return `// user_cards.js — задания, добавленные через приложение.\n// Замените этот файл в репозитории (GitHub), чтобы сохранить их навсегда.\nconst USER_CARDS = [\n${lines.join('\n')}\n];`;
+  return `// cards_fants_users.js — задания, добавленные через приложение.\n// Замените этот файл в репозитории (GitHub), чтобы сохранить их навсегда.\nconst USER_CARDS = [\n${lines.join('\n')}\n];`;
 }
 document.getElementById('exportCardsBtn').addEventListener('click', ()=>{
   const items = (state.customCards||[]).filter(c=>!c.deleted);
@@ -2601,14 +3995,14 @@ document.getElementById('exportCardsBtn').addEventListener('click', ()=>{
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'user_cards.js';
+  a.download = 'cards_fants_users.js';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 1000);
-  showToast('Файл user_cards.js скачан', 2200);
+  showToast('Файл cards_fants_users.js скачан', 2200);
 });
-// Загрузка заданий из файла (например, ранее скачанного user_cards.js) — добавляет их в игру на этом устройстве
+// Загрузка заданий из файла (например, ранее скачанного cards_fants_users.js) — добавляет их в игру на этом устройстве
 function parseCardsFromText(text){
   const matches = text.match(/\{[^{}]*\}/g) || [];
   const cards = [];
@@ -2705,6 +4099,27 @@ document.getElementById('addCardModal').addEventListener('click', (e)=>{
       return;
     }
 
+    if(isDavayMode()){
+      if(!currentDavayCard) return;
+      // Пока идёт опрос (выбран игрок), порядок видео фиксирован — свайпы
+      // влево/вправо отключены, чтобы не сбить очередь из 10 видео.
+      if(state.davayQuizActivePlayer){
+        if(dy < 0){
+          const vid = davayCardId(currentDavayCard);
+          if(!(state.davayLiked||[]).includes(vid)) toggleFavorite();
+        }
+        return;
+      }
+      if(absX > absY){
+        if(dx > 0) davaySwipeNext(); // вправо — следующее видео
+        else davaySwipePrev(); // влево — предыдущее видео
+      } else if(dy < 0){
+        const vid = davayCardId(currentDavayCard);
+        if(!(state.davayLiked||[]).includes(vid)) toggleFavorite();
+      }
+      return;
+    }
+
     if(!currentCard) return;
     if(absX > absY){
       if(dx > 0){ playSuccessSound(); nextTurn(true); }
@@ -2727,6 +4142,16 @@ if(state.inProgress){
   state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = false;
+  if(state.pausedMode === 'davay'){
+    state.davayQuizActivePlayer = 0;
+    state.davayQuizQueue = [];
+    state.davayQuizIndex = 0;
+    state.davayQuizAnswers = {};
+    state.davayQuizP1Done = false;
+    state.davayQuizP2Done = false;
+    state.davayQuizPendingNext = 0;
+  }
+  state.pausedMode = null;
   saveState();
 }
 if(!getSortedActiveLevels().includes(state.levelCap)) state.levelCap = getSortedActiveLevels()[0];
@@ -2736,6 +4161,11 @@ renderModeGroup();
 document.getElementById('name1').value = state.name1 || '';
 document.getElementById('name2').value = state.name2 || '';
 updateStarterLabels();
+renderDavaySetupStarterGroup();
+renderDavaySetupLevels();
+updateDavaySetupStarterLabels();
+davaySoundOn = !!state.davaySoundOn;
+updateDavayMuteBtn();
 updateMuteBtn();
 updateResumeUI();
 updateFavoritesOnlyBtn();
