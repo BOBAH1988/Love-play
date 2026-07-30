@@ -742,8 +742,8 @@
       <label>Выбери игру</label>
       <div class="game-select-list" id="gameSelectList">
         <button type="button" class="btn btn-primary" id="gameFantyBtn">💘 Фанты</button>
+        <button type="button" class="btn btn-placeholder-a" id="gamePhotoBtn">💃 Предложи партнеру</button>
         <button type="button" class="btn btn-placeholder-c" id="gameDavayBtn">🎬 Давай попробуем</button>
-        <button type="button" class="btn btn-placeholder-a" id="gamePhotoBtn">💃 Позы любви</button>
         <button type="button" class="btn btn-placeholder-b" id="gameVideoBtn">🎥 Видеорулетка</button>
       </div>
     </div>
@@ -834,6 +834,25 @@
       <button type="button" class="toggle-pill" id="davaySetupFavoritesBtn">❤️ Избранное</button>
       <button type="button" class="toggle-pill" id="davaySetupImportBtn">➕ Добавить видео</button>
       <button type="button" class="toggle-pill" id="davaySetupSoundBtn" aria-label="Включить звук видео">🔇 Звук выключен</button>
+    </div>
+  </section>
+
+  <!-- ===== ПОЗЫ ЛЮБВИ: НАСТРОЙКА ИГРЫ ===== -->
+  <section id="photoSetup" class="screen">
+    <h1 class="title">💃 Предложи партнеру</h1>
+    <div class="subtitle">Выберите уровень и откройте для себя новые позы</div>
+
+    <div class="field">
+      <label>Предложи партнеру</label>
+      <div class="levels" id="photoSetupLevels"></div>
+    </div>
+
+    <button class="btn btn-primary" id="photoSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="photoSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="photoSetupRulesBtn">Правила</button>
+      <button type="button" class="toggle-pill" id="photoSetupSoundBtn" aria-label="Выключить звук">🔊 Звук включён</button>
     </div>
   </section>
 
@@ -936,6 +955,26 @@
         <li>«Выход» на экране итогов и странице настройки возвращает в меню «Давай попробуем» без сохранения текущего прохождения.</li>
       </ol>
       <button class="btn btn-primary" id="closeDavayRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ПОЗЫ ЛЮБВИ" ===== -->
+  <div class="modal-overlay" id="photoRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">💃 Правила игры «Предложи партнеру»</div>
+      <div class="intro-text">Никакого счёта и очереди — просто листайте карточки с позами вдвоём и выбирайте, что хочется попробовать сегодня.</div>
+      <ol class="modal-rules">
+        <li>На странице настройки выберите уровень: 🙂 «Простые», 😏 «Интересные», 🔥 «Сложные» или 🚗 «В авто».</li>
+        <li>На карточке — фото позы и краткое описание техники с советами для комфорта.</li>
+        <li>Нажмите «Следующая» — покажется новая случайная поза этого же уровня.</li>
+        <li>Понравилась и уже попробовали? Нажмите ☆ — карточка отметится сердечком ❤️, чтобы потом было легко её найти.</li>
+        <li>Поза совсем не ваша? Нажмите 👎 — она исчезнет из игры навсегда.</li>
+        <li>«🔥 Повысить уровень» и «Легче» переключают уровень сложности прямо в игре, без возврата в настройки.</li>
+        <li>Когда карточки уровня закончатся, колода перемешается и покажет их заново.</li>
+        <li>«Выход» в любой момент вернёт в меню «Предложи партнеру» — можно сменить уровень и продолжить.</li>
+        <li>Говорите друг с другом открыто и выбирайте то, что комфортно обоим.</li>
+      </ol>
+      <button class="btn btn-primary" id="closePhotoRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -1077,7 +1116,7 @@ let state = {
   levelCap:1, usedIndexes:[], hiddenIndexes:[],
   muted:false, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
-  photoUsed:{}, photoHidden:[], photoDone:[],
+  photoUsed:{}, photoHidden:[], photoDone:[], photoSelectedLevel:1,
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false,
   davayUsed:{}, davayHidden:[], davayLiked:[], davayFavoritesOnly:false, davayAutoAdvance:false,
   davayFavYes:[], davayFavLater:[], davayFavNo:[],
@@ -1351,7 +1390,7 @@ document.getElementById('gameDavayBtn').addEventListener('click', ()=>{
 document.getElementById('gamePhotoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToPlaceholderGame();
+  goToPhotoSetup();
 });
 document.getElementById('gameVideoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -1385,7 +1424,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.activeLevels = [1,2,3,4,5];
   state.starter = 'random';
   state.favoritesOnly = false;
-  // Позы любви (фото)
+  // Предложи партнеру (фото)
   state.photoUsed = {};
   state.photoHidden = [];
   state.photoDone = [];
@@ -1572,10 +1611,17 @@ function updateTurnUI(){
 
 function updateMuteBtn(){
   const btn = document.getElementById('muteBtn');
-  if(!btn) return;
-  btn.textContent = state.muted ? '🔇 Звук выключен' : '🔊 Звук включён';
-  btn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
-  btn.classList.toggle('on', !!state.muted);
+  if(btn){
+    btn.textContent = state.muted ? '🔇 Звук выключен' : '🔊 Звук включён';
+    btn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
+    btn.classList.toggle('on', !!state.muted);
+  }
+  const photoBtn = document.getElementById('photoSetupSoundBtn');
+  if(photoBtn){
+    photoBtn.textContent = state.muted ? '🔇 Звук выключен' : '🔊 Звук включён';
+    photoBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
+    photoBtn.classList.toggle('on', !!state.muted);
+  }
 }
 document.getElementById('muteBtn').addEventListener('click', ()=>{
   state.muted = !state.muted;
@@ -2730,6 +2776,60 @@ document.getElementById('davaySetupFavoritesBtn').addEventListener('click', ()=>
   goToDavayFavoritesView();
 });
 
+// ===== Экран настройки "Предложи партнеру" (выбор уровня) =====
+// Свой набор уровней (не трогает общий LEVELS, которым пользуются "Фанты").
+const PHOTO_LEVELS = [
+  {id:1, name:'Простые', desc:'Лёгкие и классические позы', icon:'🙂'},
+  {id:2, name:'Интересные', desc:'Больше разнообразия и вариантов', icon:'😏'},
+  {id:3, name:'Сложные', desc:'Нужны гибкость и физподготовка', icon:'🔥'},
+  {id:4, name:'В авто', desc:'Позы в машине', icon:'🚗'},
+];
+function renderPhotoSetupLevels(){
+  const wrap = document.getElementById('photoSetupLevels');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  PHOTO_LEVELS.forEach(l=>{
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (state.photoSelectedLevel === l.id ? ' on' : '');
+    div.dataset.id = l.id;
+    div.innerHTML = `
+      <div class="lname">${l.icon} ${l.name}</div>
+      <div class="ldesc">${l.desc}</div>
+      <div class="level-check"></div>
+    `;
+    div.addEventListener('click', ()=>{
+      state.photoSelectedLevel = l.id;
+      saveState();
+      renderPhotoSetupLevels();
+    });
+    wrap.appendChild(div);
+  });
+}
+function goToPhotoSetup(){
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('photoSetup').classList.add('active');
+  renderPhotoSetupLevels();
+  updateMuteBtn();
+}
+function exitPhotoSetup(){
+  document.getElementById('photoSetup').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+}
+document.getElementById('photoSetupExitBtn').addEventListener('click', ()=>{
+  exitPhotoSetup();
+});
+document.getElementById('photoSetupStartBtn').addEventListener('click', ()=>{
+  const level = state.photoSelectedLevel || 1;
+  const hasPhotos = getPhotoCardsList().some(c=>c.level===level);
+  if(!hasPhotos){
+    playErrorSound();
+    showToast('На этом уровне пока нет карточек');
+    return;
+  }
+  playSuccessSound();
+  goToPlaceholderGame();
+});
+
 // Просмотр избранных видео (совпавшие "Да" из прошлых раундов) прямо со
 // страницы настройки, без прохождения квиза заново.
 function goToDavayFavoritesView(){
@@ -2913,11 +3013,11 @@ function goToPlaceholderGame(){
   state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = true;
-  photoLevel = 1;
+  photoLevel = state.photoSelectedLevel || 1;
   state.photoUsed = {};
   state.photoHidden = [];
   saveState();
-  document.getElementById('setup').classList.remove('active');
+  document.getElementById('photoSetup').classList.remove('active');
   document.getElementById('game').classList.add('active');
   document.getElementById('game').classList.add('placeholder-mode');
   document.getElementById('doneBtn').textContent = 'Следующая';
@@ -3343,6 +3443,20 @@ document.getElementById('closeDavayRulesBtn').addEventListener('click', ()=>{
 });
 document.getElementById('davayRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'davayRulesModal') e.currentTarget.classList.remove('show');
+});
+document.getElementById('photoSetupRulesBtn').addEventListener('click', ()=>{
+  document.getElementById('photoRulesModal').classList.add('show');
+});
+document.getElementById('closePhotoRulesBtn').addEventListener('click', ()=>{
+  document.getElementById('photoRulesModal').classList.remove('show');
+});
+document.getElementById('photoRulesModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'photoRulesModal') e.currentTarget.classList.remove('show');
+});
+document.getElementById('photoSetupSoundBtn').addEventListener('click', ()=>{
+  state.muted = !state.muted;
+  saveState();
+  updateMuteBtn();
 });
 document.getElementById('installBtn').addEventListener('click', ()=>{
   document.getElementById('installModal').classList.add('show');
