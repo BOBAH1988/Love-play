@@ -265,6 +265,7 @@
   .game-select-list .btn{padding:16px; font-size:17px;}
   .btn-ghost{
     background:transparent; color:#e8c9dd; text-decoration:underline; font-weight:600; font-size:14px;
+    cursor:pointer;
   }
   .btn:active{transform:scale(.98);}
 
@@ -758,6 +759,7 @@
     </div>
 
     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:14px;">
+      <span class="btn-ghost" id="updateAppBtn">Обновить приложение</span>
       <span class="btn-ghost" id="resetHiddenBtn">Сбросить прогресс</span>
       <span class="btn-ghost" id="installBtn">⬇ Установить</span>
     </div>
@@ -1117,7 +1119,7 @@ let state = {
   muted:false, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
   photoUsed:{}, photoHidden:[], photoDone:[], photoSelectedLevel:1,
-  videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false,
+  videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false, videoSoundOn:false,
   davayUsed:{}, davayHidden:[], davayLiked:[], davayFavoritesOnly:false, davayAutoAdvance:false,
   davayFavYes:[], davayFavLater:[], davayFavNo:[],
   davayQuizActivePlayer:0, davayQuizQueue:[], davayQuizIndex:0, davayQuizAnswers:{},
@@ -1415,6 +1417,16 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   goToGame();
 });
 
+
+document.getElementById('updateAppBtn').addEventListener('click', ()=>{
+  // Жёсткое обновление: перезагружаем текущий URL с cache-busting параметром,
+  // чтобы браузер подтянул свежую версию файлов, но адрес (и иконка на
+  // главном экране, если приложение установлено) остаются прежними.
+  try{ sessionStorage.setItem('appJustUpdated', '1'); }catch(e){}
+  const url = new URL(location.href);
+  url.searchParams.set('_r', Date.now());
+  location.replace(url.toString());
+});
 
 document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   // Обычная игра (карточки)
@@ -1746,6 +1758,7 @@ function fitTextToContainer(containerEl, textEl, fullText){
   textEl.textContent = sentences[0].trim();
 }
 
+let cardTransitionLocked = false; // защита от двойного тапа на время анимации смены карточки
 function fadeSwapCard(paintFn){
   const el = document.getElementById('card');
   const inner = el.querySelector('.card-inner');
@@ -1759,8 +1772,10 @@ function fadeSwapCard(paintFn){
         newInner.classList.remove('card-hidden');
       });
     }
+    cardTransitionLocked = false;
   };
   if(inner){
+    cardTransitionLocked = true;
     inner.classList.add('card-hidden');
     setTimeout(doPaint, 220);
   } else {
@@ -2026,11 +2041,16 @@ function updateVideoMuteBtn(){
   btn.textContent = videoSoundOn ? '🔊' : '🔇';
   btn.setAttribute('aria-label', videoSoundOn ? 'Выключить звук видео' : 'Включить звук видео');
 }
-document.getElementById('videoMuteBtn').addEventListener('click', ()=>{
-  videoSoundOn = !videoSoundOn;
+function setVideoSoundOn(on){
+  videoSoundOn = on;
+  state.videoSoundOn = on;
+  saveState();
   const video = document.getElementById('videoPlayer');
   if(video) video.muted = !videoSoundOn;
   updateVideoMuteBtn();
+}
+document.getElementById('videoMuteBtn').addEventListener('click', ()=>{
+  setVideoSoundOn(!videoSoundOn);
 });
 
 function updateVideoLoopBtn(){
@@ -3359,6 +3379,7 @@ function nextTurn(completed){
 }
 
 document.getElementById('doneBtn').addEventListener('click', ()=>{
+  if(cardTransitionLocked) return;
   playSuccessSound();
   if(isPlaceholderMode()){
     drawPhotoCard(photoLevel || 1);
@@ -3374,7 +3395,11 @@ document.getElementById('doneBtn').addEventListener('click', ()=>{
   }
   nextTurn(true);
 });
-document.getElementById('skipBtn').addEventListener('click', ()=>{ playFailSound(); nextTurn(false); });
+document.getElementById('skipBtn').addEventListener('click', ()=>{
+  if(cardTransitionLocked) return;
+  playFailSound();
+  nextTurn(false);
+});
 document.getElementById('pauseBtn').addEventListener('click', ()=>{
   if(isPlaceholderMode()){
     exitPlaceholderGame();
@@ -3726,13 +3751,16 @@ function answerDavayQuiz(answer){
   }
 }
 document.getElementById('davayYesBtn').addEventListener('click', ()=>{
+  if(cardTransitionLocked) return;
   playSuccessSound();
   answerDavayQuiz('yes');
 });
 document.getElementById('davayLaterBtn').addEventListener('click', ()=>{
+  if(cardTransitionLocked) return;
   answerDavayQuiz('later');
 });
 document.getElementById('davayNoBtn').addEventListener('click', ()=>{
+  if(cardTransitionLocked) return;
   playFailSound();
   answerDavayQuiz('no');
 });
@@ -4196,10 +4224,18 @@ renderDavaySetupLevels();
 updateDavaySetupStarterLabels();
 davaySoundOn = !!state.davaySoundOn;
 updateDavayMuteBtn();
+videoSoundOn = !!state.videoSoundOn;
+updateVideoMuteBtn();
 updateMuteBtn();
 updateResumeUI();
 updateFavoritesOnlyBtn();
 populateNewCardLevelSelect();
+try{
+  if(sessionStorage.getItem('appJustUpdated')){
+    sessionStorage.removeItem('appJustUpdated');
+    setTimeout(()=>showToast('У вас последняя версия'), 400);
+  }
+}catch(e){}
 </script>
 </body>
 </html>
