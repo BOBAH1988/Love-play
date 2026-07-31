@@ -185,10 +185,21 @@
   .toggle-pill.on{
     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
   }
-  /* Кнопки блока "Резервная копия" — ниже обычных toggle-pill */
+  /* Кнопки блока "Резервная копия" — ниже обычных toggle-pill и заметно
+     прозрачнее, чтобы визуально не путались с кнопками игр в меню. */
   #exportDataBtn, #importDataBtn{
     padding:6px 8px; font-size:12px;
+    background:rgba(255,255,255,.03); border-color:rgba(255,255,255,.1);
+    color:#d8b8cd;
   }
+  #exportDataBtn:active, #importDataBtn:active{ background:rgba(255,255,255,.07); }
+
+  /* Блок "Резервная копия" сворачивается по нажатию на заголовок, по
+     умолчанию свёрнут. */
+  #backupContent{display:none;}
+  #backupField.backup-open #backupContent{display:flex;}
+  .backup-toggle-arrow{display:inline-block; font-size:10px; transition:transform .2s ease;}
+  #backupField.backup-open .backup-toggle-arrow{transform:rotate(180deg);}
 
   .levels{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
   .level-toggle{
@@ -221,6 +232,19 @@
     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
   }
   .mode-btn{font-size:11.5px; padding:12px 4px; letter-spacing:-.1px;}
+  #timerModeGroup .mode-btn{font-size:15px; padding:14px 8px; letter-spacing:normal;}
+  .timer-mode-caption{display:block; font-size:11.5px; font-weight:600; opacity:.75; margin-top:4px; letter-spacing:0;}
+  .timer-mode-single-row{display:flex; justify-content:center; margin-top:8px;}
+  .timer-mode-single-row .btn{flex:0 0 auto; width:auto; padding:14px 26px;}
+  #timerLevelsField.timer-levels-locked .levels{opacity:.4; pointer-events:none;}
+  #timerDurationField.timer-levels-locked .timer-duration-group{opacity:.4; pointer-events:none;}
+  .timer-levelup-group{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  #timerLevelUpField.timer-levels-locked .timer-levelup-group{opacity:.4; pointer-events:none;}
+  #timerHotterBtn.timer-hotter-ready{
+    background:linear-gradient(135deg,#ff9a5e,#ff3b5c); color:#fff; border-color:transparent;
+    box-shadow:0 6px 16px rgba(255,59,92,.4);
+  }
+  .timer-levels-note{font-size:12px; color:#cba0bf; margin-top:4px; text-align:center;}
 
   .btn{
     display:flex; align-items:center; justify-content:center;
@@ -248,21 +272,25 @@
   .placeholder-row{display:none; gap:10px; flex-wrap:wrap;}
   #placeholderBlock.open .placeholder-row{display:flex;}
   .placeholder-row .btn{flex:1 1 140px; padding:10px; font-size:14px;}
-  .btn-placeholder-a{
-    background:linear-gradient(135deg,#2fd4c4,#1fa8b8); color:#0a2b2e;
-    box-shadow:0 8px 20px rgba(47,212,196,.35);
+  /* Список игр на главной странице — единый спокойный стиль вместо разноцветных градиентов;
+     сетка сама переходит на 2 колонки, если хватает ширины экрана. */
+  .game-select-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:12px;
+    margin-top:6px;
   }
-  .btn-placeholder-b{
-    background:linear-gradient(135deg,#8a6bff,#c07bff); color:#22103f;
-    box-shadow:0 8px 20px rgba(138,107,255,.35);
+  .game-select-list .btn{
+    padding:14px 12px; font-size:16px; line-height:1.25;
+    justify-content:center; text-align:center; white-space:normal;
   }
-  .btn-placeholder-c{
-    background:linear-gradient(135deg,#ff9a5e,#ff6b8b); color:#3a1208;
-    box-shadow:0 8px 20px rgba(255,107,139,.35);
+  .btn-menu-item{
+    background:linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+    color:#fff;
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:0 6px 16px rgba(0,0,0,.25);
   }
-  /* Список игр на главной странице */
-  .game-select-list{display:flex; flex-direction:column; gap:12px; margin-top:6px;}
-  .game-select-list .btn{padding:16px; font-size:17px;}
+  .btn-menu-item:active{background:rgba(255,255,255,.16);}
   .btn-ghost{
     background:transparent; color:#e8c9dd; text-decoration:underline; font-weight:600; font-size:14px;
     cursor:pointer;
@@ -434,6 +462,32 @@
   .card-split-title{
     font-size:17px; font-weight:800; color:#2b0f2e;
   }
+  /* Номер в рейтинге продаж — модуль "Секс-шоп" в "Предложи партнеру", крупный значок над названием */
+  .card-split-rank-badge{
+    display:inline-block; background:var(--accent); color:#2b0f2e;
+    border-radius:12px; padding:4px 14px; font-size:19px; font-weight:900;
+    letter-spacing:.3px; margin-bottom:2px;
+  }
+  /* "Подходит: ..." — отдельная строка под описанием (модуль "Секс-шоп") */
+  .card-forwhom-row{
+    display:none; justify-content:center; margin-top:10px;
+  }
+  .forwhom-pill{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:6px 13px; border-radius:16px; font-size:13px; font-weight:800;
+    letter-spacing:.2px; background:rgba(180,140,255,.16); color:#6a3fc2;
+  }
+  /* Оценки партнёров — отдельная строка ниже (модуль "Секс-шоп") */
+  .card-rating-row{
+    display:none; justify-content:center; gap:10px; margin-top:12px; flex-wrap:wrap;
+  }
+  .rating-pill{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:6px 13px; border-radius:16px; font-size:13px; font-weight:800;
+    letter-spacing:.2px;
+  }
+  .rating-pill.rating-women{ background:rgba(255,110,168,.16); color:#c2185b; }
+  .rating-pill.rating-men{ background:rgba(94,158,255,.16); color:#1a5fb4; }
 
   #game.placeholder-mode .score-row, #game.video-mode .score-row, #game.davay-mode .score-row{display:none;}
   #game.placeholder-mode #skipBtn, #game.video-mode #skipBtn, #game.davay-mode #skipBtn{display:none;}
@@ -443,6 +497,14 @@
   }
   #game.placeholder-mode #favoriteBtn.active, #game.video-mode #favoriteBtn.active{
     background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25);
+  }
+  /* "Уже есть" — отметка "выполнено" для товаров модуля "Секс-шоп" */
+  #sexshopOwnedBtn{display:none;}
+  #game.placeholder-mode #sexshopOwnedBtn{
+    flex:0 0 auto; width:auto; padding:0 14px; font-size:30px;
+  }
+  #game.placeholder-mode #sexshopOwnedBtn.active{
+    background:rgba(120,220,150,.18); color:#37b567; border-color:rgba(120,220,150,.4);
   }
   /* В "Давай попробуем" избранное формируется только совпадением "Да" у
      обоих игроков — ручная кнопка-сердечко тут не нужна. */
@@ -663,9 +725,12 @@
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
-  .resume-row{display:none; gap:10px; margin-bottom:10px;}
+  .resume-row{display:none; flex-direction:column; gap:10px; margin-bottom:10px;}
   .resume-row.show{display:flex;}
   .resume-row .btn{flex:1;}
+  .resume-bottom-row{display:flex; gap:10px;}
+  .resume-bottom-row .btn{flex:1;}
+  #resumeMuteBtn{flex:0 0 44px; width:44px; padding:0; font-size:18px;}
 
   .locked-settings{opacity:.4; cursor:not-allowed;}
 
@@ -691,6 +756,18 @@
     font-size:14px; line-height:1.5; text-align:left; color:#3a2438;
   }
   .modal-rules li{padding-left:4px;}
+  /* Пункты в списках совпадений кликабельны — открывают карточку с описанием */
+  #wishlistSummaryList li, #wishlistHistoryList li{
+    cursor:pointer; border-radius:8px; padding:4px 6px 4px 4px; margin:0 -6px;
+    transition:background .15s ease;
+  }
+  #wishlistSummaryList li:active, #wishlistHistoryList li:active,
+  #wishlistSummaryList li:hover, #wishlistHistoryList li:hover{
+    background:rgba(255,110,168,.12);
+  }
+  .modal-pagination{display:flex; align-items:center; justify-content:center; gap:16px; margin:2px 0 18px;}
+  .modal-pagination .modal-pagination-btn{flex:0 0 auto; width:44px; height:40px; padding:0; font-size:16px;}
+  .modal-pagination-label{font-size:13px; color:#5c3a52; min-width:56px; text-align:center;}
   .video-level-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
   .video-level-grid .btn{width:100%;}
   .summary-stats{
@@ -713,6 +790,72 @@
   }
   .icon-btn:disabled{opacity:.5; cursor:default;}
   .btn:disabled{opacity:.5; cursor:default;}
+
+  /* ---- Правда или действие ---- */
+  .td-score-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-size:22px; color:#cba0bf; margin-bottom:4px;
+  }
+  .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd; margin-bottom:10px;}
+  .td-actions-row{display:flex; gap:10px; margin-top:10px;}
+  .td-actions-row .btn{flex:1;}
+  .td-actions-row #tdPauseBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .td-actions-row #tdDislikeBtn{flex:0 0 auto; width:44px; padding:0; font-size:18px;}
+
+  /* ---- Секс-бинго ---- */
+  .bingo-level-label{
+    text-align:center; font-size:13px; font-weight:800; color:var(--gold);
+    margin-bottom:10px;
+  }
+  .bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:12px 0; max-width:100%;}
+  .bingo-cell{
+    aspect-ratio:1/1; border-radius:10px; border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08); color:#fff; font-size:9.5px; line-height:1.15;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:3px; cursor:pointer; font-weight:600; overflow:hidden;
+    word-break:break-word; hyphens:auto;
+  }
+  .bingo-cell.checked{
+    background:linear-gradient(135deg,#ff5e8e,#ff8a5e); color:#2b0f2e; border-color:transparent;
+  }
+  .bingo-actions-row{display:flex; gap:10px; margin-top:6px;}
+  .bingo-actions-row .btn{flex:1;}
+
+  /* ---- Таймер ---- */
+  .timer-bar-track{height:10px; border-radius:6px; background:rgba(255,255,255,.15); overflow:hidden; margin-top:14px;}
+  .timer-bar-fill{
+    height:100%; width:100%; border-radius:6px;
+    background:linear-gradient(135deg,#ff9a5e,#ff6b8b); transition:width 1s linear;
+  }
+  .timer-label{text-align:center; font-size:28px; font-weight:800; margin-top:8px; color:#fff;}
+  .timer-actions-row{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;}
+  .timer-actions-row .btn{flex:1;}
+  .timer-actions-row #timerSkipBtn,
+  .timer-actions-row #timerExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+
+  /* ---- Плейлист желаний ---- */
+  .wishlist-player-row{display:flex; gap:10px; margin-bottom:10px;}
+  .wishlist-player-row .btn{flex:1; pointer-events:none;}
+  .wishlist-player-row .btn.active{
+    background:linear-gradient(135deg,#ff9a5e,#ff6b8b); color:#3a1208; border-color:transparent;
+  }
+  .wishlist-player-row .btn.done{opacity:.4;}
+  .wishlist-progress-row{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+  .wishlist-progress-track{flex:1; height:8px; border-radius:6px; background:rgba(255,255,255,.15); overflow:hidden;}
+  .wishlist-progress-fill{
+    height:100%; width:0%; border-radius:6px;
+    background:linear-gradient(135deg,#ff9a5e,#ff6b8b); transition:width .25s ease;
+  }
+  .wishlist-progress-label{font-size:12px; color:#cba0bf; white-space:nowrap; min-width:44px; text-align:right;}
+  /* Заголовок пункта — как раньше card-text; описание — компактный подзаголовок
+     под ним, чтобы обе части гарантированно помещались в карточку на телефоне. */
+  .wishlist-item-title{font-size:18px; font-weight:700; line-height:1.3;}
+  .wishlist-item-desc{font-size:13.5px; font-weight:500; line-height:1.4; color:#7a5a72; margin-top:8px; padding:0 4px;}
+  .wishlist-actions-row{display:flex; gap:10px; margin-top:14px;}
+  .wishlist-actions-row .btn{flex:1;}
+  .wishlist-setup-actions-row{display:flex; gap:10px; margin-top:10px;}
+  .wishlist-setup-actions-row #wishlistHistoryBtn{flex:1;}
+  .wishlist-setup-actions-row #wishlistSetupExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -736,22 +879,29 @@
 
     <div class="resume-row" id="resumeRow">
       <button class="btn btn-primary" id="resumeBtn">Продолжить игру</button>
-      <button class="btn btn-secondary" id="finishGameBtn">Закончить игру</button>
+      <div class="resume-bottom-row">
+        <button class="btn btn-secondary" id="finishGameBtn">Закончить игру</button>
+        <button type="button" class="btn btn-secondary" id="resumeMuteBtn" aria-label="Выключить звук">🔊</button>
+      </div>
     </div>
 
     <div class="field" id="gameSelectField">
       <label>Выбери игру</label>
       <div class="game-select-list" id="gameSelectList">
-        <button type="button" class="btn btn-primary" id="gameFantyBtn">💘 Фанты</button>
-        <button type="button" class="btn btn-placeholder-a" id="gamePhotoBtn">💃 Предложи партнеру</button>
-        <button type="button" class="btn btn-placeholder-c" id="gameDavayBtn">🎬 Давай попробуем</button>
-        <button type="button" class="btn btn-placeholder-b" id="gameVideoBtn">🎥 Видеорулетка</button>
+        <button type="button" class="btn btn-menu-item" id="gameFantyBtn">💘 Фанты</button>
+        <button type="button" class="btn btn-menu-item" id="gameTdBtn">❓ Правда или действие</button>
+        <button type="button" class="btn btn-menu-item" id="gameTimerBtn">⏱️ Таймер страсти</button>
+        <button type="button" class="btn btn-menu-item" id="gameWishlistBtn">💌 Твои желания</button>
+        <button type="button" class="btn btn-menu-item" id="gamePhotoBtn">💃 Предложи партнеру</button>
+        <button type="button" class="btn btn-menu-item" id="gameBingoBtn">🎱 Секс-бинго</button>
+        <button type="button" class="btn btn-menu-item" id="gameDavayBtn">🎬 Давай попробуем</button>
+        <button type="button" class="btn btn-menu-item" id="gameVideoBtn">🎥 Видеорулетка</button>
       </div>
     </div>
 
     <div class="field" id="backupField" style="margin-top:18px;">
-      <label>Резервная копия</label>
-      <div class="toggle-row" style="margin-bottom:0;">
+      <label id="backupToggle" style="cursor:pointer; user-select:none;">Резервная копия <span class="backup-toggle-arrow">▾</span></label>
+      <div class="toggle-row" id="backupContent" style="margin-bottom:0;">
         <button type="button" class="toggle-pill" id="exportDataBtn">⬆ Экспортировать данные</button>
         <button type="button" class="toggle-pill" id="importDataBtn">⬇ Импортировать данные</button>
       </div>
@@ -895,6 +1045,7 @@
         <button type="button" class="btn btn-primary" id="davayHandoffStartBtn">Начать</button>
         <button type="button" class="btn btn-secondary" id="davayFavPrevBtn">◀ Предыдущее</button>
         <button type="button" class="btn btn-secondary" id="davayFavNextBtn">Следующее ▶</button>
+        <button type="button" class="btn btn-secondary btn-square" id="sexshopOwnedBtn" aria-label="Уже есть">🛍️</button>
         <button type="button" class="btn btn-secondary btn-square" id="favoriteBtn" aria-label="В избранное">☆</button>
         <button type="button" class="btn btn-secondary btn-square" id="davayMuteBtn" aria-label="Включить звук видео">🔇</button>
       </div>
@@ -903,7 +1054,7 @@
         <button class="btn btn-secondary" id="levelUpBtn">🔥 Повысить уровень</button>
         <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Понизить уровень">Легче</button>
         <button type="button" class="btn btn-secondary btn-square" id="refreshBtn" aria-label="Новое задание для этого же игрока">🔄</button>
-        <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">👎</button>
+        <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">🚫</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoMuteBtn" aria-label="Включить звук видео">🔇</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoLoopBtn" aria-label="Автопереключение на следующее видео">🔁</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoFullscreenBtn" aria-label="Видео на весь экран">⛶</button>
@@ -914,6 +1065,219 @@
     </div>
     <input type="file" id="videoImportInput" accept="video/*" multiple style="display:none">
     <input type="file" id="davayImportInput" accept="video/*" multiple style="display:none">
+  </section>
+
+  <!-- ===== ПРАВДА ИЛИ ДЕЙСТВИЕ: НАСТРОЙКА ===== -->
+  <section id="tdSetup" class="screen">
+    <h1 class="title">❓ Правда или действие</h1>
+    <div class="subtitle">Выберите уровень смелости и раскрывайтесь по очереди</div>
+
+    <div class="field">
+      <label>Уровень</label>
+      <div class="levels" id="tdSetupLevels"></div>
+    </div>
+
+    <button class="btn btn-primary" id="tdSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="tdSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="tdSetupRulesBtn">Правила</button>
+      <button type="button" class="toggle-pill" id="tdSetupSoundBtn" aria-label="Выключить звук">🔊 Звук включён</button>
+    </div>
+  </section>
+
+  <!-- ===== ПРАВДА ИЛИ ДЕЙСТВИЕ: ИГРА ===== -->
+  <section id="tdGame" class="screen">
+    <div class="td-score-row">
+      <span id="tdScore1">Men: 0</span>
+      <span id="tdScore2">Sexy: 0</span>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="tdCard">
+        <div class="card-inner">
+          <div class="card-icon">❓</div>
+          <div class="card-text" id="tdCardText">Выберите «Правда» или «Действие»</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="td-actions-row" id="tdChoiceRow">
+      <button type="button" class="btn btn-primary" id="tdTruthBtn">🤔 Правда</button>
+      <button type="button" class="btn btn-secondary" id="tdDareBtn">🎯 Действие</button>
+    </div>
+    <div class="td-actions-row" id="tdAnswerRow" style="display:none;">
+      <button type="button" class="btn btn-primary" id="tdDoneBtn">💕 Готово</button>
+      <button type="button" class="btn btn-secondary" id="tdSkipBtn">❄️ Отказ</button>
+      <button type="button" class="btn btn-secondary btn-square" id="tdDislikeBtn" aria-label="Не показывать больше">🚫</button>
+    </div>
+    <div class="td-actions-row" style="margin-top:10px;">
+      <button type="button" class="btn btn-secondary" id="tdLevelUpBtn">🔥 Повысить уровень</button>
+      <button type="button" class="btn btn-secondary" id="tdPauseBtn">Пауза</button>
+    </div>
+  </section>
+
+  <!-- ===== СЕКС-БИНГО: НАСТРОЙКА ===== -->
+  <section id="bingoSetup" class="screen">
+    <h1 class="title">🎱 Секс-бинго</h1>
+    <div class="subtitle">Собирайте линии — уровень растёт по ходу игры</div>
+
+    <button class="btn btn-primary" id="bingoSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="bingoSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="bingoSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== СЕКС-БИНГО: ИГРА ===== -->
+  <section id="bingoGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🎱 Секс-бинго</h1>
+    <div class="subtitle" style="margin-bottom:2px;">Отмечайте выполненное — линия открывает бонус</div>
+    <div class="bingo-level-label" id="bingoLevelLabel"></div>
+    <div class="bingo-grid" id="bingoGrid"></div>
+    <div class="bingo-actions-row">
+      <button type="button" class="btn btn-secondary" id="bingoNewCardBtn">🔄 Новая карта</button>
+      <button type="button" class="btn btn-secondary" id="bingoPauseBtn">Пауза</button>
+    </div>
+  </section>
+
+  <!-- ===== ТАЙМЕР-ИГРА: НАСТРОЙКА ===== -->
+  <section id="timerSetup" class="screen">
+    <h1 class="title">⏱️ Таймер страсти</h1>
+    <div class="subtitle">Выполняйте задание, пока идёт время</div>
+
+    <div class="field">
+      <label>Режим игры</label>
+      <div id="timerModeGroup">
+        <div class="starter-group timer-mode-group">
+          <button type="button" class="starter-btn mode-btn" data-value="fast">Быстрая<span class="timer-mode-caption">10–15 минут</span></button>
+          <button type="button" class="starter-btn mode-btn" data-value="long">Продолжительная<span class="timer-mode-caption">20–25 минут</span></button>
+        </div>
+        <div class="timer-mode-single-row">
+          <button type="button" class="starter-btn mode-btn" data-value="single">Пользовательская</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="timerDurationField">
+      <label>Время на действие</label>
+      <div class="starter-group timer-duration-group" id="timerDurationGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="5">5 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="30">30 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="60">60 сек</button>
+      </div>
+      <div class="timer-levels-note" id="timerDurationNote" style="display:none;">В этом режиме время задаётся уровнем</div>
+    </div>
+
+    <div class="field" id="timerLevelUpField">
+      <label>Повышение уровня</label>
+      <div class="timer-levelup-group" id="timerLevelUpGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="3">Каждые 3 карточки</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5">Каждые 5 карточек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">Каждые 10 карточек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="manual">Вручную</button>
+      </div>
+      <div class="timer-levels-note" id="timerLevelUpNote" style="display:none;">Доступно только в режиме «Пользовательская»</div>
+    </div>
+
+    <div class="field" id="timerLevelsField">
+      <label>Уровень</label>
+      <div class="levels" id="timerSetupLevels"></div>
+      <div class="timer-levels-note" id="timerLevelsNote" style="display:none;">В этом режиме игра всегда начинается с 1-го уровня</div>
+    </div>
+
+    <button class="btn btn-primary" id="timerSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="timerSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="timerSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== ТАЙМЕР-ИГРА: ИГРА ===== -->
+  <section id="timerGame" class="screen">
+    <div class="td-score-row">
+      <span id="timerScore1">Men: 0</span>
+      <span id="timerScore2">Sexy: 0</span>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="timerCard">
+        <div class="card-inner">
+          <div class="card-icon">⏱️</div>
+          <div class="card-text" id="timerCardText">Нажмите «▶ Начать»</div>
+        </div>
+      </div>
+    </div>
+    <div class="timer-bar-track">
+      <div class="timer-bar-fill" id="timerBarFill"></div>
+    </div>
+    <div class="timer-label" id="timerLabel">00:00</div>
+    <div class="timer-actions-row" style="margin-top:14px;">
+      <button type="button" class="btn btn-primary" id="timerStartTaskBtn">▶ Начать</button>
+      <button type="button" class="btn btn-secondary" id="timerSkipBtn">❄️ Отказ</button>
+      <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;">🔥 Горячее</button>
+      <button type="button" class="btn btn-secondary" id="timerPauseBtn" style="display:none;">⏸ Пауза</button>
+      <button type="button" class="btn btn-primary" id="timerNextBtn" style="display:none;">Следующее задание</button>
+      <button type="button" class="btn btn-secondary" id="timerExitBtn">Выход</button>
+    </div>
+  </section>
+
+  <!-- ===== ПЛЕЙЛИСТ ЖЕЛАНИЙ: НАСТРОЙКА ===== -->
+  <section id="wishlistSetup" class="screen">
+    <h1 class="title">💌 Твои желания</h1>
+    <div class="subtitle">Каждый тайно отмечает желаемое — увидите только совпадения</div>
+
+    <div class="field">
+      <label>Первым начинает</label>
+      <div class="starter-group" id="wishlistSetupStarterGroup">
+        <button type="button" class="starter-btn" data-value="M">М</button>
+        <button type="button" class="starter-btn" data-value="F">Ж</button>
+        <button type="button" class="starter-btn" data-value="random">Случайно</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="wishlistSetupStartBtn">Начать</button>
+    <div class="wishlist-setup-actions-row">
+      <button class="btn btn-secondary" id="wishlistHistoryBtn">💜 Совпадения</button>
+      <button class="btn btn-secondary" id="wishlistSetupExitBtn">Выход</button>
+    </div>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="wishlistSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== ПЛЕЙЛИСТ ЖЕЛАНИЙ: ИГРА ===== -->
+  <section id="wishlistGame" class="screen">
+    <div class="wishlist-player-row" id="wishlistPlayerRow">
+      <button type="button" class="btn btn-secondary" id="wishlistPlayer1Btn">Men</button>
+      <button type="button" class="btn btn-secondary" id="wishlistPlayer2Btn">Sexy</button>
+    </div>
+    <div class="wishlist-progress-row" id="wishlistProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="wishlistProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="wishlistProgressLabel">0 / 15</div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="wishlistCard">
+        <div class="card-inner">
+          <div class="card-icon">💌</div>
+          <div class="card-text" id="wishlistCardText">Загрузка…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wishlist-actions-row" id="wishlistAnswerRow">
+      <button type="button" class="btn btn-secondary" id="wishlistNoBtn">Нет</button>
+      <button type="button" class="btn btn-primary" id="wishlistYesBtn">Да 💜</button>
+    </div>
+    <div class="wishlist-actions-row" id="wishlistHandoffRow" style="display:none;">
+      <button type="button" class="btn btn-primary" id="wishlistHandoffStartBtn">Начать</button>
+    </div>
+    <button type="button" class="btn btn-secondary" id="wishlistExitBtn" style="margin-top:10px;">Выход</button>
   </section>
 
   <div class="toast" id="toast"></div>
@@ -929,7 +1293,7 @@
         <li>Отключите телефоны — сегодня вечер только для вас двоих.</li>
         <li>Тяните карточки по очереди и раскрывайтесь друг перед другом: «Правда» — для откровенных признаний, «Действие» — для смелых поступков.</li>
         <li>Задание смущает или пока не по силам? Смело жмите «Отказ» — колода подкинет следующее, но балл за этот ход упущен.</li>
-        <li>Задание совсем не ваше? Нажмите 👎 — и оно исчезнет из игры навсегда, никаких неловких повторений.</li>
+        <li>Задание совсем не ваше? Нажмите 🚫 — и оно исчезнет из игры навсегда, никаких неловких повторений.</li>
         <li>Что-то особенно зацепило? Нажмите ☆ — сохраните находку в избранном и вернитесь к ней в другой раз.</li>
         <li>Чувствуете, как разгорается огонёк? Жмите «Повысить уровень» — и игра станет ещё смелее.</li>
         <li>Нужна передышка? «Пауза» сохранит счёт и уровень — вернётесь и продолжите с того же места. А захотите завершить вечер — «Закончить игру» покажет итог.</li>
@@ -966,17 +1330,140 @@
       <div class="modal-title">💃 Правила игры «Предложи партнеру»</div>
       <div class="intro-text">Никакого счёта и очереди — просто листайте карточки с позами вдвоём и выбирайте, что хочется попробовать сегодня.</div>
       <ol class="modal-rules">
-        <li>На странице настройки выберите уровень: 🙂 «Простые», 😏 «Интересные», 🔥 «Сложные» или 🚗 «В авто».</li>
-        <li>На карточке — фото позы и краткое описание техники с советами для комфорта.</li>
-        <li>Нажмите «Следующая» — покажется новая случайная поза этого же уровня.</li>
+        <li>На странице настройки выберите уровень: 🙂 «Простые позы», 😏 «Интересные позы», 🔥 «Сложные позы», 🚗 «В авто» или 🛍️ «Секс-шоп» (топ-200 товаров с рейтингом вместо поз).</li>
+        <li>На карточке позы — фото и краткое описание техники с советами для комфорта.</li>
+        <li>На карточке товара из «Секс-шоп» сверху — номер в рейтинге продаж, ниже название и описание, строка «Подходит: ...» и оценки партнёров ♀/♂ по 10-балльной шкале.</li>
+        <li>На карточках «Секс-шоп» есть кнопка 🛍️ «Уже есть» — отметьте ✅, если эта игрушка у вас уже есть.</li>
+        <li>Нажмите «Следующая» — покажется новая случайная карточка этого же уровня.</li>
         <li>Понравилась и уже попробовали? Нажмите ☆ — карточка отметится сердечком ❤️, чтобы потом было легко её найти.</li>
-        <li>Поза совсем не ваша? Нажмите 👎 — она исчезнет из игры навсегда.</li>
-        <li>«🔥 Повысить уровень» и «Легче» переключают уровень сложности прямо в игре, без возврата в настройки.</li>
+        <li>Не понравилось? Нажмите 🚫 — карточка исчезнет из игры навсегда.</li>
+        <li>«🔥 Повысить уровень» и «Легче» переключают уровень прямо в игре, без возврата в настройки.</li>
         <li>Когда карточки уровня закончатся, колода перемешается и покажет их заново.</li>
         <li>«Выход» в любой момент вернёт в меню «Предложи партнеру» — можно сменить уровень и продолжить.</li>
         <li>Говорите друг с другом открыто и выбирайте то, что комфортно обоим.</li>
       </ol>
       <button class="btn btn-primary" id="closePhotoRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ПРАВДА ИЛИ ДЕЙСТВИЕ" ===== -->
+  <div class="modal-overlay" id="tdRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">❓ Правила игры «Правда или действие»</div>
+      <div class="intro-text">Классика с новым удобным экраном — выбирайте между честным признанием и смелым поступком.</div>
+      <ol class="modal-rules">
+        <li>На странице настройки выберите уровень смелости.</li>
+        <li>В свой ход нажмите «🤔 Правда» или «🎯 Действие» — откроется случайное задание этого типа.</li>
+        <li>Выполнили или ответили честно? Нажмите «Готово» — балл засчитан, ход переходит партнёру.</li>
+        <li>Задание не по силам? Нажмите «❄️ Отказ» — балл не засчитывается, но игра продолжается.</li>
+        <li>Задание совсем не ваше? Нажмите 🚫 — оно исчезнет из игры навсегда, никаких неловких повторений.</li>
+        <li>«🔥 Повысить уровень» меняет уровень смелости прямо в игре, без возврата в настройки.</li>
+        <li>«Пауза» сохранит счёт и уровень — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+      </ol>
+      <button class="btn btn-primary" id="closeTdRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "СЕКС-БИНГО" ===== -->
+  <div class="modal-overlay" id="bingoRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🎱 Правила игры «Секс-бинго»</div>
+      <div class="intro-text">Собирайте линии на игровой карте — сложность растёт сама по ходу игры.</div>
+      <ol class="modal-rules">
+        <li>Игра всегда начинается с уровня 💗 «Нежное» — карта заполнится 25 случайными заданиями этого уровня.</li>
+        <li>Выполнили задание из клетки — нажмите на неё, чтобы отметить.</li>
+        <li>Собрали 5 отмеченных клеток подряд по горизонтали, вертикали или диагонали — линия засчитана.</li>
+        <li>Собрали 1-ю линию по горизонтали или вертикали (диагонали не считаются) — все ещё не отмеченные клетки становятся заданиями уровня 🔥 «Горячее».</li>
+        <li>Собрали 3-ю такую линию — оставшиеся клетки становятся уровня 🌶️ «Дерзкое».</li>
+        <li>Бонусное задание открывается трижды за игру: перед каждым из этих двух повышений уровня и в самом конце, когда отмечены все 25 клеток.</li>
+        <li>«🔄 Новая карта» начнёт всё заново с уровня «Нежное».</li>
+        <li>«Пауза» сохранит прогресс карты и вернёт в главное меню — игру можно будет продолжить позже.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeBingoRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== БОНУС "СЕКС-БИНГО" ===== -->
+  <div class="modal-overlay" id="bingoBonusModal">
+    <div class="modal-card">
+      <div class="modal-title">🎉 Линия собрана!</div>
+      <div class="intro-text" id="bingoBonusText"></div>
+      <button class="btn btn-primary" id="closeBingoBonusBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ТАЙМЕР-ИГРА" ===== -->
+  <div class="modal-overlay" id="timerRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">⏱️ Правила игры «Таймер страсти»</div>
+      <div class="intro-text">Задание показывается заранее — обратный отсчёт начинается по вашей команде. Ход переходит от игрока к игроку, как в Фантах.</div>
+      <ol class="modal-rules">
+        <li>«Быстрая» (10–15 мин) и «Продолжительная» (20–25 мин) — уровень растёт сам, когда каждый партнёр выполнит нужное число заданий текущего уровня; в «Продолжительной» это число больше и растёт от уровня к уровню. Время на задание в этих режимах задаётся уровнем.</li>
+        <li>«Пользовательская» — уровень и время на задание (5/10/30/60 сек) задаёте сами. Здесь же выбирается «Повышение уровня»: «Каждые 3/5/10 карточек» повышает уровень автоматически, а «Вручную» открывает в игре кнопку «🔥 Горячее» — уровень повышается для обоих, как только партнёры выполнят поровну заданий текущего уровня; если один партнёр нажал раньше, повышение произойдёт после хода отстающего.</li>
+        <li>Выберите уровень — в «Быстрой» и «Продолжительной» от него зависит длительность отсчёта.</li>
+        <li>Прочитайте задание и нажмите «▶ Начать», когда будете готовы, либо «❄️ Отказ», чтобы пропустить без штрафа для партнёра.</li>
+        <li>Выполняйте задание, пока идёт время. Нажать «Готово» раньше нельзя — балл засчитается, только когда время истечёт само.</li>
+        <li>«⏸ Пауза» остановит отсчёт, если нужна передышка.</li>
+        <li>«Следующее задание» передаёт ход партнёру и показывает новую карточку этого уровня.</li>
+        <li>«Выход» покажет итоги партии — счёт и число выполненных/отказанных заданий.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeTimerRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ПЛЕЙЛИСТ ЖЕЛАНИЙ" ===== -->
+  <div class="modal-overlay" id="wishlistRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">💌 Правила игры «Твои желания»</div>
+      <div class="intro-text">Узнайте, что хотите попробовать оба — без неловких разговоров вслух.</div>
+      <ol class="modal-rules">
+        <li>Выберите, кто отвечает первым, и нажмите «Начать».</li>
+        <li>По каждому пункту наедине с экраном отвечайте «Да» или «Нет» — партнёр не видит ваши ответы.</li>
+        <li>Ответили на все пункты — появится карточка «Передайте телефон», второй игрок нажимает «Начать» и отвечает на те же пункты.</li>
+        <li>После ответов обоих покажутся только совпавшие «Да» — то, что хотите попробовать вы оба.</li>
+        <li>Кнопка «💜 Совпадения» в настройках показывает все совпадения, накопленные за все прошлые игры, а не только за последний раунд.</li>
+        <li>«Выход» в любой момент вернёт в главное меню без сохранения текущего прохождения.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeWishlistRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ИТОГИ "ТВОИ ЖЕЛАНИЯ" (ЗА ЭТУ ИГРУ) ===== -->
+  <div class="modal-overlay" id="wishlistSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">💜 Совпадения</div>
+      <div class="intro-text" id="wishlistSummaryIntro"></div>
+      <ol class="modal-rules" id="wishlistSummaryList"></ol>
+      <div class="modal-pagination" id="wishlistSummaryPagination" style="display:none;">
+        <button type="button" class="btn btn-secondary modal-pagination-btn" id="wishlistSummaryPrevBtn" aria-label="Предыдущая страница">◀</button>
+        <span class="modal-pagination-label" id="wishlistSummaryPageLabel">1 / 1</span>
+        <button type="button" class="btn btn-secondary modal-pagination-btn" id="wishlistSummaryNextBtn" aria-label="Следующая страница">▶</button>
+      </div>
+      <button class="btn btn-primary" id="closeWishlistSummaryBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== "ТВОИ ЖЕЛАНИЯ": ВСЕ СОВПАДЕНИЯ ЗА ВСЁ ВРЕМЯ ===== -->
+  <div class="modal-overlay" id="wishlistHistoryModal">
+    <div class="modal-card">
+      <div class="modal-title">💜 Совпадения</div>
+      <div class="intro-text" id="wishlistHistoryIntro"></div>
+      <ol class="modal-rules" id="wishlistHistoryList"></ol>
+      <div class="modal-pagination" id="wishlistHistoryPagination" style="display:none;">
+        <button type="button" class="btn btn-secondary modal-pagination-btn" id="wishlistHistoryPrevBtn" aria-label="Предыдущая страница">◀</button>
+        <span class="modal-pagination-label" id="wishlistHistoryPageLabel">1 / 1</span>
+        <button type="button" class="btn btn-secondary modal-pagination-btn" id="wishlistHistoryNextBtn" aria-label="Следующая страница">▶</button>
+      </div>
+      <button class="btn btn-primary" id="closeWishlistHistoryBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== "ТВОИ ЖЕЛАНИЯ": КАРТОЧКА ОДНОГО ПУНКТА ИЗ СПИСКА СОВПАДЕНИЙ ===== -->
+  <div class="modal-overlay" id="wishlistItemModal">
+    <div class="modal-card">
+      <div class="modal-title" id="wishlistItemModalTitle">💜</div>
+      <div class="intro-text" id="wishlistItemModalDesc"></div>
+      <button class="btn btn-primary" id="closeWishlistItemBtn">Понятно</button>
     </div>
   </div>
 
@@ -1096,7 +1583,11 @@
 <script src="cards_fants.js"></script>
 <script src="cards_fants_users.js"></script>
 <script src="cards_poses.js"></script>
+<script src="cards_sexshop.js"></script>
 <script src="cards_video.js"></script>
+<script src="cards_bingo.js"></script>
+<script src="cards_timer.js"></script>
+<script src="cards_wishlist.js"></script>
 <script>
 /* ============ ДАННЫЕ КАРТ ============ */
 const LEVELS = [
@@ -1115,17 +1606,33 @@ let state = {
   starter:'random',
   gameMode:'custom', autoMilestone:0, turnsPlayed:0, turnsAtLastLevelUp:0,
   currentPlayer:1, score1:0, score2:0,
+  levelTurnCounts:{1:0, 2:0}, pendingLevelUp:false,
   levelCap:1, usedIndexes:[], hiddenIndexes:[],
   muted:false, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
-  photoUsed:{}, photoHidden:[], photoDone:[], photoSelectedLevel:1,
+  photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1,
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false, videoSoundOn:false,
   davayUsed:{}, davayHidden:[], davayLiked:[], davayFavoritesOnly:false, davayAutoAdvance:false,
   davayFavYes:[], davayFavLater:[], davayFavNo:[],
   davayQuizActivePlayer:0, davayQuizQueue:[], davayQuizIndex:0, davayQuizAnswers:{},
   davayQuizP1Done:false, davayQuizP2Done:false, davayQuizPendingNext:0,
   davayStarter:'random', davaySelectedLevel:3, davaySoundOn:false,
-  pausedMode:null
+  pausedMode:null,
+  // Правда или действие
+  tdSelectedLevel:1, tdCurrentPlayer:1, tdScore1:0, tdScore2:0, tdUsed:{}, tdHidden:[],
+  tdCompletedCount:0, tdSkippedCount:0,
+  tdLevelTurnCounts:{1:0, 2:0}, tdPendingLevelUp:false,
+  // Секс-бинго
+  bingoSelectedLevel:1, bingoGridLevel:0, bingoGrid:[], bingoChecked:[], bingoWonLines:[], bingoUsedBonus:[], bingoCurrentLevel:1,
+  bingoEscalatedTo2:false, bingoEscalatedTo3:false, bingoBonusEndGiven:false,
+  // Таймер
+  timerSelectedLevel:1, timerUsed:{}, timerGameMode:'fast', timerLevelUpCounts:{1:0, 2:0}, timerPendingLevelUp:false, timerCustomSeconds:10,
+  timerLevelUpCadence:5,
+  timerCurrentPlayer:1, timerScore1:0, timerScore2:0, timerCompletedCount:0, timerSkippedCount:0,
+  // Твои желания
+  wishlistStarter:'random', wishlistQueue:[], wishlistIndex:0, wishlistAnswers:{},
+  wishlistActivePlayer:0, wishlistP1Done:false, wishlistP2Done:false, wishlistPendingNext:0,
+  wishlistMatchHistory:[], wishlistHidden:[]
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -1191,6 +1698,11 @@ function importGameDataFromFile(file){
       if(!incoming || typeof incoming !== 'object' || Array.isArray(incoming)){
         throw new Error('Некорректный файл');
       }
+      // Импорт полностью заменяет текущий прогресс — подтверждение защищает
+      // от случайного выбора не того файла.
+      if(!confirm('Заменить текущий прогресс данными из этого файла? Это действие нельзя отменить.')){
+        return;
+      }
       state = Object.assign({}, state, incoming);
       saveState();
       document.getElementById('name1').value = state.name1 || '';
@@ -1220,6 +1732,9 @@ document.getElementById('importDataInput').addEventListener('change', (e)=>{
   const file = e.target.files && e.target.files[0];
   e.target.value = '';
   importGameDataFromFile(file);
+});
+document.getElementById('backupToggle').addEventListener('click', ()=>{
+  document.getElementById('backupField').classList.toggle('backup-open');
 });
 
 /* ============ УТИЛИТЫ ============ */
@@ -1362,6 +1877,7 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
   state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.levelCap = getSortedActiveLevels()[0];
   state.inProgress = true;
@@ -1375,10 +1891,26 @@ document.getElementById('videoExtraToggle').addEventListener('click', ()=>{
 // "Выбери игру" скрыт (см. updateResumeUI) — эта проверка остаётся как
 // подстраховка на случай прямого вызова обработчика.
 function blockedByDavayPause(){
-  if(state.pausedMode !== 'davay') return false;
+  if(!state.pausedMode) return false;
   playErrorSound();
-  showToast('Сначала завершите «Давай попробуем» — «Продолжить игру» или «Закончить игру»');
+  const label = state.pausedMode === 'davay' ? '«Давай попробуем»' : (state.pausedMode === 'bingo' ? '«Секс-бинго»' : '«Правда или действие»');
+  showToast(`Сначала завершите ${label} — «Продолжить игру» или «Закончить игру»`);
   return true;
+}
+// Симметрично abandonPausedDavaySession() — сбрасывает "чужую" паузу
+// "Правда или действие", если вдруг начинается другая игра (страховка,
+// т.к. в обычном UI выбор игры скрыт, пока есть активная пауза).
+function abandonPausedTdSession(){
+  if(state.pausedMode === 'td'){
+    state.pausedMode = null;
+  }
+}
+// Симметрично abandonPausedTdSession() — сбрасывает "чужую" паузу
+// "Секс-бинго", если вдруг начинается другая игра (страховка).
+function abandonPausedBingoSession(){
+  if(state.pausedMode === 'bingo'){
+    state.pausedMode = null;
+  }
 }
 document.getElementById('gameFantyBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -1399,6 +1931,26 @@ document.getElementById('gameVideoBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToVideoGame();
 });
+document.getElementById('gameTdBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToTdSetup();
+});
+document.getElementById('gameBingoBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToBingoSetup();
+});
+document.getElementById('gameTimerBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToTimerSetup();
+});
+document.getElementById('gameWishlistBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToWishlistSetup();
+});
 function goToFantySetup(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('fantySetup').classList.add('active');
@@ -1412,6 +1964,14 @@ document.getElementById('fantyExitBtn').addEventListener('click', ()=>{
 document.getElementById('resumeBtn').addEventListener('click', ()=>{
   if(state.pausedMode === 'davay'){
     resumeDavayGame();
+    return;
+  }
+  if(state.pausedMode === 'td'){
+    resumeTdGame();
+    return;
+  }
+  if(state.pausedMode === 'bingo'){
+    resumeBingoGame();
     return;
   }
   goToGame();
@@ -1440,6 +2000,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.photoUsed = {};
   state.photoHidden = [];
   state.photoDone = [];
+  state.sexshopOwned = [];
   // Видеорулетка
   state.videoUsed = {};
   state.videoHidden = [];
@@ -1471,6 +2032,13 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
     davayHistory = [];
     davayHistoryPos = -1;
   }
+  // Твои желания
+  state.wishlistHidden = [];
+  // Правда или действие
+  state.tdUsed = {};
+  state.tdHidden = [];
+  // Таймер страсти
+  state.timerUsed = {};
   saveState();
   renderModeGroup();
   renderLevelToggles();
@@ -1535,6 +2103,8 @@ function drawFromPool(forceLevel){
 /* ============ GAME SCREEN ============ */
 function goToGame(){
   abandonPausedDavaySession();
+  abandonPausedTdSession();
+  abandonPausedBingoSession();
   state.inProgress = true;
   saveState();
   document.getElementById('setup').classList.remove('active');
@@ -1575,6 +2145,7 @@ function goToSetup(){
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
   state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = false;
   saveState();
@@ -1634,8 +2205,25 @@ function updateMuteBtn(){
     photoBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
     photoBtn.classList.toggle('on', !!state.muted);
   }
+  const resumeBtn = document.getElementById('resumeMuteBtn');
+  if(resumeBtn){
+    resumeBtn.textContent = state.muted ? '🔇' : '🔊';
+    resumeBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
+    resumeBtn.classList.toggle('on', !!state.muted);
+  }
+  const tdBtn = document.getElementById('tdSetupSoundBtn');
+  if(tdBtn){
+    tdBtn.textContent = state.muted ? '🔇 Звук выключен' : '🔊 Звук включён';
+    tdBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
+    tdBtn.classList.toggle('on', !!state.muted);
+  }
 }
 document.getElementById('muteBtn').addEventListener('click', ()=>{
+  state.muted = !state.muted;
+  saveState();
+  updateMuteBtn();
+});
+document.getElementById('resumeMuteBtn').addEventListener('click', ()=>{
   state.muted = !state.muted;
   saveState();
   updateMuteBtn();
@@ -1643,7 +2231,17 @@ document.getElementById('muteBtn').addEventListener('click', ()=>{
 
 function updateLevelUI(){
   const btn = document.getElementById('levelUpBtn');
-  if(isPlaceholderMode() || isVideoMode() || isDavayMode()){
+  if(isPlaceholderMode()){
+    const atMax = photoLevel >= PHOTO_MAX_LEVEL;
+    btn.disabled = atMax;
+    btn.textContent = atMax ? 'Максимальный уровень' : 'Сложнее';
+    const downBtn = document.getElementById('levelDownBtn');
+    if(downBtn) downBtn.disabled = photoLevel <= 1;
+    const el = document.getElementById('levelProgress');
+    if(el) el.textContent = '';
+    return;
+  }
+  if(isVideoMode() || isDavayMode()){
     btn.disabled = false;
     btn.textContent = 'Сложнее';
     const el = document.getElementById('levelProgress');
@@ -1686,6 +2284,8 @@ function advanceLevel(){
   if(idx>=0 && idx<levels.length-1){
     playLevelUpSound();
     state.levelCap = levels[idx+1];
+    state.levelTurnCounts = {1:0, 2:0};
+    state.pendingLevelUp = false;
     saveState();
     updateLevelUI();
     const lvl = levelById(state.levelCap);
@@ -1694,7 +2294,28 @@ function advanceLevel(){
   }
   return false;
 }
+// Ручное "Повысить уровень": если партнёры ещё не сыграли поровну карточек
+// текущего уровня, повышение откладывается до тех пор, пока отстающий
+// игрок не сделает свой ход на этом же уровне (см. nextTurn()).
 function levelUp(){
+  const levels = getSortedActiveLevels();
+  const isMax = levels.indexOf(state.levelCap) === levels.length-1;
+  if(isMax){
+    showToast('Это максимальный уровень 🔥');
+    return;
+  }
+  const counts = state.levelTurnCounts || {1:0, 2:0};
+  // Повышение доступно, только когда оба партнёра сыграли поровну карточек
+  // текущего уровня И хотя бы по одной — сразу после повышения счётчики
+  // обнуляются, и без этого условия можно было бы повысить уровень второй раз
+  // подряд, не сыграв на новом уровне ни одной карточки.
+  const ready = (counts[1]||0) === (counts[2]||0) && (counts[1]||0) >= 1;
+  if(!ready){
+    state.pendingLevelUp = true;
+    saveState();
+    showToast('Уровень повысится после хода партнёра');
+    return;
+  }
   if(advanceLevel()){
     drawCard(state.levelCap);
   } else {
@@ -1783,6 +2404,33 @@ function fadeSwapCard(paintFn){
   }
 }
 
+// Такая же плавная смена содержимого карточки, но для отдельных экранов новых
+// игр (у каждой свой элемент карточки, не общий #card) — с колбэком onDone,
+// чтобы вызывающая игра могла снять собственную блокировку двойного тапа.
+function fadeSwapEl(elId, paintFn, onDone){
+  const el = document.getElementById(elId);
+  if(!el){ if(onDone) onDone(); return; }
+  const inner = el.querySelector('.card-inner');
+  const doPaint = ()=>{
+    paintFn(el);
+    const newInner = el.querySelector('.card-inner');
+    if(newInner){
+      newInner.classList.add('card-hidden');
+      void newInner.offsetWidth;
+      requestAnimationFrame(()=>{
+        newInner.classList.remove('card-hidden');
+      });
+    }
+    if(onDone) onDone();
+  };
+  if(inner){
+    inner.classList.add('card-hidden');
+    setTimeout(doPaint, 220);
+  } else {
+    doPaint();
+  }
+}
+
 function renderNoCards(){
   clearInterval(timerInterval);
   timerInterval = null;
@@ -1806,16 +2454,20 @@ function renderPlaceholderCard(){
 }
 
 function getPhotoCardsList(){
-  if(typeof PHOTO_CARDS === 'undefined' || !Array.isArray(PHOTO_CARDS)) return [];
-  return PHOTO_CARDS;
+  const poses = (typeof PHOTO_CARDS !== 'undefined' && Array.isArray(PHOTO_CARDS)) ? PHOTO_CARDS : [];
+  // 5-й модуль "Секс-шоп" — отдельный файл cards_sexshop.js, объединяется с
+  // позами по тому же принципу (level=5 выступает как отдельная категория).
+  const shop = (typeof SEXSHOP_CARDS !== 'undefined' && Array.isArray(SEXSHOP_CARDS)) ? SEXSHOP_CARDS : [];
+  return poses.concat(shop);
 }
 
-const PHOTO_MAX_LEVEL = 4;
+const PHOTO_MAX_LEVEL = 5;
 let photoLevel = 1;
 let currentPhotoCard = null;
 
 function drawPhotoCard(level){
   photoLevel = level;
+  updateLevelUI();
   const hidden = state.photoHidden || [];
   const all = getPhotoCardsList().filter(c=>c.level===level && !hidden.includes(c.image));
   if(all.length===0){ currentPhotoCard = null; renderPlaceholderCard(); return; }
@@ -1848,8 +2500,11 @@ function renderPhotoCard(card, level){
           <img src="${card.image}" alt="" id="placeholderImg">
         </div>
         <div class="card-split-desc" id="placeholderDesc">
+          ${card.rank ? `<div class="card-split-rank-badge">№${card.rank}</div>` : ''}
           ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
           <div class="card-text" id="placeholderText"></div>
+          <div class="card-forwhom-row" id="placeholderForWhom"></div>
+          <div class="card-rating-row" id="placeholderRating"></div>
         </div>
       </div>
     `;
@@ -1866,6 +2521,31 @@ function renderPhotoCard(card, level){
       document.getElementById('placeholderText'),
       card.text
     );
+    // "Подходит: ..." (модуль "Секс-шоп") — отдельной строкой под описанием.
+    const forWhomEl = document.getElementById('placeholderForWhom');
+    if(forWhomEl){
+      if(card.forWhom){
+        forWhomEl.innerHTML = `<span class="forwhom-pill">Подходит: ${card.forWhom}</span>`;
+        forWhomEl.style.display = 'flex';
+      } else {
+        forWhomEl.innerHTML = '';
+        forWhomEl.style.display = 'none';
+      }
+    }
+    // Оценки партнёров (модуль "Секс-шоп") — отдельной строкой ниже.
+    const ratingEl = document.getElementById('placeholderRating');
+    if(ratingEl){
+      if(card.womenRating !== undefined && card.menRating !== undefined){
+        ratingEl.innerHTML = `
+          <span class="rating-pill rating-women">♀ ${card.womenRating}/10</span>
+          <span class="rating-pill rating-men">♂ ${card.menRating}/10</span>
+        `;
+        ratingEl.style.display = 'flex';
+      } else {
+        ratingEl.innerHTML = '';
+        ratingEl.style.display = 'none';
+      }
+    }
   });
   updateFavoriteBtn();
 }
@@ -2089,10 +2769,22 @@ document.addEventListener('webkitfullscreenchange', ()=>{
   davayFullscreenActive = !!document.webkitFullscreenElement;
 });
 
-function toggleVideoFullscreen(){
-  const video = document.getElementById('videoPlayer');
+// Общий вход/выход из полноэкранного режима для видео в "Видеорулетке" и
+// "Давай попробуем" — используется и ручной кнопкой ⛶, и авто-переключением
+// при повороте экрана (см. handleOrientationFullscreen ниже).
+function getActiveGameVideoEl(){
+  return document.getElementById('videoPlayer') || document.getElementById('davayPlayer');
+}
+function isCardFullscreenActive(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement
+    || videoNativeFullscreenActive || davayNativeFullscreenActive);
+}
+function enterCardFullscreen(){
+  const videoEl = document.getElementById('videoPlayer');
+  const davayEl = document.getElementById('davayPlayer');
+  const video = videoEl || davayEl;
   const cardEl = document.getElementById('card');
-  if(!video || !cardEl) return;
+  if(!video || !cardEl || isCardFullscreenActive()) return;
   // На iPhone/iPad свайпы во время полного экрана работать не будут — это
   // системный полноэкранный плеер видео, страница туда "не достаёт" жестами.
   // На остальных устройствах разворачиваем всю карточку (не только видео),
@@ -2101,33 +2793,52 @@ function toggleVideoFullscreen(){
   if(isIOSDevice && video.webkitEnterFullscreen){
     try{
       video.webkitEnterFullscreen();
-      videoNativeFullscreenActive = true;
+      if(videoEl) videoNativeFullscreenActive = true;
+      if(davayEl) davayNativeFullscreenActive = true;
       return;
     } catch(err){ /* падаем ниже на стандартный способ */ }
   }
   try{
-    if(document.fullscreenElement){
-      document.exitFullscreen();
-      return;
-    }
     if(cardEl.requestFullscreen){
       const result = cardEl.requestFullscreen();
       if(result && typeof result.catch === 'function'){
         result.catch(()=>{
           if(cardEl.webkitRequestFullscreen) cardEl.webkitRequestFullscreen();
-          else showToast('Не удалось открыть полноэкранный режим');
         });
       }
       return;
     }
     if(cardEl.webkitRequestFullscreen){
       cardEl.webkitRequestFullscreen();
-      return;
     }
-    showToast('Полный экран не поддерживается на этом устройстве');
-  } catch(err){
-    showToast('Не удалось открыть полноэкранный режим');
+  } catch(err){ /* полный экран недоступен — просто остаёмся в обычном виде */ }
+}
+function exitCardFullscreen(){
+  try{
+    if(document.fullscreenElement && document.exitFullscreen){
+      document.exitFullscreen();
+    } else if(document.webkitFullscreenElement && document.webkitExitFullscreen){
+      document.webkitExitFullscreen();
+    }
+  } catch(err){}
+  const video = getActiveGameVideoEl();
+  if(isIOSDevice && video && video.webkitDisplayingFullscreen && video.webkitExitFullscreen){
+    try{ video.webkitExitFullscreen(); } catch(err){}
   }
+}
+function toggleVideoFullscreen(){
+  if(isCardFullscreenActive()){
+    exitCardFullscreen();
+    return;
+  }
+  const video = document.getElementById('videoPlayer');
+  const cardEl = document.getElementById('card');
+  if(!video || !cardEl) return;
+  if(!(isIOSDevice && video.webkitEnterFullscreen) && !cardEl.requestFullscreen && !cardEl.webkitRequestFullscreen){
+    showToast('Полный экран не поддерживается на этом устройстве');
+    return;
+  }
+  enterCardFullscreen();
 }
 document.getElementById('videoFullscreenBtn').addEventListener('click', toggleVideoFullscreen);
 
@@ -2171,23 +2882,55 @@ function fitCardVideoToArea(video, el){
     el.style.aspectRatio = '';
   }
 }
+// true, только если сейчас реально открыт игровой экран в режиме
+// "Видеорулетка" или "Давай попробуем" — на всех остальных страницах
+// (главное меню, Фанты, Предложи партнеру, новые мини-игры и т.д.)
+// поворот экрана ни на что не влияет.
+function isActiveVideoOrDavayMode(){
+  const gameEl = document.getElementById('game');
+  return !!(gameEl && gameEl.classList.contains('active')
+    && (gameEl.classList.contains('video-mode') || gameEl.classList.contains('davay-mode')));
+}
 // При повороте телефона пересчитываем размер уже открытого видео в
 // "Видеорулетке"/"Давай попробуем" под новую ориентацию экрана.
 function refitCurrentCardVideo(){
+  if(!isActiveVideoOrDavayMode()) return;
   const el = document.getElementById('card');
   if(!el) return;
   const video = document.getElementById('videoPlayer') || document.getElementById('davayPlayer');
   if(video) fitCardVideoToArea(video, el);
 }
-window.addEventListener('orientationchange', ()=>{ setTimeout(refitCurrentCardVideo, 250); });
+// Поворот в горизонтальное положение — видео разворачивается на весь экран;
+// поворот обратно в вертикальное — полноэкранный режим снимается сам.
+function handleOrientationFullscreen(){
+  if(!isActiveVideoOrDavayMode()) return;
+  const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+  if(isLandscape){
+    enterCardFullscreen();
+  } else {
+    exitCardFullscreen();
+  }
+}
+window.addEventListener('orientationchange', ()=>{
+  setTimeout(()=>{
+    refitCurrentCardVideo();
+    handleOrientationFullscreen();
+  }, 250);
+});
 if(window.visualViewport){
   window.visualViewport.addEventListener('resize', refitCurrentCardVideo);
 } else {
   window.addEventListener('resize', refitCurrentCardVideo);
 }
 
+function updateVideoLevelBtn(){
+  const btn = document.getElementById('videoLevelUpBtn');
+  if(!btn) return;
+  btn.disabled = videoLevel >= VIDEO_MAX_LEVEL;
+}
 function drawVideoCard(level){
   videoLevel = level;
+  updateVideoLevelBtn();
   const hidden = state.videoHidden || [];
   const liked = state.videoLiked || [];
   let all = getVideoCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
@@ -2325,6 +3068,8 @@ function renderVideoCard(card, level){
 
 async function goToVideoGame(){
   abandonPausedDavaySession();
+  abandonPausedTdSession();
+  abandonPausedBingoSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -2333,6 +3078,7 @@ async function goToVideoGame(){
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
   state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = true;
   videoLevel = 1;
@@ -2597,8 +3343,14 @@ document.getElementById('davayFavPrevBtn').addEventListener('click', ()=>{
   davayFavPrev();
 });
 
+function updateDavayLevelBtn(){
+  const btn = document.getElementById('davayLevelUpBtn');
+  if(!btn) return;
+  btn.disabled = davayLevel >= DAVAY_MAX_LEVEL;
+}
 function drawDavayCard(level){
   davayLevel = level;
+  updateDavayLevelBtn();
   const hidden = state.davayHidden || [];
   const liked = state.davayLiked || [];
   let all = getDavayCardsList().filter(c=>c.level===level && !hidden.includes(davayCardId(c)));
@@ -2799,10 +3551,11 @@ document.getElementById('davaySetupFavoritesBtn').addEventListener('click', ()=>
 // ===== Экран настройки "Предложи партнеру" (выбор уровня) =====
 // Свой набор уровней (не трогает общий LEVELS, которым пользуются "Фанты").
 const PHOTO_LEVELS = [
-  {id:1, name:'Простые', desc:'Лёгкие и классические позы', icon:'🙂'},
-  {id:2, name:'Интересные', desc:'Больше разнообразия и вариантов', icon:'😏'},
-  {id:3, name:'Сложные', desc:'Нужны гибкость и физподготовка', icon:'🔥'},
+  {id:1, name:'Простые позы', desc:'Лёгкие и классические позы', icon:'🙂'},
+  {id:2, name:'Интересные позы', desc:'Больше разнообразия и вариантов', icon:'😏'},
+  {id:3, name:'Сложные позы', desc:'Нужны гибкость и физподготовка', icon:'🔥'},
   {id:4, name:'В авто', desc:'Позы в машине', icon:'🚗'},
+  {id:5, name:'Секс-шоп', desc:'Топ-200 товаров с рейтингом', icon:'🛍️'},
 ];
 function renderPhotoSetupLevels(){
   const wrap = document.getElementById('photoSetupLevels');
@@ -2859,6 +3612,8 @@ function goToDavayFavoritesView(){
     return;
   }
   abandonPausedDavaySession();
+  abandonPausedTdSession();
+  abandonPausedBingoSession();
   state.pausedMode = null;
   state.inProgress = true;
   davayLevel = (state.davaySelectedLevel || 3) - 2;
@@ -2897,6 +3652,7 @@ async function goToDavayGame(){
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
   state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = true;
   davayLevel = (state.davaySelectedLevel || 3) - 2;
@@ -3023,6 +3779,8 @@ function abandonPausedDavaySession(){
 
 function goToPlaceholderGame(){
   abandonPausedDavaySession();
+  abandonPausedTdSession();
+  abandonPausedBingoSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -3031,6 +3789,7 @@ function goToPlaceholderGame(){
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
   state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = true;
   photoLevel = state.photoSelectedLevel || 1;
@@ -3303,7 +4062,7 @@ function dislikeCurrentCard(){
     state.hiddenIndexes.push(currentCard.idx);
   }
   saveState();
-  showToast('Карточка скрыта навсегда 👎');
+  showToast('Карточка скрыта навсегда 🚫');
   drawCard();
 }
 
@@ -3371,8 +4130,15 @@ function nextTurn(completed){
     state.skippedCount = (state.skippedCount||0) + 1;
   }
   state.turnsPlayed = (state.turnsPlayed||0) + 1;
+  if(!state.levelTurnCounts) state.levelTurnCounts = {1:0, 2:0};
+  state.levelTurnCounts[state.currentPlayer] = (state.levelTurnCounts[state.currentPlayer]||0) + 1;
   checkAutoLevelUp();
   state.currentPlayer = state.currentPlayer===1 ? 2 : 1;
+  // Если повышение уровня было отложено — как только оба партнёра сыграли
+  // поровну карточек текущего уровня, применяем его прямо сейчас.
+  if(state.pendingLevelUp && (state.levelTurnCounts[1]||0) === (state.levelTurnCounts[2]||0) && (state.levelTurnCounts[1]||0) >= 1){
+    advanceLevel();
+  }
   saveState();
   updateTurnUI();
   drawCard();
@@ -3431,10 +4197,24 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
     showToast('Игра завершена');
     return;
   }
+  if(state.pausedMode === 'td'){
+    showTdSummary();
+    return;
+  }
+  if(state.pausedMode === 'bingo'){
+    finishBingoGame();
+    showToast('Игра завершена');
+    return;
+  }
   showSummary();
 });
 
+// Определяет, что делать при закрытии общего окна итогов (#summaryModal) —
+// сброс Фантов или завершение "Правда или действие" (обе игры используют
+// одну и ту же модалку итогов, только с разными данными).
+let summaryModalMode = 'fanty';
 function showSummary(){
+  summaryModalMode = 'fanty';
   const winnerEl = document.getElementById('summaryWinner');
   if(state.score1 === state.score2){
     winnerEl.textContent = '🤝 Ничья!';
@@ -3448,6 +4228,14 @@ function showSummary(){
 }
 document.getElementById('closeSummaryBtn').addEventListener('click', ()=>{
   document.getElementById('summaryModal').classList.remove('show');
+  if(summaryModalMode === 'td'){
+    finishTdGame();
+    return;
+  }
+  if(summaryModalMode === 'timer'){
+    exitTimerGame();
+    return;
+  }
   goToSetup();
 });
 
@@ -3765,6 +4553,9 @@ document.getElementById('davayNoBtn').addEventListener('click', ()=>{
   answerDavayQuiz('no');
 });
 document.getElementById('levelUpBtn').addEventListener('click', ()=>{
+  // Примечание: этой кнопкой пользуются только Фанты и "Предложи партнеру" —
+  // в Видеорулетке и "Давай попробуем" она скрыта CSS (там свои кнопки
+  // videoLevelUpBtn/davayLevelUpBtn), поэтому здесь нет веток под эти режимы.
   if(isPlaceholderMode()){
     if(photoLevel < PHOTO_MAX_LEVEL){
       playLevelUpSound();
@@ -3775,54 +4566,15 @@ document.getElementById('levelUpBtn').addEventListener('click', ()=>{
     }
     return;
   }
-  if(isVideoMode()){
-    if(videoLevel < VIDEO_MAX_LEVEL){
-      playLevelUpSound();
-      drawVideoCard(videoLevel + 1);
-      showToast(`Уровень повышен: ${videoLevel}`);
-    } else {
-      showToast('Это максимальный уровень 🔥');
-    }
-    return;
-  }
-  if(isDavayMode()){
-    if(davayLevel < DAVAY_MAX_LEVEL){
-      playLevelUpSound();
-      drawDavayCard(davayLevel + 1);
-      showToast(`Уровень повышен: ${davayLevel}`);
-    } else {
-      showToast('Это максимальный уровень 🔥');
-    }
-    return;
-  }
   levelUp();
 });
 document.getElementById('levelDownBtn').addEventListener('click', ()=>{
+  // См. примечание у levelUpBtn — в Видеорулетке/"Давай попробуем" кнопка скрыта.
   if(isPlaceholderMode()){
     if(photoLevel > 1){
       playNeutralSound();
       drawPhotoCard(photoLevel - 1);
       showToast(`Уровень понижен: ${photoLevel}`);
-    } else {
-      showToast('Это минимальный уровень');
-    }
-    return;
-  }
-  if(isVideoMode()){
-    if(videoLevel > 1){
-      playNeutralSound();
-      drawVideoCard(videoLevel - 1);
-      showToast(`Уровень понижен: ${videoLevel}`);
-    } else {
-      showToast('Это минимальный уровень');
-    }
-    return;
-  }
-  if(isDavayMode()){
-    if(davayLevel > 1){
-      playNeutralSound();
-      drawDavayCard(davayLevel - 1);
-      showToast(`Уровень понижен: ${davayLevel}`);
     } else {
       showToast('Это минимальный уровень');
     }
@@ -3838,7 +4590,7 @@ document.getElementById('dislikeBtn').addEventListener('click', ()=>{
       state.photoHidden.push(currentPhotoCard.image);
     }
     saveState();
-    showToast('Карточка скрыта 👎');
+    showToast('Карточка скрыта 🚫');
     drawPhotoCard(photoLevel);
     return;
   }
@@ -3851,7 +4603,7 @@ document.getElementById('dislikeBtn').addEventListener('click', ()=>{
       state.videoHidden.push(vid);
     }
     saveState();
-    showToast('Видео скрыто 👎');
+    showToast('Видео скрыто 🚫');
     drawVideoCard(videoLevel);
     return;
   }
@@ -3864,7 +4616,7 @@ document.getElementById('dislikeBtn').addEventListener('click', ()=>{
       state.davayHidden.push(vid);
     }
     saveState();
-    showToast('Видео скрыто 👎');
+    showToast('Видео скрыто 🚫');
     drawDavayCard(davayLevel);
     return;
   }
@@ -3872,7 +4624,36 @@ document.getElementById('dislikeBtn').addEventListener('click', ()=>{
 });
 
 /* ============ ИЗБРАННОЕ / "СДЕЛАНО" ============ */
+function updateOwnedBtn(){
+  const btn = document.getElementById('sexshopOwnedBtn');
+  if(!btn) return;
+  if(!isPlaceholderMode() || !currentPhotoCard || currentPhotoCard.level !== 5){
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'flex';
+  const isOwned = (state.sexshopOwned||[]).includes(currentPhotoCard.image);
+  btn.textContent = isOwned ? '✅' : '🛍️';
+  btn.classList.toggle('active', isOwned);
+}
+function toggleOwned(){
+  if(!isPlaceholderMode() || !currentPhotoCard || currentPhotoCard.level !== 5) return;
+  if(!state.sexshopOwned) state.sexshopOwned = [];
+  const pos = state.sexshopOwned.indexOf(currentPhotoCard.image);
+  if(pos>=0){
+    state.sexshopOwned.splice(pos,1);
+    showToast('Отметка «уже есть» снята');
+  } else {
+    state.sexshopOwned.push(currentPhotoCard.image);
+    playSuccessSound();
+    showToast('Отмечено: уже есть ✅');
+  }
+  saveState();
+  updateOwnedBtn();
+}
+document.getElementById('sexshopOwnedBtn').addEventListener('click', toggleOwned);
 function updateFavoriteBtn(){
+  updateOwnedBtn();
   const btn = document.getElementById('favoriteBtn');
   if(!btn) return;
   if(isPlaceholderMode()){
@@ -4198,6 +4979,7 @@ if(state.inProgress){
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
   state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = false;
   if(state.pausedMode === 'davay'){
@@ -4212,6 +4994,1206 @@ if(state.inProgress){
   state.pausedMode = null;
   saveState();
 }
+/* ============================================================ */
+/* ====================  НОВЫЕ ИГРЫ (MVP)  ===================== */
+/* ============================================================ */
+
+/* ---------- 1. ПРАВДА ИЛИ ДЕЙСТВИЕ ---------- */
+let tdLevel = 1;
+let tdLocked = false;
+let currentTdCard = null;
+let currentTdType = null;
+function renderTdSetupLevels(){
+  const wrap = document.getElementById('tdSetupLevels');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  LEVELS.forEach(l=>{
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (state.tdSelectedLevel === l.id ? ' on' : '');
+    div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
+    div.addEventListener('click', ()=>{
+      state.tdSelectedLevel = l.id;
+      saveState();
+      renderTdSetupLevels();
+    });
+    wrap.appendChild(div);
+  });
+}
+function goToTdSetup(){
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('tdSetup').classList.add('active');
+  renderTdSetupLevels();
+  updateMuteBtn();
+}
+function exitTdSetup(){
+  document.getElementById('tdSetup').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+}
+function tdUpdateScoreUI(){
+  document.getElementById('tdScore1').textContent = (state.name1 || 'Игрок 1') + ': ' + state.tdScore1;
+  document.getElementById('tdScore2').textContent = (state.name2 || 'Игрок 2') + ': ' + state.tdScore2;
+}
+// Оформление карточки скопировано со стиля игры "Фанты" (border-top по полу
+// игрока, шапка с именем/уровнем, плашка типа карточки) — только без
+// встроенного ручного таймера, это отдельная механика, а не стиль.
+function tdCardHeaderHtml(){
+  const lvl = levelById(tdLevel);
+  const turnName = state.tdCurrentPlayer === 1 ? (state.name1 || 'Игрок 1') : (state.name2 || 'Игрок 2');
+  return `
+    <div class="card-header">
+      <div class="card-turn">
+        <div class="card-turn-label">Ход игрока</div>
+        <div class="card-turn-name">${turnName}</div>
+      </div>
+      <div class="badge">
+        <span class="level-pill" style="background:${lvl.color}">${lvl.icon} ${lvl.name}</span>
+      </div>
+    </div>
+  `;
+}
+function updateTdLevelBtn(){
+  const btn = document.getElementById('tdLevelUpBtn');
+  if(!btn) return;
+  btn.disabled = tdLevel >= LEVELS.length;
+}
+function tdShowChoice(){
+  updateTdLevelBtn();
+  currentTdCard = null;
+  currentTdType = null;
+  tdLocked = true;
+  document.getElementById('tdChoiceRow').style.display = 'flex';
+  document.getElementById('tdAnswerRow').style.display = 'none';
+  const gender = state.tdCurrentPlayer === 1 ? 'M' : 'F';
+  fadeSwapEl('tdCard', (el)=>{
+    el.className = 'card';
+    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
+    el.innerHTML = `
+      <div class="card-inner">
+        ${tdCardHeaderHtml()}
+        <div class="card-body">
+          <div class="card-icon">❓</div>
+          <div class="card-text">Выберите «Правда» или «Действие»</div>
+        </div>
+      </div>
+    `;
+  }, ()=>{ tdLocked = false; });
+}
+function tdDraw(type){
+  const gender = state.tdCurrentPlayer === 1 ? 'M' : 'F';
+  const userCards = (typeof USER_CARDS !== 'undefined' && Array.isArray(USER_CARDS)) ? USER_CARDS : [];
+  const hidden = state.tdHidden || [];
+  const pool = CARDS.concat(state.customCards || []).concat(userCards)
+    .filter(c => !c.deleted && c.level === tdLevel && c.type === type && (!c.for || c.for === gender) && !hidden.includes(c.text));
+  if(pool.length === 0){
+    playErrorSound();
+    showToast('На этом уровне нет карточек этого типа');
+    return;
+  }
+  if(!state.tdUsed) state.tdUsed = {};
+  const key = tdLevel + '_' + type;
+  let used = state.tdUsed[key] || [];
+  let available = pool.filter(c => !used.includes(c.text));
+  if(available.length === 0){
+    used = [];
+    available = pool;
+    showToast('Карточки этого уровня показаны заново 🔀');
+  }
+  const card = available[Math.floor(Math.random() * available.length)];
+  used.push(card.text);
+  state.tdUsed[key] = used;
+  currentTdCard = card;
+  currentTdType = type;
+  saveState();
+  tdLocked = true;
+  document.getElementById('tdChoiceRow').style.display = 'none';
+  document.getElementById('tdAnswerRow').style.display = 'flex';
+  fadeSwapEl('tdCard', (el)=>{
+    el.className = 'card';
+    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
+    el.innerHTML = `
+      <div class="card-inner">
+        ${tdCardHeaderHtml()}
+        <div class="card-type-row">
+          <span class="type-pill">${type === 'truth' ? 'Правда' : 'Действие'}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-text">${card.text}</div>
+        </div>
+      </div>
+    `;
+  }, ()=>{ tdLocked = false; });
+}
+function dislikeTdCard(){
+  if(!currentTdCard || !currentTdType) return;
+  playErrorSound();
+  if(!state.tdHidden) state.tdHidden = [];
+  if(!state.tdHidden.includes(currentTdCard.text)){
+    state.tdHidden.push(currentTdCard.text);
+  }
+  saveState();
+  showToast('Карточка скрыта навсегда 🚫');
+  tdDraw(currentTdType);
+}
+function tdNextTurn(completed){
+  if(completed){
+    if(state.tdCurrentPlayer === 1) state.tdScore1++; else state.tdScore2++;
+    state.tdCompletedCount = (state.tdCompletedCount||0) + 1;
+  } else {
+    state.tdSkippedCount = (state.tdSkippedCount||0) + 1;
+  }
+  if(!state.tdLevelTurnCounts) state.tdLevelTurnCounts = {1:0, 2:0};
+  state.tdLevelTurnCounts[state.tdCurrentPlayer] = (state.tdLevelTurnCounts[state.tdCurrentPlayer]||0) + 1;
+  state.tdCurrentPlayer = state.tdCurrentPlayer === 1 ? 2 : 1;
+  // Если повышение уровня было отложено — как только оба партнёра сыграли
+  // поровну карточек текущего уровня, применяем его прямо сейчас.
+  if(state.tdPendingLevelUp && (state.tdLevelTurnCounts[1]||0) === (state.tdLevelTurnCounts[2]||0) && (state.tdLevelTurnCounts[1]||0) >= 1){
+    state.tdPendingLevelUp = false;
+    tdLevel = Math.min(tdLevel + 1, LEVELS.length);
+    state.tdSelectedLevel = tdLevel;
+    state.tdLevelTurnCounts = {1:0, 2:0};
+    playLevelUpSound();
+    showToast(`Уровень повышен для обоих: ${tdLevel}`);
+  }
+  saveState();
+  tdUpdateScoreUI();
+  tdShowChoice();
+}
+function goToTdGame(){
+  abandonPausedDavaySession();
+  abandonPausedBingoSession();
+  state.pausedMode = null;
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  state.name1 = n1raw || 'Men';
+  state.name2 = n2raw || 'Sexy';
+  tdLevel = state.tdSelectedLevel || 1;
+  state.tdCurrentPlayer = pickStartingPlayerValue('random');
+  state.tdScore1 = 0; state.tdScore2 = 0;
+  state.tdCompletedCount = 0; state.tdSkippedCount = 0;
+  state.tdLevelTurnCounts = {1:0, 2:0}; state.tdPendingLevelUp = false;
+  state.inProgress = true;
+  saveState();
+  document.getElementById('tdSetup').classList.remove('active');
+  document.getElementById('tdGame').classList.add('active');
+  tdUpdateScoreUI();
+  tdShowChoice();
+}
+// Пауза: вернуться в главное меню, не сбрасывая счёт — можно продолжить позже
+// через общий блок "Продолжить игру" / "Закончить игру".
+function pauseTdGame(){
+  state.pausedMode = 'td';
+  saveState();
+  document.getElementById('tdGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  updateResumeUI();
+}
+function resumeTdGame(){
+  state.pausedMode = null;
+  saveState();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('tdGame').classList.add('active');
+  tdUpdateScoreUI();
+  tdShowChoice();
+}
+function finishTdGame(){
+  state.tdScore1 = 0; state.tdScore2 = 0;
+  state.tdCompletedCount = 0; state.tdSkippedCount = 0;
+  state.tdLevelTurnCounts = {1:0, 2:0}; state.tdPendingLevelUp = false;
+  state.inProgress = false;
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+}
+function showTdSummary(){
+  summaryModalMode = 'td';
+  const winnerEl = document.getElementById('summaryWinner');
+  const name1 = state.name1 || 'Игрок 1';
+  const name2 = state.name2 || 'Игрок 2';
+  if(state.tdScore1 === state.tdScore2){
+    winnerEl.textContent = '🤝 Ничья!';
+  } else {
+    const winnerName = state.tdScore1 > state.tdScore2 ? name1 : name2;
+    winnerEl.textContent = `🏆 Победил ${winnerName}`;
+  }
+  document.getElementById('summaryScore').textContent = `${name1}: ${state.tdScore1}  ·  ${name2}: ${state.tdScore2}`;
+  document.getElementById('summaryCounts').textContent = `Выполнено: ${state.tdCompletedCount||0}  ·  Отказов: ${state.tdSkippedCount||0}`;
+  document.getElementById('summaryModal').classList.add('show');
+}
+// Повышение уровня в "Правда или действие" тоже откладывается, пока оба
+// партнёра не сыграют поровну карточек текущего уровня (см. tdNextTurn()).
+function tdChangeLevel(delta){
+  const newLevel = tdLevel + delta;
+  if(newLevel < 1 || newLevel > LEVELS.length){
+    showToast(delta > 0 ? 'Это максимальный уровень 🔥' : 'Это минимальный уровень');
+    return;
+  }
+  if(delta > 0){
+    const counts = state.tdLevelTurnCounts || {1:0, 2:0};
+    // Как и в Фантах: нужно равное количество карточек у обоих партнёров,
+    // и не меньше одной — иначе можно было бы повышать уровень второй раз
+    // подряд сразу после сброса счётчиков.
+    const ready = (counts[1]||0) === (counts[2]||0) && (counts[1]||0) >= 1;
+    if(!ready){
+      state.tdPendingLevelUp = true;
+      saveState();
+      showToast('Уровень повысится после хода партнёра');
+      return;
+    }
+  }
+  tdLevel = newLevel;
+  state.tdSelectedLevel = tdLevel;
+  if(delta > 0){
+    state.tdLevelTurnCounts = {1:0, 2:0};
+    state.tdPendingLevelUp = false;
+  }
+  saveState();
+  if(delta > 0) playLevelUpSound(); else playNeutralSound();
+  showToast(delta > 0 ? `Уровень повышен: ${tdLevel}` : `Уровень понижен: ${tdLevel}`);
+  tdShowChoice();
+}
+document.getElementById('tdSetupExitBtn').addEventListener('click', exitTdSetup);
+document.getElementById('tdSetupStartBtn').addEventListener('click', ()=>{
+  const level = state.tdSelectedLevel || 1;
+  const hasTruth = CARDS.some(c=>c.level===level && c.type==='truth');
+  const hasDare = CARDS.some(c=>c.level===level && c.type==='dare');
+  if(!hasTruth || !hasDare){
+    playErrorSound();
+    showToast('На этом уровне не хватает карточек для игры');
+    return;
+  }
+  playSuccessSound();
+  goToTdGame();
+});
+document.getElementById('tdTruthBtn').addEventListener('click', ()=>{ if(tdLocked) return; playNeutralSound(); tdDraw('truth'); });
+document.getElementById('tdDareBtn').addEventListener('click', ()=>{ if(tdLocked) return; playNeutralSound(); tdDraw('dare'); });
+document.getElementById('tdDoneBtn').addEventListener('click', ()=>{ if(tdLocked) return; playSuccessSound(); tdNextTurn(true); });
+document.getElementById('tdSkipBtn').addEventListener('click', ()=>{ if(tdLocked) return; playFailSound(); tdNextTurn(false); });
+document.getElementById('tdDislikeBtn').addEventListener('click', ()=>{ if(tdLocked) return; dislikeTdCard(); });
+document.getElementById('tdLevelUpBtn').addEventListener('click', ()=>{ if(tdLocked) return; tdChangeLevel(1); });
+document.getElementById('tdPauseBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  pauseTdGame();
+  showToast('Игра на паузе — прогресс сохранён');
+});
+document.getElementById('tdSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.add('show'); });
+document.getElementById('closeTdRulesBtn').addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.remove('show'); });
+document.getElementById('tdRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'tdRulesModal') e.currentTarget.classList.remove('show'); });
+document.getElementById('tdSetupSoundBtn').addEventListener('click', ()=>{
+  state.muted = !state.muted;
+  saveState();
+  updateMuteBtn();
+});
+
+/* ---------- 2. СЕКС-БИНГО ---------- */
+const BINGO_LINES = [
+  [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
+  [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],
+  [0,6,12,18,24],[4,8,12,16,20]
+];
+function getBingoItemsList(level){
+  if(typeof BINGO_ITEMS === 'undefined' || !Array.isArray(BINGO_ITEMS)) return [];
+  return BINGO_ITEMS.filter(i=>i.level===level);
+}
+function getBingoBonusList(level){
+  if(typeof BINGO_BONUS === 'undefined' || !Array.isArray(BINGO_BONUS)) return [];
+  return BINGO_BONUS.filter(i=>i.level===level);
+}
+function goToBingoSetup(){
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('bingoSetup').classList.add('active');
+}
+function exitBingoSetup(){
+  document.getElementById('bingoSetup').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+}
+function generateBingoGrid(level){
+  // Все 25 клеток — реальные задания (раньше центральная клетка была
+  // "бесплатной" и всегда отмеченной сердечком; теперь это обычное задание).
+  const pool = shuffle(getBingoItemsList(level)).slice(0,25);
+  const grid = [];
+  for(let i=0;i<25;i++){
+    grid.push(pool[i] ? pool[i].text : '—');
+  }
+  state.bingoGrid = grid;
+  state.bingoChecked = grid.map(()=>false);
+  state.bingoWonLines = [];
+  state.bingoUsedBonus = [];
+  state.bingoCurrentLevel = level;
+  state.bingoEscalatedTo2 = false;
+  state.bingoEscalatedTo3 = false;
+  state.bingoBonusEndGiven = false;
+  state.bingoGridLevel = level;
+}
+function updateBingoLevelLabel(){
+  const el = document.getElementById('bingoLevelLabel');
+  if(!el) return;
+  const lvl = (typeof BINGO_LEVELS !== 'undefined') ? BINGO_LEVELS.find(l=>l.id === (state.bingoCurrentLevel||1)) : null;
+  el.textContent = lvl ? `Уровень сейчас: ${lvl.icon} ${lvl.name}` : '';
+}
+// Уменьшает шрифт клетки шаг за шагом, пока текст задания не поместится
+// внутри квадратной клетки целиком — чтобы карта не "разъезжалась" за рамки
+// на маленьких экранах и особенно в установленном PWA-режиме.
+function fitBingoCellText(cell){
+  let size = 9.5;
+  cell.style.fontSize = size + 'px';
+  while(cell.scrollHeight > cell.clientHeight + 1 && size > 6.5){
+    size -= 0.5;
+    cell.style.fontSize = size + 'px';
+  }
+}
+function renderBingoGrid(){
+  const wrap = document.getElementById('bingoGrid');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  (state.bingoGrid || []).forEach((text,i)=>{
+    const cell = document.createElement('div');
+    cell.className = 'bingo-cell' + (state.bingoChecked[i] ? ' checked' : '');
+    cell.textContent = text;
+    cell.addEventListener('click', ()=>toggleBingoCell(i));
+    wrap.appendChild(cell);
+    fitBingoCellText(cell);
+  });
+  updateBingoLevelLabel();
+}
+function toggleBingoCell(i){
+  state.bingoChecked[i] = !state.bingoChecked[i];
+  saveState();
+  renderBingoGrid();
+  if(state.bingoChecked[i]){
+    playNeutralSound();
+    checkBingoLines();
+  }
+}
+function checkBingoLines(){
+  BINGO_LINES.forEach((line, li)=>{
+    if(state.bingoWonLines.includes(li)) return;
+    const complete = line.every(idx=>state.bingoChecked[idx]);
+    if(complete){
+      state.bingoWonLines.push(li);
+    }
+  });
+  saveState();
+  advanceBingoStage();
+}
+// Игра всегда начинается с уровня 1 (Нежное) и постепенно горячеет по ходу
+// партии: после 1-й собранной линии по горизонтали/вертикали (диагонали не
+// считаются) — переход на уровень 2 (Горячее), после 3-й такой линии —
+// на уровень 3 (Дерзкое). Бонусное задание теперь выдаётся не за каждую
+// линию, а только в 3 момента: перед каждым из этих двух переходов и в
+// самом конце игры, когда отмечены все 25 клеток.
+function advanceBingoStage(){
+  const rowColWon = state.bingoWonLines.filter(li=>li<=9).length;
+  if(!state.bingoEscalatedTo2 && rowColWon >= 1){
+    showBingoBonus();
+    escalateBingoTo(2);
+    state.bingoEscalatedTo2 = true;
+    saveState();
+    return;
+  }
+  if(state.bingoEscalatedTo2 && !state.bingoEscalatedTo3 && rowColWon >= 3){
+    showBingoBonus();
+    escalateBingoTo(3);
+    state.bingoEscalatedTo3 = true;
+    saveState();
+    return;
+  }
+  if(!state.bingoBonusEndGiven && state.bingoChecked.length === 25 && state.bingoChecked.every(Boolean)){
+    showBingoBonus();
+    state.bingoBonusEndGiven = true;
+    saveState();
+  }
+}
+// Все ещё не отмеченные клетки заменяются заданиями нового уровня. Уже
+// отмеченные клетки не трогаем — они остаются как есть, подтверждая, что
+// задание выполнено.
+function escalateBingoTo(nextLevel){
+  const pool = shuffle(getBingoItemsList(nextLevel));
+  const usedTexts = new Set(state.bingoGrid);
+  let p = 0;
+  for(let i=0;i<25;i++){
+    if(state.bingoChecked[i]) continue;
+    while(p < pool.length && usedTexts.has(pool[p].text)) p++;
+    const item = pool[p];
+    if(item){
+      state.bingoGrid[i] = item.text;
+      usedTexts.add(item.text);
+      p++;
+    }
+  }
+  state.bingoCurrentLevel = nextLevel;
+  renderBingoGrid();
+  const lvl = (typeof BINGO_LEVELS !== 'undefined' ? BINGO_LEVELS.find(l=>l.id===nextLevel) : null);
+  showToast(`Уровень повышен: ${lvl ? lvl.icon + ' ' + lvl.name : nextLevel} 🔥`);
+}
+function showBingoBonus(){
+  const list = getBingoBonusList(state.bingoCurrentLevel || 1);
+  if(!state.bingoUsedBonus) state.bingoUsedBonus = [];
+  let available = list.filter(b=>!state.bingoUsedBonus.includes(b.text));
+  if(available.length === 0){
+    // Все бонусы этого уровня уже показаны в этой игре — начинаем пул заново,
+    // но не повторяем ничего, пока не исчерпан весь список.
+    state.bingoUsedBonus = [];
+    available = list;
+  }
+  const bonus = available.length ? available[Math.floor(Math.random()*available.length)] : null;
+  if(bonus){
+    state.bingoUsedBonus.push(bonus.text);
+    saveState();
+  }
+  playLevelUpSound();
+  document.getElementById('bingoBonusText').textContent = bonus ? bonus.text : 'Поздравляем с собранной линией!';
+  document.getElementById('bingoBonusModal').classList.add('show');
+}
+function goToBingoGame(){
+  abandonPausedDavaySession();
+  abandonPausedTdSession();
+  abandonPausedBingoSession();
+  state.pausedMode = null;
+  // Игра всегда начинается с уровня 1 (Нежное) — выбор уровня в настройке
+  // убран, дальше карта повышает сложность сама по ходу игры.
+  // Каждый новый запуск игры (не возобновление после паузы, для этого есть
+  // отдельная resumeBingoGame()) должен давать свежую карту, а не
+  // повторять сетку и отметки из прошлой законченной игры.
+  generateBingoGrid(1);
+  state.inProgress = true;
+  saveState();
+  document.getElementById('bingoSetup').classList.remove('active');
+  document.getElementById('bingoGame').classList.add('active');
+  renderBingoGrid();
+}
+// Пауза: вернуться в главное меню, не сбрасывая карту — можно продолжить
+// позже через общий блок "Продолжить игру" / "Закончить игру".
+function pauseBingoGame(){
+  state.pausedMode = 'bingo';
+  saveState();
+  document.getElementById('bingoGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  updateResumeUI();
+}
+function resumeBingoGame(){
+  state.pausedMode = null;
+  saveState();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('bingoGame').classList.add('active');
+  renderBingoGrid();
+}
+function finishBingoGame(){
+  state.inProgress = false;
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+}
+document.getElementById('bingoSetupExitBtn').addEventListener('click', exitBingoSetup);
+document.getElementById('bingoSetupStartBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  goToBingoGame();
+});
+document.getElementById('bingoNewCardBtn').addEventListener('click', ()=>{
+  generateBingoGrid(1);
+  saveState();
+  renderBingoGrid();
+  playSuccessSound();
+  showToast('Новая карта готова 🎲');
+});
+document.getElementById('bingoPauseBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  pauseBingoGame();
+  showToast('Игра на паузе — прогресс сохранён');
+});
+document.getElementById('bingoSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('bingoRulesModal').classList.add('show'); });
+document.getElementById('closeBingoRulesBtn').addEventListener('click', ()=>{ document.getElementById('bingoRulesModal').classList.remove('show'); });
+document.getElementById('bingoRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'bingoRulesModal') e.currentTarget.classList.remove('show'); });
+document.getElementById('closeBingoBonusBtn').addEventListener('click', ()=>{ document.getElementById('bingoBonusModal').classList.remove('show'); });
+document.getElementById('bingoBonusModal').addEventListener('click', (e)=>{ if(e.target.id === 'bingoBonusModal') e.currentTarget.classList.remove('show'); });
+
+/* ---------- 3. ТАЙМЕР-ИГРА ---------- */
+let mtLevel = 1; // "mt" = mini-timer-game, чтобы не путать с общим timerInterval карточек
+let mtCurrentCard = null;
+let mtRemaining = 0;
+let mtTotal = 0;
+let mtIntervalId = null;
+let mtRunning = false;
+function getMtCardsList(level){
+  if(typeof TIMER_CARDS === 'undefined' || !Array.isArray(TIMER_CARDS)) return [];
+  return TIMER_CARDS.filter(c=>c.level===level);
+}
+function getMtLevelInfo(level){
+  if(typeof TIMER_LEVELS === 'undefined' || !Array.isArray(TIMER_LEVELS)) return null;
+  return TIMER_LEVELS.find(l=>l.id===level);
+}
+function renderTimerSetupLevels(){
+  const wrap = document.getElementById('timerSetupLevels');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  (typeof TIMER_LEVELS !== 'undefined' ? TIMER_LEVELS : []).forEach(l=>{
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (state.timerSelectedLevel === l.id ? ' on' : '');
+    div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.seconds} секунд</div><div class="level-check"></div>`;
+    div.addEventListener('click', ()=>{
+      state.timerSelectedLevel = l.id;
+      saveState();
+      renderTimerSetupLevels();
+    });
+    wrap.appendChild(div);
+  });
+}
+function renderTimerModeGroup(){
+  document.querySelectorAll('#timerModeGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === (state.timerGameMode || 'fast'));
+  });
+  // "Быстрая"/"Продолжительная" сами повышают уровень и всегда стартуют
+  // с 1-го, а время задания берётся из уровня — выбор уровня и своего
+  // времени в этих режимах недоступен, доступен только в "Пользовательской".
+  const locked = (state.timerGameMode || 'fast') !== 'single';
+  const levelsField = document.getElementById('timerLevelsField');
+  const levelsNote = document.getElementById('timerLevelsNote');
+  if(levelsField) levelsField.classList.toggle('timer-levels-locked', locked);
+  if(levelsNote) levelsNote.style.display = locked ? '' : 'none';
+  const durationField = document.getElementById('timerDurationField');
+  const durationNote = document.getElementById('timerDurationNote');
+  if(durationField) durationField.classList.toggle('timer-levels-locked', locked);
+  if(durationNote) durationNote.style.display = locked ? '' : 'none';
+  const levelUpField = document.getElementById('timerLevelUpField');
+  const levelUpNote = document.getElementById('timerLevelUpNote');
+  if(levelUpField) levelUpField.classList.toggle('timer-levels-locked', locked);
+  if(levelUpNote) levelUpNote.style.display = locked ? '' : 'none';
+}
+document.querySelectorAll('#timerModeGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.timerGameMode = btn.dataset.value;
+    if(state.timerGameMode !== 'single') state.timerSelectedLevel = 1;
+    saveState();
+    renderTimerModeGroup();
+    renderTimerSetupLevels();
+  });
+});
+function renderTimerDurationGroup(){
+  document.querySelectorAll('#timerDurationGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.timerCustomSeconds || 10));
+  });
+}
+document.querySelectorAll('#timerDurationGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if((state.timerGameMode || 'fast') !== 'single') return;
+    state.timerCustomSeconds = parseInt(btn.dataset.value, 10);
+    saveState();
+    renderTimerDurationGroup();
+  });
+});
+function renderTimerLevelUpGroup(){
+  document.querySelectorAll('#timerLevelUpGroup .starter-btn').forEach(btn=>{
+    const val = btn.dataset.value === 'manual' ? 'manual' : parseInt(btn.dataset.value, 10);
+    btn.classList.toggle('on', val === (state.timerLevelUpCadence || 5));
+  });
+}
+document.querySelectorAll('#timerLevelUpGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if((state.timerGameMode || 'fast') !== 'single') return;
+    state.timerLevelUpCadence = btn.dataset.value === 'manual' ? 'manual' : parseInt(btn.dataset.value, 10);
+    saveState();
+    renderTimerLevelUpGroup();
+  });
+});
+function goToTimerSetup(){
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('timerSetup').classList.add('active');
+  renderTimerModeGroup();
+  renderTimerDurationGroup();
+  renderTimerLevelUpGroup();
+  renderTimerSetupLevels();
+}
+function exitTimerSetup(){
+  document.getElementById('timerSetup').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+}
+function stopMtInterval(){
+  if(mtIntervalId){ clearInterval(mtIntervalId); mtIntervalId = null; }
+  mtRunning = false;
+}
+function updateMtBar(){
+  const fill = document.getElementById('timerBarFill');
+  const label = document.getElementById('timerLabel');
+  if(!fill || !label) return;
+  const pct = mtTotal > 0 ? Math.round((mtRemaining / mtTotal) * 100) : 0;
+  fill.style.width = pct + '%';
+  const mm = String(Math.floor(mtRemaining / 60)).padStart(2,'0');
+  const ss = String(mtRemaining % 60).padStart(2,'0');
+  label.textContent = mm + ':' + ss;
+}
+function mtUpdateScoreUI(){
+  document.getElementById('timerScore1').textContent = (state.name1 || 'Игрок 1') + ': ' + state.timerScore1;
+  document.getElementById('timerScore2').textContent = (state.name2 || 'Игрок 2') + ': ' + state.timerScore2;
+}
+// Карточка оформлена в стиле "Фантов": полоса сверху по полу текущего
+// игрока и шапка с именем хода и уровнем.
+function mtCardHeaderHtml(levelInfo){
+  const turnName = state.timerCurrentPlayer === 1 ? (state.name1 || 'Игрок 1') : (state.name2 || 'Игрок 2');
+  return `
+    <div class="card-header">
+      <div class="card-turn">
+        <div class="card-turn-label">Ход игрока</div>
+        <div class="card-turn-name">${turnName}</div>
+      </div>
+      <div class="badge">
+        <span class="level-pill" style="background:${levelInfo ? levelInfo.color : '#ff9a5e'}">${levelInfo ? levelInfo.icon + ' ' + levelInfo.name : '⏱️'}</span>
+      </div>
+    </div>
+  `;
+}
+function mtDrawCard(){
+  stopMtInterval();
+  document.getElementById('timerPauseBtn').textContent = '⏸ Пауза';
+  const all = getMtCardsList(mtLevel);
+  const levelInfo = getMtLevelInfo(mtLevel);
+  const gender = state.timerCurrentPlayer === 1 ? 'M' : 'F';
+  if(all.length === 0){
+    fadeSwapEl('timerCard', (el)=>{
+      el.className = 'card';
+      el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
+      el.innerHTML = `<div class="card-inner">${mtCardHeaderHtml(levelInfo)}<div class="card-body"><div class="card-icon">🃏</div><div class="card-text">Нет заданий для этого уровня</div></div></div>`;
+    });
+    return;
+  }
+  if(!state.timerUsed) state.timerUsed = {};
+  let used = state.timerUsed[mtLevel] || [];
+  let pool = all.filter(c=>!used.includes(c.text));
+  if(pool.length === 0){
+    pool = all;
+    used = [];
+    showToast('Задания этого уровня показаны заново 🔀');
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  used.push(card.text);
+  state.timerUsed[mtLevel] = used;
+  saveState();
+  mtCurrentCard = card;
+  // В "Пользовательской" длительность раунда задаётся отдельно (5/10/30/60 сек),
+  // в остальных режимах — длительностью самого уровня.
+  mtTotal = (state.timerGameMode || 'fast') === 'single'
+    ? (state.timerCustomSeconds || 10)
+    : (levelInfo ? levelInfo.seconds : 60);
+  mtRemaining = mtTotal;
+  fadeSwapEl('timerCard', (el)=>{
+    el.className = 'card';
+    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
+    el.innerHTML = `<div class="card-inner">${mtCardHeaderHtml(levelInfo)}<div class="card-body"><div class="card-text">${card.text}</div></div></div>`;
+  });
+  updateMtBar();
+  document.getElementById('timerStartTaskBtn').style.display = 'flex';
+  document.getElementById('timerSkipBtn').style.display = 'flex';
+  document.getElementById('timerPauseBtn').style.display = 'none';
+  document.getElementById('timerNextBtn').style.display = 'none';
+  updateTimerHotterBtnUI();
+}
+// В режиме "С повышением" уровень растёт автоматически, когда КАЖДЫЙ
+// партнёр выполнил (не пропустил) по 5 заданий текущего уровня.
+// "Быстрая" и "Продолжительная" повышают уровень сам по себе, когда КАЖДЫЙ
+// партнёр выполнил нужное число заданий текущего уровня. У "Продолжительной"
+// порог выше (и на начальном уровне ниже, чем на следующих), чтобы партия
+// длилась дольше. "Без повышения" порогов не имеет — уровень не меняется.
+const TIMER_MODE_LEVELUP_THRESHOLDS = {
+  fast: {1:5, 2:5, 3:5},
+  long: {1:6, 2:12, 3:12},
+};
+// В "Пользовательской" повышение уровня настраивается отдельно: "Каждые
+// N карточек" — тот же автоматический порог, что и у "Быстрой"/"Продолжительной",
+// только число N выбирает игрок; "Вручную" — авто-порога нет вообще, вместо
+// этого в игре есть кнопка "🔥 Горячее" (как в Фантах/"Правда или действие") —
+// нажатие сразу повышает уровень для обоих, без каких-либо условий.
+function isTimerManualMode(){
+  return (state.timerGameMode || 'fast') === 'single' && state.timerLevelUpCadence === 'manual';
+}
+function getTimerLevelUpThreshold(){
+  const mode = state.timerGameMode || 'fast';
+  if(mode === 'single'){
+    if(state.timerLevelUpCadence === 'manual') return null;
+    return state.timerLevelUpCadence || 5;
+  }
+  const table = TIMER_MODE_LEVELUP_THRESHOLDS[mode];
+  return table ? (table[mtLevel] || null) : null;
+}
+function updateTimerHotterBtnUI(){
+  const btn = document.getElementById('timerHotterBtn');
+  if(!btn) return;
+  if(!isTimerManualMode()){
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'flex';
+  btn.disabled = mtLevel >= TIMER_LEVELS.length;
+}
+// Ручное "Горячее": если партнёры ещё не выполнили поровну карточек текущего
+// уровня, повышение откладывается до тех пор, пока отстающий партнёр не
+// выполнит своё задание на этом же уровне (см. mtMarkCompleted()).
+function mtManualLevelUp(){
+  if(mtLevel >= TIMER_LEVELS.length){
+    showToast('Это максимальный уровень 🔥');
+    return;
+  }
+  const counts = state.timerLevelUpCounts || {1:0, 2:0};
+  // Как и в Фантах/"Правда или действие": нужно равное число выполненных
+  // карточек у обоих партнёров, и не меньше одной — иначе сразу после сброса
+  // счётчиков можно было бы повысить уровень второй раз подряд без единой
+  // выполненной карточки на новом уровне.
+  const ready = (counts[1]||0) === (counts[2]||0) && (counts[1]||0) >= 1;
+  if(!ready){
+    state.timerPendingLevelUp = true;
+    saveState();
+    showToast('Уровень повысится после хода партнёра');
+    return;
+  }
+  playLevelUpSound();
+  mtLevel++;
+  state.timerSelectedLevel = mtLevel;
+  state.timerLevelUpCounts = {1:0, 2:0};
+  state.timerPendingLevelUp = false;
+  saveState();
+  const info = getMtLevelInfo(mtLevel);
+  showToast(`Уровень повышен для обоих: ${info ? info.icon + ' ' + info.name : mtLevel}`);
+  mtDrawCard(); // показать новую карточку уже на повышенном уровне
+}
+function mtMarkCompleted(){
+  if(state.timerCurrentPlayer === 1) state.timerScore1++; else state.timerScore2++;
+  state.timerCompletedCount = (state.timerCompletedCount||0) + 1;
+  let leveledUp = false;
+  if(!state.timerLevelUpCounts) state.timerLevelUpCounts = {1:0, 2:0};
+  state.timerLevelUpCounts[state.timerCurrentPlayer] = (state.timerLevelUpCounts[state.timerCurrentPlayer]||0) + 1;
+  const threshold = getTimerLevelUpThreshold();
+  if(threshold){
+    const eligible = (state.timerLevelUpCounts[1]||0) >= threshold && (state.timerLevelUpCounts[2]||0) >= threshold && mtLevel < TIMER_LEVELS.length;
+    if(eligible){
+      mtLevel++;
+      state.timerSelectedLevel = mtLevel;
+      state.timerLevelUpCounts = {1:0, 2:0};
+      leveledUp = true;
+    }
+  } else if(state.timerPendingLevelUp && (state.timerLevelUpCounts[1]||0) === (state.timerLevelUpCounts[2]||0) && (state.timerLevelUpCounts[1]||0) >= 1 && mtLevel < TIMER_LEVELS.length){
+    // Отложенное ручное повышение — партнёры сравнялись по числу карточек текущего уровня.
+    mtLevel++;
+    state.timerSelectedLevel = mtLevel;
+    state.timerLevelUpCounts = {1:0, 2:0};
+    state.timerPendingLevelUp = false;
+    leveledUp = true;
+  }
+  saveState();
+  mtUpdateScoreUI();
+  updateTimerHotterBtnUI();
+  return leveledUp;
+}
+function mtTimeUp(){
+  playLevelUpSound();
+  const leveledUp = mtMarkCompleted();
+  document.getElementById('timerPauseBtn').style.display = 'none';
+  document.getElementById('timerHotterBtn').style.display = 'none';
+  document.getElementById('timerNextBtn').style.display = 'flex';
+  if(leveledUp){
+    const info = getMtLevelInfo(mtLevel);
+    showToast(`Уровень повышен для обоих: ${info ? info.icon + ' ' + info.name : mtLevel}`);
+  } else {
+    showToast('Время вышло! ⏱️');
+  }
+}
+function mtTick(){
+  mtRemaining--;
+  updateMtBar();
+  if(mtRemaining <= 0){
+    stopMtInterval();
+    mtTimeUp();
+  }
+}
+function goToTimerGame(){
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  state.name1 = n1raw || 'Men';
+  state.name2 = n2raw || 'Sexy';
+  mtLevel = (state.timerGameMode || 'fast') === 'single' ? (state.timerSelectedLevel || 1) : 1;
+  state.timerCurrentPlayer = pickStartingPlayerValue('random');
+  state.timerScore1 = 0; state.timerScore2 = 0;
+  state.timerCompletedCount = 0; state.timerSkippedCount = 0;
+  state.timerLevelUpCounts = {1:0, 2:0};
+  state.timerPendingLevelUp = false;
+  saveState();
+  document.getElementById('timerSetup').classList.remove('active');
+  document.getElementById('timerGame').classList.add('active');
+  mtUpdateScoreUI();
+  mtDrawCard();
+}
+function exitTimerGame(){
+  stopMtInterval();
+  document.getElementById('timerGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+}
+function showTimerSummary(){
+  summaryModalMode = 'timer';
+  const winnerEl = document.getElementById('summaryWinner');
+  const name1 = state.name1 || 'Игрок 1';
+  const name2 = state.name2 || 'Игрок 2';
+  if(state.timerScore1 === state.timerScore2){
+    winnerEl.textContent = '🤝 Ничья!';
+  } else {
+    const winnerName = state.timerScore1 > state.timerScore2 ? name1 : name2;
+    winnerEl.textContent = `🏆 Победил ${winnerName}`;
+  }
+  document.getElementById('summaryScore').textContent = `${name1}: ${state.timerScore1}  ·  ${name2}: ${state.timerScore2}`;
+  document.getElementById('summaryCounts').textContent = `Выполнено: ${state.timerCompletedCount||0}  ·  Отказов: ${state.timerSkippedCount||0}`;
+  document.getElementById('summaryModal').classList.add('show');
+}
+document.getElementById('timerSetupExitBtn').addEventListener('click', exitTimerSetup);
+document.getElementById('timerSetupStartBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  goToTimerGame();
+});
+document.getElementById('timerStartTaskBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  mtRunning = true;
+  document.getElementById('timerStartTaskBtn').style.display = 'none';
+  document.getElementById('timerSkipBtn').style.display = 'none';
+  document.getElementById('timerHotterBtn').style.display = 'none';
+  document.getElementById('timerPauseBtn').style.display = 'flex';
+  document.getElementById('timerNextBtn').style.display = 'none';
+  mtIntervalId = setInterval(mtTick, 1000);
+});
+document.getElementById('timerSkipBtn').addEventListener('click', ()=>{
+  playFailSound();
+  state.timerSkippedCount = (state.timerSkippedCount||0) + 1;
+  state.timerCurrentPlayer = state.timerCurrentPlayer === 1 ? 2 : 1;
+  saveState();
+  mtUpdateScoreUI();
+  mtDrawCard();
+});
+document.getElementById('timerHotterBtn').addEventListener('click', ()=>{
+  mtManualLevelUp();
+});
+document.getElementById('timerPauseBtn').addEventListener('click', (e)=>{
+  if(mtRunning){
+    stopMtInterval();
+    e.target.textContent = '▶ Продолжить';
+  } else {
+    mtRunning = true;
+    e.target.textContent = '⏸ Пауза';
+    mtIntervalId = setInterval(mtTick, 1000);
+  }
+});
+document.getElementById('timerNextBtn').addEventListener('click', ()=>{
+  state.timerCurrentPlayer = state.timerCurrentPlayer === 1 ? 2 : 1;
+  saveState();
+  mtUpdateScoreUI();
+  mtDrawCard();
+});
+document.getElementById('timerExitBtn').addEventListener('click', ()=>{
+  stopMtInterval();
+  showTimerSummary();
+});
+document.getElementById('timerSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('timerRulesModal').classList.add('show'); });
+document.getElementById('closeTimerRulesBtn').addEventListener('click', ()=>{ document.getElementById('timerRulesModal').classList.remove('show'); });
+document.getElementById('timerRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'timerRulesModal') e.currentTarget.classList.remove('show'); });
+
+/* ---------- 4. СОВМЕСТНЫЙ ПЛЕЙЛИСТ ЖЕЛАНИЙ ---------- */
+function renderWishlistSetupStarterGroup(){
+  document.querySelectorAll('#wishlistSetupStarterGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === (state.wishlistStarter || 'random'));
+  });
+}
+document.querySelectorAll('#wishlistSetupStarterGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.wishlistStarter = btn.dataset.value;
+    saveState();
+    renderWishlistSetupStarterGroup();
+  });
+});
+function goToWishlistSetup(){
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('wishlistSetup').classList.add('active');
+  renderWishlistSetupStarterGroup();
+}
+function exitWishlistSetup(){
+  document.getElementById('wishlistSetup').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+}
+function resetWishlistQuiz(){
+  state.wishlistQueue = [];
+  state.wishlistIndex = 0;
+  state.wishlistAnswers = {};
+  state.wishlistActivePlayer = 0;
+  state.wishlistP1Done = false;
+  state.wishlistP2Done = false;
+  state.wishlistPendingNext = 0;
+  saveState();
+}
+function updateWishlistPlayerButtons(){
+  const p1 = document.getElementById('wishlistPlayer1Btn');
+  const p2 = document.getElementById('wishlistPlayer2Btn');
+  if(p1){
+    p1.textContent = state.name1 || 'Игрок 1';
+    p1.classList.toggle('active', state.wishlistActivePlayer === 1);
+    p1.classList.toggle('done', !!state.wishlistP1Done);
+  }
+  if(p2){
+    p2.textContent = state.name2 || 'Игрок 2';
+    p2.classList.toggle('active', state.wishlistActivePlayer === 2);
+    p2.classList.toggle('done', !!state.wishlistP2Done);
+  }
+  updateWishlistProgressBar();
+}
+function updateWishlistProgressBar(){
+  const fill = document.getElementById('wishlistProgressFill');
+  const label = document.getElementById('wishlistProgressLabel');
+  if(!fill || !label) return;
+  const total = state.wishlistQueue.length;
+  const done = Math.min(state.wishlistIndex, total);
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  fill.style.width = pct + '%';
+  label.textContent = total > 0 ? `${done} / ${total}` : '0 / 15';
+}
+// Оформление карточки скопировано со стиля игры "Фанты" (border-top по полу
+// отвечающего игрока, шапка с именем). Уровней в этой игре нет, поэтому
+// вместо плашки уровня в шапке — счётчик прогресса "X / N".
+function wishlistCardHeaderHtml(label, name, showBadge){
+  const total = state.wishlistQueue.length;
+  const done = Math.min(state.wishlistIndex, total);
+  return `
+    <div class="card-header">
+      <div class="card-turn">
+        <div class="card-turn-label">${label}</div>
+        <div class="card-turn-name">${name}</div>
+      </div>
+      ${showBadge ? `<div class="badge"><span class="level-pill" style="background:#ff6ea8">${done} / ${total || 15}</span></div>` : ''}
+    </div>
+  `;
+}
+function showWishlistHandoffCard(nextPlayerNum){
+  const nextName = nextPlayerNum === 2 ? (state.name2 || 'Игрок 2') : (state.name1 || 'Игрок 1');
+  const gender = nextPlayerNum === 2 ? 'F' : 'M';
+  document.getElementById('wishlistAnswerRow').style.display = 'none';
+  document.getElementById('wishlistHandoffRow').style.display = 'flex';
+  fadeSwapEl('wishlistCard', (el)=>{
+    el.className = 'card';
+    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
+    el.innerHTML = `<div class="card-inner">${wishlistCardHeaderHtml('Дальше отвечает', nextName, false)}<div class="card-body"><div class="card-icon">💞</div><div class="card-text">Передайте телефон игроку «${nextName}»</div></div></div>`;
+  });
+}
+function showWishlistCurrentItem(){
+  const idx = state.wishlistQueue[state.wishlistIndex];
+  const items = (typeof WISHLIST_ITEMS !== 'undefined' && Array.isArray(WISHLIST_ITEMS)) ? WISHLIST_ITEMS : [];
+  const item = items[idx];
+  const gender = state.wishlistActivePlayer === 2 ? 'F' : 'M';
+  const turnName = state.wishlistActivePlayer === 2 ? (state.name2 || 'Игрок 2') : (state.name1 || 'Игрок 1');
+  document.getElementById('wishlistAnswerRow').style.display = 'flex';
+  document.getElementById('wishlistHandoffRow').style.display = 'none';
+  fadeSwapEl('wishlistCard', (el)=>{
+    el.className = 'card';
+    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
+    const titleHtml = `<div class="wishlist-item-title">${item ? item.text : '—'}</div>`;
+    const descHtml = (item && item.desc) ? `<div class="wishlist-item-desc">${item.desc}</div>` : '';
+    el.innerHTML = `<div class="card-inner">${wishlistCardHeaderHtml('Отвечает', turnName, true)}<div class="card-body"><div class="card-icon">💌</div>${titleHtml}${descHtml}</div></div>`;
+  });
+}
+function startWishlistPlayer(playerNum){
+  if(state.wishlistActivePlayer !== 0) return;
+  if(playerNum === 1 && state.wishlistP1Done) return;
+  if(playerNum === 2 && state.wishlistP2Done) return;
+  if(state.wishlistQueue.length === 0){
+    const items = (typeof WISHLIST_ITEMS !== 'undefined' && Array.isArray(WISHLIST_ITEMS)) ? WISHLIST_ITEMS : [];
+    // Пункты, на которые кто-то из партнёров ответил "Нет", больше не
+    // предлагаются в новых играх — до нажатия "Сбросить прогресс" в настройках.
+    const hidden = state.wishlistHidden || [];
+    const allIdx = items.map((c,i)=>i);
+    let pool = allIdx.filter(i=>!hidden.includes(i));
+    if(pool.length === 0) pool = allIdx; // на случай, если скрыты вообще все пункты
+    else if(pool.length < 15) showToast(`Доступно только ${pool.length} желаний — используем их`);
+    state.wishlistQueue = shuffle(pool).slice(0,15);
+  }
+  state.wishlistIndex = 0;
+  state.wishlistActivePlayer = playerNum;
+  saveState();
+  updateWishlistPlayerButtons();
+  showWishlistCurrentItem();
+}
+function answerWishlistItem(answer){
+  if(!state.wishlistActivePlayer) return;
+  const idx = state.wishlistQueue[state.wishlistIndex];
+  if(idx === undefined) return;
+  if(!state.wishlistAnswers[idx]) state.wishlistAnswers[idx] = {};
+  const key = state.wishlistActivePlayer === 1 ? 'p1' : 'p2';
+  state.wishlistAnswers[idx][key] = answer;
+  state.wishlistIndex++;
+  if(state.wishlistIndex < state.wishlistQueue.length){
+    saveState();
+    updateWishlistProgressBar();
+    showWishlistCurrentItem();
+    return;
+  }
+  const finishedPlayer = state.wishlistActivePlayer;
+  if(finishedPlayer === 1) state.wishlistP1Done = true; else state.wishlistP2Done = true;
+  state.wishlistActivePlayer = 0;
+  const otherDone = finishedPlayer === 1 ? state.wishlistP2Done : state.wishlistP1Done;
+  if(!otherDone){
+    const nextPlayer = finishedPlayer === 1 ? 2 : 1;
+    state.wishlistPendingNext = nextPlayer;
+    saveState();
+    updateWishlistPlayerButtons();
+    showWishlistHandoffCard(nextPlayer);
+  } else {
+    saveState();
+    finishWishlistSummary();
+  }
+}
+// Общий постраничный вывод для списков совпадений (за игру и за всё время):
+// если пунктов больше WISHLIST_PAGE_SIZE, показываем по страницам с кнопками
+// "◀"/"▶" вместо одного длинного списка.
+const WISHLIST_PAGE_SIZE = 7;
+const WISHLIST_SUMMARY_PAGINATION_IDS = {list:'wishlistSummaryList', pagination:'wishlistSummaryPagination', label:'wishlistSummaryPageLabel', prev:'wishlistSummaryPrevBtn', next:'wishlistSummaryNextBtn'};
+const WISHLIST_HISTORY_PAGINATION_IDS = {list:'wishlistHistoryList', pagination:'wishlistHistoryPagination', label:'wishlistHistoryPageLabel', prev:'wishlistHistoryPrevBtn', next:'wishlistHistoryNextBtn'};
+let wishlistSummaryMatches = [];
+let wishlistSummaryPage = 0;
+let wishlistHistoryPage = 0;
+function renderWishlistPage(items, page, ids){
+  const listEl = document.getElementById(ids.list);
+  const paginationEl = document.getElementById(ids.pagination);
+  const labelEl = document.getElementById(ids.label);
+  const prevBtn = document.getElementById(ids.prev);
+  const nextBtn = document.getElementById(ids.next);
+  const totalPages = Math.max(1, Math.ceil(items.length / WISHLIST_PAGE_SIZE));
+  const clampedPage = Math.min(Math.max(page, 0), totalPages - 1);
+  const start = clampedPage * WISHLIST_PAGE_SIZE;
+  listEl.innerHTML = items.slice(start, start + WISHLIST_PAGE_SIZE).map(t=>`<li>${t}</li>`).join('');
+  if(items.length > WISHLIST_PAGE_SIZE){
+    paginationEl.style.display = 'flex';
+    labelEl.textContent = `${clampedPage+1} / ${totalPages}`;
+    prevBtn.disabled = clampedPage === 0;
+    nextBtn.disabled = clampedPage >= totalPages - 1;
+  } else {
+    paginationEl.style.display = 'none';
+  }
+  return clampedPage;
+}
+function finishWishlistSummary(){
+  const items = (typeof WISHLIST_ITEMS !== 'undefined' && Array.isArray(WISHLIST_ITEMS)) ? WISHLIST_ITEMS : [];
+  const matches = [];
+  // "Нет" от ЛЮБОГО из партнёров — пункт скрывается из будущих игр (как в
+  // "Давай попробуем"/"Видеорулетке"), до нажатия "Сбросить прогресс".
+  const newHidden = [];
+  state.wishlistQueue.forEach(idx=>{
+    const a = state.wishlistAnswers[idx];
+    if(!a) return;
+    if(a.p1 === true && a.p2 === true){
+      const item = items[idx];
+      if(item) matches.push(item.text);
+    }
+    if(a.p1 === false || a.p2 === false){
+      newHidden.push(idx);
+    }
+  });
+  if(newHidden.length){
+    if(!state.wishlistHidden) state.wishlistHidden = [];
+    newHidden.forEach(idx=>{
+      if(!state.wishlistHidden.includes(idx)) state.wishlistHidden.push(idx);
+    });
+  }
+  const introEl = document.getElementById('wishlistSummaryIntro');
+  if(matches.length === 0){
+    introEl.textContent = 'В этот раз совпадений не нашлось — попробуйте ещё раз с другими пунктами.';
+  } else {
+    introEl.textContent = `Вы оба хотите попробовать (${matches.length}):`;
+  }
+  wishlistSummaryMatches = matches;
+  wishlistSummaryPage = renderWishlistPage(wishlistSummaryMatches, 0, WISHLIST_SUMMARY_PAGINATION_IDS);
+  // Копим совпадения этой игры в общую историю (на кнопку "Совпадения" в
+  // настройках), чтобы партнёры могли посмотреть все совпавшие желания за
+  // всё время игры, не только за последний раунд. Дубликаты не добавляем.
+  if(matches.length){
+    if(!state.wishlistMatchHistory) state.wishlistMatchHistory = [];
+    matches.forEach(t=>{
+      if(!state.wishlistMatchHistory.includes(t)) state.wishlistMatchHistory.push(t);
+    });
+  }
+  saveState();
+  document.getElementById('wishlistSummaryModal').classList.add('show');
+}
+function renderWishlistHistory(){
+  const introEl = document.getElementById('wishlistHistoryIntro');
+  const history = state.wishlistMatchHistory || [];
+  if(history.length === 0){
+    introEl.textContent = 'Пока нет совпадений — сыграйте хотя бы раз, чтобы что-то здесь появилось.';
+  } else {
+    introEl.textContent = `Вы оба хотели попробовать за всё время (${history.length}):`;
+  }
+  wishlistHistoryPage = renderWishlistPage(history, 0, WISHLIST_HISTORY_PAGINATION_IDS);
+}
+document.getElementById('wishlistSetupExitBtn').addEventListener('click', exitWishlistSetup);
+document.getElementById('wishlistSetupStartBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  state.name1 = n1raw || 'Men';
+  state.name2 = n2raw || 'Sexy';
+  resetWishlistQuiz();
+  document.getElementById('wishlistSetup').classList.remove('active');
+  document.getElementById('wishlistGame').classList.add('active');
+  updateWishlistPlayerButtons();
+  startWishlistPlayer(pickStartingPlayerValue(state.wishlistStarter || 'random'));
+});
+document.getElementById('wishlistYesBtn').addEventListener('click', ()=>{ playSuccessSound(); answerWishlistItem(true); });
+document.getElementById('wishlistNoBtn').addEventListener('click', ()=>{ playFailSound(); answerWishlistItem(false); });
+document.getElementById('wishlistHandoffStartBtn').addEventListener('click', ()=>{
+  const next = state.wishlistPendingNext || 2;
+  state.wishlistPendingNext = 0;
+  saveState();
+  startWishlistPlayer(next);
+});
+document.getElementById('wishlistExitBtn').addEventListener('click', ()=>{
+  resetWishlistQuiz();
+  document.getElementById('wishlistGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+});
+document.getElementById('closeWishlistSummaryBtn').addEventListener('click', ()=>{
+  document.getElementById('wishlistSummaryModal').classList.remove('show');
+  document.getElementById('wishlistGame').classList.remove('active');
+  document.getElementById('wishlistSetup').classList.add('active');
+  resetWishlistQuiz();
+  renderWishlistSetupStarterGroup();
+});
+document.getElementById('wishlistSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('wishlistRulesModal').classList.add('show'); });
+document.getElementById('closeWishlistRulesBtn').addEventListener('click', ()=>{ document.getElementById('wishlistRulesModal').classList.remove('show'); });
+document.getElementById('wishlistRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'wishlistRulesModal') e.currentTarget.classList.remove('show'); });
+document.getElementById('wishlistHistoryBtn').addEventListener('click', ()=>{
+  renderWishlistHistory();
+  document.getElementById('wishlistHistoryModal').classList.add('show');
+});
+document.getElementById('closeWishlistHistoryBtn').addEventListener('click', ()=>{ document.getElementById('wishlistHistoryModal').classList.remove('show'); });
+document.getElementById('wishlistHistoryModal').addEventListener('click', (e)=>{ if(e.target.id === 'wishlistHistoryModal') e.currentTarget.classList.remove('show'); });
+document.getElementById('wishlistSummaryPrevBtn').addEventListener('click', ()=>{
+  wishlistSummaryPage = renderWishlistPage(wishlistSummaryMatches, wishlistSummaryPage - 1, WISHLIST_SUMMARY_PAGINATION_IDS);
+});
+document.getElementById('wishlistSummaryNextBtn').addEventListener('click', ()=>{
+  wishlistSummaryPage = renderWishlistPage(wishlistSummaryMatches, wishlistSummaryPage + 1, WISHLIST_SUMMARY_PAGINATION_IDS);
+});
+document.getElementById('wishlistHistoryPrevBtn').addEventListener('click', ()=>{
+  wishlistHistoryPage = renderWishlistPage(state.wishlistMatchHistory || [], wishlistHistoryPage - 1, WISHLIST_HISTORY_PAGINATION_IDS);
+});
+document.getElementById('wishlistHistoryNextBtn').addEventListener('click', ()=>{
+  wishlistHistoryPage = renderWishlistPage(state.wishlistMatchHistory || [], wishlistHistoryPage + 1, WISHLIST_HISTORY_PAGINATION_IDS);
+});
+// Клик по строке в списке совпадений (за игру или за всё время) открывает
+// карточку с заголовком и полным описанием этого пункта.
+function showWishlistItemDetail(title){
+  const items = (typeof WISHLIST_ITEMS !== 'undefined' && Array.isArray(WISHLIST_ITEMS)) ? WISHLIST_ITEMS : [];
+  const item = items.find(i=>i.text === title);
+  document.getElementById('wishlistItemModalTitle').textContent = '💜 ' + title;
+  document.getElementById('wishlistItemModalDesc').textContent = item && item.desc ? item.desc : '';
+  document.getElementById('wishlistItemModal').classList.add('show');
+}
+document.getElementById('wishlistSummaryList').addEventListener('click', (e)=>{
+  const li = e.target.closest('li');
+  if(li) showWishlistItemDetail(li.textContent);
+});
+document.getElementById('wishlistHistoryList').addEventListener('click', (e)=>{
+  const li = e.target.closest('li');
+  if(li) showWishlistItemDetail(li.textContent);
+});
+document.getElementById('closeWishlistItemBtn').addEventListener('click', ()=>{ document.getElementById('wishlistItemModal').classList.remove('show'); });
+document.getElementById('wishlistItemModal').addEventListener('click', (e)=>{ if(e.target.id === 'wishlistItemModal') e.currentTarget.classList.remove('show'); });
+
 if(!getSortedActiveLevels().includes(state.levelCap)) state.levelCap = getSortedActiveLevels()[0];
 renderLevelToggles();
 renderStarterGroup();
