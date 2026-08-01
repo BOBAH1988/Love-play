@@ -85,12 +85,20 @@
     background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
     overscroll-behavior:none;
   }
+  /* body закреплён через position:fixed + inset:0 — это само по себе всегда
+     точно совпадает с текущим видимым viewport (реагирует мгновенно, без
+     задержек). Раньше здесь ЕЩЁ и явно задавалась height (100dvh /
+     --real-vh) — но когда у fixed-элемента одновременно заданы top, bottom
+     (через inset:0) И height, по спецификации CSS bottom игнорируется и
+     пересчитывается из height. Если height хоть на миг оказывался неточным
+     (а расчёт --real-vh в JS неизбежно немного отстаёт от реального
+     поворота/показа панели браузера), нижний край body переставал доходить
+     до настоящего края экрана — и снизу оставалась белая полоса. Убрали
+     явную height, оставили только inset:0 — так body всегда без всяких
+     пересчётов точно соответствует экрану. */
   body{
     position:fixed;
     inset:0;
-    height:100%;
-    height:100dvh;
-    height:calc(var(--real-vh, 1vh) * 100);
     width:100%;
     margin:0;
     font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -113,9 +121,10 @@
     z-index:-1;
   }
   #app{
+    /* #app не позиционирован fixed, а лежит в потоке внутри body — раз body
+       теперь всегда точно равен экрану (см. комментарий выше), простого
+       height:100% достаточно и без dvh/--real-vh пересчётов. */
     height:100%;
-    height:100dvh;
-    height:calc(var(--real-vh, 1vh) * 100);
     width:100%;
     display:flex;
     flex-direction:column;
@@ -974,6 +983,36 @@
 </style>
 </head>
 <body>
+<!-- ===== ВОЗРАСТНОЕ ПРЕДУПРЕЖДЕНИЕ (18+) =====
+     Показывается один раз при первом заходе с устройства (флаг хранится
+     отдельно от основного state в localStorage, чтобы "Сбросить прогресс"
+     или восстановление резервной копии его не затрагивали). Скрипт сразу
+     после разметки скрывает окно ещё до отрисовки остального содержимого,
+     если пользователь уже подтверждал возраст раньше — без "мигания". -->
+<div class="modal-overlay show" id="ageGateModal" style="z-index:500;">
+  <div class="modal-card">
+    <div class="modal-title">🔞 Только для взрослых</div>
+    <div class="intro-text">Это приложение содержит откровенный контент для взрослых: темы интимной близости, эротические материалы и игры для пар 18+. Продолжая, вы подтверждаете, что вам уже исполнилось 18 лет.</div>
+    <button type="button" class="btn btn-primary" id="ageGateAdultBtn" style="margin-bottom:10px;">Мне есть 18 — продолжить</button>
+    <button type="button" class="btn btn-secondary" id="ageGateMinorBtn">Мне нет 18</button>
+  </div>
+</div>
+<div class="modal-overlay" id="ageBlockedModal" style="z-index:500;">
+  <div class="modal-card">
+    <div class="modal-title">Доступ закрыт</div>
+    <div class="intro-text">Этот сайт предназначен только для совершеннолетних пользователей. Доступ к содержимому для лиц младше 18 лет закрыт.</div>
+  </div>
+</div>
+<script>
+  (function(){
+    try{
+      if(localStorage.getItem('couple-game-age-verified-v1') === '1'){
+        var gate = document.getElementById('ageGateModal');
+        if(gate) gate.classList.remove('show');
+      }
+    }catch(e){}
+  })();
+</script>
 <div id="app">
 
   <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) ===== -->
@@ -1402,7 +1441,7 @@
   <!-- ===== Я ЗНАЮ ВСЕ: НАСТРОЙКА (полная копия "Твои желания", дорабатывается) ===== -->
   <section id="znayuSetup" class="screen">
     <h1 class="title">💑 Я знаю все</h1>
-    <div class="subtitle">Каждый тайно отмечает желаемое — увидите только совпадения</div>
+    <div class="subtitle">10 случайных вопросов о предпочтениях — увидите только совпадения</div>
 
     <div class="field">
       <label>Первым начинает</label>
@@ -1432,7 +1471,7 @@
     </div>
     <div class="wishlist-progress-row" id="znayuProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="znayuProgressFill"></div></div>
-      <div class="wishlist-progress-label" id="znayuProgressLabel">0 / 100</div>
+      <div class="wishlist-progress-label" id="znayuProgressLabel">0 / 10</div>
     </div>
 
     <div class="card-area">
@@ -1647,7 +1686,7 @@
       <div class="intro-text">Проверьте, насколько хорошо вы знаете предпочтения друг друга.</div>
       <ol class="modal-rules">
         <li>Выберите, кто отвечает первым, и нажмите «Начать».</li>
-        <li>По очереди каждый партнёр наедине с экраном отвечает на одни и те же 100 вопросов об интимных предпочтениях — партнёр не видит ваши ответы.</li>
+        <li>За партию задаётся 10 вопросов — случайная подборка из банка в 100 вопросов об интимных предпочтениях, каждый раз разная. Оба партнёра по очереди наедине с экраном отвечают на одни и те же 10 вопросов — партнёр не видит ваши ответы.</li>
         <li>На каждый вопрос — 4 варианта ответа. Выберите один, и сразу откроется следующий вопрос.</li>
         <li>Вопросы идут по нарастающей — от лёгких к более откровенным.</li>
         <li>Ответили на все 10 — появится карточка «Передайте телефон», второй игрок нажимает «Начать» и отвечает на те же вопросы.</li>
@@ -4718,6 +4757,19 @@ document.getElementById('closeInstallBtn').addEventListener('click', ()=>{
 document.getElementById('installModal').addEventListener('click', (e)=>{
   if(e.target.id === 'installModal') e.currentTarget.classList.remove('show');
 });
+// Возрастное предупреждение (18+) — флаг подтверждения хранится отдельным
+// ключом в localStorage (не внутри основного state), намеренно: чтобы
+// "Сбросить прогресс" и импорт/экспорт резервной копии его не трогали, и
+// подтверждение возраста не терялось вместе с прогрессом игр. Окно "Доступ
+// закрыт" закрыть нельзя — это конечная точка для тех, кто выбрал "Мне нет 18".
+document.getElementById('ageGateAdultBtn').addEventListener('click', ()=>{
+  try{ localStorage.setItem('couple-game-age-verified-v1', '1'); }catch(e){}
+  document.getElementById('ageGateModal').classList.remove('show');
+});
+document.getElementById('ageGateMinorBtn').addEventListener('click', ()=>{
+  document.getElementById('ageGateModal').classList.remove('show');
+  document.getElementById('ageBlockedModal').classList.add('show');
+});
 document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
   if(videoLevel < VIDEO_MAX_LEVEL){
     playLevelUpSound();
@@ -6769,8 +6821,14 @@ function exitZnayuSetup(){
   document.getElementById('znayuSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
 }
+// Сколько вопросов задаётся за одну партию — случайная выборка из полного
+// банка (см. cards_znayu.js), а не всегда одни и те же по порядку.
+const ZNAYU_ROUND_SIZE = 10;
 function resetZnayuQuiz(){
-  state.znayuQueue = [];
+  const items = (typeof ZNAYU_ITEMS !== 'undefined' && Array.isArray(ZNAYU_ITEMS)) ? ZNAYU_ITEMS : [];
+  const allIdx = items.map((c,i)=>i);
+  const size = Math.min(ZNAYU_ROUND_SIZE, allIdx.length);
+  state.znayuQueue = shuffle(allIdx).slice(0, size);
   state.znayuIndex = 0;
   state.znayuAnswers = {};
   state.znayuActivePlayer = 0;
@@ -6802,7 +6860,7 @@ function updateZnayuProgressBar(){
   const done = Math.min(state.znayuIndex, total);
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   fill.style.width = pct + '%';
-  label.textContent = total > 0 ? `${done} / ${total}` : '0 / 100';
+  label.textContent = total > 0 ? `${done} / ${total}` : '0 / 10';
 }
 // Оформление карточки скопировано со стиля игры "Фанты" (border-top по полу
 // отвечающего игрока, шапка с именем). Уровней в этой игре нет, поэтому
@@ -6847,10 +6905,12 @@ function showZnayuCurrentItem(){
   let item = items[idx];
   if(!item){
     // Защита от несовместимых старых данных в localStorage (например, если
-    // очередь была сохранена ещё до переделки игры в квиз) — вместо пустой
-    // карточки пересобираем очередь заново и показываем вопрос с начала.
+    // очередь была сохранена ещё до переделки игры в квиз или до расширения
+    // банка вопросов) — вместо пустой карточки пересобираем очередь заново
+    // (случайная выборка) и показываем вопрос с начала.
     if(items.length === 0){ renderZnayuPlaceholderCard(); return; }
-    state.znayuQueue = items.map((c,i)=>i);
+    const allIdx = items.map((c,i)=>i);
+    state.znayuQueue = shuffle(allIdx).slice(0, Math.min(ZNAYU_ROUND_SIZE, allIdx.length));
     state.znayuIndex = 0;
     saveState();
     idx = state.znayuQueue[0];
@@ -6879,15 +6939,15 @@ function startZnayuPlayer(playerNum){
   if(playerNum === 1 && state.znayuP1Done) return;
   if(playerNum === 2 && state.znayuP2Done) return;
   const items = (typeof ZNAYU_ITEMS !== 'undefined' && Array.isArray(ZNAYU_ITEMS)) ? ZNAYU_ITEMS : [];
-  // В отличие от "Твои желания" здесь нет случайной выборки и "скрытых"
-  // пунктов — фиксированный список всех вопросов по порядку (по нарастанию
-  // сложности), как они идут в cards_znayu.js. Дополнительно проверяем, что
-  // уже сохранённая очередь (если есть) действительно указывает на пункты
-  // текущего каталога — иначе (например, после переделки игры) в очереди
-  // могли остаться несовместимые старые индексы, и пересобираем её заново.
+  // Очередь вопросов на партию собирается заранее в resetZnayuQuiz() —
+  // случайная выборка ZNAYU_ROUND_SIZE вопросов из полного банка. Здесь
+  // только подстраховка: если очередь вдруг пуста или содержит индексы вне
+  // диапазона текущего каталога (например, сохранение осталось от старой
+  // версии игры с другим числом вопросов), пересобираем её тоже случайно.
   const queueValid = state.znayuQueue.length > 0 && state.znayuQueue.every(i => i >= 0 && i < items.length);
   if(!queueValid){
-    state.znayuQueue = items.map((c,i)=>i);
+    const allIdx = items.map((c,i)=>i);
+    state.znayuQueue = shuffle(allIdx).slice(0, Math.min(ZNAYU_ROUND_SIZE, allIdx.length));
   }
   state.znayuIndex = 0;
   state.znayuActivePlayer = playerNum;
