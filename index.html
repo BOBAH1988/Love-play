@@ -8,25 +8,44 @@
   // 100dvh иногда считается некорректно, из-за чего снизу остаётся белая полоса
   // под home indicator. Меряем настоящую высоту через JS и держим её в CSS-переменной.
   (function(){
+    function getViewportHeight(){
+      return (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    }
     function setRealVH(){
-      var h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
-      document.documentElement.style.setProperty('--real-vh', (h * 0.01) + 'px');
+      document.documentElement.style.setProperty('--real-vh', (getViewportHeight() * 0.01) + 'px');
     }
     setRealVH();
     window.addEventListener('resize', setRealVH);
-    // На iOS после поворота экрана реальная высота видимой области меняется
-    // не сразу — если пересчитать её в тот же момент, что и orientationchange,
-    // можно получить значение "на лету" ещё для старой ориентации, и тогда
-    // белая полоса снизу вернётся и не исчезнет, пока не повернуть телефон ещё
-    // раз. Поэтому пересчитываем несколько раз подряд с задержкой, пока layout
-    // не устоится.
-    window.addEventListener('orientationchange', function(){
-      setRealVH();
-      setTimeout(setRealVH, 50);
-      setTimeout(setRealVH, 300);
-      setTimeout(setRealVH, 600);
-    });
     if(window.visualViewport) window.visualViewport.addEventListener('resize', setRealVH);
+    // На iOS после поворота экрана реальная высота видимой области "устаканивается"
+    // не сразу и не за одну и ту же по времени паузу — панели браузера и
+    // safe-area досчитываются с разной задержкой от раза к разу. Разовый
+    // пересчёт (или пересчёт через фиксированные паузы) поэтому иногда всё
+    // равно фиксировал старую высоту, и белая полоса снизу возвращалась и не
+    // исчезала до следующего поворота. Вместо гадания с паузами опрашиваем
+    // высоту короткими интервалами и пересчитываем каждый раз, когда она
+    // меняется, пока не перестанет меняться (с ограничением по времени на
+    // всякий случай, чтобы не крутить таймер вечно).
+    let settleTimer = null;
+    function settleRealVH(){
+      if(settleTimer) clearInterval(settleTimer);
+      let lastH = getViewportHeight();
+      let attempts = 0;
+      setRealVH();
+      settleTimer = setInterval(function(){
+        attempts++;
+        const h = getViewportHeight();
+        if(h !== lastH){
+          lastH = h;
+          setRealVH();
+        }
+        if(attempts >= 20){ // ~2 секунды подстраховки, дальше можно остановиться
+          clearInterval(settleTimer);
+          settleTimer = null;
+        }
+      }, 100);
+    }
+    window.addEventListener('orientationchange', settleRealVH);
   })();
 </script>
 <title>Игра для двоих</title>
@@ -81,12 +100,15 @@
     overscroll-behavior:none;
     -webkit-overflow-scrolling:auto;
   }
-  /* Подстраховка от белой полосы под home indicator в standalone-режиме iOS:
-     фон растянут чуть за пределы экрана, чтобы перекрыть любые зазоры от dvh/safe-area */
+  /* Подстраховка от белой полосы под home indicator / после поворота экрана:
+     фон растянут заметно за пределы экрана (не в притык, а с большим запасом),
+     чтобы перекрыть любые временные зазоры от dvh/safe-area/поворота —
+     пересчёт --real-vh в JS может на короткое время отставать от реальной
+     высоты, и небольшого запаса в 4px на это не хватало. */
   body::before{
     content:'';
     position:fixed;
-    top:-4px; left:-4px; right:-4px; bottom:-4px;
+    top:-60px; left:-60px; right:-60px; bottom:-60px;
     background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
     z-index:-1;
   }
@@ -559,13 +581,17 @@
      обоих игроков — ручная кнопка-сердечко тут не нужна. */
   #game.davay-mode #favoriteBtn{display:none;}
   /* Просмотр избранного "Предложи партнеру": вместо "Следующая"/сердечка/
-     "уже есть" — Предыдущее/Следующее для перелистывания отмеченных карточек. */
+     "уже есть"/уровня — Предыдущее/Следующее для перелистывания отмеченных
+     карточек. "Выход" (pauseBtn) в row2 оставляем видимым — это единственный
+     способ покинуть просмотр избранного. */
   #photoFavPrevBtn, #photoFavNextBtn{display:none;}
-  #game.placeholder-mode.photo-favview .row2,
   #game.placeholder-mode.photo-favview #levelProgress{display:none;}
   #game.placeholder-mode.photo-favview #doneBtn,
   #game.placeholder-mode.photo-favview #favoriteBtn,
-  #game.placeholder-mode.photo-favview #sexshopOwnedBtn{display:none;}
+  #game.placeholder-mode.photo-favview #sexshopOwnedBtn,
+  #game.placeholder-mode.photo-favview #levelUpBtn,
+  #game.placeholder-mode.photo-favview #levelDownBtn,
+  #game.placeholder-mode.photo-favview #dislikeBtn{display:none;}
   #game.placeholder-mode.photo-favview #photoFavPrevBtn,
   #game.placeholder-mode.photo-favview #photoFavNextBtn{
     display:flex; flex:1; min-width:0; font-size:14px; padding:0 8px;
@@ -836,7 +862,15 @@
     padding:0 4px; margin-bottom:4px;
   }
   .znayu-answers{display:flex; flex-direction:column; gap:10px; width:100%; margin-top:10px;}
-  .znayu-answers .znayu-answer-btn{width:100%; white-space:normal; height:auto; min-height:var(--btn-height); padding:10px 14px; line-height:1.3;}
+  /* Кнопки ответов лежат прямо на белой карточке — обычный .btn-secondary
+     (белый текст на полупрозрачно-белом фоне) рассчитан на тёмный фон
+     приложения и на карточке был практически невидим. Берём ту же тёмную-
+     на-светлом схему, что и у кнопок внутри .modal-card. */
+  .znayu-answers .znayu-answer-btn{
+    width:100%; white-space:normal; height:auto; min-height:var(--btn-height); padding:10px 14px; line-height:1.3;
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .znayu-answers .znayu-answer-btn:active{ background:rgba(43,15,46,.14); }
   .modal-pagination{display:flex; align-items:center; justify-content:center; gap:16px; margin:2px 0 18px;}
   .modal-pagination .modal-pagination-btn{flex:0 0 auto; width:44px; height:40px; padding:0; font-size:16px;}
   .modal-pagination-label{font-size:13px; color:#5c3a52; min-width:56px; text-align:center;}
@@ -1398,7 +1432,7 @@
     </div>
     <div class="wishlist-progress-row" id="znayuProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="znayuProgressFill"></div></div>
-      <div class="wishlist-progress-label" id="znayuProgressLabel">0 / 10</div>
+      <div class="wishlist-progress-label" id="znayuProgressLabel">0 / 100</div>
     </div>
 
     <div class="card-area">
@@ -1613,7 +1647,7 @@
       <div class="intro-text">Проверьте, насколько хорошо вы знаете предпочтения друг друга.</div>
       <ol class="modal-rules">
         <li>Выберите, кто отвечает первым, и нажмите «Начать».</li>
-        <li>По очереди каждый партнёр наедине с экраном отвечает на одни и те же 10 вопросов об интимных предпочтениях — партнёр не видит ваши ответы.</li>
+        <li>По очереди каждый партнёр наедине с экраном отвечает на одни и те же 100 вопросов об интимных предпочтениях — партнёр не видит ваши ответы.</li>
         <li>На каждый вопрос — 4 варианта ответа. Выберите один, и сразу откроется следующий вопрос.</li>
         <li>Вопросы идут по нарастающей — от лёгких к более откровенным.</li>
         <li>Ответили на все 10 — появится карточка «Передайте телефон», второй игрок нажимает «Начать» и отвечает на те же вопросы.</li>
@@ -6768,7 +6802,7 @@ function updateZnayuProgressBar(){
   const done = Math.min(state.znayuIndex, total);
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   fill.style.width = pct + '%';
-  label.textContent = total > 0 ? `${done} / ${total}` : '0 / 15';
+  label.textContent = total > 0 ? `${done} / ${total}` : '0 / 100';
 }
 // Оформление карточки скопировано со стиля игры "Фанты" (border-top по полу
 // отвечающего игрока, шапка с именем). Уровней в этой игре нет, поэтому
