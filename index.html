@@ -200,11 +200,6 @@
      Трансформация на #app заодно "утаскивает" за собой все модалки внутри
      него — они position:fixed, а трансформированный предок становится для
      них новой системой координат. */
-  /* Принудительный разворот (force-portrait) отключён в JS
-     (updateForcedPortraitLock: shouldLock всегда false) — эффект "переворот и
-     щелчок обратно" при повороте телефона мешал глазам. Класс force-portrait
-     больше никогда не добавляется, поэтому правила ниже фактически не
-     применяются; оставлены как есть на случай, если понадобится вернуть. */
   @media screen and (orientation:landscape){
     html.force-portrait body{overflow:hidden;}
     html.force-portrait #app{
@@ -215,6 +210,14 @@
     html.force-portrait.force-portrait-cw #app{transform:rotate(90deg) translateY(-100%);}
     html.force-portrait.force-portrait-ccw #app{transform:rotate(-90deg) translateX(-100%);}
   }
+  /* Сам момент физического поворота телефона (пока идёт разворот #app обратно
+     в портрет) выглядел заметно и раздражал глаза — контент на долю секунды
+     виден "боком", потом резко "щёлкает" обратно. Вместо резкого щелчка на
+     время поворота коротко прячем #app (см. rotateMaskTimer в скрипте ниже:
+     класс rotate-masking) и мягко проявляем его обратно уже в правильной,
+     готовой ориентации — так сам разворот пользователь не видит вовсе. */
+  #app.rotate-masking{opacity:0 !important; transition:none !important;}
+  #app{transition:opacity .18s ease;}
   .screen{
     flex:1;
     display:none;
@@ -3126,14 +3129,7 @@ function updateForcedPortraitLock(){
   let isTouchDevice = false;
   try{ isTouchDevice = window.matchMedia('(pointer: coarse)').matches; }catch(e){}
   const isActiveMedia = isActiveVideoOrDavayMode();
-  // Раньше здесь принудительно возвращали остальные игры в портретную
-  // ориентацию визуальным разворотом #app на 90° при повороте телефона на
-  // бок. От этого сам момент поворота выглядел как "переворот и щелчок
-  // обратно" — заметный, раздражающий глаза эффект. По просьбе убрали
-  // принудительный разворот полностью: теперь при повороте телефона на бок
-  // все игры просто остаются в горизонтальной ориентации, как обычная
-  // веб-страница, без каких-либо трансформаций.
-  const shouldLock = false;
+  const shouldLock = isLandscape && isTouchDevice && !isActiveMedia;
   // В "Видеорулетке"/"Давай попробуем" поворот на бок не блокируется — экран
   // остаётся горизонтальным, чтобы видео заняло максимум места. Но обычная
   // медиа-настройка #app (колонка максимум 480px по центру, для комфортного
@@ -3159,7 +3155,28 @@ function updateForcedPortraitLock(){
   html.classList.toggle('force-portrait-cw', useCw);
   html.classList.toggle('force-portrait-ccw', !useCw);
 }
-window.addEventListener('orientationchange', ()=>setTimeout(updateForcedPortraitLock, 50));
+// Сам физический поворот телефона на бок и последующий "щелчок" #app обратно
+// в портрет — это два наложенных друг на друга визуальных вращения подряд,
+// и это то, что мешало глазам. Прячем #app (opacity:0, без анимации) сразу по
+// сигналу orientationchange, ждём, пока и сам поворот, и applyForcedPortraitLock
+// (обновление классов force-portrait) точно завершатся, и только потом плавно
+// проявляем #app обратно — пользователь видит только мягкое затемнение и
+// проявление, а не сам процесс разворота.
+let rotateMaskTimer = null;
+function maskAppDuringOrientationChange(){
+  const app = document.getElementById('app');
+  if(!app){ updateForcedPortraitLock(); return; }
+  app.classList.add('rotate-masking');
+  if(rotateMaskTimer) clearTimeout(rotateMaskTimer);
+  rotateMaskTimer = setTimeout(function(){
+    updateForcedPortraitLock();
+    requestAnimationFrame(function(){
+      app.classList.remove('rotate-masking');
+    });
+    rotateMaskTimer = null;
+  }, 260);
+}
+window.addEventListener('orientationchange', maskAppDuringOrientationChange);
 window.addEventListener('resize', updateForcedPortraitLock);
 if(window.visualViewport) window.visualViewport.addEventListener('resize', updateForcedPortraitLock);
 // #game — общий экран для Фантов/Видеорулетки/"Давай попробуем": входы и
