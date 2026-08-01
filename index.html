@@ -37,13 +37,13 @@
     document.addEventListener('DOMContentLoaded', forceBg);
   })();
 </script>
-<title>Игра для двоих</title>
+<title>Игры для двоих</title>
 
 <!-- iOS "как приложение": полноэкранный режим без сафари-панели -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Игра для двоих">
+<meta name="apple-mobile-web-app-title" content="Игры для двоих">
 <meta name="theme-color" content="#3a1030">
 <!-- Стандартный Web App Manifest — без него некоторые браузеры (например,
      Yandex Browser на iOS) не переводят страницу в полноэкранный
@@ -228,6 +228,13 @@
 
   /* ---- Setup screen ---- */
   .field{margin-bottom:16px;}
+  .section-title{
+    text-align:center;
+    font-size:20px;
+    font-weight:800;
+    margin:0 0 12px;
+    letter-spacing:.2px;
+  }
   .names-row{display:flex; flex-direction:row; gap:10px;}
   .names-row .field{flex:1; min-width:0;}
   @media (min-width:700px){
@@ -286,6 +293,13 @@
   #backupField.backup-open #backupContent{display:flex;}
   .backup-toggle-arrow{display:inline-block; font-size:10px; transition:transform .2s ease;}
   #backupField.backup-open .backup-toggle-arrow{transform:rotate(180deg);}
+
+  /* Сворачиваемые блоки списков игр ("Игры для двоих" / "Игры для компании") —
+     по умолчанию свёрнуты, разворачиваются по клику на заголовок. */
+  .field-collapsible{display:none;}
+  .field-collapsible.section-open{display:block;}
+  .section-toggle-arrow{display:inline-block; font-size:13px; transition:transform .2s ease; opacity:.75;}
+  .section-toggle-arrow.section-open{transform:rotate(180deg);}
 
   .levels{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
   .level-toggle{
@@ -521,6 +535,70 @@
   .card-icon{font-size:38px; margin-bottom:10px; margin-top:10px;}
   .card-text{
     font-size:19px; font-weight:700; line-height:1.4;
+  }
+  /* Карточка "Крокодила" — вместо обычного белого фона с чёрным текстом
+     спокойный сине-голубой градиент вместо обычного плоского бело-чёрного
+     оформления и белый текст, чтобы слово выделялось на карточке. */
+  #krokodilCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  #krokodilCard .card-text{color:#fff;}
+  /* Карточка "Мемасиков" — то же оформление, что у "Крокодила" (синий
+     градиент + белый текст по центру), но без иконки — просто текст ситуации. */
+  #memesCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  #memesCard .card-text{color:#fff;}
+  .memes-situation{
+    font-size:23px;
+    font-weight:800;
+    line-height:1.4;
+    text-shadow:0 3px 12px rgba(0,0,0,.3);
+  }
+  #krokodilCard .card-icon{font-size:76px; margin-bottom:14px; filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}
+  /* Слово в "Крокодиле" — крупно, по центру карточки (card-body уже центрирует
+     содержимое и по горизонтали, и по вертикали), сверху крупная иконка-подсказка. */
+  .krokodil-word-icon{
+    font-size:96px;
+    line-height:1;
+    margin-bottom:16px;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
+  }
+  .krokodil-word{
+    font-size:34px;
+    font-weight:800;
+    line-height:1.25;
+    text-shadow:0 3px 12px rgba(0,0,0,.3);
+  }
+  /* Динамический список игроков "Крокодила" — от 2 до 10 полей с именами,
+     добавляются/удаляются кнопками, оформлены как обычные текстовые поля. */
+  .krokodil-player-row{
+    display:flex; align-items:center; gap:8px; margin-bottom:8px;
+  }
+  .krokodil-player-row input[type=text]{
+    flex:1; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,.12); color:#fff; font-size:15px;
+    outline:none; border:1px solid rgba(255,255,255,.2);
+  }
+  .krokodil-player-row input[type=text]::placeholder{color:rgba(255,255,255,.5);}
+  .krokodil-player-remove{
+    flex:0 0 auto; width:40px; height:40px; border-radius:10px; border:none;
+    background:rgba(255,255,255,.12); color:#fff; font-size:16px; cursor:pointer;
+  }
+  /* Строка счёта "Крокодила" — от 2 до 10 игроков, поэтому вместо
+     space-between (как в остальных играх на двоих) — перенос строк по центру. */
+  .krokodil-score-row{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:6px 8px;
+    margin-bottom:10px;
+  }
+  .krokodil-score-row .krokodil-score-item{
+    padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700;
+    background:rgba(255,255,255,.08); color:#cba0bf;
+  }
+  .krokodil-score-row .krokodil-score-item.active{
+    background:rgba(255,255,255,.22); color:#fff;
   }
   .card-empty .card-inner{align-items:center; justify-content:center;}
   .card-empty .card-icon{font-size:52px;}
@@ -1044,19 +1122,8 @@
 
   <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) ===== -->
   <section id="setup" class="screen active">
-    <h1 class="title">💕 Игра для двоих</h1>
+    <h1 class="title section-toggle" id="mainGamesToggle" style="cursor:pointer; user-select:none;">💕 Игры для двоих <span class="section-toggle-arrow section-open" id="mainGamesArrow">▾</span></h1>
     <div class="subtitle">Разожгите страсть и почувствуйте друг друга</div>
-
-    <div class="names-row">
-      <div class="field">
-        <label>Имя мужчины</label>
-        <input type="text" id="name1" placeholder="Men" minlength="2" maxlength="10">
-      </div>
-      <div class="field">
-        <label>Имя женщины</label>
-        <input type="text" id="name2" placeholder="Sexy" minlength="2" maxlength="10">
-      </div>
-    </div>
 
     <div class="resume-row" id="resumeRow">
       <button class="btn btn-primary" id="resumeBtn">Продолжить игру</button>
@@ -1067,16 +1134,51 @@
     </div>
 
     <div class="field" id="gameSelectField">
-      <label>Выбери игру</label>
-      <div class="game-select-list" id="gameSelectList">
-        <button type="button" class="btn btn-menu-item" id="gameFantyBtn">💘 Фанты</button>
-        <button type="button" class="btn btn-menu-item" id="gameTdBtn">❓ Правда или действие</button>
-        <button type="button" class="btn btn-menu-item" id="gameTimerBtn">⏱️ Таймер страсти</button>
-        <button type="button" class="btn btn-menu-item" id="gameWishlistBtn">💌 Твои желания</button>
-        <button type="button" class="btn btn-menu-item" id="gamePhotoBtn">💃 Предложи партнеру</button>
-        <button type="button" class="btn btn-menu-item" id="gameBingoBtn">🎱 Секс-бинго</button>
-        <button type="button" class="btn btn-menu-item" id="gameZnayuBtn">💑 Я знаю все</button>
-        <button type="button" class="btn btn-menu-item" id="gameDavayBtn">🎬 Давай попробуем</button>
+      <div class="field-collapsible section-open" id="mainGamesBody">
+        <div class="names-row">
+          <div class="field">
+            <label>Имя мужчины</label>
+            <input type="text" id="name1" placeholder="Men" minlength="2" maxlength="10">
+          </div>
+          <div class="field">
+            <label>Имя женщины</label>
+            <input type="text" id="name2" placeholder="Sexy" minlength="2" maxlength="10">
+          </div>
+        </div>
+
+        <label>Выбери игру</label>
+        <div class="game-select-list" id="gameSelectList">
+          <button type="button" class="btn btn-menu-item" id="gameFantyBtn">💘 Фанты</button>
+          <button type="button" class="btn btn-menu-item" id="gameTdBtn">❓ Правда или действие</button>
+          <button type="button" class="btn btn-menu-item" id="gameWishlistBtn">💌 Твои желания</button>
+          <button type="button" class="btn btn-menu-item" id="gameZnayuBtn">💑 Я знаю все</button>
+          <button type="button" class="btn btn-menu-item" id="gameBingoBtn">🎱 Секс-бинго</button>
+          <button type="button" class="btn btn-menu-item" id="gameTimerBtn">⏱️ Таймер страсти</button>
+          <button type="button" class="btn btn-menu-item" id="gamePhotoBtn">💃 Предложи партнеру</button>
+          <button type="button" class="btn btn-menu-item" id="gameDavayBtn">🎬 Давай попробуем</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="partyGameSelectField" style="margin-top:22px;">
+      <div class="section-title section-toggle" id="partyGamesToggle" style="cursor:pointer; user-select:none;">
+        <span id="partyGamesTitleText">🎉 Игры для компании</span> <span class="section-toggle-arrow" id="partyGamesArrow">▾</span>
+      </div>
+      <div class="timer-levels-note" id="partyGamesDesc" style="text-align:center; margin:-6px 0 12px;">Шумные игры на компанию друзей — Крокодил и Мемасики. Впишите имена участников, они общие для всех игр этой группы.</div>
+
+      <div class="field-collapsible" id="partyGamesBody">
+        <div class="field" id="partyPlayersField">
+          <label>Игроки</label>
+          <div id="partyPlayersList"></div>
+          <button type="button" class="toggle-pill" id="partyAddPlayerBtn" style="margin-top:2px;">+ Добавить игрока</button>
+          <div class="timer-levels-note">От 2 до 10 игроков — общий список для всех игр компании</div>
+        </div>
+
+        <label>Выбери игру</label>
+        <div class="game-select-list" id="partyGameSelectList">
+          <button type="button" class="btn btn-menu-item" id="gameKrokodilBtn">🐊 Крокодил</button>
+          <button type="button" class="btn btn-menu-item" id="gameMemesBtn">🃏 Мемасики</button>
+        </div>
       </div>
     </div>
 
@@ -1410,6 +1512,109 @@
     </div>
   </section>
 
+  <!-- ===== КРОКОДИЛ: НАСТРОЙКА ===== -->
+  <section id="krokodilSetup" class="screen">
+    <h1 class="title">🐊 Крокодил</h1>
+    <div class="subtitle">Один показывает слово молча — остальные угадывают</div>
+
+    <div class="field">
+      <label>Уровень</label>
+      <div class="levels" id="krokodilSetupLevels"></div>
+    </div>
+
+    <div class="field">
+      <label>Время на раунд</label>
+      <div class="starter-group timer-duration-group" id="krokodilDurationGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="30">30 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="120">2 мин</button>
+        <button type="button" class="starter-btn mode-btn" data-value="300">5 мин</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="krokodilSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="krokodilSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="krokodilSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== КРОКОДИЛ: ИГРА ===== -->
+  <section id="krokodilGame" class="screen">
+    <div class="krokodil-score-row" id="krokodilScoreRow"></div>
+    <div class="td-turn-label" id="krokodilTurnLabel">Показывает: Игрок 1</div>
+
+    <div class="card-area">
+      <div class="card" id="krokodilCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="card-icon">🐊</div>
+            <div class="card-text" id="krokodilCardText">Нажмите «▶ Начать раунд»</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="timer-bar-track" id="krokodilBarTrack" style="display:none;">
+      <div class="timer-bar-fill" id="krokodilBarFill"></div>
+    </div>
+    <div class="timer-label" id="krokodilLabel" style="display:none;">00:00</div>
+    <div class="intro-text" id="krokodilRoundSummary" style="display:none; text-align:center; margin-top:10px;"></div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="krokodilStartRoundBtn">▶ Начать раунд</button>
+        <button type="button" class="btn btn-primary" id="krokodilGuessedBtn" style="display:none;">✅ Угадали</button>
+        <button type="button" class="btn btn-secondary" id="krokodilSkipBtn" style="display:none;">➡️ Пропустить</button>
+        <button type="button" class="btn btn-primary" id="krokodilNextPlayerBtn" style="display:none;">Следующий игрок</button>
+        <button type="button" class="btn btn-primary" id="krokodilFinishBtn" style="display:none;">Завершить игру</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary" id="krokodilExitBtn">Пауза</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== МЕМАСИКИ: НАСТРОЙКА ===== -->
+  <section id="memesSetup" class="screen">
+    <h1 class="title">🃏 Мемасики</h1>
+    <div class="subtitle">Подберите мем из своей колоды под ситуацию на карточке</div>
+
+    <div class="field">
+      <label>Уровень</label>
+      <div class="levels" id="memesSetupLevels"></div>
+    </div>
+
+    <button class="btn btn-primary" id="memesSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="memesSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="memesSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== МЕМАСИКИ: ИГРА ===== -->
+  <section id="memesGame" class="screen">
+    <div class="card-area">
+      <div class="card" id="memesCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="card-text memes-situation" id="memesCardText">Загрузка…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="memesNextBtn">Далее</button>
+        <button type="button" class="btn btn-secondary" id="memesHideBtn">🚫 Скрыть</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary" id="memesExitBtn">Выход</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== ПЛЕЙЛИСТ ЖЕЛАНИЙ: НАСТРОЙКА ===== -->
   <section id="wishlistSetup" class="screen">
     <h1 class="title">💌 Твои желания</h1>
@@ -1567,10 +1772,10 @@
       <div class="modal-title">💃 Правила игры «Предложи партнеру»</div>
       <div class="intro-text">Никакого счёта и очереди — просто листайте карточки с позами вдвоём и выбирайте, что хочется попробовать сегодня.</div>
       <ol class="modal-rules">
-        <li>На странице настройки выберите уровень: 🙂 «Простые позы», 😏 «Интересные позы», 🔥 «Сложные позы», 🚗 «В авто» или 🛍️ «Секс-шоп» (топ-150 товаров с рейтингом вместо поз).</li>
+        <li>На странице настройки выберите уровень: 🙂 «Простые позы», 😏 «Интересные позы», 🔥 «Сложные позы», 🚗 «В авто», 🛍️ «Секс-шоп» (топ-150 товаров с рейтингом вместо поз) или 📦 «Коллекция» (109 позиций личной коллекции).</li>
         <li>На карточке позы — фото и краткое описание техники с советами для комфорта.</li>
-        <li>На карточке товара из «Секс-шоп» сверху — номер в рейтинге продаж, ниже название и описание, строка «Подходит: ...» и оценки партнёров ♀/♂ по 10-балльной шкале.</li>
-        <li>На карточках «Секс-шоп» есть кнопка 🛍️ «Уже есть» — отметьте ✅, если эта игрушка у вас уже есть.</li>
+        <li>На карточке товара из «Секс-шоп» сверху — номер в рейтинге продаж, ниже название и описание, строка «Подходит: ...» и оценки партнёров ♀/♂ по 10-балльной шкале. В «Коллекции» — то же самое, но без номера.</li>
+        <li>На карточках «Секс-шоп» есть кнопка 🛍️ «Уже есть» — отметьте ✅, если эта вещь у вас уже есть.</li>
         <li>Нажмите «Следующая» — покажется новая случайная карточка этого же уровня.</li>
         <li>Понравилась и уже попробовали? Нажмите ☆ — карточка отметится сердечком ❤️, чтобы потом было легко её найти.</li>
         <li>Не понравилось? Нажмите 🚫 — карточка исчезнет из игры навсегда.</li>
@@ -1647,6 +1852,41 @@
         <li>«Выход» покажет итоги партии — счёт и число выполненных/отказанных заданий.</li>
       </ol>
       <button class="btn btn-primary" id="closeTimerRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "КРОКОДИЛ" ===== -->
+  <div class="modal-overlay" id="krokodilRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🐊 Правила игры «Крокодил»</div>
+      <div class="intro-text">Классические шарады: один игрок молча показывает слово с карточки жестами и мимикой, без слов и звуков, а остальные пытаются угадать за отведённое время.</div>
+      <ol class="modal-rules">
+        <li>На главном экране, в блоке «Игры для компании», впишите имена игроков (от 2 до 10, кнопка «+ Добавить игрока») — этот список общий для всех игр компании. Затем на экране настройки Крокодила выберите уровень: 🧒 «До 12 лет», 🎈 «До 18 лет», 🔥 «18+» или 😈 «Похабные» — и время на раунд (30 сек/2 мин/5 мин).</li>
+        <li>Телефон берёт тот, кто будет показывать. Нажмите «▶ Начать раунд» — пойдёт отсчёт и появится первое слово.</li>
+        <li>Показывайте слово жестами, без слов. Как только зрители угадали — нажмите «✅ Угадали», откроется следующее слово. Если слово не поддаётся — «➡️ Пропустить».</li>
+        <li>В раунде ровно 5 слов — как только показаны все 5 (угадано или пропущено), раунд завершится сам, даже если время ещё не вышло; если время истечёт раньше, слово на экране засчитывается как пропущенное и раунд тоже заканчивается.</li>
+        <li>Передайте телефон следующему игроку и нажмите «Следующий игрок», затем «▶ Начать раунд» для нового раунда.</li>
+        <li>Каждый игрок показывает по 5 раундов по очереди — когда все отыграют свои 5, игра завершится и покажет итоговую таблицу результатов.</li>
+        <li>Очки за угаданные слова копятся за каждым игроком отдельно — «Пауза» сохранит счёт и игроков, на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+      </ol>
+      <button class="btn btn-primary" id="closeKrokodilRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "МЕМАСИКИ" ===== -->
+  <div class="modal-overlay" id="memesRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🃏 Правила игры «Мемасики»</div>
+      <div class="intro-text">Приложение показывает карточку с описанием ситуации — компания подбирает под неё самый смешной мем из своей колоды физических карточек с мемами.</div>
+      <ol class="modal-rules">
+        <li>Выберите уровень: 🧒 «До 12 лет», 🎈 «До 18 лет», 🔥 «18+» или 😈 «Похабные».</li>
+        <li>Прочитайте вслух ситуацию на карточке.</li>
+        <li>Каждый участник выбирает из своей руки мем-карточку, которая лучше всего подходит к ситуации, и кладёт её в закрытую.</li>
+        <li>Ведущий (или все вместе) выбирает самый смешной вариант — можно вести счёт очков на бумаге или на словах.</li>
+        <li>«Далее» покажет новую ситуацию, «🚫 Скрыть» уберёт текущую карточку насовсем.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeMemesRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -1859,11 +2099,14 @@
 <script src="cards_fants_users.js"></script>
 <script src="cards_poses.js"></script>
 <script src="cards_sexshop.js"></script>
+<script src="cards_collection.js"></script>
 <script src="cards_video.js"></script>
 <script src="cards_bingo.js"></script>
 <script src="cards_timer.js"></script>
 <script src="cards_wishlist.js"></script>
 <script src="cards_znayu.js"></script>
+<script src="cards_krokodil.js"></script>
+<script src="cards_memes.js"></script>
 <script>
 /* ============ ДАННЫЕ КАРТ ============ */
 const LEVELS = [
@@ -1913,7 +2156,13 @@ let state = {
   // Я знаю все (квиз "насколько хорошо вы знаете предпочтения друг друга")
   znayuStarter:'random', znayuQueue:[], znayuIndex:0, znayuAnswers:{},
   znayuActivePlayer:0, znayuP1Done:false, znayuP2Done:false, znayuPendingNext:0,
-  znayuMatchHistory:[], znayuHidden:[]
+  znayuMatchHistory:[], znayuHidden:[],
+  // Крокодил
+  krokodilSelectedLevel:1, krokodilRoundSeconds:30, krokodilUsed:{},
+  partyPlayers:['Игрок 1','Игрок 2'], krokodilScores:[], krokodilCurrentPlayerIndex:0,
+  krokodilTurnsPlayed:0, krokodilRoundsPerPlayer:5,
+  // Мемасики
+  memesSelectedLevel:1, memesUsed:{}, memesHidden:[]
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -1947,7 +2196,7 @@ function saveState(){
 function exportGameData(){
   saveState();
   const payload = {
-    app: 'Игра для двоих',
+    app: 'Игры для двоих',
     backupVersion: 1,
     exportedAt: new Date().toISOString(),
     state: state
@@ -2016,6 +2265,16 @@ document.getElementById('importDataInput').addEventListener('change', (e)=>{
 });
 document.getElementById('backupToggle').addEventListener('click', ()=>{
   document.getElementById('backupField').classList.toggle('backup-open');
+});
+// Сворачиваемые блоки списков игр — по умолчанию свёрнуты, разворачиваются
+// по клику на заголовок ("Игры для двоих" / "Игры для компании").
+document.getElementById('mainGamesToggle').addEventListener('click', ()=>{
+  document.getElementById('mainGamesBody').classList.toggle('section-open');
+  document.getElementById('mainGamesArrow').classList.toggle('section-open');
+});
+document.getElementById('partyGamesToggle').addEventListener('click', ()=>{
+  document.getElementById('partyGamesBody').classList.toggle('section-open');
+  document.getElementById('partyGamesArrow').classList.toggle('section-open');
 });
 
 /* ============ УТИЛИТЫ ============ */
@@ -2174,7 +2433,7 @@ document.getElementById('videoExtraToggle').addEventListener('click', ()=>{
 function blockedByDavayPause(){
   if(!state.pausedMode) return false;
   playErrorSound();
-  const label = state.pausedMode === 'davay' ? '«Давай попробуем»' : (state.pausedMode === 'bingo' ? '«Секс-бинго»' : '«Правда или действие»');
+  const label = state.pausedMode === 'davay' ? '«Давай попробуем»' : (state.pausedMode === 'bingo' ? '«Секс-бинго»' : (state.pausedMode === 'krokodil' ? '«Крокодил»' : '«Правда или действие»'));
   showToast(`Сначала завершите ${label} — «Продолжить игру» или «Закончить игру»`);
   return true;
 }
@@ -2190,6 +2449,12 @@ function abandonPausedTdSession(){
 // "Секс-бинго", если вдруг начинается другая игра (страховка).
 function abandonPausedBingoSession(){
   if(state.pausedMode === 'bingo'){
+    state.pausedMode = null;
+  }
+}
+// Симметрично остальным — сбрасывает "чужую" паузу «Крокодила» (страховка).
+function abandonPausedKrokodilSession(){
+  if(state.pausedMode === 'krokodil'){
     state.pausedMode = null;
   }
 }
@@ -2222,6 +2487,16 @@ document.getElementById('gameTimerBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToTimerSetup();
 });
+document.getElementById('gameKrokodilBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKrokodilSetup();
+});
+document.getElementById('gameMemesBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToMemesSetup();
+});
 document.getElementById('gameWishlistBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
@@ -2253,6 +2528,10 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'bingo'){
     resumeBingoGame();
+    return;
+  }
+  if(state.pausedMode === 'krokodil'){
+    resumeKrokodilGame();
     return;
   }
   goToGame();
@@ -2322,6 +2601,11 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.timerUsed = {};
   // Я знаю все — вопросы, скрытые кнопкой "Не хочу отвечать"
   state.znayuHidden = [];
+  // Крокодил
+  state.krokodilUsed = {};
+  // Мемасики
+  state.memesUsed = {};
+  state.memesHidden = [];
   saveState();
   renderModeGroup();
   renderLevelToggles();
@@ -2385,6 +2669,7 @@ function goToGame(){
   abandonPausedDavaySession();
   abandonPausedTdSession();
   abandonPausedBingoSession();
+  abandonPausedKrokodilSession();
   state.inProgress = true;
   saveState();
   document.getElementById('setup').classList.remove('active');
@@ -2461,8 +2746,28 @@ function updateResumeUI(){
   // показывать выбор другой игры и резервную копию — только сама пауза.
   const gameSelectField = document.getElementById('gameSelectField');
   if(gameSelectField) gameSelectField.style.display = state.inProgress ? 'none' : '';
+  // "Игры для компании" — исключение: если на паузе именно Крокодил, блок
+  // остаётся виден (там же список игроков и кнопка "Продолжить игру").
+  const isKrPause = state.pausedMode === 'krokodil';
+  const partyGameSelectField = document.getElementById('partyGameSelectField');
+  if(partyGameSelectField) partyGameSelectField.style.display = (state.inProgress && !isKrPause) ? 'none' : '';
   const backupField = document.getElementById('backupField');
   if(backupField) backupField.style.display = state.inProgress ? 'none' : '';
+  // Пока Крокодил на паузе — заголовок и описание группы меняются на паузу
+  // этой игры, а список игроков автоматически раскрывается, чтобы сразу
+  // было видно, кто играет, без лишнего клика.
+  const partyTitleText = document.getElementById('partyGamesTitleText');
+  const partyDesc = document.getElementById('partyGamesDesc');
+  const partyBody = document.getElementById('partyGamesBody');
+  const partyArrow = document.getElementById('partyGamesArrow');
+  if(partyTitleText) partyTitleText.textContent = isKrPause ? '🐊 Крокодил — на паузе' : '🎉 Игры для компании';
+  if(partyDesc) partyDesc.textContent = isKrPause
+    ? 'Счёт и игроки сохранены — продолжите партию или закончите её кнопкой выше.'
+    : 'Шумные игры на компанию друзей — Крокодил и Мемасики. Впишите имена участников, они общие для всех игр этой группы.';
+  if(isKrPause){
+    if(partyBody) partyBody.classList.add('section-open');
+    if(partyArrow) partyArrow.classList.add('section-open');
+  }
   updateSettingsLockUI();
 }
 
@@ -2738,10 +3043,13 @@ function getPhotoCardsList(){
   // 5-й модуль "Секс-шоп" — отдельный файл cards_sexshop.js, объединяется с
   // позами по тому же принципу (level=5 выступает как отдельная категория).
   const shop = (typeof SEXSHOP_CARDS !== 'undefined' && Array.isArray(SEXSHOP_CARDS)) ? SEXSHOP_CARDS : [];
-  return poses.concat(shop);
+  // 6-й модуль "Коллекция" — отдельный файл cards_collection.js, тот же принцип
+  // объединения, что и с "Секс-шоп" (level=6 выступает как отдельная категория).
+  const collection = (typeof COLLECTION_CARDS !== 'undefined' && Array.isArray(COLLECTION_CARDS)) ? COLLECTION_CARDS : [];
+  return poses.concat(shop).concat(collection);
 }
 
-const PHOTO_MAX_LEVEL = 5;
+const PHOTO_MAX_LEVEL = 6;
 let photoLevel = 1;
 let currentPhotoCard = null;
 
@@ -3373,6 +3681,7 @@ async function goToVideoGame(){
   abandonPausedDavaySession();
   abandonPausedTdSession();
   abandonPausedBingoSession();
+  abandonPausedKrokodilSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -3439,6 +3748,7 @@ async function goToVideoFavoritesView(){
   abandonPausedDavaySession();
   abandonPausedTdSession();
   abandonPausedBingoSession();
+  abandonPausedKrokodilSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -4011,6 +4321,7 @@ const PHOTO_LEVELS = [
   {id:3, name:'Сложные позы', desc:'Нужны гибкость и физподготовка', icon:'🔥'},
   {id:4, name:'В авто', desc:'Позы в машине', icon:'🚗'},
   {id:5, name:'Секс-шоп', desc:'Топ-150 товаров с рейтингом', icon:'🛍️'},
+  {id:6, name:'Коллекция', desc:'109 позиций личной коллекции', icon:'📦'},
 ];
 function renderPhotoSetupLevels(){
   const wrap = document.getElementById('photoSetupLevels');
@@ -4069,6 +4380,7 @@ function goToDavayFavoritesView(){
   abandonPausedDavaySession();
   abandonPausedTdSession();
   abandonPausedBingoSession();
+  abandonPausedKrokodilSession();
   state.pausedMode = null;
   state.inProgress = true;
   davayLevel = (state.davaySelectedLevel || 3) - 2;
@@ -4236,6 +4548,7 @@ function goToPlaceholderGame(){
   abandonPausedDavaySession();
   abandonPausedTdSession();
   abandonPausedBingoSession();
+  abandonPausedKrokodilSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -4304,6 +4617,7 @@ function goToPhotoFavoritesView(){
   abandonPausedDavaySession();
   abandonPausedTdSession();
   abandonPausedBingoSession();
+  abandonPausedKrokodilSession();
   state.pausedMode = null;
   state.inProgress = true;
   state.photoFavView = true;
@@ -4746,6 +5060,11 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'bingo'){
     finishBingoGame();
+    showToast('Игра завершена');
+    return;
+  }
+  if(state.pausedMode === 'krokodil'){
+    finishKrokodilGame();
     showToast('Игра завершена');
     return;
   }
@@ -5722,6 +6041,7 @@ function tdNextTurn(completed){
 function goToTdGame(){
   abandonPausedDavaySession();
   abandonPausedBingoSession();
+  abandonPausedKrokodilSession();
   state.pausedMode = null;
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -6093,6 +6413,7 @@ function goToBingoGame(){
   abandonPausedDavaySession();
   abandonPausedTdSession();
   abandonPausedBingoSession();
+  abandonPausedKrokodilSession();
   state.pausedMode = null;
   // Игра всегда начинается с уровня 1 (Нежное) — выбор уровня в настройке
   // убран, дальше карта повышает сложность сама по ходу игры.
@@ -6556,6 +6877,450 @@ document.getElementById('timerExitBtn').addEventListener('click', ()=>{
 document.getElementById('timerSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('timerRulesModal').classList.add('show'); });
 document.getElementById('closeTimerRulesBtn').addEventListener('click', ()=>{ document.getElementById('timerRulesModal').classList.remove('show'); });
 document.getElementById('timerRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'timerRulesModal') e.currentTarget.classList.remove('show'); });
+
+/* ---------- КРОКОДИЛ (шарады: раунд на время, угадывают слова) ---------- */
+// Ровно 5 слов в раунде на одного игрока — раунд завершается сам, как только
+// показаны все 5 (угадано или пропущено), даже если время ещё не истекло.
+const KROKODIL_WORDS_PER_ROUND = 5;
+let krRemaining = 0;
+let krTotal = 0;
+let krIntervalId = null;
+let krRoundGuessed = 0;
+let krRoundSkipped = 0;
+let krCurrentCard = null;
+function getKrCardsList(level){
+  if(typeof KROKODIL_CARDS === 'undefined' || !Array.isArray(KROKODIL_CARDS)) return [];
+  return KROKODIL_CARDS.filter(c=>c.level===level);
+}
+// Общий список игроков для всех "Игр для компании" (сейчас использует
+// только Крокодил, но хранится на уровне группы, чтобы будущие игры тоже
+// могли на него опираться): от 2 до 10, поля добавляются/удаляются
+// кнопками, имена по умолчанию "Игрок N".
+function renderPartyPlayers(){
+  if(!state.partyPlayers || state.partyPlayers.length < 2){
+    state.partyPlayers = ['Игрок 1','Игрок 2'];
+  }
+  const wrap = document.getElementById('partyPlayersList');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  state.partyPlayers.forEach((name, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'krokodil-player-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 14;
+    input.placeholder = 'Игрок ' + (idx + 1);
+    input.value = name;
+    input.addEventListener('input', ()=>{
+      state.partyPlayers[idx] = input.value.trim() || ('Игрок ' + (idx + 1));
+      saveState();
+    });
+    row.appendChild(input);
+    if(state.partyPlayers.length > 2){
+      const rmBtn = document.createElement('button');
+      rmBtn.type = 'button';
+      rmBtn.className = 'krokodil-player-remove';
+      rmBtn.setAttribute('aria-label', 'Удалить игрока');
+      rmBtn.textContent = '✕';
+      rmBtn.addEventListener('click', ()=>{
+        if(state.partyPlayers.length <= 2) return;
+        state.partyPlayers.splice(idx, 1);
+        saveState();
+        renderPartyPlayers();
+      });
+      row.appendChild(rmBtn);
+    }
+    wrap.appendChild(row);
+  });
+  const addBtn = document.getElementById('partyAddPlayerBtn');
+  if(addBtn) addBtn.style.display = state.partyPlayers.length >= 10 ? 'none' : '';
+}
+document.getElementById('partyAddPlayerBtn').addEventListener('click', ()=>{
+  if(!state.partyPlayers) state.partyPlayers = ['Игрок 1','Игрок 2'];
+  if(state.partyPlayers.length >= 10) return;
+  state.partyPlayers.push('Игрок ' + (state.partyPlayers.length + 1));
+  saveState();
+  renderPartyPlayers();
+});
+function renderKrokodilSetupLevels(){
+  const wrap = document.getElementById('krokodilSetupLevels');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  (typeof KROKODIL_LEVELS !== 'undefined' ? KROKODIL_LEVELS : []).forEach(l=>{
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (state.krokodilSelectedLevel === l.id ? ' on' : '');
+    div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
+    div.addEventListener('click', ()=>{
+      state.krokodilSelectedLevel = l.id;
+      saveState();
+      renderKrokodilSetupLevels();
+    });
+    wrap.appendChild(div);
+  });
+}
+function renderKrokodilDurationGroup(){
+  document.querySelectorAll('#krokodilDurationGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.krokodilRoundSeconds || 30));
+  });
+}
+document.querySelectorAll('#krokodilDurationGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.krokodilRoundSeconds = parseInt(btn.dataset.value, 10);
+    saveState();
+    renderKrokodilDurationGroup();
+  });
+});
+function goToKrokodilSetup(){
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('krokodilSetup').classList.add('active');
+  renderKrokodilSetupLevels();
+  renderKrokodilDurationGroup();
+}
+function exitKrokodilSetup(){
+  document.getElementById('krokodilSetup').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+}
+function stopKrInterval(){
+  if(krIntervalId){ clearInterval(krIntervalId); krIntervalId = null; }
+}
+function updateKrBar(){
+  const fill = document.getElementById('krokodilBarFill');
+  const label = document.getElementById('krokodilLabel');
+  if(!fill || !label) return;
+  const pct = krTotal > 0 ? Math.round((krRemaining / krTotal) * 100) : 0;
+  fill.style.width = pct + '%';
+  const mm = String(Math.floor(krRemaining / 60)).padStart(2,'0');
+  const ss = String(krRemaining % 60).padStart(2,'0');
+  label.textContent = mm + ':' + ss;
+}
+function updateKrScoreUI(){
+  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const scores = state.krokodilScores || [];
+  const idx = state.krokodilCurrentPlayerIndex || 0;
+  const wrap = document.getElementById('krokodilScoreRow');
+  if(wrap){
+    wrap.innerHTML = '';
+    players.forEach((name, i)=>{
+      const span = document.createElement('span');
+      span.className = 'krokodil-score-item' + (i === idx ? ' active' : '');
+      span.textContent = name + ': ' + (scores[i] || 0);
+      wrap.appendChild(span);
+    });
+  }
+  const turnName = players[idx] || 'Игрок 1';
+  const turnLabel = document.getElementById('krokodilTurnLabel');
+  if(turnLabel) turnLabel.textContent = 'Показывает: ' + turnName;
+}
+// Слово текущего раунда, тянется без повторов внутри уровня, пока пул не
+// закончится — тот же принцип, что и во всех остальных играх приложения.
+function krDrawWord(){
+  const level = state.krokodilSelectedLevel || 1;
+  const all = getKrCardsList(level);
+  if(all.length === 0){
+    krCurrentCard = null;
+    fadeSwapEl('krokodilCard', (el)=>{
+      el.className = 'card';
+      el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нет слов для этого уровня</div></div></div>`;
+    });
+    return;
+  }
+  if(!state.krokodilUsed) state.krokodilUsed = {};
+  let used = state.krokodilUsed[level] || [];
+  let pool = all.filter(c=>!used.includes(c.text));
+  if(pool.length === 0){
+    pool = all;
+    used = [];
+    showToast('Слова этого уровня показаны заново 🔀');
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  used.push(card.text);
+  state.krokodilUsed[level] = used;
+  saveState();
+  krCurrentCard = card;
+  fadeSwapEl('krokodilCard', (el)=>{
+    el.className = 'card';
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="krokodil-word-icon">${card.icon || '🐊'}</div><div class="card-text krokodil-word">${card.text}</div></div></div>`;
+  });
+}
+function krStartRound(){
+  krRoundGuessed = 0;
+  krRoundSkipped = 0;
+  krTotal = state.krokodilRoundSeconds || 30;
+  krRemaining = krTotal;
+  document.getElementById('krokodilBarTrack').style.display = '';
+  document.getElementById('krokodilLabel').style.display = '';
+  document.getElementById('krokodilRoundSummary').style.display = 'none';
+  document.getElementById('krokodilStartRoundBtn').style.display = 'none';
+  document.getElementById('krokodilNextPlayerBtn').style.display = 'none';
+  document.getElementById('krokodilGuessedBtn').style.display = 'flex';
+  document.getElementById('krokodilSkipBtn').style.display = 'flex';
+  updateKrBar();
+  krDrawWord();
+  stopKrInterval();
+  krIntervalId = setInterval(krTick, 1000);
+}
+function krTick(){
+  krRemaining--;
+  updateKrBar();
+  if(krRemaining <= 0){
+    stopKrInterval();
+    // Слово, которое было на экране в момент истечения времени, не было ни
+    // угадано, ни пропущено вручную — засчитываем его как пропущенное.
+    if(krCurrentCard){ krRoundSkipped++; krCurrentCard = null; }
+    krRoundEnd();
+  }
+}
+function krRoundEnd(){
+  stopKrInterval();
+  playSuccessSound();
+  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const idx = state.krokodilCurrentPlayerIndex || 0;
+  const turnName = players[idx] || 'Игрок 1';
+  if(!state.krokodilScores) state.krokodilScores = [];
+  state.krokodilScores[idx] = (state.krokodilScores[idx] || 0) + krRoundGuessed;
+  state.krokodilTurnsPlayed = (state.krokodilTurnsPlayed || 0) + 1;
+  saveState();
+  updateKrScoreUI();
+  document.getElementById('krokodilGuessedBtn').style.display = 'none';
+  document.getElementById('krokodilSkipBtn').style.display = 'none';
+  document.getElementById('krokodilBarTrack').style.display = 'none';
+  document.getElementById('krokodilLabel').style.display = 'none';
+
+  const roundsPerPlayer = state.krokodilRoundsPerPlayer || 5;
+  const gameOver = state.krokodilTurnsPlayed >= players.length * roundsPerPlayer;
+
+  const summary = document.getElementById('krokodilRoundSummary');
+  if(summary){
+    summary.style.display = '';
+    let html = `Раунд завершён! ${turnName} угадал(а) слов: ${krRoundGuessed}` + (krRoundSkipped ? `, пропущено: ${krRoundSkipped}` : '');
+    if(gameOver){
+      const ranking = players.map((n,i)=>({n, score: state.krokodilScores[i] || 0})).sort((a,b)=>b.score-a.score);
+      const lines = ranking.map((r,i)=>`${i+1}. ${r.n} — ${r.score}`).join('<br>');
+      html += `<br><br>🏆 Игра окончена!<br>${lines}`;
+    }
+    summary.innerHTML = html;
+  }
+  fadeSwapEl('krokodilCard', (el)=>{
+    el.className = 'card';
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">${gameOver ? 'Игра окончена' : 'Раунд окончен'}</div></div></div>`;
+  });
+  document.getElementById('krokodilNextPlayerBtn').style.display = gameOver ? 'none' : 'flex';
+  document.getElementById('krokodilFinishBtn').style.display = gameOver ? 'flex' : 'none';
+}
+function krNextPlayerRound(){
+  const n = (state.partyPlayers || []).length || 1;
+  state.krokodilCurrentPlayerIndex = ((state.krokodilCurrentPlayerIndex || 0) + 1) % n;
+  saveState();
+  updateKrScoreUI();
+  document.getElementById('krokodilRoundSummary').style.display = 'none';
+  document.getElementById('krokodilNextPlayerBtn').style.display = 'none';
+  document.getElementById('krokodilStartRoundBtn').style.display = 'flex';
+  fadeSwapEl('krokodilCard', (el)=>{
+    el.className = 'card';
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «▶ Начать раунд»</div></div></div>`;
+  });
+}
+function goToKrokodilGame(){
+  abandonPausedDavaySession();
+  abandonPausedTdSession();
+  abandonPausedBingoSession();
+  state.pausedMode = null;
+  document.getElementById('krokodilSetup').classList.remove('active');
+  document.getElementById('krokodilGame').classList.add('active');
+  if(!state.partyPlayers || state.partyPlayers.length < 2){
+    state.partyPlayers = ['Игрок 1','Игрок 2'];
+  }
+  const n = state.partyPlayers.length;
+  state.krokodilScores = new Array(n).fill(0);
+  state.krokodilTurnsPlayed = 0;
+  state.krokodilCurrentPlayerIndex = Math.floor(Math.random() * n);
+  state.inProgress = true;
+  saveState();
+  updateKrScoreUI();
+  document.getElementById('krokodilStartRoundBtn').style.display = 'flex';
+  document.getElementById('krokodilGuessedBtn').style.display = 'none';
+  document.getElementById('krokodilSkipBtn').style.display = 'none';
+  document.getElementById('krokodilNextPlayerBtn').style.display = 'none';
+  document.getElementById('krokodilFinishBtn').style.display = 'none';
+  document.getElementById('krokodilBarTrack').style.display = 'none';
+  document.getElementById('krokodilLabel').style.display = 'none';
+  document.getElementById('krokodilRoundSummary').style.display = 'none';
+  fadeSwapEl('krokodilCard', (el)=>{
+    el.className = 'card';
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «▶ Начать раунд»</div></div></div>`;
+  });
+  updateMuteBtn();
+  requestWakeLock();
+}
+// Полный выход из партии (по кнопке "Завершить игру" на итоговом экране) —
+// сбрасывает счёт и возвращает на экран настройки Крокодила.
+function exitKrokodilGame(){
+  stopKrInterval();
+  state.krokodilScores = [];
+  state.krokodilTurnsPlayed = 0;
+  state.krokodilCurrentPlayerIndex = 0;
+  state.inProgress = false;
+  state.pausedMode = null;
+  saveState();
+  document.getElementById('krokodilGame').classList.remove('active');
+  document.getElementById('krokodilSetup').classList.add('active');
+}
+// Пауза: вернуться в главное меню, не сбрасывая счёт и игроков — можно
+// продолжить позже через общий блок "Продолжить игру" / "Закончить игру".
+function pauseKrokodilGame(){
+  stopKrInterval();
+  state.pausedMode = 'krokodil';
+  saveState();
+  document.getElementById('krokodilGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  updateResumeUI();
+}
+function resumeKrokodilGame(){
+  state.pausedMode = null;
+  saveState();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('krokodilGame').classList.add('active');
+  updateKrScoreUI();
+  document.getElementById('krokodilStartRoundBtn').style.display = 'flex';
+  document.getElementById('krokodilGuessedBtn').style.display = 'none';
+  document.getElementById('krokodilSkipBtn').style.display = 'none';
+  document.getElementById('krokodilNextPlayerBtn').style.display = 'none';
+  document.getElementById('krokodilFinishBtn').style.display = 'none';
+  document.getElementById('krokodilBarTrack').style.display = 'none';
+  document.getElementById('krokodilLabel').style.display = 'none';
+  document.getElementById('krokodilRoundSummary').style.display = 'none';
+  fadeSwapEl('krokodilCard', (el)=>{
+    el.className = 'card';
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «▶ Начать раунд»</div></div></div>`;
+  });
+  updateMuteBtn();
+  requestWakeLock();
+}
+function finishKrokodilGame(){
+  state.krokodilScores = [];
+  state.krokodilTurnsPlayed = 0;
+  state.krokodilCurrentPlayerIndex = 0;
+  state.inProgress = false;
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+}
+document.getElementById('krokodilSetupStartBtn').addEventListener('click', ()=>{ goToKrokodilGame(); });
+document.getElementById('krokodilSetupExitBtn').addEventListener('click', ()=>{ exitKrokodilSetup(); });
+document.getElementById('krokodilStartRoundBtn').addEventListener('click', ()=>{ krStartRound(); });
+document.getElementById('krokodilGuessedBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  krRoundGuessed++;
+  if(krRoundGuessed + krRoundSkipped >= KROKODIL_WORDS_PER_ROUND){ krRoundEnd(); }
+  else { krDrawWord(); }
+});
+document.getElementById('krokodilSkipBtn').addEventListener('click', ()=>{
+  krRoundSkipped++;
+  if(krRoundGuessed + krRoundSkipped >= KROKODIL_WORDS_PER_ROUND){ krRoundEnd(); }
+  else { krDrawWord(); }
+});
+document.getElementById('krokodilNextPlayerBtn').addEventListener('click', ()=>{ krNextPlayerRound(); });
+document.getElementById('krokodilFinishBtn').addEventListener('click', ()=>{ exitKrokodilGame(); });
+document.getElementById('krokodilExitBtn').addEventListener('click', ()=>{
+  pauseKrokodilGame();
+  showToast('Игра на паузе — прогресс сохранён');
+});
+document.getElementById('krokodilSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('krokodilRulesModal').classList.add('show'); });
+document.getElementById('closeKrokodilRulesBtn').addEventListener('click', ()=>{ document.getElementById('krokodilRulesModal').classList.remove('show'); });
+document.getElementById('krokodilRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'krokodilRulesModal') e.currentTarget.classList.remove('show'); });
+
+/* ---------- МЕМАСИКИ (текстовые карточки-ситуации, без таймера и счёта) ---------- */
+let memesCurrentCard = null;
+function getMemesCardsList(level){
+  if(typeof MEMES_CARDS === 'undefined' || !Array.isArray(MEMES_CARDS)) return [];
+  return MEMES_CARDS.filter(c=>c.level===level);
+}
+function renderMemesSetupLevels(){
+  const wrap = document.getElementById('memesSetupLevels');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  (typeof MEMES_LEVELS !== 'undefined' ? MEMES_LEVELS : []).forEach(l=>{
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (state.memesSelectedLevel === l.id ? ' on' : '');
+    div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
+    div.addEventListener('click', ()=>{
+      state.memesSelectedLevel = l.id;
+      saveState();
+      renderMemesSetupLevels();
+    });
+    wrap.appendChild(div);
+  });
+}
+function goToMemesSetup(){
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('memesSetup').classList.add('active');
+  renderMemesSetupLevels();
+}
+function exitMemesSetup(){
+  document.getElementById('memesSetup').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+}
+function drawMemesCard(){
+  const level = state.memesSelectedLevel || 1;
+  const all = getMemesCardsList(level);
+  const hidden = state.memesHidden || [];
+  const visible = all.filter(c=>!hidden.includes(c.text));
+  if(visible.length === 0){
+    memesCurrentCard = null;
+    fadeSwapEl('memesCard', (el)=>{
+      el.className = 'card';
+      el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-text memes-situation">Все ситуации этого уровня скрыты — сбросьте прогресс в настройках</div></div></div>`;
+    });
+    return;
+  }
+  if(!state.memesUsed) state.memesUsed = {};
+  let used = (state.memesUsed[level] || []).filter(t=>!hidden.includes(t));
+  let pool = visible.filter(c=>!used.includes(c.text));
+  if(pool.length === 0){
+    pool = visible;
+    used = [];
+    showToast('Ситуации этого уровня показаны заново 🔀');
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  used.push(card.text);
+  state.memesUsed[level] = used;
+  saveState();
+  memesCurrentCard = card;
+  fadeSwapEl('memesCard', (el)=>{
+    el.className = 'card';
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-text memes-situation">${card.text}</div></div></div>`;
+  });
+}
+function goToMemesGame(){
+  document.getElementById('memesSetup').classList.remove('active');
+  document.getElementById('memesGame').classList.add('active');
+  drawMemesCard();
+  updateMuteBtn();
+  requestWakeLock();
+}
+function exitMemesGame(){
+  document.getElementById('memesGame').classList.remove('active');
+  document.getElementById('memesSetup').classList.add('active');
+}
+document.getElementById('memesSetupStartBtn').addEventListener('click', ()=>{ goToMemesGame(); });
+document.getElementById('memesSetupExitBtn').addEventListener('click', ()=>{ exitMemesSetup(); });
+document.getElementById('memesNextBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  drawMemesCard();
+});
+document.getElementById('memesHideBtn').addEventListener('click', ()=>{
+  if(!memesCurrentCard) return;
+  if(!state.memesHidden) state.memesHidden = [];
+  if(!state.memesHidden.includes(memesCurrentCard.text)) state.memesHidden.push(memesCurrentCard.text);
+  saveState();
+  playErrorSound();
+  showToast('Ситуация скрыта навсегда 🚫');
+  drawMemesCard();
+});
+document.getElementById('memesExitBtn').addEventListener('click', ()=>{ exitMemesGame(); });
+document.getElementById('memesSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('memesRulesModal').classList.add('show'); });
+document.getElementById('closeMemesRulesBtn').addEventListener('click', ()=>{ document.getElementById('memesRulesModal').classList.remove('show'); });
+document.getElementById('memesRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'memesRulesModal') e.currentTarget.classList.remove('show'); });
 
 /* ---------- 4. СОВМЕСТНЫЙ ПЛЕЙЛИСТ ЖЕЛАНИЙ ---------- */
 function renderWishlistSetupStarterGroup(){
@@ -7236,6 +8001,7 @@ updateDavayMuteBtn();
 videoSoundOn = !!state.videoSoundOn;
 updateVideoMuteBtn();
 updateMuteBtn();
+renderPartyPlayers();
 updateResumeUI();
 updateFavoritesOnlyBtn();
 populateNewCardLevelSelect();

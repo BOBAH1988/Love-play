@@ -1,6 +1,6 @@
 {
-  "name": "Игра для двоих",
-  "short_name": "Игра для двоих",
+  "name": "Игры для двоих",
+  "short_name": "Игры для двоих",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
