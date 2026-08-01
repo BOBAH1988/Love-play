@@ -44,7 +44,8 @@
     --gold:#ffd27a;
     --btn-height:52px;
   }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
+  input, textarea{-webkit-user-select:text; user-select:text; -webkit-touch-callout:default;}
   html{
     height:100%;
     height:100dvh;
@@ -1373,11 +1374,13 @@
       <div class="intro-text">Собирайте линии на игровой карте — сложность растёт сама по ходу игры.</div>
       <ol class="modal-rules">
         <li>Игра всегда начинается с уровня 💗 «Нежное» — карта заполнится 25 случайными заданиями этого уровня.</li>
-        <li>Выполнили задание из клетки — нажмите на неё, чтобы отметить.</li>
+        <li>Выполнили задание из клетки — нажмите на неё, чтобы отметить. Обычное нажатие клетку не снимает.</li>
+        <li>Отметили клетку по ошибке — зажмите её и удерживайте, чтобы снять отметку.</li>
         <li>Собрали 5 отмеченных клеток подряд по горизонтали, вертикали или диагонали — линия засчитана.</li>
         <li>Собрали 1-ю линию по горизонтали или вертикали (диагонали не считаются) — все ещё не отмеченные клетки становятся заданиями уровня 🔥 «Горячее».</li>
         <li>Собрали 3-ю такую линию — оставшиеся клетки становятся уровня 🌶️ «Дерзкое».</li>
-        <li>Бонусное задание открывается трижды за игру: перед каждым из этих двух повышений уровня и в самом конце, когда отмечены все 25 клеток.</li>
+        <li>Бонусное задание открывается дважды за игру — перед каждым из этих двух повышений уровня.</li>
+        <li>Игра завершается сама, как только собрано 5 любых линий (горизонталь, вертикаль или диагональ) или отмечены все 25 клеток — на экране появится окно с итогом партии.</li>
         <li>«🔄 Новая карта» начнёт всё заново с уровня «Нежное».</li>
         <li>«Пауза» сохранит прогресс карты и вернёт в главное меню — игру можно будет продолжить позже.</li>
       </ol>
@@ -1626,7 +1629,7 @@ let state = {
   tdLevelTurnCounts:{1:0, 2:0}, tdPendingLevelUp:false,
   // Секс-бинго
   bingoSelectedLevel:1, bingoGridLevel:0, bingoGrid:[], bingoChecked:[], bingoWonLines:[], bingoUsedBonus:[], bingoCurrentLevel:1,
-  bingoEscalatedTo2:false, bingoEscalatedTo3:false, bingoBonusEndGiven:false,
+  bingoEscalatedTo2:false, bingoEscalatedTo3:false, bingoVictoryMilestones:[], bingoFinished:false,
   // Таймер
   timerSelectedLevel:1, timerUsed:{}, timerGameMode:'fast', timerLevelUpCounts:{1:0, 2:0}, timerPendingLevelUp:false, timerCustomSeconds:10,
   timerLevelUpCadence:5,
@@ -3934,6 +3937,30 @@ function playLevelUpSound(){
   if(navigator.vibrate) navigator.vibrate([60,40,60,40,120]);
 }
 
+function playBingoVictorySound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // до-ми-соль-до-ми — яркая победная фанфара за линии/финал бинго
+    notes.forEach((freq, i)=>{
+      const t = i*0.09;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.55);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([100,50,100,50,200]);
+}
+
 function playFailSound(){
   if(state.muted) return;
   try{
@@ -4238,6 +4265,10 @@ document.getElementById('closeSummaryBtn').addEventListener('click', ()=>{
   }
   if(summaryModalMode === 'timer'){
     exitTimerGame();
+    return;
+  }
+  if(summaryModalMode === 'bingo'){
+    exitBingoGameToSetup();
     return;
   }
   goToSetup();
@@ -5317,7 +5348,8 @@ function generateBingoGrid(level){
   state.bingoCurrentLevel = level;
   state.bingoEscalatedTo2 = false;
   state.bingoEscalatedTo3 = false;
-  state.bingoBonusEndGiven = false;
+  state.bingoVictoryMilestones = [];
+  state.bingoFinished = false;
   state.bingoGridLevel = level;
 }
 function updateBingoLevelLabel(){
@@ -5345,20 +5377,56 @@ function renderBingoGrid(){
     const cell = document.createElement('div');
     cell.className = 'bingo-cell' + (state.bingoChecked[i] ? ' checked' : '');
     cell.textContent = text;
-    cell.addEventListener('click', ()=>toggleBingoCell(i));
+    attachBingoCellPress(cell, i);
     wrap.appendChild(cell);
     fitBingoCellText(cell);
   });
   updateBingoLevelLabel();
 }
-function toggleBingoCell(i){
-  state.bingoChecked[i] = !state.bingoChecked[i];
+// Обычное нажатие только отмечает клетку выполненной — снять отметку
+// случайным повторным тапом больше нельзя. Снять отметку можно только
+// долгим зажатием клетки (используется Pointer Events, единый механизм
+// для мыши и тач-экрана).
+const BINGO_LONG_PRESS_MS = 550;
+function attachBingoCellPress(cell, i){
+  let pressTimer = null;
+  let longPressDone = false;
+  const clearPressTimer = ()=>{
+    if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+  };
+  const startPress = ()=>{
+    longPressDone = false;
+    clearPressTimer();
+    if(!state.bingoChecked[i]) return; // долгое нажатие имеет смысл только на уже отмеченной клетке
+    pressTimer = setTimeout(()=>{
+      longPressDone = true;
+      uncheckBingoCell(i);
+    }, BINGO_LONG_PRESS_MS);
+  };
+  const endPress = ()=>{ clearPressTimer(); };
+  cell.addEventListener('pointerdown', startPress);
+  cell.addEventListener('pointerup', endPress);
+  cell.addEventListener('pointerleave', endPress);
+  cell.addEventListener('pointercancel', endPress);
+  cell.addEventListener('click', ()=>{
+    if(longPressDone){ longPressDone = false; return; } // клик, который браузер шлёт следом за долгим нажатием — игнорируем
+    if(!state.bingoChecked[i]) checkBingoCell(i);
+  });
+}
+function checkBingoCell(i){
+  if(state.bingoFinished || state.bingoChecked[i]) return;
+  state.bingoChecked[i] = true;
   saveState();
   renderBingoGrid();
-  if(state.bingoChecked[i]){
-    playNeutralSound();
-    checkBingoLines();
-  }
+  playNeutralSound();
+  checkBingoLines();
+}
+function uncheckBingoCell(i){
+  if(state.bingoFinished || !state.bingoChecked[i]) return;
+  state.bingoChecked[i] = false;
+  saveState();
+  renderBingoGrid();
+  if(!state.muted && navigator.vibrate) navigator.vibrate(30);
 }
 function checkBingoLines(){
   BINGO_LINES.forEach((line, li)=>{
@@ -5366,17 +5434,26 @@ function checkBingoLines(){
     const complete = line.every(idx=>state.bingoChecked[idx]);
     if(complete){
       state.bingoWonLines.push(li);
+      const total = state.bingoWonLines.length;
+      if(!state.bingoVictoryMilestones) state.bingoVictoryMilestones = [];
+      if((total === 1 || total === 3 || total === 5) && !state.bingoVictoryMilestones.includes(total)){
+        state.bingoVictoryMilestones.push(total);
+        playBingoVictorySound();
+      }
     }
   });
   saveState();
   advanceBingoStage();
+  checkBingoGameFinished();
 }
 // Игра всегда начинается с уровня 1 (Нежное) и постепенно горячеет по ходу
 // партии: после 1-й собранной линии по горизонтали/вертикали (диагонали не
 // считаются) — переход на уровень 2 (Горячее), после 3-й такой линии —
-// на уровень 3 (Дерзкое). Бонусное задание теперь выдаётся не за каждую
-// линию, а только в 3 момента: перед каждым из этих двух переходов и в
-// самом конце игры, когда отмечены все 25 клеток.
+// на уровень 3 (Дерзкое). Бонусное задание выдаётся за оба этих перехода
+// уровня. Итог самой партии (см. checkBingoGameFinished) наступает раньше,
+// чем можно было бы отметить все 25 клеток, поэтому отдельного бонуса "за
+// полную карту" здесь больше нет — этот момент теперь закрывает итоговое
+// окно результатов.
 function advanceBingoStage(){
   const rowColWon = state.bingoWonLines.filter(li=>li<=9).length;
   if(!state.bingoEscalatedTo2 && rowColWon >= 1){
@@ -5393,11 +5470,38 @@ function advanceBingoStage(){
     saveState();
     return;
   }
-  if(!state.bingoBonusEndGiven && state.bingoChecked.length === 25 && state.bingoChecked.every(Boolean)){
-    showBingoBonus();
-    state.bingoBonusEndGiven = true;
+}
+// Партия завершается сама, как только собрано 5 любых линий (ряд, столбец
+// или диагональ — все считаются) или отмечены все 25 клеток. Заполнить все
+// 25 клеток, не собрав по дороге 5 линий, математически невозможно (это
+// сразу все 12 линий), поэтому проверка "5 линий" в реальной игре и
+// срабатывает первой — второе условие оставлено как подстраховка.
+function checkBingoGameFinished(){
+  if(state.bingoFinished) return;
+  const total = state.bingoWonLines.length;
+  const allChecked = state.bingoChecked.length === 25 && state.bingoChecked.every(Boolean);
+  if(total >= 5 || allChecked){
+    state.bingoFinished = true;
+    state.inProgress = false;
     saveState();
+    showBingoSummary();
   }
+}
+function showBingoSummary(){
+  document.getElementById('bingoBonusModal').classList.remove('show');
+  summaryModalMode = 'bingo';
+  const total = state.bingoWonLines.length;
+  const allChecked = state.bingoChecked.length === 25 && state.bingoChecked.every(Boolean);
+  const lvl = (typeof BINGO_LEVELS !== 'undefined') ? BINGO_LEVELS.find(l=>l.id === (state.bingoCurrentLevel||1)) : null;
+  document.getElementById('summaryWinner').textContent = '🏆 Карта пройдена!';
+  document.getElementById('summaryScore').textContent = `Собрано линий: ${total} из 12`;
+  document.getElementById('summaryCounts').textContent = (allChecked ? 'Отмечены все 25 клеток' : 'Собрано 5 линий') + (lvl ? ` · Уровень: ${lvl.icon} ${lvl.name}` : '');
+  document.getElementById('summaryModal').classList.add('show');
+}
+function exitBingoGameToSetup(){
+  document.getElementById('bingoGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  finishBingoGame();
 }
 // Все ещё не отмеченные клетки заменяются заданиями нового уровня. Уже
 // отмеченные клетки не трогаем — они остаются как есть, подтверждая, что
