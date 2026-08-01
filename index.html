@@ -46,6 +46,21 @@
       }, 100);
     }
     window.addEventListener('orientationchange', settleRealVH);
+
+    // "Любой ценой" подстраховка от белой полосы: даже если по какой-то
+    // причине CSS-фон html/body не применится вовремя (порядок загрузки,
+    // особенности конкретного браузера), выставляем тот же тёмный фон
+    // напрямую инлайновым стилем через JS — это гарантированно перекрывает
+    // любые CSS-каскадные накладки.
+    function forceBg(){
+      var bg = 'linear-gradient(160deg,#2b0f2e,#4a1240 55%, #1a0a20)';
+      try{
+        document.documentElement.style.background = bg;
+        if(document.body) document.body.style.background = bg;
+      }catch(e){}
+    }
+    forceBg();
+    document.addEventListener('DOMContentLoaded', forceBg);
   })();
 </script>
 <title>Игра для двоих</title>
@@ -82,7 +97,8 @@
     height:calc(var(--real-vh, 1vh) * 100);
     width:100%;
     overflow:hidden;
-    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    background-color:var(--bg1);
+    background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
     overscroll-behavior:none;
   }
   /* body закреплён через position:fixed + inset:0 — это само по себе всегда
@@ -102,22 +118,23 @@
     width:100%;
     margin:0;
     font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    background-color:var(--bg1);
+    background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
     color:#fff;
     overflow:hidden;
     overscroll-behavior:none;
     -webkit-overflow-scrolling:auto;
   }
   /* Подстраховка от белой полосы под home indicator / после поворота экрана:
-     фон растянут заметно за пределы экрана (не в притык, а с большим запасом),
-     чтобы перекрыть любые временные зазоры от dvh/safe-area/поворота —
-     пересчёт --real-vh в JS может на короткое время отставать от реальной
-     высоты, и небольшого запаса в 4px на это не хватало. */
+     фон растянут заметно за пределы экрана (не в притык, а с большим запасом
+     в vh/vw — не фиксированных px, чтобы запас масштабировался под размер
+     экрана конкретного устройства), чтобы перекрыть любые временные зазоры
+     от dvh/safe-area/поворота. */
   body::before{
     content:'';
     position:fixed;
-    top:-60px; left:-60px; right:-60px; bottom:-60px;
-    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    top:-25vh; left:-25vw; right:-25vw; bottom:-25vh;
+    background:var(--bg1) linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
     z-index:-1;
   }
   #app{
