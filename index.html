@@ -14,7 +14,18 @@
     }
     setRealVH();
     window.addEventListener('resize', setRealVH);
-    window.addEventListener('orientationchange', setRealVH);
+    // На iOS после поворота экрана реальная высота видимой области меняется
+    // не сразу — если пересчитать её в тот же момент, что и orientationchange,
+    // можно получить значение "на лету" ещё для старой ориентации, и тогда
+    // белая полоса снизу вернётся и не исчезнет, пока не повернуть телефон ещё
+    // раз. Поэтому пересчитываем несколько раз подряд с задержкой, пока layout
+    // не устоится.
+    window.addEventListener('orientationchange', function(){
+      setRealVH();
+      setTimeout(setRealVH, 50);
+      setTimeout(setRealVH, 300);
+      setTimeout(setRealVH, 600);
+    });
     if(window.visualViewport) window.visualViewport.addEventListener('resize', setRealVH);
   })();
 </script>
@@ -100,6 +111,17 @@
       border-right:1px solid rgba(255,255,255,.08);
       box-shadow:0 0 80px rgba(0,0,0,.55);
     }
+  }
+  /* На телефоне, повёрнутом на бок, во время "Видеорулетки"/"Давай попробуем"
+     снимаем это ограничение по ширине — приложение растягивается на весь
+     доступный ландшафтный экран вместо узкой колонки посередине с рамками
+     (класс включается/выключается в updateForcedPortraitLock). */
+  html.video-landscape-fill #app{
+    max-width:none;
+    margin:0;
+    border-left:none;
+    border-right:none;
+    box-shadow:none;
   }
   /* Горизонтальная ориентация телефона в "Видеорулетке" и "Давай попробуем":
      высота экрана резко сокращается, поэтому служебные элементы (имена
@@ -536,6 +558,18 @@
   /* В "Давай попробуем" избранное формируется только совпадением "Да" у
      обоих игроков — ручная кнопка-сердечко тут не нужна. */
   #game.davay-mode #favoriteBtn{display:none;}
+  /* Просмотр избранного "Предложи партнеру": вместо "Следующая"/сердечка/
+     "уже есть" — Предыдущее/Следующее для перелистывания отмеченных карточек. */
+  #photoFavPrevBtn, #photoFavNextBtn{display:none;}
+  #game.placeholder-mode.photo-favview .row2,
+  #game.placeholder-mode.photo-favview #levelProgress{display:none;}
+  #game.placeholder-mode.photo-favview #doneBtn,
+  #game.placeholder-mode.photo-favview #favoriteBtn,
+  #game.placeholder-mode.photo-favview #sexshopOwnedBtn{display:none;}
+  #game.placeholder-mode.photo-favview #photoFavPrevBtn,
+  #game.placeholder-mode.photo-favview #photoFavNextBtn{
+    display:flex; flex:1; min-width:0; font-size:14px; padding:0 8px;
+  }
   #levelDownBtn{display:none;}
   #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
   #videoMuteBtn, #videoLoopBtn, #videoFavoritesBtn, #videoFullscreenBtn,
@@ -858,6 +892,12 @@
   }
   .bingo-actions-row{display:flex; gap:10px; margin-top:6px;}
   .bingo-actions-row .btn{flex:1;}
+  .bingo-actions-row #bingoRandomBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .bingo-actions-bottom{margin-top:8px;}
+  .bingo-actions-bottom .btn{height:40px; padding:0 10px; font-size:14px;}
+  .bingo-cell.bingo-suggested{
+    box-shadow:0 0 0 3px var(--accent) inset;
+  }
 
   /* ---- Таймер ---- */
   .timer-bar-track{height:10px; border-radius:6px; background:rgba(255,255,255,.15); overflow:hidden; margin-top:14px;}
@@ -866,10 +906,13 @@
     background:linear-gradient(135deg,#ff9a5e,#ff6b8b); transition:width 1s linear;
   }
   .timer-label{text-align:center; font-size:28px; font-weight:800; margin-top:8px; color:#fff;}
-  .timer-actions-row{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;}
-  .timer-actions-row .btn{flex:1;}
-  .timer-actions-row #timerSkipBtn,
-  .timer-actions-row #timerExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .timer-actions-row{display:flex; flex-direction:column; gap:10px; margin-top:14px;}
+  .timer-actions-top{display:flex; gap:10px;}
+  .timer-actions-top .btn{flex:1;}
+  .timer-actions-top #timerSkipBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .timer-actions-bottom{display:flex; gap:10px;}
+  .timer-actions-bottom .btn{flex:1; height:40px; padding:0 10px;}
+  .timer-actions-bottom #timerExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
 
   /* ---- Плейлист желаний ---- */
   .wishlist-player-row{display:flex; gap:10px; margin-bottom:10px;}
@@ -949,7 +992,7 @@
     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:14px;">
       <span class="btn-ghost" id="updateAppBtn">Обновить приложение</span>
       <span class="btn-ghost" id="resetHiddenBtn">Сбросить прогресс</span>
-      <span class="btn-ghost" id="installBtn">⬇ Установить</span>
+      <span class="btn-ghost" id="installBtn">📲 Установить</span>
     </div>
   </section>
 
@@ -1050,6 +1093,7 @@
 
     <div class="toggle-row" style="margin-top:10px;">
       <button type="button" class="toggle-pill" id="photoSetupRulesBtn">Правила</button>
+      <button type="button" class="toggle-pill" id="photoSetupFavoritesBtn">❤️ Избранное</button>
       <button type="button" class="toggle-pill" id="photoSetupSoundBtn" aria-label="Выключить звук">🔊 Звук включён</button>
     </div>
   </section>
@@ -1093,6 +1137,8 @@
         <button type="button" class="btn btn-secondary" id="davayFavNextBtn">Следующее ▶</button>
         <button type="button" class="btn btn-secondary btn-square" id="sexshopOwnedBtn" aria-label="Уже есть">🛍️</button>
         <button type="button" class="btn btn-secondary btn-square" id="favoriteBtn" aria-label="В избранное">☆</button>
+        <button type="button" class="btn btn-secondary" id="photoFavPrevBtn">◀ Предыдущее</button>
+        <button type="button" class="btn btn-secondary" id="photoFavNextBtn">Следующее ▶</button>
         <button type="button" class="btn btn-secondary btn-square" id="davayMuteBtn" aria-label="Включить звук видео">🔇</button>
       </div>
       <div class="video-extra-toggle" id="videoExtraToggle">Дополнительно <span class="video-extra-arrow">▾</span></div>
@@ -1168,11 +1214,12 @@
     <div class="bingo-level-label" id="bingoLevelLabel"></div>
     <div class="bingo-grid" id="bingoGrid"></div>
     <div class="bingo-actions-row">
-      <button type="button" class="btn btn-secondary" id="bingoNewCardBtn">🔄 Новая карта</button>
-      <button type="button" class="btn btn-secondary" id="bingoPauseBtn">Пауза</button>
+      <button type="button" class="btn btn-secondary" id="bingoNewCardBtn">🔄 Новая игра</button>
+      <button type="button" class="btn btn-secondary" id="bingoRandomBtn">🎲 Случайно</button>
     </div>
-    <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill" id="bingoGameRulesBtn">Правила</button>
+    <div class="bingo-actions-row bingo-actions-bottom">
+      <button type="button" class="btn btn-secondary" id="bingoPauseBtn">Пауза</button>
+      <button type="button" class="btn btn-secondary" id="bingoGameRulesBtn">Правила</button>
     </div>
   </section>
 
@@ -1249,13 +1296,17 @@
       <div class="timer-bar-fill" id="timerBarFill"></div>
     </div>
     <div class="timer-label" id="timerLabel">00:00</div>
-    <div class="timer-actions-row" style="margin-top:14px;">
-      <button type="button" class="btn btn-primary" id="timerStartTaskBtn">▶ Начать</button>
-      <button type="button" class="btn btn-secondary" id="timerSkipBtn">❄️ Отказ</button>
-      <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;">🔥 Горячее</button>
-      <button type="button" class="btn btn-secondary" id="timerPauseBtn" style="display:none;">⏸ Пауза</button>
-      <button type="button" class="btn btn-primary" id="timerNextBtn" style="display:none;">Следующее задание</button>
-      <button type="button" class="btn btn-secondary" id="timerExitBtn">Выход</button>
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="timerStartTaskBtn">▶ Начать</button>
+        <button type="button" class="btn btn-secondary" id="timerPauseBtn" style="display:none;">⏸ Пауза</button>
+        <button type="button" class="btn btn-primary" id="timerNextBtn" style="display:none;">Следующее задание</button>
+        <button type="button" class="btn btn-secondary" id="timerSkipBtn">❄️ Отказ</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;">🔥 Горячее</button>
+        <button type="button" class="btn btn-secondary" id="timerExitBtn">Выход</button>
+      </div>
     </div>
   </section>
 
@@ -1416,7 +1467,7 @@
       <div class="modal-title">💃 Правила игры «Предложи партнеру»</div>
       <div class="intro-text">Никакого счёта и очереди — просто листайте карточки с позами вдвоём и выбирайте, что хочется попробовать сегодня.</div>
       <ol class="modal-rules">
-        <li>На странице настройки выберите уровень: 🙂 «Простые позы», 😏 «Интересные позы», 🔥 «Сложные позы», 🚗 «В авто» или 🛍️ «Секс-шоп» (топ-200 товаров с рейтингом вместо поз).</li>
+        <li>На странице настройки выберите уровень: 🙂 «Простые позы», 😏 «Интересные позы», 🔥 «Сложные позы», 🚗 «В авто» или 🛍️ «Секс-шоп» (топ-150 товаров с рейтингом вместо поз).</li>
         <li>На карточке позы — фото и краткое описание техники с советами для комфорта.</li>
         <li>На карточке товара из «Секс-шоп» сверху — номер в рейтинге продаж, ниже название и описание, строка «Подходит: ...» и оценки партнёров ♀/♂ по 10-балльной шкале.</li>
         <li>На карточках «Секс-шоп» есть кнопка 🛍️ «Уже есть» — отметьте ✅, если эта игрушка у вас уже есть.</li>
@@ -1463,7 +1514,8 @@
         <li>Собрали 1-ю линию — все ещё не отмеченные клетки становятся заданиями уровня 🔥 «Горячее», и даётся бонус 1-го уровня (нежный).</li>
         <li>Собрали 3-ю линию — оставшиеся клетки становятся уровня 🌶️ «Дерзкое», и даётся бонус 2-го уровня (горячее).</li>
         <li>Игра завершается сама, как только собрано 5 любых линий или отмечены все 25 клеток — на экране появится окно с итогом партии и финальным призом (бонус 3-го, самого смелого уровня).</li>
-        <li>«🔄 Новая карта» начнёт всё заново с уровня «Нежное».</li>
+        <li>«🔄 Новая игра» начнёт всё заново с уровня «Нежное».</li>
+        <li>«🎲 Случайно» подсветит контуром случайную ещё не отмеченную клетку — подсказка, что сделать дальше. Подсветка снимается следующим касанием экрана.</li>
         <li>«Пауза» сохранит прогресс карты и вернёт в главное меню — игру можно будет продолжить позже.</li>
       </ol>
       <button class="btn btn-primary" id="closeBingoRulesBtn">Понятно</button>
@@ -1733,7 +1785,7 @@ let state = {
   levelCap:1, usedIndexes:[], hiddenIndexes:[],
   muted:false, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
-  photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1,
+  photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false, videoSoundOn:false,
   videoDbMigrated:false,
   davayUsed:{}, davayHidden:[], davayLiked:[], davayFavoritesOnly:false, davayAutoAdvance:false,
@@ -2956,11 +3008,10 @@ function isActiveVideoOrDavayMode(){
 // бок мы визуально разворачиваем #app обратно на 90° через CSS-класс
 // force-portrait (сама трансформация описана в стилях рядом с медиа-запросом
 // orientation:landscape). Сторону разворота определяем по реальному углу
-// экрана (screen.orientation.angle) — 90° соответствует повороту телефона
-// против часовой стрелки, 270°/−90° — по часовой; направление подобрано по
-// стандартному определению этого угла и не проверялось на реальном
-// устройстве, поэтому если разворот окажется зеркальным — правится заменой
-// строки "const useCw = ..." на противоположное значение (!useCw).
+// экрана (screen.orientation.angle). Изначальная схема (90°→по часовой,
+// 270°/−90°→против часовой) оказалась зеркальной на реальном устройстве
+// (картинка выводилась вверх ногами), поэтому направление развёрнуто на
+// противоположное.
 function updateForcedPortraitLock(){
   const html = document.documentElement;
   let isLandscape = false;
@@ -2973,7 +3024,16 @@ function updateForcedPortraitLock(){
   // где вообще бывает физический поворот экрана.
   let isTouchDevice = false;
   try{ isTouchDevice = window.matchMedia('(pointer: coarse)').matches; }catch(e){}
-  const shouldLock = isLandscape && isTouchDevice && !isActiveVideoOrDavayMode();
+  const isActiveMedia = isActiveVideoOrDavayMode();
+  const shouldLock = isLandscape && isTouchDevice && !isActiveMedia;
+  // В "Видеорулетке"/"Давай попробуем" поворот на бок не блокируется — экран
+  // остаётся горизонтальным, чтобы видео заняло максимум места. Но обычная
+  // медиа-настройка #app (колонка максимум 480px по центру, для комфортного
+  // вида на компьютере) в этом случае тоже срабатывает от одной лишь ширины
+  // окна и сжимает приложение в узкую рамку прямо посреди широкого
+  // горизонтального экрана телефона. Отдельным классом снимаем это
+  // ограничение именно на время активного видео-режима в ландшафте.
+  html.classList.toggle('video-landscape-fill', isLandscape && isTouchDevice && isActiveMedia);
   if(!shouldLock){
     html.classList.remove('force-portrait', 'force-portrait-cw', 'force-portrait-ccw');
     return;
@@ -2986,7 +3046,7 @@ function updateForcedPortraitLock(){
       angle = window.orientation === -90 ? 270 : 90;
     }
   }catch(e){}
-  const useCw = !(angle === 270 || angle === -90);
+  const useCw = (angle === 270 || angle === -90);
   html.classList.add('force-portrait');
   html.classList.toggle('force-portrait-cw', useCw);
   html.classList.toggle('force-portrait-ccw', !useCw);
@@ -3152,6 +3212,16 @@ function renderVideoCard(card, level){
       // чтобы высота не уменьшилась — такое видео просто обрежется по бокам.
       video.addEventListener('loadedmetadata', ()=>{
         fitCardVideoToArea(video, el);
+        // iOS: если предыдущее видео смотрели в полном экране — открываем
+        // следующее тоже сразу в полном экране (обычный <video> без этого
+        // каждый раз сбрасывается в обычный режим). Вызывать это нужно именно
+        // после loadedmetadata — сразу после вставки нового <video> в DOM
+        // (readyState ещё 0) webkitEnterFullscreen молча не срабатывает, и
+        // видео при автопереключении/повторе показывалось уже не на весь
+        // экран.
+        if(videoNativeFullscreenActive && video.webkitEnterFullscreen){
+          try{ video.webkitEnterFullscreen(); } catch(err){}
+        }
       });
       video.addEventListener('error', ()=>{
         const fallback = getFallbackVideoCard();
@@ -3168,13 +3238,7 @@ function renderVideoCard(card, level){
       video.addEventListener('ended', ()=>{
         if(state.videoAutoAdvance) drawVideoCard(videoLevel);
       });
-      // iOS: если предыдущее видео смотрели в полном экране — открываем
-      // следующее тоже сразу в полном экране (обычный <video> без этого
-      // каждый раз сбрасывается в обычный режим).
       video.addEventListener('webkitendfullscreen', ()=>{ videoNativeFullscreenActive = false; });
-      if(videoNativeFullscreenActive && video.webkitEnterFullscreen){
-        try{ video.webkitEnterFullscreen(); } catch(err){}
-      }
     }
     updateVideoMuteBtn();
     updateVideoLoopBtn();
@@ -3664,6 +3728,12 @@ function renderDavayCard(card, level){
       attemptPlay();
       video.addEventListener('loadedmetadata', ()=>{
         fitCardVideoToArea(video, el);
+        // См. аналогичный комментарий в renderVideoCard — вызывать нужно
+        // после loadedmetadata, иначе на iOS повторный вход в полноэкранный
+        // режим при автопереключении/повторе молча не срабатывает.
+        if(davayNativeFullscreenActive && video.webkitEnterFullscreen){
+          try{ video.webkitEnterFullscreen(); } catch(err){}
+        }
       });
       video.addEventListener('error', ()=>{
         const media = document.getElementById('davayMedia');
@@ -3673,9 +3743,6 @@ function renderDavayCard(card, level){
         if(state.davayAutoAdvance) drawDavayCard(davayLevel);
       });
       video.addEventListener('webkitendfullscreen', ()=>{ davayNativeFullscreenActive = false; });
-      if(davayNativeFullscreenActive && video.webkitEnterFullscreen){
-        try{ video.webkitEnterFullscreen(); } catch(err){}
-      }
     }
     updateDavayMuteBtn();
     updateDavayFavoritesBtn();
@@ -3799,7 +3866,7 @@ const PHOTO_LEVELS = [
   {id:2, name:'Интересные позы', desc:'Больше разнообразия и вариантов', icon:'😏'},
   {id:3, name:'Сложные позы', desc:'Нужны гибкость и физподготовка', icon:'🔥'},
   {id:4, name:'В авто', desc:'Позы в машине', icon:'🚗'},
-  {id:5, name:'Секс-шоп', desc:'Топ-200 товаров с рейтингом', icon:'🛍️'},
+  {id:5, name:'Секс-шоп', desc:'Топ-150 товаров с рейтингом', icon:'🛍️'},
 ];
 function renderPhotoSetupLevels(){
   const wrap = document.getElementById('photoSetupLevels');
@@ -4039,10 +4106,14 @@ function goToPlaceholderGame(){
   photoLevel = state.photoSelectedLevel || 1;
   state.photoUsed = {};
   state.photoHidden = [];
+  // Новая партия — всегда обычная колода, а не режим "просмотр избранного"
+  // (иначе после однажды открытого избранного игра застревала бы в нём).
+  state.photoFavView = false;
   saveState();
   document.getElementById('photoSetup').classList.remove('active');
   document.getElementById('game').classList.add('active');
   document.getElementById('game').classList.add('placeholder-mode');
+  document.getElementById('game').classList.remove('photo-favview');
   document.getElementById('doneBtn').textContent = 'Следующая';
   document.getElementById('pauseBtn').textContent = 'Выход';
   updateTurnUI();
@@ -4056,10 +4127,70 @@ function goToPlaceholderGame(){
   }
 }
 
+// Просмотр избранных карточек "Предложи партнеру" (отмеченных ❤️ во время
+// игры) прямо со страницы настройки, без прохождения колоды заново.
+let photoFavIndex = -1;
+function getPhotoFavoritesList(){
+  const done = state.photoDone || [];
+  return getPhotoCardsList().filter(c => done.includes(c.image));
+}
+function showPhotoFavoriteAt(index){
+  const list = getPhotoFavoritesList();
+  if(list.length === 0){
+    photoFavIndex = -1;
+    currentPhotoCard = null;
+    renderPlaceholderCard();
+    return;
+  }
+  if(index < 0) index = list.length - 1;
+  if(index >= list.length) index = 0;
+  photoFavIndex = index;
+  const card = list[photoFavIndex];
+  currentPhotoCard = card;
+  renderPhotoCard(card, card.level);
+}
+function photoFavNext(){ showPhotoFavoriteAt(photoFavIndex + 1); }
+function photoFavPrev(){ showPhotoFavoriteAt(photoFavIndex - 1); }
+function goToPhotoFavoritesView(){
+  if(!(state.photoDone && state.photoDone.length)){
+    playErrorSound();
+    showToast('Пока нет избранного — сначала отметьте карточки ❤️');
+    return;
+  }
+  abandonPausedDavaySession();
+  abandonPausedTdSession();
+  abandonPausedBingoSession();
+  state.pausedMode = null;
+  state.inProgress = true;
+  state.photoFavView = true;
+  saveState();
+  document.getElementById('photoSetup').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('game').classList.add('placeholder-mode');
+  document.getElementById('game').classList.add('photo-favview');
+  document.getElementById('pauseBtn').textContent = 'Выход';
+  updateMuteBtn();
+  requestWakeLock();
+  photoFavIndex = -1;
+  showPhotoFavoriteAt(0);
+}
+document.getElementById('photoSetupFavoritesBtn').addEventListener('click', ()=>{
+  goToPhotoFavoritesView();
+});
+document.getElementById('photoFavNextBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  photoFavNext();
+});
+document.getElementById('photoFavPrevBtn').addEventListener('click', ()=>{
+  photoFavPrev();
+});
+
 function exitPlaceholderGame(){
   state.inProgress = false;
+  state.photoFavView = false;
   saveState();
   document.getElementById('game').classList.remove('placeholder-mode');
+  document.getElementById('game').classList.remove('photo-favview');
   document.getElementById('doneBtn').textContent = '💕 Готово';
   document.getElementById('pauseBtn').textContent = 'Пауза';
   returnToSetupUI();
@@ -5845,7 +5976,35 @@ document.getElementById('bingoNewCardBtn').addEventListener('click', ()=>{
   saveState();
   renderBingoGrid();
   playSuccessSound();
-  showToast('Новая карта готова 🎲');
+  showToast('Новая игра начата 🎲');
+});
+// "Случайно" — подсказка: подсвечивает контуром случайную ещё не отмеченную
+// клетку, чтобы было проще выбрать следующее задание. Подсветка снимается
+// самим первым касанием экрана после этого (в т.ч. по этой же клетке).
+function suggestRandomBingoCell(){
+  if(state.bingoFinished){
+    showToast('Партия уже завершена');
+    return;
+  }
+  const candidates = (state.bingoChecked || []).map((v,i)=>v?null:i).filter(i=>i!==null);
+  if(candidates.length === 0){
+    showToast('Все клетки уже отмечены');
+    return;
+  }
+  const idx = candidates[Math.floor(Math.random()*candidates.length)];
+  const wrap = document.getElementById('bingoGrid');
+  if(!wrap) return;
+  wrap.querySelectorAll('.bingo-cell.bingo-suggested').forEach(c=>c.classList.remove('bingo-suggested'));
+  const cellEl = wrap.children[idx];
+  if(cellEl) cellEl.classList.add('bingo-suggested');
+  playNeutralSound();
+  document.addEventListener('pointerdown', function clearBingoSuggestion(){
+    const w = document.getElementById('bingoGrid');
+    if(w) w.querySelectorAll('.bingo-cell.bingo-suggested').forEach(c=>c.classList.remove('bingo-suggested'));
+  }, {capture:true, once:true});
+}
+document.getElementById('bingoRandomBtn').addEventListener('click', ()=>{
+  suggestRandomBingoCell();
 });
 document.getElementById('bingoPauseBtn').addEventListener('click', ()=>{
   playSuccessSound();
@@ -6561,6 +6720,13 @@ document.querySelectorAll('#znayuSetupStarterGroup .starter-btn').forEach(btn=>{
   });
 });
 function goToZnayuSetup(){
+  // Если предыдущая партия не была доиграна и корректно завершена (например,
+  // приложение закрыли посреди вопросов), state.znayuActivePlayer мог
+  // остаться не равным 0 — на всякий случай сбрасываем прогресс уже здесь,
+  // а не только по кнопке "Начать", чтобы новая партия точно стартовала чисто.
+  if(state.znayuActivePlayer !== 0 || state.znayuP1Done || state.znayuP2Done){
+    resetZnayuQuiz();
+  }
   document.getElementById('setup').classList.remove('active');
   document.getElementById('znayuSetup').classList.add('active');
   renderZnayuSetupStarterGroup();
@@ -6634,10 +6800,29 @@ function showZnayuHandoffCard(nextPlayerNum){
 // вариантами ответа. Выбор любой из них сразу фиксирует ответ и переключает
 // на следующий вопрос (см. answerZnayuItem) — отдельных кнопок "Да"/"Нет"
 // в этой игре больше нет.
+function renderZnayuPlaceholderCard(){
+  fadeSwapEl('znayuCard', (el)=>{
+    el.className = 'card card-empty';
+    el.style.borderTop = '';
+    el.innerHTML = `<div class="card-inner"><div class="card-icon">💑</div><div class="card-text">Не удалось загрузить вопросы — попробуйте обновить приложение</div></div>`;
+  });
+}
 function showZnayuCurrentItem(){
-  const idx = state.znayuQueue[state.znayuIndex];
   const items = (typeof ZNAYU_ITEMS !== 'undefined' && Array.isArray(ZNAYU_ITEMS)) ? ZNAYU_ITEMS : [];
-  const item = items[idx];
+  let idx = state.znayuQueue[state.znayuIndex];
+  let item = items[idx];
+  if(!item){
+    // Защита от несовместимых старых данных в localStorage (например, если
+    // очередь была сохранена ещё до переделки игры в квиз) — вместо пустой
+    // карточки пересобираем очередь заново и показываем вопрос с начала.
+    if(items.length === 0){ renderZnayuPlaceholderCard(); return; }
+    state.znayuQueue = items.map((c,i)=>i);
+    state.znayuIndex = 0;
+    saveState();
+    idx = state.znayuQueue[0];
+    item = items[idx];
+    if(!item){ renderZnayuPlaceholderCard(); return; }
+  }
   const gender = state.znayuActivePlayer === 2 ? 'F' : 'M';
   document.getElementById('znayuHandoffRow').style.display = 'none';
   fadeSwapEl('znayuCard', (el)=>{
@@ -6659,11 +6844,15 @@ function startZnayuPlayer(playerNum){
   if(state.znayuActivePlayer !== 0) return;
   if(playerNum === 1 && state.znayuP1Done) return;
   if(playerNum === 2 && state.znayuP2Done) return;
-  if(state.znayuQueue.length === 0){
-    const items = (typeof ZNAYU_ITEMS !== 'undefined' && Array.isArray(ZNAYU_ITEMS)) ? ZNAYU_ITEMS : [];
-    // В отличие от "Твои желания" здесь нет случайной выборки и "скрытых"
-    // пунктов — фиксированный список всех вопросов по порядку (по нарастанию
-    // сложности), как они идут в cards_znayu.js.
+  const items = (typeof ZNAYU_ITEMS !== 'undefined' && Array.isArray(ZNAYU_ITEMS)) ? ZNAYU_ITEMS : [];
+  // В отличие от "Твои желания" здесь нет случайной выборки и "скрытых"
+  // пунктов — фиксированный список всех вопросов по порядку (по нарастанию
+  // сложности), как они идут в cards_znayu.js. Дополнительно проверяем, что
+  // уже сохранённая очередь (если есть) действительно указывает на пункты
+  // текущего каталога — иначе (например, после переделки игры) в очереди
+  // могли остаться несовместимые старые индексы, и пересобираем её заново.
+  const queueValid = state.znayuQueue.length > 0 && state.znayuQueue.every(i => i >= 0 && i < items.length);
+  if(!queueValid){
     state.znayuQueue = items.map((c,i)=>i);
   }
   state.znayuIndex = 0;
