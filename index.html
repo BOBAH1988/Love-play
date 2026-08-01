@@ -887,17 +887,21 @@
   }
   .znayu-answers .znayu-answer-btn:active{ background:rgba(43,15,46,.14); }
   /* "Не хочу отвечать" — не вариант ответа, а отказ от вопроса, поэтому
-     визуально отделена от настоящих вариантов (отступ сверху, приглушённый
-     пунктирный стиль), чтобы её не путали с обычным ответом. */
-  .znayu-answers .znayu-skip-btn{
-    margin-top:4px;
+     вынесена из блока вариантов и прижата к самому низу карточки (сама
+     кнопка — прямой потомок .card-inner, а не .znayu-answers; .card-body
+     перед ней flex:1 и забирает всё оставшееся место, поэтому кнопка
+     всегда остаётся внизу, независимо от длины вопроса). Приглушённый
+     пунктирный стиль — чтобы не путали с обычным вариантом ответа. */
+  .znayu-skip-btn{
+    width:100%;
+    margin-top:14px;
     background:transparent;
     border:1px dashed rgba(43,15,46,.35);
     color:rgba(43,15,46,.6);
     font-size:13px;
     min-height:auto; padding:8px 14px;
   }
-  .znayu-answers .znayu-skip-btn:active{ background:rgba(43,15,46,.08); }
+  .znayu-skip-btn:active{ background:rgba(43,15,46,.08); }
   .modal-pagination{display:flex; align-items:center; justify-content:center; gap:16px; margin:2px 0 18px;}
   .modal-pagination .modal-pagination-btn{flex:0 0 auto; width:44px; height:40px; padding:0; font-size:16px;}
   .modal-pagination-label{font-size:13px; color:#5c3a52; min-width:56px; text-align:center;}
@@ -6999,8 +7003,12 @@ function showZnayuCurrentItem(){
     el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
     const questionHtml = `<div class="znayu-question-text">${item ? item.question : '—'}</div>`;
     const options = (item && Array.isArray(item.options)) ? item.options : [];
-    const answersHtml = `<div class="znayu-answers">${options.map((opt,i)=>`<button type="button" class="btn btn-secondary znayu-answer-btn" data-idx="${i}">${opt}</button>`).join('')}<button type="button" class="btn btn-secondary znayu-answer-btn znayu-skip-btn">Не хочу отвечать</button></div>`;
-    el.innerHTML = `<div class="card-inner"><div class="card-body">${questionHtml}${answersHtml}</div></div>`;
+    const answersHtml = `<div class="znayu-answers">${options.map((opt,i)=>`<button type="button" class="btn btn-secondary znayu-answer-btn" data-idx="${i}">${opt}</button>`).join('')}</div>`;
+    // "Не хочу отвечать" — вне .card-body, прямой потомок .card-inner, чтобы
+    // всегда быть прижатой к низу карточки, а не идти сразу за вариантами
+    // ответа (см. комментарий у .znayu-skip-btn в стилях).
+    const skipBtnHtml = `<button type="button" class="btn btn-secondary znayu-answer-btn znayu-skip-btn">Не хочу отвечать</button>`;
+    el.innerHTML = `<div class="card-inner"><div class="card-body">${questionHtml}${answersHtml}</div>${skipBtnHtml}</div>`;
     el.querySelectorAll('.znayu-answer-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         if(btn.classList.contains('znayu-skip-btn')){
