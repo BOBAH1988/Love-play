@@ -14,64 +14,13 @@
      заполнение той зоны — забота ОС, а не наша. -->
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <script>
-  // Реальная высота экрана в standalone-режиме iOS (Добавить на экран «Домой»):
-  // 100dvh иногда считается некорректно, из-за чего снизу остаётся белая полоса
-  // под home indicator. Меряем настоящую высоту через JS и держим её в CSS-переменной.
+  // Раньше здесь был JS-расчёт "настоящей" высоты/ширины экрана (--real-vh/
+  // --real-vw) для html и для разворота #app при принудительном портрете —
+  // оба места, где это использовалось, убраны (html теперь без явной height,
+  // а разворот #app заменён простой заглушкой #rotateStub без трансформаций,
+  // см. комментарии в стилях и в updateForcedPortraitLock). Расчёт стал не
+  // нужен нигде и был убран целиком, чтобы не оставлять мёртвый код.
   (function(){
-    function getViewportHeight(){
-      return (window.visualViewport ? window.visualViewport.height : window.innerHeight);
-    }
-    // Для принудительного портрета (force-portrait, см. стили и
-    // updateForcedPortraitLock ниже) нужна ещё и реальная ШИРИНА видимой
-    // области — та же природа бага, что и с высотой: сырые CSS-юниты 100vh/
-    // 100vw в мобильных браузерах не всегда точно совпадают с фактической
-    // видимой областью (особенно когда есть safe-area/панели браузера), из-за
-    // чего в развёрнутом на 90° #app снизу/сбоку оставался зазор — белая
-    // полоса, которая появлялась именно при повороте на бок и пропадала при
-    // возврате в портрет.
-    function getViewportWidth(){
-      return (window.visualViewport ? window.visualViewport.width : window.innerWidth);
-    }
-    function setRealVH(){
-      document.documentElement.style.setProperty('--real-vh', (getViewportHeight() * 0.01) + 'px');
-      document.documentElement.style.setProperty('--real-vw', (getViewportWidth() * 0.01) + 'px');
-    }
-    setRealVH();
-    window.addEventListener('resize', setRealVH);
-    if(window.visualViewport) window.visualViewport.addEventListener('resize', setRealVH);
-    // На iOS после поворота экрана реальная высота видимой области "устаканивается"
-    // не сразу и не за одну и ту же по времени паузу — панели браузера и
-    // safe-area досчитываются с разной задержкой от раза к разу. Разовый
-    // пересчёт (или пересчёт через фиксированные паузы) поэтому иногда всё
-    // равно фиксировал старую высоту, и белая полоса снизу возвращалась и не
-    // исчезала до следующего поворота. Вместо гадания с паузами опрашиваем
-    // высоту короткими интервалами и пересчитываем каждый раз, когда она
-    // меняется, пока не перестанет меняться (с ограничением по времени на
-    // всякий случай, чтобы не крутить таймер вечно).
-    let settleTimer = null;
-    function settleRealVH(){
-      if(settleTimer) clearInterval(settleTimer);
-      let lastH = getViewportHeight();
-      let lastW = getViewportWidth();
-      let attempts = 0;
-      setRealVH();
-      settleTimer = setInterval(function(){
-        attempts++;
-        const h = getViewportHeight();
-        const w = getViewportWidth();
-        if(h !== lastH || w !== lastW){
-          lastH = h;
-          lastW = w;
-          setRealVH();
-        }
-        if(attempts >= 20){ // ~2 секунды подстраховки, дальше можно остановиться
-          clearInterval(settleTimer);
-          settleTimer = null;
-        }
-      }, 100);
-    }
-    window.addEventListener('orientationchange', settleRealVH);
-
     // "Любой ценой" подстраховка от белой полосы: даже если по какой-то
     // причине CSS-фон html/body не применится вовремя (порядок загрузки,
     // особенности конкретного браузера), выставляем тот же тёмный фон
@@ -216,39 +165,34 @@
     #game.davay-mode .davay-repeat-label{padding:0 0 2px; font-size:13px;}
   }
   /* Во всех остальных играх (кроме Видеорулетки и "Давай попробуем")
-     ориентация всегда должна оставаться вертикальной, даже если телефон
-     физически повёрнут на бок. Браузер не даёт веб-странице запретить
-     поворот напрямую (особенно на iPhone), поэтому вместо этого мы визуально
-     разворачиваем #app обратно на 90° — какую сторону крутить, решает JS
-     (updateForcedPortraitLock) по реальному углу поворота экрана. Класс
-     force-portrait добавляется/убирается автоматически, см. скрипт ниже.
-     Трансформация на #app заодно "утаскивает" за собой все модалки внутри
-     него — они position:fixed, а трансформированный предок становится для
-     них новой системой координат. */
-  @media screen and (orientation:landscape){
-    html.force-portrait body{overflow:hidden;}
-    html.force-portrait #app{
-      position:fixed; top:0; left:0;
-      /* Сырые CSS-юниты 100vh/100vw в мобильных браузерах не всегда точно
-         совпадают с реальной видимой областью (safe-area, панели браузера) —
-         именно тут и появлялась белая полоса при повороте на бок: развёрнутый
-         блок оказывался чуть меньше настоящего экрана. Берём точные
-         JS-замеры (--real-vh/--real-vw, см. скрипт в head) вместо сырых vh/vw. */
-      width:calc(var(--real-vh, 1vh) * 100);
-      height:calc(var(--real-vw, 1vw) * 100);
-      transform-origin:top left;
-    }
-    html.force-portrait.force-portrait-cw #app{transform:rotate(90deg) translateY(-100%);}
-    html.force-portrait.force-portrait-ccw #app{transform:rotate(-90deg) translateX(-100%);}
+     ориентация всегда должна оставаться вертикальной. Раньше при повороте
+     телефона на бок #app визуально разворачивался обратно на 90° через CSS
+     transform — но это давало то белую полосу (сырые 100vh/100vw в мобильных
+     браузерах неточно совпадают с реальной видимой областью), то заметный
+     глазу "щелчок" в момент поворота, то (после попытки замаскировать щелчок
+     плавным затемнением) настоящий разворот всё равно оставлял артефакты —
+     слишком много факторов, которые браузер считает независимо от нас и с
+     задержкой. Вместо трансформации #app просто показываем поверх всего
+     простую заглушку с просьбой повернуть телефон обратно — без единой
+     трансформации или пересчёта размеров тут нечему разъезжаться. Заглушка
+     показывается/прячется классом show на #rotateStub, см. updateForcedPortraitLock. */
+  #rotateStub{
+    display:none;
+    position:fixed; inset:0;
+    z-index:9999;
+    flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:14px;
+    padding:24px;
+    text-align:center;
+    background-color:var(--bg1);
+    background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    color:#fff;
   }
-  /* Сам момент физического поворота телефона (пока идёт разворот #app обратно
-     в портрет) выглядел заметно и раздражал глаза — контент на долю секунды
-     виден "боком", потом резко "щёлкает" обратно. Вместо резкого щелчка на
-     время поворота коротко прячем #app (см. rotateMaskTimer в скрипте ниже:
-     класс rotate-masking) и мягко проявляем его обратно уже в правильной,
-     готовой ориентации — так сам разворот пользователь не видит вовсе. */
-  #app.rotate-masking{opacity:0 !important; transition:none !important;}
-  #app{transition:opacity .18s ease;}
+  #rotateStub.show{display:flex;}
+  #rotateStub .rotate-stub-icon{font-size:44px;}
+  #rotateStub .rotate-stub-text{font-size:17px; font-weight:700; max-width:280px;}
+  #rotateStub .rotate-stub-sub{font-size:13px; color:#e8c9dd; max-width:260px; line-height:1.5;}
   .screen{
     flex:1;
     display:none;
@@ -1075,6 +1019,11 @@
     }catch(e){}
   })();
 </script>
+<div id="rotateStub">
+  <div class="rotate-stub-icon">📱</div>
+  <div class="rotate-stub-text">Поверните телефон вертикально</div>
+  <div class="rotate-stub-sub">Эта игра работает только в вертикальной ориентации — «Видеорулетка» и «Давай попробуем» можно смотреть и горизонтально.</div>
+</div>
 <div id="app">
 
   <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) ===== -->
@@ -3138,25 +3087,23 @@ function isActiveVideoOrDavayMode(){
     && (gameEl.classList.contains('video-mode') || gameEl.classList.contains('davay-mode')));
 }
 // Принудительная вертикальная ориентация везде, кроме "Видеорулетки" и
-// "Давай попробуем". Браузер (особенно на iPhone) не даёт странице
-// программно запретить поворот экрана, поэтому вместо этого при повороте на
-// бок мы визуально разворачиваем #app обратно на 90° через CSS-класс
-// force-portrait (сама трансформация описана в стилях рядом с медиа-запросом
-// orientation:landscape). Сторону разворота определяем по реальному углу
-// экрана (screen.orientation.angle). Изначальная схема (90°→по часовой,
-// 270°/−90°→против часовой) оказалась зеркальной на реальном устройстве
-// (картинка выводилась вверх ногами), поэтому направление развёрнуто на
-// противоположное.
+// "Давай попробуем". Раньше это делалось визуальным разворотом #app на 90°
+// через CSS transform — от него то и дело оставались белые полосы и
+// заметный глазу "щелчок" при повороте (см. комментарий у #rotateStub в
+// стилях). Вместо трансформации просто показываем заглушку с просьбой
+// повернуть телефон обратно поверх всего — никаких трансформаций и
+// пересчётов размеров, а значит и нечему давать сбой.
 function updateForcedPortraitLock(){
   const html = document.documentElement;
+  const stub = document.getElementById('rotateStub');
   let isLandscape = false;
   try{ isLandscape = window.matchMedia('(orientation: landscape)').matches; }catch(e){}
   // orientation:landscape срабатывает просто от широкого окна, а не только от
   // реального поворота телефона — на десктопе обычное окно браузера почти
-  // всегда "landscape", и без этой проверки вся игра оказывалась развёрнута
-  // на 90° прямо при открытии в браузере на компьютере. Поэтому разворот
-  // включаем только на устройствах с сенсорным (неточным) вводом — там же,
-  // где вообще бывает физический поворот экрана.
+  // всегда "landscape", и без этой проверки заглушка показывалась бы прямо
+  // при открытии в браузере на компьютере. Поэтому включаем её только на
+  // устройствах с сенсорным (неточным) вводом — там же, где вообще бывает
+  // физический поворот экрана.
   let isTouchDevice = false;
   try{ isTouchDevice = window.matchMedia('(pointer: coarse)').matches; }catch(e){}
   const isActiveMedia = isActiveVideoOrDavayMode();
@@ -3169,45 +3116,9 @@ function updateForcedPortraitLock(){
   // горизонтального экрана телефона. Отдельным классом снимаем это
   // ограничение именно на время активного видео-режима в ландшафте.
   html.classList.toggle('video-landscape-fill', isLandscape && isTouchDevice && isActiveMedia);
-  if(!shouldLock){
-    html.classList.remove('force-portrait', 'force-portrait-cw', 'force-portrait-ccw');
-    return;
-  }
-  let angle = 90;
-  try{
-    if(screen.orientation && typeof screen.orientation.angle === 'number'){
-      angle = screen.orientation.angle;
-    } else if(typeof window.orientation === 'number' && window.orientation !== 0 && window.orientation !== 180){
-      angle = window.orientation === -90 ? 270 : 90;
-    }
-  }catch(e){}
-  const useCw = (angle === 270 || angle === -90);
-  html.classList.add('force-portrait');
-  html.classList.toggle('force-portrait-cw', useCw);
-  html.classList.toggle('force-portrait-ccw', !useCw);
+  if(stub) stub.classList.toggle('show', shouldLock);
 }
-// Сам физический поворот телефона на бок и последующий "щелчок" #app обратно
-// в портрет — это два наложенных друг на друга визуальных вращения подряд,
-// и это то, что мешало глазам. Прячем #app (opacity:0, без анимации) сразу по
-// сигналу orientationchange, ждём, пока и сам поворот, и applyForcedPortraitLock
-// (обновление классов force-portrait) точно завершатся, и только потом плавно
-// проявляем #app обратно — пользователь видит только мягкое затемнение и
-// проявление, а не сам процесс разворота.
-let rotateMaskTimer = null;
-function maskAppDuringOrientationChange(){
-  const app = document.getElementById('app');
-  if(!app){ updateForcedPortraitLock(); return; }
-  app.classList.add('rotate-masking');
-  if(rotateMaskTimer) clearTimeout(rotateMaskTimer);
-  rotateMaskTimer = setTimeout(function(){
-    updateForcedPortraitLock();
-    requestAnimationFrame(function(){
-      app.classList.remove('rotate-masking');
-    });
-    rotateMaskTimer = null;
-  }, 260);
-}
-window.addEventListener('orientationchange', maskAppDuringOrientationChange);
+window.addEventListener('orientationchange', updateForcedPortraitLock);
 window.addEventListener('resize', updateForcedPortraitLock);
 if(window.visualViewport) window.visualViewport.addEventListener('resize', updateForcedPortraitLock);
 // #game — общий экран для Фантов/Видеорулетки/"Давай попробуем": входы и
