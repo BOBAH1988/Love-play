@@ -2,7 +2,17 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<!-- viewport-fit=cover раньше растягивал страницу ПОД системными безопасными
+     зонами (статус-бар сверху, home indicator снизу), а мы сами добавляли
+     отступы через env(safe-area-inset-*). Белая полоса внизу держится даже
+     после всех CSS/JS-фиксов и одинаково видна в Safari и Yandex (оба на iOS
+     работают на одном движке WebKit) — похоже на то, что именно эта ручная
+     растяжка под safe area не срабатывает как надо на конкретном устройстве, и
+     WebKit сам заполняет нижнюю safe-зону белым по умолчанию, а не нашим
+     фоном. Пробуем убрать cover и вернуться к обычному поведению (страница не
+     лезет под home indicator, эту зону целиком рисует сама система) — тогда
+     заполнение той зоны — забота ОС, а не наша. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <script>
   // Реальная высота экрана в standalone-режиме iOS (Добавить на экран «Домой»):
   // 100dvh иногда считается некорректно, из-за чего снизу остаётся белая полоса
