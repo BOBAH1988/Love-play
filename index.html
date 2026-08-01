@@ -21,8 +21,20 @@
     function getViewportHeight(){
       return (window.visualViewport ? window.visualViewport.height : window.innerHeight);
     }
+    // Для принудительного портрета (force-portrait, см. стили и
+    // updateForcedPortraitLock ниже) нужна ещё и реальная ШИРИНА видимой
+    // области — та же природа бага, что и с высотой: сырые CSS-юниты 100vh/
+    // 100vw в мобильных браузерах не всегда точно совпадают с фактической
+    // видимой областью (особенно когда есть safe-area/панели браузера), из-за
+    // чего в развёрнутом на 90° #app снизу/сбоку оставался зазор — белая
+    // полоса, которая появлялась именно при повороте на бок и пропадала при
+    // возврате в портрет.
+    function getViewportWidth(){
+      return (window.visualViewport ? window.visualViewport.width : window.innerWidth);
+    }
     function setRealVH(){
       document.documentElement.style.setProperty('--real-vh', (getViewportHeight() * 0.01) + 'px');
+      document.documentElement.style.setProperty('--real-vw', (getViewportWidth() * 0.01) + 'px');
     }
     setRealVH();
     window.addEventListener('resize', setRealVH);
@@ -40,13 +52,16 @@
     function settleRealVH(){
       if(settleTimer) clearInterval(settleTimer);
       let lastH = getViewportHeight();
+      let lastW = getViewportWidth();
       let attempts = 0;
       setRealVH();
       settleTimer = setInterval(function(){
         attempts++;
         const h = getViewportHeight();
-        if(h !== lastH){
+        const w = getViewportWidth();
+        if(h !== lastH || w !== lastW){
           lastH = h;
+          lastW = w;
           setRealVH();
         }
         if(attempts >= 20){ // ~2 секунды подстраховки, дальше можно остановиться
@@ -214,7 +229,13 @@
     html.force-portrait body{overflow:hidden;}
     html.force-portrait #app{
       position:fixed; top:0; left:0;
-      width:100vh; height:100vw;
+      /* Сырые CSS-юниты 100vh/100vw в мобильных браузерах не всегда точно
+         совпадают с реальной видимой областью (safe-area, панели браузера) —
+         именно тут и появлялась белая полоса при повороте на бок: развёрнутый
+         блок оказывался чуть меньше настоящего экрана. Берём точные
+         JS-замеры (--real-vh/--real-vw, см. скрипт в head) вместо сырых vh/vw. */
+      width:calc(var(--real-vh, 1vh) * 100);
+      height:calc(var(--real-vw, 1vw) * 100);
       transform-origin:top left;
     }
     html.force-portrait.force-portrait-cw #app{transform:rotate(90deg) translateY(-100%);}
