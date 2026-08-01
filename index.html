@@ -91,10 +91,16 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
   input, textarea{-webkit-user-select:text; user-select:text; -webkit-touch-callout:default;}
+  /* html НАРОЧНО без явной height (не 100%, не 100dvh, не --real-vh расчёт):
+     фон корневого элемента (html) браузер по умолчанию рисует на весь
+     видимый холст страницы (canvas) независимо от реальной высоты его
+     собственного бокса — это не требует точных пересчётов вообще и не
+     отстаёт от поворота экрана/показа-скрытия панели браузера, в отличие от
+     любых JS-измерений высоты. Раньше здесь пытались точно подогнать height
+     под --real-vh, но JS-расчёт неизбежно на миг отстаёт от реального
+     изменения видимой области — и именно этот один момент отставания
+     оставлял внизу белую полосу. Без явной height отставать нечему. */
   html{
-    height:100%;
-    height:100dvh;
-    height:calc(var(--real-vh, 1vh) * 100);
     width:100%;
     overflow:hidden;
     background-color:var(--bg1);
