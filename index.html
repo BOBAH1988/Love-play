@@ -114,6 +114,26 @@
     #game.video-mode .controls .btn, #game.davay-mode .controls .btn{height:36px; font-size:13px;}
     #game.davay-mode .davay-repeat-label{padding:0 0 2px; font-size:13px;}
   }
+  /* Во всех остальных играх (кроме Видеорулетки и "Давай попробуем")
+     ориентация всегда должна оставаться вертикальной, даже если телефон
+     физически повёрнут на бок. Браузер не даёт веб-странице запретить
+     поворот напрямую (особенно на iPhone), поэтому вместо этого мы визуально
+     разворачиваем #app обратно на 90° — какую сторону крутить, решает JS
+     (updateForcedPortraitLock) по реальному углу поворота экрана. Класс
+     force-portrait добавляется/убирается автоматически, см. скрипт ниже.
+     Трансформация на #app заодно "утаскивает" за собой все модалки внутри
+     него — они position:fixed, а трансформированный предок становится для
+     них новой системой координат. */
+  @media screen and (orientation:landscape){
+    html.force-portrait body{overflow:hidden;}
+    html.force-portrait #app{
+      position:fixed; top:0; left:0;
+      width:100vh; height:100vw;
+      transform-origin:top left;
+    }
+    html.force-portrait.force-portrait-cw #app{transform:rotate(90deg) translateY(-100%);}
+    html.force-portrait.force-portrait-ccw #app{transform:rotate(-90deg) translateX(-100%);}
+  }
   .screen{
     flex:1;
     display:none;
@@ -1376,11 +1396,10 @@
         <li>Игра всегда начинается с уровня 💗 «Нежное» — карта заполнится 25 случайными заданиями этого уровня.</li>
         <li>Выполнили задание из клетки — нажмите на неё, чтобы отметить. Обычное нажатие клетку не снимает.</li>
         <li>Отметили клетку по ошибке — зажмите её и удерживайте, чтобы снять отметку.</li>
-        <li>Собрали 5 отмеченных клеток подряд по горизонтали, вертикали или диагонали — линия засчитана.</li>
-        <li>Собрали 1-ю линию по горизонтали или вертикали (диагонали не считаются) — все ещё не отмеченные клетки становятся заданиями уровня 🔥 «Горячее».</li>
-        <li>Собрали 3-ю такую линию — оставшиеся клетки становятся уровня 🌶️ «Дерзкое».</li>
-        <li>Бонусное задание открывается дважды за игру — перед каждым из этих двух повышений уровня.</li>
-        <li>Игра завершается сама, как только собрано 5 любых линий (горизонталь, вертикаль или диагональ) или отмечены все 25 клеток — на экране появится окно с итогом партии.</li>
+        <li>Собрали 5 отмеченных клеток подряд по горизонтали или вертикали — линия засчитана (диагонали не считаются).</li>
+        <li>Собрали 1-ю линию — все ещё не отмеченные клетки становятся заданиями уровня 🔥 «Горячее», и даётся бонус 1-го уровня (нежный).</li>
+        <li>Собрали 3-ю линию — оставшиеся клетки становятся уровня 🌶️ «Дерзкое», и даётся бонус 2-го уровня (горячее).</li>
+        <li>Игра завершается сама, как только собрано 5 любых линий или отмечены все 25 клеток — на экране появится окно с итогом партии и финальным призом (бонус 3-го, самого смелого уровня).</li>
         <li>«🔄 Новая карта» начнёт всё заново с уровня «Нежное».</li>
         <li>«Пауза» сохранит прогресс карты и вернёт в главное меню — игру можно будет продолжить позже.</li>
       </ol>
@@ -1480,6 +1499,7 @@
         <div class="summary-row" id="summaryWinner"></div>
         <div class="summary-row" id="summaryScore"></div>
         <div class="summary-row" id="summaryCounts"></div>
+        <div class="summary-row" id="summaryBonusText" style="display:none; color:var(--gold); font-weight:700;"></div>
       </div>
       <button class="btn btn-primary" id="closeSummaryBtn">Понятно</button>
     </div>
@@ -2898,6 +2918,54 @@ function isActiveVideoOrDavayMode(){
   return !!(gameEl && gameEl.classList.contains('active')
     && (gameEl.classList.contains('video-mode') || gameEl.classList.contains('davay-mode')));
 }
+// Принудительная вертикальная ориентация везде, кроме "Видеорулетки" и
+// "Давай попробуем". Браузер (особенно на iPhone) не даёт странице
+// программно запретить поворот экрана, поэтому вместо этого при повороте на
+// бок мы визуально разворачиваем #app обратно на 90° через CSS-класс
+// force-portrait (сама трансформация описана в стилях рядом с медиа-запросом
+// orientation:landscape). Сторону разворота определяем по реальному углу
+// экрана (screen.orientation.angle) — 90° соответствует повороту телефона
+// против часовой стрелки, 270°/−90° — по часовой; направление подобрано по
+// стандартному определению этого угла и не проверялось на реальном
+// устройстве, поэтому если разворот окажется зеркальным — правится заменой
+// строки "const useCw = ..." на противоположное значение (!useCw).
+function updateForcedPortraitLock(){
+  const html = document.documentElement;
+  let isLandscape = false;
+  try{ isLandscape = window.matchMedia('(orientation: landscape)').matches; }catch(e){}
+  const shouldLock = isLandscape && !isActiveVideoOrDavayMode();
+  if(!shouldLock){
+    html.classList.remove('force-portrait', 'force-portrait-cw', 'force-portrait-ccw');
+    return;
+  }
+  let angle = 90;
+  try{
+    if(screen.orientation && typeof screen.orientation.angle === 'number'){
+      angle = screen.orientation.angle;
+    } else if(typeof window.orientation === 'number' && window.orientation !== 0 && window.orientation !== 180){
+      angle = window.orientation === -90 ? 270 : 90;
+    }
+  }catch(e){}
+  const useCw = !(angle === 270 || angle === -90);
+  html.classList.add('force-portrait');
+  html.classList.toggle('force-portrait-cw', useCw);
+  html.classList.toggle('force-portrait-ccw', !useCw);
+}
+window.addEventListener('orientationchange', ()=>setTimeout(updateForcedPortraitLock, 50));
+window.addEventListener('resize', updateForcedPortraitLock);
+if(window.visualViewport) window.visualViewport.addEventListener('resize', updateForcedPortraitLock);
+// #game — общий экран для Фантов/Видеорулетки/"Давай попробуем": входы и
+// выходы из видео-режимов всегда меняют его класс, поэтому достаточно
+// следить за атрибутом class именно этого экрана, чтобы блокировка
+// включалась/выключалась сразу при переходе между играми, а не только по
+// факту физического поворота.
+(function watchGameModeForPortraitLock(){
+  const gameEl = document.getElementById('game');
+  if(gameEl && window.MutationObserver){
+    new MutationObserver(updateForcedPortraitLock).observe(gameEl, {attributes:true, attributeFilter:['class']});
+  }
+  updateForcedPortraitLock();
+})();
 // При повороте телефона пересчитываем размер уже открытого видео в
 // "Видеорулетке"/"Давай попробуем" под новую ориентацию экрана.
 function refitCurrentCardVideo(){
@@ -4246,6 +4314,7 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
 let summaryModalMode = 'fanty';
 function showSummary(){
   summaryModalMode = 'fanty';
+  document.getElementById('summaryBonusText').style.display = 'none';
   const winnerEl = document.getElementById('summaryWinner');
   if(state.score1 === state.score2){
     winnerEl.textContent = '🤝 Ничья!';
@@ -5241,6 +5310,7 @@ function finishTdGame(){
 }
 function showTdSummary(){
   summaryModalMode = 'td';
+  document.getElementById('summaryBonusText').style.display = 'none';
   const winnerEl = document.getElementById('summaryWinner');
   const name1 = state.name1 || 'Игрок 1';
   const name2 = state.name2 || 'Игрок 2';
@@ -5320,10 +5390,11 @@ document.getElementById('tdSetupSoundBtn').addEventListener('click', ()=>{
 });
 
 /* ---------- 2. СЕКС-БИНГО ---------- */
+// Только ряды и столбцы — диагонали в зачёт линий не идут (как было
+// изначально).
 const BINGO_LINES = [
   [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
-  [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],
-  [0,6,12,18,24],[4,8,12,16,20]
+  [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24]
 ];
 function getBingoItemsList(level){
   if(typeof BINGO_ITEMS === 'undefined' || !Array.isArray(BINGO_ITEMS)) return [];
@@ -5447,15 +5518,15 @@ function checkBingoLines(){
   checkBingoGameFinished();
 }
 // Игра всегда начинается с уровня 1 (Нежное) и постепенно горячеет по ходу
-// партии: после 1-й собранной линии по горизонтали/вертикали (диагонали не
-// считаются) — переход на уровень 2 (Горячее), после 3-й такой линии —
-// на уровень 3 (Дерзкое). Бонусное задание выдаётся за оба этих перехода
-// уровня. Итог самой партии (см. checkBingoGameFinished) наступает раньше,
-// чем можно было бы отметить все 25 клеток, поэтому отдельного бонуса "за
-// полную карту" здесь больше нет — этот момент теперь закрывает итоговое
-// окно результатов.
+// партии: после 1-й собранной линии (ряд или столбец; диагонали не в счёт)
+// — переход на уровень 2 (Горячее), после 3-й такой линии — на уровень 3
+// (Дерзкое). Бонусное задание выдаётся за оба этих перехода уровня. Итог
+// самой партии (см. checkBingoGameFinished) наступает раньше, чем можно
+// было бы отметить все 25 клеток, поэтому отдельного бонуса "за полную
+// карту" здесь больше нет — этот момент теперь закрывает итоговое окно
+// результатов финальным призом (см. showBingoSummary).
 function advanceBingoStage(){
-  const rowColWon = state.bingoWonLines.filter(li=>li<=9).length;
+  const rowColWon = state.bingoWonLines.length; // диагоналей в BINGO_LINES больше нет — все линии считаются
   if(!state.bingoEscalatedTo2 && rowColWon >= 1){
     showBingoBonus();
     escalateBingoTo(2);
@@ -5471,10 +5542,10 @@ function advanceBingoStage(){
     return;
   }
 }
-// Партия завершается сама, как только собрано 5 любых линий (ряд, столбец
-// или диагональ — все считаются) или отмечены все 25 клеток. Заполнить все
-// 25 клеток, не собрав по дороге 5 линий, математически невозможно (это
-// сразу все 12 линий), поэтому проверка "5 линий" в реальной игре и
+// Партия завершается сама, как только собрано 5 любых линий (ряд или
+// столбец — диагонали не считаются) или отмечены все 25 клеток. Заполнить
+// все 25 клеток, не собрав по дороге 5 линий, математически невозможно (это
+// сразу все 10 линий), поэтому проверка "5 линий" в реальной игре и
 // срабатывает первой — второе условие оставлено как подстраховка.
 function checkBingoGameFinished(){
   if(state.bingoFinished) return;
@@ -5494,8 +5565,21 @@ function showBingoSummary(){
   const allChecked = state.bingoChecked.length === 25 && state.bingoChecked.every(Boolean);
   const lvl = (typeof BINGO_LEVELS !== 'undefined') ? BINGO_LEVELS.find(l=>l.id === (state.bingoCurrentLevel||1)) : null;
   document.getElementById('summaryWinner').textContent = '🏆 Карта пройдена!';
-  document.getElementById('summaryScore').textContent = `Собрано линий: ${total} из 12`;
+  document.getElementById('summaryScore').textContent = `Собрано линий: ${total} из 10`;
   document.getElementById('summaryCounts').textContent = (allChecked ? 'Отмечены все 25 клеток' : 'Собрано 5 линий') + (lvl ? ` · Уровень: ${lvl.icon} ${lvl.name}` : '');
+  // Финальный приз — самый смелый уровень бонусов, выдаётся один раз, только
+  // за победу (пул уровня 3 к этому моменту уже актуален — карта всегда
+  // успевает подняться до уровня 3 раньше, чем партия завершится).
+  const bonusEl = document.getElementById('summaryBonusText');
+  const finalBonus = pickBingoBonus(3);
+  if(finalBonus){
+    bonusEl.textContent = '🎁 Финальный приз: ' + finalBonus.text;
+    bonusEl.style.display = 'block';
+  } else {
+    bonusEl.textContent = '';
+    bonusEl.style.display = 'none';
+  }
+  saveState();
   document.getElementById('summaryModal').classList.add('show');
 }
 function exitBingoGameToSetup(){
@@ -5525,8 +5609,10 @@ function escalateBingoTo(nextLevel){
   const lvl = (typeof BINGO_LEVELS !== 'undefined' ? BINGO_LEVELS.find(l=>l.id===nextLevel) : null);
   showToast(`Уровень повышен: ${lvl ? lvl.icon + ' ' + lvl.name : nextLevel} 🔥`);
 }
-function showBingoBonus(){
-  const list = getBingoBonusList(state.bingoCurrentLevel || 1);
+// Общий выбор бонусного задания нужного уровня без повторов в рамках одной
+// партии (используется и для бонуса за линию, и для финального приза).
+function pickBingoBonus(level){
+  const list = getBingoBonusList(level);
   if(!state.bingoUsedBonus) state.bingoUsedBonus = [];
   let available = list.filter(b=>!state.bingoUsedBonus.includes(b.text));
   if(available.length === 0){
@@ -5536,10 +5622,12 @@ function showBingoBonus(){
     available = list;
   }
   const bonus = available.length ? available[Math.floor(Math.random()*available.length)] : null;
-  if(bonus){
-    state.bingoUsedBonus.push(bonus.text);
-    saveState();
-  }
+  if(bonus) state.bingoUsedBonus.push(bonus.text);
+  return bonus;
+}
+function showBingoBonus(){
+  const bonus = pickBingoBonus(state.bingoCurrentLevel || 1);
+  saveState();
   playLevelUpSound();
   document.getElementById('bingoBonusText').textContent = bonus ? bonus.text : 'Поздравляем с собранной линией!';
   document.getElementById('bingoBonusModal').classList.add('show');
@@ -5920,6 +6008,7 @@ function exitTimerGame(){
 }
 function showTimerSummary(){
   summaryModalMode = 'timer';
+  document.getElementById('summaryBonusText').style.display = 'none';
   const winnerEl = document.getElementById('summaryWinner');
   const name1 = state.name1 || 'Игрок 1';
   const name2 = state.name2 || 'Игрок 2';
