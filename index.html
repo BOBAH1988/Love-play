@@ -886,6 +886,18 @@
     background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
   }
   .znayu-answers .znayu-answer-btn:active{ background:rgba(43,15,46,.14); }
+  /* "Не хочу отвечать" — не вариант ответа, а отказ от вопроса, поэтому
+     визуально отделена от настоящих вариантов (отступ сверху, приглушённый
+     пунктирный стиль), чтобы её не путали с обычным ответом. */
+  .znayu-answers .znayu-skip-btn{
+    margin-top:4px;
+    background:transparent;
+    border:1px dashed rgba(43,15,46,.35);
+    color:rgba(43,15,46,.6);
+    font-size:13px;
+    min-height:auto; padding:8px 14px;
+  }
+  .znayu-answers .znayu-skip-btn:active{ background:rgba(43,15,46,.08); }
   .modal-pagination{display:flex; align-items:center; justify-content:center; gap:16px; margin:2px 0 18px;}
   .modal-pagination .modal-pagination-btn{flex:0 0 auto; width:44px; height:40px; padding:0; font-size:16px;}
   .modal-pagination-label{font-size:13px; color:#5c3a52; min-width:56px; text-align:center;}
@@ -1699,6 +1711,7 @@
         <li>Выберите, кто отвечает первым, и нажмите «Начать».</li>
         <li>За партию задаётся 10 вопросов — случайная подборка из банка в 200 вопросов об интимных предпочтениях, каждый раз разная. Оба партнёра по очереди наедине с экраном отвечают на одни и те же 10 вопросов — партнёр не видит ваши ответы.</li>
         <li>На каждый вопрос — 3 варианта ответа. Выберите один, и сразу откроется следующий вопрос.</li>
+        <li>Не хотите отвечать на какой-то вопрос — нажмите «Не хочу отвечать»: он не засчитается и больше не появится ни в одной из будущих партий, пока не нажмёте «Сбросить прогресс» в настройках.</li>
         <li>Вопросы идут по нарастающей — от лёгких к более откровенным.</li>
         <li>Ответили на все 10 — появится карточка «Передайте телефон», второй игрок нажимает «Начать» и отвечает на те же вопросы.</li>
         <li>После ответов обоих покажутся вопросы, где ваши варианты совпали — узнаете, в чём вы действительно сходитесь.</li>
@@ -1896,7 +1909,7 @@ let state = {
   // Я знаю все (квиз "насколько хорошо вы знаете предпочтения друг друга")
   znayuStarter:'random', znayuQueue:[], znayuIndex:0, znayuAnswers:{},
   znayuActivePlayer:0, znayuP1Done:false, znayuP2Done:false, znayuPendingNext:0,
-  znayuMatchHistory:[]
+  znayuMatchHistory:[], znayuHidden:[]
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -2303,6 +2316,8 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.tdHidden = [];
   // Таймер страсти
   state.timerUsed = {};
+  // Я знаю все — вопросы, скрытые кнопкой "Не хочу отвечать"
+  state.znayuHidden = [];
   saveState();
   renderModeGroup();
   renderLevelToggles();
@@ -3242,10 +3257,95 @@ function videoSwipeNext(){
   }
 }
 
+// Общая настройка <video> для "Видеорулетки" — вынесена отдельно от
+// renderVideoCard, чтобы можно было применить её и к УЖЕ существующему
+// элементу (reuse=true), а не только к только что вставленному через
+// innerHTML (reuse=false). См. причину в renderVideoCard ниже.
+function setupVideoPlayerElement(video, card, level, reuse){
+  video.muted = !videoSoundOn;
+  video.loop = !state.videoAutoAdvance;
+  if(reuse){
+    // Меняем src у уже существующего элемента вместо пересоздания — именно
+    // это позволяет iOS не закрывать нативный полноэкранный плеер.
+    video.src = card.video;
+    video.load();
+  }
+  // Атрибут autoplay сам по себе не всегда срабатывает для видео,
+  // вставленного динамически (особенно при быстрых свайпах подряд) —
+  // из-за этого видео иногда "зависало" на первом кадре и не играло, а
+  // проблема тянулась и на все следующие карточки. Запускаем воспроизведение
+  // явно и, если браузер отклонил первую попытку, пробуем ещё раз.
+  const attemptPlay = ()=>{
+    const p = video.play();
+    if(p && typeof p.catch === 'function'){
+      p.catch(()=>{ setTimeout(()=>{ video.play().catch(()=>{}); }, 150); });
+    }
+  };
+  attemptPlay();
+  const cardEl = document.getElementById('card');
+  // {once:true} — при reuse=true эти слушатели навешиваются заново на каждую
+  // смену видео на одном и том же элементе; без once они бы копились один
+  // поверх другого при каждом переключении.
+  video.addEventListener('loadedmetadata', ()=>{
+    // Высота карточки всегда занимает всё доступное место. Ширину сужаем
+    // под видео, только если оно "уже" доступной области (портретное) —
+    // тогда по бокам не остаётся пустого места. Если видео горизонтальное
+    // и шире экрана, ширину карточки не трогаем (остаётся на весь экран),
+    // чтобы высота не уменьшилась — такое видео просто обрежется по бокам.
+    fitCardVideoToArea(video, cardEl);
+    // iOS: если предыдущее видео смотрели в полном экране — открываем
+    // следующее тоже сразу в полном экране (обычный <video> без этого
+    // каждый раз сбрасывается в обычный режим). Вызывать это нужно именно
+    // после loadedmetadata — сразу после вставки нового <video> в DOM
+    // (readyState ещё 0) webkitEnterFullscreen молча не срабатывает, и
+    // видео при автопереключении/повторе показывалось уже не на весь экран.
+    if(videoNativeFullscreenActive && video.webkitEnterFullscreen && !video.webkitDisplayingFullscreen){
+      try{ video.webkitEnterFullscreen(); } catch(err){}
+    }
+  }, {once:true});
+  video.addEventListener('error', ()=>{
+    const fallback = getFallbackVideoCard();
+    // Если сломался не сам образец — показываем вместо него образец из
+    // cards_video.js. Если сломался и он тоже — тогда уже просто иконка,
+    // чтобы не зациклиться.
+    if(fallback && card.video !== fallback.video){
+      renderVideoCard(fallback, level);
+      return;
+    }
+    const media = document.getElementById('videoMedia');
+    if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+  }, {once:true});
+  video.addEventListener('ended', ()=>{
+    if(state.videoAutoAdvance) drawVideoCard(videoLevel);
+  }, {once:true});
+  if(!reuse){
+    video.addEventListener('webkitendfullscreen', ()=>{ videoNativeFullscreenActive = false; });
+  }
+}
 function renderVideoCard(card, level){
   clearInterval(timerInterval);
   timerInterval = null;
   currentCard = null;
+  // Пока видео открыто в НАТИВНОМ полноэкранном режиме iOS
+  // (webkitEnterFullscreen), обычная пересборка карточки (fadeSwapCard)
+  // полностью уничтожает и создаёт заново <video> через innerHTML — а
+  // системный полноэкранный плеер iOS привязан именно к этому DOM-узлу.
+  // Когда узел исчезает, iOS принудительно и ЗАМЕТНО закрывает полный
+  // экран, и следующее видео открывалось уже не сразу в полном экране, а с
+  // видимым "миганием" обратно на карточку с кнопками управления. Пока мы
+  // в полном экране, вместо пересборки карточки просто меняем src у уже
+  // существующего <video> — iOS продолжает показывать тот же системный
+  // плеер без выхода из полного экрана, и видео идут одно за другим уже в
+  // развёрнутом виде.
+  const existingVideo = document.getElementById('videoPlayer');
+  if(videoNativeFullscreenActive && existingVideo){
+    setupVideoPlayerElement(existingVideo, card, level, true);
+    updateVideoMuteBtn();
+    updateVideoLoopBtn();
+    updateVideoFavoritesBtn();
+    updateFavoriteBtn();
+    return;
+  }
   fadeSwapCard((el)=>{
     el.className = 'card card-empty';
     el.style.borderTop = '';
@@ -3257,56 +3357,7 @@ function renderVideoCard(card, level){
       </div>
     `;
     const video = document.getElementById('videoPlayer');
-    if(video){
-      video.muted = !videoSoundOn;
-      video.loop = !state.videoAutoAdvance;
-      // Атрибут autoplay сам по себе не всегда срабатывает для видео,
-      // вставленного динамически (особенно при быстрых свайпах подряд) —
-      // из-за этого видео иногда "зависало" на первом кадре и не играло, а
-      // проблема тянулась и на все следующие карточки. Запускаем воспроизведение
-      // явно и, если браузер отклонил первую попытку, пробуем ещё раз.
-      const attemptPlay = ()=>{
-        const p = video.play();
-        if(p && typeof p.catch === 'function'){
-          p.catch(()=>{ setTimeout(()=>{ video.play().catch(()=>{}); }, 150); });
-        }
-      };
-      attemptPlay();
-      // Высота карточки всегда занимает всё доступное место. Ширину сужаем
-      // под видео, только если оно "уже" доступной области (портретное) —
-      // тогда по бокам не остаётся пустого места. Если видео горизонтальное
-      // и шире экрана, ширину карточки не трогаем (остаётся на весь экран),
-      // чтобы высота не уменьшилась — такое видео просто обрежется по бокам.
-      video.addEventListener('loadedmetadata', ()=>{
-        fitCardVideoToArea(video, el);
-        // iOS: если предыдущее видео смотрели в полном экране — открываем
-        // следующее тоже сразу в полном экране (обычный <video> без этого
-        // каждый раз сбрасывается в обычный режим). Вызывать это нужно именно
-        // после loadedmetadata — сразу после вставки нового <video> в DOM
-        // (readyState ещё 0) webkitEnterFullscreen молча не срабатывает, и
-        // видео при автопереключении/повторе показывалось уже не на весь
-        // экран.
-        if(videoNativeFullscreenActive && video.webkitEnterFullscreen){
-          try{ video.webkitEnterFullscreen(); } catch(err){}
-        }
-      });
-      video.addEventListener('error', ()=>{
-        const fallback = getFallbackVideoCard();
-        // Если сломался не сам образец — показываем вместо него образец из
-        // cards_video.js. Если сломался и он тоже — тогда уже просто иконка,
-        // чтобы не зациклиться.
-        if(fallback && card.video !== fallback.video){
-          renderVideoCard(fallback, level);
-          return;
-        }
-        const media = document.getElementById('videoMedia');
-        if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
-      });
-      video.addEventListener('ended', ()=>{
-        if(state.videoAutoAdvance) drawVideoCard(videoLevel);
-      });
-      video.addEventListener('webkitendfullscreen', ()=>{ videoNativeFullscreenActive = false; });
-    }
+    if(video) setupVideoPlayerElement(video, card, level, false);
     updateVideoMuteBtn();
     updateVideoLoopBtn();
     updateVideoFavoritesBtn();
@@ -3768,10 +3819,59 @@ function davaySwipeNext(){
   }
 }
 
+// См. аналогичный комментарий у setupVideoPlayerElement/renderVideoCard —
+// та же логика для "Давай попробуем": пока видео открыто в нативном
+// полноэкранном режиме iOS, при переключении на следующее видео меняем src у
+// уже существующего элемента (reuse=true) вместо пересоздания через
+// innerHTML, чтобы iOS не закрывала полный экран с видимым "миганием"
+// обратно на карточку с кнопками.
+function setupDavayPlayerElement(video, card, level, reuse){
+  video.muted = !davaySoundOn;
+  video.loop = !state.davayAutoAdvance;
+  if(reuse){
+    video.src = card.video;
+    video.load();
+  }
+  const attemptPlay = ()=>{
+    const p = video.play();
+    if(p && typeof p.catch === 'function'){
+      p.catch(()=>{ setTimeout(()=>{ video.play().catch(()=>{}); }, 150); });
+    }
+  };
+  attemptPlay();
+  const cardEl = document.getElementById('card');
+  video.addEventListener('loadedmetadata', ()=>{
+    fitCardVideoToArea(video, cardEl);
+    // См. аналогичный комментарий в renderVideoCard — вызывать нужно
+    // после loadedmetadata, иначе на iOS повторный вход в полноэкранный
+    // режим при автопереключении/повторе молча не срабатывает.
+    if(davayNativeFullscreenActive && video.webkitEnterFullscreen && !video.webkitDisplayingFullscreen){
+      try{ video.webkitEnterFullscreen(); } catch(err){}
+    }
+  }, {once:true});
+  video.addEventListener('error', ()=>{
+    const media = document.getElementById('davayMedia');
+    if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+  }, {once:true});
+  video.addEventListener('ended', ()=>{
+    if(state.davayAutoAdvance) drawDavayCard(davayLevel);
+  }, {once:true});
+  if(!reuse){
+    video.addEventListener('webkitendfullscreen', ()=>{ davayNativeFullscreenActive = false; });
+  }
+}
 function renderDavayCard(card, level){
   clearInterval(timerInterval);
   timerInterval = null;
   currentCard = null;
+  const existingVideo = document.getElementById('davayPlayer');
+  if(davayNativeFullscreenActive && existingVideo){
+    setupDavayPlayerElement(existingVideo, card, level, true);
+    updateDavayMuteBtn();
+    updateDavayFavoritesBtn();
+    updateFavoriteBtn();
+    return;
+  }
   fadeSwapCard((el)=>{
     el.className = 'card card-empty';
     el.style.borderTop = '';
@@ -3783,34 +3883,7 @@ function renderDavayCard(card, level){
       </div>
     `;
     const video = document.getElementById('davayPlayer');
-    if(video){
-      video.muted = !davaySoundOn;
-      video.loop = !state.davayAutoAdvance;
-      const attemptPlay = ()=>{
-        const p = video.play();
-        if(p && typeof p.catch === 'function'){
-          p.catch(()=>{ setTimeout(()=>{ video.play().catch(()=>{}); }, 150); });
-        }
-      };
-      attemptPlay();
-      video.addEventListener('loadedmetadata', ()=>{
-        fitCardVideoToArea(video, el);
-        // См. аналогичный комментарий в renderVideoCard — вызывать нужно
-        // после loadedmetadata, иначе на iOS повторный вход в полноэкранный
-        // режим при автопереключении/повторе молча не срабатывает.
-        if(davayNativeFullscreenActive && video.webkitEnterFullscreen){
-          try{ video.webkitEnterFullscreen(); } catch(err){}
-        }
-      });
-      video.addEventListener('error', ()=>{
-        const media = document.getElementById('davayMedia');
-        if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
-      });
-      video.addEventListener('ended', ()=>{
-        if(state.davayAutoAdvance) drawDavayCard(davayLevel);
-      });
-      video.addEventListener('webkitendfullscreen', ()=>{ davayNativeFullscreenActive = false; });
-    }
+    if(video) setupDavayPlayerElement(video, card, level, false);
     updateDavayMuteBtn();
     updateDavayFavoritesBtn();
   });
@@ -6818,9 +6891,15 @@ function exitZnayuSetup(){
 // Сколько вопросов задаётся за одну партию — случайная выборка из полного
 // банка (см. cards_znayu.js), а не всегда одни и те же по порядку.
 const ZNAYU_ROUND_SIZE = 10;
+// Вопросы, заблокированные кнопкой "Не хочу отвечать" (state.znayuHidden) —
+// исключаются из выборки для новых раундов, пока прогресс не сброшен.
+function getZnayuAvailableIndexes(items){
+  const hidden = state.znayuHidden || [];
+  return items.map((c,i)=>i).filter(i=>!hidden.includes(i));
+}
 function resetZnayuQuiz(){
   const items = (typeof ZNAYU_ITEMS !== 'undefined' && Array.isArray(ZNAYU_ITEMS)) ? ZNAYU_ITEMS : [];
-  const allIdx = items.map((c,i)=>i);
+  const allIdx = getZnayuAvailableIndexes(items);
   const size = Math.min(ZNAYU_ROUND_SIZE, allIdx.length);
   state.znayuQueue = shuffle(allIdx).slice(0, size);
   state.znayuIndex = 0;
@@ -6882,10 +6961,12 @@ function showZnayuHandoffCard(nextPlayerNum){
     el.innerHTML = `<div class="card-inner">${znayuCardHeaderHtml('Дальше отвечает', nextName, false)}<div class="card-body"><div class="card-icon">💞</div><div class="card-text">Передайте телефон игроку «${nextName}»</div></div></div>`;
   });
 }
-// Карточка вопроса: заголовок вверху карты — сам вопрос, ниже 4 кнопки с
-// вариантами ответа. Выбор любой из них сразу фиксирует ответ и переключает
-// на следующий вопрос (см. answerZnayuItem) — отдельных кнопок "Да"/"Нет"
-// в этой игре больше нет.
+// Карточка вопроса: заголовок вверху карты — сам вопрос, ниже 3 кнопки с
+// вариантами ответа и отдельная кнопка "Не хочу отвечать". Выбор любого из
+// вариантов сразу фиксирует ответ и переключает на следующий вопрос (см.
+// answerZnayuItem) — отдельных кнопок "Да"/"Нет" в этой игре больше нет.
+// "Не хочу отвечать" ответ не засчитывает, а сам вопрос блокирует для всех
+// будущих партий (см. skipZnayuItem).
 function renderZnayuPlaceholderCard(){
   fadeSwapEl('znayuCard', (el)=>{
     el.className = 'card card-empty';
@@ -6903,7 +6984,7 @@ function showZnayuCurrentItem(){
     // банка вопросов) — вместо пустой карточки пересобираем очередь заново
     // (случайная выборка) и показываем вопрос с начала.
     if(items.length === 0){ renderZnayuPlaceholderCard(); return; }
-    const allIdx = items.map((c,i)=>i);
+    const allIdx = getZnayuAvailableIndexes(items);
     state.znayuQueue = shuffle(allIdx).slice(0, Math.min(ZNAYU_ROUND_SIZE, allIdx.length));
     state.znayuIndex = 0;
     saveState();
@@ -6918,10 +6999,16 @@ function showZnayuCurrentItem(){
     el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
     const questionHtml = `<div class="znayu-question-text">${item ? item.question : '—'}</div>`;
     const options = (item && Array.isArray(item.options)) ? item.options : [];
-    const answersHtml = `<div class="znayu-answers">${options.map((opt,i)=>`<button type="button" class="btn btn-secondary znayu-answer-btn" data-idx="${i}">${opt}</button>`).join('')}</div>`;
+    const answersHtml = `<div class="znayu-answers">${options.map((opt,i)=>`<button type="button" class="btn btn-secondary znayu-answer-btn" data-idx="${i}">${opt}</button>`).join('')}<button type="button" class="btn btn-secondary znayu-answer-btn znayu-skip-btn">Не хочу отвечать</button></div>`;
     el.innerHTML = `<div class="card-inner"><div class="card-body">${questionHtml}${answersHtml}</div></div>`;
     el.querySelectorAll('.znayu-answer-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
+        if(btn.classList.contains('znayu-skip-btn')){
+          playErrorSound();
+          showToast('Вопрос скрыт навсегда 🚫');
+          skipZnayuItem();
+          return;
+        }
         playSuccessSound();
         answerZnayuItem(parseInt(btn.dataset.idx, 10));
       });
@@ -6940,7 +7027,7 @@ function startZnayuPlayer(playerNum){
   // версии игры с другим числом вопросов), пересобираем её тоже случайно.
   const queueValid = state.znayuQueue.length > 0 && state.znayuQueue.every(i => i >= 0 && i < items.length);
   if(!queueValid){
-    const allIdx = items.map((c,i)=>i);
+    const allIdx = getZnayuAvailableIndexes(items);
     state.znayuQueue = shuffle(allIdx).slice(0, Math.min(ZNAYU_ROUND_SIZE, allIdx.length));
   }
   state.znayuIndex = 0;
@@ -6949,7 +7036,7 @@ function startZnayuPlayer(playerNum){
   updateZnayuPlayerButtons();
   showZnayuCurrentItem();
 }
-// answer — индекс выбранного варианта ответа (0-3), а не Да/Нет.
+// answer — индекс выбранного варианта ответа (0-2), а не Да/Нет.
 function answerZnayuItem(answer){
   if(!state.znayuActivePlayer) return;
   const idx = state.znayuQueue[state.znayuIndex];
@@ -6957,6 +7044,27 @@ function answerZnayuItem(answer){
   if(!state.znayuAnswers[idx]) state.znayuAnswers[idx] = {};
   const key = state.znayuActivePlayer === 1 ? 'p1' : 'p2';
   state.znayuAnswers[idx][key] = answer;
+  advanceZnayuQueue();
+}
+// Кнопка "Не хочу отвечать" — в отличие от обычного ответа НИЧЕГО не
+// записывает в state.znayuAnswers (значит вопрос никогда не попадёт в
+// список совпадений ни в этом раунде, ни задним числом), а сам вопрос
+// добавляется в state.znayuHidden — в СЛЕДУЮЩИХ партиях он больше не будет
+// предложен ни одному из партнёров, пока прогресс не сброшен ("Сбросить
+// прогресс" в настройках). Текущий раунд (уже собранная очередь) при этом
+// не трогаем — оба партнёра всё равно отвечают на одни и те же 10 вопросов
+// текущей партии для честного сравнения.
+function skipZnayuItem(){
+  if(!state.znayuActivePlayer) return;
+  const idx = state.znayuQueue[state.znayuIndex];
+  if(idx === undefined) return;
+  if(!state.znayuHidden) state.znayuHidden = [];
+  if(!state.znayuHidden.includes(idx)) state.znayuHidden.push(idx);
+  advanceZnayuQueue();
+}
+// Общий переход к следующему вопросу очереди (или к завершению партии) —
+// используется и обычным ответом, и кнопкой "Не хочу отвечать".
+function advanceZnayuQueue(){
   state.znayuIndex++;
   if(state.znayuIndex < state.znayuQueue.length){
     saveState();
