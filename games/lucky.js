@@ -325,12 +325,12 @@ function escalateLuckyTo(nextLevel){
   renderLuckyGrid();
   showLuckyBonus(nextLevel);
 }
-// Бонусное окно — праздничное и информационное: само повышение уровня уже
-// произошло, окно просто оглашает бонусное задание.
+// Окно повышения уровня — праздничное и чисто информационное: бонусное
+// задание здесь больше не выдаётся ни разу за игру (ни после 1-й, ни после
+// 3-й линии) — оно достаётся только победившей команде после финальной
+// победы, в итоговом окне партии (см. showLuckySummaryModal).
 function showLuckyBonus(level){
   playLevelUpSound();
-  const bonus = pickLuckyBonus(level);
-  if(bonus){ addLuckyBonusToChecklist(bonus.text); renderLuckyBonusChecklist(); saveState(); }
   const info = luckyLevelInfo(level);
   // Ход ещё не передан следующей команде (передача — после этой функции, в
   // clickLuckyCell), поэтому luckyCurrentTeamIndex — это команда, которая
@@ -340,7 +340,7 @@ function showLuckyBonus(level){
   const introEl = document.getElementById('luckyBonusIntro');
   if(introEl) introEl.textContent = `🏆 Линия собрана командой «${teamName}»! Уровень повышен: ${info.icon} ${info.name}`;
   const textEl = document.getElementById('luckyBonusText');
-  if(textEl) textEl.textContent = bonus ? bonus.text : 'Поздравьте друг друга аплодисментами!';
+  if(textEl) textEl.textContent = 'Поздравьте друг друга аплодисментами!';
   document.getElementById('luckyBonusModal').classList.add('show');
 }
 // Партия завершается сама, как только собрано 5 любых линий или отмечены
@@ -382,20 +382,31 @@ function showLuckySummaryModal(){
   const introEl = document.getElementById('luckySummaryIntro');
   if(introEl) introEl.textContent = `Уровень: ${info.icon} ${info.name} · Линий собрано: ${total} из 10` + (allChecked ? ' · Отмечены все 25 клеток!' : '');
   document.getElementById('luckySummaryList').innerHTML = listHtml;
-  // Победитель по итогам партии больше не получает отдельное финальное
-  // задание/приз — только сам факт победы (виден в таблице выше). Единственное
-  // финальное задание в конце партии — у проигравшей команды, см. ниже.
+  const isTie = ranking.length === 2 && ranking[0].score === ranking[1].score;
+  const winnerName = (!isTie && ranking.length === 2) ? ranking[0].n : null;
+  const loserName = (!isTie && ranking.length === 2) ? ranking[1].n : null;
+  // Бонусное задание больше не выдаётся во время партии (ни после 1-й, ни
+  // после 3-й линии) — оно достаётся только победившей команде один раз,
+  // здесь, после финальной победы. При ничьей никто его не получает.
+  // Как и раньше, бонус попадает в накопительный чек-лист «🎁 Бонусные
+  // задания» под картой.
   const bonusEl = document.getElementById('luckySummaryBonusText');
   if(bonusEl){
-    bonusEl.textContent = '';
-    bonusEl.style.display = 'none';
+    const bonusTask = winnerName ? pickLuckyBonus(3) : null;
+    if(bonusTask){
+      addLuckyBonusToChecklist(bonusTask.text);
+      renderLuckyBonusChecklist();
+      bonusEl.textContent = `🏆 Бонусное задание команде «${winnerName}»: ` + bonusTask.text;
+      bonusEl.style.display = 'block';
+    } else {
+      bonusEl.textContent = '';
+      bonusEl.style.display = 'none';
+    }
   }
   // Финальное задание проигравшей команде (меньше отмеченных клеток) —
   // весёлый форфейт перед компанией. При ничьей (оба счёта равны)
   // проигравшего нет — задание не показываем.
   const finalTaskEl = document.getElementById('luckySummaryFinalTaskText');
-  const isTie = ranking.length === 2 && ranking[0].score === ranking[1].score;
-  const loserName = ranking.length === 2 ? ranking[1].n : null;
   if(finalTaskEl){
     const finalTask = (!isTie && loserName) ? pickLuckyFinalTask() : null;
     if(finalTask){

@@ -59,6 +59,10 @@ let state = {
   krokodilMode:'word', krokodilWordsPerRound:5,
   partyPlayers:['Игрок 1','Игрок 2'], krokodilScores:[], krokodilSkipCounts:[], krokodilCurrentPlayerIndex:0,
   krokodilTurnsPlayed:0, krokodilRoundsPerPlayer:5,
+  // Игры с детьми (список игроков отдельный от "Игры для компании")
+  kidsPlayers:['Игрок 1','Игрок 2'],
+  // Мемори
+  kidsMemoryLevel:1, kidsMemoryDeck:[], kidsMemoryScores:[], kidsMemoryCurrentPlayerIndex:0,
   // Мемасики
   memesSelectedLevel:2, memesUsed:{}, memesHidden:[],
   // Фанты (компания)
@@ -210,6 +214,70 @@ document.getElementById('homeKidsBtn').addEventListener('click', ()=>{ playSucce
 document.getElementById('twoPlayerBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('companyBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('kidsBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+
+// Список игроков для "Игры с детьми" — тот же паттерн, что renderPartyPlayers
+// в games/krokodil.js, но отдельное состояние (kidsPlayers), т.к. это не
+// связано с "Играми для компании": от 2 до 10, поля добавляются/удаляются
+// кнопками, имена по умолчанию "Игрок N".
+function renderKidsPlayers(){
+  if(!state.kidsPlayers || state.kidsPlayers.length < 2){
+    state.kidsPlayers = ['Игрок 1','Игрок 2'];
+  }
+  const wrap = document.getElementById('kidsPlayersList');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  state.kidsPlayers.forEach((name, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'krokodil-player-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 14;
+    input.placeholder = 'Игрок ' + (idx + 1);
+    input.value = name;
+    input.addEventListener('input', ()=>{
+      state.kidsPlayers[idx] = input.value.trim() || ('Игрок ' + (idx + 1));
+      saveState();
+    });
+    row.appendChild(input);
+    if(state.kidsPlayers.length > 2){
+      const rmBtn = document.createElement('button');
+      rmBtn.type = 'button';
+      rmBtn.className = 'krokodil-player-remove';
+      rmBtn.setAttribute('aria-label', 'Удалить игрока');
+      rmBtn.textContent = '✕';
+      rmBtn.addEventListener('click', ()=>{
+        if(state.kidsPlayers.length <= 2) return;
+        state.kidsPlayers.splice(idx, 1);
+        saveState();
+        renderKidsPlayers();
+      });
+      row.appendChild(rmBtn);
+    }
+    wrap.appendChild(row);
+  });
+  const addBtn = document.getElementById('kidsAddPlayerBtn');
+  if(addBtn) addBtn.style.display = state.kidsPlayers.length >= 10 ? 'none' : '';
+}
+document.getElementById('kidsAddPlayerBtn').addEventListener('click', ()=>{
+  if(!state.kidsPlayers) state.kidsPlayers = ['Игрок 1','Игрок 2'];
+  if(state.kidsPlayers.length >= 10) return;
+  state.kidsPlayers.push('Игрок ' + (state.kidsPlayers.length + 1));
+  saveState();
+  renderKidsPlayers();
+});
+renderKidsPlayers();
+// "Мемори" — первая настоящая игра в разделе, goToKidsMemorySetup() определена
+// в games/kids-memory.js (грузится позже, но объявления function поднимаются
+// в общую область видимости — тот же приём, что и с остальными играми ниже).
+document.getElementById('gameKidsMemoryBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKidsMemorySetup();
+});
+// Вторая игра раздела пока не сделана — кнопка временная заглушка.
+document.getElementById('gameKidsStub2Btn').addEventListener('click', ()=>{
+  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+});
 
 /* ============ УТИЛИТЫ ============ */
 function shuffle(arr){
@@ -379,6 +447,7 @@ const PAUSED_MODE_LABELS = {
   partyTd: '«Правда/Действие» (компания)',
   famZnayu: '«Знаю тебя» (компания)',
   lucky: '«Счастливый билет»',
+  kidsMemory: '«Мемори»',
 };
 function blockedByDavayPause(){
   if(!state.pausedMode) return false;
@@ -450,6 +519,12 @@ function abandonPausedFamZnayuSession(){
 }
 function abandonPausedLuckySession(){
   if(state.pausedMode === 'lucky'){
+    state.pausedMode = null;
+  }
+}
+// Симметрично остальным — сбрасывает "чужую" паузу «Мемори» (страховка).
+function abandonPausedKidsMemorySession(){
+  if(state.pausedMode === 'kidsMemory'){
     state.pausedMode = null;
   }
 }
@@ -575,6 +650,10 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'lucky'){
     resumeLuckyGame();
+    return;
+  }
+  if(state.pausedMode === 'kidsMemory'){
+    resumeKidsMemoryGame();
     return;
   }
   goToGame();
@@ -768,6 +847,7 @@ function goToGame(){
   abandonPausedPartyTdSession();
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
+  abandonPausedKidsMemorySession();
   abandonPausedFantySession();
   // Своя пауза Фантов сбрасывается явно (не через abandonPausedFantySession
   // — это возврат в СВОЮ же игру после паузы, а не "чужая" сессия), и здесь
@@ -863,6 +943,7 @@ const PAUSE_MENU_TITLES = {
   partyTd: '🗣️ Правда/Действие (компания) — на паузе',
   famZnayu: '🧠 Знаю тебя — на паузе',
   lucky: '🎫 Счастливый билет — на паузе',
+  kidsMemory: '🧠 Мемори — на паузе',
 };
 function updateResumeUI(){
   const pauseModal = document.getElementById('pauseMenuModal');
@@ -881,9 +962,12 @@ function updateResumeUI(){
   // блока (Крокодил, Фанты-компания и т.д.), сам блок остаётся виден (там
   // же список игроков), хотя сами кнопки паузы теперь всегда в модалке.
   const isPartyPause = state.pausedMode === 'krokodil' || state.pausedMode === 'partyFants' || state.pausedMode === 'partyTd' || state.pausedMode === 'famZnayu' || state.pausedMode === 'lucky';
-  const isTwoPlayerPause = !!state.pausedMode && !isPartyPause;
+  const isKidsPause = state.pausedMode === 'kidsMemory';
+  const isTwoPlayerPause = !!state.pausedMode && !isPartyPause && !isKidsPause;
   const partyGameSelectField = document.getElementById('partyGameSelectField');
   if(partyGameSelectField) partyGameSelectField.style.display = (state.inProgress && !isPartyPause) ? 'none' : '';
+  const kidsGameSelectField = document.getElementById('kidsGameSelectField');
+  if(kidsGameSelectField) kidsGameSelectField.style.display = (state.inProgress && !isKidsPause) ? 'none' : '';
   const backupField = document.getElementById('backupField');
   if(backupField) backupField.style.display = state.inProgress ? 'none' : '';
   // Пока игра компании на паузе — заголовок и описание блока меняются на
@@ -894,10 +978,19 @@ function updateResumeUI(){
   if(partyDesc) partyDesc.textContent = isPartyPause
     ? 'Счёт и игроки сохранены — продолжите партию или закончите её кнопкой выше.'
     : 'Шумные и весёлые игры для компании';
+  // Симметрично "Играм для компании" — пока Мемори на паузе, заголовок и
+  // описание блока "Игры с детьми" тоже меняются на паузу этой игры.
+  const kidsTitleText = document.getElementById('kidsGamesTitleText');
+  const kidsDesc = document.getElementById('kidsGamesDesc');
+  if(kidsTitleText) kidsTitleText.textContent = isKidsPause ? (PAUSE_MENU_TITLES[state.pausedMode] || '🧸 Игры с детьми') : '🧸 Игры с детьми';
+  if(kidsDesc) kidsDesc.textContent = isKidsPause
+    ? 'Поле и счёт сохранены — продолжите партию или закончите её кнопкой выше.'
+    : 'Весёлые игры, чтобы играть вместе с ребёнком';
   // Пока какая-нибудь игра на паузе — на #setup сразу открыт нужный блок
-  // (игры для двоих / игры для компании), чтобы после "Закончить игру" не
-  // приходилось лишний раз возвращаться туда через главную.
+  // (игры для двоих / игры для компании / игры с детьми), чтобы после
+  // "Закончить игру" не приходилось лишний раз возвращаться туда через главную.
   if(isPartyPause) showSetupView('companyView');
+  else if(isKidsPause) showSetupView('kidsView');
   else if(isTwoPlayerPause) showSetupView('twoPlayerView');
   updateSettingsLockUI();
 }
@@ -1845,6 +1938,7 @@ async function goToVideoGame(){
   abandonPausedPartyTdSession();
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
+  abandonPausedKidsMemorySession();
   abandonPausedFantySession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -1920,6 +2014,7 @@ async function goToVideoFavoritesView(){
   abandonPausedPartyTdSession();
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
+  abandonPausedKidsMemorySession();
   abandonPausedFantySession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -2560,6 +2655,7 @@ function goToDavayFavoritesView(){
   abandonPausedPartyTdSession();
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
+  abandonPausedKidsMemorySession();
   abandonPausedFantySession();
   state.pausedMode = null;
   state.inProgress = true;
@@ -2737,6 +2833,7 @@ function goToPlaceholderGame(){
   abandonPausedPartyTdSession();
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
+  abandonPausedKidsMemorySession();
   abandonPausedFantySession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -2814,6 +2911,7 @@ function goToPhotoFavoritesView(){
   abandonPausedPartyTdSession();
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
+  abandonPausedKidsMemorySession();
   abandonPausedFantySession();
   state.pausedMode = null;
   state.inProgress = true;
@@ -3293,6 +3391,11 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'lucky'){
     finishLuckyGame();
+    showToast('Игра завершена');
+    return;
+  }
+  if(state.pausedMode === 'kidsMemory'){
+    finishKidsMemoryGame();
     showToast('Игра завершена');
     return;
   }
