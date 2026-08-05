@@ -734,7 +734,7 @@
      добавляются/удаляются кнопками, оформлены как обычные текстовые поля. */
   /* Имена игроков компании — как в блоке "Игры для двоих": по 2 в ряд,
      поля покороче, вместо одной колонки во всю ширину. */
-  #partyPlayersList{display:flex; flex-wrap:wrap; gap:8px 10px;}
+  #partyPlayersList, #kidsPlayersList{display:flex; flex-wrap:wrap; gap:8px 10px;}
   .krokodil-player-row{
     display:flex; align-items:center; gap:6px;
     flex:1 1 calc(50% - 5px); min-width:118px;
@@ -1218,6 +1218,23 @@
   .bingo-cell.bingo-suggested{
     box-shadow:0 0 0 3px var(--accent) inset;
   }
+
+  /* ---- Мемори (игры с детьми) ---- */
+  .memory-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0; max-width:100%;}
+  .memory-card{
+    aspect-ratio:1/1; border-radius:14px; border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.10); color:#fff; font-size:20px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0; transition:background .15s ease, opacity .15s ease;
+  }
+  .memory-card.flipped, .memory-card.matched{
+    font-size:30px; background:rgba(255,255,255,.22);
+  }
+  .memory-card.matched{
+    background:linear-gradient(135deg,#ff5e8e,#ff8a5e); border-color:transparent; opacity:.55;
+  }
+  .memory-card:disabled{cursor:default;}
+
   /* Блок "Бонусные задания" — накопительный чек-лист бонусов, заработанных
      за собранные линии и победы в "Секс-бинго". В отличие от самой карты
      (которая обнуляется в каждой новой партии), этот список НЕ сбрасывается
@@ -1454,15 +1471,88 @@
       </div>
     </div>
 
-    <!-- ---- Игры с детьми (заглушка — сама игра ещё не сделана) ---- -->
+    <!-- ---- Игры с детьми ---- -->
     <div class="field-collapsible" id="kidsView">
       <button type="button" class="btn-ghost" id="kidsBackBtn" style="margin-bottom:8px;">← Назад</button>
-      <h1 class="title">🧸 Игры с детьми</h1>
-      <div class="subtitle">Совсем скоро — весёлые игры, чтобы играть вместе с ребёнком</div>
-      <div class="intro-text" style="text-align:center; margin-top:10px;">Мы уже работаем над этим разделом 🚧 Загляните сюда чуть позже.</div>
+      <h1 class="title" id="kidsGamesTitleText">🧸 Игры с детьми</h1>
+      <div class="subtitle" id="kidsGamesDesc">Весёлые игры, чтобы играть вместе с ребёнком</div>
+
+      <div class="field" id="kidsGameSelectField">
+        <div class="field" id="kidsPlayersField">
+          <label>Игроки</label>
+          <div id="kidsPlayersList"></div>
+          <button type="button" class="toggle-pill" id="kidsAddPlayerBtn" style="margin-top:10px;">+ Добавить игрока</button>
+          <div class="timer-levels-note">От 2 до 10 игроков — общий список для игр с детьми</div>
+        </div>
+
+        <label>Выбери игру</label>
+        <div class="game-select-list" id="kidsGameSelectList">
+          <button type="button" class="btn btn-menu-item" id="gameKidsMemoryBtn">🧠 Мемори</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsStub2Btn">🎲 Скоро</button>
+        </div>
+      </div>
     </div>
 
   </section>
+
+  <!-- ===== МЕМОРИ: НАСТРОЙКА ===== -->
+  <section id="kidsMemorySetup" class="screen">
+    <h1 class="title">🧠 Мемори</h1>
+    <div class="subtitle">Открывайте карточки по очереди и ищите пары</div>
+
+    <div class="field">
+      <label>Сложность</label>
+      <div class="levels" id="kidsMemorySetupLevels"></div>
+    </div>
+
+    <button class="btn btn-primary" id="kidsMemorySetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="kidsMemorySetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="kidsMemorySetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== МЕМОРИ: ИГРА ===== -->
+  <section id="kidsMemoryGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🧠 Мемори</h1>
+    <div class="krokodil-score-row" id="kidsMemoryScoreRow"></div>
+    <div class="td-turn-label" id="kidsMemoryTurnLabel">Ходит: Игрок 1</div>
+
+    <div class="memory-grid" id="kidsMemoryGrid"></div>
+
+    <div class="bingo-actions-row bingo-actions-bottom">
+      <button type="button" class="btn btn-secondary btn-rules" id="kidsMemoryGameRulesBtn">Правила</button>
+      <button type="button" class="btn btn-secondary btn-pause" id="kidsMemoryExitBtn">Пауза</button>
+    </div>
+  </section>
+
+  <!-- ===== МЕМОРИ: ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="kidsMemorySummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="kidsMemorySummaryIntro"></div>
+      <div class="krokodil-summary-list" id="kidsMemorySummaryList"></div>
+      <button class="btn btn-primary" id="closeKidsMemorySummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "МЕМОРИ" ===== -->
+  <div class="modal-overlay" id="kidsMemoryRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🧠 Правила игры «Мемори»</div>
+      <div class="intro-text">Классическая игра на память для 2–10 игроков.</div>
+      <ol class="modal-rules">
+        <li>На экране настройки впишите имена игроков (2–10, общий список для игр с детьми) и выберите сложность — от неё зависит, сколько пар карточек на поле.</li>
+        <li>Все карточки лежат картинкой вниз. Игроки ходят по очереди.</li>
+        <li>На своём ходу откройте две любые карточки. Если картинки совпали — пара найдена, очко ваше, и вы ходите ещё раз. Если нет — карточки перевернутся обратно, и ход переходит следующему игроку.</li>
+        <li>Старайтесь запоминать, где какая картинка лежала — это поможет собрать пары быстрее.</li>
+        <li>Игра заканчивается, когда все пары найдены. Побеждает тот, кто нашёл больше всего пар.</li>
+        <li>«Пауза» сохранит поле и счёт — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+      </ol>
+      <button class="btn btn-primary" id="closeKidsMemoryRulesBtn">Понятно</button>
+    </div>
+  </div>
 
   <!-- ===== ФАНТЫ: НАСТРОЙКА ИГРЫ ===== -->
   <section id="fantySetup" class="screen">
@@ -2499,10 +2589,9 @@
         <li>На своём ходу команда выбирает любую свободную клетку на общем поле — исполнитель сразу выполняет задание для своего партнёра, клетка отмечается за команду.</li>
         <li>Не готовы выполнять ни одно из заданий прямо сейчас? «🚫 Пропустить ход» передаст очередь другой команде без отметки.</li>
         <li>«🎲 Случайно» подсветит контуром случайную ещё не отмеченную клетку — подсказка, что сделать дальше. Подсветка снимается следующим касанием экрана.</li>
-        <li>Как только на поле собирается целая линия (ряд или столбец — всего их 10), команда, собравшая её, получает бонусное задание на двоих. Уровень автоматически повышается после 1-й и после 3-й собранной линии — уже отмеченные клетки не меняются, обновляются только пустые.</li>
-        <li>Уровни идут по нарастающей: 💗 «Нежно» → 😏 «Игриво» → 🔥 «Дерзко». Чем выше уровень, тем откровеннее и смелее задания — но без прямого секса и без обнажения гениталий.</li>
-        <li>Каждый заработанный бонус (за линию и финальный приз) добавляется в блок «🎁 Бонусные задания» под картой — он никуда не пропадает после игры. Выполнили — нажмите на текст задания, оно зачеркнётся. Кнопка «✕» удаляет пункт из списка.</li>
-        <li>Партия завершается сама, как только собрано 5 линий или отмечены все 25 клеток — победит команда, отметившая больше клеток, ей достанется финальный приз. Проигравшую команду (если ничьей нет) ждёт весёлое финальное задание перед всей компанией.</li>
+        <li>Как только на поле собирается целая линия (ряд или столбец — всего их 10), уровень автоматически повышается — сначала после 1-й линии, потом после 3-й. Уже отмеченные клетки не меняются, обновляются только пустые. Во время партии бонусные задания не выдаются.</li>
+        <li>Уровни идут по нарастающей: 💗 «Нежно» → 😏 «Игриво» → 🔥 «Дерзко». Чем выше уровень, тем откровеннее и смелее задания — разрешены поцелуи и касания любых мест тела, включая без одежды, но без прямого секса и без обнажения гениталий.</li>
+        <li>Партия завершается сама, как только собрано 5 линий или отмечены все 25 клеток — побеждает команда, отметившая больше клеток. Победившая команда получает бонусное задание на двоих (добавляется в блок «🎁 Бонусные задания» под картой — он никуда не пропадает после игры, выполнили — нажмите на текст, он зачеркнётся, «✕» удаляет пункт). Проигравшую команду (если ничьей нет) ждёт самое горячее задание игры — финальный форфейт перед всей компанией.</li>
         <li>«Пауза» сохранит поле и очередь — на главном экране появится «Продолжить игру» или «Закончить игру» (без показа итогов, только для незавершённой партии).</li>
       </ol>
       <button class="btn btn-primary" id="closeLuckyRulesBtn">Понятно</button>
@@ -2731,6 +2820,7 @@
 <script src="cards/cards_party_td.js"></script>
 <script src="cards/cards_fam_znayu.js"></script>
 <script src="cards/cards_lucky.js"></script>
+<script src="cards/cards_kids_memory.js"></script>
 <script src="games/core.js"></script>
 <script src="games/truth-dare.js"></script>
 <script src="games/bingo.js"></script>
@@ -2741,6 +2831,7 @@
 <script src="games/party-td.js"></script>
 <script src="games/fam-znayu.js"></script>
 <script src="games/lucky.js"></script>
+<script src="games/kids-memory.js"></script>
 <script src="games/wishlist.js"></script>
 <script src="games/znayu.js"></script>
 <script src="games/init.js"></script>
