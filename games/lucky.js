@@ -382,21 +382,13 @@ function showLuckySummaryModal(){
   const introEl = document.getElementById('luckySummaryIntro');
   if(introEl) introEl.textContent = `Уровень: ${info.icon} ${info.name} · Линий собрано: ${total} из 10` + (allChecked ? ' · Отмечены все 25 клеток!' : '');
   document.getElementById('luckySummaryList').innerHTML = listHtml;
-  // Финальный приз — самый смелый (3-й) уровень бонусов, достаётся
-  // команде-победителю (той, что отметила больше клеток).
+  // Победитель по итогам партии больше не получает отдельное финальное
+  // задание/приз — только сам факт победы (виден в таблице выше). Единственное
+  // финальное задание в конце партии — у проигравшей команды, см. ниже.
   const bonusEl = document.getElementById('luckySummaryBonusText');
-  const finalBonus = pickLuckyBonus(3);
-  const winnerName = ranking.length ? ranking[0].n : 'Команда 1';
   if(bonusEl){
-    if(finalBonus){
-      bonusEl.textContent = `🎁 Финальный приз команде «${winnerName}»: ` + finalBonus.text;
-      bonusEl.style.display = 'block';
-      addLuckyBonusToChecklist(finalBonus.text);
-      renderLuckyBonusChecklist();
-    } else {
-      bonusEl.textContent = '';
-      bonusEl.style.display = 'none';
-    }
+    bonusEl.textContent = '';
+    bonusEl.style.display = 'none';
   }
   // Финальное задание проигравшей команде (меньше отмеченных клеток) —
   // весёлый форфейт перед компанией. При ничьей (оба счёта равны)
