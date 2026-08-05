@@ -36,6 +36,13 @@ function pickLuckyBonus(level){
   if(bonus) state.luckyUsedBonus.push(bonus.text);
   return bonus;
 }
+// Финальное задание для проигравшей команды (меньше отмеченных клеток) —
+// отдельный пул LUCKY_FINAL_TASKS, не привязан к уровню, выбирается один
+// раз случайно в конце партии (см. showLuckySummaryModal).
+function pickLuckyFinalTask(){
+  if(typeof LUCKY_FINAL_TASKS === 'undefined' || !Array.isArray(LUCKY_FINAL_TASKS) || LUCKY_FINAL_TASKS.length === 0) return null;
+  return LUCKY_FINAL_TASKS[Math.floor(Math.random()*LUCKY_FINAL_TASKS.length)];
+}
 function luckyLevelInfo(level){
   return (typeof LUCKY_LEVELS !== 'undefined' ? LUCKY_LEVELS.find(l=>l.id===level) : null) || {name:'Знакомство', icon:'🤝'};
 }
@@ -389,6 +396,22 @@ function showLuckySummaryModal(){
     } else {
       bonusEl.textContent = '';
       bonusEl.style.display = 'none';
+    }
+  }
+  // Финальное задание проигравшей команде (меньше отмеченных клеток) —
+  // весёлый форфейт перед компанией. При ничьей (оба счёта равны)
+  // проигравшего нет — задание не показываем.
+  const finalTaskEl = document.getElementById('luckySummaryFinalTaskText');
+  const isTie = ranking.length === 2 && ranking[0].score === ranking[1].score;
+  const loserName = ranking.length === 2 ? ranking[1].n : null;
+  if(finalTaskEl){
+    const finalTask = (!isTie && loserName) ? pickLuckyFinalTask() : null;
+    if(finalTask){
+      finalTaskEl.textContent = `😅 Финальное задание команде «${loserName}»: ` + finalTask.text;
+      finalTaskEl.style.display = 'block';
+    } else {
+      finalTaskEl.textContent = '';
+      finalTaskEl.style.display = 'none';
     }
   }
   saveState();

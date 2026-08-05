@@ -192,16 +192,24 @@ document.getElementById('importDataInput').addEventListener('change', (e)=>{
 document.getElementById('backupToggle').addEventListener('click', ()=>{
   document.getElementById('backupField').classList.toggle('backup-open');
 });
-// Сворачиваемые блоки списков игр — по умолчанию свёрнуты, разворачиваются
-// по клику на заголовок ("Игры для двоих" / "Игры для компании").
-document.getElementById('mainGamesToggle').addEventListener('click', ()=>{
-  document.getElementById('mainGamesBody').classList.toggle('section-open');
-  document.getElementById('mainGamesArrow').classList.toggle('section-open');
-});
-document.getElementById('partyGamesToggle').addEventListener('click', ()=>{
-  document.getElementById('partyGamesBody').classList.toggle('section-open');
-  document.getElementById('partyGamesArrow').classList.toggle('section-open');
-});
+// Главная страница (#setup) содержит 4 блока-«вида» (главный хаб, игры для
+// двоих, игры для компании, заглушка игр с детьми), но всегда остаётся тем
+// же самым экраном #setup — переходы "назад в #setup" из любой игры трогать
+// не нужно, они как и раньше просто делают #setup активным экраном. Здесь
+// только переключение, какой из 4 блоков внутри него показан.
+const SETUP_VIEW_IDS = ['homeView','twoPlayerView','companyView','kidsView'];
+function showSetupView(name){
+  SETUP_VIEW_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('section-open', id === name);
+  });
+}
+document.getElementById('homeTwoPlayerBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('twoPlayerView'); });
+document.getElementById('homeCompanyBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('companyView'); });
+document.getElementById('homeKidsBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('kidsView'); });
+document.getElementById('twoPlayerBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('companyBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('kidsBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 
 /* ============ УТИЛИТЫ ============ */
 function shuffle(arr){
@@ -586,7 +594,7 @@ document.getElementById('updateAppBtn').addEventListener('click', ()=>{
 document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   // Необратимое действие сразу по всем играм — подтверждение защищает от
   // случайного тапа (аналогично подтверждению при импорте бэкапа).
-  if(!confirm('Сбросить весь прогресс во всех играх? Счёт, избранное, свои задания, имена команд и историю совпадений будет не вернуть. Это действие нельзя отменить.')){
+  if(!confirm('Сбросить весь прогресс во всех играх? Счёт, избранное, имена команд и историю совпадений будет не вернуть. Свои добавленные задания в «Фантах» при этом сохранятся. Это действие нельзя отменить.')){
     return;
   }
   // Обычная игра (карточки)
@@ -599,6 +607,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.turnsAtLastLevelUp = 0;
   state.starter = 'random';
   state.favoritesOnly = false;
+  state.favoriteIndexes = [];
   // Предложи партнеру (фото)
   state.photoUsed = {};
   state.photoHidden = [];
@@ -607,6 +616,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   // Видеорулетка
   state.videoUsed = {};
   state.videoHidden = [];
+  state.videoLiked = [];
   state.videoFavoritesOnly = false;
   state.videoAutoAdvance = false;
   // Давай попробуем
@@ -871,25 +881,24 @@ function updateResumeUI(){
   // блока (Крокодил, Фанты-компания и т.д.), сам блок остаётся виден (там
   // же список игроков), хотя сами кнопки паузы теперь всегда в модалке.
   const isPartyPause = state.pausedMode === 'krokodil' || state.pausedMode === 'partyFants' || state.pausedMode === 'partyTd' || state.pausedMode === 'famZnayu' || state.pausedMode === 'lucky';
+  const isTwoPlayerPause = !!state.pausedMode && !isPartyPause;
   const partyGameSelectField = document.getElementById('partyGameSelectField');
   if(partyGameSelectField) partyGameSelectField.style.display = (state.inProgress && !isPartyPause) ? 'none' : '';
   const backupField = document.getElementById('backupField');
   if(backupField) backupField.style.display = state.inProgress ? 'none' : '';
-  // Пока игра компании на паузе — заголовок и описание группы меняются на
-  // паузу этой игры, а список игроков автоматически раскрывается, чтобы
-  // сразу было видно, кто играет, без лишнего клика.
+  // Пока игра компании на паузе — заголовок и описание блока меняются на
+  // паузу этой игры.
   const partyTitleText = document.getElementById('partyGamesTitleText');
   const partyDesc = document.getElementById('partyGamesDesc');
-  const partyBody = document.getElementById('partyGamesBody');
-  const partyArrow = document.getElementById('partyGamesArrow');
   if(partyTitleText) partyTitleText.textContent = isPartyPause ? (PAUSE_MENU_TITLES[state.pausedMode] || '🎉 Игры для компании') : '🎉 Игры для компании';
   if(partyDesc) partyDesc.textContent = isPartyPause
     ? 'Счёт и игроки сохранены — продолжите партию или закончите её кнопкой выше.'
     : 'Шумные и весёлые игры для компании';
-  if(isPartyPause){
-    if(partyBody) partyBody.classList.add('section-open');
-    if(partyArrow) partyArrow.classList.add('section-open');
-  }
+  // Пока какая-нибудь игра на паузе — на #setup сразу открыт нужный блок
+  // (игры для двоих / игры для компании), чтобы после "Закончить игру" не
+  // приходилось лишний раз возвращаться туда через главную.
+  if(isPartyPause) showSetupView('companyView');
+  else if(isTwoPlayerPause) showSetupView('twoPlayerView');
   updateSettingsLockUI();
 }
 
