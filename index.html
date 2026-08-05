@@ -406,6 +406,15 @@
     padding:14px 12px; font-size:16px; line-height:1.25;
     justify-content:center; text-align:center; white-space:normal;
   }
+  /* Главная страница (хаб) — 3 крупные кнопки формата игры, всегда в один
+     столбец (не сетка), чтобы они читались как главный выбор, а не как
+     рядовые пункты списка игр. */
+  #homeMenuList{
+    display:flex; flex-direction:column; gap:14px; margin-top:22px;
+  }
+  #homeMenuList .btn{
+    padding:22px 16px; font-size:19px; font-weight:800;
+  }
   .btn-menu-item{
     background:linear-gradient(135deg, rgba(255,94,142,.22), rgba(255,255,255,.05));
     color:#fff;
@@ -1349,13 +1358,51 @@
 </div>
 <div id="app">
 
-  <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) ===== -->
+  <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) =====
+       Внутри одного экрана #setup — 4 переключаемых блока (.field-collapsible,
+       у активного добавлен класс .section-open, у остальных его нет — тот же
+       механизм показа/скрытия, что раньше использовался для сворачивания
+       списков игр). Так все существующие переходы "назад в #setup" из каждой
+       игры (goToXSetup/exitX и т.д.) остаются рабочими без изменений — они
+       переключают только внешний .screen, а не эти внутренние блоки. Какой
+       из 4 блоков показан, управляется отдельно в core.js (см. showSetupView
+       и вызовы в updateResumeUI). -->
   <section id="setup" class="screen active">
-    <h1 class="title section-toggle" id="mainGamesToggle" style="cursor:pointer; user-select:none;">💕 Игры для двоих <span class="section-toggle-arrow section-open" id="mainGamesArrow">▾</span></h1>
-    <div class="subtitle">Разожгите страсть и почувствуйте друг друга</div>
 
-    <div class="field" id="gameSelectField">
-      <div class="field-collapsible section-open" id="mainGamesBody">
+    <!-- ---- Главная (хаб): название, описание, выбор формата игры ---- -->
+    <div class="field-collapsible section-open" id="homeView">
+      <h1 class="title">✨ Весёлые игры</h1>
+      <div class="subtitle">Простые игры для тёплых вечеров — вдвоём с любимым человеком, весёлой компанией или всей семьёй. Выберите формат и начинайте.</div>
+
+      <div class="game-select-list" id="homeMenuList">
+        <button type="button" class="btn btn-menu-item" id="homeTwoPlayerBtn">💕 Игры для двоих</button>
+        <button type="button" class="btn btn-menu-item" id="homeCompanyBtn">🎉 Игры для компании</button>
+        <button type="button" class="btn btn-menu-item" id="homeKidsBtn">🧸 Игры с детьми</button>
+      </div>
+
+      <div class="field" id="backupField" style="margin-top:22px;">
+        <label id="backupToggle" style="cursor:pointer; user-select:none;">Резервная копия <span class="backup-toggle-arrow">▾</span></label>
+        <div class="toggle-row" id="backupContent" style="margin-bottom:0;">
+          <button type="button" class="toggle-pill" id="exportDataBtn">⬆ Экспортировать данные</button>
+          <button type="button" class="toggle-pill" id="importDataBtn">⬇ Импортировать данные</button>
+        </div>
+        <input type="file" id="importDataInput" accept="application/json,.json" style="display:none">
+      </div>
+
+      <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:14px;">
+        <span class="btn-ghost" id="updateAppBtn">Обновить приложение</span>
+        <span class="btn-ghost" id="resetHiddenBtn">Сбросить прогресс</span>
+        <span class="btn-ghost" id="installBtn">📲 Установить</span>
+      </div>
+    </div>
+
+    <!-- ---- Игры для двоих ---- -->
+    <div class="field-collapsible" id="twoPlayerView">
+      <button type="button" class="btn-ghost" id="twoPlayerBackBtn" style="margin-bottom:8px;">← Назад</button>
+      <h1 class="title">💕 Игры для двоих</h1>
+      <div class="subtitle">Разожгите страсть и почувствуйте друг друга</div>
+
+      <div class="field" id="gameSelectField">
         <div class="names-row">
           <div class="field">
             <label>Имя мужчины</label>
@@ -1381,13 +1428,13 @@
       </div>
     </div>
 
-    <div class="field" id="partyGameSelectField" style="margin-top:22px;">
-      <div class="section-title section-toggle" id="partyGamesToggle" style="cursor:pointer; user-select:none;">
-        <span id="partyGamesTitleText">🎉 Игры для компании</span> <span class="section-toggle-arrow" id="partyGamesArrow">▾</span>
-      </div>
-      <div class="timer-levels-note" id="partyGamesDesc" style="text-align:center; margin:-6px 0 12px;">Шумные и весёлые игры для компании</div>
+    <!-- ---- Игры для компании ---- -->
+    <div class="field-collapsible" id="companyView">
+      <button type="button" class="btn-ghost" id="companyBackBtn" style="margin-bottom:8px;">← Назад</button>
+      <h1 class="title" id="partyGamesTitleText">🎉 Игры для компании</h1>
+      <div class="subtitle" id="partyGamesDesc">Шумные и весёлые игры для компании</div>
 
-      <div class="field-collapsible" id="partyGamesBody">
+      <div class="field" id="partyGameSelectField">
         <div class="field" id="partyPlayersField">
           <label>Игроки</label>
           <div id="partyPlayersList"></div>
@@ -1407,20 +1454,14 @@
       </div>
     </div>
 
-    <div class="field" id="backupField" style="margin-top:18px;">
-      <label id="backupToggle" style="cursor:pointer; user-select:none;">Резервная копия <span class="backup-toggle-arrow">▾</span></label>
-      <div class="toggle-row" id="backupContent" style="margin-bottom:0;">
-        <button type="button" class="toggle-pill" id="exportDataBtn">⬆ Экспортировать данные</button>
-        <button type="button" class="toggle-pill" id="importDataBtn">⬇ Импортировать данные</button>
-      </div>
-      <input type="file" id="importDataInput" accept="application/json,.json" style="display:none">
+    <!-- ---- Игры с детьми (заглушка — сама игра ещё не сделана) ---- -->
+    <div class="field-collapsible" id="kidsView">
+      <button type="button" class="btn-ghost" id="kidsBackBtn" style="margin-bottom:8px;">← Назад</button>
+      <h1 class="title">🧸 Игры с детьми</h1>
+      <div class="subtitle">Совсем скоро — весёлые игры, чтобы играть вместе с ребёнком</div>
+      <div class="intro-text" style="text-align:center; margin-top:10px;">Мы уже работаем над этим разделом 🚧 Загляните сюда чуть позже.</div>
     </div>
 
-    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:14px;">
-      <span class="btn-ghost" id="updateAppBtn">Обновить приложение</span>
-      <span class="btn-ghost" id="resetHiddenBtn">Сбросить прогресс</span>
-      <span class="btn-ghost" id="installBtn">📲 Установить</span>
-    </div>
   </section>
 
   <!-- ===== ФАНТЫ: НАСТРОЙКА ИГРЫ ===== -->
@@ -1640,7 +1681,7 @@
     <div class="bingo-grid" id="bingoGrid"></div>
     <div class="bingo-actions-row">
       <button type="button" class="btn btn-secondary" id="bingoRandomBtn">🎲 Случайно</button>
-      <button type="button" class="btn btn-secondary" id="bingoNewCardBtn">🔄 Новая игра</button>
+      <button type="button" class="btn btn-secondary" id="bingoNewCardBtn">🌟 Новая игра</button>
     </div>
     <div class="bingo-actions-row bingo-actions-bottom">
       <button type="button" class="btn btn-secondary btn-rules" id="bingoGameRulesBtn">Правила</button>
@@ -2332,7 +2373,7 @@
         <li>Собрали 1-ю линию — все ещё не отмеченные клетки становятся заданиями уровня 🔥 «Горячее» (сложность растёт, отдельного бонуса за это не даётся).</li>
         <li>Собрали 3-ю линию — оставшиеся клетки становятся уровня 🌶️ «Дерзкое».</li>
         <li>Игра завершается сама, как только собрано 5 любых линий или отмечены все 25 клеток — на экране появится окно с итогом партии и единственным бонусом-призом за победу: особым заданием, которое не пересекается с обычными клетками поля и его можно выполнить позже, в другой раз или в другом месте.</li>
-        <li>«🔄 Новая игра» начнёт всё заново с уровня «Нежное».</li>
+        <li>«🌟 Новая игра» начнёт всё заново с уровня «Нежное».</li>
         <li>«🎲 Случайно» подсветит контуром случайную ещё не отмеченную клетку — подсказка, что сделать дальше. Подсветка снимается следующим касанием экрана.</li>
         <li>«Пауза» сохранит прогресс карты и вернёт в главное меню. «Закончить игру» покажет короткие итоги (сколько заданий отмечено, сколько линий собрано) перед сбросом партии.</li>
         <li>Полученный финальный приз добавляется в блок «🎁 Бонусные задания» под картой — он никуда не пропадает после игры. Выполнили — нажмите на текст задания, оно зачеркнётся. Кнопка «✕» удаляет пункт из списка.</li>
