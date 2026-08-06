@@ -60,9 +60,11 @@ let state = {
   partyPlayers:['Игрок 1','Игрок 2'], krokodilScores:[], krokodilSkipCounts:[], krokodilCurrentPlayerIndex:0,
   krokodilTurnsPlayed:0, krokodilRoundsPerPlayer:5,
   // Игры с детьми (список игроков отдельный от "Игры для компании")
-  kidsPlayers:['Игрок 1','Игрок 2'],
+  kidsPlayers:['Игрок 1','Игрок 2'], kidsAge:1,
   // Мемори
   kidsMemoryLevel:1, kidsMemoryDeck:[], kidsMemoryScores:[], kidsMemoryCurrentPlayerIndex:0,
+  // Правда/Действие (дети)
+  kidsTdCompleted:[], kidsTdSkipped:[], kidsTdCurrentPlayerIndex:0, kidsTdCurrentType:null, kidsTdUsed:{},
   // Мемасики
   memesSelectedLevel:2, memesUsed:{}, memesHidden:[],
   // Фанты (компания)
@@ -266,6 +268,22 @@ document.getElementById('kidsAddPlayerBtn').addEventListener('click', ()=>{
   renderKidsPlayers();
 });
 renderKidsPlayers();
+// Возраст ребёнка — общий переключатель для игр раздела "Игры с детьми",
+// которым важен возраст (сейчас — "Правда/Действие"): 1=5 лет, 2=7 лет,
+// 3=10 лет, 4=14 лет. Тот же паттерн, что renderKrokodilDurationGroup.
+function renderKidsAgeGroup(){
+  document.querySelectorAll('#kidsAgeGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.kidsAge || 1));
+  });
+}
+document.querySelectorAll('#kidsAgeGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.kidsAge = parseInt(btn.dataset.value, 10);
+    saveState();
+    renderKidsAgeGroup();
+  });
+});
+renderKidsAgeGroup();
 // "Мемори" — первая настоящая игра в разделе, goToKidsMemorySetup() определена
 // в games/kids-memory.js (грузится позже, но объявления function поднимаются
 // в общую область видимости — тот же приём, что и с остальными играми ниже).
@@ -274,9 +292,11 @@ document.getElementById('gameKidsMemoryBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToKidsMemorySetup();
 });
-// Вторая игра раздела пока не сделана — кнопка временная заглушка.
-document.getElementById('gameKidsStub2Btn').addEventListener('click', ()=>{
-  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+// "Правда/Действие" (дети) — goToKidsTdSetup() определена в games/kids-td.js.
+document.getElementById('gameKidsTdBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKidsTdSetup();
 });
 
 /* ============ УТИЛИТЫ ============ */
@@ -448,6 +468,7 @@ const PAUSED_MODE_LABELS = {
   famZnayu: '«Знаю тебя» (компания)',
   lucky: '«Счастливый билет»',
   kidsMemory: '«Мемори»',
+  kidsTd: '«Правда/Действие» (дети)',
 };
 function blockedByDavayPause(){
   if(!state.pausedMode) return false;
@@ -525,6 +546,12 @@ function abandonPausedLuckySession(){
 // Симметрично остальным — сбрасывает "чужую" паузу «Мемори» (страховка).
 function abandonPausedKidsMemorySession(){
   if(state.pausedMode === 'kidsMemory'){
+    state.pausedMode = null;
+  }
+}
+// Симметрично остальным — сбрасывает "чужую" паузу «Правда/Действие» (дети).
+function abandonPausedKidsTdSession(){
+  if(state.pausedMode === 'kidsTd'){
     state.pausedMode = null;
   }
 }
@@ -654,6 +681,10 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'kidsMemory'){
     resumeKidsMemoryGame();
+    return;
+  }
+  if(state.pausedMode === 'kidsTd'){
+    resumeKidsTdGame();
     return;
   }
   goToGame();
@@ -848,6 +879,7 @@ function goToGame(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedKidsMemorySession();
+  abandonPausedKidsTdSession();
   abandonPausedFantySession();
   // Своя пауза Фантов сбрасывается явно (не через abandonPausedFantySession
   // — это возврат в СВОЮ же игру после паузы, а не "чужая" сессия), и здесь
@@ -944,6 +976,7 @@ const PAUSE_MENU_TITLES = {
   famZnayu: '🧠 Знаю тебя — на паузе',
   lucky: '🎫 Счастливый билет — на паузе',
   kidsMemory: '🧠 Мемори — на паузе',
+  kidsTd: '🗣️ Правда/Действие — на паузе',
 };
 function updateResumeUI(){
   const pauseModal = document.getElementById('pauseMenuModal');
@@ -962,7 +995,7 @@ function updateResumeUI(){
   // блока (Крокодил, Фанты-компания и т.д.), сам блок остаётся виден (там
   // же список игроков), хотя сами кнопки паузы теперь всегда в модалке.
   const isPartyPause = state.pausedMode === 'krokodil' || state.pausedMode === 'partyFants' || state.pausedMode === 'partyTd' || state.pausedMode === 'famZnayu' || state.pausedMode === 'lucky';
-  const isKidsPause = state.pausedMode === 'kidsMemory';
+  const isKidsPause = state.pausedMode === 'kidsMemory' || state.pausedMode === 'kidsTd';
   const isTwoPlayerPause = !!state.pausedMode && !isPartyPause && !isKidsPause;
   const partyGameSelectField = document.getElementById('partyGameSelectField');
   if(partyGameSelectField) partyGameSelectField.style.display = (state.inProgress && !isPartyPause) ? 'none' : '';
@@ -1939,6 +1972,7 @@ async function goToVideoGame(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedKidsMemorySession();
+  abandonPausedKidsTdSession();
   abandonPausedFantySession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -2015,6 +2049,7 @@ async function goToVideoFavoritesView(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedKidsMemorySession();
+  abandonPausedKidsTdSession();
   abandonPausedFantySession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -2656,6 +2691,7 @@ function goToDavayFavoritesView(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedKidsMemorySession();
+  abandonPausedKidsTdSession();
   abandonPausedFantySession();
   state.pausedMode = null;
   state.inProgress = true;
@@ -2834,6 +2870,7 @@ function goToPlaceholderGame(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedKidsMemorySession();
+  abandonPausedKidsTdSession();
   abandonPausedFantySession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -2912,6 +2949,7 @@ function goToPhotoFavoritesView(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedKidsMemorySession();
+  abandonPausedKidsTdSession();
   abandonPausedFantySession();
   state.pausedMode = null;
   state.inProgress = true;
@@ -3396,6 +3434,11 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'kidsMemory'){
     finishKidsMemoryGame();
+    showToast('Игра завершена');
+    return;
+  }
+  if(state.pausedMode === 'kidsTd'){
+    finishKidsTdGame();
     showToast('Игра завершена');
     return;
   }

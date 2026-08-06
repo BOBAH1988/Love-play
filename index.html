@@ -1564,6 +1564,81 @@
     </div>
   </div>
 
+  <!-- ===== ПРАВДА/ДЕЙСТВИЕ (ДЕТИ): НАСТРОЙКА ===== -->
+  <section id="kidsTdSetup" class="screen">
+    <h1 class="title">🗣️ Правда/Действие</h1>
+    <div class="subtitle" id="kidsTdSetupSubtitle">Выбирайте Правду или Действие по очереди</div>
+
+    <button class="btn btn-primary" id="kidsTdSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="kidsTdSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="kidsTdSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== ПРАВДА/ДЕЙСТВИЕ (ДЕТИ): ИГРА ===== -->
+  <section id="kidsTdGame" class="screen">
+    <div class="krokodil-score-row" id="kidsTdScoreRow"></div>
+    <div class="td-turn-label" id="kidsTdTurnLabel">Выбирает: Игрок 1</div>
+
+    <div class="party-td-choice-row" id="kidsTdChoiceRow">
+      <button type="button" class="btn btn-primary" id="kidsTdTruthBtn">🗣️ Правда</button>
+      <button type="button" class="btn btn-primary" id="kidsTdDareBtn">🎭 Действие</button>
+    </div>
+    <div class="timer-actions-bottom" id="kidsTdChoicePauseRow">
+      <button type="button" class="btn btn-secondary btn-pause" id="kidsTdChoiceExitBtn">Пауза</button>
+    </div>
+
+    <div class="card-area" id="kidsTdCardArea" style="display:none;">
+      <div class="card" id="kidsTdCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="partytd-type-badge" id="kidsTdCardBadge">Правда</div>
+            <div class="card-text partytd-text" id="kidsTdCardText">Загрузка…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-actions-row" id="kidsTdActionsRow" style="display:none;">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="kidsTdDoneBtn">✅ Выполнено</button>
+        <button type="button" class="btn btn-secondary" id="kidsTdSkipBtn">🚫 Отказ</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary btn-pause" id="kidsTdExitBtn">Пауза</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ПРАВДА/ДЕЙСТВИЕ (ДЕТИ): ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="kidsTdSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="kidsTdSummaryIntro">Вот кто выполнил больше всех заданий:</div>
+      <div class="krokodil-summary-list" id="kidsTdSummaryList"></div>
+      <button class="btn btn-primary" id="closeKidsTdSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ПРАВДА/ДЕЙСТВИЕ" (ДЕТИ) ===== -->
+  <div class="modal-overlay" id="kidsTdRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🗣️ Правила игры «Правда/Действие»</div>
+      <div class="intro-text">Дети по очереди выбирают Правду или Действие — отвечают на вопрос или выполняют задание.</div>
+      <ol class="modal-rules">
+        <li>На экране выбора игр впишите имена игроков (2–10) и выберите возраст — 5, 7, 10 или 14 лет: вопросы и задания подбираются подходящими для этого возраста.</li>
+        <li>Игроки ходят по очереди — имя того, чья очередь, показано над карточками выбора.</li>
+        <li>Игрок выбирает «🗣️ Правда» (ответить на вопрос вслух) или «🎭 Действие» (выполнить задание).</li>
+        <li>Ответили или выполнили — нажмите «✅ Выполнено», очко засчитано, и очередь переходит следующему игроку. Не хотите — «🚫 Отказ», очко не засчитывается, но игра продолжается.</li>
+        <li>Счёт по каждому игроку виден вверху экрана всё время — отдельного окна с итогами нет, игра продолжается, пока вы сами не решите закончить.</li>
+        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+      </ol>
+      <button class="btn btn-primary" id="closeKidsTdRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== ФАНТЫ: НАСТРОЙКА ИГРЫ ===== -->
   <section id="fantySetup" class="screen">
     <h1 class="title">💘 Фанты</h1>
@@ -2831,6 +2906,7 @@
 <script src="cards/cards_fam_znayu.js"></script>
 <script src="cards/cards_lucky.js"></script>
 <script src="cards/cards_kids_memory.js"></script>
+<script src="cards/cards_kids_td.js"></script>
 <script src="games/core.js"></script>
 <script src="games/truth-dare.js"></script>
 <script src="games/bingo.js"></script>
@@ -2842,6 +2918,7 @@
 <script src="games/fam-znayu.js"></script>
 <script src="games/lucky.js"></script>
 <script src="games/kids-memory.js"></script>
+<script src="games/kids-td.js"></script>
 <script src="games/wishlist.js"></script>
 <script src="games/znayu.js"></script>
 <script src="games/init.js"></script>
