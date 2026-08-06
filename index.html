@@ -316,7 +316,7 @@
   .backup-toggle-arrow{display:inline-block; font-size:10px; transition:transform .2s ease;}
   #backupField.backup-open .backup-toggle-arrow{transform:rotate(180deg);}
 
-  /* Сворачиваемые блоки списков игр ("Игры для двоих" / "Игры для компании") —
+  /* Сворачиваемые блоки списков игр ("Игры для пар 18+" / "Игры для компании") —
      по умолчанию свёрнуты, разворачиваются по клику на заголовок. */
   .field-collapsible{display:none;}
   .field-collapsible.section-open{display:block;}
@@ -732,7 +732,7 @@
   }
   /* Динамический список игроков "Крокодила" — от 2 до 10 полей с именами,
      добавляются/удаляются кнопками, оформлены как обычные текстовые поля. */
-  /* Имена игроков компании — как в блоке "Игры для двоих": по 2 в ряд,
+  /* Имена игроков компании — как в блоке "Игры для пар 18+": по 2 в ряд,
      поля покороче, вместо одной колонки во всю ширину. */
   #partyPlayersList, #kidsPlayersList{display:flex; flex-wrap:wrap; gap:8px 10px;}
   .krokodil-player-row{
@@ -1392,7 +1392,7 @@
       <div class="subtitle">Простые игры для тёплых вечеров — вдвоём с любимым человеком, весёлой компанией или всей семьёй. Выберите формат и начинайте.</div>
 
       <div class="game-select-list" id="homeMenuList">
-        <button type="button" class="btn btn-menu-item" id="homeTwoPlayerBtn">💕 Игры для двоих</button>
+        <button type="button" class="btn btn-menu-item" id="homeTwoPlayerBtn">💕 Игры для пар 18+</button>
         <button type="button" class="btn btn-menu-item" id="homeCompanyBtn">🎉 Игры для компании</button>
         <button type="button" class="btn btn-menu-item" id="homeKidsBtn">🧸 Игры с детьми</button>
       </div>
@@ -1413,10 +1413,10 @@
       </div>
     </div>
 
-    <!-- ---- Игры для двоих ---- -->
+    <!-- ---- Игры для пар 18+ ---- -->
     <div class="field-collapsible" id="twoPlayerView">
       <button type="button" class="btn-ghost" id="twoPlayerBackBtn" style="margin-bottom:8px;">← Назад</button>
-      <h1 class="title">💕 Игры для двоих</h1>
+      <h1 class="title">💕 Игры для пар 18+</h1>
       <div class="subtitle">Разожгите страсть и почувствуйте друг друга</div>
 
       <div class="field" id="gameSelectField">
