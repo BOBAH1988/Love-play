@@ -139,27 +139,34 @@ function checkKidsMemoryFinished(){
   }
   return false;
 }
-// Итоговое окно — та же вёрстка, что showKrokodilSummaryModal: место, имя,
-// число найденных пар, отсортировано по убыванию. 1-е место выделено.
+// Игроки с одинаковым числом найденных пар делят одно место — как в
+// спортивном рейтинге (1-2-2-4, а не 1-2-2-3): следующее отличающееся место
+// пропускает столько позиций, сколько игроков было в "связке". Если 1-е
+// место разделили двое и больше — в шапке отдельно отмечается ничья.
 function showKidsMemorySummaryModal(){
   const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
   const scores = state.kidsMemoryScores || [];
   const ranking = players.map((n,i)=>({n, score: scores[i] || 0})).sort((a,b)=>b.score-a.score);
   const medals = ['🥇','🥈','🥉'];
+  let place = 1;
   const listHtml = ranking.map((r,i)=>{
-    const place = medals[i] || `${i+1}.`;
-    const isFirst = i === 0;
+    if(i === 0 || ranking[i-1].score !== r.score){
+      place = i + 1;
+    }
+    const placeLabel = medals[place-1] || `${place}.`;
+    const isFirst = place === 1;
     return `
       <div class="krokodil-summary-row${isFirst ? ' krokodil-summary-first' : ''}">
-        <span class="krokodil-summary-place">${place}</span>
+        <span class="krokodil-summary-place">${placeLabel}</span>
         <span class="krokodil-summary-name">${r.n}</span>
         <span class="krokodil-summary-score">Пар найдено: ${r.score}</span>
       </div>
     `;
   }).join('');
   const totalPairs = Math.floor((state.kidsMemoryDeck || []).length / 2);
+  const isTopTie = ranking.length > 1 && ranking[0].score === ranking[1].score;
   const introEl = document.getElementById('kidsMemorySummaryIntro');
-  if(introEl) introEl.textContent = `Все ${totalPairs} пар найдены! Вот кто справился лучше всех:`;
+  if(introEl) introEl.textContent = `Все ${totalPairs} пар найдены!` + (isTopTie ? ' 🤝 Ничья за 1-е место!' : ' Вот кто справился лучше всех:');
   document.getElementById('kidsMemorySummaryList').innerHTML = listHtml;
   document.getElementById('kidsMemorySummaryModal').classList.add('show');
 }
@@ -175,6 +182,7 @@ function goToKidsMemoryGame(){
   abandonPausedPartyTdSession();
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
+  abandonPausedKidsTdSession();
   abandonPausedFantySession();
   state.pausedMode = null;
   document.getElementById('kidsMemorySetup').classList.remove('active');
