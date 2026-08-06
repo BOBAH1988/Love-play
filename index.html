@@ -1223,12 +1223,12 @@
   .memory-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0; max-width:100%;}
   .memory-card{
     aspect-ratio:1/1; border-radius:14px; border:1px solid rgba(255,255,255,.2);
-    background:rgba(255,255,255,.10); color:#fff; font-size:20px;
+    background:rgba(255,255,255,.10); color:#fff; font-size:min(9vw,34px);
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; padding:0; transition:background .15s ease, opacity .15s ease;
   }
   .memory-card.flipped, .memory-card.matched{
-    font-size:30px; background:rgba(255,255,255,.22);
+    font-size:min(13vw,52px); background:rgba(255,255,255,.22);
   }
   .memory-card.matched{
     background:linear-gradient(135deg,#ff5e8e,#ff8a5e); border-color:transparent; opacity:.55;
@@ -1485,10 +1485,20 @@
           <div class="timer-levels-note">От 2 до 10 игроков — общий список для игр с детьми</div>
         </div>
 
+        <div class="field" id="kidsAgeField">
+          <label>Выберите возраст</label>
+          <div class="starter-group timer-duration-group" id="kidsAgeGroup">
+            <button type="button" class="starter-btn mode-btn" data-value="1">5 лет</button>
+            <button type="button" class="starter-btn mode-btn" data-value="2">7 лет</button>
+            <button type="button" class="starter-btn mode-btn" data-value="3">10 лет</button>
+            <button type="button" class="starter-btn mode-btn" data-value="4">14 лет</button>
+          </div>
+        </div>
+
         <label>Выбери игру</label>
         <div class="game-select-list" id="kidsGameSelectList">
           <button type="button" class="btn btn-menu-item" id="gameKidsMemoryBtn">🧠 Мемори</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsStub2Btn">🎲 Скоро</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsTdBtn">🗣️ Правда/Действие</button>
         </div>
       </div>
     </div>
