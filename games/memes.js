@@ -84,10 +84,16 @@ function stopMemesSpeech(){
   const hint = document.getElementById('memesTtsHint');
   if(hint) hint.classList.remove('speaking');
 }
+// Синтезатор речи озвучивает символы кавычек (« » " " ' и т.п.) отдельным
+// словом ("кавычки"), что режет слух — для самой озвучки убираем их из
+// текста, а на самой карточке кавычки остаются видны как обычно.
+function stripQuotesForSpeech(text){
+  return (text || '').replace(/[«»"""'']/g, '').replace(/\s{2,}/g, ' ').trim();
+}
 function speakMemesCard(){
   if(!memesCurrentCard || !('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(memesCurrentCard.text);
+  const utter = new SpeechSynthesisUtterance(stripQuotesForSpeech(memesCurrentCard.text));
   utter.lang = 'ru-RU';
   utter.rate = 0.95;
   const voice = pickMemesFemaleVoice();

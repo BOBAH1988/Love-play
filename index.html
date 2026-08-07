@@ -1153,6 +1153,27 @@
     min-height:auto; padding:8px 14px;
   }
   .znayu-skip-btn:active{ background:rgba(43,15,46,.08); }
+  /* Викторина (пары/компания/дети) — переиспользует карточку и кнопки
+     ответов "Тайных ответов" (.znayu-question-text/.znayu-answers/
+     .znayu-answer-btn), добавляя подсветку результата после выбора:
+     зелёным — верный вариант, красным — выбранный неверный. */
+  .znayu-answer-btn.answer-correct{
+    background:rgba(76,217,100,.85); color:#fff; border-color:transparent;
+  }
+  .znayu-answer-btn.answer-wrong{
+    background:rgba(255,69,58,.85); color:#fff; border-color:transparent;
+  }
+  .znayu-answer-btn:disabled{opacity:.9; pointer-events:none;}
+  /* Озвучка вопроса по тапу на карточку — та же иконка-подсказка 🔊, что и
+     .memes-tts-hint в "Мемасиках", только под своим именем для карточек
+     Викторины (пары/компания/дети): карточка кликабельна (см. #quizCard и
+     т.п. ниже), сама иконка тап не перехватывает. */
+  #quizCard, #partyQuizCard, #kidsQuizCard{cursor:pointer;}
+  .quiz-tts-hint{
+    position:absolute; right:16px; bottom:14px; font-size:17px; opacity:.5;
+    pointer-events:none;
+  }
+  .quiz-tts-hint.speaking{opacity:.9;}
   .modal-pagination{display:flex; align-items:center; justify-content:center; gap:16px; margin:2px 0 18px;}
   .modal-pagination .modal-pagination-btn{flex:0 0 auto; width:44px; height:40px; padding:0; font-size:16px;}
   .modal-pagination-label{font-size:13px; color:#5c3a52; min-width:56px; text-align:center;}
@@ -1285,7 +1306,7 @@
   }
   .krokodil-summary-place{font-size:18px; font-weight:800; flex:0 0 auto; min-width:26px; text-align:center;}
   .krokodil-summary-name{flex:1; font-size:15px; font-weight:700; color:#2b0f2e; overflow-wrap:anywhere;}
-  .krokodil-summary-score{font-size:13px; color:#5c3a52; flex:0 0 auto; text-align:right;}
+  .krokodil-summary-score{font-size:13px; color:#5c3a52; flex:0 0 auto; text-align:right; line-height:1.5;}
   .krokodil-summary-row.krokodil-summary-first .krokodil-summary-name,
   .krokodil-summary-row.krokodil-summary-first .krokodil-summary-score{color:#2b0f2e;}
 
@@ -1441,6 +1462,8 @@
           <button type="button" class="btn btn-menu-item" id="gameTimerBtn">⏱️ Таймер страсти</button>
           <button type="button" class="btn btn-menu-item" id="gamePhotoBtn">💃 Предложи партнеру</button>
           <button type="button" class="btn btn-menu-item" id="gameDavayBtn">🎬 Давай попробуем</button>
+          <button type="button" class="btn btn-menu-item" id="gameQuizBtn">🎯 Викторина</button>
+          <button type="button" class="btn btn-menu-item" id="gameIdeasBtn">✨ Идеи для вас</button>
         </div>
       </div>
     </div>
@@ -1467,6 +1490,8 @@
           <button type="button" class="btn btn-menu-item" id="gamePartyTdBtn">🗣️ Правда/Действие</button>
           <button type="button" class="btn btn-menu-item" id="gameFamZnayuBtn">🧠 Знаю тебя</button>
           <button type="button" class="btn btn-menu-item" id="gameLuckyBtn">🎫 Счастливый билет</button>
+          <button type="button" class="btn btn-menu-item" id="gamePartyQuizBtn">🎯 Викторина</button>
+          <button type="button" class="btn btn-menu-item" id="gameTwisterBtn">🌀 Твистер</button>
         </div>
       </div>
     </div>
@@ -1499,6 +1524,10 @@
         <div class="game-select-list" id="kidsGameSelectList">
           <button type="button" class="btn btn-menu-item" id="gameKidsMemoryBtn">🧠 Мемори</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsTdBtn">🗣️ Правда/Действие</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsQuizBtn">🎯 Викторина</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsFlashBtn">🗂️ Флеш карты</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsHangmanBtn">🪢 Виселица</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsMinesweeperBtn">💣 Сапёр</button>
         </div>
       </div>
     </div>
@@ -1636,6 +1665,96 @@
         <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsTdRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ВИКТОРИНА (ДЕТИ): НАСТРОЙКА =====
+       Уровень (возраст) отдельно тут не выбирается — берётся из
+       возрастной группы в главном меню "Игры с детьми" (state.kidsAge). -->
+  <section id="kidsQuizSetup" class="screen">
+    <h1 class="title">🎯 Викторина</h1>
+    <div class="subtitle" id="kidsQuizSetupSubtitle">Отвечайте на вопросы по очереди — 4 варианта, только один верный</div>
+
+    <div class="field">
+      <label>Время на ответ</label>
+      <div class="starter-group timer-duration-group" id="kidsQuizAnswerTimeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="5">5 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="15">15 сек</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Вопросов в игре</label>
+      <div class="starter-group timer-duration-group" id="kidsQuizQuestionCountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="3">3</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="7">7</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="kidsQuizSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="kidsQuizSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="kidsQuizSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== ВИКТОРИНА (ДЕТИ): ИГРА ===== -->
+  <section id="kidsQuizGame" class="screen">
+    <div class="krokodil-score-row" id="kidsQuizScoreRow"></div>
+    <div class="td-turn-label" id="kidsQuizTurnLabel">Отвечает: Игрок 1</div>
+    <div class="wishlist-progress-row" id="kidsQuizProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="kidsQuizProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="kidsQuizProgressLabel">0 / 3</div>
+    </div>
+    <div class="timer-bar-track" id="kidsQuizBarTrack">
+      <div class="timer-bar-fill" id="kidsQuizBarFill"></div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="kidsQuizCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="znayu-question-text" id="kidsQuizQuestionText">Загрузка…</div>
+          </div>
+          <div class="znayu-answers" id="kidsQuizAnswers"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wishlist-actions-row" id="kidsQuizHandoffRow" style="display:none;">
+      <button type="button" class="btn btn-primary" id="kidsQuizHandoffStartBtn">Начать</button>
+    </div>
+    <button type="button" class="btn btn-secondary btn-pause" id="kidsQuizExitBtn" style="margin-top:10px;">Пауза</button>
+  </section>
+
+  <!-- ===== ВИКТОРИНА (ДЕТИ): ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="kidsQuizSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="kidsQuizSummaryIntro">Вот кто лучше всех справился с викториной:</div>
+      <div class="krokodil-summary-list" id="kidsQuizSummaryList"></div>
+      <button class="btn btn-primary" id="closeKidsQuizSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ВИКТОРИНА" (ДЕТИ) ===== -->
+  <div class="modal-overlay" id="kidsQuizRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🎯 Правила игры «Викторина»</div>
+      <div class="intro-text">Дети по очереди отвечают на вопросы — 4 варианта ответа, только один верный.</div>
+      <ol class="modal-rules">
+        <li>На экране выбора игр впишите имена игроков (2–10) и выберите возраст в главном меню «Игры с детьми» — 5, 7, 10 или 14 лет: вопросы подбираются подходящими для этого возраста. На экране настройки викторины выберите время на ответ (3, 5 или 10 секунд) и сколько всего вопросов будет в игре (1, 3, 5 или 10).</li>
+        <li>Вопросы задаются по очереди: ответил игрок — телефон переходит следующему, показывается карточка «Передайте телефон».</li>
+        <li>На каждый вопрос — 4 варианта ответа, верный только один. Кнопки «Пропустить» нет — нужно успеть выбрать вариант, пока идёт отсчёт времени.</li>
+        <li>Если время вышло, а ответ не выбран — вопрос засчитывается как неверный.</li>
+        <li>В конце — таблица результатов: место, имя, число верных ответов и общее время, потраченное на ответы. Если по числу верных ответов победитель не определился — побеждает тот, кто отвечал быстрее.</li>
+        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+      </ol>
+      <button class="btn btn-primary" id="closeKidsQuizRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -1787,7 +1906,7 @@
       <div class="video-extra-toggle" id="videoExtraToggle">Дополнительно <span class="video-extra-arrow">▾</span></div>
       <div class="row2">
         <button class="btn btn-secondary" id="levelUpBtn">🔥 Горячее</button>
-        <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Понизить уровень">Легче</button>
+        <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Предыдущий вариант">Предыдущее</button>
         <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">🚫</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoMuteBtn" aria-label="Включить звук видео">🔇</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoLoopBtn" aria-label="Автопереключение на следующее видео">🔁</button>
@@ -1986,9 +2105,9 @@
     <div class="field">
       <label>Количество заданий</label>
       <div class="starter-group timer-duration-group" id="krokodilWordsCountGroup">
-        <button type="button" class="starter-btn mode-btn" data-value="1">1</button>
         <button type="button" class="starter-btn mode-btn" data-value="3">3</button>
         <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="7">7</button>
         <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
       </div>
     </div>
@@ -2335,6 +2454,99 @@
     </div>
   </div>
 
+  <!-- ===== ВИКТОРИНА (КОМПАНИЯ): НАСТРОЙКА ===== -->
+  <section id="partyQuizSetup" class="screen">
+    <h1 class="title">🎯 Викторина</h1>
+    <div class="subtitle">Отвечайте на вопросы по очереди — 4 варианта, только один верный</div>
+
+    <div class="field">
+      <label>Уровень</label>
+      <div class="levels" id="partyQuizSetupLevels"></div>
+    </div>
+
+    <div class="field">
+      <label>Время на ответ</label>
+      <div class="starter-group timer-duration-group" id="partyQuizAnswerTimeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="5">5 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="15">15 сек</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Вопросов в игре</label>
+      <div class="starter-group timer-duration-group" id="partyQuizQuestionCountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="3">3</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="7">7</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="partyQuizSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="partyQuizSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="partyQuizSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== ВИКТОРИНА (КОМПАНИЯ): ИГРА ===== -->
+  <section id="partyQuizGame" class="screen">
+    <div class="krokodil-score-row" id="partyQuizScoreRow"></div>
+    <div class="td-turn-label" id="partyQuizTurnLabel">Отвечает: Игрок 1</div>
+    <div class="wishlist-progress-row" id="partyQuizProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="partyQuizProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="partyQuizProgressLabel">0 / 3</div>
+    </div>
+    <div class="timer-bar-track" id="partyQuizBarTrack">
+      <div class="timer-bar-fill" id="partyQuizBarFill"></div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="partyQuizCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="znayu-question-text" id="partyQuizQuestionText">Загрузка…</div>
+          </div>
+          <div class="znayu-answers" id="partyQuizAnswers"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wishlist-actions-row" id="partyQuizHandoffRow" style="display:none;">
+      <button type="button" class="btn btn-primary" id="partyQuizHandoffStartBtn">Начать</button>
+    </div>
+    <button type="button" class="btn btn-secondary btn-pause" id="partyQuizExitBtn" style="margin-top:10px;">Пауза</button>
+  </section>
+
+  <!-- ===== ВИКТОРИНА (КОМПАНИЯ): ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="partyQuizSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="partyQuizSummaryIntro">Вот кто лучше всех справился с викториной:</div>
+      <div class="krokodil-summary-list" id="partyQuizSummaryList"></div>
+      <button class="btn btn-primary" id="closePartyQuizSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ВИКТОРИНА" (КОМПАНИЯ) ===== -->
+  <div class="modal-overlay" id="partyQuizRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🎯 Правила игры «Викторина»</div>
+      <div class="intro-text">Компания по очереди отвечает на вопросы — 4 варианта ответа, только один верный.</div>
+      <ol class="modal-rules">
+        <li>На главном экране, в блоке «Игры для компании», впишите имена игроков (от 2 до 10). На экране настройки выберите уровень, время на ответ (3, 5 или 10 секунд) и сколько всего вопросов будет в игре (1, 3, 5 или 10).</li>
+        <li>Вопросы задаются по очереди: ответил игрок — телефон переходит следующему, показывается карточка «Передайте телефон».</li>
+        <li>На каждый вопрос — 4 варианта ответа, верный только один. Кнопки «Пропустить» нет — нужно успеть выбрать вариант, пока идёт отсчёт времени.</li>
+        <li>Если время вышло, а ответ не выбран — вопрос засчитывается как неверный.</li>
+        <li>В конце — таблица результатов: место, имя, число верных ответов и общее время, потраченное на ответы. Если по числу верных ответов победитель не определился — побеждает тот, кто отвечал быстрее.</li>
+        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+      </ol>
+      <button class="btn btn-primary" id="closePartyQuizRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== ПЛЕЙЛИСТ ЖЕЛАНИЙ: НАСТРОЙКА ===== -->
   <section id="wishlistSetup" class="screen">
     <h1 class="title">💌 Твои желания</h1>
@@ -2441,6 +2653,99 @@
     <button type="button" class="btn btn-secondary btn-pause" id="znayuExitBtn" style="margin-top:10px;">Пауза</button>
   </section>
 
+  <!-- ===== ВИКТОРИНА (ПАРЫ 18+): НАСТРОЙКА ===== -->
+  <section id="quizSetup" class="screen">
+    <h1 class="title">🎯 Викторина</h1>
+    <div class="subtitle">Отвечайте на вопросы по очереди — 4 варианта, только один верный</div>
+
+    <div class="field">
+      <label>Уровень</label>
+      <div class="levels" id="quizSetupLevels"></div>
+    </div>
+
+    <div class="field">
+      <label>Время на ответ</label>
+      <div class="starter-group timer-duration-group" id="quizAnswerTimeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="5">5 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="15">15 сек</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Вопросов в игре</label>
+      <div class="starter-group timer-duration-group" id="quizQuestionCountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="3">3</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="7">7</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="quizSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="quizSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="quizSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== ВИКТОРИНА (ПАРЫ 18+): ИГРА ===== -->
+  <section id="quizGame" class="screen">
+    <div class="krokodil-score-row" id="quizScoreRow"></div>
+    <div class="td-turn-label" id="quizTurnLabel">Отвечает: Игрок 1</div>
+    <div class="wishlist-progress-row" id="quizProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="quizProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="quizProgressLabel">0 / 3</div>
+    </div>
+    <div class="timer-bar-track" id="quizBarTrack">
+      <div class="timer-bar-fill" id="quizBarFill"></div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="quizCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="znayu-question-text" id="quizQuestionText">Загрузка…</div>
+          </div>
+          <div class="znayu-answers" id="quizAnswers"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wishlist-actions-row" id="quizHandoffRow" style="display:none;">
+      <button type="button" class="btn btn-primary" id="quizHandoffStartBtn">Начать</button>
+    </div>
+    <button type="button" class="btn btn-secondary btn-pause" id="quizExitBtn" style="margin-top:10px;">Пауза</button>
+  </section>
+
+  <!-- ===== ВИКТОРИНА (ПАРЫ 18+): ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="quizSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="quizSummaryIntro">Вот кто лучше всех справился с викториной:</div>
+      <div class="krokodil-summary-list" id="quizSummaryList"></div>
+      <button class="btn btn-primary" id="closeQuizSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ВИКТОРИНА" (ПАРЫ 18+) ===== -->
+  <div class="modal-overlay" id="quizRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🎯 Правила игры «Викторина»</div>
+      <div class="intro-text">Отвечайте на вопросы по очереди — 4 варианта ответа, только один верный.</div>
+      <ol class="modal-rules">
+        <li>На экране настройки выберите уровень и время на ответ (3, 5 или 10 секунд), а также сколько всего вопросов будет в игре (1, 3, 5 или 10).</li>
+        <li>Вопросы задаются по очереди: ответили — телефон переходит следующему игроку, показывается карточка «Передайте телефон».</li>
+        <li>На каждый вопрос — 4 варианта ответа, верный только один. Кнопки «Пропустить» нет — нужно успеть выбрать вариант, пока идёт отсчёт времени.</li>
+        <li>Если время вышло, а ответ не выбран — вопрос засчитывается как неверный.</li>
+        <li>В конце — таблица результатов: место, имя, число верных ответов и общее время, потраченное на ответы. Если по числу верных ответов победитель не определился — побеждает тот, кто отвечал быстрее.</li>
+        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+      </ol>
+      <button class="btn btn-primary" id="closeQuizRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <!-- ===== ЕДИНОЕ МЕНЮ ПАУЗЫ (одинаковое для всех игр) ===== -->
@@ -2510,7 +2815,7 @@
         <li>Нажмите «Следующая» — покажется новая случайная карточка этого же уровня.</li>
         <li>Понравилась и уже попробовали? Нажмите ☆ — карточка отметится сердечком ❤️, чтобы потом было легко её найти.</li>
         <li>Не понравилось? Нажмите 🚫 — карточка исчезнет из игры навсегда.</li>
-        <li>«🔥 Горячее» и «Легче» переключают уровень прямо в игре, без возврата в настройки.</li>
+        <li>«Ещё варианты» и «Предыдущее» переключают уровень прямо в игре, без возврата в настройки.</li>
         <li>Когда карточки уровня закончатся, колода перемешается и покажет их заново.</li>
         <li>«Выход» в любой момент вернёт в меню «Предложи партнеру» — можно сменить уровень и продолжить.</li>
         <li>Говорите друг с другом открыто и выбирайте то, что комфортно обоим.</li>
@@ -2907,6 +3212,9 @@
 <script src="cards/cards_lucky.js"></script>
 <script src="cards/cards_kids_memory.js"></script>
 <script src="cards/cards_kids_td.js"></script>
+<script src="cards/cards_quiz.js"></script>
+<script src="cards/cards_party_quiz.js"></script>
+<script src="cards/cards_kids_quiz.js"></script>
 <script src="games/core.js"></script>
 <script src="games/truth-dare.js"></script>
 <script src="games/bingo.js"></script>
@@ -2919,6 +3227,9 @@
 <script src="games/lucky.js"></script>
 <script src="games/kids-memory.js"></script>
 <script src="games/kids-td.js"></script>
+<script src="games/quiz.js"></script>
+<script src="games/party-quiz.js"></script>
+<script src="games/kids-quiz.js"></script>
 <script src="games/wishlist.js"></script>
 <script src="games/znayu.js"></script>
 <script src="games/init.js"></script>

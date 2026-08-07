@@ -60,7 +60,9 @@ let state = {
   partyPlayers:['Игрок 1','Игрок 2'], krokodilScores:[], krokodilSkipCounts:[], krokodilCurrentPlayerIndex:0,
   krokodilTurnsPlayed:0, krokodilRoundsPerPlayer:5,
   // Игры с детьми (список игроков отдельный от "Игры для компании")
-  kidsPlayers:['Игрок 1','Игрок 2'], kidsAge:1,
+  // kidsAge по умолчанию = 2 (7 лет) — см. просьбу сделать 7 лет базовым
+  // возрастом раздела вместо прежних 5 лет.
+  kidsPlayers:['Игрок 1','Игрок 2'], kidsAge:2,
   // Мемори
   kidsMemoryLevel:1, kidsMemoryDeck:[], kidsMemoryScores:[], kidsMemoryCurrentPlayerIndex:0,
   // Правда/Действие (дети)
@@ -94,7 +96,17 @@ let state = {
   luckyTeamTurnCount:[0,0],
   luckyLevel:1, luckyGrid:[], luckyChecked:[], luckyCurrentTeamIndex:0,
   luckyCompleted:[], luckyWonLines:[], luckyEscalatedTo2:false, luckyEscalatedTo3:false,
-  luckyFinished:false, luckyUsed:{}, luckyUsedBonus:[], luckyPendingBonusText:'', luckyBonusChecklist:[]
+  luckyFinished:false, luckyUsed:{}, luckyUsedBonus:[], luckyPendingBonusText:'', luckyBonusChecklist:[],
+  // Викторина (пары) — каждый игрок отвечает на все свои вопросы подряд
+  // (quizQuestionCount штук), затем передаёт телефон следующему; см. games/quiz.js.
+  quizSelectedLevel:1, quizAnswerSeconds:10, quizQuestionCount:5, quizUsed:{},
+  quizQueue:[], quizIndex:0, quizCurrentPlayerIndex:0, quizCorrect:[], quizTimeMs:[],
+  // Викторина (компания) — та же логика, все игроки из partyPlayers по очереди.
+  partyQuizSelectedLevel:1, partyQuizAnswerSeconds:10, partyQuizQuestionCount:5, partyQuizUsed:{},
+  partyQuizQueue:[], partyQuizIndex:0, partyQuizCurrentPlayerIndex:0, partyQuizCorrect:[], partyQuizTimeMs:[],
+  // Викторина (дети) — уровень берётся из kidsAge, а не из своего селектора.
+  kidsQuizAnswerSeconds:10, kidsQuizQuestionCount:5, kidsQuizUsed:{},
+  kidsQuizQueue:[], kidsQuizIndex:0, kidsQuizCurrentPlayerIndex:0, kidsQuizCorrect:[], kidsQuizTimeMs:[]
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -298,6 +310,20 @@ document.getElementById('gameKidsTdBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToKidsTdSetup();
 });
+document.getElementById('gameKidsQuizBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKidsQuizSetup();
+});
+document.getElementById('gameKidsFlashBtn').addEventListener('click', ()=>{
+  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+});
+document.getElementById('gameKidsHangmanBtn').addEventListener('click', ()=>{
+  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+});
+document.getElementById('gameKidsMinesweeperBtn').addEventListener('click', ()=>{
+  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+});
 
 /* ============ УТИЛИТЫ ============ */
 function shuffle(arr){
@@ -469,6 +495,9 @@ const PAUSED_MODE_LABELS = {
   lucky: '«Счастливый билет»',
   kidsMemory: '«Мемори»',
   kidsTd: '«Правда/Действие» (дети)',
+  quiz: '«Викторина»',
+  partyQuiz: '«Викторина» (компания)',
+  kidsQuiz: '«Викторина» (дети)',
 };
 function blockedByDavayPause(){
   if(!state.pausedMode) return false;
@@ -555,6 +584,23 @@ function abandonPausedKidsTdSession(){
     state.pausedMode = null;
   }
 }
+// Симметрично остальным — сбрасывает "чужие" паузы «Викторины» во всех трёх
+// разделах (пары/компания/дети) — каждый раздел хранит свою игру отдельно.
+function abandonPausedQuizSession(){
+  if(state.pausedMode === 'quiz'){
+    state.pausedMode = null;
+  }
+}
+function abandonPausedPartyQuizSession(){
+  if(state.pausedMode === 'partyQuiz'){
+    state.pausedMode = null;
+  }
+}
+function abandonPausedKidsQuizSession(){
+  if(state.pausedMode === 'kidsQuiz'){
+    state.pausedMode = null;
+  }
+}
 document.getElementById('gameFantyBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
@@ -568,6 +614,17 @@ document.getElementById('gamePhotoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToPhotoSetup();
+});
+// "Викторина" пока не сделана — по одной временной заглушке в каждом из
+// трёх разделов (Игры для пар 18+ / Игры для компании / Игры с детьми),
+// тот же приём, что раньше был у gameKidsStub2Btn.
+document.getElementById('gameQuizBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToQuizSetup();
+});
+document.getElementById('gameIdeasBtn').addEventListener('click', ()=>{
+  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
 });
 document.getElementById('gameTdBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -613,6 +670,14 @@ document.getElementById('gameLuckyBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToLuckySetup();
+});
+document.getElementById('gamePartyQuizBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToPartyQuizSetup();
+});
+document.getElementById('gameTwisterBtn').addEventListener('click', ()=>{
+  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
 });
 document.getElementById('gameWishlistBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -685,6 +750,18 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'kidsTd'){
     resumeKidsTdGame();
+    return;
+  }
+  if(state.pausedMode === 'quiz'){
+    resumeQuizGame();
+    return;
+  }
+  if(state.pausedMode === 'partyQuiz'){
+    resumePartyQuizGame();
+    return;
+  }
+  if(state.pausedMode === 'kidsQuiz'){
+    resumeKidsQuizGame();
     return;
   }
   goToGame();
@@ -807,6 +884,13 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.luckyCompleted = []; state.luckyWonLines = []; state.luckyLevel = 1;
   state.luckyEscalatedTo2 = false; state.luckyEscalatedTo3 = false; state.luckyFinished = false;
   state.luckyUsedBonus = []; state.luckyPendingBonusText = ''; state.luckyBonusChecklist = [];
+  // Викторина (пары/компания/дети)
+  state.quizUsed = {}; state.quizQueue = []; state.quizIndex = 0; state.quizCurrentPlayerIndex = 0;
+  state.quizCorrect = []; state.quizTimeMs = [];
+  state.partyQuizUsed = {}; state.partyQuizQueue = []; state.partyQuizIndex = 0; state.partyQuizCurrentPlayerIndex = 0;
+  state.partyQuizCorrect = []; state.partyQuizTimeMs = [];
+  state.kidsQuizUsed = {}; state.kidsQuizQueue = []; state.kidsQuizIndex = 0; state.kidsQuizCurrentPlayerIndex = 0;
+  state.kidsQuizCorrect = []; state.kidsQuizTimeMs = [];
   saveState();
   renderModeGroup();
   renderLevelToggles();
@@ -881,6 +965,9 @@ function goToGame(){
   abandonPausedKidsMemorySession();
   abandonPausedKidsTdSession();
   abandonPausedFantySession();
+  abandonPausedQuizSession();
+  abandonPausedPartyQuizSession();
+  abandonPausedKidsQuizSession();
   // Своя пауза Фантов сбрасывается явно (не через abandonPausedFantySession
   // — это возврат в СВОЮ же игру после паузы, а не "чужая" сессия), и здесь
   // же нужно закрыть глобальную модалку паузы (см. правку с пропавшими
@@ -977,6 +1064,9 @@ const PAUSE_MENU_TITLES = {
   lucky: '🎫 Счастливый билет — на паузе',
   kidsMemory: '🧠 Мемори — на паузе',
   kidsTd: '🗣️ Правда/Действие — на паузе',
+  quiz: '🎯 Викторина — на паузе',
+  partyQuiz: '🎯 Викторина — на паузе',
+  kidsQuiz: '🎯 Викторина — на паузе',
 };
 function updateResumeUI(){
   const pauseModal = document.getElementById('pauseMenuModal');
@@ -994,8 +1084,8 @@ function updateResumeUI(){
   // "Игры для компании" — исключение: если на паузе игра именно из этого
   // блока (Крокодил, Фанты-компания и т.д.), сам блок остаётся виден (там
   // же список игроков), хотя сами кнопки паузы теперь всегда в модалке.
-  const isPartyPause = state.pausedMode === 'krokodil' || state.pausedMode === 'partyFants' || state.pausedMode === 'partyTd' || state.pausedMode === 'famZnayu' || state.pausedMode === 'lucky';
-  const isKidsPause = state.pausedMode === 'kidsMemory' || state.pausedMode === 'kidsTd';
+  const isPartyPause = state.pausedMode === 'krokodil' || state.pausedMode === 'partyFants' || state.pausedMode === 'partyTd' || state.pausedMode === 'famZnayu' || state.pausedMode === 'lucky' || state.pausedMode === 'partyQuiz';
+  const isKidsPause = state.pausedMode === 'kidsMemory' || state.pausedMode === 'kidsTd' || state.pausedMode === 'kidsQuiz';
   const isTwoPlayerPause = !!state.pausedMode && !isPartyPause && !isKidsPause;
   const partyGameSelectField = document.getElementById('partyGameSelectField');
   if(partyGameSelectField) partyGameSelectField.style.display = (state.inProgress && !isPartyPause) ? 'none' : '';
@@ -1082,7 +1172,7 @@ function updateLevelUI(){
   if(isPlaceholderMode()){
     const atMax = photoLevel >= PHOTO_MAX_LEVEL;
     btn.disabled = atMax;
-    btn.textContent = atMax ? 'Максимальный уровень' : 'Сложнее';
+    btn.textContent = atMax ? 'Максимальный уровень' : 'Ещё варианты';
     const downBtn = document.getElementById('levelDownBtn');
     if(downBtn) downBtn.disabled = photoLevel <= 1;
     const el = document.getElementById('levelProgress');
@@ -1974,6 +2064,9 @@ async function goToVideoGame(){
   abandonPausedKidsMemorySession();
   abandonPausedKidsTdSession();
   abandonPausedFantySession();
+  abandonPausedQuizSession();
+  abandonPausedPartyQuizSession();
+  abandonPausedKidsQuizSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -2051,6 +2144,9 @@ async function goToVideoFavoritesView(){
   abandonPausedKidsMemorySession();
   abandonPausedKidsTdSession();
   abandonPausedFantySession();
+  abandonPausedQuizSession();
+  abandonPausedPartyQuizSession();
+  abandonPausedKidsQuizSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -2693,6 +2789,9 @@ function goToDavayFavoritesView(){
   abandonPausedKidsMemorySession();
   abandonPausedKidsTdSession();
   abandonPausedFantySession();
+  abandonPausedQuizSession();
+  abandonPausedPartyQuizSession();
+  abandonPausedKidsQuizSession();
   state.pausedMode = null;
   state.inProgress = true;
   davayLevel = (state.davaySelectedLevel || 3) - 2;
@@ -2872,6 +2971,9 @@ function goToPlaceholderGame(){
   abandonPausedKidsMemorySession();
   abandonPausedKidsTdSession();
   abandonPausedFantySession();
+  abandonPausedQuizSession();
+  abandonPausedPartyQuizSession();
+  abandonPausedKidsQuizSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -2951,6 +3053,9 @@ function goToPhotoFavoritesView(){
   abandonPausedKidsMemorySession();
   abandonPausedKidsTdSession();
   abandonPausedFantySession();
+  abandonPausedQuizSession();
+  abandonPausedPartyQuizSession();
+  abandonPausedKidsQuizSession();
   state.pausedMode = null;
   state.inProgress = true;
   state.photoFavView = true;
@@ -3439,6 +3544,21 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'kidsTd'){
     finishKidsTdGame();
+    showToast('Игра завершена');
+    return;
+  }
+  if(state.pausedMode === 'quiz'){
+    finishQuizGame();
+    showToast('Игра завершена');
+    return;
+  }
+  if(state.pausedMode === 'partyQuiz'){
+    finishPartyQuizGame();
+    showToast('Игра завершена');
+    return;
+  }
+  if(state.pausedMode === 'kidsQuiz'){
+    finishKidsQuizGame();
     showToast('Игра завершена');
     return;
   }
