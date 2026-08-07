@@ -340,7 +340,9 @@ function showQuizSummaryModal(){
   const ranking = players.map((n,i)=>({n, correct: correct[i]||0, timeMs: timeMs[i]||0}))
     .sort((a,b)=> b.correct - a.correct || a.timeMs - b.timeMs);
   const medals = ['🥇','🥈','🥉'];
-  const total = state.quizQueue ? state.quizQueue.length : (state.quizQuestionCount || 5);
+  // "из total" — сколько вопросов задавалось КАЖДОМУ игроку (quizQuestionCount),
+  // а не общая длина очереди на всю партию (которая = quizQuestionCount × число игроков).
+  const total = state.quizQuestionCount || 5;
   let place = 1;
   const listHtml = ranking.map((r,i)=>{
     if(i === 0 || ranking[i-1].correct !== r.correct || ranking[i-1].timeMs !== r.timeMs){
