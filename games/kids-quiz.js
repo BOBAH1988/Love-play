@@ -236,6 +236,11 @@ function answerKidsQuizQuestion(choiceIdx){
     playSuccessSound();
   } else {
     playFailSound();
+    // Явно сообщаем об истечении времени — зелёная подсветка верного варианта
+    // ниже это просто подсказка "вот какой был правильный ответ", очко за
+    // него НЕ начисляется (state.kidsQuizCorrect не увеличивается), но без
+    // этого тоста легко перепутать подсветку с "ответ засчитан верным".
+    if(choiceIdx < 0) showToast('⏰ Время вышло — ответ не выбран, засчитано как неверно');
   }
   document.querySelectorAll('#kidsQuizCard .znayu-answer-btn').forEach((btn, i)=>{
     btn.disabled = true;
