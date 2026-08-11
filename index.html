@@ -1336,6 +1336,11 @@
   .timer-actions-top #partyTdSkipBtn{
     flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;
   }
+  /* "Идеи для вас" — сердечко-избранное узкой квадратной кнопкой, "Далее"
+     занимает всё оставшееся место в ряду. */
+  .timer-actions-top #ideasFavBtn{
+    flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:22px;
+  }
   .timer-actions-bottom{display:flex; gap:10px;}
   .timer-actions-bottom .btn{flex:1; height:40px; padding:0 10px;}
 
@@ -2566,6 +2571,45 @@
     </div>
   </div>
 
+  <!-- ===== ТВИСТЕР: ИГРА =====
+       Физическое поле — своё, отдельное, приложение только объявляет ход:
+       кто, какой рукой/ногой, на какой цвет. Первый игрок выбирается случайно,
+       дальше — по кругу списка partyPlayers. Каждый ход озвучивается вслух. -->
+  <section id="twisterGame" class="screen">
+    <div class="card-area">
+      <div class="card" id="twisterCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="card-icon">🌀</div>
+            <div class="card-split-title" id="twisterPlayerName">…</div>
+            <div class="card-text" id="twisterMoveText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="timer-bar-track">
+      <div class="timer-bar-fill" id="twisterBarFill"></div>
+    </div>
+    <div class="timer-label" id="twisterTimeLabel">00:10</div>
+
+    <div class="starter-group timer-duration-group" id="twisterDurationGroup">
+      <button type="button" class="starter-btn mode-btn" data-value="5">5 сек</button>
+      <button type="button" class="starter-btn mode-btn" data-value="10">10 сек</button>
+      <button type="button" class="starter-btn mode-btn" data-value="15">15 сек</button>
+    </div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="twisterPauseBtn">⏸ Пауза</button>
+        <button type="button" class="btn btn-secondary" id="twisterNextBtn">Следующий ход ▶</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary btn-rules" id="twisterGameRulesBtn">Правила</button>
+        <button type="button" class="btn btn-secondary btn-pause" id="twisterExitBtn">Выход</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== ПРАВИЛА "ВИКТОРИНА" (КОМПАНИЯ) ===== -->
   <div class="modal-overlay" id="partyQuizRulesModal">
     <div class="modal-card">
@@ -2580,6 +2624,25 @@
         <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closePartyQuizRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ТВИСТЕР" ===== -->
+  <div class="modal-overlay" id="twisterRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🌀 Правила игры «Твистер»</div>
+      <div class="intro-text">Игровое поле — обычный физический коврик «Твистер» (или расстеленный на полу лист с цветными кругами). Приложение не показывает поле, а только объявляет, кому и куда ходить.</div>
+      <ol class="modal-rules">
+        <li>Список игроков — общий для игр компании (от 2 до 10), заполните его на главном экране перед входом в игру.</li>
+        <li>Первый игрок выбирается случайно, дальше ход переходит по кругу списка.</li>
+        <li>На карточке — имя игрока и его ход, например «левая рука на красный». Ход также озвучивается вслух.</li>
+        <li>Внизу выберите время на ход: 5, 10 или 15 секунд.</li>
+        <li>Когда время истечёт, автоматически покажется следующий игрок и новый ход.</li>
+        <li>«Следующий ход» — переключает ход досрочно, не дожидаясь таймера. «⏸ Пауза» — останавливает отсчёт.</li>
+        <li>Кто первым падает или касается пола не руками/ногами — выбывает, как в обычном Твистере; победитель определяется вами, приложение это не считает.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeTwisterRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -3270,6 +3333,7 @@
 <script src="cards/cards_kids_quiz.js"></script>
 <script src="cards/cards_ideas.js"></script>
 <script src="games/core.js"></script>
+<script src="games/twister.js"></script>
 <script src="games/truth-dare.js"></script>
 <script src="games/bingo.js"></script>
 <script src="games/timer-game.js"></script>

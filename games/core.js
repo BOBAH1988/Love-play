@@ -108,7 +108,9 @@ let state = {
   kidsQuizAnswerSeconds:10, kidsQuizQuestionCount:5, kidsQuizUsed:{},
   kidsQuizQueue:[], kidsQuizIndex:0, kidsQuizCurrentPlayerIndex:0, kidsQuizCorrect:[], kidsQuizTimeMs:[],
   // Идеи для вас (без уровней — единая колода из 100 карточек)
-  ideasUsed:[], ideasFavorites:[], ideasFavView:false
+  ideasUsed:[], ideasFavorites:[], ideasFavView:false,
+  // Твистер — приложение только объявляет ходы, поле физическое
+  twisterDuration:10
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -681,7 +683,9 @@ document.getElementById('gamePartyQuizBtn').addEventListener('click', ()=>{
   goToPartyQuizSetup();
 });
 document.getElementById('gameTwisterBtn').addEventListener('click', ()=>{
-  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToTwisterGame();
 });
 document.getElementById('gameWishlistBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
