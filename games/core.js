@@ -110,7 +110,22 @@ let state = {
   // Идеи для вас (без уровней — единая колода из 100 карточек)
   ideasUsed:[], ideasFavorites:[], ideasFavView:false,
   // Твистер — приложение только объявляет ходы, поле физическое
-  twisterDuration:10
+  twisterDuration:10,
+  // Бизнес игры — список игроков отдельный от "Игры для компании"
+  businessPlayers:['Игрок 1','Игрок 2'],
+  // Во что поиграть? (дети) — без уровней, единая колода описаний игр
+  whatToPlayUsed:[], whatToPlayFavorites:[], whatToPlayFavView:false,
+  // Крокодил (дети) — уровень берётся из kidsAge, игроки из kidsPlayers
+  kidsKrokodilMode:'word', kidsKrokodilRoundSeconds:180, kidsKrokodilWordsPerRound:5,
+  kidsKrokodilRoundsPerPlayer:5, kidsKrokodilUsed:{},
+  kidsKrokodilScores:[], kidsKrokodilSkipCounts:[], kidsKrokodilCurrentPlayerIndex:0,
+  kidsKrokodilTurnsPlayed:0,
+  // Мемасики (дети) — уровень берётся из kidsAge
+  kidsMemesUsed:{}, kidsMemesHidden:[],
+  // Сапёр (дети) — механика скопирована с "Секс-бинго"
+  kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperWonLines:[], kidsSaperUsedBonus:[],
+  kidsSaperCurrentLevel:1, kidsSaperEscalatedTo2:false, kidsSaperEscalatedTo3:false,
+  kidsSaperFinished:false, kidsSaperBonusChecklist:[]
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -219,7 +234,7 @@ document.getElementById('backupToggle').addEventListener('click', ()=>{
 // же самым экраном #setup — переходы "назад в #setup" из любой игры трогать
 // не нужно, они как и раньше просто делают #setup активным экраном. Здесь
 // только переключение, какой из 4 блоков внутри него показан.
-const SETUP_VIEW_IDS = ['homeView','twoPlayerView','companyView','kidsView'];
+const SETUP_VIEW_IDS = ['homeView','twoPlayerView','companyView','kidsView','businessView'];
 function showSetupView(name){
   SETUP_VIEW_IDS.forEach(id=>{
     const el = document.getElementById(id);
@@ -229,9 +244,11 @@ function showSetupView(name){
 document.getElementById('homeTwoPlayerBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('twoPlayerView'); });
 document.getElementById('homeCompanyBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('companyView'); });
 document.getElementById('homeKidsBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('kidsView'); });
+document.getElementById('homeBusinessBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('businessView'); });
 document.getElementById('twoPlayerBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('companyBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('kidsBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('businessBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 
 // Список игроков для "Игры с детьми" — тот же паттерн, что renderPartyPlayers
 // в games/krokodil.js, но отдельное состояние (kidsPlayers), т.к. это не
@@ -284,6 +301,61 @@ document.getElementById('kidsAddPlayerBtn').addEventListener('click', ()=>{
   renderKidsPlayers();
 });
 renderKidsPlayers();
+// Список игроков для "Бизнес игр" — тот же паттерн, что renderPartyPlayers/
+// renderKidsPlayers, но отдельное состояние (businessPlayers).
+function renderBusinessPlayers(){
+  if(!state.businessPlayers || state.businessPlayers.length < 2){
+    state.businessPlayers = ['Игрок 1','Игрок 2'];
+  }
+  const wrap = document.getElementById('businessPlayersList');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  state.businessPlayers.forEach((name, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'krokodil-player-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 14;
+    input.placeholder = 'Игрок ' + (idx + 1);
+    input.value = name;
+    input.addEventListener('input', ()=>{
+      state.businessPlayers[idx] = input.value.trim() || ('Игрок ' + (idx + 1));
+      saveState();
+    });
+    row.appendChild(input);
+    if(state.businessPlayers.length > 2){
+      const rmBtn = document.createElement('button');
+      rmBtn.type = 'button';
+      rmBtn.className = 'krokodil-player-remove';
+      rmBtn.setAttribute('aria-label', 'Удалить игрока');
+      rmBtn.textContent = '✕';
+      rmBtn.addEventListener('click', ()=>{
+        if(state.businessPlayers.length <= 2) return;
+        state.businessPlayers.splice(idx, 1);
+        saveState();
+        renderBusinessPlayers();
+      });
+      row.appendChild(rmBtn);
+    }
+    wrap.appendChild(row);
+  });
+  const addBtn = document.getElementById('businessAddPlayerBtn');
+  if(addBtn) addBtn.style.display = state.businessPlayers.length >= 10 ? 'none' : '';
+}
+document.getElementById('businessAddPlayerBtn').addEventListener('click', ()=>{
+  if(!state.businessPlayers) state.businessPlayers = ['Игрок 1','Игрок 2'];
+  if(state.businessPlayers.length >= 10) return;
+  state.businessPlayers.push('Игрок ' + (state.businessPlayers.length + 1));
+  saveState();
+  renderBusinessPlayers();
+});
+renderBusinessPlayers();
+document.getElementById('gameBusiness1Btn').addEventListener('click', ()=>{
+  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+});
+document.getElementById('gameBusiness2Btn').addEventListener('click', ()=>{
+  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+});
 // Возраст ребёнка — общий переключатель для игр раздела "Игры с детьми",
 // которым важен возраст (сейчас — "Правда/Действие"): 1=5 лет, 2=7 лет,
 // 3=10 лет, 4=14 лет. Тот же паттерн, что renderKrokodilDurationGroup.
@@ -308,6 +380,24 @@ document.getElementById('gameKidsMemoryBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToKidsMemorySetup();
 });
+// "Во что поиграть?" — goToWhatToPlayGame() определена в games/whattoplay.js.
+document.getElementById('gameKidsWhatToPlayBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToWhatToPlayGame();
+});
+// "Крокодил" (дети) — goToKidsKrokodilSetup() определена в games/kids-krokodil.js.
+document.getElementById('gameKidsKrokodilBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKidsKrokodilSetup();
+});
+// "Мемасики" (дети) — goToKidsMemesSetup() определена в games/kids-memes.js.
+document.getElementById('gameKidsMemesBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKidsMemesSetup();
+});
 // "Правда/Действие" (дети) — goToKidsTdSetup() определена в games/kids-td.js.
 document.getElementById('gameKidsTdBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -325,8 +415,11 @@ document.getElementById('gameKidsFlashBtn').addEventListener('click', ()=>{
 document.getElementById('gameKidsHangmanBtn').addEventListener('click', ()=>{
   showToast('Эта игра ещё в разработке 🚧 Загляните позже');
 });
+// "Сапёр" (дети) — goToKidsSaperSetup() определена в games/kids-saper.js.
 document.getElementById('gameKidsMinesweeperBtn').addEventListener('click', ()=>{
-  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKidsSaperSetup();
 });
 
 /* ============ УТИЛИТЫ ============ */
@@ -876,6 +969,24 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.ideasUsed = [];
   state.ideasFavorites = [];
   state.ideasFavView = false;
+  // Во что поиграть? (дети)
+  state.whatToPlayUsed = [];
+  state.whatToPlayFavorites = [];
+  state.whatToPlayFavView = false;
+  // Крокодил (дети)
+  state.kidsKrokodilUsed = {};
+  state.kidsKrokodilScores = []; state.kidsKrokodilSkipCounts = [];
+  state.kidsKrokodilCurrentPlayerIndex = 0; state.kidsKrokodilTurnsPlayed = 0;
+  // Мемасики (дети)
+  state.kidsMemesUsed = {};
+  state.kidsMemesHidden = [];
+  // Сапёр (дети)
+  state.kidsSaperGrid = []; state.kidsSaperChecked = []; state.kidsSaperWonLines = [];
+  state.kidsSaperUsedBonus = []; state.kidsSaperCurrentLevel = 1;
+  state.kidsSaperEscalatedTo2 = false; state.kidsSaperEscalatedTo3 = false;
+  state.kidsSaperFinished = false; state.kidsSaperBonusChecklist = [];
+  // Твистер — возвращаем время на ход к дефолту (10 сек)
+  state.twisterDuration = 10;
   // Фанты (компания)
   state.partyFantsUsed = {};
   state.partyFantsCompleted = []; state.partyFantsSkipped = []; state.partyFantsCurrentPlayerIndex = 0;
@@ -3513,8 +3624,7 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
     return;
   }
   if(state.pausedMode === 'krokodil'){
-    finishKrokodilGame();
-    showToast('Игра завершена');
+    showKrokodilExitSummary();
     return;
   }
   if(state.pausedMode === 'wishlist'){

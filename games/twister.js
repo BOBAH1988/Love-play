@@ -6,16 +6,16 @@
 // случайный игрок, дальше по кругу списка; каждый ход также озвучивается.
 
 const TWISTER_LIMBS = [
-  { key:'hand-left', text:'левая рука' },
-  { key:'hand-right', text:'правая рука' },
-  { key:'foot-left', text:'левая нога' },
-  { key:'foot-right', text:'правая нога' },
+  { key:'hand-left', text:'левая рука', icon:'✋' },
+  { key:'hand-right', text:'правая рука', icon:'✋' },
+  { key:'foot-left', text:'левая нога', icon:'🦶' },
+  { key:'foot-right', text:'правая нога', icon:'🦶' },
 ];
 const TWISTER_COLORS = [
-  { key:'red', name:'красный' },
-  { key:'yellow', name:'жёлтый' },
-  { key:'green', name:'зелёный' },
-  { key:'blue', name:'синий' },
+  { key:'red', name:'красный', hex:'#e63946' },
+  { key:'yellow', name:'жёлтый', hex:'#f4c430' },
+  { key:'green', name:'зелёный', hex:'#3cb043' },
+  { key:'blue', name:'синий', hex:'#2f6fed' },
 ];
 
 let twisterPlayerIdx = 0;
@@ -24,6 +24,9 @@ let twisterRemaining = 0;
 let twisterTotal = 0;
 let twisterIntervalId = null;
 let twisterRunning = false;
+// Игра ждёт явной команды "▶ Начать" перед первым запуском отсчёта — см.
+// goToTwisterGame() и обработчик twisterPauseBtn.
+let twisterStarted = false;
 
 function stopTwisterInterval(){
   if(twisterIntervalId){ clearInterval(twisterIntervalId); twisterIntervalId = null; }
@@ -61,12 +64,18 @@ function pickTwisterVoice(){
 function speakTwisterMove(text){
   if(!('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'ru-RU';
-  utter.rate = 0.95;
-  const voice = pickTwisterVoice();
-  if(voice) utter.voice = voice;
-  window.speechSynthesis.speak(utter);
+  // Известная особенность Web Speech API в некоторых браузерах: speak(),
+  // вызванный сразу вслед за cancel(), молча "проглатывается" (речь не
+  // звучит, хотя ошибки нет) — небольшая задержка перед speak() надёжно
+  // это обходит (тот же приём, что рекомендуют для Chrome/Android WebView).
+  setTimeout(()=>{
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'ru-RU';
+    utter.rate = 0.95;
+    const voice = pickTwisterVoice();
+    if(voice) utter.voice = voice;
+    window.speechSynthesis.speak(utter);
+  }, 60);
 }
 
 function drawTwisterMove(){
@@ -79,7 +88,24 @@ function drawTwisterMove(){
   twisterCurrentMove = { player, limb, color, moveText };
   document.getElementById('twisterPlayerName').textContent = player;
   document.getElementById('twisterMoveText').textContent = moveText;
+  const circleEl = document.getElementById('twisterLimbCircle');
+  if(circleEl){
+    circleEl.style.background = color.hex;
+    circleEl.textContent = limb.icon;
+  }
   speakTwisterMove(`${player}: ${moveText}`);
+}
+
+// Показывается при входе в игру и после выхода/паузы — до нажатия "▶ Начать
+// игру" никакой ход не объявляется и не озвучивается.
+function renderTwisterIdleCard(){
+  const circleEl = document.getElementById('twisterLimbCircle');
+  if(circleEl){
+    circleEl.style.background = '#ffffff';
+    circleEl.textContent = '🤸';
+  }
+  document.getElementById('twisterPlayerName').textContent = 'Готовы?';
+  document.getElementById('twisterMoveText').textContent = 'Нажми начать игру';
 }
 
 function twisterAdvancePlayer(){
@@ -114,8 +140,15 @@ function goToTwisterGame(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('twisterGame').classList.add('active');
   renderTwisterDurationGroup();
-  drawTwisterMove();
-  startTwisterTimer();
+  stopTwisterInterval();
+  twisterStarted = false;
+  // Ход ещё не объявляется и не озвучивается — только заглушка с иконкой и
+  // подписью "Начать игру", пока игроки не встали на поле и не нажали кнопку.
+  renderTwisterIdleCard();
+  twisterTotal = state.twisterDuration || 10;
+  twisterRemaining = twisterTotal;
+  updateTwisterBar();
+  document.getElementById('twisterPauseBtn').textContent = '▶ Начать игру';
   updateMuteBtn();
   requestWakeLock();
 }
@@ -127,6 +160,13 @@ function exitTwisterGame(){
 }
 
 document.getElementById('twisterPauseBtn').addEventListener('click', (e)=>{
+  if(!twisterStarted){
+    twisterStarted = true;
+    playSuccessSound();
+    drawTwisterMove();
+    startTwisterTimer();
+    return;
+  }
   if(twisterRunning){
     stopTwisterInterval();
     e.target.textContent = '▶ Продолжить';
@@ -140,6 +180,7 @@ document.getElementById('twisterNextBtn').addEventListener('click', ()=>{
   playSuccessSound();
   twisterAdvancePlayer();
   drawTwisterMove();
+  twisterStarted = true;
   startTwisterTimer();
 });
 document.getElementById('twisterExitBtn').addEventListener('click', ()=>{ exitTwisterGame(); });

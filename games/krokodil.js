@@ -278,14 +278,20 @@ function krRoundEnd(){
 // Итоговое окно результатов — место, имя, угадано/пропущено по каждому
 // игроку, отсортировано по убыванию счёта (угадано). 1-е место выделено
 // цветом и медалью, 2-е и 3-е — тоже медалями, остальные — номером места.
-function showKrokodilSummaryModal(){
+// krokodilSummaryIsExit различает два случая закрытия модалки (см.
+// closeKrokodilSummaryBtn): естественное завершение партии (все раунды
+// сыграны — экран уже krokodilGame, значит после закрытия нужно вернуться
+// на экран настройки) и досрочный выход через общее меню паузы (см.
+// showKrokodilExitSummary — там экран уже #setup, никуда переключать не надо).
+let krokodilSummaryIsExit = false;
+function renderKrokodilSummaryList(){
   const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
   const scores = state.krokodilScores || [];
   const skips = state.krokodilSkipCounts || [];
   const ranking = players.map((n,i)=>({n, score: scores[i] || 0, skipped: skips[i] || 0}))
     .sort((a,b)=>b.score-a.score);
   const medals = ['🥇','🥈','🥉'];
-  const listHtml = ranking.map((r,i)=>{
+  return ranking.map((r,i)=>{
     const place = medals[i] || `${i+1}.`;
     const isFirst = i === 0;
     return `
@@ -296,8 +302,31 @@ function showKrokodilSummaryModal(){
       </div>
     `;
   }).join('');
+}
+function showKrokodilSummaryModal(){
+  krokodilSummaryIsExit = false;
+  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  document.getElementById('krokodilSummaryTitle').textContent = '🏆 Игра окончена';
   document.getElementById('krokodilSummaryIntro').textContent = `Сыграно раундов: ${players.length * (state.krokodilRoundsPerPlayer || 5)} — вот кто справился лучше всех:`;
-  document.getElementById('krokodilSummaryList').innerHTML = listHtml;
+  document.getElementById('krokodilSummaryList').innerHTML = renderKrokodilSummaryList();
+  document.getElementById('krokodilSummaryModal').classList.add('show');
+}
+// Досрочный выход через общее меню паузы ("Пауза" на экране игры → на
+// главном экране "Закончить игру") — раньше в этом случае партия просто
+// молча сбрасывалась без единого слова об итогах (см. finishGameBtn в
+// games/core.js), из-за чего казалось, что у Крокодила вообще нет итогового
+// окна. Теперь показываем те же итоги, что и при обычном завершении, только
+// с пометкой "партия прервана" и текущим (неполным) счётом.
+function showKrokodilExitSummary(){
+  krokodilSummaryIsExit = true;
+  // Меню паузы (#pauseMenuModal) само не закрывается при нажатии "Закончить
+  // игру" — без этого оно перекрывало итоговое окно (оба модальных окна
+  // получали класс .show одновременно, а позже в DOM побеждает pauseMenuModal).
+  const pauseModal = document.getElementById('pauseMenuModal');
+  if(pauseModal) pauseModal.classList.remove('show');
+  document.getElementById('krokodilSummaryTitle').textContent = '⏸️ Партия прервана';
+  document.getElementById('krokodilSummaryIntro').textContent = `Сыграно раундов: ${state.krokodilTurnsPlayed || 0}. Текущий счёт:`;
+  document.getElementById('krokodilSummaryList').innerHTML = renderKrokodilSummaryList();
   document.getElementById('krokodilSummaryModal').classList.add('show');
 }
 function krNextPlayerRound(){
@@ -419,7 +448,14 @@ document.getElementById('krokodilSkipBtn').addEventListener('click', ()=>{
 });
 document.getElementById('krokodilNextPlayerBtn').addEventListener('click', ()=>{ krNextPlayerRound(); });
 document.getElementById('krokodilFinishBtn').addEventListener('click', ()=>{ exitKrokodilGame(); });
-document.getElementById('closeKrokodilSummaryBtn').addEventListener('click', ()=>{ exitKrokodilGame(); });
+document.getElementById('closeKrokodilSummaryBtn').addEventListener('click', ()=>{
+  if(krokodilSummaryIsExit){
+    document.getElementById('krokodilSummaryModal').classList.remove('show');
+    finishKrokodilGame();
+  } else {
+    exitKrokodilGame();
+  }
+});
 document.getElementById('krokodilExitBtn').addEventListener('click', ()=>{
   pauseKrokodilGame();
   showToast('Игра на паузе — прогресс сохранён');
