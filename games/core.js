@@ -106,7 +106,9 @@ let state = {
   partyQuizQueue:[], partyQuizIndex:0, partyQuizCurrentPlayerIndex:0, partyQuizCorrect:[], partyQuizTimeMs:[],
   // Викторина (дети) — уровень берётся из kidsAge, а не из своего селектора.
   kidsQuizAnswerSeconds:10, kidsQuizQuestionCount:5, kidsQuizUsed:{},
-  kidsQuizQueue:[], kidsQuizIndex:0, kidsQuizCurrentPlayerIndex:0, kidsQuizCorrect:[], kidsQuizTimeMs:[]
+  kidsQuizQueue:[], kidsQuizIndex:0, kidsQuizCurrentPlayerIndex:0, kidsQuizCorrect:[], kidsQuizTimeMs:[],
+  // Идеи для вас (без уровней — единая колода из 100 карточек)
+  ideasUsed:[], ideasFavorites:[], ideasFavView:false
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -624,7 +626,9 @@ document.getElementById('gameQuizBtn').addEventListener('click', ()=>{
   goToQuizSetup();
 });
 document.getElementById('gameIdeasBtn').addEventListener('click', ()=>{
-  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToIdeasGame();
 });
 document.getElementById('gameTdBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -864,6 +868,10 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   // Мемасики
   state.memesUsed = {};
   state.memesHidden = [];
+  // Идеи для вас
+  state.ideasUsed = [];
+  state.ideasFavorites = [];
+  state.ideasFavView = false;
   // Фанты (компания)
   state.partyFantsUsed = {};
   state.partyFantsCompleted = []; state.partyFantsSkipped = []; state.partyFantsCurrentPlayerIndex = 0;

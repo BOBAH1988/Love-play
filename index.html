@@ -398,13 +398,14 @@
      сетка сама переходит на 2 колонки, если хватает ширины экрана. */
   .game-select-list{
     display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns:repeat(2, 1fr);
     gap:12px;
     margin-top:6px;
   }
   .game-select-list .btn{
     padding:14px 12px; font-size:16px; line-height:1.25;
     justify-content:center; text-align:center; white-space:normal;
+    min-height:76px;
   }
   /* Главная страница (хаб) — 3 крупные кнопки формата игры, всегда в один
      столбец (не сетка), чтобы они читались как главный выбор, а не как
@@ -606,6 +607,10 @@
     font-weight:800;
     line-height:1.25;
     text-shadow:0 3px 12px rgba(0,0,0,.3);
+    max-width:100%;
+    overflow-wrap:break-word;
+    word-break:break-word;
+    hyphens:auto;
   }
   /* Карточка "Фанты" (компания) — тот же стиль-стандарт, что у "Крокодила"/
      "Мемасиков" (синий градиент, белый текст по центру), без иконки —
@@ -1158,10 +1163,12 @@
      .znayu-answer-btn), добавляя подсветку результата после выбора:
      зелёным — верный вариант, красным — выбранный неверный. */
   .znayu-answer-btn.answer-correct{
-    background:rgba(76,217,100,.85); color:#fff; border-color:transparent;
+    background:rgba(76,217,100,.85); color:#2b0f2e; border-color:#2ecc55;
+    box-shadow:0 0 0 2px rgba(46,204,85,.55), 0 6px 16px rgba(0,0,0,.25);
   }
   .znayu-answer-btn.answer-wrong{
-    background:rgba(255,69,58,.85); color:#fff; border-color:transparent;
+    background:rgba(255,69,58,.85); color:#2b0f2e; border-color:#ff453a;
+    box-shadow:0 0 0 2px rgba(255,69,58,.55), 0 6px 16px rgba(0,0,0,.25);
   }
   .znayu-answer-btn:disabled{opacity:.9; pointer-events:none;}
   /* Озвучка вопроса по тапу на карточку — та же иконка-подсказка 🔊, что и
@@ -1409,7 +1416,7 @@
 
     <!-- ---- Главная (хаб): название, описание, выбор формата игры ---- -->
     <div class="field-collapsible section-open" id="homeView">
-      <h1 class="title">✨ Весёлые игры</h1>
+      <h1 class="title">Fan plays</h1>
       <div class="subtitle">Простые игры для тёплых вечеров — вдвоём с любимым человеком, весёлой компанией или всей семьёй. Выберите формат и начинайте.</div>
 
       <div class="game-select-list" id="homeMenuList">
@@ -1454,16 +1461,16 @@
 
         <label>Выбери игру</label>
         <div class="game-select-list" id="gameSelectList">
+          <button type="button" class="btn btn-menu-item" id="gameQuizBtn">🎯 Викторина</button>
+          <button type="button" class="btn btn-menu-item" id="gameIdeasBtn">✨ Идеи для вас</button>
           <button type="button" class="btn btn-menu-item" id="gameFantyBtn">💘 Фанты</button>
           <button type="button" class="btn btn-menu-item" id="gameTdBtn">❓ Правда/Действие</button>
-          <button type="button" class="btn btn-menu-item" id="gameWishlistBtn">💌 Твои желания</button>
           <button type="button" class="btn btn-menu-item" id="gameZnayuBtn">💑 Тайные ответы</button>
+          <button type="button" class="btn btn-menu-item" id="gameWishlistBtn">💌 Твои желания</button>
           <button type="button" class="btn btn-menu-item" id="gameBingoBtn">🎱 Секс-бинго</button>
           <button type="button" class="btn btn-menu-item" id="gameTimerBtn">⏱️ Таймер страсти</button>
           <button type="button" class="btn btn-menu-item" id="gamePhotoBtn">💃 Предложи партнеру</button>
           <button type="button" class="btn btn-menu-item" id="gameDavayBtn">🎬 Давай попробуем</button>
-          <button type="button" class="btn btn-menu-item" id="gameQuizBtn">🎯 Викторина</button>
-          <button type="button" class="btn btn-menu-item" id="gameIdeasBtn">✨ Идеи для вас</button>
         </div>
       </div>
     </div>
@@ -1916,6 +1923,35 @@
       </div>
     </div>
     <input type="file" id="davayImportInput" accept="video/*" multiple style="display:none">
+  </section>
+
+  <!-- ===== ИДЕИ ДЛЯ ВАС: ИГРА ===== -->
+  <section id="ideasGame" class="screen">
+    <div class="card-area">
+      <div class="card" id="ideasCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="card-icon">✨</div>
+            <div class="card-split-title" id="ideasCardTitle">Загрузка…</div>
+            <div class="card-text" id="ideasCardText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="ideasNextBtn">Далее</button>
+        <button type="button" class="btn btn-secondary btn-square" id="ideasFavBtn" aria-label="В избранное">☆</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary" id="ideasFavViewBtn">⭐ Избранное</button>
+        <button type="button" class="btn btn-secondary btn-rules" id="ideasGameRulesBtn">Правила</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary btn-pause" id="ideasExitBtn">Выход</button>
+      </div>
+    </div>
   </section>
 
   <!-- ===== ПРАВДА ИЛИ ДЕЙСТВИЕ: НАСТРОЙКА ===== -->
@@ -2824,6 +2860,23 @@
     </div>
   </div>
 
+  <!-- ===== ПРАВИЛА "ИДЕИ ДЛЯ ВАС" ===== -->
+  <div class="modal-overlay" id="ideasRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">✨ Правила игры «Идеи для вас»</div>
+      <div class="intro-text">Никакого счёта и уровней — просто листайте карточки со сценариями, как провести вечер вдвоём, и выбирайте то, что понравилось.</div>
+      <ol class="modal-rules">
+        <li>На карточке — название идеи и короткое описание, как её воплотить.</li>
+        <li>Нажмите «Далее» — покажется новая случайная идея.</li>
+        <li>Понравилась идея? Нажмите ☆ — она отметится сердечком ❤️ и попадёт в избранное.</li>
+        <li>Кнопка «⭐ Избранное» показывает только отмеченные идеи; повторное нажатие возвращает полный список.</li>
+        <li>Когда все идеи будут показаны, колода перемешается и покажет их заново.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeIdeasRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== ПРАВИЛА "ПРАВДА ИЛИ ДЕЙСТВИЕ" ===== -->
   <div class="modal-overlay" id="tdRulesModal">
     <div class="modal-card">
@@ -2889,7 +2942,7 @@
       <div class="modal-title">🐊 Правила игры «Крокодил»</div>
       <div class="intro-text">Классические шарады: один игрок молча показывает слово с карточки жестами и мимикой, без слов и звуков, а остальные пытаются угадать за отведённое время.</div>
       <ol class="modal-rules">
-        <li>На главном экране, в блоке «Игры для компании», впишите имена игроков (от 2 до 10, кнопка «+ Добавить игрока») — этот список общий для всех игр компании. Затем на экране настройки Крокодила выберите уровень: 🧒 «До 12 лет», 🎈 «До 18 лет», 🔥 «18+» или 😈 «Похабные»; сложность «Слово» (только одиночные существительные — классический Крокодил) или «Действие» (сценки, эмоции, персонажи — по умолчанию); время на раунд (30 сек/3 мин/5 мин) и количество заданий за раунд (1/3/5/10, по умолчанию 5).</li>
+        <li>На главном экране, в блоке «Игры для компании», впишите имена игроков (от 2 до 10, кнопка «+ Добавить игрока») — этот список общий для всех игр компании. Затем на экране настройки Крокодила выберите уровень: 🧒 «До 12 лет», 🎈 «До 18 лет», 🔥 «18+» или 😈 «Пошлые»; сложность «Слово» (только одиночные существительные — классический Крокодил) или «Действие» (сценки, эмоции, персонажи — по умолчанию); время на раунд (30 сек/3 мин/5 мин) и количество заданий за раунд (1/3/5/10, по умолчанию 5).</li>
         <li>Телефон берёт тот, кто будет показывать. Нажмите «▶ Начать раунд» — пойдёт отсчёт и появится первое слово.</li>
         <li>Показывайте слово жестами, без слов. Как только зрители угадали — нажмите «✅ Угадали», откроется следующее слово. Если слово не поддаётся — «➡️ Пропустить».</li>
         <li>В раунде ровно столько заданий, сколько выбрано в настройке «Количество заданий» — как только все показаны (угадано или пропущено), раунд завершится сам, даже если время ещё не вышло; если время истечёт раньше, слово на экране засчитывается как пропущенное и раунд тоже заканчивается.</li>
@@ -2907,7 +2960,7 @@
       <div class="modal-title">😂 Правила игры «Мемасики»</div>
       <div class="intro-text">Приложение показывает карточку с описанием ситуации — компания подбирает под неё самый смешной мем из своей колоды физических карточек с мемами.</div>
       <ol class="modal-rules">
-        <li>Выберите уровень: 🧒 «До 12 лет», 🎈 «До 18 лет», 🔥 «18+» или 😈 «Похабные».</li>
+        <li>Выберите уровень: 🧒 «До 12 лет», 🎈 «До 18 лет», 🔥 «18+» или 😈 «Пошлые».</li>
         <li>Прочитайте вслух ситуацию на карточке — или нажмите на саму карточку (иконка 🔊 в углу), и телефон озвучит её сам, если это поддерживает браузер.</li>
         <li>Каждый участник выбирает из своей руки мем-карточку, которая лучше всего подходит к ситуации, и кладёт её в закрытую.</li>
         <li>Ведущий (или все вместе) выбирает самый смешной вариант — можно вести счёт очков на бумаге или на словах.</li>
@@ -3215,6 +3268,7 @@
 <script src="cards/cards_quiz.js"></script>
 <script src="cards/cards_party_quiz.js"></script>
 <script src="cards/cards_kids_quiz.js"></script>
+<script src="cards/cards_ideas.js"></script>
 <script src="games/core.js"></script>
 <script src="games/truth-dare.js"></script>
 <script src="games/bingo.js"></script>
@@ -3232,6 +3286,7 @@
 <script src="games/kids-quiz.js"></script>
 <script src="games/wishlist.js"></script>
 <script src="games/znayu.js"></script>
+<script src="games/ideas.js"></script>
 <script src="games/init.js"></script>
 </body>
 </html>

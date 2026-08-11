@@ -12,7 +12,7 @@ const KROKODIL_LEVELS = [
   {id:1, name:'До 12 лет', desc:'Для всей семьи', icon:'🧒'},
   {id:2, name:'До 18 лет', desc:'Для подростковой компании', icon:'🎈'},
   {id:3, name:'18+', desc:'Для взрослой компании', icon:'🔥'},
-  {id:4, name:'Похабные', desc:'Только для смелых', icon:'😈'},
+  {id:4, name:'Пошлые', desc:'Только для смелых', icon:'😈'},
 ];
 
 const KROKODIL_CARDS = [
