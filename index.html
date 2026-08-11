@@ -582,6 +582,122 @@
   .card-text{
     font-size:19px; font-weight:700; line-height:1.4;
   }
+  /* Виселица (компания) — рисунок висельника (SVG), слово клетками и
+     экранная клавиатура русского алфавита. */
+  .hangman-svg{
+    display:block; width:140px; height:auto; margin:6px auto 10px; color:#fff;
+  }
+  .hangman-part{ opacity:0; transition:opacity .2s ease; }
+  .hangman-part.hangman-part-visible{ opacity:1; }
+  .hangman-word-row{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:8px 0 4px;
+  }
+  .hangman-letter-box{
+    width:26px; height:32px; border-bottom:3px solid rgba(255,255,255,.5);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:800; color:#fff;
+  }
+  .hangman-status{
+    text-align:center; font-size:14px; color:#e8c9dd; min-height:18px; margin-bottom:8px;
+  }
+  .hangman-keyboard{
+    display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:10px;
+  }
+  .hangman-keyboard.hangman-keyboard-disabled{ opacity:.5; pointer-events:none; }
+  .hangman-key{
+    aspect-ratio:1/1; border-radius:8px; border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.1); color:#fff; font-size:14px; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .hangman-key:disabled{ cursor:default; }
+  .hangman-key-correct{ background:rgba(76,217,100,.85); color:#0b3d1f; border-color:transparent; }
+  .hangman-key-wrong{ background:rgba(255,69,58,.6); color:#fff; border-color:transparent; opacity:.7; }
+  /* Магазин (дети) — корзина покупателя, касса продавца, денежный лоток. */
+  .shop-cart-panel{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+    border-radius:16px; padding:14px; margin-top:12px;
+  }
+  .shop-cart-title{ font-weight:800; margin-bottom:8px; }
+  .shop-cart-list{ list-style:none; padding:0; margin:0 0 8px; display:flex; flex-direction:column; gap:4px; font-size:14px; }
+  .shop-cart-empty{ color:#cba0bf; font-style:italic; }
+  .shop-cart-total{ font-weight:800; font-size:16px; margin-bottom:10px; }
+  .shop-register-card .card-icon{ font-size:48px; }
+  .shop-register-card .shop-cart-list{ text-align:left; width:100%; }
+  .shop-cash-given{ font-weight:800; margin-top:10px; font-size:16px; color:#ffd27a; }
+  .shop-money-panel{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+    border-radius:16px; padding:14px; margin-top:12px;
+  }
+  .shop-money-target{ font-weight:700; margin-bottom:6px; }
+  .shop-money-sum{ font-size:22px; font-weight:800; margin-bottom:10px; }
+  .shop-money-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:10px; }
+  .shop-money-btn{
+    padding:12px 4px; border-radius:10px; border:1px solid rgba(255,255,255,.25);
+    font-weight:800; font-size:15px; cursor:pointer; color:#2b0f2e;
+  }
+  .shop-money-btn.shop-money-coin{ background:linear-gradient(135deg,#ffe29a,#ffb347); border-radius:50%; aspect-ratio:1/1; }
+  .shop-money-btn.shop-money-bill{ background:linear-gradient(135deg,#a8e6a1,#6fcf6a); }
+  .shop-money-selected{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; min-height:20px; }
+  .shop-money-chip{
+    background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3);
+    border-radius:20px; padding:5px 10px; font-size:13px; cursor:pointer;
+  }
+  /* Рулетка (компания) — волчок, поле ставок, фишки. */
+  .roulette-wheel-wrap{
+    position:relative; width:180px; height:180px; margin:8px auto 6px;
+  }
+  .roulette-wheel{
+    width:100%; height:100%; border-radius:50%;
+    border:4px solid rgba(255,255,255,.5);
+    box-shadow:0 8px 24px rgba(0,0,0,.45);
+    will-change:transform;
+  }
+  .roulette-pointer{
+    position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+    font-size:22px; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,.5);
+  }
+  .roulette-result{
+    text-align:center; font-size:16px; font-weight:700; min-height:24px; margin-bottom:8px; color:#fff;
+  }
+  .roulette-zero-cell{
+    display:block; width:100%; padding:10px; margin-bottom:6px; border-radius:8px;
+    background:#2ecc71; color:#fff; font-weight:800; font-size:15px; border:1px solid rgba(255,255,255,.25);
+    cursor:pointer; position:relative;
+  }
+  .roulette-number-grid{
+    display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; margin-bottom:8px;
+  }
+  .roulette-number-cell{
+    aspect-ratio:1/1; border-radius:6px; border:1px solid rgba(255,255,255,.25);
+    font-weight:800; font-size:13px; cursor:pointer; color:#fff; position:relative;
+  }
+  .roulette-number-cell.roulette-red{ background:#e63946; }
+  .roulette-number-cell.roulette-black{ background:#222; }
+  .roulette-outside-grid{
+    display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-bottom:6px;
+  }
+  .roulette-outside-btn{
+    padding:10px 4px; border-radius:8px; border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.1); color:#fff; font-weight:700; font-size:13px;
+    cursor:pointer; position:relative;
+  }
+  .roulette-outside-btn.roulette-red{ background:rgba(230,57,70,.7); }
+  .roulette-outside-btn.roulette-black{ background:rgba(34,34,34,.85); }
+  .roulette-bet-badge{
+    position:absolute; bottom:-6px; right:-6px; background:#ffd23f; color:#3d2b00;
+    border-radius:10px; font-size:10px; font-weight:800; padding:2px 5px; line-height:1;
+    box-shadow:0 2px 4px rgba(0,0,0,.4);
+  }
+  .roulette-chips-row{ display:flex; gap:8px; justify-content:center; margin:8px 0; }
+  .roulette-chip{
+    width:52px; height:52px; border-radius:50%; border:3px dashed rgba(255,255,255,.5);
+    background:linear-gradient(135deg,#ffd27a,#ff8a5e); color:#2b0f2e; font-weight:800; font-size:14px;
+    cursor:pointer;
+  }
+  .roulette-chip.roulette-chip-selected{
+    border-style:solid; border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35);
+  }
+  .roulette-bet-total{ text-align:center; font-weight:700; margin-bottom:8px; color:#e8c9dd; }
   /* Карточка "Крокодила" — вместо обычного белого фона с чёрным текстом
      спокойный сине-голубой градиент вместо обычного плоского бело-чёрного
      оформления и белый текст, чтобы слово выделялось на карточке. */
@@ -1455,6 +1571,7 @@
         <button type="button" class="btn btn-menu-item" id="homeCompanyBtn">🎉 Игры для компании</button>
         <button type="button" class="btn btn-menu-item" id="homeKidsBtn">🧸 Игры с детьми</button>
         <button type="button" class="btn btn-menu-item" id="homeBusinessBtn">💼 Бизнес игры</button>
+        <button type="button" class="btn btn-menu-item" id="homeSoloBtn">🧍 Игры для одного</button>
       </div>
 
       <div class="field" id="backupField" style="margin-top:22px;">
@@ -1531,6 +1648,7 @@
           <button type="button" class="btn btn-menu-item" id="gameLuckyBtn">🎫 Счастливый билет</button>
           <button type="button" class="btn btn-menu-item" id="gamePartyQuizBtn">🎯 Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameTwisterBtn">🤸 Твистер</button>
+          <button type="button" class="btn btn-menu-item" id="gamePartyRouletteBtn">🎡 Рулетка</button>
         </div>
       </div>
     </div>
@@ -1565,11 +1683,11 @@
           <button type="button" class="btn btn-menu-item" id="gameKidsTdBtn">🗣️ Правда/Действие</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsQuizBtn">🎯 Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsFlashBtn">🗂️ Флеш карты</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsHangmanBtn">🪢 Виселица</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsMinesweeperBtn">💣 Сапёр</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsWhatToPlayBtn">🎲 Во что поиграть?</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsKrokodilBtn">🐊 Крокодил</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsMemesBtn">😂 Мемасики</button>
+          <button type="button" class="btn btn-menu-item" id="gameShopBtn">🏪 Магазин</button>
         </div>
       </div>
     </div>
@@ -1592,6 +1710,22 @@
         <div class="game-select-list" id="businessGameSelectList">
           <button type="button" class="btn btn-menu-item" id="gameBusiness1Btn">🧊 Игра 1</button>
           <button type="button" class="btn btn-menu-item" id="gameBusiness2Btn">🎯 Игра 2</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- Игры для одного ---- -->
+    <div class="field-collapsible" id="soloView">
+      <button type="button" class="btn-ghost" id="soloBackBtn" style="margin-bottom:8px;">← Назад</button>
+      <h1 class="title">🧍 Игры для одного</h1>
+      <div class="subtitle">Скоротать время в одиночку</div>
+
+      <div class="field">
+        <label>Выбери игру</label>
+        <div class="game-select-list" id="soloGameSelectList">
+          <button type="button" class="btn btn-menu-item" id="gamePartyHangmanBtn">🪢 Виселица</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloQuizBtn">🎯 Викторина</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn">🧠 Мемори</button>
         </div>
       </div>
     </div>
@@ -2202,6 +2336,106 @@
       <div class="intro-text" id="kidsSaperSummaryCounts"></div>
       <div class="intro-text" id="kidsSaperSummaryBonusText" style="margin-top:10px; font-weight:700; display:none;"></div>
       <button class="btn btn-primary" id="closeKidsSaperSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== МАГАЗИН (ДЕТИ): НАСТРОЙКА ===== -->
+  <section id="shopSetup" class="screen">
+    <h1 class="title">🏪 Магазин</h1>
+    <div class="subtitle">Учимся считать деньги — покупаем и продаём</div>
+
+    <div class="field">
+      <label>Режим игры</label>
+      <div class="starter-group" id="shopModeGroup">
+        <button type="button" class="starter-btn" data-value="buyer">🛍️ Покупатель</button>
+        <button type="button" class="starter-btn" data-value="seller">💰 Продавец</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="shopSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="shopSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="shopGameRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== МАГАЗИН (ДЕТИ): ИГРА ===== -->
+  <section id="shopGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🏪 Магазин</h1>
+
+    <!-- Покупатель: листаем товары, собираем корзину -->
+    <div id="shopBuyerShopping">
+      <div class="card-area">
+        <div class="card" id="shopProductCard">
+          <div class="card-inner"><div class="card-body"><div class="card-text">Загрузка…</div></div></div>
+        </div>
+      </div>
+      <div class="timer-actions-row">
+        <div class="timer-actions-top">
+          <button type="button" class="btn btn-primary" id="shopAddToCartBtn">🛒 В корзину</button>
+          <button type="button" class="btn btn-secondary" id="shopSkipProductBtn">Далее</button>
+        </div>
+      </div>
+      <div class="shop-cart-panel">
+        <div class="shop-cart-title">🛒 Корзина</div>
+        <ul class="shop-cart-list" id="shopCartList"></ul>
+        <div class="shop-cart-total" id="shopCartTotal">Итого: 0 ₽</div>
+        <button type="button" class="btn btn-primary" id="shopGoToPayBtn" disabled>💳 К оплате</button>
+      </div>
+    </div>
+
+    <!-- Продавец: касса со случайной покупкой -->
+    <div id="shopSellerPanel" style="display:none;">
+      <div class="card shop-register-card">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="card-icon">🏪</div>
+            <ul class="shop-cart-list" id="shopSaleList"></ul>
+            <div class="shop-cart-total" id="shopSaleTotal">Итого: 0 ₽</div>
+            <div class="shop-cash-given" id="shopCashGivenText">Покупатель даёт: 0 ₽</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Общий денежный лоток: и для оплаты (Покупатель), и для сдачи (Продавец) -->
+    <div class="shop-money-panel" id="shopMoneyPanel" style="display:none;">
+      <div class="shop-money-target" id="shopMoneyTargetLabel"></div>
+      <div class="shop-money-sum" id="shopMoneySum">0 ₽</div>
+      <div class="shop-money-grid" id="shopMoneyGrid"></div>
+      <div class="shop-money-selected" id="shopMoneySelected"></div>
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-secondary" id="shopMoneyClearBtn">Очистить</button>
+        <button type="button" class="btn btn-primary" id="shopMoneySubmitBtn">Готово</button>
+      </div>
+    </div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-secondary" id="shopBackToShoppingBtn" style="display:none;">← Назад к покупкам</button>
+        <button type="button" class="btn btn-secondary" id="shopNextSaleBtn" style="display:none;">Следующий покупатель</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary btn-pause" id="shopExitBtn">Выход</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ПРАВИЛА "МАГАЗИН" ===== -->
+  <div class="modal-overlay" id="shopRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🏪 Правила игры «Магазин»</div>
+      <div class="intro-text">Учимся считать и узнавать деньги в двух ролях.</div>
+      <ol class="modal-rules">
+        <li><b>🛍️ Покупатель</b>: листайте карточки товаров и нажимайте «🛒 В корзину», чтобы добавить понравившееся. Когда корзина готова — «💳 К оплате».</li>
+        <li>На экране оплаты нужно набрать монетами и купюрами ровно ту сумму, что указана — без сдачи. Нажимайте на купюры/монеты, чтобы добавить их в лоток, на выбранную купюру в списке ниже — чтобы убрать.</li>
+        <li>Сумма совпала — покупка засчитана, начнётся новая корзина. Не совпала — приложение подскажет, не хватает денег или слишком много.</li>
+        <li><b>💰 Продавец</b>: на кассе — случайный список покупок, итоговая сумма и сумма наличных от покупателя. Нужно отсчитать и отдать точную сдачу.</li>
+        <li>«Следующий покупатель» — новая случайная покупка.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeShopRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -2873,6 +3107,152 @@
     </div>
   </div>
 
+  <!-- ===== ВИКТОРИНА (ОДИН): НАСТРОЙКА ===== -->
+  <section id="soloQuizSetup" class="screen">
+    <h1 class="title">🎯 Викторина</h1>
+    <div class="subtitle">Отвечайте на вопросы в своём темпе — 4 варианта, только один верный</div>
+
+    <div class="field">
+      <label>Уровень</label>
+      <div class="levels" id="soloQuizSetupLevels"></div>
+    </div>
+
+    <div class="field">
+      <label>Время на ответ</label>
+      <div class="starter-group timer-duration-group" id="soloQuizAnswerTimeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="5">5 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="15">15 сек</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Вопросов в игре</label>
+      <div class="starter-group timer-duration-group" id="soloQuizQuestionCountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
+        <button type="button" class="starter-btn mode-btn" data-value="15">15</button>
+        <button type="button" class="starter-btn mode-btn" data-value="20">20</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="soloQuizSetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="soloQuizSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="soloQuizSetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== ВИКТОРИНА (ОДИН): ИГРА ===== -->
+  <section id="soloQuizGame" class="screen">
+    <div class="krokodil-score-row" id="soloQuizScoreRow">✅ Верно: 0</div>
+    <div class="wishlist-progress-row" id="soloQuizProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="soloQuizProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="soloQuizProgressLabel">0 / 10</div>
+    </div>
+    <div class="timer-bar-track" id="soloQuizBarTrack">
+      <div class="timer-bar-fill" id="soloQuizBarFill"></div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="soloQuizCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="znayu-question-text" id="soloQuizQuestionText">Загрузка…</div>
+          </div>
+          <div class="znayu-answers" id="soloQuizAnswers"></div>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-secondary btn-pause" id="soloQuizExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== ВИКТОРИНА (ОДИН): ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="soloQuizSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="soloQuizSummaryIntro">Верно: 0 из 10</div>
+      <button class="btn btn-primary" id="closeSoloQuizSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ВИКТОРИНА" (ОДИН) ===== -->
+  <div class="modal-overlay" id="soloQuizRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🎯 Правила игры «Викторина»</div>
+      <div class="intro-text">Отвечайте на вопросы в одиночку — 4 варианта ответа, только один верный.</div>
+      <ol class="modal-rules">
+        <li>Выберите уровень сложности, время на ответ (5/10/15 сек) и число вопросов в игре (5/10/15/20).</li>
+        <li>На каждый вопрос — 4 варианта ответа. Не успели выбрать за отведённое время — вопрос засчитывается как неверный.</li>
+        <li>Тап по карточке озвучивает вопрос вслух (🔊), если это поддерживает браузер.</li>
+        <li>В конце — итог: сколько вопросов угадано и сколько заняло времени.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeSoloQuizRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== МЕМОРИ (ОДИН): НАСТРОЙКА ===== -->
+  <section id="soloMemorySetup" class="screen">
+    <h1 class="title">🧠 Мемори</h1>
+    <div class="subtitle">Открывайте карточки и ищите пары — в одиночку, на скорость и число ходов</div>
+
+    <div class="field">
+      <label>Сложность</label>
+      <div class="levels" id="soloMemorySetupLevels"></div>
+    </div>
+
+    <button class="btn btn-primary" id="soloMemorySetupStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="soloMemorySetupExitBtn" style="margin-top:10px;">Выход</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="soloMemorySetupRulesBtn">Правила</button>
+    </div>
+  </section>
+
+  <!-- ===== МЕМОРИ (ОДИН): ИГРА ===== -->
+  <section id="soloMemoryGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🧠 Мемори</h1>
+    <div class="krokodil-score-row" id="soloMemoryStatsRow">👣 Ходы: 0</div>
+    <div class="td-turn-label" id="soloMemoryTimerLabel">⏱️ 00:00</div>
+
+    <div class="memory-grid" id="soloMemoryGrid"></div>
+
+    <div class="bingo-actions-row bingo-actions-bottom">
+      <button type="button" class="btn btn-secondary btn-rules" id="soloMemoryGameRulesBtn">Правила</button>
+      <button type="button" class="btn btn-secondary btn-pause" id="soloMemoryExitBtn">Выход</button>
+    </div>
+  </section>
+
+  <!-- ===== МЕМОРИ (ОДИН): ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="soloMemorySummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="soloMemorySummaryIntro"></div>
+      <div class="intro-text" id="soloMemorySummaryStats" style="font-weight:700; margin-top:6px;"></div>
+      <button class="btn btn-primary" id="closeSoloMemorySummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "МЕМОРИ" (ОДИН) ===== -->
+  <div class="modal-overlay" id="soloMemoryRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🧠 Правила игры «Мемори»</div>
+      <div class="intro-text">Классическая игра на память — в одиночку, на число ходов и время.</div>
+      <ol class="modal-rules">
+        <li>Выберите сложность — от неё зависит, сколько пар карточек будет на поле.</li>
+        <li>Все карточки лежат картинкой вниз. За один ход открывайте две любые карточки.</li>
+        <li>Совпали — пара найдена, карточки остаются открытыми. Не совпали — переворачиваются обратно.</li>
+        <li>Каждая попытка открыть пару считается ходом — старайтесь запоминать, где что лежит, чтобы пройти игру быстрее и за меньшее число ходов.</li>
+        <li>Игра заканчивается, когда все пары найдены — в итогах покажем, за сколько ходов и сколько времени это заняло.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeSoloMemoryRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== ПРАВИЛА "ТВИСТЕР" ===== -->
   <div class="modal-overlay" id="twisterRulesModal">
     <div class="modal-card">
@@ -2889,6 +3269,116 @@
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
       <button class="btn btn-primary" id="closeTwisterRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ВИСЕЛИЦА: ИГРА ===== -->
+  <section id="partyHangmanGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🪢 Виселица</h1>
+    <div class="subtitle" id="partyHangmanScoreRow" style="margin-bottom:2px;">🏆 Побед: 0   ·   💀 Поражений: 0</div>
+
+    <svg class="hangman-svg" viewBox="0 0 120 150">
+      <line x1="10" y1="140" x2="90" y2="140" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <line x1="30" y1="140" x2="30" y2="10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <line x1="30" y1="10" x2="80" y2="10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <line x1="80" y1="10" x2="80" y2="24" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <circle id="hmHead" class="hangman-part" cx="80" cy="34" r="10" stroke="currentColor" stroke-width="3" fill="none"/>
+      <line id="hmBody" class="hangman-part" x1="80" y1="44" x2="80" y2="80" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <line id="hmArmL" class="hangman-part" x1="80" y1="55" x2="63" y2="70" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <line id="hmArmR" class="hangman-part" x1="80" y1="55" x2="97" y2="70" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <line id="hmLegL" class="hangman-part" x1="80" y1="80" x2="65" y2="106" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <line id="hmLegR" class="hangman-part" x1="80" y1="80" x2="95" y2="106" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+
+    <div class="hangman-word-row" id="partyHangmanWordRow"></div>
+    <div class="hangman-status" id="partyHangmanStatus"></div>
+    <div class="hangman-keyboard" id="partyHangmanKeyboard"></div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="partyHangmanNextBtn" style="display:none;">Следующее слово</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary btn-rules" id="partyHangmanGameRulesBtn">Правила</button>
+        <button type="button" class="btn btn-secondary btn-pause" id="partyHangmanExitBtn">Выход</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ПРАВИЛА "ВИСЕЛИЦА" ===== -->
+  <div class="modal-overlay" id="partyHangmanRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🪢 Правила игры «Виселица»</div>
+      <div class="intro-text">Компания вместе угадывает загаданное слово по буквам — классическая «Виселица».</div>
+      <ol class="modal-rules">
+        <li>Приложение загадывает случайное слово и показывает его длину пустыми клетками.</li>
+        <li>Компания по очереди называет буквы — нажмите на букву на экранной клавиатуре.</li>
+        <li>Если буква есть в слове — она откроется во всех клетках. Если нет — засчитывается ошибка, и на рисунке появляется новая часть виселицы.</li>
+        <li>6 ошибок — поражение, слово будет показано полностью. Собрали все буквы раньше — победа!</li>
+        <li>«Следующее слово» начнёт новый раунд. Общий счёт побед и поражений сохраняется.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closePartyHangmanRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== РУЛЕТКА: ИГРА =====
+       Игроки по очереди из общего списка "Игры для компании", у каждого свой
+       баланс фишек. Поле ставок: числа 0-36 (окрашены как в настоящей
+       рулетке) + внешние ставки (цвет/чёт-нечет/половина). Волчок — цветное
+       колесо на CSS conic-gradient, крутится случайно на нужный угол. -->
+  <section id="partyRouletteGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🎡 Рулетка</h1>
+    <div class="subtitle" id="rouletteTurnLabel" style="margin-bottom:2px;">Ходит: Игрок 1 · Баланс: 1000 фишек</div>
+
+    <div class="roulette-wheel-wrap">
+      <div class="roulette-wheel" id="rouletteWheel"></div>
+      <div class="roulette-pointer">▼</div>
+    </div>
+    <div class="roulette-result" id="rouletteResult"></div>
+
+    <button type="button" class="roulette-zero-cell" id="rouletteZeroCell" data-bet="num-0">0</button>
+    <div class="roulette-number-grid" id="rouletteNumberGrid"></div>
+
+    <div class="roulette-outside-grid" id="rouletteOutsideGrid">
+      <button type="button" class="roulette-outside-btn roulette-red" data-bet="color-red">Красное</button>
+      <button type="button" class="roulette-outside-btn roulette-black" data-bet="color-black">Чёрное</button>
+      <button type="button" class="roulette-outside-btn" data-bet="parity-even">Чёт</button>
+      <button type="button" class="roulette-outside-btn" data-bet="parity-odd">Нечет</button>
+      <button type="button" class="roulette-outside-btn" data-bet="range-low">1–18</button>
+      <button type="button" class="roulette-outside-btn" data-bet="range-high">19–36</button>
+    </div>
+
+    <label style="margin-top:10px;">Фишка</label>
+    <div class="roulette-chips-row" id="rouletteChipsRow"></div>
+    <div class="roulette-bet-total" id="rouletteBetTotal">Ставка: 0 · Осталось: 1000</div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="rouletteSpinBtn">🎡 Крутить</button>
+        <button type="button" class="btn btn-secondary" id="rouletteClearBetsBtn">Сброс ставок</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary btn-rules" id="rouletteGameRulesBtn">Правила</button>
+        <button type="button" class="btn btn-secondary btn-pause" id="rouletteExitBtn">Выход</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ПРАВИЛА "РУЛЕТКА" ===== -->
+  <div class="modal-overlay" id="partyRouletteRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🎡 Правила игры «Рулетка»</div>
+      <div class="intro-text">Казино-рулетка на фишки: делайте ставки на поле и крутите волчок — совсем как в казино, только понарошку.</div>
+      <ol class="modal-rules">
+        <li>Игроки — общий список компании, у каждого свой баланс, который сохраняется между заходами в игру.</li>
+        <li>Выберите номинал фишки внизу, затем нажмите на число (0-36) или на внешнюю ставку (Красное/Чёрное, Чёт/Нечет, 1-18/19-36), чтобы поставить фишку туда — можно ставить сразу на несколько полей.</li>
+        <li>Число выигрывает 35 фишек за одну (плюс сама ставка), внешние ставки — 1 к 1 (удваивают ставку).</li>
+        <li>«Сброс ставок» уберёт все ещё не сыгранные ставки текущего хода.</li>
+        <li>«🎡 Крутить» запускает волчок — он останавливается на случайном числе, выигрыш начисляется автоматически, и ход переходит следующему игроку.</li>
+        <li>«Выход» в любой момент вернёт в меню, баланс сохранится.</li>
+      </ol>
+      <button class="btn btn-primary" id="closePartyRouletteRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -3648,8 +4138,15 @@
 <script src="cards/cards_kids_krokodil.js"></script>
 <script src="cards/cards_kids_memes.js"></script>
 <script src="cards/cards_kids_saper.js"></script>
+<script src="cards/cards_party_hangman.js"></script>
+<script src="cards/cards_shop.js"></script>
 <script src="games/core.js"></script>
 <script src="games/twister.js"></script>
+<script src="games/party-hangman.js"></script>
+<script src="games/solo-quiz.js"></script>
+<script src="games/solo-memory.js"></script>
+<script src="games/shop.js"></script>
+<script src="games/party-roulette.js"></script>
 <script src="games/truth-dare.js"></script>
 <script src="games/bingo.js"></script>
 <script src="games/timer-game.js"></script>

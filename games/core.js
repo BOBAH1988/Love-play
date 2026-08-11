@@ -125,7 +125,21 @@ let state = {
   // Сапёр (дети) — механика скопирована с "Секс-бинго"
   kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperWonLines:[], kidsSaperUsedBonus:[],
   kidsSaperCurrentLevel:1, kidsSaperEscalatedTo2:false, kidsSaperEscalatedTo3:false,
-  kidsSaperFinished:false, kidsSaperBonusChecklist:[]
+  kidsSaperFinished:false, kidsSaperBonusChecklist:[],
+  // Виселица (компания) — без уровней, общий счёт побед/поражений
+  partyHangmanWord:'', partyHangmanGuessed:[], partyHangmanWrong:0,
+  partyHangmanUsedWords:[], partyHangmanWins:0, partyHangmanLosses:0,
+  // Магазин (дети)
+  shopMode:'buyer',
+  // Рулетка (компания) — баланс по игрокам, сохраняется между заходами
+  rouletteBalances:[], rouletteCurrentPlayerIndex:0,
+  // Викторина (один) — использует тот же банк вопросов, что и Викторина
+  // (компания), но со своим прогрессом "показанных" вопросов и своим счётом.
+  soloQuizSelectedLevel:1, soloQuizAnswerSeconds:10, soloQuizQuestionCount:10,
+  soloQuizUsed:{}, soloQuizQueue:[], soloQuizIndex:0, soloQuizCorrect:0, soloQuizTimeMs:0,
+  // Мемори (один) — использует те же данные, что и детское Мемори
+  // (KIDS_MEMORY_LEVELS/KIDS_MEMORY_ICONS), свой прогресс и статистика ходов/времени
+  soloMemoryLevel:1, soloMemoryDeck:[], soloMemorySteps:0, soloMemoryElapsedMs:0
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -234,7 +248,7 @@ document.getElementById('backupToggle').addEventListener('click', ()=>{
 // же самым экраном #setup — переходы "назад в #setup" из любой игры трогать
 // не нужно, они как и раньше просто делают #setup активным экраном. Здесь
 // только переключение, какой из 4 блоков внутри него показан.
-const SETUP_VIEW_IDS = ['homeView','twoPlayerView','companyView','kidsView','businessView'];
+const SETUP_VIEW_IDS = ['homeView','twoPlayerView','companyView','kidsView','businessView','soloView'];
 function showSetupView(name){
   SETUP_VIEW_IDS.forEach(id=>{
     const el = document.getElementById(id);
@@ -245,10 +259,12 @@ document.getElementById('homeTwoPlayerBtn').addEventListener('click', ()=>{ play
 document.getElementById('homeCompanyBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('companyView'); });
 document.getElementById('homeKidsBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('kidsView'); });
 document.getElementById('homeBusinessBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('businessView'); });
+document.getElementById('homeSoloBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('soloView'); });
 document.getElementById('twoPlayerBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('companyBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('kidsBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('businessBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('soloBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 
 // Список игроков для "Игры с детьми" — тот же паттерн, что renderPartyPlayers
 // в games/krokodil.js, но отдельное состояние (kidsPlayers), т.к. это не
@@ -398,6 +414,12 @@ document.getElementById('gameKidsMemesBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToKidsMemesSetup();
 });
+// "Магазин" (дети) — goToShopSetup() определена в games/shop.js.
+document.getElementById('gameShopBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToShopSetup();
+});
 // "Правда/Действие" (дети) — goToKidsTdSetup() определена в games/kids-td.js.
 document.getElementById('gameKidsTdBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -410,9 +432,6 @@ document.getElementById('gameKidsQuizBtn').addEventListener('click', ()=>{
   goToKidsQuizSetup();
 });
 document.getElementById('gameKidsFlashBtn').addEventListener('click', ()=>{
-  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
-});
-document.getElementById('gameKidsHangmanBtn').addEventListener('click', ()=>{
   showToast('Эта игра ещё в разработке 🚧 Загляните позже');
 });
 // "Сапёр" (дети) — goToKidsSaperSetup() определена в games/kids-saper.js.
@@ -780,6 +799,30 @@ document.getElementById('gameTwisterBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToTwisterGame();
 });
+// "Виселица" (игры для одного) — goToPartyHangmanGame() определена в games/party-hangman.js.
+document.getElementById('gamePartyHangmanBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToPartyHangmanGame();
+});
+// "Викторина" (игры для одного) — goToSoloQuizSetup() определена в games/solo-quiz.js.
+document.getElementById('gameSoloQuizBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToSoloQuizSetup();
+});
+// "Мемори" (игры для одного) — goToSoloMemorySetup() определена в games/solo-memory.js.
+document.getElementById('gameSoloMemoryBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToSoloMemorySetup();
+});
+// "Рулетка" (компания) — goToPartyRouletteGame() определена в games/party-roulette.js.
+document.getElementById('gamePartyRouletteBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToPartyRouletteGame();
+});
 document.getElementById('gameWishlistBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
@@ -987,6 +1030,16 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.kidsSaperFinished = false; state.kidsSaperBonusChecklist = [];
   // Твистер — возвращаем время на ход к дефолту (10 сек)
   state.twisterDuration = 10;
+  // Виселица (компания)
+  state.partyHangmanWord = ''; state.partyHangmanGuessed = []; state.partyHangmanWrong = 0;
+  state.partyHangmanUsedWords = []; state.partyHangmanWins = 0; state.partyHangmanLosses = 0;
+  // Рулетка (компания) — сброс баланса всех игроков к стартовому
+  state.rouletteBalances = []; state.rouletteCurrentPlayerIndex = 0;
+  // Викторина (один)
+  state.soloQuizUsed = {}; state.soloQuizQueue = []; state.soloQuizIndex = 0;
+  state.soloQuizCorrect = 0; state.soloQuizTimeMs = 0;
+  // Мемори (один)
+  state.soloMemoryDeck = []; state.soloMemorySteps = 0; state.soloMemoryElapsedMs = 0;
   // Фанты (компания)
   state.partyFantsUsed = {};
   state.partyFantsCompleted = []; state.partyFantsSkipped = []; state.partyFantsCurrentPlayerIndex = 0;
