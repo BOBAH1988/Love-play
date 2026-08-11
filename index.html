@@ -1263,6 +1263,14 @@
   .bingo-cell.bingo-suggested{
     box-shadow:0 0 0 3px var(--accent) inset;
   }
+  /* Сапёр (дети) — клетка закрыта иконкой на всю клетку, пока не нажали;
+     после нажатия открывается текст задания (обычный .bingo-cell.checked
+     стиль), кроме "счастливых" клеток пропуска хода — те при открытии
+     подсвечиваются зелёным вместо розового. */
+  .kids-saper-cell.closed{ font-size:26px; }
+  .bingo-cell.checked.kids-saper-lucky{
+    background:linear-gradient(135deg,#4cd964,#2ecc71); color:#0b3d1f;
+  }
 
   /* ---- Мемори (игры с детьми) ---- */
   .memory-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0; max-width:100%;}

@@ -18,12 +18,19 @@ function getKidsSaperBonusList(level){
   if(typeof KIDS_SAPER_BONUS === 'undefined' || !Array.isArray(KIDS_SAPER_BONUS)) return [];
   return KIDS_SAPER_BONUS.filter(i=>i.level===level);
 }
+// "Счастливые" клетки — не задание, а пропуск хода. Ровно 4 штуки на карту,
+// раскиданы случайно среди 25 клеток (см. generateKidsSaperGrid). Текст
+// клетки — единственный признак, по которому её узнают escalateKidsSaperTo
+// (при повышении уровня такие клетки не заменяются заданиями) и рендер
+// (см. KIDS_SAPER_LUCKY_TEXT ниже).
+const KIDS_SAPER_LUCKY_TEXT = 'Вам повезло! Вы пропускаете ход.';
+const KIDS_SAPER_LUCKY_COUNT = 4;
 function generateKidsSaperGrid(level){
-  const pool = shuffle(getKidsSaperItemsList(level)).slice(0,25);
-  const grid = [];
-  for(let i=0;i<25;i++){
-    grid.push(pool[i] ? pool[i].text : '—');
-  }
+  const pool = shuffle(getKidsSaperItemsList(level)).slice(0, 25 - KIDS_SAPER_LUCKY_COUNT);
+  const items = pool.map(p=>p.text);
+  while(items.length < 25 - KIDS_SAPER_LUCKY_COUNT) items.push('—');
+  for(let i=0;i<KIDS_SAPER_LUCKY_COUNT;i++) items.push(KIDS_SAPER_LUCKY_TEXT);
+  const grid = shuffle(items);
   state.kidsSaperGrid = grid;
   state.kidsSaperChecked = grid.map(()=>false);
   state.kidsSaperWonLines = [];
@@ -53,11 +60,17 @@ function renderKidsSaperGrid(){
   wrap.innerHTML = '';
   (state.kidsSaperGrid || []).forEach((text,i)=>{
     const cell = document.createElement('div');
-    cell.className = 'bingo-cell' + (state.kidsSaperChecked[i] ? ' checked' : '');
-    cell.textContent = text;
+    const isOpen = !!state.kidsSaperChecked[i];
+    const isLucky = text === KIDS_SAPER_LUCKY_TEXT;
+    cell.className = 'bingo-cell kids-saper-cell' + (isOpen ? ' checked' : ' closed') + (isOpen && isLucky ? ' kids-saper-lucky' : '');
+    if(isOpen){
+      cell.textContent = text;
+    } else {
+      cell.textContent = '💣';
+    }
     attachKidsSaperCellPress(cell, i);
     wrap.appendChild(cell);
-    fitKidsSaperCellText(cell);
+    if(isOpen) fitKidsSaperCellText(cell);
   });
   updateKidsSaperLevelLabel();
 }
@@ -173,6 +186,7 @@ function escalateKidsSaperTo(nextLevel){
   let p = 0;
   for(let i=0;i<25;i++){
     if(state.kidsSaperChecked[i]) continue;
+    if(state.kidsSaperGrid[i] === KIDS_SAPER_LUCKY_TEXT) continue;
     while(p < pool.length && usedTexts.has(pool[p].text)) p++;
     const item = pool[p];
     if(item){
