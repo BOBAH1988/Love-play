@@ -30,6 +30,7 @@ function goToSoloMemorySetup(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('soloMemorySetup').classList.add('active');
   renderSoloMemoryLevels();
+  renderSoloMemoryLeaderboard();
 }
 function exitSoloMemorySetup(){
   document.getElementById('soloMemorySetup').classList.remove('active');
@@ -139,7 +140,36 @@ function showSoloMemorySummaryModal(){
   if(introEl) introEl.textContent = `Все ${totalPairs} пар найдены! 🎉`;
   const statsEl = document.getElementById('soloMemorySummaryStats');
   if(statsEl) statsEl.textContent = `👣 Пройдено за ${state.soloMemorySteps || 0} ходов · ⏱️ Время: ${fmtSoloMemoryTime(state.soloMemoryElapsedMs || 0)}`;
+  const nameInput = document.getElementById('soloMemoryNameInput');
+  if(nameInput) nameInput.value = state.soloMemoryLastName || '';
   document.getElementById('soloMemorySummaryModal').classList.add('show');
+}
+function renderSoloMemoryLeaderboard(){
+  const wrap = document.getElementById('soloMemoryLeaderboardList');
+  if(!wrap) return;
+  const list = state.soloMemoryLeaderboard || [];
+  if(list.length === 0){
+    wrap.innerHTML = '<div class="leaderboard-empty">Пока нет результатов — сыграйте первую игру!</div>';
+    return;
+  }
+  const medals = {1:'🥇', 2:'🥈', 3:'🥉'};
+  wrap.innerHTML = list.map((entry, i)=>{
+    const rank = i + 1;
+    return `<div class="leaderboard-row${rank <= 3 ? ' leaderboard-top' + rank : ''}">
+      <div class="leaderboard-rank">${medals[rank] || rank + '.'}</div>
+      <div class="leaderboard-name">${entry.name}</div>
+      <div class="leaderboard-time">${fmtSoloMemoryTime(entry.timeMs)}</div>
+    </div>`;
+  }).join('');
+}
+function saveSoloMemoryScore(name, timeMs){
+  const cleanName = (name || '').trim().slice(0, 14) || 'Игрок';
+  if(!state.soloMemoryLeaderboard) state.soloMemoryLeaderboard = [];
+  state.soloMemoryLeaderboard.push({name: cleanName, timeMs});
+  state.soloMemoryLeaderboard.sort((a,b)=>a.timeMs - b.timeMs);
+  state.soloMemoryLeaderboard = state.soloMemoryLeaderboard.slice(0, 10);
+  state.soloMemoryLastName = cleanName;
+  saveState();
 }
 function goToSoloMemoryGame(){
   document.getElementById('soloMemorySetup').classList.remove('active');
@@ -168,10 +198,15 @@ function exitSoloMemoryGame(){
   saveState();
   document.getElementById('soloMemoryGame').classList.remove('active');
   document.getElementById('soloMemorySetup').classList.add('active');
+  renderSoloMemoryLeaderboard();
 }
 document.getElementById('soloMemorySetupStartBtn').addEventListener('click', ()=>{ goToSoloMemoryGame(); });
 document.getElementById('soloMemorySetupExitBtn').addEventListener('click', ()=>{ exitSoloMemorySetup(); });
-document.getElementById('closeSoloMemorySummaryBtn').addEventListener('click', ()=>{ exitSoloMemoryGame(); });
+document.getElementById('closeSoloMemorySummaryBtn').addEventListener('click', ()=>{
+  const nameInput = document.getElementById('soloMemoryNameInput');
+  saveSoloMemoryScore(nameInput ? nameInput.value : '', state.soloMemoryElapsedMs || 0);
+  exitSoloMemoryGame();
+});
 document.getElementById('soloMemoryExitBtn').addEventListener('click', ()=>{ exitSoloMemoryGame(); });
 document.getElementById('soloMemorySetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.add('show'); });
 document.getElementById('soloMemoryGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.add('show'); });

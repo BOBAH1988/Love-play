@@ -138,8 +138,10 @@ let state = {
   soloQuizSelectedLevel:1, soloQuizAnswerSeconds:10, soloQuizQuestionCount:10,
   soloQuizUsed:{}, soloQuizQueue:[], soloQuizIndex:0, soloQuizCorrect:0, soloQuizTimeMs:0,
   // Мемори (один) — использует те же данные, что и детское Мемори
-  // (KIDS_MEMORY_LEVELS/KIDS_MEMORY_ICONS), свой прогресс и статистика ходов/времени
-  soloMemoryLevel:1, soloMemoryDeck:[], soloMemorySteps:0, soloMemoryElapsedMs:0
+  // (KIDS_MEMORY_LEVELS/KIDS_MEMORY_ICONS), свой прогресс и статистика ходов/времени,
+  // таблица лидеров — топ-10 {name, timeMs}, отсортированных по времени.
+  soloMemoryLevel:1, soloMemoryDeck:[], soloMemorySteps:0, soloMemoryElapsedMs:0,
+  soloMemoryLeaderboard:[], soloMemoryLastName:''
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -1040,6 +1042,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.soloQuizCorrect = 0; state.soloQuizTimeMs = 0;
   // Мемори (один)
   state.soloMemoryDeck = []; state.soloMemorySteps = 0; state.soloMemoryElapsedMs = 0;
+  state.soloMemoryLeaderboard = []; state.soloMemoryLastName = '';
   // Фанты (компания)
   state.partyFantsUsed = {};
   state.partyFantsCompleted = []; state.partyFantsSkipped = []; state.partyFantsCurrentPlayerIndex = 0;

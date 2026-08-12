@@ -626,21 +626,39 @@
   .shop-cash-given{ font-weight:800; margin-top:10px; font-size:16px; color:#ffd27a; }
   .shop-money-panel{
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
-    border-radius:16px; padding:14px; margin-top:12px;
+    border-radius:16px; padding:16px; margin-top:12px;
   }
-  .shop-money-target{ font-weight:700; margin-bottom:6px; }
-  .shop-money-sum{ font-size:22px; font-weight:800; margin-bottom:10px; }
-  .shop-money-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:10px; }
+  .shop-money-target{ font-weight:700; margin-bottom:2px; font-size:14px; color:#e8c9dd; }
+  .shop-money-sum{ font-size:28px; font-weight:900; margin-bottom:14px; color:#ffd27a; text-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .shop-money-group{ margin-bottom:12px; }
+  .shop-money-group-label{
+    font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    color:#cba0bf; margin-bottom:8px;
+  }
+  .shop-money-row{ display:flex; flex-wrap:wrap; gap:10px; }
   .shop-money-btn{
-    padding:12px 4px; border-radius:10px; border:1px solid rgba(255,255,255,.25);
-    font-weight:800; font-size:15px; cursor:pointer; color:#2b0f2e;
+    border:none; cursor:pointer; font-weight:800; color:#3d2b00;
+    box-shadow:0 3px 8px rgba(0,0,0,.35), inset 0 0 0 2px rgba(255,255,255,.4);
+    transition:transform .12s ease;
   }
-  .shop-money-btn.shop-money-coin{ background:linear-gradient(135deg,#ffe29a,#ffb347); border-radius:50%; aspect-ratio:1/1; }
-  .shop-money-btn.shop-money-bill{ background:linear-gradient(135deg,#a8e6a1,#6fcf6a); }
-  .shop-money-selected{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; min-height:20px; }
+  .shop-money-btn:active{ transform:scale(.92); }
+  .shop-money-btn.shop-money-coin{
+    width:54px; height:54px; border-radius:50%; font-size:14px;
+    background:radial-gradient(circle at 35% 30%, #fff6d9, #ffcf5c 55%, #dd9c2a);
+  }
+  .shop-money-btn.shop-money-bill{
+    min-width:78px; height:46px; padding:0 12px; border-radius:8px; font-size:14px;
+    background:linear-gradient(135deg,#dfffe4,#8ee89e 60%,#4ac26a);
+  }
+  .shop-money-selected{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 12px; min-height:22px; }
   .shop-money-chip{
-    background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3);
-    border-radius:20px; padding:5px 10px; font-size:13px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:7px;
+    background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.28);
+    border-radius:20px; padding:5px 6px 5px 12px; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .shop-money-chip-remove{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.25); font-size:11px; line-height:1;
   }
   /* Рулетка (компания) — волчок, поле ставок, фишки. */
   .roulette-wheel-wrap{
@@ -698,6 +716,12 @@
     border-style:solid; border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35);
   }
   .roulette-bet-total{ text-align:center; font-weight:700; margin-bottom:8px; color:#e8c9dd; }
+  /* Карточка "Игры для двоих" — вместо плоского белого фона мягкий
+     светло-розовый градиент. Фон остаётся достаточно светлым, поэтому
+     весь остальной (тёмный) текст карточки менять не нужно. */
+  #card{
+    background:linear-gradient(160deg, #ffe1f0, #ffc3e2 55%, #f6a3d3);
+  }
   /* Карточка "Крокодила" — вместо обычного белого фона с чёрным текстом
      спокойный сине-голубой градиент вместо обычного плоского бело-чёрного
      оформления и белый текст, чтобы слово выделялось на карточке. */
@@ -1403,6 +1427,22 @@
     background:linear-gradient(135deg,#ff5e8e,#ff8a5e); border-color:transparent; opacity:.55;
   }
   .memory-card:disabled{cursor:default;}
+
+  /* Таблица лидеров "Мемори" (один) — топ-10 лучших результатов по времени. */
+  .leaderboard-list{ display:flex; flex-direction:column; gap:6px; }
+  .leaderboard-empty{ text-align:center; color:#cba0bf; font-size:14px; padding:10px 0; }
+  .leaderboard-row{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; padding:9px 14px;
+  }
+  .leaderboard-rank{ font-weight:800; font-size:14px; width:24px; text-align:center; color:#e8c9dd; flex-shrink:0; }
+  .leaderboard-row.leaderboard-top1, .leaderboard-row.leaderboard-top2, .leaderboard-row.leaderboard-top3{
+    background:rgba(255,255,255,.1);
+  }
+  .leaderboard-top1 .leaderboard-rank, .leaderboard-top2 .leaderboard-rank, .leaderboard-top3 .leaderboard-rank{ font-size:18px; }
+  .leaderboard-name{ flex:1; font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .leaderboard-time{ font-weight:800; font-size:14px; color:#ffd27a; flex-shrink:0; }
 
   /* Блок "Бонусные задания" — накопительный чек-лист бонусов, заработанных
      за собранные линии и победы в "Секс-бинго". В отличие от самой карты
@@ -3210,6 +3250,9 @@
     <div class="toggle-row" style="margin-top:10px;">
       <button type="button" class="toggle-pill rules-pill" id="soloMemorySetupRulesBtn">Правила</button>
     </div>
+
+    <div class="section-title" style="margin-top:26px; font-size:16px;">🏆 Таблица лидеров</div>
+    <div class="leaderboard-list" id="soloMemoryLeaderboardList"></div>
   </section>
 
   <!-- ===== МЕМОРИ (ОДИН): ИГРА ===== -->
@@ -3232,6 +3275,10 @@
       <div class="modal-title">🏆 Игра окончена</div>
       <div class="intro-text" id="soloMemorySummaryIntro"></div>
       <div class="intro-text" id="soloMemorySummaryStats" style="font-weight:700; margin-top:6px;"></div>
+      <div class="field" style="margin-top:14px; text-align:left;">
+        <label>Ваше имя (для таблицы лидеров)</label>
+        <input type="text" id="soloMemoryNameInput" maxlength="14" placeholder="Игрок">
+      </div>
       <button class="btn btn-primary" id="closeSoloMemorySummaryBtn">Завершить игру</button>
     </div>
   </div>

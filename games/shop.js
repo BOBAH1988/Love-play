@@ -57,16 +57,34 @@ function renderShopMoneyGrid(){
   if(!wrap) return;
   wrap.innerHTML = '';
   const list = (typeof SHOP_MONEY !== 'undefined' && Array.isArray(SHOP_MONEY)) ? SHOP_MONEY : [];
-  list.forEach(m=>{
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'shop-money-btn shop-money-' + m.type;
-    btn.textContent = formatRub(m.value);
-    btn.addEventListener('click', ()=>{
-      shopMoneySelected.push(m.value);
-      renderShopMoneySelected();
+  const groups = [
+    { type: 'coin', label: 'Монеты' },
+    { type: 'bill', label: 'Купюры' }
+  ];
+  groups.forEach(g=>{
+    const items = list.filter(m=>m.type === g.type);
+    if(items.length === 0) return;
+    const groupEl = document.createElement('div');
+    groupEl.className = 'shop-money-group';
+    const labelEl = document.createElement('div');
+    labelEl.className = 'shop-money-group-label';
+    labelEl.textContent = g.label;
+    groupEl.appendChild(labelEl);
+    const rowEl = document.createElement('div');
+    rowEl.className = 'shop-money-row';
+    items.forEach(m=>{
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'shop-money-btn shop-money-' + m.type;
+      btn.textContent = formatRub(m.value);
+      btn.addEventListener('click', ()=>{
+        shopMoneySelected.push(m.value);
+        renderShopMoneySelected();
+      });
+      rowEl.appendChild(btn);
     });
-    wrap.appendChild(btn);
+    groupEl.appendChild(rowEl);
+    wrap.appendChild(groupEl);
   });
 }
 function renderShopMoneySelected(){
@@ -74,7 +92,12 @@ function renderShopMoneySelected(){
   if(sumEl) sumEl.textContent = formatRub(shopMoneySum());
   const wrap = document.getElementById('shopMoneySelected');
   if(wrap){
-    wrap.innerHTML = shopMoneySelected.map((v,i)=>`<button type="button" class="shop-money-chip" data-idx="${i}">${formatRub(v)} ✕</button>`).join('');
+    const byValue = {};
+    (typeof SHOP_MONEY !== 'undefined' ? SHOP_MONEY : []).forEach(m=>{ byValue[m.value] = m.type; });
+    wrap.innerHTML = shopMoneySelected.map((v,i)=>{
+      const icon = byValue[v] === 'bill' ? '💵' : '🪙';
+      return `<button type="button" class="shop-money-chip" data-idx="${i}">${icon} ${formatRub(v)}<span class="shop-money-chip-remove">✕</span></button>`;
+    }).join('');
     wrap.querySelectorAll('.shop-money-chip').forEach(chip=>{
       chip.addEventListener('click', ()=>{
         const idx = parseInt(chip.dataset.idx, 10);
