@@ -262,11 +262,11 @@ document.getElementById('homeCompanyBtn').addEventListener('click', ()=>{ playSu
 document.getElementById('homeKidsBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('kidsView'); });
 document.getElementById('homeBusinessBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('businessView'); });
 document.getElementById('homeSoloBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('soloView'); });
-document.getElementById('twoPlayerBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
-document.getElementById('companyBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
-document.getElementById('kidsBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
-document.getElementById('businessBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
-document.getElementById('soloBackBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('twoPlayerExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('companyExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('kidsExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('businessExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('soloExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 
 // Список игроков для "Игры с детьми" — тот же паттерн, что renderPartyPlayers
 // в games/krokodil.js, но отдельное состояние (kidsPlayers), т.к. это не
@@ -3672,14 +3672,19 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
     return;
   }
   if(state.pausedMode === 'td'){
+    if((state.tdScore1||0) === 0 && (state.tdScore2||0) === 0){ finishTdGame(); return; }
     showTdSummary();
     return;
   }
   if(state.pausedMode === 'bingo'){
+    const bingoCheckedCount = (state.bingoChecked || []).filter(Boolean).length;
+    if(bingoCheckedCount === 0){ finishBingoGame(); return; }
     showBingoExitSummary();
     return;
   }
   if(state.pausedMode === 'krokodil'){
+    const krokodilTotal = (state.krokodilScores || []).reduce((a,b)=>a+(b||0), 0);
+    if(krokodilTotal === 0){ finishKrokodilGame(); return; }
     showKrokodilExitSummary();
     return;
   }
@@ -3694,14 +3699,19 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
     return;
   }
   if(state.pausedMode === 'timer'){
+    if((state.timerScore1||0) === 0 && (state.timerScore2||0) === 0){ exitTimerGame(); return; }
     showTimerSummary();
     return;
   }
   if(state.pausedMode === 'partyFants'){
+    const partyFantsTotal = (state.partyFantsCompleted || []).reduce((a,b)=>a+(b||0), 0);
+    if(partyFantsTotal === 0){ exitPartyFantsGame(); return; }
     finishPartyFantsGame();
     return;
   }
   if(state.pausedMode === 'partyTd'){
+    const partyTdTotal = (state.partyTdCompleted || []).reduce((a,b)=>a+(b||0), 0);
+    if(partyTdTotal === 0){ exitPartyTdGame(); return; }
     finishPartyTdGame();
     return;
   }
@@ -3740,6 +3750,7 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
     showToast('Игра завершена');
     return;
   }
+  if((state.score1||0) === 0 && (state.score2||0) === 0){ goToSetup(); return; }
   showSummary();
 });
 
