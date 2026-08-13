@@ -141,7 +141,15 @@ let state = {
   // (KIDS_MEMORY_LEVELS/KIDS_MEMORY_ICONS), свой прогресс и статистика ходов/времени,
   // таблица лидеров — топ-10 {name, timeMs}, отсортированных по времени.
   soloMemoryLevel:1, soloMemoryDeck:[], soloMemorySteps:0, soloMemoryElapsedMs:0,
-  soloMemoryLeaderboard:[], soloMemoryLastName:''
+  soloMemoryLeaderboard:[], soloMemoryLastName:'',
+  // Лимонадный ларёк (бизнес) — партия из 5 дней: утро (погода/событие/
+  // апгрейды) → место → закупка → цена → итоги дня, капитал переносится
+  // между днями, после 5-го дня — мини-проверка.
+  businessLemonadeDay:1, businessLemonadeCapital:200, businessLemonadeUpgrades:{sign:false, music:false},
+  businessLemonadeWeatherKey:'normal', businessLemonadeEventIdx:-1, businessLemonadeLocation:null, businessLemonadeIce:false,
+  businessLemonadeCups:10, businessLemonadePrice:40, businessLemonadeSold:0,
+  businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[],
+  businessLemonadeQuizIndex:0, businessLemonadeQuizCorrect:0
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -368,8 +376,11 @@ document.getElementById('businessAddPlayerBtn').addEventListener('click', ()=>{
   renderBusinessPlayers();
 });
 renderBusinessPlayers();
+// "Лимонадный ларёк" (бизнес) — goToBusinessLemonadeSetup() определена в games/business-lemonade.js.
 document.getElementById('gameBusiness1Btn').addEventListener('click', ()=>{
-  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToBusinessLemonadeSetup();
 });
 document.getElementById('gameBusiness2Btn').addEventListener('click', ()=>{
   showToast('Эта игра ещё в разработке 🚧 Загляните позже');
@@ -916,8 +927,15 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
 
 document.getElementById('updateAppBtn').addEventListener('click', ()=>{
   // Жёсткое обновление: перезагружаем текущий URL с cache-busting параметром,
-  // чтобы браузер подтянул свежую версию файлов, но адрес (и иконка на
-  // главном экране, если приложение установлено) остаются прежними.
+  // чтобы браузер подтянул свежую версию index.html. Этого одного недостаточно —
+  // браузер кеширует каждый <script src="games/*.js"> ОТДЕЛЬНО по его
+  // собственному URL, независимо от параметра на странице, поэтому старый
+  // закэшированный JS мог продолжать грузиться даже после "обновления"
+  // (так было с card/games/*.js — при правках файлов кнопка не помогала).
+  // Поэтому у каждого <script src> в index.html есть общий "?v=ДАТАбуква"
+  // (см. низ файла) — при любой правке games/*.js или cards/*.js эту версию
+  // нужно менять (например 20260813a → 20260813b), иначе новый index.html
+  // всё равно сошлётся на те же URL скриптов, которые браузер уже закэшировал.
   try{ sessionStorage.setItem('appJustUpdated', '1'); }catch(e){}
   const url = new URL(location.href);
   url.searchParams.set('_r', Date.now());
@@ -1043,6 +1061,14 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   // Мемори (один)
   state.soloMemoryDeck = []; state.soloMemorySteps = 0; state.soloMemoryElapsedMs = 0;
   state.soloMemoryLeaderboard = []; state.soloMemoryLastName = '';
+  // Лимонадный ларёк (бизнес)
+  state.businessLemonadeDay = 1; state.businessLemonadeCapital = 200;
+  state.businessLemonadeUpgrades = {sign:false, music:false};
+  state.businessLemonadeWeatherKey = 'normal'; state.businessLemonadeEventIdx = -1;
+  state.businessLemonadeLocation = null; state.businessLemonadeIce = false;
+  state.businessLemonadeCups = 10; state.businessLemonadePrice = 40; state.businessLemonadeSold = 0;
+  state.businessLemonadeRevenue = 0; state.businessLemonadeNetProfit = 0; state.businessLemonadeDayProfits = [];
+  state.businessLemonadeQuizIndex = 0; state.businessLemonadeQuizCorrect = 0;
   // Фанты (компания)
   state.partyFantsUsed = {};
   state.partyFantsCompleted = []; state.partyFantsSkipped = []; state.partyFantsCurrentPlayerIndex = 0;

@@ -660,6 +660,68 @@
     display:inline-flex; align-items:center; justify-content:center;
     width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.25); font-size:11px; line-height:1;
   }
+  /* Лимонадный ларёк (бизнес) — партия из 5 дней: утро (погода/событие/
+     апгрейды) → место → закупка → цена → итоги дня → (после 5-го дня)
+     мини-проверка. Шаги — обычные div внутри одного экрана
+     #businessLemonadeGame, переключаются через .biz-phase-active (без
+     отдельных экранов-секций, чтобы не плодить лишнюю навигацию). */
+  .biz-phase{ display:none; }
+  .biz-phase.biz-phase-active{ display:block; }
+  .biz-step-title{ font-size:18px; font-weight:800; margin:4px 0 10px; text-align:center; }
+  .biz-breakdown-box{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+    border-radius:16px; padding:14px; margin:12px 0;
+  }
+  .biz-breakdown-row{ display:flex; justify-content:space-between; gap:10px; font-size:14px; padding:4px 0; }
+  .biz-breakdown-row.biz-total{
+    font-weight:800; font-size:16px; border-top:1px solid rgba(255,255,255,.15); margin-top:6px; padding-top:8px;
+  }
+  .biz-formula-line{ font-size:12px; color:#cba0bf; text-align:center; margin:6px 0 2px; }
+  .biz-result-highlight{
+    font-size:30px; font-weight:900; text-align:center; margin:6px 0 4px; color:#ffd27a;
+    text-shadow:0 2px 8px rgba(0,0,0,.3);
+  }
+  .biz-result-highlight.biz-loss{ color:#ff6b6b; }
+  .biz-quiz-progress{ text-align:center; font-size:13px; color:#cba0bf; margin-bottom:10px; }
+  /* Мини-проверка "Лимонадного ларька" лежит прямо на тёмном фоне экрана
+     (без карточки-обёртки) — кнопки .znayu-answer-btn по умолчанию тёмные
+     полупрозрачные (рассчитаны на светлую карточку), поэтому здесь были
+     невидимы. Перекрашены в светлые полупрозрачные — тот же приём, что и
+     у карточек "Знаю тебя"/"Викторины" в компании. */
+  #bizPhaseQuiz .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  #bizPhaseQuiz .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
+  /* Шкала дней вверху экрана — видна на всех шагах, чтобы было понятно,
+     где в партии сейчас находишься. */
+  .biz-day-bar{ margin:8px 0 4px; }
+  .biz-day-track{ height:6px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden; }
+  .biz-day-fill{ height:100%; background:linear-gradient(90deg,#ff5e8e,#ff8a5e); border-radius:3px; transition:width .3s ease; }
+  .biz-day-label{ text-align:center; font-size:12px; font-weight:700; color:#cba0bf; margin-top:4px; }
+  .biz-capital-row{ text-align:center; font-size:15px; font-weight:800; color:#ffd27a; margin-bottom:10px; }
+  .biz-weather-card{
+    text-align:center; font-size:17px; font-weight:700; padding:12px; border-radius:14px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); margin-bottom:10px;
+  }
+  .biz-event-card{
+    text-align:center; font-size:14px; padding:10px; border-radius:12px;
+    background:rgba(255,210,122,.14); border:1px solid rgba(255,210,122,.3); color:#ffd27a; margin-bottom:10px;
+  }
+  .biz-upgrade-box{ margin-top:8px; }
+  .biz-upgrade-btn{
+    width:100%; text-align:left; padding:12px 14px; border-radius:14px; margin-top:8px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff;
+    font-size:14px; font-weight:700; cursor:pointer;
+  }
+  .biz-upgrade-btn.biz-upgrade-owned{ opacity:.55; cursor:default; }
+  .biz-upgrade-btn .biz-upgrade-price{ display:block; font-size:12px; font-weight:600; color:#cba0bf; margin-top:2px; }
+  .biz-location-item{
+    width:100%; text-align:left; padding:14px; border-radius:14px; margin-top:10px;
+    background:rgba(255,255,255,.06); border:2px solid rgba(255,255,255,.15); color:#fff; cursor:pointer;
+  }
+  .biz-location-item.on{ border-color:#ff5e8e; background:rgba(255,94,142,.14); }
+  .biz-location-name{ font-size:16px; font-weight:800; }
+  .biz-location-hint{ font-size:12px; color:#cba0bf; margin-top:3px; }
   /* Рулетка (компания) — волчок, поле ставок, фишки. */
   .roulette-wheel-wrap{
     position:relative; width:180px; height:180px; margin:8px auto 6px;
@@ -1805,7 +1867,7 @@
 
         <label>Выбери игру</label>
         <div class="game-select-list" id="businessGameSelectList">
-          <button type="button" class="btn btn-menu-item" id="gameBusiness1Btn">🧊 Игра 1</button>
+          <button type="button" class="btn btn-menu-item" id="gameBusiness1Btn">🍋 Лимонадный ларёк</button>
           <button type="button" class="btn btn-menu-item" id="gameBusiness2Btn">🎯 Игра 2</button>
         </div>
       </div>
@@ -2545,6 +2607,159 @@
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
       <button class="btn btn-primary" id="closeShopRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ЛИМОНАДНЫЙ ЛАРЁК (БИЗНЕС): НАСТРОЙКА ===== -->
+  <section id="businessLemonadeSetup" class="screen">
+    <h1 class="title">🍋 Лимонадный ларёк</h1>
+    <div class="subtitle">5 дней своего лимонадного бизнеса: погода, место, закупки и цены — научись считать себестоимость, выручку и прибыль на практике.</div>
+
+    <button class="btn btn-primary" id="businessLemonadeSetupStartBtn">Начать</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="businessLemonadeSetupRulesBtn">Правила</button>
+    </div>
+
+    <button class="btn btn-secondary" id="businessLemonadeSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== ЛИМОНАДНЫЙ ЛАРЁК (БИЗНЕС): ИГРА ===== -->
+  <section id="businessLemonadeGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🍋 Лимонадный ларёк</h1>
+    <div class="biz-day-bar">
+      <div class="biz-day-track"><div class="biz-day-fill" id="bizDayFill"></div></div>
+      <div class="biz-day-label" id="bizDayLabel">День 1 из 5</div>
+    </div>
+    <div class="biz-capital-row" id="bizCapitalRow">Капитал: 200 ₽</div>
+
+    <!-- Шаг 0: начало дня — погода, событие, апгрейды -->
+    <div class="biz-phase biz-phase-active" id="bizPhaseDayIntro">
+      <div class="biz-step-title" id="bizDayIntroTitle">День 1. Доброе утро!</div>
+      <div class="biz-weather-card" id="bizWeatherCard">☀️ Погода: жара</div>
+      <div class="biz-event-card" id="bizEventCard" style="display:none;">Событие</div>
+      <div class="biz-upgrade-box" id="bizUpgradeBox" style="display:none;">
+        <div class="biz-formula-line" style="margin-top:0;">Можно вложиться в развитие ларька (покупается один раз на всю партию):</div>
+        <div id="bizUpgradeButtons"></div>
+      </div>
+      <button type="button" class="btn btn-primary" id="bizStartDayBtn" style="margin-top:14px;">Начать день →</button>
+    </div>
+
+    <!-- Шаг 1: место торговли -->
+    <div class="biz-phase" id="bizPhaseLocation">
+      <div class="biz-step-title">Шаг 1. Выбери место</div>
+      <div class="intro-text">От места зависит, сколько людей пройдёт мимо, и сколько стоит аренда места.</div>
+      <div id="bizLocationList"></div>
+      <button type="button" class="btn btn-primary" id="bizToBuyBtn" style="margin-top:10px;" disabled>Дальше: закупка →</button>
+    </div>
+
+    <!-- Шаг 2: закупка — сколько стаканов приготовить -->
+    <div class="biz-phase" id="bizPhaseBuy">
+      <div class="biz-step-title">Шаг 2. Закупка продуктов</div>
+      <div class="intro-text">Чтобы сделать стакан лимонада, нужны лимоны, сахар и стаканчики. Выбери, сколько стаканов приготовить сегодня.</div>
+      <div class="field">
+        <label>Сколько стаканов приготовить?</label>
+        <div class="starter-group timer-duration-group" id="bizQuantityGroup">
+          <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+          <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
+          <button type="button" class="starter-btn mode-btn" data-value="15">15</button>
+          <button type="button" class="starter-btn mode-btn" data-value="20">20</button>
+        </div>
+      </div>
+      <div class="field" id="bizIceField">
+        <label>🧊 Добавить лёд? (+1 ₽/стакан — в жару разбирают быстрее)</label>
+        <div class="toggle-row">
+          <button type="button" class="toggle-pill" id="bizIceToggleBtn">🧊 Без льда</button>
+        </div>
+      </div>
+      <div class="biz-breakdown-box">
+        <div class="biz-breakdown-row"><span>🍋 Лимоны</span><span id="bizBuyLemonRow">— ₽</span></div>
+        <div class="biz-breakdown-row"><span>🧂 Сахар</span><span id="bizBuySugarRow">— ₽</span></div>
+        <div class="biz-breakdown-row"><span>🥤 Стаканчики</span><span id="bizBuyCupRow">— ₽</span></div>
+        <div class="biz-breakdown-row" id="bizBuyIceRowWrap"><span>🧊 Лёд</span><span id="bizBuyIceRow">— ₽</span></div>
+        <div class="biz-breakdown-row"><span>🏠 Аренда места</span><span id="bizBuyRentRow">— ₽</span></div>
+        <div class="biz-breakdown-row biz-total"><span>Расходы всего</span><span id="bizBuyTotalRow">— ₽</span></div>
+      </div>
+      <button type="button" class="btn btn-primary" id="bizToPriceBtn">Дальше: назначить цену →</button>
+    </div>
+
+    <!-- Шаг 3: цена -->
+    <div class="biz-phase" id="bizPhasePrice">
+      <div class="biz-step-title">Шаг 3. Назначь цену</div>
+      <div class="biz-formula-line" id="bizPriceCostReminder">Себестоимость одного стакана: — ₽</div>
+      <div class="field" style="margin-top:10px;">
+        <label>Цена за стакан</label>
+        <div class="starter-group timer-duration-group" id="bizPriceGroup">
+          <button type="button" class="starter-btn mode-btn" data-value="5">5 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="10">10 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="20">20 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="30">30 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="40">40 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="50">50 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="60">60 ₽</button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" id="bizSellBtn" style="margin-top:14px;">🍋 Продавать!</button>
+    </div>
+
+    <!-- Шаг 4: итоги дня -->
+    <div class="biz-phase" id="bizPhaseResults">
+      <div class="biz-step-title" id="bizResultsTitle">Итоги дня</div>
+      <div class="biz-result-highlight" id="bizResultHighlight">— ₽</div>
+      <div class="biz-breakdown-box">
+        <div class="biz-breakdown-row"><span>Расходы (продукты + аренда)</span><span id="bizResExpenses">— ₽</span></div>
+        <div class="biz-formula-line">Себестоимость 1 стакана = Расходы ÷ Количество</div>
+        <div class="biz-breakdown-row"><span>Себестоимость 1 стакана</span><span id="bizResCost">— ₽</span></div>
+        <div class="biz-breakdown-row"><span>Цена продажи</span><span id="bizResPrice">— ₽</span></div>
+        <div class="biz-formula-line">Прибыль с 1 стакана = Цена − Себестоимость</div>
+        <div class="biz-breakdown-row"><span>Прибыль с 1 стакана</span><span id="bizResProfitPerCup">— ₽</span></div>
+        <div class="biz-breakdown-row"><span>Продано стаканов</span><span id="bizResSold">— из —</span></div>
+        <div class="biz-formula-line">Выручка = Цена × Продано</div>
+        <div class="biz-breakdown-row"><span>Выручка</span><span id="bizResRevenue">— ₽</span></div>
+        <div class="biz-formula-line">Чистая прибыль = Выручка − Расходы</div>
+        <div class="biz-breakdown-row biz-total"><span>Чистая прибыль</span><span id="bizResNetProfit">— ₽</span></div>
+      </div>
+      <button type="button" class="btn btn-primary" id="bizNextDayBtn">Следующий день →</button>
+    </div>
+
+    <!-- Шаг 5: мини-проверка (после 5-го дня) -->
+    <div class="biz-phase" id="bizPhaseQuiz">
+      <div class="biz-step-title">Проверь себя</div>
+      <div class="biz-quiz-progress" id="bizQuizProgress">Вопрос 1 из 5</div>
+      <div class="znayu-question-text" id="bizQuizQuestion">Загрузка…</div>
+      <div class="znayu-answers" id="bizQuizAnswers"></div>
+    </div>
+
+    <button type="button" class="btn btn-secondary" id="businessLemonadeExitBtn" style="margin-top:14px;">Выход</button>
+  </section>
+
+  <!-- ===== ЛИМОНАДНЫЙ ЛАРЁК (БИЗНЕС): ИТОГИ ===== -->
+  <div class="modal-overlay" id="businessLemonadeSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title" id="bizSummaryTitle">🍋 Партия завершена!</div>
+      <div class="intro-text" id="bizSummaryIntro"></div>
+      <div class="biz-breakdown-box" id="bizSummaryDaysBox"></div>
+      <div class="krokodil-summary-list" id="bizSummaryList"></div>
+      <button class="btn btn-primary" id="bizPlayAgainBtn">Попробовать снова</button>
+      <button class="btn btn-secondary" id="closeBusinessLemonadeSummaryBtn" style="margin-top:10px;">Выход</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ЛИМОНАДНЫЙ ЛАРЁК" ===== -->
+  <div class="modal-overlay" id="businessLemonadeRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🍋 Правила игры «Лимонадный ларёк»</div>
+      <div class="intro-text">Бизнес — это когда покупаешь дешевле, а продаёшь дороже, и разницу забираешь себе. Партия — 5 дней своего ларька, капитал переносится изо дня в день.</div>
+      <ol class="modal-rules">
+        <li>Каждое утро — случайные погода и событие (не выбираются, только показываются) и, если хватает денег, можно вложиться в вывеску или музыку — они на всю партию привлекают больше покупателей.</li>
+        <li><b>Место.</b> У школы, в парке или на пляже — разная аренда и разная выручка в зависимости от погоды (например, пляж отлично работает в жару, но пуст в дождь).</li>
+        <li><b>Закупка.</b> Сколько стаканов приготовить и добавлять ли лёд (+1 ₽/стакан, но в жару раскупают быстрее) — покажем расходы на лимоны, сахар, стаканчики и аренду.</li>
+        <li><b>Цена.</b> Себестоимость — сколько денег ушло на один стакан. Слишком высокая цена — купят меньше. Цена ниже себестоимости — убыток, даже если продашь всё.</li>
+        <li>Итоги дня: выручка (все деньги от покупателей) и чистая прибыль (что осталось после расходов) — капитал переходит на следующий день.</li>
+        <li>После 5-го дня — пять коротких вопросов и оценка твоего бизнеса по суммарной прибыли за партию.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeBusinessLemonadeRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -4242,62 +4457,63 @@
   </div>
 </div>
 
-<script src="cards/cards_fants.js"></script>
-<script src="cards/cards_fants_users.js"></script>
-<script src="cards/cards_poses.js"></script>
-<script src="cards/cards_sexshop.js"></script>
-<script src="cards/cards_collection.js"></script>
-<script src="cards/cards_video.js"></script>
-<script src="cards/cards_bingo.js"></script>
-<script src="cards/cards_timer.js"></script>
-<script src="cards/cards_wishlist.js"></script>
-<script src="cards/cards_znayu.js"></script>
-<script src="cards/cards_krokodil.js"></script>
-<script src="cards/cards_memes.js"></script>
-<script src="cards/cards_party_fants.js"></script>
-<script src="cards/cards_party_td.js"></script>
-<script src="cards/cards_fam_znayu.js"></script>
-<script src="cards/cards_lucky.js"></script>
-<script src="cards/cards_kids_memory.js"></script>
-<script src="cards/cards_kids_td.js"></script>
-<script src="cards/cards_quiz.js"></script>
-<script src="cards/cards_party_quiz.js"></script>
-<script src="cards/cards_kids_quiz.js"></script>
-<script src="cards/cards_ideas.js"></script>
-<script src="cards/cards_whattoplay.js"></script>
-<script src="cards/cards_kids_krokodil.js"></script>
-<script src="cards/cards_kids_memes.js"></script>
-<script src="cards/cards_kids_saper.js"></script>
-<script src="cards/cards_party_hangman.js"></script>
-<script src="cards/cards_shop.js"></script>
-<script src="games/core.js"></script>
-<script src="games/twister.js"></script>
-<script src="games/party-hangman.js"></script>
-<script src="games/solo-quiz.js"></script>
-<script src="games/solo-memory.js"></script>
-<script src="games/shop.js"></script>
-<script src="games/party-roulette.js"></script>
-<script src="games/truth-dare.js"></script>
-<script src="games/bingo.js"></script>
-<script src="games/timer-game.js"></script>
-<script src="games/krokodil.js"></script>
-<script src="games/memes.js"></script>
-<script src="games/party-fants.js"></script>
-<script src="games/party-td.js"></script>
-<script src="games/fam-znayu.js"></script>
-<script src="games/lucky.js"></script>
-<script src="games/kids-memory.js"></script>
-<script src="games/kids-krokodil.js"></script>
-<script src="games/kids-memes.js"></script>
-<script src="games/kids-saper.js"></script>
-<script src="games/kids-td.js"></script>
-<script src="games/quiz.js"></script>
-<script src="games/party-quiz.js"></script>
-<script src="games/kids-quiz.js"></script>
-<script src="games/wishlist.js"></script>
-<script src="games/znayu.js"></script>
-<script src="games/ideas.js"></script>
-<script src="games/whattoplay.js"></script>
-<script src="games/init.js"></script>
+<script src="cards/cards_fants.js?v=20260813a"></script>
+<script src="cards/cards_fants_users.js?v=20260813a"></script>
+<script src="cards/cards_poses.js?v=20260813a"></script>
+<script src="cards/cards_sexshop.js?v=20260813a"></script>
+<script src="cards/cards_collection.js?v=20260813a"></script>
+<script src="cards/cards_video.js?v=20260813a"></script>
+<script src="cards/cards_bingo.js?v=20260813a"></script>
+<script src="cards/cards_timer.js?v=20260813a"></script>
+<script src="cards/cards_wishlist.js?v=20260813a"></script>
+<script src="cards/cards_znayu.js?v=20260813a"></script>
+<script src="cards/cards_krokodil.js?v=20260813a"></script>
+<script src="cards/cards_memes.js?v=20260813a"></script>
+<script src="cards/cards_party_fants.js?v=20260813a"></script>
+<script src="cards/cards_party_td.js?v=20260813a"></script>
+<script src="cards/cards_fam_znayu.js?v=20260813a"></script>
+<script src="cards/cards_lucky.js?v=20260813a"></script>
+<script src="cards/cards_kids_memory.js?v=20260813a"></script>
+<script src="cards/cards_kids_td.js?v=20260813a"></script>
+<script src="cards/cards_quiz.js?v=20260813a"></script>
+<script src="cards/cards_party_quiz.js?v=20260813a"></script>
+<script src="cards/cards_kids_quiz.js?v=20260813a"></script>
+<script src="cards/cards_ideas.js?v=20260813a"></script>
+<script src="cards/cards_whattoplay.js?v=20260813a"></script>
+<script src="cards/cards_kids_krokodil.js?v=20260813a"></script>
+<script src="cards/cards_kids_memes.js?v=20260813a"></script>
+<script src="cards/cards_kids_saper.js?v=20260813a"></script>
+<script src="cards/cards_party_hangman.js?v=20260813a"></script>
+<script src="cards/cards_shop.js?v=20260813a"></script>
+<script src="games/core.js?v=20260813a"></script>
+<script src="games/twister.js?v=20260813a"></script>
+<script src="games/party-hangman.js?v=20260813a"></script>
+<script src="games/solo-quiz.js?v=20260813a"></script>
+<script src="games/solo-memory.js?v=20260813a"></script>
+<script src="games/shop.js?v=20260813a"></script>
+<script src="games/party-roulette.js?v=20260813a"></script>
+<script src="games/business-lemonade.js?v=20260813a"></script>
+<script src="games/truth-dare.js?v=20260813a"></script>
+<script src="games/bingo.js?v=20260813a"></script>
+<script src="games/timer-game.js?v=20260813a"></script>
+<script src="games/krokodil.js?v=20260813a"></script>
+<script src="games/memes.js?v=20260813a"></script>
+<script src="games/party-fants.js?v=20260813a"></script>
+<script src="games/party-td.js?v=20260813a"></script>
+<script src="games/fam-znayu.js?v=20260813a"></script>
+<script src="games/lucky.js?v=20260813a"></script>
+<script src="games/kids-memory.js?v=20260813a"></script>
+<script src="games/kids-krokodil.js?v=20260813a"></script>
+<script src="games/kids-memes.js?v=20260813a"></script>
+<script src="games/kids-saper.js?v=20260813a"></script>
+<script src="games/kids-td.js?v=20260813a"></script>
+<script src="games/quiz.js?v=20260813a"></script>
+<script src="games/party-quiz.js?v=20260813a"></script>
+<script src="games/kids-quiz.js?v=20260813a"></script>
+<script src="games/wishlist.js?v=20260813a"></script>
+<script src="games/znayu.js?v=20260813a"></script>
+<script src="games/ideas.js?v=20260813a"></script>
+<script src="games/whattoplay.js?v=20260813a"></script>
+<script src="games/init.js?v=20260813a"></script>
 </body>
 </html>
