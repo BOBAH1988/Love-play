@@ -16,14 +16,20 @@ function getBingoBonusList(level){
   if(typeof BINGO_BONUS === 'undefined' || !Array.isArray(BINGO_BONUS)) return [];
   return BINGO_BONUS.filter(i=>i.level===level);
 }
+// "Счастливые" клетки — не задание, а пропуск хода. Ровно 3 штуки на карту,
+// раскиданы случайно среди 25 клеток и переживают повышение уровня без
+// изменений (см. escalateBingoTo — при повышении такие клетки не
+// заменяются заданиями нового уровня). Тот же приём, что и в "Сапёре"
+// (games/kids-saper.js, KIDS_SAPER_LUCKY_TEXT).
+const BINGO_LUCKY_TEXT = 'Пропустите ход';
+const BINGO_LUCKY_COUNT = 3;
 function generateBingoGrid(level){
-  // Все 25 клеток — реальные задания (раньше центральная клетка была
-  // "бесплатной" и всегда отмеченной сердечком; теперь это обычное задание).
-  const pool = shuffle(getBingoItemsList(level)).slice(0,25);
-  const grid = [];
-  for(let i=0;i<25;i++){
-    grid.push(pool[i] ? pool[i].text : '—');
-  }
+  // 22 клетки — реальные задания, 3 — "счастливые" (пропуск хода).
+  const pool = shuffle(getBingoItemsList(level)).slice(0, 25 - BINGO_LUCKY_COUNT);
+  const items = pool.map(p=>p.text);
+  while(items.length < 25 - BINGO_LUCKY_COUNT) items.push('—');
+  for(let i=0;i<BINGO_LUCKY_COUNT;i++) items.push(BINGO_LUCKY_TEXT);
+  const grid = shuffle(items);
   state.bingoGrid = grid;
   state.bingoChecked = grid.map(()=>false);
   state.bingoTasksHidden = false;
@@ -61,12 +67,16 @@ function renderBingoGrid(){
   if(!state.bingoRevealed) state.bingoRevealed = (state.bingoGrid || []).map(()=>true);
   (state.bingoGrid || []).forEach((text,i)=>{
     const isHidden = !!state.bingoTasksHidden && !state.bingoChecked[i] && !state.bingoRevealed[i];
+    const isLucky = text === BINGO_LUCKY_TEXT;
     const cell = document.createElement('div');
-    cell.className = 'bingo-cell' + (state.bingoChecked[i] ? ' checked' : '') + (isHidden ? ' hidden' : '');
+    cell.className = 'bingo-cell' + (state.bingoChecked[i] ? ' checked' : '') + (isHidden ? ' hidden' : '') + (state.bingoChecked[i] && isLucky ? ' bingo-lucky' : '');
     cell.textContent = isHidden ? '🎁' : text;
     attachBingoCellPress(cell, i);
     wrap.appendChild(cell);
-    fitBingoCellText(cell);
+    // Скрытая клетка показывает только иконку — подгонка размера под длинный
+    // текст задания ей не нужна и мешает увеличенному размеру иконки из CSS
+    // (inline font-size иначе перебивает .bingo-cell.hidden{font-size:...}).
+    if(!isHidden) fitBingoCellText(cell);
   });
   updateBingoLevelLabel();
 }
@@ -218,6 +228,7 @@ function escalateBingoTo(nextLevel){
   let p = 0;
   for(let i=0;i<25;i++){
     if(state.bingoChecked[i]) continue;
+    if(state.bingoGrid[i] === BINGO_LUCKY_TEXT) continue;
     while(p < pool.length && usedTexts.has(pool[p].text)) p++;
     const item = pool[p];
     if(item){

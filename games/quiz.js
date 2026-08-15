@@ -186,6 +186,7 @@ function showQuizHandoffCard(){
   });
   updateQuizScoreUI();
   updateQuizProgressBar();
+  updateQuizAutoSpeakBtn();
 }
 function showQuizQuestion(){
   stopQuizInterval();
@@ -228,6 +229,8 @@ function showQuizQuestion(){
   updateQuizBar(quizDurationMs, quizDurationMs);
   updateQuizScoreUI();
   updateQuizProgressBar();
+  updateQuizAutoSpeakBtn();
+  if(state.quizAutoSpeak) speakQuizCard();
   quizIntervalId = setInterval(quizTick, 100);
 }
 function quizTick(){
@@ -326,6 +329,21 @@ function speakQuizCard(){
   utter.onerror = ()=>{ if(hint) hint.classList.remove('speaking'); };
   window.speechSynthesis.speak(utter);
 }
+// Кнопка рядом с "Паузой" — включает автоозвучку: каждый новый вопрос
+// проговаривается голосом сразу при показе (см. вызов в showQuizQuestion),
+// без необходимости тапать по карточке вручную.
+function updateQuizAutoSpeakBtn(){
+  const btn = document.getElementById('quizAutoSpeakBtn');
+  if(!btn) return;
+  btn.classList.toggle('on', !!state.quizAutoSpeak);
+}
+document.getElementById('quizAutoSpeakBtn').addEventListener('click', ()=>{
+  state.quizAutoSpeak = !state.quizAutoSpeak;
+  saveState();
+  updateQuizAutoSpeakBtn();
+  playSuccessSound();
+  if(state.quizAutoSpeak && quizShowingQuestion) speakQuizCard();
+});
 document.getElementById('quizCard').addEventListener('click', (e)=>{
   if(e.target.closest('.znayu-answer-btn')) return;
   if(!quizShowingQuestion) return;

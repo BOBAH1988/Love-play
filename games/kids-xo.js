@@ -1,15 +1,54 @@
 // games/kids-xo.js — Игра «Крестики-нолики» (раздел «Игры с детьми»).
 // Два игрока (берутся из общего списка kidsPlayers — первые два имени),
-// поле 3×3. Первый ход в партии — случайный, дальше первым всегда ходит
+// поле на выбор: 3×3 (три своих знака подряд — победа) или 5×5 (четыре в
+// ряд). Первый ход в партии — случайный, дальше первым всегда ходит
 // победитель предыдущего раунда (при ничьей — право первого хода переходит
 // другому игроку). Счёт побед/ничьих ведётся по всей партии, итог
 // показывается при выходе.
 
-const KIDS_XO_LINES = [
-  [0,1,2],[3,4,5],[6,7,8],
-  [0,3,6],[1,4,7],[2,5,8],
-  [0,4,8],[2,4,6]
-];
+// winLen — сколько своих знаков подряд нужно для победы на поле этого размера.
+const KIDS_XO_SIZES = {
+  3: { size: 3, winLen: 3 },
+  5: { size: 5, winLen: 4 },
+};
+function kidsXoConfig(){
+  return KIDS_XO_SIZES[state.kidsXoBoardSize] || KIDS_XO_SIZES[3];
+}
+// Строит все линии длиной winLen (по горизонтали/вертикали/двум диагоналям)
+// на поле size×size — обобщение классических 8 линий 3×3 на любой размер.
+function kidsXoBuildLines(size, winLen){
+  const idx = (r, c) => r * size + c;
+  const lines = [];
+  for(let r = 0; r < size; r++){
+    for(let c = 0; c <= size - winLen; c++){
+      const line = [];
+      for(let k = 0; k < winLen; k++) line.push(idx(r, c + k));
+      lines.push(line);
+    }
+  }
+  for(let c = 0; c < size; c++){
+    for(let r = 0; r <= size - winLen; r++){
+      const line = [];
+      for(let k = 0; k < winLen; k++) line.push(idx(r + k, c));
+      lines.push(line);
+    }
+  }
+  for(let r = 0; r <= size - winLen; r++){
+    for(let c = 0; c <= size - winLen; c++){
+      const line = [];
+      for(let k = 0; k < winLen; k++) line.push(idx(r + k, c + k));
+      lines.push(line);
+    }
+  }
+  for(let r = 0; r <= size - winLen; r++){
+    for(let c = winLen - 1; c < size; c++){
+      const line = [];
+      for(let k = 0; k < winLen; k++) line.push(idx(r + k, c - k));
+      lines.push(line);
+    }
+  }
+  return lines;
+}
 
 function kidsXoPlayerName(mark){
   const players = state.kidsPlayers || [];
@@ -19,11 +58,32 @@ function kidsXoPlayerName(mark){
 function goToKidsXoSetup(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('kidsXoSetup').classList.add('active');
+  renderKidsXoSizeGroup();
 }
 function exitKidsXoSetup(){
   document.getElementById('kidsXoSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
 }
+function renderKidsXoSizeGroup(){
+  const size = state.kidsXoBoardSize || 3;
+  document.querySelectorAll('#kidsXoSizeGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === size);
+  });
+  const subtitle = document.getElementById('kidsXoSetupSubtitle');
+  if(subtitle){
+    subtitle.textContent = size === 5
+      ? 'Классическая игра для двоих — поле 5×5, четыре в ряд побеждают'
+      : 'Классическая игра для двоих — поле 3×3, три в ряд побеждают';
+  }
+}
+document.querySelectorAll('#kidsXoSizeGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    playSuccessSound();
+    state.kidsXoBoardSize = parseInt(btn.dataset.value, 10);
+    saveState();
+    renderKidsXoSizeGroup();
+  });
+});
 function updateKidsXoScoreUI(){
   const el = document.getElementById('kidsXoScoreRow');
   if(!el) return;
@@ -40,16 +100,20 @@ function updateKidsXoTurnLabel(){
   el.textContent = `Ходит: ${kidsXoPlayerName(mark)} (${mark === 'X' ? '❌' : '⭕'})`;
 }
 function kidsXoCheckWin(board){
-  for(const line of KIDS_XO_LINES){
-    const [a,b,c] = line;
-    if(board[a] && board[a] === board[b] && board[a] === board[c]) return line;
+  const { size, winLen } = kidsXoConfig();
+  const lines = kidsXoBuildLines(size, winLen);
+  for(const line of lines){
+    const first = board[line[0]];
+    if(first && line.every(i => board[i] === first)) return line;
   }
   return null;
 }
 function renderKidsXoGrid(winLine){
   const wrap = document.getElementById('kidsXoGrid');
   if(!wrap) return;
-  const board = state.kidsXoBoard || new Array(9).fill('');
+  const { size } = kidsXoConfig();
+  wrap.classList.toggle('kids-xo-grid-5', size === 5);
+  const board = state.kidsXoBoard || new Array(size * size).fill('');
   wrap.innerHTML = '';
   board.forEach((mark, i)=>{
     const btn = document.createElement('button');
@@ -62,7 +126,8 @@ function renderKidsXoGrid(winLine){
   });
 }
 function startKidsXoRound(startingMark){
-  state.kidsXoBoard = new Array(9).fill('');
+  const { size } = kidsXoConfig();
+  state.kidsXoBoard = new Array(size * size).fill('');
   state.kidsXoCurrentPlayer = startingMark;
   state.kidsXoRoundOver = false;
   saveState();
@@ -73,7 +138,8 @@ function startKidsXoRound(startingMark){
 }
 function clickKidsXoCell(i){
   if(state.kidsXoRoundOver) return;
-  const board = state.kidsXoBoard || (state.kidsXoBoard = new Array(9).fill(''));
+  const { size } = kidsXoConfig();
+  const board = state.kidsXoBoard || (state.kidsXoBoard = new Array(size * size).fill(''));
   if(board[i]) return;
   const mark = state.kidsXoCurrentPlayer || 'X';
   board[i] = mark;
@@ -145,7 +211,8 @@ function showKidsXoSummaryModal(){
 function exitKidsXoGame(){
   document.getElementById('kidsXoGame').classList.remove('active');
   document.getElementById('kidsXoSetup').classList.add('active');
-  state.kidsXoBoard = new Array(9).fill('');
+  const { size } = kidsXoConfig();
+  state.kidsXoBoard = new Array(size * size).fill('');
   state.kidsXoScoreX = 0;
   state.kidsXoScoreO = 0;
   state.kidsXoDraws = 0;

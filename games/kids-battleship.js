@@ -107,14 +107,14 @@ function showKidsBattleshipHandoff(){
   const oppIdx = idx === 0 ? 1 : 0;
   const textEl = document.getElementById('kidsBattleshipHandoffText');
   if(textEl) textEl.textContent = `Передайте телефон игроку «${bsPlayerName(idx)}» — ваш ход по флоту игрока «${bsPlayerName(oppIdx)}»`;
-  document.getElementById('kidsBattleshipHandoffCard').style.display = '';
+  document.getElementById('kidsBattleshipHandoffCardArea').style.display = 'flex';
   document.getElementById('kidsBattleshipHandoffRow').style.display = 'flex';
   document.getElementById('kidsBattleshipGrid').style.display = 'none';
   document.getElementById('kidsBattleshipStatusText').textContent = '';
 }
 
 function showKidsBattleshipGrid(){
-  document.getElementById('kidsBattleshipHandoffCard').style.display = 'none';
+  document.getElementById('kidsBattleshipHandoffCardArea').style.display = 'none';
   document.getElementById('kidsBattleshipHandoffRow').style.display = 'none';
   document.getElementById('kidsBattleshipGrid').style.display = '';
   renderKidsBattleshipGrid();
@@ -173,14 +173,16 @@ function fireKidsBattleshipShot(i){
   cell.shot = true;
   state.battleshipShotsCount[idx] = (state.battleshipShotsCount[idx] || 0) + 1;
   let resultText;
+  let hit = false;
   if(cell.ship){
+    hit = true;
     const ship = board.ships.find(s => s.id === cell.shipId);
     ship.hits++;
     if(ship.hits >= ship.size){
       ship.sunk = true;
-      resultText = `💀 Потоплен ${ship.size}-палубный корабль!`;
+      resultText = `💀 Потоплен ${ship.size}-палубный корабль! Стреляй ещё раз →`;
     } else {
-      resultText = '🔥 Попадание!';
+      resultText = '🔥 Попадание! Стреляй ещё раз →';
     }
     playSuccessSound();
   } else {
@@ -197,6 +199,12 @@ function fireKidsBattleshipShot(i){
     return;
   }
   updateKidsBattleshipStatus(resultText);
+  // Попал — стреляет ещё раз тот же игрок (карту противника видно дальше,
+  // без передачи телефона); промазал — ход переходит другому игроку.
+  if(hit){
+    saveState();
+    return;
+  }
   state.battleshipCurrentPlayer = oppIdx;
   saveState();
   setTimeout(showKidsBattleshipHandoff, 900);

@@ -64,6 +64,8 @@ function drawMemesCard(){
     el.className = 'card';
     el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-text memes-situation">${card.text}</div></div><div class="memes-tts-hint" id="memesTtsHint">🔊</div></div>`;
   });
+  updateMemesAutoSpeakBtn();
+  if(state.memesAutoSpeak) speakMemesCard();
 }
 // ===== Озвучка карточки "Мемасики" (по тапу на карточку) =====
 // Необязательная фича: если браузер не поддерживает Web Speech API —
@@ -106,6 +108,18 @@ function speakMemesCard(){
 }
 document.getElementById('memesCard').addEventListener('click', ()=>{
   speakMemesCard();
+});
+function updateMemesAutoSpeakBtn(){
+  const btn = document.getElementById('memesAutoSpeakBtn');
+  if(!btn) return;
+  btn.classList.toggle('on', !!state.memesAutoSpeak);
+}
+document.getElementById('memesAutoSpeakBtn').addEventListener('click', ()=>{
+  state.memesAutoSpeak = !state.memesAutoSpeak;
+  saveState();
+  updateMemesAutoSpeakBtn();
+  playSuccessSound();
+  if(state.memesAutoSpeak) speakMemesCard();
 });
 function goToMemesGame(){
   document.getElementById('memesSetup').classList.remove('active');

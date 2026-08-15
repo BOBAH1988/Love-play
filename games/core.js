@@ -69,7 +69,7 @@ let state = {
   // Правда/Действие (дети)
   kidsTdCompleted:[], kidsTdSkipped:[], kidsTdCurrentPlayerIndex:0, kidsTdCurrentType:null, kidsTdUsed:{},
   // Мемасики
-  memesSelectedLevel:2, memesUsed:{}, memesHidden:[],
+  memesSelectedLevel:2, memesUsed:{}, memesHidden:[], memesAutoSpeak:false,
   // Фанты (компания)
   partyFantsSelectedLevel:2, partyFantsUsed:{}, partyFantsCompleted:[], partyFantsSkipped:[],
   partyFantsCurrentPlayerIndex:0,
@@ -103,12 +103,15 @@ let state = {
   // (quizQuestionCount штук), затем передаёт телефон следующему; см. games/quiz.js.
   quizSelectedLevel:1, quizAnswerSeconds:15, quizQuestionCount:5, quizUsed:{},
   quizQueue:[], quizIndex:0, quizCurrentPlayerIndex:0, quizCorrect:[], quizTimeMs:[],
+  quizAutoSpeak:false,
   // Викторина (компания) — та же логика, все игроки из partyPlayers по очереди.
   partyQuizSelectedLevel:1, partyQuizAnswerSeconds:15, partyQuizQuestionCount:5, partyQuizUsed:{},
   partyQuizQueue:[], partyQuizIndex:0, partyQuizCurrentPlayerIndex:0, partyQuizCorrect:[], partyQuizTimeMs:[],
+  partyQuizAutoSpeak:false,
   // Викторина (дети) — уровень берётся из kidsAge, а не из своего селектора.
   kidsQuizAnswerSeconds:15, kidsQuizQuestionCount:5, kidsQuizUsed:{},
   kidsQuizQueue:[], kidsQuizIndex:0, kidsQuizCurrentPlayerIndex:0, kidsQuizCorrect:[], kidsQuizTimeMs:[],
+  kidsQuizAutoSpeak:false,
   // Идеи для вас (без уровней — единая колода из 100 карточек)
   ideasUsed:[], ideasFavorites:[], ideasFavView:false,
   // Твистер — приложение только объявляет ходы, поле физическое
@@ -123,7 +126,7 @@ let state = {
   kidsKrokodilScores:[], kidsKrokodilSkipCounts:[], kidsKrokodilCurrentPlayerIndex:0,
   kidsKrokodilTurnsPlayed:0,
   // Мемасики (дети) — уровень берётся из kidsAge
-  kidsMemesUsed:{}, kidsMemesHidden:[],
+  kidsMemesUsed:{}, kidsMemesHidden:[], kidsMemesAutoSpeak:false,
   // Сапёр (дети) — механика скопирована с "Секс-бинго"
   kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperWonLines:[], kidsSaperUsedBonus:[],
   kidsSaperCurrentLevel:1, kidsSaperEscalatedTo2:false, kidsSaperEscalatedTo3:false,
@@ -139,6 +142,7 @@ let state = {
   // (компания), но со своим прогрессом "показанных" вопросов и своим счётом.
   soloQuizSelectedLevel:1, soloQuizAnswerSeconds:15, soloQuizQuestionCount:10,
   soloQuizUsed:{}, soloQuizQueue:[], soloQuizIndex:0, soloQuizCorrect:0, soloQuizTimeMs:0,
+  soloQuizAutoSpeak:false,
   // Мемори (один) — использует те же данные, что и детское Мемори
   // (KIDS_MEMORY_LEVELS/KIDS_MEMORY_ICONS), свой прогресс и статистика ходов/времени,
   // таблица лидеров — топ-10 {name, timeMs}, отсортированных по времени.
@@ -157,7 +161,8 @@ let state = {
   businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[], businessLemonadeDayLog:[],
   businessLemonadeQuizIndex:0, businessLemonadeQuizCorrect:0, businessLemonadeQuizItems:[],
   // Крестики-нолики (дети) — счёт партии переживает раунды, обнуляется только при выходе.
-  kidsXoBoard:[], kidsXoCurrentPlayer:'X', kidsXoRoundOver:false, kidsXoStartingPlayer:'X',
+  // kidsXoBoardSize: 3 (3×3, три в ряд) или 5 (5×5, четыре в ряд).
+  kidsXoBoard:[], kidsXoBoardSize:3, kidsXoCurrentPlayer:'X', kidsXoRoundOver:false, kidsXoStartingPlayer:'X',
   kidsXoScoreX:0, kidsXoScoreO:0, kidsXoDraws:0,
   // "Я никогда не" (компания)
   partyNeverSelectedLevel:1, partyNeverUsed:{},

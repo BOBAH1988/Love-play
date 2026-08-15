@@ -50,6 +50,8 @@ function drawKidsMemesCard(){
     el.className = 'card';
     el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-text memes-situation">${card.text}</div></div></div><div class="memes-tts-hint" id="kidsMemesTtsHint">🔊</div>`;
   });
+  updateKidsMemesAutoSpeakBtn();
+  if(state.kidsMemesAutoSpeak) speakKidsMemesCard();
 }
 function pickKidsMemesFemaleVoice(){
   if(!('speechSynthesis' in window)) return null;
@@ -80,6 +82,18 @@ function speakKidsMemesCard(){
 }
 document.getElementById('kidsMemesCard').addEventListener('click', ()=>{
   speakKidsMemesCard();
+});
+function updateKidsMemesAutoSpeakBtn(){
+  const btn = document.getElementById('kidsMemesAutoSpeakBtn');
+  if(!btn) return;
+  btn.classList.toggle('on', !!state.kidsMemesAutoSpeak);
+}
+document.getElementById('kidsMemesAutoSpeakBtn').addEventListener('click', ()=>{
+  state.kidsMemesAutoSpeak = !state.kidsMemesAutoSpeak;
+  saveState();
+  updateKidsMemesAutoSpeakBtn();
+  playSuccessSound();
+  if(state.kidsMemesAutoSpeak) speakKidsMemesCard();
 });
 function goToKidsMemesGame(){
   document.getElementById('kidsMemesSetup').classList.remove('active');

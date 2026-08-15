@@ -312,7 +312,7 @@
      вторичных кнопок (Отказ, Скрыть и т.п.), плюс заметно ниже основных
      кнопок действия (Да/Нет, Выполнено и т.д.). */
   .btn-pause{
-    padding:11px 15px;
+    padding:7px 15px;
     font-size:15px;
     background:rgba(255,99,110,.14)!important;
     border-color:rgba(255,99,110,.5)!important;
@@ -346,8 +346,8 @@
     display:flex; flex-direction:column; align-items:flex-start;
     background:rgba(255,255,255,.08);
     border:1px solid rgba(255,255,255,.15);
-    border-radius:14px; padding:12px; cursor:pointer;
-    position:relative; min-height:82px;
+    border-radius:14px; padding:8px 12px; cursor:pointer;
+    position:relative; min-height:56px;
   }
   .level-toggle.on{border-color:var(--accent); background:rgba(255,94,142,.18);}
   .level-toggle .lname{font-weight:700; font-size:14px; padding-right:22px;}
@@ -428,6 +428,11 @@
     padding:9px 12px; font-size:16px; line-height:1.25;
     justify-content:center; text-align:center; white-space:normal;
     min-height:56px;
+  }
+  /* Иконка в начале названия игры — крупнее самого текста, чтобы список игр
+     читался быстрее (сама надпись остаётся прежнего размера). */
+  .game-select-list .btn .menu-icon{
+    font-size:1.7em; line-height:1; margin-right:6px; flex-shrink:0;
   }
   /* Главная страница (хаб) — 3 крупные кнопки формата игры, всегда в один
      столбец (не сетка), чтобы они читались как главный выбор, а не как
@@ -720,7 +725,7 @@
   .biz-day-track{ height:6px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden; }
   .biz-day-fill{ height:100%; background:linear-gradient(90deg,#ff5e8e,#ff8a5e); border-radius:3px; transition:width .3s ease; }
   .biz-day-label{ text-align:center; font-size:12px; font-weight:700; color:#cba0bf; margin-top:4px; }
-  .biz-capital-row{ text-align:center; font-size:15px; font-weight:800; color:#ffd27a; margin-bottom:8px; }
+  .biz-capital-row{ text-align:center; font-size:15px; font-weight:800; color:#ffd27a; margin-bottom:8px; flex-shrink:0; }
   .biz-weather-card{
     text-align:center; font-size:17px; font-weight:700; padding:12px; border-radius:14px;
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); margin-bottom:10px;
@@ -749,7 +754,7 @@
      приходилось листать назад, чтобы вспомнить, какая сегодня погода. */
   .biz-context-bar{
     display:flex; flex-wrap:wrap; justify-content:center; gap:6px;
-    min-height:0; margin-bottom:36px;
+    flex-shrink:0; margin-bottom:20px;
   }
   .biz-context-chip{
     background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
@@ -863,6 +868,25 @@
   #wishlistCard .card-text, #znayuCard .card-text, #ideasCard .card-text{
     color:#fff;
   }
+  /* Заголовок "Ход игрока" и разделитель под ним рассчитаны на светлый фон
+     карточки (тёмно-серый текст, тёмная линия) — на тёмном фоне этих карточек
+     были почти невидимы. */
+  #card .card-turn-label, #tdCard .card-turn-label, #timerCard .card-turn-label,
+  #wishlistCard .card-turn-label, #znayuCard .card-turn-label{
+    color:rgba(255,255,255,.65);
+  }
+  #card .card-header, #tdCard .card-header, #timerCard .card-header,
+  #wishlistCard .card-header, #znayuCard .card-header{
+    border-bottom-color:rgba(255,255,255,.18);
+  }
+  /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт
+     и "Старт") — тоже рассчитан на светлый фон, на тёмном был почти невидим. */
+  #card .card-timer{ border-top-color:rgba(255,255,255,.18); }
+  #card .timer-dur-btn{ background:rgba(255,255,255,.14); color:#fff; }
+  #card .timer-dur-btn.on{ background:var(--accent); color:#2b0f2e; }
+  #card .timer-display{ color:#fff; }
+  #card .timer-btn{ background:rgba(255,255,255,.14); color:#fff; }
+  #card .timer-btn.running{ background:var(--accent); color:#2b0f2e; }
   /* Название идеи должно явно отличаться от текста задания под ним — иначе
      они визуально сливаются в один абзац (оба были похожего размера и
      цвета). Тут название — короткая заглавная "плашка" акцентным цветом,
@@ -876,8 +900,25 @@
   #wishlistCard .card-turn-name, #znayuCard .card-turn-name{
     color:#fff;
   }
+  /* Описание пункта желаний рассчитано на светлый фон (приглушённый
+     тёмно-фиолетовый) — на тёмной карточке было почти невидимо. */
+  #wishlistCard .wishlist-item-desc{
+    color:rgba(255,255,255,.75);
+  }
   #card .type-pill, #tdCard .type-pill{
     background:rgba(255,255,255,.18); color:#fff;
+  }
+  /* "Тайные ответы" — тоже переиспользует компонент вопрос/ответы
+     (.znayu-answers), который по умолчанию рассчитан на светлый фон
+     (тёмные полупрозрачные кнопки) — на тёмном фоне этой карточки варианты
+     ответа были почти нечитаемы. Тот же приём, что и у остальных карточек
+     с этим компонентом (Викторины, "Знаю тебя" и т.д.). */
+  #znayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  #znayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
+  #znayuCard .znayu-answers .znayu-skip-btn:not(.answer-correct):not(.answer-wrong){
+    color:rgba(255,255,255,.5); border-color:rgba(255,255,255,.2);
   }
   /* Карточка "Викторины" — переиспользует компонент вопрос/ответы
      (.znayu-answers), кнопки которого по умолчанию тёмные полупрозрачные
@@ -1401,7 +1442,7 @@
   .timer-btn:active{transform:scale(.96);}
 
   @keyframes timerPulse{
-    0%,100%{ transform:scale(1); color:#2b0f2e; }
+    0%,100%{ transform:scale(1); color:#fff; }
     50%{ transform:scale(1.35); color:var(--accent); }
   }
   .timer-display.done{
@@ -1566,10 +1607,23 @@
      т.п. ниже), сама иконка тап не перехватывает. */
   #quizCard, #partyQuizCard, #kidsQuizCard{cursor:pointer;}
   .quiz-tts-hint{
+    display:none;
     position:absolute; right:16px; bottom:14px; font-size:17px; opacity:.5;
     pointer-events:none;
   }
   .quiz-tts-hint.speaking{opacity:.9;}
+  /* Кнопка автоозвучки вопросов "Викторины" — рядом с "Паузой", включает
+     проговаривание каждого нового вопроса голосом сразу при показе, без
+     тапа по карточке (см. quizAutoSpeakBtn/speakQuizCard в games/quiz.js). */
+  .quiz-pause-row{ display:flex; gap:8px; align-items:stretch; margin-top:10px; }
+  .quiz-pause-row .btn-pause{ flex:1; margin-top:0; }
+  .quiz-pause-row .quiz-autospeak-btn{
+    flex:0 0 72px; width:72px; padding:0; font-size:34px;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+  }
+  .quiz-pause-row .quiz-autospeak-btn.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
   .modal-pagination{display:flex; align-items:center; justify-content:center; gap:16px; margin:2px 0 18px;}
   .modal-pagination .modal-pagination-btn{flex:0 0 auto; width:44px; height:40px; padding:0; font-size:16px;}
   .modal-pagination-label{font-size:13px; color:#5c3a52; min-width:56px; text-align:center;}
@@ -1631,7 +1685,7 @@
   /* Режим "Скрыть задания" — невыполненные клетки показывают только иконку,
      без текста задания (сюрприз до тапа), пока их не откроют по одной.
      Тот же приём, что и у закрытых клеток Сапёра ("Игры с детьми"). */
-  .bingo-cell.hidden{ font-size:34px; }
+  .bingo-cell.hidden{ font-size:46px; }
   /* Крестики-нолики (дети) — поле 3×3. */
   .kids-xo-grid{
     display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
@@ -1642,6 +1696,11 @@
     background:rgba(255,255,255,.08); color:#fff; font-size:64px; font-weight:800; line-height:1;
     display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
   }
+  /* Поле 5×5 — клеток больше, каждая мельче, знак пропорционально меньше. */
+  .kids-xo-grid.kids-xo-grid-5{
+    grid-template-columns:repeat(5,1fr); gap:6px; max-width:340px;
+  }
+  .kids-xo-grid.kids-xo-grid-5 .kids-xo-cell{ font-size:30px; border-radius:8px; }
   .kids-xo-cell:disabled{ cursor:default; }
   .kids-xo-cell.kids-xo-win{
     background:linear-gradient(135deg,#ff5e8e,#ff8a5e); border-color:transparent;
@@ -1675,7 +1734,7 @@
      стиль), кроме "счастливых" клеток пропуска хода — те при открытии
      подсвечиваются зелёным вместо розового. */
   .kids-saper-cell.closed{ font-size:26px; }
-  .bingo-cell.checked.kids-saper-lucky{
+  .bingo-cell.checked.kids-saper-lucky, .bingo-cell.checked.bingo-lucky{
     background:linear-gradient(135deg,#4cd964,#2ecc71); color:#0b3d1f;
   }
 
@@ -1742,6 +1801,7 @@
      на неё можно нажать. Сама иконка не перехватывает тап (pointer-events:none). */
   #memesCard{cursor:pointer;}
   .memes-tts-hint{
+    display:none;
     position:absolute; right:16px; bottom:14px; font-size:17px; opacity:.5;
     pointer-events:none;
   }
@@ -1789,6 +1849,18 @@
   .timer-actions-top #ideasFavBtn,
   .timer-actions-top #whatToPlayFavBtn{
     flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:22px;
+  }
+  /* Автоозвучка "Мемасиков" — та же кнопка-плеер, что и у "Викторины"
+     (games/memes.js, games/kids-memes.js), только квадратной иконкой в общем
+     ряду с "Далее"/"Скрыть", а не отдельной строкой у "Паузы". */
+  .timer-actions-top #memesAutoSpeakBtn,
+  .timer-actions-top #kidsMemesAutoSpeakBtn{
+    flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:26px;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+  }
+  .timer-actions-top #memesAutoSpeakBtn.on,
+  .timer-actions-top #kidsMemesAutoSpeakBtn.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
   }
   .timer-actions-bottom{display:flex; gap:10px;}
   .timer-actions-bottom .btn{flex:1; height:40px; padding:0 10px;}
@@ -1874,11 +1946,11 @@
       <div class="subtitle">Простые игры для тёплых вечеров — вдвоём с любимым человеком, весёлой компанией или всей семьёй. Выберите формат и начинайте.</div>
 
       <div class="game-select-list" id="homeMenuList">
-        <button type="button" class="btn btn-menu-item" id="homeTwoPlayerBtn">💕 Игры для пар 18+</button>
-        <button type="button" class="btn btn-menu-item" id="homeCompanyBtn">🎉 Игры для компании</button>
-        <button type="button" class="btn btn-menu-item" id="homeKidsBtn">🧸 Игры с детьми</button>
-        <button type="button" class="btn btn-menu-item" id="homeBusinessBtn">💼 Бизнес игры</button>
-        <button type="button" class="btn btn-menu-item" id="homeSoloBtn">🧍 Игры для одного</button>
+        <button type="button" class="btn btn-menu-item" id="homeTwoPlayerBtn"><span class="menu-icon">💕</span> Игры для пар 18+</button>
+        <button type="button" class="btn btn-menu-item" id="homeCompanyBtn"><span class="menu-icon">🎉</span> Игры для компании</button>
+        <button type="button" class="btn btn-menu-item" id="homeKidsBtn"><span class="menu-icon">🧸</span> Игры с детьми</button>
+        <button type="button" class="btn btn-menu-item" id="homeBusinessBtn"><span class="menu-icon">💼</span> Бизнес игры</button>
+        <button type="button" class="btn btn-menu-item" id="homeSoloBtn"><span class="menu-icon">📱</span> Игры для одного</button>
       </div>
 
       <div class="field" id="backupField" style="margin-top:22px;">
@@ -1920,16 +1992,16 @@
 
         <label>Выбери игру</label>
         <div class="game-select-list" id="gameSelectList">
-          <button type="button" class="btn btn-menu-item" id="gameQuizBtn">🎯 Викторина</button>
-          <button type="button" class="btn btn-menu-item" id="gameIdeasBtn">✨ Идеи для вас</button>
-          <button type="button" class="btn btn-menu-item" id="gameFantyBtn">💘 Фанты</button>
-          <button type="button" class="btn btn-menu-item" id="gameTdBtn">❓ Правда/Действие</button>
-          <button type="button" class="btn btn-menu-item" id="gameZnayuBtn">💑 Тайные ответы</button>
-          <button type="button" class="btn btn-menu-item" id="gameWishlistBtn">💌 Твои желания</button>
-          <button type="button" class="btn btn-menu-item" id="gameBingoBtn">🎱 Секс-бинго</button>
-          <button type="button" class="btn btn-menu-item" id="gameTimerBtn">⏱️ Таймер страсти</button>
-          <button type="button" class="btn btn-menu-item" id="gamePhotoBtn">💃 Предложи партнеру</button>
-          <button type="button" class="btn btn-menu-item" id="gameDavayBtn">🎬 Давай попробуем</button>
+          <button type="button" class="btn btn-menu-item" id="gameQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
+          <button type="button" class="btn btn-menu-item" id="gameIdeasBtn"><span class="menu-icon">✨</span> Идеи для вас</button>
+          <button type="button" class="btn btn-menu-item" id="gameFantyBtn"><span class="menu-icon">💘</span> Фанты</button>
+          <button type="button" class="btn btn-menu-item" id="gameTdBtn"><span class="menu-icon">❓</span> Правда/Действие</button>
+          <button type="button" class="btn btn-menu-item" id="gameZnayuBtn"><span class="menu-icon">💑</span> Тайные ответы</button>
+          <button type="button" class="btn btn-menu-item" id="gameWishlistBtn"><span class="menu-icon">💌</span> Твои желания</button>
+          <button type="button" class="btn btn-menu-item" id="gameBingoBtn"><span class="menu-icon">🎱</span> Секс-бинго</button>
+          <button type="button" class="btn btn-menu-item" id="gameTimerBtn"><span class="menu-icon">⏱️</span> Таймер страсти</button>
+          <button type="button" class="btn btn-menu-item" id="gamePhotoBtn"><span class="menu-icon">💃</span> Предложи партнеру</button>
+          <button type="button" class="btn btn-menu-item" id="gameDavayBtn"><span class="menu-icon">🎬</span> Давай попробуем</button>
         </div>
       </div>
 
@@ -1951,16 +2023,16 @@
 
         <label>Выбери игру</label>
         <div class="game-select-list" id="partyGameSelectList">
-          <button type="button" class="btn btn-menu-item" id="gameKrokodilBtn">🐊 Крокодил</button>
-          <button type="button" class="btn btn-menu-item" id="gameMemesBtn">😂 Мемасики</button>
-          <button type="button" class="btn btn-menu-item" id="gamePartyFantsBtn">🎉 Фанты</button>
-          <button type="button" class="btn btn-menu-item" id="gamePartyTdBtn">🗣️ Правда/Действие</button>
-          <button type="button" class="btn btn-menu-item" id="gameFamZnayuBtn">🧠 Знаю тебя</button>
-          <button type="button" class="btn btn-menu-item" id="gameLuckyBtn">🎫 Счастливый билет</button>
-          <button type="button" class="btn btn-menu-item" id="gamePartyQuizBtn">🎯 Викторина</button>
-          <button type="button" class="btn btn-menu-item" id="gameTwisterBtn">🤸 Твистер</button>
-          <button type="button" class="btn btn-menu-item" id="gamePartyRouletteBtn">🎡 Рулетка</button>
-          <button type="button" class="btn btn-menu-item" id="gamePartyNeverBtn">🙊 Я никогда не</button>
+          <button type="button" class="btn btn-menu-item" id="gameKrokodilBtn"><span class="menu-icon">🐊</span> Крокодил</button>
+          <button type="button" class="btn btn-menu-item" id="gameMemesBtn"><span class="menu-icon">😂</span> Мемасики</button>
+          <button type="button" class="btn btn-menu-item" id="gamePartyFantsBtn"><span class="menu-icon">🎉</span> Фанты</button>
+          <button type="button" class="btn btn-menu-item" id="gamePartyTdBtn"><span class="menu-icon">🗣️</span> Правда/Действие</button>
+          <button type="button" class="btn btn-menu-item" id="gameFamZnayuBtn"><span class="menu-icon">🧠</span> Знаю тебя</button>
+          <button type="button" class="btn btn-menu-item" id="gameLuckyBtn"><span class="menu-icon">🎫</span> Счастливый билет</button>
+          <button type="button" class="btn btn-menu-item" id="gamePartyQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
+          <button type="button" class="btn btn-menu-item" id="gameTwisterBtn"><span class="menu-icon">🤸</span> Твистер</button>
+          <button type="button" class="btn btn-menu-item" id="gamePartyRouletteBtn"><span class="menu-icon">🎡</span> Рулетка</button>
+          <button type="button" class="btn btn-menu-item" id="gamePartyNeverBtn"><span class="menu-icon">🙊</span> Я никогда не</button>
         </div>
       </div>
 
@@ -1992,16 +2064,16 @@
 
         <label>Выбери игру</label>
         <div class="game-select-list" id="kidsGameSelectList">
-          <button type="button" class="btn btn-menu-item" id="gameKidsKrokodilBtn">🐊 Крокодил</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsMemesBtn">😂 Мемасики</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsMemoryBtn">🧠 Мемори</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsTdBtn">🗣️ Правда/Действие</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsQuizBtn">🎯 Викторина</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsFlashBtn">🗂️ Флеш карты</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsMinesweeperBtn">💣 Сапёр</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsWhatToPlayBtn">🎲 Во что поиграть?</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn">❌⭕ Крестики-нолики</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsBattleshipBtn">🚢 Морской бой</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsKrokodilBtn"><span class="menu-icon">🐊</span> Крокодил</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsMemesBtn"><span class="menu-icon">😂</span> Мемасики</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsTdBtn"><span class="menu-icon">🗣️</span> Правда/Действие</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsFlashBtn"><span class="menu-icon">🗂️</span> Флеш карты</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsMinesweeperBtn"><span class="menu-icon">💣</span> Сапёр</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsWhatToPlayBtn"><span class="menu-icon">🎲</span> Во что поиграть?</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon">❌⭕</span> Крестики-нолики</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
         </div>
       </div>
 
@@ -2023,9 +2095,9 @@
 
         <label>Выбери игру</label>
         <div class="game-select-list" id="businessGameSelectList">
-          <button type="button" class="btn btn-menu-item" id="gameBusiness1Btn">🍋 Лимонадный ларёк</button>
-          <button type="button" class="btn btn-menu-item" id="gameShopBtn">🛍️ Магазин</button>
-          <button type="button" class="btn btn-menu-item" id="gameBusiness2Btn">🎯 Игра 2</button>
+          <button type="button" class="btn btn-menu-item" id="gameBusiness1Btn"><span class="menu-icon">🍋</span> Лимонадный ларёк</button>
+          <button type="button" class="btn btn-menu-item" id="gameShopBtn"><span class="menu-icon">🛍️</span> Магазин</button>
+          <button type="button" class="btn btn-menu-item" id="gameBusiness2Btn"><span class="menu-icon">🎯</span> Игра 2</button>
         </div>
       </div>
 
@@ -2034,15 +2106,15 @@
 
     <!-- ---- Игры для одного ---- -->
     <div class="field-collapsible" id="soloView">
-      <h1 class="title">🧍 Игры для одного</h1>
+      <h1 class="title">📱 Игры для одного</h1>
       <div class="subtitle">Скоротать время в одиночку</div>
 
       <div class="field">
         <label>Выбери игру</label>
         <div class="game-select-list" id="soloGameSelectList">
-          <button type="button" class="btn btn-menu-item" id="gamePartyHangmanBtn">🪢 Виселица</button>
-          <button type="button" class="btn btn-menu-item" id="gameSoloQuizBtn">🎯 Викторина</button>
-          <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn">🧠 Мемори</button>
+          <button type="button" class="btn btn-menu-item" id="gamePartyHangmanBtn"><span class="menu-icon">🪢</span> Виселица</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
         </div>
       </div>
 
@@ -2248,7 +2320,10 @@
     <div class="wishlist-actions-row" id="kidsQuizHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="kidsQuizHandoffStartBtn">Начать</button>
     </div>
-    <button type="button" class="btn btn-secondary btn-pause" id="kidsQuizExitBtn" style="margin-top:10px;">Пауза</button>
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-secondary btn-pause" id="kidsQuizExitBtn">Пауза</button>
+      <button type="button" class="btn btn-secondary quiz-autospeak-btn" id="kidsQuizAutoSpeakBtn" aria-label="Автоозвучка вопросов">▶️</button>
+    </div>
   </section>
 
   <!-- ===== ВИКТОРИНА (ДЕТИ): ИТОГИ ИГРЫ ===== -->
@@ -2613,6 +2688,7 @@
       <div class="timer-actions-top">
         <button type="button" class="btn btn-primary" id="kidsMemesNextBtn">Далее</button>
         <button type="button" class="btn btn-secondary" id="kidsMemesHideBtn">🚫 Скрыть</button>
+        <button type="button" class="btn btn-secondary" id="kidsMemesAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary btn-pause" id="kidsMemesExitBtn">Выход</button>
@@ -2952,7 +3028,15 @@
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЕТИ): НАСТРОЙКА ===== -->
   <section id="kidsXoSetup" class="screen">
     <h1 class="title">❌⭕ Крестики-нолики</h1>
-    <div class="subtitle">Классическая игра для двоих — поле 3×3, три в ряд побеждают</div>
+    <div class="subtitle" id="kidsXoSetupSubtitle">Классическая игра для двоих — поле 3×3, три в ряд побеждают</div>
+
+    <div class="field">
+      <label>Размер поля</label>
+      <div class="starter-group" id="kidsXoSizeGroup">
+        <button type="button" class="starter-btn" data-value="3">3×3</button>
+        <button type="button" class="starter-btn" data-value="5">5×5</button>
+      </div>
+    </div>
 
     <button class="btn btn-primary" id="kidsXoSetupStartBtn">Начать</button>
 
@@ -2993,11 +3077,12 @@
   <div class="modal-overlay" id="kidsXoRulesModal">
     <div class="modal-card">
       <div class="modal-title">❌⭕ Правила игры «Крестики-нолики»</div>
-      <div class="intro-text">Классика для двоих на поле 3×3.</div>
+      <div class="intro-text">Классика для двоих — на выбор поле 3×3 или 5×5.</div>
       <ol class="modal-rules">
+        <li>На экране настройки выберите размер поля: 3×3 (три своих знака подряд — победа) или 5×5 (поле больше, для победы нужно уже четыре своих знака подряд).</li>
         <li>Кто ходит первым в самой первой партии — решает случай, дальше первым всегда ходит победитель предыдущего раунда (при ничьей право первого хода переходит другому игроку).</li>
         <li>По очереди ставьте крестики и нолики в свободные клетки.</li>
-        <li>Три своих знака подряд по горизонтали, вертикали или диагонали — победа в раунде.</li>
+        <li>Нужное количество своих знаков подряд по горизонтали, вертикали или диагонали — победа в раунде.</li>
         <li>Если все клетки заполнены, а ряд не собран — ничья.</li>
         <li>Счёт побед и ничьих ведётся по всей партии — итог покажем при выходе.</li>
         <li>«Выход» в любой момент вернёт в меню.</li>
@@ -3025,11 +3110,13 @@
     <h1 class="title" style="font-size:20px;">🚢 Морской бой</h1>
     <div class="intro-text" id="kidsBattleshipStatusText" style="text-align:center; min-height:22px; margin-bottom:6px;"></div>
 
-    <div class="card" id="kidsBattleshipHandoffCard" style="display:none;">
-      <div class="card-inner"><div class="card-body">
-        <div class="card-icon">🚢</div>
-        <div class="card-text" id="kidsBattleshipHandoffText">Передайте телефон</div>
-      </div></div>
+    <div class="card-area" id="kidsBattleshipHandoffCardArea" style="display:none;">
+      <div class="card" id="kidsBattleshipHandoffCard">
+        <div class="card-inner"><div class="card-body">
+          <div class="card-icon">🚢</div>
+          <div class="card-text" id="kidsBattleshipHandoffText">Передайте телефон</div>
+        </div></div>
+      </div>
     </div>
     <div class="wishlist-actions-row" id="kidsBattleshipHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="kidsBattleshipHandoffStartBtn">Начать</button>
@@ -3061,7 +3148,7 @@
         <li>Флоты обоих игроков расставляются случайно и автоматически: 1 четырёхпалубный, 2 трёхпалубных, 3 двухпалубных и 4 однопалубных корабля (10 кораблей, 20 клеток), корабли не касаются друг друга даже углами — как в классической игре.</li>
         <li>Игроки стреляют по очереди. Перед своим ходом видна карточка «Передайте телефон» — нажмите «Начать», только когда телефон окажется у нужного игрока, чтобы не увидеть чужое поле раньше времени.</li>
         <li>Стреляйте по полю противника, нажимая на клетку: 🌊 — мимо, 🔥 — попадание, 💀 — корабль потоплен полностью.</li>
-        <li>Ход переходит другому игроку после каждого выстрела, независимо от результата.</li>
+        <li>Попал — стреляешь ещё раз; промазал — ход переходит другому игроку (телефон передаётся снова через карточку «Передайте телефон»).</li>
         <li>Побеждает тот, кто первым потопит весь флот противника (все 20 клеток кораблей).</li>
         <li>«Выход» в любой момент завершает партию без объявления победителя.</li>
       </ol>
@@ -3350,6 +3437,7 @@
       <div class="timer-actions-top">
         <button type="button" class="btn btn-primary" id="memesNextBtn">Далее</button>
         <button type="button" class="btn btn-secondary" id="memesHideBtn">🚫 Скрыть</button>
+        <button type="button" class="btn btn-secondary" id="memesAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary btn-pause" id="memesExitBtn">Выход</button>
@@ -3730,7 +3818,10 @@
     <div class="wishlist-actions-row" id="partyQuizHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="partyQuizHandoffStartBtn">Начать</button>
     </div>
-    <button type="button" class="btn btn-secondary btn-pause" id="partyQuizExitBtn" style="margin-top:10px;">Пауза</button>
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-secondary btn-pause" id="partyQuizExitBtn">Пауза</button>
+      <button type="button" class="btn btn-secondary quiz-autospeak-btn" id="partyQuizAutoSpeakBtn" aria-label="Автоозвучка вопросов">▶️</button>
+    </div>
   </section>
 
   <!-- ===== ВИКТОРИНА (КОМПАНИЯ): ИТОГИ ИГРЫ ===== -->
@@ -3859,7 +3950,10 @@
       </div>
     </div>
 
-    <button type="button" class="btn btn-secondary btn-pause" id="soloQuizExitBtn" style="margin-top:10px;">Выход</button>
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-secondary btn-pause" id="soloQuizExitBtn">Выход</button>
+      <button type="button" class="btn btn-secondary quiz-autospeak-btn" id="soloQuizAutoSpeakBtn" aria-label="Автоозвучка вопросов">▶️</button>
+    </div>
   </section>
 
   <!-- ===== ВИКТОРИНА (ОДИН): ИТОГИ ИГРЫ ===== -->
@@ -3879,7 +3973,7 @@
       <ol class="modal-rules">
         <li>Выберите уровень сложности, время на ответ (10/15/20 сек) и число вопросов в игре (5/10/15/20).</li>
         <li>На каждый вопрос — 4 варианта ответа. Не успели выбрать за отведённое время — вопрос засчитывается как неверный.</li>
-        <li>Тап по карточке озвучивает вопрос вслух (🔊), если это поддерживает браузер.</li>
+        <li>Тап по карточке озвучивает вопрос вслух, если это поддерживает браузер.</li>
         <li>В конце — итог: сколько вопросов угадано и сколько заняло времени.</li>
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
@@ -4255,7 +4349,10 @@
     <div class="wishlist-actions-row" id="quizHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="quizHandoffStartBtn">Начать</button>
     </div>
-    <button type="button" class="btn btn-secondary btn-pause" id="quizExitBtn" style="margin-top:10px;">Пауза</button>
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-secondary btn-pause" id="quizExitBtn">Пауза</button>
+      <button type="button" class="btn btn-secondary quiz-autospeak-btn" id="quizAutoSpeakBtn" aria-label="Автоозвучка вопросов">▶️</button>
+    </div>
   </section>
 
   <!-- ===== ВИКТОРИНА (ПАРЫ 18+): ИТОГИ ИГРЫ ===== -->
@@ -4479,7 +4576,7 @@
       <div class="intro-text">Приложение показывает карточку с описанием ситуации — компания подбирает под неё самый смешной мем из своей колоды физических карточек с мемами.</div>
       <ol class="modal-rules">
         <li>Выберите уровень: 🧒 «До 12 лет», 🎈 «До 18 лет», 🔥 «18+» или 😈 «Пошлые».</li>
-        <li>Прочитайте вслух ситуацию на карточке — или нажмите на саму карточку (иконка 🔊 в углу), и телефон озвучит её сам, если это поддерживает браузер.</li>
+        <li>Прочитайте вслух ситуацию на карточке — или нажмите на саму карточку, и телефон озвучит её сам, если это поддерживает браузер. Кнопка ▶️ рядом со «Скрыть» включает автоозвучку каждой новой ситуации.</li>
         <li>Каждый участник выбирает из своей руки мем-карточку, которая лучше всего подходит к ситуации, и кладёт её в закрытую.</li>
         <li>Ведущий (или все вместе) выбирает самый смешной вариант — можно вести счёт очков на бумаге или на словах.</li>
         <li>«Далее» покажет новую ситуацию, «🚫 Скрыть» уберёт текущую карточку насовсем.</li>
@@ -4512,7 +4609,7 @@
       <div class="intro-text">Приложение показывает карточку с описанием ситуации — компания подбирает под неё самый смешной мем из своей колоды физических карточек с мемами.</div>
       <ol class="modal-rules">
         <li>Уровень берётся из общего переключателя возраста (5/7/10/14 лет) на экране «Игры с детьми».</li>
-        <li>Прочитайте вслух ситуацию на карточке — или нажмите на саму карточку (иконка 🔊), и телефон озвучит её сам.</li>
+        <li>Прочитайте вслух ситуацию на карточке — или нажмите на саму карточку, и телефон озвучит её сам. Кнопка ▶️ рядом со «Скрыть» включает автоозвучку каждой новой ситуации.</li>
         <li>Каждый участник выбирает из своей руки мем-карточку, которая лучше всего подходит к ситуации.</li>
         <li>«Далее» покажет новую ситуацию, «🚫 Скрыть» уберёт текущую карточку насовсем.</li>
         <li>«Выход» в любой момент вернёт в меню.</li>
@@ -4822,67 +4919,67 @@
   </div>
 </div>
 
-<script src="cards/cards_fants.js?v=20260816e"></script>
-<script src="cards/cards_fants_users.js?v=20260816e"></script>
-<script src="cards/cards_poses.js?v=20260816e"></script>
-<script src="cards/cards_sexshop.js?v=20260816e"></script>
-<script src="cards/cards_collection.js?v=20260816e"></script>
-<script src="cards/cards_video.js?v=20260816e"></script>
-<script src="cards/cards_bingo.js?v=20260816e"></script>
-<script src="cards/cards_timer.js?v=20260816e"></script>
-<script src="cards/cards_wishlist.js?v=20260816e"></script>
-<script src="cards/cards_znayu.js?v=20260816e"></script>
-<script src="cards/cards_krokodil.js?v=20260816e"></script>
-<script src="cards/cards_memes.js?v=20260816e"></script>
-<script src="cards/cards_party_never.js?v=20260816e"></script>
-<script src="cards/cards_party_fants.js?v=20260816e"></script>
-<script src="cards/cards_party_td.js?v=20260816e"></script>
-<script src="cards/cards_fam_znayu.js?v=20260816e"></script>
-<script src="cards/cards_lucky.js?v=20260816e"></script>
-<script src="cards/cards_kids_memory.js?v=20260816e"></script>
-<script src="cards/cards_kids_td.js?v=20260816e"></script>
-<script src="cards/cards_quiz.js?v=20260816e"></script>
-<script src="cards/cards_party_quiz.js?v=20260816e"></script>
-<script src="cards/cards_kids_quiz.js?v=20260816e"></script>
-<script src="cards/cards_ideas.js?v=20260816e"></script>
-<script src="cards/cards_whattoplay.js?v=20260816e"></script>
-<script src="cards/cards_kids_krokodil.js?v=20260816e"></script>
-<script src="cards/cards_kids_memes.js?v=20260816e"></script>
-<script src="cards/cards_kids_saper.js?v=20260816e"></script>
-<script src="cards/cards_party_hangman.js?v=20260816e"></script>
-<script src="cards/cards_shop.js?v=20260816e"></script>
-<script src="games/core.js?v=20260816e"></script>
-<script src="games/twister.js?v=20260816e"></script>
-<script src="games/party-hangman.js?v=20260816e"></script>
-<script src="games/solo-quiz.js?v=20260816e"></script>
-<script src="games/solo-memory.js?v=20260816e"></script>
-<script src="games/shop.js?v=20260816e"></script>
-<script src="games/party-roulette.js?v=20260816e"></script>
-<script src="games/business-lemonade.js?v=20260816e"></script>
-<script src="games/kids-xo.js?v=20260816e"></script>
-<script src="games/kids-battleship.js?v=20260816e"></script>
-<script src="games/truth-dare.js?v=20260816e"></script>
-<script src="games/bingo.js?v=20260816e"></script>
-<script src="games/timer-game.js?v=20260816e"></script>
-<script src="games/krokodil.js?v=20260816e"></script>
-<script src="games/memes.js?v=20260816e"></script>
-<script src="games/party-never.js?v=20260816e"></script>
-<script src="games/party-fants.js?v=20260816e"></script>
-<script src="games/party-td.js?v=20260816e"></script>
-<script src="games/fam-znayu.js?v=20260816e"></script>
-<script src="games/lucky.js?v=20260816e"></script>
-<script src="games/kids-memory.js?v=20260816e"></script>
-<script src="games/kids-krokodil.js?v=20260816e"></script>
-<script src="games/kids-memes.js?v=20260816e"></script>
-<script src="games/kids-saper.js?v=20260816e"></script>
-<script src="games/kids-td.js?v=20260816e"></script>
-<script src="games/quiz.js?v=20260816e"></script>
-<script src="games/party-quiz.js?v=20260816e"></script>
-<script src="games/kids-quiz.js?v=20260816e"></script>
-<script src="games/wishlist.js?v=20260816e"></script>
-<script src="games/znayu.js?v=20260816e"></script>
-<script src="games/ideas.js?v=20260816e"></script>
-<script src="games/whattoplay.js?v=20260816e"></script>
-<script src="games/init.js?v=20260816e"></script>
+<script src="cards/cards_fants.js?v=20260816t"></script>
+<script src="cards/cards_fants_users.js?v=20260816t"></script>
+<script src="cards/cards_poses.js?v=20260816t"></script>
+<script src="cards/cards_sexshop.js?v=20260816t"></script>
+<script src="cards/cards_collection.js?v=20260816t"></script>
+<script src="cards/cards_video.js?v=20260816t"></script>
+<script src="cards/cards_bingo.js?v=20260816t"></script>
+<script src="cards/cards_timer.js?v=20260816t"></script>
+<script src="cards/cards_wishlist.js?v=20260816t"></script>
+<script src="cards/cards_znayu.js?v=20260816t"></script>
+<script src="cards/cards_krokodil.js?v=20260816t"></script>
+<script src="cards/cards_memes.js?v=20260816t"></script>
+<script src="cards/cards_party_never.js?v=20260816t"></script>
+<script src="cards/cards_party_fants.js?v=20260816t"></script>
+<script src="cards/cards_party_td.js?v=20260816t"></script>
+<script src="cards/cards_fam_znayu.js?v=20260816t"></script>
+<script src="cards/cards_lucky.js?v=20260816t"></script>
+<script src="cards/cards_kids_memory.js?v=20260816t"></script>
+<script src="cards/cards_kids_td.js?v=20260816t"></script>
+<script src="cards/cards_quiz.js?v=20260816t"></script>
+<script src="cards/cards_party_quiz.js?v=20260816t"></script>
+<script src="cards/cards_kids_quiz.js?v=20260816t"></script>
+<script src="cards/cards_ideas.js?v=20260816t"></script>
+<script src="cards/cards_whattoplay.js?v=20260816t"></script>
+<script src="cards/cards_kids_krokodil.js?v=20260816t"></script>
+<script src="cards/cards_kids_memes.js?v=20260816t"></script>
+<script src="cards/cards_kids_saper.js?v=20260816t"></script>
+<script src="cards/cards_party_hangman.js?v=20260816t"></script>
+<script src="cards/cards_shop.js?v=20260816t"></script>
+<script src="games/core.js?v=20260816t"></script>
+<script src="games/twister.js?v=20260816t"></script>
+<script src="games/party-hangman.js?v=20260816t"></script>
+<script src="games/solo-quiz.js?v=20260816t"></script>
+<script src="games/solo-memory.js?v=20260816t"></script>
+<script src="games/shop.js?v=20260816t"></script>
+<script src="games/party-roulette.js?v=20260816t"></script>
+<script src="games/business-lemonade.js?v=20260816t"></script>
+<script src="games/kids-xo.js?v=20260816t"></script>
+<script src="games/kids-battleship.js?v=20260816t"></script>
+<script src="games/truth-dare.js?v=20260816t"></script>
+<script src="games/bingo.js?v=20260816t"></script>
+<script src="games/timer-game.js?v=20260816t"></script>
+<script src="games/krokodil.js?v=20260816t"></script>
+<script src="games/memes.js?v=20260816t"></script>
+<script src="games/party-never.js?v=20260816t"></script>
+<script src="games/party-fants.js?v=20260816t"></script>
+<script src="games/party-td.js?v=20260816t"></script>
+<script src="games/fam-znayu.js?v=20260816t"></script>
+<script src="games/lucky.js?v=20260816t"></script>
+<script src="games/kids-memory.js?v=20260816t"></script>
+<script src="games/kids-krokodil.js?v=20260816t"></script>
+<script src="games/kids-memes.js?v=20260816t"></script>
+<script src="games/kids-saper.js?v=20260816t"></script>
+<script src="games/kids-td.js?v=20260816t"></script>
+<script src="games/quiz.js?v=20260816t"></script>
+<script src="games/party-quiz.js?v=20260816t"></script>
+<script src="games/kids-quiz.js?v=20260816t"></script>
+<script src="games/wishlist.js?v=20260816t"></script>
+<script src="games/znayu.js?v=20260816t"></script>
+<script src="games/ideas.js?v=20260816t"></script>
+<script src="games/whattoplay.js?v=20260816t"></script>
+<script src="games/init.js?v=20260816t"></script>
 </body>
 </html>

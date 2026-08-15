@@ -97,9 +97,9 @@ function bizHoursMult(hours){
 // погоду, иначе не действует; обычный mult — действует всегда, пока включена.
 const BIZ_OPTIONS = {
   ice:      { name: 'Лёд', icon: '🧊', costType: 'perCup', cost: 1, weatherKey: 'hot', onMult: 1.15, offMult: 0.9, hint: 'В жару разбирают быстрее' },
-  umbrella: { name: 'Зонтик', icon: '☂️', costType: 'flatDay', cost: 15, weatherKey: 'rain', onMult: 1.4, offMult: 1, hint: 'Спасает продажи в дождь' },
-  colorCup: { name: 'Цветной стакан', icon: '🌈', costType: 'perCup', cost: 1, mult: 1.08, hint: 'Ярче — заметнее издалека' },
-  straw:    { name: 'Узорная трубочка', icon: '🎨', costType: 'perCup', cost: 1, mult: 1.05, hint: 'Приятная мелочь для покупателей' },
+  umbrella: { name: 'Зонтик', icon: '☂️', costType: 'perCup', cost: 1, mult: 1.06, hint: 'Красивая мелочь в стакане' },
+  colorCup: { name: 'Цветной стакан', icon: '🧋', costType: 'perCup', cost: 1, mult: 1.08, hint: 'Ярче — заметнее издалека' },
+  straw:    { name: 'Узорная трубочка', icon: '🥤', costType: 'perCup', cost: 1, mult: 1.05, hint: 'Приятная мелочь для покупателей' },
 };
 // Доля раскупленных стаканов в зависимости от цены (до умножения на погоду/
 // место/событие/апгрейды/опции/время работы/конкурента) — до 40 ₽ раскупают
