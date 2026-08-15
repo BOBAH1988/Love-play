@@ -22,6 +22,7 @@ function renderSoloMemoryLevels(){
       state.soloMemoryLevel = l.id;
       saveState();
       renderSoloMemoryLevels();
+      renderSoloMemoryLeaderboard();
     });
     wrap.appendChild(div);
   });
@@ -147,9 +148,15 @@ function showSoloMemorySummaryModal(){
 function renderSoloMemoryLeaderboard(){
   const wrap = document.getElementById('soloMemoryLeaderboardList');
   if(!wrap) return;
-  const list = state.soloMemoryLeaderboard || [];
+  const level = state.soloMemoryLevel || 1;
+  const titleEl = document.getElementById('soloMemoryLeaderboardTitle');
+  if(titleEl){
+    const levelInfo = (typeof KIDS_MEMORY_LEVELS !== 'undefined' ? KIDS_MEMORY_LEVELS.find(l=>l.id===level) : null);
+    titleEl.textContent = '🏆 Таблица лидеров' + (levelInfo ? ' — ' + levelInfo.name : '');
+  }
+  const list = (state.soloMemoryLeaderboard || []).filter(entry => (entry.level || 1) === level);
   if(list.length === 0){
-    wrap.innerHTML = '<div class="leaderboard-empty">Пока нет результатов — сыграйте первую игру!</div>';
+    wrap.innerHTML = '<div class="leaderboard-empty">Пока нет результатов на этом уровне — сыграйте первую игру!</div>';
     return;
   }
   const medals = {1:'🥇', 2:'🥈', 3:'🥉'};
@@ -162,12 +169,24 @@ function renderSoloMemoryLeaderboard(){
     </div>`;
   }).join('');
 }
-function saveSoloMemoryScore(name, timeMs){
+function saveSoloMemoryScore(name, timeMs, level){
   const cleanName = (name || '').trim().slice(0, 14) || 'Игрок';
   if(!state.soloMemoryLeaderboard) state.soloMemoryLeaderboard = [];
-  state.soloMemoryLeaderboard.push({name: cleanName, timeMs});
-  state.soloMemoryLeaderboard.sort((a,b)=>a.timeMs - b.timeMs);
-  state.soloMemoryLeaderboard = state.soloMemoryLeaderboard.slice(0, 10);
+  state.soloMemoryLeaderboard.push({name: cleanName, level: level || 1, timeMs});
+  // Сортируем и обрезаем до топ-10 ОТДЕЛЬНО для каждого уровня, чтобы
+  // результаты на одном уровне не вытесняли результаты другого.
+  const byLevel = {};
+  state.soloMemoryLeaderboard.forEach(e=>{
+    const lvl = e.level || 1;
+    if(!byLevel[lvl]) byLevel[lvl] = [];
+    byLevel[lvl].push(e);
+  });
+  let merged = [];
+  Object.keys(byLevel).forEach(lvl=>{
+    byLevel[lvl].sort((a,b)=>a.timeMs - b.timeMs);
+    merged = merged.concat(byLevel[lvl].slice(0, 10));
+  });
+  state.soloMemoryLeaderboard = merged;
   state.soloMemoryLastName = cleanName;
   saveState();
 }
@@ -204,7 +223,7 @@ document.getElementById('soloMemorySetupStartBtn').addEventListener('click', ()=
 document.getElementById('soloMemorySetupExitBtn').addEventListener('click', ()=>{ exitSoloMemorySetup(); });
 document.getElementById('closeSoloMemorySummaryBtn').addEventListener('click', ()=>{
   const nameInput = document.getElementById('soloMemoryNameInput');
-  saveSoloMemoryScore(nameInput ? nameInput.value : '', state.soloMemoryElapsedMs || 0);
+  saveSoloMemoryScore(nameInput ? nameInput.value : '', state.soloMemoryElapsedMs || 0, state.soloMemoryLevel || 1);
   exitSoloMemoryGame();
 });
 document.getElementById('soloMemoryExitBtn').addEventListener('click', ()=>{ exitSoloMemoryGame(); });

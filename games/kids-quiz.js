@@ -34,9 +34,9 @@ function updateKidsQuizSetupSubtitle(){
     : 'Отвечайте на вопросы по очереди — 4 варианта, только один верный';
 }
 function renderKidsQuizAnswerTimeGroup(){
-  if(![5,10,15].includes(state.kidsQuizAnswerSeconds)){ state.kidsQuizAnswerSeconds = 10; saveState(); }
+  if(![10,15,20].includes(state.kidsQuizAnswerSeconds)){ state.kidsQuizAnswerSeconds = 15; saveState(); }
   document.querySelectorAll('#kidsQuizAnswerTimeGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.kidsQuizAnswerSeconds || 10));
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.kidsQuizAnswerSeconds || 15));
   });
 }
 document.querySelectorAll('#kidsQuizAnswerTimeGroup .starter-btn').forEach(btn=>{

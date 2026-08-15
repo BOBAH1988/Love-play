@@ -238,11 +238,13 @@ function renderLuckyGrid(){
   wrap.innerHTML = '';
   const grid = state.luckyGrid || [];
   const checked = state.luckyChecked || [];
+  if(!state.luckyRevealed) state.luckyRevealed = grid.map(()=>true);
   const actor = luckyCurrentActor(state.luckyCurrentTeamIndex || 0);
   grid.forEach((text, i)=>{
+    const isHidden = !!state.luckyTasksHidden && !checked[i] && !state.luckyRevealed[i];
     const cell = document.createElement('div');
-    cell.className = 'bingo-cell' + (checked[i] ? ' checked' : '');
-    cell.textContent = resolveLuckyActorGenderText(text, actor.actorIsM);
+    cell.className = 'bingo-cell' + (checked[i] ? ' checked' : '') + (isHidden ? ' hidden' : '');
+    cell.textContent = isHidden ? '🎁' : resolveLuckyActorGenderText(text, actor.actorIsM);
     if(!checked[i] && !state.luckyFinished) cell.addEventListener('click', ()=>clickLuckyCell(i));
     wrap.appendChild(cell);
     fitBingoCellText(cell);
@@ -253,6 +255,14 @@ function clickLuckyCell(i){
   if(state.luckyFinished) return;
   const checked = state.luckyChecked || (state.luckyChecked = new Array(25).fill(false));
   if(checked[i]) return;
+  if(!state.luckyRevealed) state.luckyRevealed = (state.luckyGrid || []).map(()=>true);
+  if(state.luckyTasksHidden && !state.luckyRevealed[i]){
+    state.luckyRevealed[i] = true;
+    saveState();
+    playNeutralSound();
+    renderLuckyGrid();
+    return;
+  }
   playSuccessSound();
   checked[i] = true;
   const idx = state.luckyCurrentTeamIndex || 0;
@@ -440,6 +450,8 @@ function goToLuckyGame(){
   state.luckyUsed = {};
   state.luckyGrid = generateLuckyGrid(1);
   state.luckyChecked = new Array(25).fill(false);
+  state.luckyTasksHidden = false;
+  state.luckyRevealed = state.luckyGrid.map(()=>true);
   state.luckyCompleted = new Array(2).fill(0);
   state.luckyWonLines = [];
   state.luckyEscalatedTo2 = false;
@@ -458,6 +470,7 @@ function goToLuckyGame(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('luckyGame').classList.add('active');
   renderLuckyGrid();
+  updateLuckyHideTasksBtn();
   renderLuckyBonusChecklist();
 }
 // Пауза: вернуться в главное меню, не сбрасывая поле и очередь — можно
@@ -476,6 +489,7 @@ function resumeLuckyGame(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('luckyGame').classList.add('active');
   renderLuckyGrid();
+  updateLuckyHideTasksBtn();
   renderLuckyBonusChecklist();
 }
 // Вызывается из общего "Закончить игру" на главном экране, пока игра стоит
@@ -485,6 +499,8 @@ function resumeLuckyGame(){
 function finishLuckyGame(){
   state.luckyGrid = [];
   state.luckyChecked = [];
+  state.luckyTasksHidden = false;
+  state.luckyRevealed = [];
   state.luckyCompleted = [];
   state.luckyWonLines = [];
   state.luckyLevel = 1;
@@ -557,11 +573,23 @@ document.getElementById('luckySetupStartBtn').addEventListener('click', ()=>{
   goToLuckyGame();
 });
 document.getElementById('luckySetupExitBtn').addEventListener('click', ()=>{ exitLuckySetup(); });
-document.getElementById('luckySkipTurnBtn').addEventListener('click', ()=>{
-  if(state.luckyFinished) return;
-  playFailSound();
-  passLuckyTurn();
-  showToast('Ход передан');
+function updateLuckyHideTasksBtn(){
+  const btn = document.getElementById('luckyHideTasksBtn');
+  if(!btn) return;
+  btn.textContent = state.luckyTasksHidden ? '👀 Показать задания' : '🙈 Скрыть задания';
+}
+document.getElementById('luckyHideTasksBtn').addEventListener('click', ()=>{
+  state.luckyTasksHidden = !state.luckyTasksHidden;
+  const grid = state.luckyGrid || [];
+  if(state.luckyTasksHidden){
+    state.luckyRevealed = grid.map(()=>false);
+  } else {
+    state.luckyRevealed = grid.map(()=>true);
+  }
+  saveState();
+  updateLuckyHideTasksBtn();
+  renderLuckyGrid();
+  playSuccessSound();
 });
 document.getElementById('luckyExitBtn').addEventListener('click', ()=>{
   pauseLuckyGame();

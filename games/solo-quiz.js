@@ -34,9 +34,9 @@ function renderSoloQuizSetupLevels(){
   });
 }
 function renderSoloQuizAnswerTimeGroup(){
-  if(![5,10,15].includes(state.soloQuizAnswerSeconds)){ state.soloQuizAnswerSeconds = 10; saveState(); }
+  if(![10,15,20].includes(state.soloQuizAnswerSeconds)){ state.soloQuizAnswerSeconds = 15; saveState(); }
   document.querySelectorAll('#soloQuizAnswerTimeGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.soloQuizAnswerSeconds || 10));
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.soloQuizAnswerSeconds || 15));
   });
 }
 document.querySelectorAll('#soloQuizAnswerTimeGroup .starter-btn').forEach(btn=>{

@@ -44,11 +44,11 @@ function renderQuizSetupLevels(){
 }
 function renderQuizAnswerTimeGroup(){
   // Клэмп на случай старого сохранённого значения (раньше были варианты
-  // 3/5/10 — теперь 5/10/15), чтобы после обновления приложения всегда была
-  // подсвечена одна из актуальных кнопок.
-  if(![5,10,15].includes(state.quizAnswerSeconds)){ state.quizAnswerSeconds = 10; saveState(); }
+  // 5/10/15 — теперь 10/15/20), чтобы после обновления приложения всегда
+  // была подсвечена одна из актуальных кнопок.
+  if(![10,15,20].includes(state.quizAnswerSeconds)){ state.quizAnswerSeconds = 15; saveState(); }
   document.querySelectorAll('#quizAnswerTimeGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.quizAnswerSeconds || 10));
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.quizAnswerSeconds || 15));
   });
 }
 document.querySelectorAll('#quizAnswerTimeGroup .starter-btn').forEach(btn=>{

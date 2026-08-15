@@ -295,14 +295,4 @@ document.getElementById('tdPauseBtn').addEventListener('click', ()=>{
 document.getElementById('tdSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.add('show'); });
 document.getElementById('closeTdRulesBtn').addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.remove('show'); });
 document.getElementById('tdRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'tdRulesModal') e.currentTarget.classList.remove('show'); });
-document.getElementById('tdSetupSoundBtn').addEventListener('click', ()=>{
-  state.muted = !state.muted;
-  saveState();
-  updateMuteBtn();
-});
-document.getElementById('timerSetupSoundBtn').addEventListener('click', ()=>{
-  state.muted = !state.muted;
-  saveState();
-  updateMuteBtn();
-});
 

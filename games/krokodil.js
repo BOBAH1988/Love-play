@@ -14,10 +14,14 @@ let krRoundSkipped = 0;
 let krCurrentCard = null;
 // mode: 'word' — только одиночные существительные (карточки с mode:'word'
 // в cards_krokodil.js); 'action' (по умолчанию) — обычные карточки-сценки
-// без этого поля. Оба пула никогда не пересекаются по level+mode.
+// без этого поля; 'explain' — разновидность без пантомимы (объясняешь
+// словами и описаниями, не называя само слово) — использует тот же пул
+// карточек, что и 'word' (одиночные существительные подходят для устного
+// объяснения так же хорошо, как и для показа жестами), без отдельного
+// набора карточек.
 function getKrCardsList(level, mode){
   if(typeof KROKODIL_CARDS === 'undefined' || !Array.isArray(KROKODIL_CARDS)) return [];
-  return KROKODIL_CARDS.filter(c=>c.level===level && (mode === 'word' ? c.mode === 'word' : c.mode !== 'word'));
+  return KROKODIL_CARDS.filter(c=>c.level===level && ((mode === 'word' || mode === 'explain') ? c.mode === 'word' : c.mode !== 'word'));
 }
 // Общий список игроков для всех "Игр для компании" (сейчас использует
 // только Крокодил, но хранится на уровне группы, чтобы будущие игры тоже
@@ -99,10 +103,18 @@ document.querySelectorAll('#krokodilDurationGroup .starter-btn').forEach(btn=>{
 });
 // "Сложность": Слово (только одиночные существительные) / Действие (сценки,
 // по умолчанию — прежнее поведение игры до этой настройки).
+const KROKODIL_MODE_SUBTITLES = {
+  word: 'Один показывает слово молча — остальные угадывают',
+  action: 'Один показывает слово молча — остальные угадывают',
+  explain: 'Один объясняет слово своими словами, не называя его и однокоренные — остальные угадывают',
+};
 function renderKrokodilModeGroup(){
+  const mode = state.krokodilMode || 'word';
   document.querySelectorAll('#krokodilModeGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', btn.dataset.value === (state.krokodilMode || 'word'));
+    btn.classList.toggle('on', btn.dataset.value === mode);
   });
+  const subtitle = document.getElementById('krokodilSetupSubtitle');
+  if(subtitle) subtitle.textContent = KROKODIL_MODE_SUBTITLES[mode] || KROKODIL_MODE_SUBTITLES.word;
 }
 document.querySelectorAll('#krokodilModeGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -166,7 +178,8 @@ function updateKrScoreUI(){
   }
   const turnName = players[idx] || 'Игрок 1';
   const turnLabel = document.getElementById('krokodilTurnLabel');
-  if(turnLabel) turnLabel.textContent = 'Показывает: ' + turnName;
+  const verb = (state.krokodilMode || 'word') === 'explain' ? 'Объясняет' : 'Показывает';
+  if(turnLabel) turnLabel.textContent = verb + ': ' + turnName;
 }
 // Слово текущего раунда, тянется без повторов внутри уровня+режима, пока
 // пул не закончится — тот же принцип, что и во всех остальных играх

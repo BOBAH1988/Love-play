@@ -37,21 +37,16 @@ function renderTimerModeGroup(){
     btn.classList.toggle('on', btn.dataset.value === (state.timerGameMode || 'fast'));
   });
   // "Быстрая"/"Продолжительная" сами повышают уровень и всегда стартуют
-  // с 1-го, а время задания берётся из уровня — выбор уровня и своего
-  // времени в этих режимах недоступен, доступен только в "Пользовательской".
+  // с 1-го, а время задания берётся из уровня — эти настройки нужны только
+  // в "Пользовательской" и в остальных режимах полностью скрыты (не просто
+  // заблокированы), чтобы не перегружать экран настройки.
   const locked = (state.timerGameMode || 'fast') !== 'single';
   const levelsField = document.getElementById('timerLevelsField');
-  const levelsNote = document.getElementById('timerLevelsNote');
-  if(levelsField) levelsField.classList.toggle('timer-levels-locked', locked);
-  if(levelsNote) levelsNote.style.display = locked ? '' : 'none';
+  if(levelsField) levelsField.style.display = locked ? 'none' : '';
   const durationField = document.getElementById('timerDurationField');
-  const durationNote = document.getElementById('timerDurationNote');
-  if(durationField) durationField.classList.toggle('timer-levels-locked', locked);
-  if(durationNote) durationNote.style.display = locked ? '' : 'none';
+  if(durationField) durationField.style.display = locked ? 'none' : '';
   const levelUpField = document.getElementById('timerLevelUpField');
-  const levelUpNote = document.getElementById('timerLevelUpNote');
-  if(levelUpField) levelUpField.classList.toggle('timer-levels-locked', locked);
-  if(levelUpNote) levelUpNote.style.display = locked ? '' : 'none';
+  if(levelUpField) levelUpField.style.display = locked ? 'none' : '';
 }
 document.querySelectorAll('#timerModeGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{

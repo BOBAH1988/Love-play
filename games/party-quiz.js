@@ -35,9 +35,9 @@ function renderPartyQuizSetupLevels(){
   });
 }
 function renderPartyQuizAnswerTimeGroup(){
-  if(![5,10,15].includes(state.partyQuizAnswerSeconds)){ state.partyQuizAnswerSeconds = 10; saveState(); }
+  if(![10,15,20].includes(state.partyQuizAnswerSeconds)){ state.partyQuizAnswerSeconds = 15; saveState(); }
   document.querySelectorAll('#partyQuizAnswerTimeGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.partyQuizAnswerSeconds || 10));
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.partyQuizAnswerSeconds || 15));
   });
 }
 document.querySelectorAll('#partyQuizAnswerTimeGroup .starter-btn').forEach(btn=>{

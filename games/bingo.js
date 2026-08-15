@@ -26,6 +26,8 @@ function generateBingoGrid(level){
   }
   state.bingoGrid = grid;
   state.bingoChecked = grid.map(()=>false);
+  state.bingoTasksHidden = false;
+  state.bingoRevealed = grid.map(()=>true);
   state.bingoWonLines = [];
   state.bingoUsedBonus = [];
   state.bingoCurrentLevel = level;
@@ -56,10 +58,12 @@ function renderBingoGrid(){
   const wrap = document.getElementById('bingoGrid');
   if(!wrap) return;
   wrap.innerHTML = '';
+  if(!state.bingoRevealed) state.bingoRevealed = (state.bingoGrid || []).map(()=>true);
   (state.bingoGrid || []).forEach((text,i)=>{
+    const isHidden = !!state.bingoTasksHidden && !state.bingoChecked[i] && !state.bingoRevealed[i];
     const cell = document.createElement('div');
-    cell.className = 'bingo-cell' + (state.bingoChecked[i] ? ' checked' : '');
-    cell.textContent = text;
+    cell.className = 'bingo-cell' + (state.bingoChecked[i] ? ' checked' : '') + (isHidden ? ' hidden' : '');
+    cell.textContent = isHidden ? '🎁' : text;
     attachBingoCellPress(cell, i);
     wrap.appendChild(cell);
     fitBingoCellText(cell);
@@ -93,6 +97,14 @@ function attachBingoCellPress(cell, i){
   cell.addEventListener('pointercancel', endPress);
   cell.addEventListener('click', ()=>{
     if(longPressDone){ longPressDone = false; return; } // клик, который браузер шлёт следом за долгим нажатием — игнорируем
+    const isHidden = !!state.bingoTasksHidden && !state.bingoChecked[i] && !state.bingoRevealed[i];
+    if(isHidden){
+      state.bingoRevealed[i] = true;
+      saveState();
+      playNeutralSound();
+      renderBingoGrid();
+      return;
+    }
     if(!state.bingoChecked[i]) checkBingoCell(i);
   });
 }
@@ -177,10 +189,9 @@ function showBingoSummary(){
   document.getElementById('summaryScore').textContent = `Собрано линий: ${total} из 10`;
   document.getElementById('summaryCounts').textContent = (allChecked ? 'Отмечены все 25 клеток' : 'Собрано 5 линий') + (lvl ? ` · Уровень: ${lvl.icon} ${lvl.name}` : '');
   // Финальный приз — самый смелый уровень бонусов, выдаётся один раз, только
-  // за победу (пул уровня 3 к этому моменту уже актуален — карта всегда
-  // успевает подняться до уровня 3 раньше, чем партия завершится).
+  // за победу.
   const bonusEl = document.getElementById('summaryBonusText');
-  const finalBonus = pickBingoBonus(3);
+  const finalBonus = pickBingoBonus(4);
   if(finalBonus){
     bonusEl.textContent = '🎁 Финальный приз: ' + finalBonus.text;
     bonusEl.style.display = 'block';
@@ -221,7 +232,7 @@ function escalateBingoTo(nextLevel){
   showToast(`Уровень повышен: ${lvl ? lvl.icon + ' ' + lvl.name : nextLevel} 🔥`);
 }
 // Выбор бонусного задания без повторов в рамках одной партии — единственный
-// вызов теперь для финального приза (level=3) в конце партии.
+// вызов теперь для финального приза (level=4) в конце партии.
 function pickBingoBonus(level){
   const list = getBingoBonusList(level);
   if(!state.bingoUsedBonus) state.bingoUsedBonus = [];
@@ -309,6 +320,7 @@ function goToBingoGame(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('bingoGame').classList.add('active');
   renderBingoGrid();
+  updateBingoHideTasksBtn();
   renderBingoBonusChecklist();
 }
 // Пауза: вернуться в главное меню, не сбрасывая карту — можно продолжить
@@ -327,6 +339,7 @@ function resumeBingoGame(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('bingoGame').classList.add('active');
   renderBingoGrid();
+  updateBingoHideTasksBtn();
   renderBingoBonusChecklist();
 }
 function finishBingoGame(){
@@ -360,12 +373,22 @@ function showBingoExitSummary(){
   }
   document.getElementById('summaryModal').classList.add('show');
 }
-document.getElementById('bingoNewCardBtn').addEventListener('click', ()=>{
-  generateBingoGrid(1);
+function updateBingoHideTasksBtn(){
+  const btn = document.getElementById('bingoHideTasksBtn');
+  if(!btn) return;
+  btn.textContent = state.bingoTasksHidden ? '👀 Показать задания' : '🙈 Скрыть задания';
+}
+document.getElementById('bingoHideTasksBtn').addEventListener('click', ()=>{
+  state.bingoTasksHidden = !state.bingoTasksHidden;
+  if(state.bingoTasksHidden){
+    state.bingoRevealed = (state.bingoGrid || []).map(()=>false);
+  } else {
+    state.bingoRevealed = (state.bingoGrid || []).map(()=>true);
+  }
   saveState();
+  updateBingoHideTasksBtn();
   renderBingoGrid();
   playSuccessSound();
-  showToast('Новая игра начата 🎲');
 });
 // "Случайно" — подсказка: подсвечивает контуром случайную ещё не отмеченную
 // клетку, чтобы было проще выбрать следующее задание. Подсветка снимается

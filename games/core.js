@@ -33,12 +33,13 @@ let state = {
   davayStarter:'random', davaySelectedLevel:3, davaySoundOn:false,
   pausedMode:null,
   // Правда или действие
-  tdSelectedLevel:1, tdCurrentPlayer:1, tdScore1:0, tdScore2:0, tdUsed:{}, tdHidden:[],
+  tdSelectedLevel:3, tdCurrentPlayer:1, tdScore1:0, tdScore2:0, tdUsed:{}, tdHidden:[],
   tdCompletedCount:0, tdSkippedCount:0,
   tdLevelTurnCounts:{1:0, 2:0}, tdPendingLevelUp:false,
   // Секс-бинго
   bingoSelectedLevel:1, bingoGridLevel:0, bingoGrid:[], bingoChecked:[], bingoWonLines:[], bingoUsedBonus:[], bingoCurrentLevel:1,
   bingoEscalatedTo2:false, bingoEscalatedTo3:false, bingoVictoryMilestones:[], bingoFinished:false,
+  bingoTasksHidden:false, bingoRevealed:[],
   // Накопительный чек-лист бонусных заданий — в отличие от остального
   // состояния карты НЕ сбрасывается между партиями, только вручную.
   bingoBonusChecklist:[],
@@ -97,15 +98,16 @@ let state = {
   luckyLevel:1, luckyGrid:[], luckyChecked:[], luckyCurrentTeamIndex:0,
   luckyCompleted:[], luckyWonLines:[], luckyEscalatedTo2:false, luckyEscalatedTo3:false,
   luckyFinished:false, luckyUsed:{}, luckyUsedBonus:[], luckyPendingBonusText:'', luckyBonusChecklist:[],
+  luckyTasksHidden:false, luckyRevealed:[],
   // Викторина (пары) — каждый игрок отвечает на все свои вопросы подряд
   // (quizQuestionCount штук), затем передаёт телефон следующему; см. games/quiz.js.
-  quizSelectedLevel:1, quizAnswerSeconds:10, quizQuestionCount:5, quizUsed:{},
+  quizSelectedLevel:1, quizAnswerSeconds:15, quizQuestionCount:5, quizUsed:{},
   quizQueue:[], quizIndex:0, quizCurrentPlayerIndex:0, quizCorrect:[], quizTimeMs:[],
   // Викторина (компания) — та же логика, все игроки из partyPlayers по очереди.
-  partyQuizSelectedLevel:1, partyQuizAnswerSeconds:10, partyQuizQuestionCount:5, partyQuizUsed:{},
+  partyQuizSelectedLevel:1, partyQuizAnswerSeconds:15, partyQuizQuestionCount:5, partyQuizUsed:{},
   partyQuizQueue:[], partyQuizIndex:0, partyQuizCurrentPlayerIndex:0, partyQuizCorrect:[], partyQuizTimeMs:[],
   // Викторина (дети) — уровень берётся из kidsAge, а не из своего селектора.
-  kidsQuizAnswerSeconds:10, kidsQuizQuestionCount:5, kidsQuizUsed:{},
+  kidsQuizAnswerSeconds:15, kidsQuizQuestionCount:5, kidsQuizUsed:{},
   kidsQuizQueue:[], kidsQuizIndex:0, kidsQuizCurrentPlayerIndex:0, kidsQuizCorrect:[], kidsQuizTimeMs:[],
   // Идеи для вас (без уровней — единая колода из 100 карточек)
   ideasUsed:[], ideasFavorites:[], ideasFavView:false,
@@ -135,7 +137,7 @@ let state = {
   rouletteBalances:[], rouletteCurrentPlayerIndex:0,
   // Викторина (один) — использует тот же банк вопросов, что и Викторина
   // (компания), но со своим прогрессом "показанных" вопросов и своим счётом.
-  soloQuizSelectedLevel:1, soloQuizAnswerSeconds:10, soloQuizQuestionCount:10,
+  soloQuizSelectedLevel:1, soloQuizAnswerSeconds:15, soloQuizQuestionCount:10,
   soloQuizUsed:{}, soloQuizQueue:[], soloQuizIndex:0, soloQuizCorrect:0, soloQuizTimeMs:0,
   // Мемори (один) — использует те же данные, что и детское Мемори
   // (KIDS_MEMORY_LEVELS/KIDS_MEMORY_ICONS), свой прогресс и статистика ходов/времени,
@@ -143,13 +145,26 @@ let state = {
   soloMemoryLevel:1, soloMemoryDeck:[], soloMemorySteps:0, soloMemoryElapsedMs:0,
   soloMemoryLeaderboard:[], soloMemoryLastName:'',
   // Лимонадный ларёк (бизнес) — партия из 5 дней: утро (погода/событие/
-  // апгрейды) → место → закупка → цена → итоги дня, капитал переносится
-  // между днями, после 5-го дня — мини-проверка.
-  businessLemonadeDay:1, businessLemonadeCapital:200, businessLemonadeUpgrades:{sign:false, music:false},
-  businessLemonadeWeatherKey:'normal', businessLemonadeEventIdx:-1, businessLemonadeLocation:null, businessLemonadeIce:false,
+  // апгрейды) → место → время работы → закупка → цена → итоги дня, капитал
+  // переносится между днями (не может уйти ниже 0), после 7-го дня — мини-проверка.
+  businessLemonadeDay:1, businessLemonadeCapital:200,
+  businessLemonadeUpgrades:{sign:false, music:false, recipe:false, seller:false, secondStand:false},
+  businessLemonadeWeatherKey:'normal', businessLemonadeEventIdx:-1, businessLemonadeLocation:null,
+  businessLemonadeHours:null, businessLemonadeOptions:{},
+  businessLemonadeLemonStock:0, businessLemonadeLemonBoughtDay:null, businessLemonadeCompetitorPrice:null,
+  businessLemonadeLoanOwed:0, businessLemonadeLoanDueDay:null,
   businessLemonadeCups:10, businessLemonadePrice:40, businessLemonadeSold:0,
-  businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[],
-  businessLemonadeQuizIndex:0, businessLemonadeQuizCorrect:0
+  businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[], businessLemonadeDayLog:[],
+  businessLemonadeQuizIndex:0, businessLemonadeQuizCorrect:0, businessLemonadeQuizItems:[],
+  // Крестики-нолики (дети) — счёт партии переживает раунды, обнуляется только при выходе.
+  kidsXoBoard:[], kidsXoCurrentPlayer:'X', kidsXoRoundOver:false, kidsXoStartingPlayer:'X',
+  kidsXoScoreX:0, kidsXoScoreO:0, kidsXoDraws:0,
+  // "Я никогда не" (компания)
+  partyNeverSelectedLevel:1, partyNeverUsed:{},
+  // Морской бой (дети) — battleshipBoards[0]/[1] — флоты игроков 0/1, каждый
+  // {cells:[{ship,shipId,shot}], ships:[{id,size,hits,sunk}]}; ходит всегда
+  // тот, чей индекс в battleshipCurrentPlayer — стреляет по ДРУГОМУ игроку.
+  battleshipBoards:[], battleshipCurrentPlayer:0, battleshipWinner:null, battleshipShotsCount:[0,0]
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
@@ -427,11 +442,23 @@ document.getElementById('gameKidsMemesBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToKidsMemesSetup();
 });
-// "Магазин" (дети) — goToShopSetup() определена в games/shop.js.
+// "Магазин" (бизнес) — goToShopSetup() определена в games/shop.js.
 document.getElementById('gameShopBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToShopSetup();
+});
+// "Крестики-нолики" (дети) — goToKidsXoSetup() определена в games/kids-xo.js.
+document.getElementById('gameKidsXoBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKidsXoSetup();
+});
+// "Морской бой" (дети) — goToKidsBattleshipSetup() определена в games/kids-battleship.js.
+document.getElementById('gameKidsBattleshipBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKidsBattleshipSetup();
 });
 // "Правда/Действие" (дети) — goToKidsTdSetup() определена в games/kids-td.js.
 document.getElementById('gameKidsTdBtn').addEventListener('click', ()=>{
@@ -836,6 +863,12 @@ document.getElementById('gamePartyRouletteBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToPartyRouletteGame();
 });
+// "Я никогда не" (компания) — goToPartyNeverSetup() определена в games/party-never.js.
+document.getElementById('gamePartyNeverBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToPartyNeverSetup();
+});
 document.getElementById('gameWishlistBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
@@ -1011,6 +1044,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.bingoGrid = []; state.bingoChecked = []; state.bingoWonLines = []; state.bingoUsedBonus = [];
   state.bingoCurrentLevel = 1; state.bingoEscalatedTo2 = false; state.bingoEscalatedTo3 = false;
   state.bingoVictoryMilestones = []; state.bingoFinished = false; state.bingoBonusChecklist = [];
+  state.bingoTasksHidden = false; state.bingoRevealed = [];
   // Таймер страсти
   state.timerUsed = {};
   state.timerScore1 = 0; state.timerScore2 = 0;
@@ -1028,6 +1062,8 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   // Мемасики
   state.memesUsed = {};
   state.memesHidden = [];
+  // "Я никогда не"
+  state.partyNeverUsed = {};
   // Идеи для вас
   state.ideasUsed = [];
   state.ideasFavorites = [];
@@ -1063,12 +1099,22 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.soloMemoryLeaderboard = []; state.soloMemoryLastName = '';
   // Лимонадный ларёк (бизнес)
   state.businessLemonadeDay = 1; state.businessLemonadeCapital = 200;
-  state.businessLemonadeUpgrades = {sign:false, music:false};
+  state.businessLemonadeUpgrades = {sign:false, music:false, recipe:false, seller:false, secondStand:false};
   state.businessLemonadeWeatherKey = 'normal'; state.businessLemonadeEventIdx = -1;
-  state.businessLemonadeLocation = null; state.businessLemonadeIce = false;
+  state.businessLemonadeLocation = null; state.businessLemonadeHours = null; state.businessLemonadeOptions = {};
+  state.businessLemonadeLemonStock = 0; state.businessLemonadeLemonBoughtDay = null;
+  state.businessLemonadeCompetitorPrice = null;
+  state.businessLemonadeLoanOwed = 0; state.businessLemonadeLoanDueDay = null;
   state.businessLemonadeCups = 10; state.businessLemonadePrice = 40; state.businessLemonadeSold = 0;
   state.businessLemonadeRevenue = 0; state.businessLemonadeNetProfit = 0; state.businessLemonadeDayProfits = [];
-  state.businessLemonadeQuizIndex = 0; state.businessLemonadeQuizCorrect = 0;
+  state.businessLemonadeDayLog = [];
+  state.businessLemonadeQuizIndex = 0; state.businessLemonadeQuizCorrect = 0; state.businessLemonadeQuizItems = [];
+  // Крестики-нолики (дети)
+  state.kidsXoBoard = []; state.kidsXoCurrentPlayer = 'X'; state.kidsXoRoundOver = false;
+  state.kidsXoStartingPlayer = 'X'; state.kidsXoScoreX = 0; state.kidsXoScoreO = 0; state.kidsXoDraws = 0;
+  // Морской бой (дети)
+  state.battleshipBoards = []; state.battleshipCurrentPlayer = 0; state.battleshipWinner = null;
+  state.battleshipShotsCount = [0,0];
   // Фанты (компания)
   state.partyFantsUsed = {};
   state.partyFantsCompleted = []; state.partyFantsSkipped = []; state.partyFantsCurrentPlayerIndex = 0;
@@ -1089,6 +1135,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.luckyCompleted = []; state.luckyWonLines = []; state.luckyLevel = 1;
   state.luckyEscalatedTo2 = false; state.luckyEscalatedTo3 = false; state.luckyFinished = false;
   state.luckyUsedBonus = []; state.luckyPendingBonusText = ''; state.luckyBonusChecklist = [];
+  state.luckyTasksHidden = false; state.luckyRevealed = [];
   // Викторина (пары/компания/дети)
   state.quizUsed = {}; state.quizQueue = []; state.quizIndex = 0; state.quizCurrentPlayerIndex = 0;
   state.quizCorrect = []; state.quizTimeMs = [];
@@ -1336,29 +1383,11 @@ function updateMuteBtn(){
     btn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
     btn.classList.toggle('on', !!state.muted);
   }
-  const photoBtn = document.getElementById('photoSetupSoundBtn');
-  if(photoBtn){
-    photoBtn.textContent = state.muted ? '🔇 Звук выключен' : '🔊 Звук включён';
-    photoBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
-    photoBtn.classList.toggle('on', !!state.muted);
-  }
   const resumeBtn = document.getElementById('resumeMuteBtn');
   if(resumeBtn){
     resumeBtn.textContent = state.muted ? '🔇' : '🔊';
     resumeBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
     resumeBtn.classList.toggle('on', !!state.muted);
-  }
-  const tdBtn = document.getElementById('tdSetupSoundBtn');
-  if(tdBtn){
-    tdBtn.textContent = state.muted ? '🔇 Звук выключен' : '🔊 Звук включён';
-    tdBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
-    tdBtn.classList.toggle('on', !!state.muted);
-  }
-  const timerBtn = document.getElementById('timerSetupSoundBtn');
-  if(timerBtn){
-    timerBtn.textContent = state.muted ? '🔇 Звук выключен' : '🔊 Звук включён';
-    timerBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
-    timerBtn.classList.toggle('on', !!state.muted);
   }
 }
 document.getElementById('muteBtn').addEventListener('click', ()=>{
@@ -3845,11 +3874,6 @@ document.getElementById('closePhotoRulesBtn').addEventListener('click', ()=>{
 });
 document.getElementById('photoRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'photoRulesModal') e.currentTarget.classList.remove('show');
-});
-document.getElementById('photoSetupSoundBtn').addEventListener('click', ()=>{
-  state.muted = !state.muted;
-  saveState();
-  updateMuteBtn();
 });
 document.getElementById('installBtn').addEventListener('click', ()=>{
   document.getElementById('installModal').classList.add('show');
