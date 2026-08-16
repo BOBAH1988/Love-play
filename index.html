@@ -860,25 +860,26 @@
      оформления, что и у карточек компании/детей, только в розовом тоне.
      Фон тёмный, поэтому текст (включая заголовок хода и плашку типа
      Правда/Действие) перекрашен в белый. */
-  #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard{
+  #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard, #sexQuestCard{
     background:linear-gradient(160deg, #e0559a, #8a2f66 55%, var(--bg2));
     color:#fff;
   }
   #card .card-text, #tdCard .card-text, #timerCard .card-text,
-  #wishlistCard .card-text, #znayuCard .card-text, #ideasCard .card-text{
+  #wishlistCard .card-text, #znayuCard .card-text, #ideasCard .card-text, #sexQuestCard .card-text{
     color:#fff;
   }
   /* Заголовок "Ход игрока" и разделитель под ним рассчитаны на светлый фон
      карточки (тёмно-серый текст, тёмная линия) — на тёмном фоне этих карточек
      были почти невидимы. */
   #card .card-turn-label, #tdCard .card-turn-label, #timerCard .card-turn-label,
-  #wishlistCard .card-turn-label, #znayuCard .card-turn-label{
+  #wishlistCard .card-turn-label, #znayuCard .card-turn-label, #sexQuestCard .card-turn-label{
     color:rgba(255,255,255,.65);
   }
   #card .card-header, #tdCard .card-header, #timerCard .card-header,
-  #wishlistCard .card-header, #znayuCard .card-header{
+  #wishlistCard .card-header, #znayuCard .card-header, #sexQuestCard .card-header{
     border-bottom-color:rgba(255,255,255,.18);
   }
+  #sexQuestCard .card-split-title{ color:#fff; font-size:17px; font-weight:800; }
   /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт
      и "Старт") — тоже рассчитан на светлый фон, на тёмном был почти невидим. */
   #card .card-timer{ border-top-color:rgba(255,255,255,.18); }
@@ -897,7 +898,7 @@
   }
   #ideasCard .card-icon{ font-size:76px; }
   #card .card-turn-name, #tdCard .card-turn-name, #timerCard .card-turn-name,
-  #wishlistCard .card-turn-name, #znayuCard .card-turn-name{
+  #wishlistCard .card-turn-name, #znayuCard .card-turn-name, #sexQuestCard .card-turn-name{
     color:#fff;
   }
   /* Описание пункта желаний рассчитано на светлый фон (приглушённый
