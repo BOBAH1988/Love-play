@@ -176,6 +176,10 @@ let state = {
   // kidsXoBoardSize: 3 (3×3, три в ряд) или 5 (5×5, четыре в ряд).
   kidsXoBoard:[], kidsXoBoardSize:3, kidsXoCurrentPlayer:'X', kidsXoRoundOver:false, kidsXoStartingPlayer:'X',
   kidsXoScoreX:0, kidsXoScoreO:0, kidsXoDraws:0,
+  // Крестики-нолики (для одного) — та же механика, но против бота: игрок
+  // всегда крестики (X), бот всегда нолики (O).
+  soloXoBoard:[], soloXoBoardSize:3, soloXoCurrentPlayer:'X', soloXoRoundOver:false, soloXoStartingPlayer:'X',
+  soloXoScorePlayer:0, soloXoScoreBot:0, soloXoDraws:0,
   // "Я никогда не" (компания)
   partyNeverSelectedLevel:1, partyNeverUsed:{},
   // Морской бой (дети) — battleshipBoards[0]/[1] — флоты игроков 0/1, каждый
@@ -883,6 +887,12 @@ document.getElementById('gameSoloMemoryBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToSoloMemorySetup();
 });
+// "Крестики-нолики" (игры для одного, против бота) — goToSoloXoSetup() определена в games/solo-xo.js.
+document.getElementById('gameSoloXoBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToSoloXoSetup();
+});
 // "Рулетка" (компания) — goToPartyRouletteGame() определена в games/party-roulette.js.
 document.getElementById('gamePartyRouletteBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -1145,6 +1155,9 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   // Крестики-нолики (дети)
   state.kidsXoBoard = []; state.kidsXoCurrentPlayer = 'X'; state.kidsXoRoundOver = false;
   state.kidsXoStartingPlayer = 'X'; state.kidsXoScoreX = 0; state.kidsXoScoreO = 0; state.kidsXoDraws = 0;
+  // Крестики-нолики (для одного)
+  state.soloXoBoard = []; state.soloXoCurrentPlayer = 'X'; state.soloXoRoundOver = false;
+  state.soloXoStartingPlayer = 'X'; state.soloXoScorePlayer = 0; state.soloXoScoreBot = 0; state.soloXoDraws = 0;
   // Морской бой (дети)
   state.battleshipBoards = []; state.battleshipCurrentPlayer = 0; state.battleshipWinner = null;
   state.battleshipShotsCount = [0,0];
@@ -3992,19 +4005,63 @@ document.getElementById('closeInstallBtn').addEventListener('click', ()=>{
 document.getElementById('installModal').addEventListener('click', (e)=>{
   if(e.target.id === 'installModal') e.currentTarget.classList.remove('show');
 });
-// Возрастное предупреждение (18+) — флаг подтверждения хранится отдельным
-// ключом в localStorage (не внутри основного state), намеренно: чтобы
-// "Сбросить прогресс" и импорт/экспорт резервной копии его не трогали, и
-// подтверждение возраста не терялось вместе с прогрессом игр. Окно "Доступ
-// закрыт" закрыть нельзя — это конечная точка для тех, кто выбрал "Мне нет 18".
+// Возрастное предупреждение (18+) — флаги хранятся отдельными ключами в
+// localStorage (не внутри основного state), намеренно: чтобы "Сбросить
+// прогресс" и импорт/экспорт резервной копии их не трогали, и выбор не
+// терялся вместе с прогрессом игр. "Мне нет 18" не блокирует сайт, а
+// включает детский режим — см. isKidsModeRestricted/applyKidsModeRestrictions
+// ниже. Это клиентский фильтр интерфейса, а не настоящая защита (тот, кто
+// откроет исходный код, легко его обойдёт) — временное решение для
+// собственного устройства ребёнка, до появления полноценных аккаунтов.
+function isKidsModeRestricted(){
+  try{ return localStorage.getItem('couple-game-kids-mode-v1') === '1'; }catch(e){ return false; }
+}
+// Прячет взрослые разделы меню и не даёт Викторине "для одного" показывать
+// уровни 18+/Пошлые (она использует общий банк вопросов компании, см.
+// games/solo-quiz.js). Вызывается один раз при загрузке и каждый раз, когда
+// рендерится список уровней Викторины для одного.
+function applyKidsModeRestrictions(){
+  if(!isKidsModeRestricted()) return;
+  const twoPlayerBtn = document.getElementById('homeTwoPlayerBtn');
+  const companyBtn = document.getElementById('homeCompanyBtn');
+  if(twoPlayerBtn) twoPlayerBtn.style.display = 'none';
+  if(companyBtn) companyBtn.style.display = 'none';
+}
 document.getElementById('ageGateAdultBtn').addEventListener('click', ()=>{
   try{ localStorage.setItem('couple-game-age-verified-v1', '1'); }catch(e){}
   document.getElementById('ageGateModal').classList.remove('show');
 });
 document.getElementById('ageGateMinorBtn').addEventListener('click', ()=>{
+  try{ localStorage.setItem('couple-game-kids-mode-v1', '1'); }catch(e){}
   document.getElementById('ageGateModal').classList.remove('show');
-  document.getElementById('ageBlockedModal').classList.add('show');
+  applyKidsModeRestrictions();
 });
+// Долгое нажатие (1.5 сек) на заголовок "Весёлые игры" — скрытый способ для
+// родителя вернуть полный доступ на этом устройстве: сбрасывает оба флага
+// возрастного экрана и перезагружает страницу, чтобы окно 18+ показалось
+// заново.
+(function(){
+  const titleEl = document.getElementById('homeTitle');
+  if(!titleEl) return;
+  let pressTimer = null;
+  const clearPressTimer = ()=>{ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+  titleEl.addEventListener('pointerdown', ()=>{
+    clearPressTimer();
+    pressTimer = setTimeout(()=>{
+      if(confirm('Сбросить выбор возраста и снова показать окно 18+?')){
+        try{
+          localStorage.removeItem('couple-game-age-verified-v1');
+          localStorage.removeItem('couple-game-kids-mode-v1');
+        }catch(e){}
+        location.reload();
+      }
+    }, 1500);
+  });
+  titleEl.addEventListener('pointerup', clearPressTimer);
+  titleEl.addEventListener('pointerleave', clearPressTimer);
+  titleEl.addEventListener('pointercancel', clearPressTimer);
+})();
+applyKidsModeRestrictions();
 document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
   if(videoLevel < VIDEO_MAX_LEVEL){
     playLevelUpSound();

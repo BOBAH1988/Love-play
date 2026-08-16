@@ -17,11 +17,21 @@ function getSoloQuizCardsList(level){
   if(typeof PARTY_QUIZ_CARDS === 'undefined' || !Array.isArray(PARTY_QUIZ_CARDS)) return [];
   return PARTY_QUIZ_CARDS.filter(c=>c.level===level);
 }
+// В детском режиме (см. isKidsModeRestricted в games/core.js) прячем уровни
+// "18+" и "Пошлые" — Викторина "для одного" использует общий банк вопросов
+// компании, где эти уровни идут вперемешку с семейными.
 function renderSoloQuizSetupLevels(){
   const wrap = document.getElementById('soloQuizSetupLevels');
   if(!wrap) return;
   wrap.innerHTML = '';
-  (typeof PARTY_QUIZ_LEVELS !== 'undefined' ? PARTY_QUIZ_LEVELS : []).forEach(l=>{
+  const kidsMode = typeof isKidsModeRestricted === 'function' && isKidsModeRestricted();
+  const allLevels = typeof PARTY_QUIZ_LEVELS !== 'undefined' ? PARTY_QUIZ_LEVELS : [];
+  const levels = kidsMode ? allLevels.filter(l=>l.id !== 3 && l.id !== 4) : allLevels;
+  if(kidsMode && !levels.some(l=>l.id === state.soloQuizSelectedLevel)){
+    state.soloQuizSelectedLevel = levels.length ? levels[0].id : 1;
+    saveState();
+  }
+  levels.forEach(l=>{
     const div = document.createElement('div');
     div.className = 'level-toggle' + (state.soloQuizSelectedLevel === l.id ? ' on' : '');
     div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;

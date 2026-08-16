@@ -1986,29 +1986,28 @@
 </head>
 <body>
 <!-- ===== ВОЗРАСТНОЕ ПРЕДУПРЕЖДЕНИЕ (18+) =====
-     Показывается один раз при первом заходе с устройства (флаг хранится
+     Показывается один раз при первом заходе с устройства (флаги хранятся
      отдельно от основного state в localStorage, чтобы "Сбросить прогресс"
-     или восстановление резервной копии его не затрагивали). Скрипт сразу
+     или восстановление резервной копии их не затрагивали). Скрипт сразу
      после разметки скрывает окно ещё до отрисовки остального содержимого,
-     если пользователь уже подтверждал возраст раньше — без "мигания". -->
+     если пользователь уже отвечал на этот вопрос раньше — без "мигания".
+     "Мне нет 18" больше не блокирует сайт полностью — включает детский
+     режим (см. applyKidsModeRestrictions в games/core.js): остаются только
+     игры с детьми, для одного (без уровней 18+/пошлые) и бизнес-игры.
+     Долгое нажатие на заголовок "Весёлые игры" сбрасывает оба флага и
+     снова показывает это окно — так родитель может вернуть полный доступ. -->
 <div class="modal-overlay show" id="ageGateModal" style="z-index:500;">
   <div class="modal-card">
-    <div class="modal-title">🔞 Только для взрослых</div>
-    <div class="intro-text">Это приложение содержит откровенный контент для взрослых: темы интимной близости, эротические материалы и игры для пар 18+. Продолжая, вы подтверждаете, что вам уже исполнилось 18 лет.</div>
+    <div class="modal-title">🔞 Есть контент для взрослых</div>
+    <div class="intro-text">Это приложение содержит игры для пар 18+ с откровенным содержанием. Если вам ещё нет 18 — будут доступны только игры с детьми, игры для одного и бизнес-игры, без взрослого контента.</div>
     <button type="button" class="btn btn-primary" id="ageGateAdultBtn" style="margin-bottom:10px;">Мне есть 18 — продолжить</button>
-    <button type="button" class="btn btn-secondary" id="ageGateMinorBtn">Мне нет 18</button>
-  </div>
-</div>
-<div class="modal-overlay" id="ageBlockedModal" style="z-index:500;">
-  <div class="modal-card">
-    <div class="modal-title">Доступ закрыт</div>
-    <div class="intro-text">Этот сайт предназначен только для совершеннолетних пользователей. Доступ к содержимому для лиц младше 18 лет закрыт.</div>
+    <button type="button" class="btn btn-secondary" id="ageGateMinorBtn">Мне нет 18 — детский режим</button>
   </div>
 </div>
 <script>
   (function(){
     try{
-      if(localStorage.getItem('couple-game-age-verified-v1') === '1'){
+      if(localStorage.getItem('couple-game-age-verified-v1') === '1' || localStorage.getItem('couple-game-kids-mode-v1') === '1'){
         var gate = document.getElementById('ageGateModal');
         if(gate) gate.classList.remove('show');
       }
@@ -2035,7 +2034,7 @@
 
     <!-- ---- Главная (хаб): название, описание, выбор формата игры ---- -->
     <div class="field-collapsible section-open" id="homeView">
-      <h1 class="title">Весёлые игры</h1>
+      <h1 class="title" id="homeTitle">Весёлые игры</h1>
       <div class="subtitle">Простые игры для тёплых вечеров — вдвоём с любимым человеком, весёлой компанией или всей семьёй. Выберите формат и начинайте.</div>
 
       <div class="game-select-list" id="homeMenuList">
@@ -2210,6 +2209,7 @@
           <button type="button" class="btn btn-menu-item" id="gamePartyHangmanBtn"><span class="menu-icon">🪢</span> Виселица</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon">❌⭕</span> Крестики-нолики</button>
         </div>
       </div>
 
@@ -3263,6 +3263,75 @@
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsXoRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЛЯ ОДНОГО): НАСТРОЙКА =====
+       Копия детской версии, но без выбора участников — игрок всегда играет
+       крестиками против бота (см. games/solo-xo.js). -->
+  <section id="soloXoSetup" class="screen">
+    <h1 class="title">❌⭕ Крестики-нолики</h1>
+    <div class="subtitle" id="soloXoSetupSubtitle">Против бота — поле 3×3, три в ряд побеждают</div>
+
+    <div class="field">
+      <label>Размер поля</label>
+      <div class="starter-group" id="soloXoSizeGroup">
+        <button type="button" class="starter-btn" data-value="3">3×3</button>
+        <button type="button" class="starter-btn" data-value="5">5×5</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="soloXoSetupStartBtn">Начать</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="soloXoSetupRulesBtn">Правила</button>
+    </div>
+
+    <button class="btn btn-secondary" id="soloXoSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЛЯ ОДНОГО): ИГРА ===== -->
+  <section id="soloXoGame" class="screen">
+    <h1 class="title" style="font-size:20px;">❌⭕ Крестики-нолики</h1>
+    <div class="krokodil-score-row" id="soloXoScoreRow"></div>
+    <div class="td-turn-label" id="soloXoTurnLabel">Ходит: Вы</div>
+
+    <div class="kids-xo-grid" id="soloXoGrid"></div>
+
+    <div class="intro-text" id="soloXoResultText" style="text-align:center; min-height:22px; margin-top:10px;"></div>
+    <button type="button" class="btn btn-primary" id="soloXoNextRoundBtn" style="display:none;">Следующий раунд →</button>
+
+    <div class="bingo-actions-row bingo-actions-bottom">
+      <button type="button" class="btn btn-secondary btn-rules" id="soloXoGameRulesBtn">Правила</button>
+      <button type="button" class="btn btn-secondary" id="soloXoExitBtn">Выход</button>
+    </div>
+  </section>
+
+  <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЛЯ ОДНОГО): ИТОГИ ===== -->
+  <div class="modal-overlay" id="soloXoSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="soloXoSummaryIntro"></div>
+      <button class="btn btn-primary" id="closeSoloXoSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "КРЕСТИКИ-НОЛИКИ" (ДЛЯ ОДНОГО) ===== -->
+  <div class="modal-overlay" id="soloXoRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">❌⭕ Правила игры «Крестики-нолики»</div>
+      <div class="intro-text">Классика против бота — на выбор поле 3×3 или 5×5.</div>
+      <ol class="modal-rules">
+        <li>На экране настройки выберите размер поля: 3×3 (три своих знака подряд — победа) или 5×5 (поле больше, для победы нужно уже четыре своих знака подряд).</li>
+        <li>Вы всегда играете крестиками, бот — ноликами.</li>
+        <li>Кто ходит первым в самой первой партии — решает случай, дальше первым всегда ходит победитель предыдущего раунда (при ничьей право первого хода переходит другой стороне).</li>
+        <li>По очереди ставьте знаки в свободные клетки.</li>
+        <li>Нужное количество своих знаков подряд по горизонтали, вертикали или диагонали — победа в раунде.</li>
+        <li>Если все клетки заполнены, а ряд не собран — ничья.</li>
+        <li>Счёт побед и ничьих ведётся по всей партии — итог покажем при выходе.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeSoloXoRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -5118,75 +5187,76 @@
   </div>
 </div>
 
-<script src="cards/cards_fants.js?v=20260817ak"></script>
-<script src="cards/cards_fants_users.js?v=20260817ak"></script>
-<script src="cards/cards_poses.js?v=20260817ak"></script>
-<script src="cards/cards_sexshop.js?v=20260817ak"></script>
-<script src="cards/cards_collection.js?v=20260817ak"></script>
-<script src="cards/cards_desires_women.js?v=20260817ak"></script>
-<script src="cards/cards_desires_men.js?v=20260817ak"></script>
-<script src="cards/cards_sex_coach_tips.js?v=20260817ak"></script>
-<script src="cards/cards_sex_coach_qa.js?v=20260817ak"></script>
-<script src="cards/cards_kamasutra_caresses.js?v=20260817ak"></script>
-<script src="cards/cards_kamasutra_positions.js?v=20260817ak"></script>
-<script src="cards/cards_video.js?v=20260817ak"></script>
-<script src="cards/cards_bingo.js?v=20260817ak"></script>
-<script src="cards/cards_timer.js?v=20260817ak"></script>
-<script src="cards/cards_wishlist.js?v=20260817ak"></script>
-<script src="cards/cards_znayu.js?v=20260817ak"></script>
-<script src="cards/cards_krokodil.js?v=20260817ak"></script>
-<script src="cards/cards_memes.js?v=20260817ak"></script>
-<script src="cards/cards_party_never.js?v=20260817ak"></script>
-<script src="cards/cards_party_fants.js?v=20260817ak"></script>
-<script src="cards/cards_party_td.js?v=20260817ak"></script>
-<script src="cards/cards_fam_znayu.js?v=20260817ak"></script>
-<script src="cards/cards_lucky.js?v=20260817ak"></script>
-<script src="cards/cards_kids_memory.js?v=20260817ak"></script>
-<script src="cards/cards_kids_td.js?v=20260817ak"></script>
-<script src="cards/cards_quiz.js?v=20260817ak"></script>
-<script src="cards/cards_party_quiz.js?v=20260817ak"></script>
-<script src="cards/cards_kids_quiz.js?v=20260817ak"></script>
-<script src="cards/cards_ideas.js?v=20260817ak"></script>
-<script src="cards/cards_sexquest.js?v=20260817ak"></script>
-<script src="cards/cards_whattoplay.js?v=20260817ak"></script>
-<script src="cards/cards_kids_krokodil.js?v=20260817ak"></script>
-<script src="cards/cards_kids_memes.js?v=20260817ak"></script>
-<script src="cards/cards_kids_saper.js?v=20260817ak"></script>
-<script src="cards/cards_party_hangman.js?v=20260817ak"></script>
-<script src="cards/cards_shop.js?v=20260817ak"></script>
-<script src="games/core.js?v=20260817ak"></script>
-<script src="games/twister.js?v=20260817ak"></script>
-<script src="games/party-hangman.js?v=20260817ak"></script>
-<script src="games/solo-quiz.js?v=20260817ak"></script>
-<script src="games/solo-memory.js?v=20260817ak"></script>
-<script src="games/shop.js?v=20260817ak"></script>
-<script src="games/party-roulette.js?v=20260817ak"></script>
-<script src="games/business-lemonade.js?v=20260817ak"></script>
-<script src="games/kids-xo.js?v=20260817ak"></script>
-<script src="games/kids-battleship.js?v=20260817ak"></script>
-<script src="games/truth-dare.js?v=20260817ak"></script>
-<script src="games/bingo.js?v=20260817ak"></script>
-<script src="games/timer-game.js?v=20260817ak"></script>
-<script src="games/krokodil.js?v=20260817ak"></script>
-<script src="games/memes.js?v=20260817ak"></script>
-<script src="games/party-never.js?v=20260817ak"></script>
-<script src="games/party-fants.js?v=20260817ak"></script>
-<script src="games/party-td.js?v=20260817ak"></script>
-<script src="games/fam-znayu.js?v=20260817ak"></script>
-<script src="games/lucky.js?v=20260817ak"></script>
-<script src="games/kids-memory.js?v=20260817ak"></script>
-<script src="games/kids-krokodil.js?v=20260817ak"></script>
-<script src="games/kids-memes.js?v=20260817ak"></script>
-<script src="games/kids-saper.js?v=20260817ak"></script>
-<script src="games/kids-td.js?v=20260817ak"></script>
-<script src="games/quiz.js?v=20260817ak"></script>
-<script src="games/party-quiz.js?v=20260817ak"></script>
-<script src="games/kids-quiz.js?v=20260817ak"></script>
-<script src="games/wishlist.js?v=20260817ak"></script>
-<script src="games/znayu.js?v=20260817ak"></script>
-<script src="games/ideas.js?v=20260817ak"></script>
-<script src="games/sexquest.js?v=20260817ak"></script>
-<script src="games/whattoplay.js?v=20260817ak"></script>
-<script src="games/init.js?v=20260817ak"></script>
+<script src="cards/cards_fants.js?v=20260817ao"></script>
+<script src="cards/cards_fants_users.js?v=20260817ao"></script>
+<script src="cards/cards_poses.js?v=20260817ao"></script>
+<script src="cards/cards_sexshop.js?v=20260817ao"></script>
+<script src="cards/cards_collection.js?v=20260817ao"></script>
+<script src="cards/cards_desires_women.js?v=20260817ao"></script>
+<script src="cards/cards_desires_men.js?v=20260817ao"></script>
+<script src="cards/cards_sex_coach_tips.js?v=20260817ao"></script>
+<script src="cards/cards_sex_coach_qa.js?v=20260817ao"></script>
+<script src="cards/cards_kamasutra_caresses.js?v=20260817ao"></script>
+<script src="cards/cards_kamasutra_positions.js?v=20260817ao"></script>
+<script src="cards/cards_video.js?v=20260817ao"></script>
+<script src="cards/cards_bingo.js?v=20260817ao"></script>
+<script src="cards/cards_timer.js?v=20260817ao"></script>
+<script src="cards/cards_wishlist.js?v=20260817ao"></script>
+<script src="cards/cards_znayu.js?v=20260817ao"></script>
+<script src="cards/cards_krokodil.js?v=20260817ao"></script>
+<script src="cards/cards_memes.js?v=20260817ao"></script>
+<script src="cards/cards_party_never.js?v=20260817ao"></script>
+<script src="cards/cards_party_fants.js?v=20260817ao"></script>
+<script src="cards/cards_party_td.js?v=20260817ao"></script>
+<script src="cards/cards_fam_znayu.js?v=20260817ao"></script>
+<script src="cards/cards_lucky.js?v=20260817ao"></script>
+<script src="cards/cards_kids_memory.js?v=20260817ao"></script>
+<script src="cards/cards_kids_td.js?v=20260817ao"></script>
+<script src="cards/cards_quiz.js?v=20260817ao"></script>
+<script src="cards/cards_party_quiz.js?v=20260817ao"></script>
+<script src="cards/cards_kids_quiz.js?v=20260817ao"></script>
+<script src="cards/cards_ideas.js?v=20260817ao"></script>
+<script src="cards/cards_sexquest.js?v=20260817ao"></script>
+<script src="cards/cards_whattoplay.js?v=20260817ao"></script>
+<script src="cards/cards_kids_krokodil.js?v=20260817ao"></script>
+<script src="cards/cards_kids_memes.js?v=20260817ao"></script>
+<script src="cards/cards_kids_saper.js?v=20260817ao"></script>
+<script src="cards/cards_party_hangman.js?v=20260817ao"></script>
+<script src="cards/cards_shop.js?v=20260817ao"></script>
+<script src="games/core.js?v=20260817ao"></script>
+<script src="games/twister.js?v=20260817ao"></script>
+<script src="games/party-hangman.js?v=20260817ao"></script>
+<script src="games/solo-quiz.js?v=20260817ao"></script>
+<script src="games/solo-memory.js?v=20260817ao"></script>
+<script src="games/solo-xo.js?v=20260817ao"></script>
+<script src="games/shop.js?v=20260817ao"></script>
+<script src="games/party-roulette.js?v=20260817ao"></script>
+<script src="games/business-lemonade.js?v=20260817ao"></script>
+<script src="games/kids-xo.js?v=20260817ao"></script>
+<script src="games/kids-battleship.js?v=20260817ao"></script>
+<script src="games/truth-dare.js?v=20260817ao"></script>
+<script src="games/bingo.js?v=20260817ao"></script>
+<script src="games/timer-game.js?v=20260817ao"></script>
+<script src="games/krokodil.js?v=20260817ao"></script>
+<script src="games/memes.js?v=20260817ao"></script>
+<script src="games/party-never.js?v=20260817ao"></script>
+<script src="games/party-fants.js?v=20260817ao"></script>
+<script src="games/party-td.js?v=20260817ao"></script>
+<script src="games/fam-znayu.js?v=20260817ao"></script>
+<script src="games/lucky.js?v=20260817ao"></script>
+<script src="games/kids-memory.js?v=20260817ao"></script>
+<script src="games/kids-krokodil.js?v=20260817ao"></script>
+<script src="games/kids-memes.js?v=20260817ao"></script>
+<script src="games/kids-saper.js?v=20260817ao"></script>
+<script src="games/kids-td.js?v=20260817ao"></script>
+<script src="games/quiz.js?v=20260817ao"></script>
+<script src="games/party-quiz.js?v=20260817ao"></script>
+<script src="games/kids-quiz.js?v=20260817ao"></script>
+<script src="games/wishlist.js?v=20260817ao"></script>
+<script src="games/znayu.js?v=20260817ao"></script>
+<script src="games/ideas.js?v=20260817ao"></script>
+<script src="games/sexquest.js?v=20260817ao"></script>
+<script src="games/whattoplay.js?v=20260817ao"></script>
+<script src="games/init.js?v=20260817ao"></script>
 </body>
 </html>
