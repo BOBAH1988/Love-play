@@ -24,6 +24,7 @@ let state = {
   muted:false, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
+  photoOrderMode:false, photoSeqIndex:{},
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false, videoSoundOn:false,
   videoDbMigrated:false,
   davayUsed:{}, davayHidden:[], davayLiked:[], davayFavoritesOnly:false, davayAutoAdvance:false,
@@ -114,6 +115,10 @@ let state = {
   kidsQuizAutoSpeak:false,
   // Идеи для вас (без уровней — единая колода из 100 карточек)
   ideasUsed:[], ideasFavorites:[], ideasFavView:false,
+  // Секс-квест — очередь желаний текущей партии, счёт и результаты по
+  // каждому желанию; sexQuestChecklists — история завершённых партий
+  // ("чек-листы" в избранном, см. games/sexquest.js).
+  sexQuestQueue:[], sexQuestIndex:0, sexQuestScore:0, sexQuestResults:[], sexQuestChecklists:[],
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании"
@@ -403,6 +408,15 @@ document.getElementById('gameBusiness1Btn').addEventListener('click', ()=>{
   goToBusinessLemonadeSetup();
 });
 document.getElementById('gameBusiness2Btn').addEventListener('click', ()=>{
+  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+});
+// "Секс квест" реализован (см. games/sexquest.js: goToSexQuestSetup).
+// "Карта секса" пока остаётся заглушкой, как "Игра 2" в бизнес-играх.
+document.getElementById('gameSexQuestBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  goToSexQuestSetup();
+});
+document.getElementById('gameSexMapBtn').addEventListener('click', ()=>{
   showToast('Эта игра ещё в разработке 🚧 Загляните позже');
 });
 // Возраст ребёнка — общий переключатель для игр раздела "Игры с детьми",
@@ -1073,6 +1087,12 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.ideasUsed = [];
   state.ideasFavorites = [];
   state.ideasFavView = false;
+  // Секс-квест
+  state.sexQuestQueue = [];
+  state.sexQuestIndex = 0;
+  state.sexQuestScore = 0;
+  state.sexQuestResults = [];
+  state.sexQuestChecklists = [];
   // Во что поиграть? (дети)
   state.whatToPlayUsed = [];
   state.whatToPlayFavorites = [];
@@ -1638,29 +1658,68 @@ function getPhotoCardsList(){
   // 6-й модуль "Коллекция" — отдельный файл cards_collection.js, тот же принцип
   // объединения, что и с "Секс-шоп" (level=6 выступает как отдельная категория).
   const collection = (typeof COLLECTION_CARDS !== 'undefined' && Array.isArray(COLLECTION_CARDS)) ? COLLECTION_CARDS : [];
-  return poses.concat(shop).concat(collection);
+  // 7-й и 8-й модули "Желания женщины"/"Желания мужчины" — текстовые карточки
+  // без фото (у них просто нет поля image, renderPhotoCard не рендерит медиа-блок).
+  const desiresWomen = (typeof DESIRES_WOMEN_CARDS !== 'undefined' && Array.isArray(DESIRES_WOMEN_CARDS)) ? DESIRES_WOMEN_CARDS : [];
+  const desiresMen = (typeof DESIRES_MEN_CARDS !== 'undefined' && Array.isArray(DESIRES_MEN_CARDS)) ? DESIRES_MEN_CARDS : [];
+  // 9-й модуль "Советы сексологов" — текстовые карточки без фото.
+  const coachTips = (typeof SEX_COACH_TIPS_CARDS !== 'undefined' && Array.isArray(SEX_COACH_TIPS_CARDS)) ? SEX_COACH_TIPS_CARDS : [];
+  // 10-й модуль — теперь "Идеи для вас" (переехала сюда из отдельной игры,
+  // см. games/ideas.js — та же кнопка в меню пар теперь открывает "Ответы на
+  // вопросы" на основе SEX_COACH_QA_CARDS). У IDEAS_CARDS нет поля level,
+  // поэтому оно добавляется здесь же через map, без мутации исходного массива.
+  const ideas = (typeof IDEAS_CARDS !== 'undefined' && Array.isArray(IDEAS_CARDS)) ? IDEAS_CARDS.map(c => Object.assign({level: 10}, c)) : [];
+  // 11-й и 12-й модули "Ласки камасутры"/"Позы камасутры" — тоже текстовые
+  // карточки без фото.
+  const kamasutraCaresses = (typeof KAMASUTRA_CARESSES_CARDS !== 'undefined' && Array.isArray(KAMASUTRA_CARESSES_CARDS)) ? KAMASUTRA_CARESSES_CARDS : [];
+  const kamasutraPositions = (typeof KAMASUTRA_POSITIONS_CARDS !== 'undefined' && Array.isArray(KAMASUTRA_POSITIONS_CARDS)) ? KAMASUTRA_POSITIONS_CARDS : [];
+  return poses.concat(shop).concat(collection).concat(desiresWomen).concat(desiresMen)
+    .concat(coachTips).concat(ideas).concat(kamasutraCaresses).concat(kamasutraPositions);
 }
 
-const PHOTO_MAX_LEVEL = 6;
+const PHOTO_MAX_LEVEL = 12;
 let photoLevel = 1;
 let currentPhotoCard = null;
+
+// Ключ карточки для списков photoUsed/photoHidden/photoDone/sexshopOwned —
+// обычно путь к фото (уникален сам по себе), но у текстовых модулей
+// "Желания женщины"/"Желания мужчины" (уровни 7-8) поля image вообще нет,
+// поэтому для них ключ собирается из level+rank (тоже гарантированно
+// уникален внутри своего уровня).
+function photoCardKey(card){
+  return card.image || ('L' + card.level + '-' + card.rank);
+}
 
 function drawPhotoCard(level){
   photoLevel = level;
   updateLevelUI();
   const hidden = state.photoHidden || [];
-  const all = getPhotoCardsList().filter(c=>c.level===level && !hidden.includes(c.image));
+  const all = getPhotoCardsList().filter(c=>c.level===level && !hidden.includes(photoCardKey(c)));
   if(all.length===0){ currentPhotoCard = null; renderPlaceholderCard(); return; }
+  // Показ "по порядку" (кнопка-переключатель рядом с "Следующая") — вместо
+  // случайной карточки из непоказанного пула просто идём по списку уровня
+  // от начала, храня указатель на каждый уровень отдельно (state.photoSeqIndex).
+  if(state.photoOrderMode){
+    if(!state.photoSeqIndex) state.photoSeqIndex = {};
+    let idx = state.photoSeqIndex[level] || 0;
+    if(idx >= all.length) idx = 0;
+    const card = all[idx];
+    state.photoSeqIndex[level] = idx + 1;
+    currentPhotoCard = card;
+    saveState();
+    renderPhotoCard(card, level);
+    return;
+  }
   if(!state.photoUsed) state.photoUsed = {};
   let used = state.photoUsed[level] || [];
-  let pool = all.filter(c=>!used.includes(c.image));
+  let pool = all.filter(c=>!used.includes(photoCardKey(c)));
   if(pool.length===0){
     pool = all;
     used = [];
     showToast('Карточки этого уровня показаны заново 🔀');
   }
   const card = pool[Math.floor(Math.random()*pool.length)];
-  used.push(card.image);
+  used.push(photoCardKey(card));
   state.photoUsed[level] = used;
   currentPhotoCard = card;
   saveState();
@@ -1674,11 +1733,16 @@ function renderPhotoCard(card, level){
   fadeSwapCard((el)=>{
     el.className = 'card card-empty';
     el.style.borderTop = '';
+    // Модули "Желания женщины"/"Желания мужчины" (уровни 7-8) — текстовые
+    // карточки без фото, поэтому медиа-блок вообще не рендерится (иначе
+    // <img> с пустым src каждый раз падал бы в onerror-заглушку 🃏).
     el.innerHTML = `
-      <div class="card-inner card-split">
+      <div class="card-inner card-split${card.image ? '' : ' card-split-text-only'}">
+        ${card.image ? `
         <div class="card-split-media" id="placeholderMedia">
           <img src="${card.image}" alt="" id="placeholderImg">
         </div>
+        ` : ''}
         <div class="card-split-desc" id="placeholderDesc">
           ${card.rank ? `<div class="card-split-rank-badge">№${card.rank}</div>` : ''}
           ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
@@ -2959,6 +3023,12 @@ const PHOTO_LEVELS = [
   {id:4, name:'В авто', desc:'Позы в машине', icon:'🚗'},
   {id:5, name:'Секс-шоп', desc:'Топ-150 товаров с рейтингом', icon:'🛍️'},
   {id:6, name:'Коллекция', desc:'109 позиций личной коллекции', icon:'📦'},
+  {id:7, name:'Желания женщины', desc:'Топ-250 женских фантазий', icon:'💗'},
+  {id:8, name:'Желания мужчины', desc:'Топ-250 мужских фантазий', icon:'💙'},
+  {id:9, name:'Советы сексологов', desc:'Топ-250 советов для пары', icon:'🧑‍⚕️'},
+  {id:10, name:'Идеи для вас', desc:'250 сценариев вечера вдвоём', icon:'✨'},
+  {id:11, name:'Ласки камасутры', desc:'150 техник прелюдии', icon:'🌸'},
+  {id:12, name:'Позы камасутры', desc:'150 поз без фото', icon:'🕉️'},
 ];
 function renderPhotoSetupLevels(){
   const wrap = document.getElementById('photoSetupLevels');
@@ -3227,6 +3297,7 @@ function goToPlaceholderGame(){
   photoLevel = state.photoSelectedLevel || 1;
   state.photoUsed = {};
   state.photoHidden = [];
+  state.photoSeqIndex = {};
   // Новая партия — всегда обычная колода, а не режим "просмотр избранного"
   // (иначе после однажды открытого избранного игра застревала бы в нём).
   state.photoFavView = false;
@@ -3253,7 +3324,7 @@ function goToPlaceholderGame(){
 let photoFavIndex = -1;
 function getPhotoFavoritesList(){
   const done = state.photoDone || [];
-  return getPhotoCardsList().filter(c => done.includes(c.image));
+  return getPhotoCardsList().filter(c => done.includes(photoCardKey(c)));
 }
 function showPhotoFavoriteAt(index){
   const list = getPhotoFavoritesList();
@@ -4215,8 +4286,8 @@ document.getElementById('dislikeBtn').addEventListener('click', ()=>{
     if(!currentPhotoCard) return;
     playErrorSound();
     if(!state.photoHidden) state.photoHidden = [];
-    if(!state.photoHidden.includes(currentPhotoCard.image)){
-      state.photoHidden.push(currentPhotoCard.image);
+    if(!state.photoHidden.includes(photoCardKey(currentPhotoCard))){
+      state.photoHidden.push(photoCardKey(currentPhotoCard));
     }
     saveState();
     showToast('Карточка скрыта 🚫');
@@ -4252,6 +4323,36 @@ document.getElementById('dislikeBtn').addEventListener('click', ()=>{
   dislikeCurrentCard();
 });
 
+/* ============ "ПО ПОРЯДКУ" / СЛУЧАЙНО ("Предложи партнеру") ============ */
+// Кнопка рядом с "Следующая" — по умолчанию карточки идут в случайном
+// порядке (как раньше); при выключении рандома показ переключается на
+// последовательный, от карточки №1, отдельно для каждого уровня
+// (state.photoSeqIndex[level]), см. drawPhotoCard.
+function updatePhotoRandomToggleBtn(){
+  const btn = document.getElementById('photoRandomToggleBtn');
+  if(!btn) return;
+  if(!isPlaceholderMode() || state.photoFavView){
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'flex';
+  const ordered = !!state.photoOrderMode;
+  btn.textContent = ordered ? '📶' : '🔀';
+  btn.setAttribute('aria-label', ordered ? 'Показ по порядку — нажмите для случайного' : 'Случайный порядок — нажмите для показа по порядку');
+}
+document.getElementById('photoRandomToggleBtn').addEventListener('click', ()=>{
+  if(!isPlaceholderMode()) return;
+  state.photoOrderMode = !state.photoOrderMode;
+  if(state.photoOrderMode){
+    if(!state.photoSeqIndex) state.photoSeqIndex = {};
+    state.photoSeqIndex[photoLevel] = 0;
+  }
+  saveState();
+  updatePhotoRandomToggleBtn();
+  playSuccessSound();
+  if(!state.photoFavView) drawPhotoCard(photoLevel);
+});
+
 /* ============ ИЗБРАННОЕ / "СДЕЛАНО" ============ */
 function updateOwnedBtn(){
   const btn = document.getElementById('sexshopOwnedBtn');
@@ -4261,19 +4362,19 @@ function updateOwnedBtn(){
     return;
   }
   btn.style.display = 'flex';
-  const isOwned = (state.sexshopOwned||[]).includes(currentPhotoCard.image);
+  const isOwned = (state.sexshopOwned||[]).includes(photoCardKey(currentPhotoCard));
   btn.textContent = isOwned ? '✅' : '🛍️';
   btn.classList.toggle('active', isOwned);
 }
 function toggleOwned(){
   if(!isPlaceholderMode() || !currentPhotoCard || currentPhotoCard.level !== 5) return;
   if(!state.sexshopOwned) state.sexshopOwned = [];
-  const pos = state.sexshopOwned.indexOf(currentPhotoCard.image);
+  const pos = state.sexshopOwned.indexOf(photoCardKey(currentPhotoCard));
   if(pos>=0){
     state.sexshopOwned.splice(pos,1);
     showToast('Отметка «уже есть» снята');
   } else {
-    state.sexshopOwned.push(currentPhotoCard.image);
+    state.sexshopOwned.push(photoCardKey(currentPhotoCard));
     playSuccessSound();
     showToast('Отмечено: уже есть ✅');
   }
@@ -4283,11 +4384,12 @@ function toggleOwned(){
 document.getElementById('sexshopOwnedBtn').addEventListener('click', toggleOwned);
 function updateFavoriteBtn(){
   updateOwnedBtn();
+  updatePhotoRandomToggleBtn();
   const btn = document.getElementById('favoriteBtn');
   if(!btn) return;
   if(isPlaceholderMode()){
     if(!currentPhotoCard){ btn.textContent = '🤍'; btn.classList.remove('active'); return; }
-    const isDone = (state.photoDone||[]).includes(currentPhotoCard.image);
+    const isDone = (state.photoDone||[]).includes(photoCardKey(currentPhotoCard));
     btn.textContent = isDone ? '❤️' : '🤍';
     btn.classList.toggle('active', isDone);
     return;
@@ -4313,12 +4415,12 @@ function toggleFavorite(){
   if(isPlaceholderMode()){
     if(!currentPhotoCard) return;
     if(!state.photoDone) state.photoDone = [];
-    const pos = state.photoDone.indexOf(currentPhotoCard.image);
+    const pos = state.photoDone.indexOf(photoCardKey(currentPhotoCard));
     if(pos>=0){
       state.photoDone.splice(pos,1);
       showToast('Отметка «сделано» снята');
     } else {
-      state.photoDone.push(currentPhotoCard.image);
+      state.photoDone.push(photoCardKey(currentPhotoCard));
       playSuccessSound();
       showToast('Отмечено как сделано ✅');
     }

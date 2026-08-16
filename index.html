@@ -908,6 +908,20 @@
   #card .type-pill, #tdCard .type-pill{
     background:rgba(255,255,255,.18); color:#fff;
   }
+  /* Карточка товара "Секс-шоп" (модуль игры "Предложи партнеру") —
+     название, "Подходит: ..." и оценки ♀/♂ рассчитаны на светлую карточку
+     (тёмный текст на бледной плашке) — на тёмном фоне #card были почти
+     невидимы. */
+  #card .card-split-title{ color:#fff; }
+  #card .forwhom-pill{
+    background:rgba(255,255,255,.16); color:#fff;
+  }
+  #card .rating-pill.rating-women{
+    background:rgba(255,110,168,.28); color:#ffd6e6;
+  }
+  #card .rating-pill.rating-men{
+    background:rgba(94,158,255,.28); color:#d6e8ff;
+  }
   /* "Тайные ответы" — тоже переиспользует компонент вопрос/ответы
      (.znayu-answers), который по умолчанию рассчитан на светлый фон
      (тёмные полупрозрачные кнопки) — на тёмном фоне этой карточки варианты
@@ -1252,8 +1266,10 @@
   /* "Обновить задание" (Фанты) убрана; "Скрыть навсегда" (Фанты) заменена
      иконкой на кнопке "Отказ" — сама dislikeBtn в Фантах теперь скрыта,
      но остаётся рабочей в остальных режимах, использующих этот же экран
-     (Предложи партнёру, Видеорулетка, Давай попробуем). */
-  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #dislikeBtn{display:none;}
+     (Видеорулетка, Давай попробуем). В "Предложи партнеру" кнопку
+     "Скрыть карточку" убрали по просьбе — во всех уровнях карточки больше
+     нельзя спрятать навсегда. */
+  #game:not(.video-mode):not(.davay-mode) #dislikeBtn{display:none;}
   #game.placeholder-mode #favoriteBtn, #game.video-mode #favoriteBtn{
     flex:0 0 auto; width:auto; padding:0 16px; font-size:20px;
   }
@@ -1268,6 +1284,15 @@
   #game.placeholder-mode #sexshopOwnedBtn.active{
     background:rgba(120,220,150,.18); color:#37b567; border-color:rgba(120,220,150,.4);
   }
+  /* Переключатель "случайно/по порядку" ("Предложи партнеру", рядом с
+     "Следующая") — по умолчанию выключен (карточки случайны, как раньше);
+     включённое состояние показывает карточки по порядку от №1 (см.
+     photoOrderMode/drawPhotoCard в games/core.js). Состояние обозначается
+     только сменой иконки (🔀 ↔ 📶), без дополнительной подсветки кнопки. */
+  #photoRandomToggleBtn{display:none;}
+  #game.placeholder-mode #photoRandomToggleBtn{
+    flex:0 0 auto; width:auto; padding:0 14px; font-size:30px;
+  }
   /* В "Давай попробуем" избранное формируется только совпадением "Да" у
      обоих игроков — ручная кнопка-сердечко тут не нужна. */
   #game.davay-mode #favoriteBtn{display:none;}
@@ -1280,6 +1305,7 @@
   #game.placeholder-mode.photo-favview #doneBtn,
   #game.placeholder-mode.photo-favview #favoriteBtn,
   #game.placeholder-mode.photo-favview #sexshopOwnedBtn,
+  #game.placeholder-mode.photo-favview #photoRandomToggleBtn,
   #game.placeholder-mode.photo-favview #levelUpBtn,
   #game.placeholder-mode.photo-favview #levelDownBtn,
   #game.placeholder-mode.photo-favview #dislikeBtn{display:none;}
@@ -1993,7 +2019,7 @@
         <label>Выбери игру</label>
         <div class="game-select-list" id="gameSelectList">
           <button type="button" class="btn btn-menu-item" id="gameQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
-          <button type="button" class="btn btn-menu-item" id="gameIdeasBtn"><span class="menu-icon">✨</span> Идеи для вас</button>
+          <button type="button" class="btn btn-menu-item" id="gameIdeasBtn"><span class="menu-icon">💬</span> Ответы на вопросы</button>
           <button type="button" class="btn btn-menu-item" id="gameFantyBtn"><span class="menu-icon">💘</span> Фанты</button>
           <button type="button" class="btn btn-menu-item" id="gameTdBtn"><span class="menu-icon">❓</span> Правда/Действие</button>
           <button type="button" class="btn btn-menu-item" id="gameZnayuBtn"><span class="menu-icon">💑</span> Тайные ответы</button>
@@ -2002,6 +2028,8 @@
           <button type="button" class="btn btn-menu-item" id="gameTimerBtn"><span class="menu-icon">⏱️</span> Таймер страсти</button>
           <button type="button" class="btn btn-menu-item" id="gamePhotoBtn"><span class="menu-icon">💃</span> Предложи партнеру</button>
           <button type="button" class="btn btn-menu-item" id="gameDavayBtn"><span class="menu-icon">🎬</span> Давай попробуем</button>
+          <button type="button" class="btn btn-menu-item" id="gameSexQuestBtn"><span class="menu-icon">🧩</span> Секс квест</button>
+          <button type="button" class="btn btn-menu-item" id="gameSexMapBtn"><span class="menu-icon">🎀</span> Карта секса</button>
         </div>
       </div>
 
@@ -2482,6 +2510,7 @@
     <div class="controls">
       <div class="row1">
         <button class="btn btn-primary" id="doneBtn">💕 Готово</button>
+        <button type="button" class="btn btn-secondary btn-square" id="photoRandomToggleBtn" aria-label="Случайный порядок">🔀</button>
         <button class="btn btn-secondary" id="skipBtn">🚫 Отказ</button>
         <button type="button" class="btn btn-secondary" id="videoLevelUpBtn" aria-label="Повысить уровень видео">Горячее</button>
         <button type="button" class="btn btn-secondary" id="davayLevelUpBtn" aria-label="Повысить уровень">Горячее</button>
@@ -2519,7 +2548,7 @@
       <div class="card" id="ideasCard">
         <div class="card-inner">
           <div class="card-body">
-            <div class="card-icon">✨</div>
+            <div class="card-icon">💬</div>
             <div class="card-split-title" id="ideasCardTitle">Загрузка…</div>
             <div class="card-text" id="ideasCardText"></div>
           </div>
@@ -2540,6 +2569,70 @@
         <button type="button" class="btn btn-secondary btn-pause" id="ideasExitBtn">Выход</button>
       </div>
     </div>
+  </section>
+
+  <!-- ===== СЕКС-КВЕСТ: НАСТРОЙКА ===== -->
+  <section id="sexQuestSetup" class="screen">
+    <h1 class="title">🧩 Секс-квест</h1>
+    <div class="subtitle">Мягкий путь к желаниям друг друга — шаг за шагом, без давления</div>
+
+    <div class="intro-text">На каждое из 12 желаний сначала спросим «Выполнить сейчас?». Ответили «нет» — начнётся цепочка мягких шагов навстречу, и в любой момент можно согласиться на облегчённую версию.</div>
+
+    <button class="btn btn-primary" id="sexQuestStartBtn" style="margin-top:16px;">Начать</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="sexQuestSetupRulesBtn">Правила</button>
+      <button type="button" class="toggle-pill" id="sexQuestHistoryBtn">📋 Чек-листы</button>
+    </div>
+
+    <button class="btn btn-secondary" id="sexQuestSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== СЕКС-КВЕСТ: ИГРА ===== -->
+  <section id="sexQuestGame" class="screen">
+    <div class="sexquest-status-row">
+      <span id="sexQuestProgressLabel">1 / 12</span>
+      <span id="sexQuestScoreLabel">0 🏆</span>
+    </div>
+    <div class="card-area">
+      <div class="card" id="sexQuestCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="card-icon">💗</div>
+            <div class="card-text">Загрузка…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="sexQuestYesBtn">Да, выполняем</button>
+        <button type="button" class="btn btn-secondary" id="sexQuestNoBtn">Нет, пока не готовы</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary btn-pause" id="sexQuestExitBtn">Выход</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== СЕКС-КВЕСТ: ИТОГ ПАРТИИ ===== -->
+  <section id="sexQuestSummary" class="screen">
+    <h1 class="title">🧩 Секс-квест: итоги</h1>
+    <div class="subtitle" id="sexQuestSummaryScore">Счёт: 0 🏆</div>
+    <div class="summary-stats" style="text-align:left;">
+      <ul class="sexquest-summary-list" id="sexQuestSummaryList"></ul>
+    </div>
+    <div class="intro-text">Чек-лист этой партии сохранён — его можно открыть позже на странице настройки игры, кнопка «📋 Чек-листы».</div>
+    <button class="btn btn-primary" id="sexQuestSummaryExitBtn" style="margin-top:10px;">В меню</button>
+  </section>
+
+  <!-- ===== СЕКС-КВЕСТ: ЧЕК-ЛИСТЫ (ИСТОРИЯ) ===== -->
+  <section id="sexQuestHistory" class="screen">
+    <h1 class="title">📋 Чек-листы «Секс-квеста»</h1>
+    <div class="subtitle">История прошлых партий — видно, на чём остановились в прошлый раз</div>
+    <div class="sexquest-history-wrap" id="sexQuestHistoryList"></div>
+    <button class="btn btn-secondary" id="sexQuestHistoryExitBtn" style="margin-top:10px;">Назад</button>
   </section>
 
   <!-- ===== ВО ЧТО ПОИГРАТЬ? (ДЕТИ): ИГРА ===== -->
@@ -4442,15 +4535,11 @@
   <div class="modal-overlay" id="photoRulesModal">
     <div class="modal-card">
       <div class="modal-title">💃 Правила игры «Предложи партнеру»</div>
-      <div class="intro-text">Никакого счёта и очереди — просто листайте карточки с позами вдвоём и выбирайте, что хочется попробовать сегодня.</div>
+      <div class="intro-text">Никакого счёта и очереди — просто листайте карточки вдвоём и выбирайте, что хочется попробовать сегодня.</div>
       <ol class="modal-rules">
-        <li>На странице настройки выберите уровень: 🙂 «Простые позы», 😏 «Интересные позы», 🔥 «Сложные позы», 🚗 «В авто», 🛍️ «Секс-шоп» (топ-150 товаров с рейтингом вместо поз) или 📦 «Коллекция» (109 позиций личной коллекции).</li>
-        <li>На карточке позы — фото и краткое описание техники с советами для комфорта.</li>
-        <li>На карточке товара из «Секс-шоп» сверху — номер в рейтинге продаж, ниже название и описание, строка «Подходит: ...» и оценки партнёров ♀/♂ по 10-балльной шкале. В «Коллекции» — то же самое, но без номера.</li>
-        <li>На карточках «Секс-шоп» есть кнопка 🛍️ «Уже есть» — отметьте ✅, если эта вещь у вас уже есть.</li>
-        <li>Нажмите «Следующая» — покажется новая случайная карточка этого же уровня.</li>
+        <li>На странице настройки выберите уровень — от поз до идей, советов и фантазий.</li>
+        <li>Нажмите «Следующая» — покажется новая случайная карточка. Кнопка 🔀 рядом с ней переключает на показ по порядку от №1 — нажмите её ещё раз, чтобы вернуть случайный порядок.</li>
         <li>Понравилась и уже попробовали? Нажмите ☆ — карточка отметится сердечком ❤️, чтобы потом было легко её найти.</li>
-        <li>Не понравилось? Нажмите 🚫 — карточка исчезнет из игры навсегда.</li>
         <li>«Ещё варианты» и «Предыдущее» переключают уровень прямо в игре, без возврата в настройки.</li>
         <li>Когда карточки уровня закончатся, колода перемешается и покажет их заново.</li>
         <li>«Выход» в любой момент вернёт в меню «Предложи партнеру» — можно сменить уровень и продолжить.</li>
@@ -4463,17 +4552,35 @@
   <!-- ===== ПРАВИЛА "ИДЕИ ДЛЯ ВАС" ===== -->
   <div class="modal-overlay" id="ideasRulesModal">
     <div class="modal-card">
-      <div class="modal-title">✨ Правила игры «Идеи для вас»</div>
-      <div class="intro-text">Никакого счёта и уровней — просто листайте карточки со сценариями, как провести вечер вдвоём, и выбирайте то, что понравилось.</div>
+      <div class="modal-title">💬 Правила игры «Ответы на вопросы»</div>
+      <div class="intro-text">Никакого счёта и уровней — просто листайте карточки с популярными вопросами сексологам и их ответами.</div>
       <ol class="modal-rules">
-        <li>На карточке — название идеи и короткое описание, как её воплотить.</li>
-        <li>Нажмите «Далее» — покажется новая случайная идея.</li>
-        <li>Понравилась идея? Нажмите ☆ — она отметится сердечком ❤️ и попадёт в избранное.</li>
-        <li>Кнопка «⭐ Избранное» показывает только отмеченные идеи; повторное нажатие возвращает полный список.</li>
-        <li>Когда все идеи будут показаны, колода перемешается и покажет их заново.</li>
+        <li>На карточке — вопрос и краткий ответ сексолога на него.</li>
+        <li>Нажмите «Далее» — покажется новый случайный вопрос.</li>
+        <li>Важный для вас вопрос? Нажмите ☆ — он отметится сердечком ❤️ и попадёт в избранное.</li>
+        <li>Кнопка «⭐ Избранное» показывает только отмеченные вопросы; повторное нажатие возвращает полный список.</li>
+        <li>Когда все вопросы будут показаны, колода перемешается и покажет их заново.</li>
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
       <button class="btn btn-primary" id="closeIdeasRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "СЕКС-КВЕСТ" ===== -->
+  <div class="modal-overlay" id="sexQuestRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🧩 Правила игры «Секс-квест»</div>
+      <div class="intro-text">Цель — мягко, без давления и дискомфорта, реализовать желания друг друга.</div>
+      <ol class="modal-rules">
+        <li>По очереди открывается одно из 12 желаний с вопросом «Выполнить сейчас?».</li>
+        <li>Ответили «Да» — желание засчитывается полностью (3 очка), переходим к следующему.</li>
+        <li>Ответили «Нет» — начинается цепочка из мягких шагов навстречу: на каждом свой маленький вопрос «Да/Нет».</li>
+        <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
+        <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
+        <li>После партии итоги сохраняются в «📋 Чек-листы» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeSexQuestRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -4919,67 +5026,75 @@
   </div>
 </div>
 
-<script src="cards/cards_fants.js?v=20260816t"></script>
-<script src="cards/cards_fants_users.js?v=20260816t"></script>
-<script src="cards/cards_poses.js?v=20260816t"></script>
-<script src="cards/cards_sexshop.js?v=20260816t"></script>
-<script src="cards/cards_collection.js?v=20260816t"></script>
-<script src="cards/cards_video.js?v=20260816t"></script>
-<script src="cards/cards_bingo.js?v=20260816t"></script>
-<script src="cards/cards_timer.js?v=20260816t"></script>
-<script src="cards/cards_wishlist.js?v=20260816t"></script>
-<script src="cards/cards_znayu.js?v=20260816t"></script>
-<script src="cards/cards_krokodil.js?v=20260816t"></script>
-<script src="cards/cards_memes.js?v=20260816t"></script>
-<script src="cards/cards_party_never.js?v=20260816t"></script>
-<script src="cards/cards_party_fants.js?v=20260816t"></script>
-<script src="cards/cards_party_td.js?v=20260816t"></script>
-<script src="cards/cards_fam_znayu.js?v=20260816t"></script>
-<script src="cards/cards_lucky.js?v=20260816t"></script>
-<script src="cards/cards_kids_memory.js?v=20260816t"></script>
-<script src="cards/cards_kids_td.js?v=20260816t"></script>
-<script src="cards/cards_quiz.js?v=20260816t"></script>
-<script src="cards/cards_party_quiz.js?v=20260816t"></script>
-<script src="cards/cards_kids_quiz.js?v=20260816t"></script>
-<script src="cards/cards_ideas.js?v=20260816t"></script>
-<script src="cards/cards_whattoplay.js?v=20260816t"></script>
-<script src="cards/cards_kids_krokodil.js?v=20260816t"></script>
-<script src="cards/cards_kids_memes.js?v=20260816t"></script>
-<script src="cards/cards_kids_saper.js?v=20260816t"></script>
-<script src="cards/cards_party_hangman.js?v=20260816t"></script>
-<script src="cards/cards_shop.js?v=20260816t"></script>
-<script src="games/core.js?v=20260816t"></script>
-<script src="games/twister.js?v=20260816t"></script>
-<script src="games/party-hangman.js?v=20260816t"></script>
-<script src="games/solo-quiz.js?v=20260816t"></script>
-<script src="games/solo-memory.js?v=20260816t"></script>
-<script src="games/shop.js?v=20260816t"></script>
-<script src="games/party-roulette.js?v=20260816t"></script>
-<script src="games/business-lemonade.js?v=20260816t"></script>
-<script src="games/kids-xo.js?v=20260816t"></script>
-<script src="games/kids-battleship.js?v=20260816t"></script>
-<script src="games/truth-dare.js?v=20260816t"></script>
-<script src="games/bingo.js?v=20260816t"></script>
-<script src="games/timer-game.js?v=20260816t"></script>
-<script src="games/krokodil.js?v=20260816t"></script>
-<script src="games/memes.js?v=20260816t"></script>
-<script src="games/party-never.js?v=20260816t"></script>
-<script src="games/party-fants.js?v=20260816t"></script>
-<script src="games/party-td.js?v=20260816t"></script>
-<script src="games/fam-znayu.js?v=20260816t"></script>
-<script src="games/lucky.js?v=20260816t"></script>
-<script src="games/kids-memory.js?v=20260816t"></script>
-<script src="games/kids-krokodil.js?v=20260816t"></script>
-<script src="games/kids-memes.js?v=20260816t"></script>
-<script src="games/kids-saper.js?v=20260816t"></script>
-<script src="games/kids-td.js?v=20260816t"></script>
-<script src="games/quiz.js?v=20260816t"></script>
-<script src="games/party-quiz.js?v=20260816t"></script>
-<script src="games/kids-quiz.js?v=20260816t"></script>
-<script src="games/wishlist.js?v=20260816t"></script>
-<script src="games/znayu.js?v=20260816t"></script>
-<script src="games/ideas.js?v=20260816t"></script>
-<script src="games/whattoplay.js?v=20260816t"></script>
-<script src="games/init.js?v=20260816t"></script>
+<script src="cards/cards_fants.js?v=20260817f"></script>
+<script src="cards/cards_fants_users.js?v=20260817f"></script>
+<script src="cards/cards_poses.js?v=20260817f"></script>
+<script src="cards/cards_sexshop.js?v=20260817f"></script>
+<script src="cards/cards_collection.js?v=20260817f"></script>
+<script src="cards/cards_desires_women.js?v=20260817f"></script>
+<script src="cards/cards_desires_men.js?v=20260817f"></script>
+<script src="cards/cards_sex_coach_tips.js?v=20260817f"></script>
+<script src="cards/cards_sex_coach_qa.js?v=20260817f"></script>
+<script src="cards/cards_kamasutra_caresses.js?v=20260817f"></script>
+<script src="cards/cards_kamasutra_positions.js?v=20260817f"></script>
+<script src="cards/cards_video.js?v=20260817f"></script>
+<script src="cards/cards_bingo.js?v=20260817f"></script>
+<script src="cards/cards_timer.js?v=20260817f"></script>
+<script src="cards/cards_wishlist.js?v=20260817f"></script>
+<script src="cards/cards_znayu.js?v=20260817f"></script>
+<script src="cards/cards_krokodil.js?v=20260817f"></script>
+<script src="cards/cards_memes.js?v=20260817f"></script>
+<script src="cards/cards_party_never.js?v=20260817f"></script>
+<script src="cards/cards_party_fants.js?v=20260817f"></script>
+<script src="cards/cards_party_td.js?v=20260817f"></script>
+<script src="cards/cards_fam_znayu.js?v=20260817f"></script>
+<script src="cards/cards_lucky.js?v=20260817f"></script>
+<script src="cards/cards_kids_memory.js?v=20260817f"></script>
+<script src="cards/cards_kids_td.js?v=20260817f"></script>
+<script src="cards/cards_quiz.js?v=20260817f"></script>
+<script src="cards/cards_party_quiz.js?v=20260817f"></script>
+<script src="cards/cards_kids_quiz.js?v=20260817f"></script>
+<script src="cards/cards_ideas.js?v=20260817f"></script>
+<script src="cards/cards_sexquest.js?v=20260817f"></script>
+<script src="cards/cards_whattoplay.js?v=20260817f"></script>
+<script src="cards/cards_kids_krokodil.js?v=20260817f"></script>
+<script src="cards/cards_kids_memes.js?v=20260817f"></script>
+<script src="cards/cards_kids_saper.js?v=20260817f"></script>
+<script src="cards/cards_party_hangman.js?v=20260817f"></script>
+<script src="cards/cards_shop.js?v=20260817f"></script>
+<script src="games/core.js?v=20260817f"></script>
+<script src="games/twister.js?v=20260817f"></script>
+<script src="games/party-hangman.js?v=20260817f"></script>
+<script src="games/solo-quiz.js?v=20260817f"></script>
+<script src="games/solo-memory.js?v=20260817f"></script>
+<script src="games/shop.js?v=20260817f"></script>
+<script src="games/party-roulette.js?v=20260817f"></script>
+<script src="games/business-lemonade.js?v=20260817f"></script>
+<script src="games/kids-xo.js?v=20260817f"></script>
+<script src="games/kids-battleship.js?v=20260817f"></script>
+<script src="games/truth-dare.js?v=20260817f"></script>
+<script src="games/bingo.js?v=20260817f"></script>
+<script src="games/timer-game.js?v=20260817f"></script>
+<script src="games/krokodil.js?v=20260817f"></script>
+<script src="games/memes.js?v=20260817f"></script>
+<script src="games/party-never.js?v=20260817f"></script>
+<script src="games/party-fants.js?v=20260817f"></script>
+<script src="games/party-td.js?v=20260817f"></script>
+<script src="games/fam-znayu.js?v=20260817f"></script>
+<script src="games/lucky.js?v=20260817f"></script>
+<script src="games/kids-memory.js?v=20260817f"></script>
+<script src="games/kids-krokodil.js?v=20260817f"></script>
+<script src="games/kids-memes.js?v=20260817f"></script>
+<script src="games/kids-saper.js?v=20260817f"></script>
+<script src="games/kids-td.js?v=20260817f"></script>
+<script src="games/quiz.js?v=20260817f"></script>
+<script src="games/party-quiz.js?v=20260817f"></script>
+<script src="games/kids-quiz.js?v=20260817f"></script>
+<script src="games/wishlist.js?v=20260817f"></script>
+<script src="games/znayu.js?v=20260817f"></script>
+<script src="games/ideas.js?v=20260817f"></script>
+<script src="games/sexquest.js?v=20260817f"></script>
+<script src="games/whattoplay.js?v=20260817f"></script>
+<script src="games/init.js?v=20260817f"></script>
 </body>
 </html>
