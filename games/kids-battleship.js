@@ -74,6 +74,26 @@ function bsGenerateBoard(){
   return bsCreateEmptyBoard();
 }
 
+// Корабли по правилам не касаются друг друга даже углами (см. bsCanPlace) —
+// значит, как только корабль потоплен, все клетки вокруг него гарантированно
+// пустые, и их можно сразу открыть точкой "мимо", не заставляя игрока
+// отстреливать очевидные клетки вручную.
+function bsMarkSunkPerimeter(board, ship){
+  board.cells.forEach((cell, i) => {
+    if(cell.shipId !== ship.id) return;
+    const r = Math.floor(i / KIDS_BATTLESHIP_SIZE);
+    const c = i % KIDS_BATTLESHIP_SIZE;
+    for(let dr = -1; dr <= 1; dr++){
+      for(let dc = -1; dc <= 1; dc++){
+        const nr = r + dr, nc = c + dc;
+        if(nr < 0 || nr >= KIDS_BATTLESHIP_SIZE || nc < 0 || nc >= KIDS_BATTLESHIP_SIZE) continue;
+        const neighbor = board.cells[bsIdx(nr, nc)];
+        if(!neighbor.shot) neighbor.shot = true;
+      }
+    }
+  });
+}
+
 function bsPlayerName(idx){
   const players = state.kidsPlayers || [];
   return players[idx] || ('Игрок ' + (idx + 1));
@@ -180,11 +200,13 @@ function fireKidsBattleshipShot(i){
     ship.hits++;
     if(ship.hits >= ship.size){
       ship.sunk = true;
+      bsMarkSunkPerimeter(board, ship);
       resultText = `💀 Потоплен ${ship.size}-палубный корабль! Стреляй ещё раз →`;
+      playBingoVictorySound();
     } else {
       resultText = '🔥 Попадание! Стреляй ещё раз →';
+      playHitSound();
     }
-    playSuccessSound();
   } else {
     resultText = '🌊 Мимо!';
     playNeutralSound();

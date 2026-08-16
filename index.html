@@ -371,6 +371,7 @@
   .starter-btn.on{
     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
   }
+  .starter-btn:disabled{ opacity:.35; cursor:default; }
   .mode-btn{font-size:11.5px; padding:9px 4px; letter-spacing:-.1px;}
   #timerModeGroup .mode-btn{font-size:15px; padding:10px 8px; letter-spacing:normal;}
   .timer-mode-caption{display:block; font-size:11.5px; font-weight:600; opacity:.75; margin-top:4px; letter-spacing:0;}
@@ -441,7 +442,7 @@
     display:flex; flex-direction:column; gap:14px; margin-top:22px;
   }
   #homeMenuList .btn{
-    padding:22px 16px; font-size:19px; font-weight:800;
+    padding:18px 13px; font-size:19px; font-weight:800;
   }
   .btn-menu-item{
     background:linear-gradient(135deg, rgba(255,94,142,.22), rgba(255,255,255,.05));
@@ -879,7 +880,11 @@
   #wishlistCard .card-header, #znayuCard .card-header, #sexQuestCard .card-header{
     border-bottom-color:rgba(255,255,255,.18);
   }
-  #sexQuestCard .card-split-title{ color:#fff; font-size:17px; font-weight:800; }
+  #sexQuestCard .card-split-title{
+    color:#ffd166; font-size:15px; font-weight:900;
+    text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px;
+  }
+  #sexQuestCard .card-icon{ font-size:76px; }
   /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт
      и "Старт") — тоже рассчитан на светлый фон, на тёмном был почти невидим. */
   #card .card-timer{ border-top-color:rgba(255,255,255,.18); }
@@ -913,7 +918,10 @@
      название, "Подходит: ..." и оценки ♀/♂ рассчитаны на светлую карточку
      (тёмный текст на бледной плашке) — на тёмном фоне #card были почти
      невидимы. */
-  #card .card-split-title{ color:#fff; }
+  #card .card-split-title{
+    color:#ffd166; font-size:15px; font-weight:900;
+    text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px;
+  }
   #card .forwhom-pill{
     background:rgba(255,255,255,.16); color:#fff;
   }
@@ -1660,6 +1668,64 @@
     display:flex; flex-direction:column; gap:10px; margin-bottom:22px; text-align:center;
   }
   .summary-row{font-size:16px; font-weight:700; color:#3a2438;}
+  /* "Секс-квест" — счёт/прогресс над карточкой, итог партии и история
+     чек-листов (games/sexquest.js). */
+  .sexquest-status-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 4px; margin-bottom:10px; font-size:14px; font-weight:800; color:#cba0bf;
+  }
+  .sexquest-summary-list{ list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .sexquest-summary-list li{
+    background:rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;
+  }
+  .sexquest-summary-title{ font-size:14px; font-weight:800; color:#fff; }
+  .sexquest-summary-outcome{ font-size:13px; color:rgba(255,255,255,.7); margin-top:2px; }
+  .sexquest-history-wrap{ display:flex; flex-direction:column; gap:14px; margin:14px 0; max-height:60vh; overflow-y:auto; }
+  .sexquest-history-entry{
+    background:rgba(255,255,255,.08); border-radius:14px; padding:12px 14px;
+  }
+  .sexquest-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+  .sexquest-history-items{ list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .sexquest-history-items > li + li{ border-top:1px solid rgba(255,255,255,.14); padding-top:10px; }
+  .sexquest-history-steps{ margin:6px 0 0; padding-left:18px; font-size:12px; color:rgba(255,255,255,.6); line-height:1.5; }
+  .sexquest-history-steps li{ margin-bottom:2px; }
+  .sexquest-step-agreed{ color:#4cd964; font-weight:700; }
+  #sexQuestHistoryBtn:disabled{ opacity:.4; cursor:default; }
+  /* Модалка "Выбор вопросов" — светлый .modal-card, поэтому пункты чек-листа
+     в тёмных тонах (как .custom-card-row), а не в белом варианте .level-toggle. */
+  .sexquest-pick-list{
+    display:flex; flex-direction:column; gap:8px; margin:14px 0;
+    text-align:left; max-height:50vh; overflow-y:auto;
+  }
+  .sexquest-pick-item{
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    background:rgba(43,15,46,.06); border:1px solid rgba(43,15,46,.12);
+    border-radius:14px; padding:10px 12px;
+  }
+  .sexquest-pick-item.on{ border-color:var(--accent); background:rgba(255,94,142,.14); }
+  .sexquest-pick-item.disabled{ opacity:.4; cursor:default; }
+  .sexquest-pick-check{
+    width:20px; height:20px; border-radius:50%; flex-shrink:0;
+    border:2px solid rgba(43,15,46,.25);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sexquest-pick-item.on .sexquest-pick-check{ background:var(--accent); border-color:var(--accent); }
+  .sexquest-pick-item.on .sexquest-pick-check::after{
+    content:'✓'; font-size:12px; font-weight:900; color:#2b0f2e; line-height:1;
+  }
+  .sexquest-pick-title{ flex:1; font-size:14px; font-weight:700; color:#2b0f2e; }
+  /* Крестик справа — исключает желание из случайной выдачи (не из ручного
+     выбора чек-листом, это независимая настройка), поэтому не участвует в
+     клике по всей строке (см. stopPropagation в sexquest.js). */
+  .sexquest-pick-exclude{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%;
+    border:1px solid rgba(43,15,46,.2); background:transparent; color:#8a6a80;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .sexquest-pick-exclude.on{ background:#ff5e6c; border-color:#ff5e6c; color:#fff; }
+  .sexquest-pick-item.excluded{ opacity:.55; }
+  .sexquest-pick-item.excluded .sexquest-pick-title{ text-decoration:line-through; }
   /* "Почти совпало" в итогах "Тайных ответов" — крупнее, по центру и с
      хорошо заметным отступом сверху (заметно ниже интро-текста), но без
      абсолютного позиционирования — чтобы не наезжать на текст рядом,
@@ -1712,7 +1778,7 @@
   /* Режим "Скрыть задания" — невыполненные клетки показывают только иконку,
      без текста задания (сюрприз до тапа), пока их не откроют по одной.
      Тот же приём, что и у закрытых клеток Сапёра ("Игры с детьми"). */
-  .bingo-cell.hidden{ font-size:46px; }
+  .bingo-cell.hidden{ font-size:min(12vw, 51px); line-height:1; padding:0; }
   /* Крестики-нолики (дети) — поле 3×3. */
   .kids-xo-grid{
     display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
@@ -1760,7 +1826,7 @@
      после нажатия открывается текст задания (обычный .bingo-cell.checked
      стиль), кроме "счастливых" клеток пропуска хода — те при открытии
      подсвечиваются зелёным вместо розового. */
-  .kids-saper-cell.closed{ font-size:26px; }
+  .kids-saper-cell.closed{ font-size:min(15vw, 64px); line-height:1; padding:0; }
   .bingo-cell.checked.kids-saper-lucky, .bingo-cell.checked.bingo-lucky{
     background:linear-gradient(135deg,#4cd964,#2ecc71); color:#0b3d1f;
   }
@@ -2577,13 +2643,28 @@
     <h1 class="title">🧩 Секс-квест</h1>
     <div class="subtitle">Мягкий путь к желаниям друг друга — шаг за шагом, без давления</div>
 
-    <div class="intro-text">На каждое из 12 желаний сначала спросим «Выполнить сейчас?». Ответили «нет» — начнётся цепочка мягких шагов навстречу, и в любой момент можно согласиться на облегчённую версию.</div>
+    <div class="field">
+      <label>Количество вопросов</label>
+      <div class="starter-group timer-duration-group" id="sexQuestCountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="1">1</button>
+        <button type="button" class="starter-btn mode-btn" data-value="3">3</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="all">Все</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="starter-group" id="sexQuestModeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="manual" id="sexQuestPickBtn">📋 Выбор вопросов</button>
+        <button type="button" class="starter-btn mode-btn" data-value="random">🔀 Случайно</button>
+      </div>
+    </div>
 
     <button class="btn btn-primary" id="sexQuestStartBtn" style="margin-top:16px;">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
       <button type="button" class="toggle-pill rules-pill" id="sexQuestSetupRulesBtn">Правила</button>
-      <button type="button" class="toggle-pill" id="sexQuestHistoryBtn">📋 Чек-листы</button>
+      <button type="button" class="toggle-pill" id="sexQuestHistoryBtn">✅ Пройденные</button>
     </div>
 
     <button class="btn btn-secondary" id="sexQuestSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -2624,13 +2705,13 @@
     <div class="summary-stats" style="text-align:left;">
       <ul class="sexquest-summary-list" id="sexQuestSummaryList"></ul>
     </div>
-    <div class="intro-text">Чек-лист этой партии сохранён — его можно открыть позже на странице настройки игры, кнопка «📋 Чек-листы».</div>
+    <div class="intro-text">Чек-лист этой партии сохранён — его можно открыть позже на странице настройки игры, кнопка «✅ Пройденные».</div>
     <button class="btn btn-primary" id="sexQuestSummaryExitBtn" style="margin-top:10px;">В меню</button>
   </section>
 
   <!-- ===== СЕКС-КВЕСТ: ЧЕК-ЛИСТЫ (ИСТОРИЯ) ===== -->
   <section id="sexQuestHistory" class="screen">
-    <h1 class="title">📋 Чек-листы «Секс-квеста»</h1>
+    <h1 class="title">✅ Пройденные «Секс-квеста»</h1>
     <div class="subtitle">История прошлых партий — видно, на чём остановились в прошлый раз</div>
     <div class="sexquest-history-wrap" id="sexQuestHistoryList"></div>
     <button class="btn btn-secondary" id="sexQuestHistoryExitBtn" style="margin-top:10px;">Назад</button>
@@ -2812,7 +2893,7 @@
     <div class="bingo-grid" id="kidsSaperGrid"></div>
     <div class="bingo-actions-row">
       <button type="button" class="btn btn-secondary" id="kidsSaperRandomBtn">🎲 Случайно</button>
-      <button type="button" class="btn btn-secondary" id="kidsSaperNewCardBtn">🌟 Новая игра</button>
+      <button type="button" class="btn btn-secondary" id="kidsSaperHideTasksBtn">👀 Показать задания</button>
     </div>
     <div class="bingo-actions-row bingo-actions-bottom">
       <button type="button" class="btn btn-secondary btn-rules" id="kidsSaperGameRulesBtn">Правила</button>
@@ -4573,15 +4654,25 @@
       <div class="modal-title">🧩 Правила игры «Секс-квест»</div>
       <div class="intro-text">Цель — мягко, без давления и дискомфорта, реализовать желания друг друга.</div>
       <ol class="modal-rules">
-        <li>По очереди открывается одно из 12 желаний с вопросом «Выполнить сейчас?».</li>
+        <li>По очереди открываются желания с вопросом «Выполнить сейчас?» — сколько именно и как выбраны, настраивается перед стартом.</li>
         <li>Ответили «Да» — желание засчитывается полностью (3 очка), переходим к следующему.</li>
-        <li>Ответили «Нет» — начинается цепочка из мягких шагов навстречу: на каждом свой маленький вопрос «Да/Нет».</li>
+        <li>Ответили «Нет» — начинается цепочка из мягких шагов навстречу: от самых простых и безопасных до более смелых, на каждом свой маленький вопрос «Да/Нет».</li>
         <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
         <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
-        <li>После партии итоги сохраняются в «📋 Чек-листы» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
+        <li>После партии итоги сохраняются в «✅ Пройденные» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
       <button class="btn btn-primary" id="closeSexQuestRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== СЕКС-КВЕСТ: ВЫБОР ЖЕЛАНИЙ ВРУЧНУЮ ===== -->
+  <div class="modal-overlay" id="sexQuestPickModal">
+    <div class="modal-card">
+      <div class="modal-title">📋 Выбор вопросов</div>
+      <div class="intro-text" id="sexQuestPickHint">Отметьте желания для партии</div>
+      <div class="sexquest-pick-list" id="sexQuestPickList"></div>
+      <button class="btn btn-primary" id="sexQuestPickDoneBtn">Готово</button>
     </div>
   </div>
 
@@ -4737,7 +4828,7 @@
         <li>Собрали 5 отмеченных клеток подряд по горизонтали или вертикали — линия засчитана.</li>
         <li>Собрали 1-ю линию — уровень повышается до 💥 «Обезвреживание», собрали 3-ю — до 🎉 «Взрыв веселья».</li>
         <li>Игра завершается сама, как только собрано 5 любых линий или отмечены все 25 клеток — на экране появится окно с итогом партии и бонусным призом.</li>
-        <li>«🌟 Новая игра» начнёт всё заново. «🎲 Случайно» подскажет, какую клетку выбрать следующей.</li>
+        <li>Клетки закрыты 💣 до нажатия — «👀 Показать задания» откроет все сразу для предпросмотра, «🙈 Скрыть задания» спрячет их обратно. «🎲 Случайно» подскажет, какую клетку выбрать следующей.</li>
         <li>Полученный приз добавляется в блок «🎁 Бонусные задания» под картой и остаётся там до выполнения.</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsSaperRulesBtn">Понятно</button>
@@ -5027,75 +5118,75 @@
   </div>
 </div>
 
-<script src="cards/cards_fants.js?v=20260817f"></script>
-<script src="cards/cards_fants_users.js?v=20260817f"></script>
-<script src="cards/cards_poses.js?v=20260817f"></script>
-<script src="cards/cards_sexshop.js?v=20260817f"></script>
-<script src="cards/cards_collection.js?v=20260817f"></script>
-<script src="cards/cards_desires_women.js?v=20260817f"></script>
-<script src="cards/cards_desires_men.js?v=20260817f"></script>
-<script src="cards/cards_sex_coach_tips.js?v=20260817f"></script>
-<script src="cards/cards_sex_coach_qa.js?v=20260817f"></script>
-<script src="cards/cards_kamasutra_caresses.js?v=20260817f"></script>
-<script src="cards/cards_kamasutra_positions.js?v=20260817f"></script>
-<script src="cards/cards_video.js?v=20260817f"></script>
-<script src="cards/cards_bingo.js?v=20260817f"></script>
-<script src="cards/cards_timer.js?v=20260817f"></script>
-<script src="cards/cards_wishlist.js?v=20260817f"></script>
-<script src="cards/cards_znayu.js?v=20260817f"></script>
-<script src="cards/cards_krokodil.js?v=20260817f"></script>
-<script src="cards/cards_memes.js?v=20260817f"></script>
-<script src="cards/cards_party_never.js?v=20260817f"></script>
-<script src="cards/cards_party_fants.js?v=20260817f"></script>
-<script src="cards/cards_party_td.js?v=20260817f"></script>
-<script src="cards/cards_fam_znayu.js?v=20260817f"></script>
-<script src="cards/cards_lucky.js?v=20260817f"></script>
-<script src="cards/cards_kids_memory.js?v=20260817f"></script>
-<script src="cards/cards_kids_td.js?v=20260817f"></script>
-<script src="cards/cards_quiz.js?v=20260817f"></script>
-<script src="cards/cards_party_quiz.js?v=20260817f"></script>
-<script src="cards/cards_kids_quiz.js?v=20260817f"></script>
-<script src="cards/cards_ideas.js?v=20260817f"></script>
-<script src="cards/cards_sexquest.js?v=20260817f"></script>
-<script src="cards/cards_whattoplay.js?v=20260817f"></script>
-<script src="cards/cards_kids_krokodil.js?v=20260817f"></script>
-<script src="cards/cards_kids_memes.js?v=20260817f"></script>
-<script src="cards/cards_kids_saper.js?v=20260817f"></script>
-<script src="cards/cards_party_hangman.js?v=20260817f"></script>
-<script src="cards/cards_shop.js?v=20260817f"></script>
-<script src="games/core.js?v=20260817f"></script>
-<script src="games/twister.js?v=20260817f"></script>
-<script src="games/party-hangman.js?v=20260817f"></script>
-<script src="games/solo-quiz.js?v=20260817f"></script>
-<script src="games/solo-memory.js?v=20260817f"></script>
-<script src="games/shop.js?v=20260817f"></script>
-<script src="games/party-roulette.js?v=20260817f"></script>
-<script src="games/business-lemonade.js?v=20260817f"></script>
-<script src="games/kids-xo.js?v=20260817f"></script>
-<script src="games/kids-battleship.js?v=20260817f"></script>
-<script src="games/truth-dare.js?v=20260817f"></script>
-<script src="games/bingo.js?v=20260817f"></script>
-<script src="games/timer-game.js?v=20260817f"></script>
-<script src="games/krokodil.js?v=20260817f"></script>
-<script src="games/memes.js?v=20260817f"></script>
-<script src="games/party-never.js?v=20260817f"></script>
-<script src="games/party-fants.js?v=20260817f"></script>
-<script src="games/party-td.js?v=20260817f"></script>
-<script src="games/fam-znayu.js?v=20260817f"></script>
-<script src="games/lucky.js?v=20260817f"></script>
-<script src="games/kids-memory.js?v=20260817f"></script>
-<script src="games/kids-krokodil.js?v=20260817f"></script>
-<script src="games/kids-memes.js?v=20260817f"></script>
-<script src="games/kids-saper.js?v=20260817f"></script>
-<script src="games/kids-td.js?v=20260817f"></script>
-<script src="games/quiz.js?v=20260817f"></script>
-<script src="games/party-quiz.js?v=20260817f"></script>
-<script src="games/kids-quiz.js?v=20260817f"></script>
-<script src="games/wishlist.js?v=20260817f"></script>
-<script src="games/znayu.js?v=20260817f"></script>
-<script src="games/ideas.js?v=20260817f"></script>
-<script src="games/sexquest.js?v=20260817f"></script>
-<script src="games/whattoplay.js?v=20260817f"></script>
-<script src="games/init.js?v=20260817f"></script>
+<script src="cards/cards_fants.js?v=20260817ak"></script>
+<script src="cards/cards_fants_users.js?v=20260817ak"></script>
+<script src="cards/cards_poses.js?v=20260817ak"></script>
+<script src="cards/cards_sexshop.js?v=20260817ak"></script>
+<script src="cards/cards_collection.js?v=20260817ak"></script>
+<script src="cards/cards_desires_women.js?v=20260817ak"></script>
+<script src="cards/cards_desires_men.js?v=20260817ak"></script>
+<script src="cards/cards_sex_coach_tips.js?v=20260817ak"></script>
+<script src="cards/cards_sex_coach_qa.js?v=20260817ak"></script>
+<script src="cards/cards_kamasutra_caresses.js?v=20260817ak"></script>
+<script src="cards/cards_kamasutra_positions.js?v=20260817ak"></script>
+<script src="cards/cards_video.js?v=20260817ak"></script>
+<script src="cards/cards_bingo.js?v=20260817ak"></script>
+<script src="cards/cards_timer.js?v=20260817ak"></script>
+<script src="cards/cards_wishlist.js?v=20260817ak"></script>
+<script src="cards/cards_znayu.js?v=20260817ak"></script>
+<script src="cards/cards_krokodil.js?v=20260817ak"></script>
+<script src="cards/cards_memes.js?v=20260817ak"></script>
+<script src="cards/cards_party_never.js?v=20260817ak"></script>
+<script src="cards/cards_party_fants.js?v=20260817ak"></script>
+<script src="cards/cards_party_td.js?v=20260817ak"></script>
+<script src="cards/cards_fam_znayu.js?v=20260817ak"></script>
+<script src="cards/cards_lucky.js?v=20260817ak"></script>
+<script src="cards/cards_kids_memory.js?v=20260817ak"></script>
+<script src="cards/cards_kids_td.js?v=20260817ak"></script>
+<script src="cards/cards_quiz.js?v=20260817ak"></script>
+<script src="cards/cards_party_quiz.js?v=20260817ak"></script>
+<script src="cards/cards_kids_quiz.js?v=20260817ak"></script>
+<script src="cards/cards_ideas.js?v=20260817ak"></script>
+<script src="cards/cards_sexquest.js?v=20260817ak"></script>
+<script src="cards/cards_whattoplay.js?v=20260817ak"></script>
+<script src="cards/cards_kids_krokodil.js?v=20260817ak"></script>
+<script src="cards/cards_kids_memes.js?v=20260817ak"></script>
+<script src="cards/cards_kids_saper.js?v=20260817ak"></script>
+<script src="cards/cards_party_hangman.js?v=20260817ak"></script>
+<script src="cards/cards_shop.js?v=20260817ak"></script>
+<script src="games/core.js?v=20260817ak"></script>
+<script src="games/twister.js?v=20260817ak"></script>
+<script src="games/party-hangman.js?v=20260817ak"></script>
+<script src="games/solo-quiz.js?v=20260817ak"></script>
+<script src="games/solo-memory.js?v=20260817ak"></script>
+<script src="games/shop.js?v=20260817ak"></script>
+<script src="games/party-roulette.js?v=20260817ak"></script>
+<script src="games/business-lemonade.js?v=20260817ak"></script>
+<script src="games/kids-xo.js?v=20260817ak"></script>
+<script src="games/kids-battleship.js?v=20260817ak"></script>
+<script src="games/truth-dare.js?v=20260817ak"></script>
+<script src="games/bingo.js?v=20260817ak"></script>
+<script src="games/timer-game.js?v=20260817ak"></script>
+<script src="games/krokodil.js?v=20260817ak"></script>
+<script src="games/memes.js?v=20260817ak"></script>
+<script src="games/party-never.js?v=20260817ak"></script>
+<script src="games/party-fants.js?v=20260817ak"></script>
+<script src="games/party-td.js?v=20260817ak"></script>
+<script src="games/fam-znayu.js?v=20260817ak"></script>
+<script src="games/lucky.js?v=20260817ak"></script>
+<script src="games/kids-memory.js?v=20260817ak"></script>
+<script src="games/kids-krokodil.js?v=20260817ak"></script>
+<script src="games/kids-memes.js?v=20260817ak"></script>
+<script src="games/kids-saper.js?v=20260817ak"></script>
+<script src="games/kids-td.js?v=20260817ak"></script>
+<script src="games/quiz.js?v=20260817ak"></script>
+<script src="games/party-quiz.js?v=20260817ak"></script>
+<script src="games/kids-quiz.js?v=20260817ak"></script>
+<script src="games/wishlist.js?v=20260817ak"></script>
+<script src="games/znayu.js?v=20260817ak"></script>
+<script src="games/ideas.js?v=20260817ak"></script>
+<script src="games/sexquest.js?v=20260817ak"></script>
+<script src="games/whattoplay.js?v=20260817ak"></script>
+<script src="games/init.js?v=20260817ak"></script>
 </body>
 </html>

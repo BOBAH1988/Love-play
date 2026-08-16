@@ -66,8 +66,13 @@ function renderBingoGrid(){
   wrap.innerHTML = '';
   if(!state.bingoRevealed) state.bingoRevealed = (state.bingoGrid || []).map(()=>true);
   (state.bingoGrid || []).forEach((text,i)=>{
-    const isHidden = !!state.bingoTasksHidden && !state.bingoChecked[i] && !state.bingoRevealed[i];
     const isLucky = text === BINGO_LUCKY_TEXT;
+    // "Пропустите ход" — сюрприз-бонус, который работает только пока клетка
+    // закрыта: если её текст виден заранее (например, в режиме "Показать
+    // задания"), игрок просто обходит эту клетку стороной, и бонус теряет
+    // смысл. Поэтому счастливые клетки остаются 🎁 до самого нажатия
+    // независимо от общего переключателя "Скрыть/Показать задания".
+    const isHidden = !state.bingoChecked[i] && (isLucky || (!!state.bingoTasksHidden && !state.bingoRevealed[i]));
     const cell = document.createElement('div');
     cell.className = 'bingo-cell' + (state.bingoChecked[i] ? ' checked' : '') + (isHidden ? ' hidden' : '') + (state.bingoChecked[i] && isLucky ? ' bingo-lucky' : '');
     cell.textContent = isHidden ? '🎁' : text;
@@ -107,20 +112,20 @@ function attachBingoCellPress(cell, i){
   cell.addEventListener('pointercancel', endPress);
   cell.addEventListener('click', ()=>{
     if(longPressDone){ longPressDone = false; return; } // клик, который браузер шлёт следом за долгим нажатием — игнорируем
-    const isHidden = !!state.bingoTasksHidden && !state.bingoChecked[i] && !state.bingoRevealed[i];
-    if(isHidden){
-      state.bingoRevealed[i] = true;
-      saveState();
-      playNeutralSound();
-      renderBingoGrid();
-      return;
-    }
     if(!state.bingoChecked[i]) checkBingoCell(i);
   });
 }
+// Скрытая заданиями клетка (см. "Скрыть задания") отмечается тем же одним
+// нажатием, что и обычная — раньше первое нажатие только открывало 🎁 →
+// текст, а отметить выполненным нужно было второе, отдельное нажатие. Это
+// расходилось с правилами игры ("нажмите на клетку, чтобы отметить") и
+// на практике выглядело так, будто нажатия на скрытые клетки не работают —
+// линии и уровень не растут, пока не поймёшь, что нужно нажать дважды.
 function checkBingoCell(i){
   if(state.bingoFinished || state.bingoChecked[i]) return;
   state.bingoChecked[i] = true;
+  if(!state.bingoRevealed) state.bingoRevealed = [];
+  state.bingoRevealed[i] = true;
   saveState();
   renderBingoGrid();
   playNeutralSound();

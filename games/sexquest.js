@@ -4,21 +4,23 @@
 //
 // Механика: на каждое желание сперва спрашивается "Выполнить сейчас?".
 //   Да  — желание сразу засчитывается полностью (3 очка), переход к следующему.
-//   Нет — начинается "квест преодоления" из 6 мягких шагов (SEXQUEST_WISHES[i].quest).
+//   Нет — начинается "квест преодоления" из мягких шагов (SEXQUEST_WISHES[i].quest,
+//         количество шагов у разных желаний может отличаться) — от самых
+//         простых и безопасных к более смелым.
 //         На каждом шаге — свой вопрос "Да/Нет":
 //           Да — желание засчитывается облегчённой версией (1 очко), показывается
 //                текст yesAction как итог, переход к следующему желанию.
-//           Нет — переход к следующему шагу квеста.
-//         Если "Нет" на всех 6 шагах — желание откладывается без давления
+//           Нет — переход к следующему, более смелому шагу квеста.
+//         Если "Нет" на всех шагах — желание откладывается без давления
 //         (SEXQUEST_SOFT_EXIT_TEXT), переход к следующему желанию.
-// Цель — реализовать желания друг друга мягким, постепенным подходом, без
-// давления и дискомфорта.
+// Цель — реализовать желания друг друга мягким, постепенным подходом от
+// простого к сложному, без давления и дискомфорта.
 //
 // После того как все желания в партии пройдены, результат сохраняется в
 // state.sexQuestChecklists — это и есть "чек-лист" для избранного/истории:
 // по каждому желанию, с которым взаимодействовали (то есть Да сразу,
 // Да на каком-то шаге квеста или отложено), фиксируется список пройденных
-// шагов вплоть до того, на котором ответили "Да" (или все 6 шагов, если
+// шагов вплоть до того, на котором ответили "Да" (или все шаги, если
 // отложили) — так партнёр, открыв чек-лист в следующий раз, сразу видит,
 // на чём остановились в прошлый раз, и с чего продолжать.
 
@@ -27,17 +29,129 @@ const SEXQUEST_MAX_SCORE_PER_DIRECT = 3;
 const SEXQUEST_MAX_SCORE_PER_LIGHT = 1;
 
 let sexQuestCurrentWish = null;
-let sexQuestCurrentStepIndex = -1; // -1 = показываем главный вопрос "Выполнить сейчас?", 0..5 = шаг квеста
+let sexQuestCurrentStepIndex = -1; // -1 = показываем главный вопрос "Выполнить сейчас?", 0+ = шаг квеста
 
 function getSexQuestWishes(){
   return (typeof SEXQUEST_WISHES !== 'undefined' && Array.isArray(SEXQUEST_WISHES)) ? SEXQUEST_WISHES : [];
+}
+
+const SEXQUEST_COUNT_VALUES = ['1','3','5','all'];
+
+function sexQuestResolvedCount(){
+  const total = getSexQuestWishes().length;
+  if(state.sexQuestCount === 'all') return total;
+  return Math.min(state.sexQuestCount, total);
 }
 
 function goToSexQuestSetup(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('sexQuestSetup').classList.add('active');
   updateSexQuestHistoryBtn();
+  renderSexQuestCountGroup();
+  renderSexQuestModeGroup();
 }
+
+function renderSexQuestCountGroup(){
+  if(!SEXQUEST_COUNT_VALUES.includes(String(state.sexQuestCount))){ state.sexQuestCount = 1; saveState(); }
+  document.querySelectorAll('#sexQuestCountGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === String(state.sexQuestCount));
+  });
+}
+document.querySelectorAll('#sexQuestCountGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.sexQuestCount = btn.dataset.value === 'all' ? 'all' : parseInt(btn.dataset.value, 10);
+    // "Все" делает ручной выбор бессмысленным (играются все желания) — возвращаем
+    // случайный режим; для остальных значений урезаем ручной выбор до нового лимита.
+    if(state.sexQuestCount === 'all'){
+      state.sexQuestMode = 'random';
+    } else if(state.sexQuestManualIds && state.sexQuestManualIds.length > state.sexQuestCount){
+      state.sexQuestManualIds = state.sexQuestManualIds.slice(0, state.sexQuestCount);
+    }
+    saveState();
+    renderSexQuestCountGroup();
+    renderSexQuestModeGroup();
+    renderSexQuestPickList();
+  });
+});
+
+function renderSexQuestModeGroup(){
+  if(state.sexQuestMode !== 'manual' && state.sexQuestMode !== 'random'){ state.sexQuestMode = 'random'; saveState(); }
+  const pickBtn = document.getElementById('sexQuestPickBtn');
+  const isAll = state.sexQuestCount === 'all';
+  if(pickBtn) pickBtn.disabled = isAll;
+  document.querySelectorAll('#sexQuestModeGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === state.sexQuestMode);
+  });
+}
+document.getElementById('sexQuestPickBtn').addEventListener('click', ()=>{
+  if(state.sexQuestCount === 'all'){
+    showToast('При выборе «Все» играются все желания');
+    return;
+  }
+  state.sexQuestMode = 'manual';
+  saveState();
+  renderSexQuestModeGroup();
+  renderSexQuestPickList();
+  document.getElementById('sexQuestPickModal').classList.add('show');
+});
+document.querySelectorAll('#sexQuestModeGroup .starter-btn[data-value="random"]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.sexQuestMode = 'random';
+    saveState();
+    renderSexQuestModeGroup();
+  });
+});
+
+function renderSexQuestPickList(){
+  const wrap = document.getElementById('sexQuestPickList');
+  if(!wrap) return;
+  const limit = sexQuestResolvedCount();
+  const hint = document.getElementById('sexQuestPickHint');
+  if(hint) hint.textContent = `Отметьте до ${limit} ${limit===1 ? 'желания' : 'желаний'} для партии`;
+  if(!state.sexQuestManualIds) state.sexQuestManualIds = [];
+  if(!state.sexQuestExcluded) state.sexQuestExcluded = [];
+  const selected = state.sexQuestManualIds;
+  const excluded = state.sexQuestExcluded;
+  wrap.innerHTML = '';
+  getSexQuestWishes().forEach(wish=>{
+    const on = selected.includes(wish.id);
+    const isExcluded = excluded.includes(wish.id);
+    const atLimit = !on && selected.length >= limit;
+    const div = document.createElement('div');
+    div.className = 'sexquest-pick-item' + (on ? ' on' : '') + (atLimit ? ' disabled' : '') + (isExcluded ? ' excluded' : '');
+    div.innerHTML = `
+      <div class="sexquest-pick-check"></div>
+      <div class="sexquest-pick-title">${wish.title}</div>
+      <button type="button" class="sexquest-pick-exclude${isExcluded ? ' on' : ''}" title="Исключить из случайной выдачи">✕</button>
+    `;
+    div.addEventListener('click', ()=>{
+      const idx = selected.indexOf(wish.id);
+      if(idx >= 0){
+        selected.splice(idx, 1);
+      } else {
+        if(selected.length >= limit){ showToast(`Можно выбрать не больше ${limit}`); return; }
+        selected.push(wish.id);
+      }
+      saveState();
+      renderSexQuestPickList();
+    });
+    div.querySelector('.sexquest-pick-exclude').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const idx = excluded.indexOf(wish.id);
+      if(idx >= 0) excluded.splice(idx, 1);
+      else excluded.push(wish.id);
+      saveState();
+      renderSexQuestPickList();
+    });
+    wrap.appendChild(div);
+  });
+}
+document.getElementById('sexQuestPickDoneBtn').addEventListener('click', ()=>{
+  document.getElementById('sexQuestPickModal').classList.remove('show');
+});
+document.getElementById('sexQuestPickModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'sexQuestPickModal') e.currentTarget.classList.remove('show');
+});
 function exitSexQuestSetup(){
   document.getElementById('sexQuestSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
@@ -47,18 +161,31 @@ document.getElementById('sexQuestSetupRulesBtn').addEventListener('click', ()=>{
 document.getElementById('closeSexQuestRulesBtn').addEventListener('click', ()=>{ document.getElementById('sexQuestRulesModal').classList.remove('show'); });
 document.getElementById('sexQuestRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'sexQuestRulesModal') e.currentTarget.classList.remove('show'); });
 
-function shuffleSexQuestQueue(){
-  const wishes = getSexQuestWishes();
-  const ids = wishes.map(w=>w.id);
-  for(let i = ids.length - 1; i > 0; i--){
+function shuffleIds(ids){
+  const arr = ids.slice();
+  for(let i = arr.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
-    [ids[i], ids[j]] = [ids[j], ids[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return ids;
+  return arr;
+}
+
+function buildSexQuestQueue(){
+  if(state.sexQuestMode === 'manual' && state.sexQuestManualIds && state.sexQuestManualIds.length){
+    return shuffleIds(state.sexQuestManualIds);
+  }
+  const allIds = getSexQuestWishes().map(w=>w.id);
+  const excluded = state.sexQuestExcluded || [];
+  // Если исключено абсолютно всё (крайний случай) — падать некуда, играем
+  // полным пулом, иначе игра вообще не сможет начаться.
+  let pool = allIds.filter(id => !excluded.includes(id));
+  if(pool.length === 0) pool = allIds;
+  const count = state.sexQuestCount === 'all' ? pool.length : Math.min(state.sexQuestCount, pool.length);
+  return shuffleIds(pool).slice(0, count);
 }
 
 function startSexQuestGame(){
-  state.sexQuestQueue = shuffleSexQuestQueue();
+  state.sexQuestQueue = buildSexQuestQueue();
   state.sexQuestIndex = 0;
   state.sexQuestScore = 0;
   state.sexQuestResults = []; // {wishId, title, outcome:'direct'|'light'|'deferred', steps:[question,...], agreedStep:number|null}
@@ -104,7 +231,7 @@ function renderSexQuestPrompt(){
           </div>
         </div>
         <div class="card-body">
-          <div class="card-icon">💗</div>
+          <div class="card-icon">🧩</div>
           <div class="card-split-title">${sexQuestCurrentWish.title}</div>
           <div class="card-text">${sexQuestCurrentWish.text}</div>
         </div>
@@ -130,7 +257,7 @@ function renderSexQuestStep(){
           </div>
         </div>
         <div class="card-body">
-          <div class="card-icon">🌤️</div>
+          <div class="card-icon">🧩</div>
           <div class="card-text">${step.question}</div>
         </div>
       </div>
@@ -141,6 +268,7 @@ function renderSexQuestStep(){
 }
 
 function renderSexQuestOutcome(text, icon){
+  updateSexQuestProgress();
   fadeSwapEl('sexQuestCard', (el)=>{
     el.className = 'card';
     el.innerHTML = `
@@ -184,7 +312,7 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
     recordSexQuestResult('direct', null);
     saveState();
     sexQuestAwaitingNext = true;
-    renderSexQuestOutcome('Отлично, порадуйте свою половинку! Желание засчитано полностью — 3 очка.', '✅');
+    renderSexQuestOutcome('Отлично, порадуйте свою половинку!<br><br>Желание засчитано полностью — 3 очка.', '✅');
     return;
   }
   // Ответили "Да" на шаге квеста — облегчённая версия.
@@ -193,10 +321,18 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
   recordSexQuestResult('light', sexQuestCurrentStepIndex);
   saveState();
   sexQuestAwaitingNext = true;
-  renderSexQuestOutcome(step.yesAction + ' — желание засчитано облегчённой версией, +1 очко.', '💞');
+  renderSexQuestOutcome(step.yesAction + '<br><br>Желание засчитано облегчённой версией, +1 очко.', '💞');
 });
 
 document.getElementById('sexQuestNoBtn').addEventListener('click', ()=>{
+  // "Нет" скрыта на экране итога шага (см. renderSexQuestOutcome), но на
+  // всякий случай защищаемся и здесь той же проверкой, что и у "Да" —
+  // чтобы повторный клик по уже показанному итогу не задваивал результат.
+  if(sexQuestAwaitingNext){
+    sexQuestAwaitingNext = false;
+    advanceSexQuestWish();
+    return;
+  }
   playNeutralSound();
   if(sexQuestCurrentStepIndex === -1){
     // Начинаем квест преодоления с первого шага.
@@ -260,6 +396,12 @@ function exitSexQuestSummary(){
 document.getElementById('sexQuestSummaryExitBtn').addEventListener('click', ()=>{ exitSexQuestSummary(); });
 
 document.getElementById('sexQuestStartBtn').addEventListener('click', ()=>{
+  if(state.sexQuestMode === 'manual' && (!state.sexQuestManualIds || !state.sexQuestManualIds.length)){
+    showToast('Выберите хотя бы одно желание');
+    renderSexQuestPickList();
+    document.getElementById('sexQuestPickModal').classList.add('show');
+    return;
+  }
   playSuccessSound();
   startSexQuestGame();
 });

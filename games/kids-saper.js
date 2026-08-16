@@ -39,6 +39,10 @@ function generateKidsSaperGrid(level){
   state.kidsSaperEscalatedTo2 = false;
   state.kidsSaperEscalatedTo3 = false;
   state.kidsSaperFinished = false;
+  // Каждая новая партия снова начинается закрытой (💣ой) — как и раньше,
+  // просто теперь это управляемый переключателем режим (см.
+  // kidsSaperHideTasksBtn), а не жёстко зашитое поведение.
+  state.kidsSaperTasksHidden = true;
 }
 function updateKidsSaperLevelLabel(){
   const el = document.getElementById('kidsSaperLevelLabel');
@@ -62,17 +66,25 @@ function renderKidsSaperGrid(){
     const cell = document.createElement('div');
     const isOpen = !!state.kidsSaperChecked[i];
     const isLucky = text === KIDS_SAPER_LUCKY_TEXT;
-    cell.className = 'bingo-cell kids-saper-cell' + (isOpen ? ' checked' : ' closed') + (isOpen && isLucky ? ' kids-saper-lucky' : '');
-    if(isOpen){
-      cell.textContent = text;
-    } else {
-      cell.textContent = '💣';
-    }
+    // "Показать задания" — чисто визуальный предпросмотр: снимает 💣 со всех
+    // ещё не открытых клеток, ничего не меняя в самой механике (нажатие на
+    // клетку по-прежнему сразу открывает/засчитывает её, независимо от того,
+    // видели вы текст заранее или нет). Исключение — счастливые клетки
+    // "Пропустите ход": та же причина, что и в Секс-бинго (см. bingo.js) —
+    // если их видно заранее, дети их просто обходят и бонус теряет смысл.
+    const isHidden = !isOpen && (isLucky || !!state.kidsSaperTasksHidden);
+    cell.className = 'bingo-cell kids-saper-cell' + (isOpen ? ' checked' : ' closed') + (isOpen && isLucky ? ' kids-saper-lucky' : '') + (isHidden ? ' hidden' : '');
+    cell.textContent = isHidden ? '💣' : text;
     attachKidsSaperCellPress(cell, i);
     wrap.appendChild(cell);
-    if(isOpen) fitKidsSaperCellText(cell);
+    if(!isHidden) fitKidsSaperCellText(cell);
   });
   updateKidsSaperLevelLabel();
+}
+function updateKidsSaperHideTasksBtn(){
+  const btn = document.getElementById('kidsSaperHideTasksBtn');
+  if(!btn) return;
+  btn.textContent = state.kidsSaperTasksHidden ? '👀 Показать задания' : '🙈 Скрыть задания';
 }
 const KIDS_SAPER_LONG_PRESS_MS = 550;
 function attachKidsSaperCellPress(cell, i){
@@ -269,17 +281,17 @@ function goToKidsSaperGame(){
   document.getElementById('kidsSaperSetup').classList.remove('active');
   document.getElementById('kidsSaperGame').classList.add('active');
   renderKidsSaperGrid();
+  updateKidsSaperHideTasksBtn();
   renderKidsSaperBonusChecklist();
   requestWakeLock();
 }
 document.getElementById('kidsSaperSetupStartBtn').addEventListener('click', ()=>{ goToKidsSaperGame(); });
 document.getElementById('kidsSaperSetupExitBtn').addEventListener('click', ()=>{ exitKidsSaperSetup(); });
-document.getElementById('kidsSaperNewCardBtn').addEventListener('click', ()=>{
-  generateKidsSaperGrid(1);
+document.getElementById('kidsSaperHideTasksBtn').addEventListener('click', ()=>{
+  state.kidsSaperTasksHidden = !state.kidsSaperTasksHidden;
   saveState();
+  updateKidsSaperHideTasksBtn();
   renderKidsSaperGrid();
-  playSuccessSound();
-  showToast('Новая игра начата 🎲');
 });
 function suggestRandomKidsSaperCell(){
   if(state.kidsSaperFinished){

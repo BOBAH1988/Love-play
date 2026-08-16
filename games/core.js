@@ -119,6 +119,13 @@ let state = {
   // каждому желанию; sexQuestChecklists — история завершённых партий
   // ("чек-листы" в избранном, см. games/sexquest.js).
   sexQuestQueue:[], sexQuestIndex:0, sexQuestScore:0, sexQuestResults:[], sexQuestChecklists:[],
+  // Настройки партии: сколько желаний играть (1/5/10/'all') и режим выбора —
+  // 'random' (случайно из всего пула) или 'manual' (отмечены вручную в
+  // sexQuestManualIds, см. модалку выбора вопросов в games/sexquest.js).
+  sexQuestCount:1, sexQuestMode:'random', sexQuestManualIds:[],
+  // Желания, исключённые крестиком из чек-листа — не участвуют в случайной
+  // выдаче (но по-прежнему доступны для ручного выбора, см. sexquest.js).
+  sexQuestExcluded:[],
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании"
@@ -135,7 +142,7 @@ let state = {
   // Сапёр (дети) — механика скопирована с "Секс-бинго"
   kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperWonLines:[], kidsSaperUsedBonus:[],
   kidsSaperCurrentLevel:1, kidsSaperEscalatedTo2:false, kidsSaperEscalatedTo3:false,
-  kidsSaperFinished:false, kidsSaperBonusChecklist:[],
+  kidsSaperFinished:false, kidsSaperBonusChecklist:[], kidsSaperTasksHidden:true,
   // Виселица (компания) — без уровней, общий счёт побед/поражений
   partyHangmanWord:'', partyHangmanGuessed:[], partyHangmanWrong:0,
   partyHangmanUsedWords:[], partyHangmanWins:0, partyHangmanLosses:0,
@@ -1109,6 +1116,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.kidsSaperUsedBonus = []; state.kidsSaperCurrentLevel = 1;
   state.kidsSaperEscalatedTo2 = false; state.kidsSaperEscalatedTo3 = false;
   state.kidsSaperFinished = false; state.kidsSaperBonusChecklist = [];
+  state.kidsSaperTasksHidden = true;
   // Твистер — возвращаем время на ход к дефолту (10 сек)
   state.twisterDuration = 10;
   // Виселица (компания)
@@ -1430,8 +1438,8 @@ function updateLevelUI(){
   const btn = document.getElementById('levelUpBtn');
   if(isPlaceholderMode()){
     const atMax = photoLevel >= PHOTO_MAX_LEVEL;
-    btn.disabled = atMax;
-    btn.textContent = atMax ? 'Максимальный уровень' : 'Ещё варианты';
+    btn.disabled = false;
+    btn.textContent = atMax ? 'Следующий' : 'Ещё варианты';
     const downBtn = document.getElementById('levelDownBtn');
     if(downBtn) downBtn.disabled = photoLevel <= 1;
     const el = document.getElementById('levelProgress');
@@ -3021,14 +3029,14 @@ const PHOTO_LEVELS = [
   {id:2, name:'Интересные позы', desc:'Больше разнообразия и вариантов', icon:'😏'},
   {id:3, name:'Сложные позы', desc:'Нужны гибкость и физподготовка', icon:'🔥'},
   {id:4, name:'В авто', desc:'Позы в машине', icon:'🚗'},
-  {id:5, name:'Секс-шоп', desc:'Топ-150 товаров с рейтингом', icon:'🛍️'},
-  {id:6, name:'Коллекция', desc:'109 позиций личной коллекции', icon:'📦'},
-  {id:7, name:'Желания женщины', desc:'Топ-250 женских фантазий', icon:'💗'},
-  {id:8, name:'Желания мужчины', desc:'Топ-250 мужских фантазий', icon:'💙'},
-  {id:9, name:'Советы сексологов', desc:'Топ-250 советов для пары', icon:'🧑‍⚕️'},
-  {id:10, name:'Идеи для вас', desc:'250 сценариев вечера вдвоём', icon:'✨'},
-  {id:11, name:'Ласки камасутры', desc:'150 техник прелюдии', icon:'🌸'},
-  {id:12, name:'Позы камасутры', desc:'150 поз без фото', icon:'🕉️'},
+  {id:5, name:'Секс-шоп', desc:'Товары с рейтингом', icon:'🛍️'},
+  {id:6, name:'Коллекция', desc:'Позиции личной коллекции', icon:'📦'},
+  {id:7, name:'Желания женщины', desc:'Топ женских фантазий', icon:'💗'},
+  {id:8, name:'Желания мужчины', desc:'Топ мужских фантазий', icon:'💙'},
+  {id:9, name:'Советы сексологов', desc:'Советы для пары', icon:'🧑‍⚕️'},
+  {id:10, name:'Идеи для вас', desc:'Сценарии вечера вдвоём', icon:'✨'},
+  {id:11, name:'Ласки камасутры', desc:'Техники прелюдии', icon:'🌸'},
+  {id:12, name:'Позы камасутры', desc:'Позы без фото', icon:'🕉️'},
 ];
 function renderPhotoSetupLevels(){
   const wrap = document.getElementById('photoSetupLevels');
@@ -3595,6 +3603,30 @@ function playErrorSound(){
     });
   }catch(e){}
   if(navigator.vibrate) navigator.vibrate([80,60,80]);
+}
+
+// Короткий "удар" для попадания в Морском бою — намеренно резче и короче
+// playSuccessSound (квадратная волна вместо синусоиды, нисходящий тон), чтобы
+// не путаться с общим "успехом" остальных игр приложения.
+function playHitSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(220, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.18);
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate(40);
 }
 
 function selectTimerDuration(sec, btnEl){
@@ -4258,13 +4290,8 @@ document.getElementById('levelUpBtn').addEventListener('click', ()=>{
   // в Видеорулетке и "Давай попробуем" она скрыта CSS (там свои кнопки
   // videoLevelUpBtn/davayLevelUpBtn), поэтому здесь нет веток под эти режимы.
   if(isPlaceholderMode()){
-    if(photoLevel < PHOTO_MAX_LEVEL){
-      playLevelUpSound();
-      drawPhotoCard(photoLevel + 1);
-      showToast(`Уровень повышен: ${photoLevel}`);
-    } else {
-      showToast('Это максимальный уровень 🔥');
-    }
+    playLevelUpSound();
+    drawPhotoCard(photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1);
     return;
   }
   levelUp();

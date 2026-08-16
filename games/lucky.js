@@ -247,22 +247,24 @@ function renderLuckyGrid(){
     cell.textContent = isHidden ? '🎁' : resolveLuckyActorGenderText(text, actor.actorIsM);
     if(!checked[i] && !state.luckyFinished) cell.addEventListener('click', ()=>clickLuckyCell(i));
     wrap.appendChild(cell);
-    fitBingoCellText(cell);
+    // Скрытая клетка показывает только иконку 🎁 — подгонка под текст задания
+    // ей не нужна и раньше перебивала инлайн-стилем увеличенный размер иконки
+    // из CSS (.bingo-cell.hidden), из-за чего иконка выглядела мелкой (см.
+    // тот же приём в games/bingo.js/renderBingoGrid).
+    if(!isHidden) fitBingoCellText(cell);
   });
   updateLuckyScoreUI();
 }
+// Скрытая заданиями клетка (см. "Скрыть задания") отмечается тем же одним
+// нажатием, что и обычная — раньше первое нажатие только открывало 🎁 →
+// текст, отметить выполненным нужно было отдельное второе нажатие (см. тот
+// же фикс и комментарий в games/bingo.js — там нашли и описали причину).
 function clickLuckyCell(i){
   if(state.luckyFinished) return;
   const checked = state.luckyChecked || (state.luckyChecked = new Array(25).fill(false));
   if(checked[i]) return;
   if(!state.luckyRevealed) state.luckyRevealed = (state.luckyGrid || []).map(()=>true);
-  if(state.luckyTasksHidden && !state.luckyRevealed[i]){
-    state.luckyRevealed[i] = true;
-    saveState();
-    playNeutralSound();
-    renderLuckyGrid();
-    return;
-  }
+  state.luckyRevealed[i] = true;
   playSuccessSound();
   checked[i] = true;
   const idx = state.luckyCurrentTeamIndex || 0;
