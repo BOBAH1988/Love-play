@@ -56,13 +56,13 @@ function kidsXoPlayerName(mark){
   return players[1] || 'Игрок 2';
 }
 function goToKidsXoSetup(){
-  document.getElementById('setup').classList.remove('active');
+  document.getElementById('kidsBoardGamesMenu').classList.remove('active');
   document.getElementById('kidsXoSetup').classList.add('active');
   renderKidsXoSizeGroup();
 }
 function exitKidsXoSetup(){
   document.getElementById('kidsXoSetup').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
+  document.getElementById('kidsBoardGamesMenu').classList.add('active');
 }
 function renderKidsXoSizeGroup(){
   const size = state.kidsXoBoardSize || 3;

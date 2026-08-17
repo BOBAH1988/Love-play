@@ -16,19 +16,22 @@ function getBingoBonusList(level){
   if(typeof BINGO_BONUS === 'undefined' || !Array.isArray(BINGO_BONUS)) return [];
   return BINGO_BONUS.filter(i=>i.level===level);
 }
-// "Счастливые" клетки — не задание, а пропуск хода. Ровно 3 штуки на карту,
-// раскиданы случайно среди 25 клеток и переживают повышение уровня без
-// изменений (см. escalateBingoTo — при повышении такие клетки не
-// заменяются заданиями нового уровня). Тот же приём, что и в "Сапёре"
-// (games/kids-saper.js, KIDS_SAPER_LUCKY_TEXT).
+// "Счастливая" клетка — не задание, а пропуск хода. Карта всегда стартует
+// открытой (без счастливых клеток вообще — см. generateBingoGrid), это
+// бонус только для режима "Скрыть задания": включили его — на карте
+// случайно появляется максимум одна такая клетка (см. bingoEnsureLuckyCell
+// в обработчике bingoHideTasksBtn ниже), выключили — она возвращается в
+// обычное задание (см. bingoRemoveLuckyCells). Переживает повышение уровня
+// без изменений, пока не отмечена (см. escalateBingoTo). Тот же приём, что
+// и в "Сапёре" (games/kids-saper.js, KIDS_SAPER_LUCKY_TEXT).
 const BINGO_LUCKY_TEXT = 'Пропустите ход';
-const BINGO_LUCKY_COUNT = 3;
+const BINGO_LUCKY_COUNT = 1;
 function generateBingoGrid(level){
-  // 22 клетки — реальные задания, 3 — "счастливые" (пропуск хода).
-  const pool = shuffle(getBingoItemsList(level)).slice(0, 25 - BINGO_LUCKY_COUNT);
+  // Все 25 клеток — реальные задания. Счастливая клетка появляется только
+  // если/когда игрок включит "Скрыть задания".
+  const pool = shuffle(getBingoItemsList(level)).slice(0, 25);
   const items = pool.map(p=>p.text);
-  while(items.length < 25 - BINGO_LUCKY_COUNT) items.push('—');
-  for(let i=0;i<BINGO_LUCKY_COUNT;i++) items.push(BINGO_LUCKY_TEXT);
+  while(items.length < 25) items.push('—');
   const grid = shuffle(items);
   state.bingoGrid = grid;
   state.bingoChecked = grid.map(()=>false);
@@ -394,12 +397,44 @@ function updateBingoHideTasksBtn(){
   if(!btn) return;
   btn.textContent = state.bingoTasksHidden ? '👀 Показать задания' : '🙈 Скрыть задания';
 }
+// Случайно выбирает одну ещё не отмеченную клетку и превращает её в
+// счастливую (если такой на карте ещё нет) — вызывается при включении
+// "Скрыть задания". Максимум BINGO_LUCKY_COUNT (1) активная клетка сразу.
+function bingoEnsureLuckyCell(){
+  const grid = state.bingoGrid || [];
+  const hasLucky = grid.filter(t => t === BINGO_LUCKY_TEXT).length;
+  if(hasLucky >= BINGO_LUCKY_COUNT) return;
+  const candidates = [];
+  grid.forEach((t,i)=>{ if(!state.bingoChecked[i] && t !== BINGO_LUCKY_TEXT) candidates.push(i); });
+  if(candidates.length === 0) return;
+  const pick = candidates[Math.floor(Math.random() * candidates.length)];
+  state.bingoGrid[pick] = BINGO_LUCKY_TEXT;
+}
+// Возвращает счастливую клетку обратно в обычное задание — вызывается при
+// выключении "Скрыть задания", чтобы в открытом режиме карта состояла
+// только из настоящих заданий, без сюрпризов.
+function bingoRemoveLuckyCells(){
+  const grid = state.bingoGrid || [];
+  const level = state.bingoCurrentLevel || 1;
+  const pool = shuffle(getBingoItemsList(level));
+  const usedTexts = new Set(grid);
+  let p = 0;
+  grid.forEach((t,i)=>{
+    if(t !== BINGO_LUCKY_TEXT) return;
+    while(p < pool.length && usedTexts.has(pool[p].text)) p++;
+    const item = pool[p];
+    grid[i] = item ? item.text : '—';
+    if(item){ usedTexts.add(item.text); p++; }
+  });
+}
 document.getElementById('bingoHideTasksBtn').addEventListener('click', ()=>{
   state.bingoTasksHidden = !state.bingoTasksHidden;
   if(state.bingoTasksHidden){
     state.bingoRevealed = (state.bingoGrid || []).map(()=>false);
+    bingoEnsureLuckyCell();
   } else {
     state.bingoRevealed = (state.bingoGrid || []).map(()=>true);
+    bingoRemoveLuckyCells();
   }
   saveState();
   updateBingoHideTasksBtn();

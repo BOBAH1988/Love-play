@@ -63,9 +63,12 @@ function drawMemesCard(){
   fadeSwapEl('memesCard', (el)=>{
     el.className = 'card';
     el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-text memes-situation">${card.text}</div></div><div class="memes-tts-hint" id="memesTtsHint">🔊</div></div>`;
+  }, ()=>{
+    // onDone — карточка уже реально отрисована (fadeSwapEl может отложить
+    // перерисовку на 220мс), только теперь в DOM точно есть #memesTtsHint.
+    updateMemesAutoSpeakBtn();
+    if(state.memesAutoSpeak) speakMemesCard();
   });
-  updateMemesAutoSpeakBtn();
-  if(state.memesAutoSpeak) speakMemesCard();
 }
 // ===== Озвучка карточки "Мемасики" (по тапу на карточку) =====
 // Необязательная фича: если браузер не поддерживает Web Speech API —
@@ -94,17 +97,33 @@ function stripQuotesForSpeech(text){
 }
 function speakMemesCard(){
   if(!memesCurrentCard || !('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(stripQuotesForSpeech(memesCurrentCard.text));
+  const synth = window.speechSynthesis;
+  const card = memesCurrentCard;
+  const utter = new SpeechSynthesisUtterance(stripQuotesForSpeech(card.text));
   utter.lang = 'ru-RU';
   utter.rate = 0.95;
   const voice = pickMemesFemaleVoice();
   if(voice) utter.voice = voice;
   const hint = document.getElementById('memesTtsHint');
-  if(hint) hint.classList.add('speaking');
-  utter.onend = ()=>{ if(hint) hint.classList.remove('speaking'); };
-  utter.onerror = ()=>{ if(hint) hint.classList.remove('speaking'); };
-  window.speechSynthesis.speak(utter);
+  const fire = ()=>{
+    if(memesCurrentCard !== card) return; // карточка уже сменилась — не озвучиваем устаревший текст
+    if(hint) hint.classList.add('speaking');
+    utter.onend = ()=>{ if(hint) hint.classList.remove('speaking'); };
+    utter.onerror = ()=>{ if(hint) hint.classList.remove('speaking'); };
+    synth.speak(utter);
+  };
+  // speak(), вызванный сразу вслед за cancel() в тот же тик, иногда молча
+  // "проглатывается" браузером — но задержка перед КАЖДЫМ speak() на
+  // мобильных браузерах рвёт связь с пользовательским жестом, и озвучка
+  // перестаёт работать вообще. Поэтому если движок сейчас свободен — говорим
+  // сразу и синхронно; отменяем и ждём короткую паузу, только если правда
+  // нужно прервать уже звучащую фразу (смена карточки на лету).
+  if(synth.speaking || synth.pending){
+    synth.cancel();
+    setTimeout(fire, 50);
+  } else {
+    fire();
+  }
 }
 document.getElementById('memesCard').addEventListener('click', ()=>{
   speakMemesCard();

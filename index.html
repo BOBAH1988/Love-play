@@ -962,7 +962,7 @@
      переиспользует компонент вопрос/ответы (.znayu-answers) — он рассчитан
      на светлый фон (тёмные полупрозрачные кнопки поверх карточки), поэтому
      для неё — светлый мятный оттенок того же зелёного тона вместо тёмного. */
-  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #whatToPlayCard, #shopProductCard, .shop-register-card{
+  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #flashCard, #whatToPlayCard, #shopProductCard, .shop-register-card{
     background:linear-gradient(160deg, #5ecf93, #23784f 55%, var(--bg2));
     color:#fff;
   }
@@ -1015,6 +1015,28 @@
     line-height:1.4;
     text-shadow:0 3px 12px rgba(0,0,0,.3);
   }
+  /* "Флеш карты" — крупное слово по центру, транскрипция помельче и
+     приглушённее сразу под ним, перевод обычным текстом ниже (только в
+     режиме "Обучение" — см. games/kids-flash.js). */
+  .flash-word{
+    font-size:40px; font-weight:900; line-height:1.2;
+    text-shadow:0 3px 12px rgba(0,0,0,.3);
+    word-break:break-word;
+  }
+  .flash-transcription{
+    font-size:18px; font-weight:600; color:rgba(255,255,255,.75);
+    margin-top:10px;
+  }
+  .flash-translation{
+    font-size:22px; font-weight:700; margin-top:14px;
+  }
+  /* Блок темы в настройках — название темы подписью над кнопками выбора
+     объёма подборки слов (100/250), другие темы добавятся сюда же позже. */
+  .flash-theme-block{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px;
+  }
+  .flash-theme-name{ font-weight:800; font-size:15px; margin-bottom:10px; }
   #krokodilCard .card-icon{font-size:76px; margin-bottom:14px; filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}
   /* Слово в "Крокодиле" — крупно, по центру карточки (card-body уже центрирует
      содержимое и по горизонтали, и по вертикали), сверху крупная иконка-подсказка. */
@@ -1930,9 +1952,8 @@
   .timer-actions-top .btn{flex:1;}
   .timer-actions-top #timerSkipBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
   .timer-actions-top #timerExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
-  /* "Нет"/"Скрыть"/"Отказ" — минимальная ширина рядом с основной кнопкой
-     действия (тот же принцип, что и у #timerSkipBtn выше). */
-  .timer-actions-top #memesHideBtn,
+  /* "Нет"/"Отказ" — минимальная ширина рядом с основной кнопкой действия
+     (тот же принцип, что и у #timerSkipBtn выше). */
   .timer-actions-top #partyFantsSkipBtn,
   .timer-actions-top #partyTdSkipBtn{
     flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;
@@ -1945,14 +1966,19 @@
   }
   /* Автоозвучка "Мемасиков" — та же кнопка-плеер, что и у "Викторины"
      (games/memes.js, games/kids-memes.js), только квадратной иконкой в общем
-     ряду с "Далее"/"Скрыть", а не отдельной строкой у "Паузы". */
+     ряду с "Далее"/"Скрыть", а не отдельной строкой у "Паузы". "Скрыть" —
+     та же квадратная иконка без текста, минимальной ширины. */
   .timer-actions-top #memesAutoSpeakBtn,
-  .timer-actions-top #kidsMemesAutoSpeakBtn{
+  .timer-actions-top #kidsMemesAutoSpeakBtn,
+  .timer-actions-top #memesHideBtn,
+  .timer-actions-top #kidsMemesHideBtn,
+  .timer-actions-top #flashAutoSpeakBtn{
     flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:26px;
     display:flex; align-items:center; justify-content:center; line-height:1;
   }
   .timer-actions-top #memesAutoSpeakBtn.on,
-  .timer-actions-top #kidsMemesAutoSpeakBtn.on{
+  .timer-actions-top #kidsMemesAutoSpeakBtn.on,
+  .timer-actions-top #flashAutoSpeakBtn.on{
     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
   }
   .timer-actions-bottom{display:flex; gap:10px;}
@@ -2166,8 +2192,7 @@
           <button type="button" class="btn btn-menu-item" id="gameKidsFlashBtn"><span class="menu-icon">🗂️</span> Флеш карты</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsMinesweeperBtn"><span class="menu-icon">💣</span> Сапёр</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsWhatToPlayBtn"><span class="menu-icon">🎲</span> Во что поиграть?</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon">❌⭕</span> Крестики-нолики</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsBoardGamesBtn"><span class="menu-icon">♟️</span> Настольные игры</button>
         </div>
       </div>
 
@@ -2862,11 +2887,81 @@
     <div class="timer-actions-row">
       <div class="timer-actions-top">
         <button type="button" class="btn btn-primary" id="kidsMemesNextBtn">Далее</button>
-        <button type="button" class="btn btn-secondary" id="kidsMemesHideBtn">🚫 Скрыть</button>
+        <button type="button" class="btn btn-secondary" id="kidsMemesHideBtn" aria-label="Скрыть">🚫</button>
         <button type="button" class="btn btn-secondary" id="kidsMemesAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary btn-pause" id="kidsMemesExitBtn">Выход</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ФЛЕШ КАРТЫ (ДЕТИ): НАСТРОЙКА ===== -->
+  <section id="flashSetup" class="screen">
+    <h1 class="title">🗂️ Флеш карты</h1>
+    <div class="subtitle">Учите слова карточками — слово, транскрипция, перевод</div>
+
+    <div class="field">
+      <label>Режим игры</label>
+      <div class="starter-group" id="flashModeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="learn">📖 Обучение</button>
+        <button type="button" class="starter-btn mode-btn" data-value="review">🔁 Повторение</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Темы</label>
+      <div class="flash-theme-block">
+        <div class="flash-theme-name">🇬🇧 Английский язык</div>
+        <div class="starter-group" id="flashThemeSizeGroup">
+          <button type="button" class="starter-btn mode-btn" data-value="100">100 слов</button>
+          <button type="button" class="starter-btn mode-btn" data-value="250">250 слов</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Количество карточек</label>
+      <div class="starter-group timer-duration-group" id="flashCountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
+        <button type="button" class="starter-btn mode-btn" data-value="25">25</button>
+        <button type="button" class="starter-btn mode-btn" data-value="50">50</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="flashSetupStartBtn">Начать</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="flashSetupRulesBtn">Правила</button>
+    </div>
+
+    <button class="btn btn-secondary" id="flashSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== ФЛЕШ КАРТЫ (ДЕТИ): ИГРА ===== -->
+  <section id="flashGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🗂️ Флеш карты</h1>
+    <div class="td-turn-label" id="flashProgressLabel">Карточка 1 из 25</div>
+
+    <div class="card-area">
+      <div class="card" id="flashCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="flash-word">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="flashNextBtn">Далее</button>
+        <button type="button" class="btn btn-secondary" id="flashAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary btn-rules" id="flashGameRulesBtn">Правила</button>
+        <button type="button" class="btn btn-secondary btn-pause" id="flashExitBtn">Выход</button>
       </div>
     </div>
   </section>
@@ -3199,6 +3294,23 @@
       <button class="btn btn-primary" id="closeBusinessLemonadeRulesBtn">Понятно</button>
     </div>
   </div>
+
+  <!-- ===== НАСТОЛЬНЫЕ ИГРЫ (ДЕТИ): ПОДМЕНЮ =====
+       Крестики-нолики и Морской бой убраны из общего списка "Игры с детьми"
+       сюда, в отдельное подменю — чтобы на одном экране не было слишком
+       много иконок. -->
+  <section id="kidsBoardGamesMenu" class="screen">
+    <h1 class="title">♟️ Настольные игры</h1>
+    <div class="subtitle">Классика для двоих</div>
+    <div class="field">
+      <label>Выбери игру</label>
+      <div class="game-select-list">
+        <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon">❌⭕</span> Крестики-нолики</button>
+        <button type="button" class="btn btn-menu-item" id="gameKidsBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
+      </div>
+    </div>
+    <button type="button" class="btn btn-secondary" id="kidsBoardGamesExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
 
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЕТИ): НАСТРОЙКА ===== -->
   <section id="kidsXoSetup" class="screen">
@@ -3680,7 +3792,7 @@
     <div class="timer-actions-row">
       <div class="timer-actions-top">
         <button type="button" class="btn btn-primary" id="memesNextBtn">Далее</button>
-        <button type="button" class="btn btn-secondary" id="memesHideBtn">🚫 Скрыть</button>
+        <button type="button" class="btn btn-secondary" id="memesHideBtn" aria-label="Скрыть">🚫</button>
         <button type="button" class="btn btn-secondary" id="memesAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
       </div>
       <div class="timer-actions-bottom">
@@ -4725,7 +4837,7 @@
       <ol class="modal-rules">
         <li>По очереди открываются желания с вопросом «Выполнить сейчас?» — сколько именно и как выбраны, настраивается перед стартом.</li>
         <li>Ответили «Да» — желание засчитывается полностью (3 очка), переходим к следующему.</li>
-        <li>Ответили «Нет» — начинается цепочка из мягких шагов навстречу: от самых простых и безопасных до более смелых, на каждом свой маленький вопрос «Да/Нет».</li>
+        <li>Ответили «Нет» — начинается цепочка из мягких шагов навстречу: первый шаг мягко намекает на саму цель желания, а с каждым отказом предложение становится всё проще и безопаснее, на каждом свой маленький вопрос «Да/Нет».</li>
         <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
         <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
         <li>После партии итоги сохраняются в «✅ Пройденные» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
@@ -4883,6 +4995,22 @@
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsMemesRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ФЛЕШ КАРТЫ" (ДЕТИ) ===== -->
+  <div class="modal-overlay" id="flashRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🗂️ Правила игры «Флеш карты»</div>
+      <div class="intro-text">Учите новые слова карточками — сами объясняете и сами проверяете друг друга, приложение просто показывает карточки.</div>
+      <ol class="modal-rules">
+        <li>Выберите режим: «Обучение» показывает слово, транскрипцию и перевод сразу; «Повторение» — только слово, чтобы вспомнить перевод самим.</li>
+        <li>Выберите тему и объём подборки слов (сейчас доступен английский язык — 100 или 250 слов) и сколько карточек будет в партии.</li>
+        <li>Нажмите на карточку — телефон озвучит слово по-английски. Кнопка ▶️ включает автоозвучку каждой новой карточки.</li>
+        <li>«Далее» показывает следующую карточку; после последней партия завершается сама.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeFlashRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -5187,76 +5315,78 @@
   </div>
 </div>
 
-<script src="cards/cards_fants.js?v=20260817ao"></script>
-<script src="cards/cards_fants_users.js?v=20260817ao"></script>
-<script src="cards/cards_poses.js?v=20260817ao"></script>
-<script src="cards/cards_sexshop.js?v=20260817ao"></script>
-<script src="cards/cards_collection.js?v=20260817ao"></script>
-<script src="cards/cards_desires_women.js?v=20260817ao"></script>
-<script src="cards/cards_desires_men.js?v=20260817ao"></script>
-<script src="cards/cards_sex_coach_tips.js?v=20260817ao"></script>
-<script src="cards/cards_sex_coach_qa.js?v=20260817ao"></script>
-<script src="cards/cards_kamasutra_caresses.js?v=20260817ao"></script>
-<script src="cards/cards_kamasutra_positions.js?v=20260817ao"></script>
-<script src="cards/cards_video.js?v=20260817ao"></script>
-<script src="cards/cards_bingo.js?v=20260817ao"></script>
-<script src="cards/cards_timer.js?v=20260817ao"></script>
-<script src="cards/cards_wishlist.js?v=20260817ao"></script>
-<script src="cards/cards_znayu.js?v=20260817ao"></script>
-<script src="cards/cards_krokodil.js?v=20260817ao"></script>
-<script src="cards/cards_memes.js?v=20260817ao"></script>
-<script src="cards/cards_party_never.js?v=20260817ao"></script>
-<script src="cards/cards_party_fants.js?v=20260817ao"></script>
-<script src="cards/cards_party_td.js?v=20260817ao"></script>
-<script src="cards/cards_fam_znayu.js?v=20260817ao"></script>
-<script src="cards/cards_lucky.js?v=20260817ao"></script>
-<script src="cards/cards_kids_memory.js?v=20260817ao"></script>
-<script src="cards/cards_kids_td.js?v=20260817ao"></script>
-<script src="cards/cards_quiz.js?v=20260817ao"></script>
-<script src="cards/cards_party_quiz.js?v=20260817ao"></script>
-<script src="cards/cards_kids_quiz.js?v=20260817ao"></script>
-<script src="cards/cards_ideas.js?v=20260817ao"></script>
-<script src="cards/cards_sexquest.js?v=20260817ao"></script>
-<script src="cards/cards_whattoplay.js?v=20260817ao"></script>
-<script src="cards/cards_kids_krokodil.js?v=20260817ao"></script>
-<script src="cards/cards_kids_memes.js?v=20260817ao"></script>
-<script src="cards/cards_kids_saper.js?v=20260817ao"></script>
-<script src="cards/cards_party_hangman.js?v=20260817ao"></script>
-<script src="cards/cards_shop.js?v=20260817ao"></script>
-<script src="games/core.js?v=20260817ao"></script>
-<script src="games/twister.js?v=20260817ao"></script>
-<script src="games/party-hangman.js?v=20260817ao"></script>
-<script src="games/solo-quiz.js?v=20260817ao"></script>
-<script src="games/solo-memory.js?v=20260817ao"></script>
-<script src="games/solo-xo.js?v=20260817ao"></script>
-<script src="games/shop.js?v=20260817ao"></script>
-<script src="games/party-roulette.js?v=20260817ao"></script>
-<script src="games/business-lemonade.js?v=20260817ao"></script>
-<script src="games/kids-xo.js?v=20260817ao"></script>
-<script src="games/kids-battleship.js?v=20260817ao"></script>
-<script src="games/truth-dare.js?v=20260817ao"></script>
-<script src="games/bingo.js?v=20260817ao"></script>
-<script src="games/timer-game.js?v=20260817ao"></script>
-<script src="games/krokodil.js?v=20260817ao"></script>
-<script src="games/memes.js?v=20260817ao"></script>
-<script src="games/party-never.js?v=20260817ao"></script>
-<script src="games/party-fants.js?v=20260817ao"></script>
-<script src="games/party-td.js?v=20260817ao"></script>
-<script src="games/fam-znayu.js?v=20260817ao"></script>
-<script src="games/lucky.js?v=20260817ao"></script>
-<script src="games/kids-memory.js?v=20260817ao"></script>
-<script src="games/kids-krokodil.js?v=20260817ao"></script>
-<script src="games/kids-memes.js?v=20260817ao"></script>
-<script src="games/kids-saper.js?v=20260817ao"></script>
-<script src="games/kids-td.js?v=20260817ao"></script>
-<script src="games/quiz.js?v=20260817ao"></script>
-<script src="games/party-quiz.js?v=20260817ao"></script>
-<script src="games/kids-quiz.js?v=20260817ao"></script>
-<script src="games/wishlist.js?v=20260817ao"></script>
-<script src="games/znayu.js?v=20260817ao"></script>
-<script src="games/ideas.js?v=20260817ao"></script>
-<script src="games/sexquest.js?v=20260817ao"></script>
-<script src="games/whattoplay.js?v=20260817ao"></script>
-<script src="games/init.js?v=20260817ao"></script>
+<script src="cards/cards_fants.js?v=20260817au"></script>
+<script src="cards/cards_fants_users.js?v=20260817au"></script>
+<script src="cards/cards_poses.js?v=20260817au"></script>
+<script src="cards/cards_sexshop.js?v=20260817au"></script>
+<script src="cards/cards_collection.js?v=20260817au"></script>
+<script src="cards/cards_desires_women.js?v=20260817au"></script>
+<script src="cards/cards_desires_men.js?v=20260817au"></script>
+<script src="cards/cards_sex_coach_tips.js?v=20260817au"></script>
+<script src="cards/cards_sex_coach_qa.js?v=20260817au"></script>
+<script src="cards/cards_kamasutra_caresses.js?v=20260817au"></script>
+<script src="cards/cards_kamasutra_positions.js?v=20260817au"></script>
+<script src="cards/cards_video.js?v=20260817au"></script>
+<script src="cards/cards_bingo.js?v=20260817au"></script>
+<script src="cards/cards_timer.js?v=20260817au"></script>
+<script src="cards/cards_wishlist.js?v=20260817au"></script>
+<script src="cards/cards_znayu.js?v=20260817au"></script>
+<script src="cards/cards_krokodil.js?v=20260817au"></script>
+<script src="cards/cards_memes.js?v=20260817au"></script>
+<script src="cards/cards_party_never.js?v=20260817au"></script>
+<script src="cards/cards_party_fants.js?v=20260817au"></script>
+<script src="cards/cards_party_td.js?v=20260817au"></script>
+<script src="cards/cards_fam_znayu.js?v=20260817au"></script>
+<script src="cards/cards_lucky.js?v=20260817au"></script>
+<script src="cards/cards_kids_memory.js?v=20260817au"></script>
+<script src="cards/cards_kids_td.js?v=20260817au"></script>
+<script src="cards/cards_quiz.js?v=20260817au"></script>
+<script src="cards/cards_party_quiz.js?v=20260817au"></script>
+<script src="cards/cards_kids_quiz.js?v=20260817au"></script>
+<script src="cards/cards_ideas.js?v=20260817au"></script>
+<script src="cards/cards_sexquest.js?v=20260817au"></script>
+<script src="cards/cards_whattoplay.js?v=20260817au"></script>
+<script src="cards/cards_kids_krokodil.js?v=20260817au"></script>
+<script src="cards/cards_kids_memes.js?v=20260817au"></script>
+<script src="cards/cards_flash.js?v=20260817au"></script>
+<script src="cards/cards_kids_saper.js?v=20260817au"></script>
+<script src="cards/cards_party_hangman.js?v=20260817au"></script>
+<script src="cards/cards_shop.js?v=20260817au"></script>
+<script src="games/core.js?v=20260817au"></script>
+<script src="games/twister.js?v=20260817au"></script>
+<script src="games/party-hangman.js?v=20260817au"></script>
+<script src="games/solo-quiz.js?v=20260817au"></script>
+<script src="games/solo-memory.js?v=20260817au"></script>
+<script src="games/solo-xo.js?v=20260817au"></script>
+<script src="games/shop.js?v=20260817au"></script>
+<script src="games/party-roulette.js?v=20260817au"></script>
+<script src="games/business-lemonade.js?v=20260817au"></script>
+<script src="games/kids-xo.js?v=20260817au"></script>
+<script src="games/kids-battleship.js?v=20260817au"></script>
+<script src="games/truth-dare.js?v=20260817au"></script>
+<script src="games/bingo.js?v=20260817au"></script>
+<script src="games/timer-game.js?v=20260817au"></script>
+<script src="games/krokodil.js?v=20260817au"></script>
+<script src="games/memes.js?v=20260817au"></script>
+<script src="games/party-never.js?v=20260817au"></script>
+<script src="games/party-fants.js?v=20260817au"></script>
+<script src="games/party-td.js?v=20260817au"></script>
+<script src="games/fam-znayu.js?v=20260817au"></script>
+<script src="games/lucky.js?v=20260817au"></script>
+<script src="games/kids-memory.js?v=20260817au"></script>
+<script src="games/kids-krokodil.js?v=20260817au"></script>
+<script src="games/kids-memes.js?v=20260817au"></script>
+<script src="games/kids-flash.js?v=20260817au"></script>
+<script src="games/kids-saper.js?v=20260817au"></script>
+<script src="games/kids-td.js?v=20260817au"></script>
+<script src="games/quiz.js?v=20260817au"></script>
+<script src="games/party-quiz.js?v=20260817au"></script>
+<script src="games/kids-quiz.js?v=20260817au"></script>
+<script src="games/wishlist.js?v=20260817au"></script>
+<script src="games/znayu.js?v=20260817au"></script>
+<script src="games/ideas.js?v=20260817au"></script>
+<script src="games/sexquest.js?v=20260817au"></script>
+<script src="games/whattoplay.js?v=20260817au"></script>
+<script src="games/init.js?v=20260817au"></script>
 </body>
 </html>

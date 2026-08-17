@@ -400,7 +400,7 @@ function stopPartyQuizSpeech(){
 function speakPartyQuizCard(){
   const item = state.partyQuizQueue && state.partyQuizQueue[state.partyQuizIndex];
   if(!item || !('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
+  const synth = window.speechSynthesis;
   const text = typeof stripQuotesForSpeech === 'function' ? stripQuotesForSpeech(item.q) : item.q;
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ru-RU';
@@ -408,10 +408,26 @@ function speakPartyQuizCard(){
   const voice = pickPartyQuizVoice();
   if(voice) utter.voice = voice;
   const hint = document.getElementById('partyQuizTtsHint');
-  if(hint) hint.classList.add('speaking');
-  utter.onend = ()=>{ if(hint) hint.classList.remove('speaking'); };
-  utter.onerror = ()=>{ if(hint) hint.classList.remove('speaking'); };
-  window.speechSynthesis.speak(utter);
+  const fire = ()=>{
+    const current = state.partyQuizQueue && state.partyQuizQueue[state.partyQuizIndex];
+    if(current !== item) return; // вопрос уже сменился — не озвучиваем устаревший текст
+    if(hint) hint.classList.add('speaking');
+    utter.onend = ()=>{ if(hint) hint.classList.remove('speaking'); };
+    utter.onerror = ()=>{ if(hint) hint.classList.remove('speaking'); };
+    synth.speak(utter);
+  };
+  // speak(), вызванный сразу вслед за cancel() в тот же тик, иногда молча
+  // "проглатывается" браузером — но задержка перед КАЖДЫМ speak() на
+  // мобильных браузерах рвёт связь с пользовательским жестом, и озвучка
+  // перестаёт работать вообще. Поэтому если движок сейчас свободен — говорим
+  // сразу и синхронно; отменяем и ждём короткую паузу, только если правда
+  // нужно прервать уже звучащую фразу (смена вопроса на лету).
+  if(synth.speaking || synth.pending){
+    synth.cancel();
+    setTimeout(fire, 50);
+  } else {
+    fire();
+  }
 }
 function updatePartyQuizAutoSpeakBtn(){
   const btn = document.getElementById('partyQuizAutoSpeakBtn');

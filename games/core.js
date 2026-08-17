@@ -139,6 +139,11 @@ let state = {
   kidsKrokodilTurnsPlayed:0,
   // Мемасики (дети) — уровень берётся из kidsAge
   kidsMemesUsed:{}, kidsMemesHidden:[], kidsMemesAutoSpeak:false,
+  // Флеш карты (дети) — flashThemeSize: 100 или 250 (объём подборки слов
+  // выбранной темы). flashQueue/flashIndex — карточки текущей партии
+  // (фиксированное количество, не бесконечная колода).
+  flashMode:'learn', flashThemeSize:100, flashCount:25,
+  flashQueue:[], flashIndex:0, flashAutoSpeak:false,
   // Сапёр (дети) — механика скопирована с "Секс-бинго"
   kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperWonLines:[], kidsSaperUsedBonus:[],
   kidsSaperCurrentLevel:1, kidsSaperEscalatedTo2:false, kidsSaperEscalatedTo3:false,
@@ -478,6 +483,18 @@ document.getElementById('gameShopBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToShopSetup();
 });
+// "Настольные игры" (дети) — подменю с Крестиками-ноликами и Морским боем,
+// чтобы не загромождать общий список "Игры с детьми" лишними иконками.
+document.getElementById('gameKidsBoardGamesBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('kidsBoardGamesMenu').classList.add('active');
+});
+document.getElementById('kidsBoardGamesExitBtn').addEventListener('click', ()=>{
+  document.getElementById('kidsBoardGamesMenu').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+});
 // "Крестики-нолики" (дети) — goToKidsXoSetup() определена в games/kids-xo.js.
 document.getElementById('gameKidsXoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -501,8 +518,11 @@ document.getElementById('gameKidsQuizBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToKidsQuizSetup();
 });
+// "Флеш карты" (дети) — goToFlashSetup() определена в games/kids-flash.js.
 document.getElementById('gameKidsFlashBtn').addEventListener('click', ()=>{
-  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToFlashSetup();
 });
 // "Сапёр" (дети) — goToKidsSaperSetup() определена в games/kids-saper.js.
 document.getElementById('gameKidsMinesweeperBtn').addEventListener('click', ()=>{
@@ -1121,6 +1141,9 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   // Мемасики (дети)
   state.kidsMemesUsed = {};
   state.kidsMemesHidden = [];
+  // Флеш карты (дети) — очередь текущей партии; настройки режима/темы/
+  // количества карточек не трогаем, это сохранённые предпочтения.
+  state.flashQueue = []; state.flashIndex = 0;
   // Сапёр (дети)
   state.kidsSaperGrid = []; state.kidsSaperChecked = []; state.kidsSaperWonLines = [];
   state.kidsSaperUsedBonus = []; state.kidsSaperCurrentLevel = 1;

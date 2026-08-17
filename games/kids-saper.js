@@ -18,13 +18,16 @@ function getKidsSaperBonusList(level){
   if(typeof KIDS_SAPER_BONUS === 'undefined' || !Array.isArray(KIDS_SAPER_BONUS)) return [];
   return KIDS_SAPER_BONUS.filter(i=>i.level===level);
 }
-// "Счастливые" клетки — не задание, а пропуск хода. Ровно 4 штуки на карту,
-// раскиданы случайно среди 25 клеток (см. generateKidsSaperGrid). Текст
+// "Счастливая" клетка — не задание, а пропуск хода. Максимум одна на карту
+// (см. KIDS_SAPER_LUCKY_COUNT) — партия всегда начинается закрытой, поэтому
+// клетка сразу присутствует на поле; если родитель откроет "Показать
+// задания", она возвращается в обычное задание (см. kidsSaperRemoveLuckyCell
+// в обработчике kidsSaperHideTasksBtn) — так же, как в Секс-бинго. Текст
 // клетки — единственный признак, по которому её узнают escalateKidsSaperTo
 // (при повышении уровня такие клетки не заменяются заданиями) и рендер
 // (см. KIDS_SAPER_LUCKY_TEXT ниже).
 const KIDS_SAPER_LUCKY_TEXT = 'Вам повезло! Вы пропускаете ход.';
-const KIDS_SAPER_LUCKY_COUNT = 4;
+const KIDS_SAPER_LUCKY_COUNT = 1;
 function generateKidsSaperGrid(level){
   const pool = shuffle(getKidsSaperItemsList(level)).slice(0, 25 - KIDS_SAPER_LUCKY_COUNT);
   const items = pool.map(p=>p.text);
@@ -287,8 +290,38 @@ function goToKidsSaperGame(){
 }
 document.getElementById('kidsSaperSetupStartBtn').addEventListener('click', ()=>{ goToKidsSaperGame(); });
 document.getElementById('kidsSaperSetupExitBtn').addEventListener('click', ()=>{ exitKidsSaperSetup(); });
+// Возвращает счастливую клетку обратно в обычное задание — вызывается при
+// включении "Показать задания", чтобы в открытом режиме на карте были
+// только настоящие задания, без сюрпризов (тот же приём, что и в bingo.js).
+function kidsSaperRemoveLuckyCell(){
+  const grid = state.kidsSaperGrid || [];
+  const level = state.kidsSaperCurrentLevel || 1;
+  const pool = shuffle(getKidsSaperItemsList(level));
+  const usedTexts = new Set(grid);
+  let p = 0;
+  grid.forEach((t,i)=>{
+    if(t !== KIDS_SAPER_LUCKY_TEXT) return;
+    while(p < pool.length && usedTexts.has(pool[p].text)) p++;
+    const item = pool[p];
+    grid[i] = item ? item.text : '—';
+    if(item){ usedTexts.add(item.text); p++; }
+  });
+}
+// Случайно превращает одну ещё не открытую клетку в счастливую (если такой
+// на карте ещё нет) — вызывается при возврате в "Скрыть задания".
+function kidsSaperEnsureLuckyCell(){
+  const grid = state.kidsSaperGrid || [];
+  if(grid.some(t => t === KIDS_SAPER_LUCKY_TEXT)) return;
+  const candidates = [];
+  grid.forEach((t,i)=>{ if(!state.kidsSaperChecked[i] && t !== KIDS_SAPER_LUCKY_TEXT) candidates.push(i); });
+  if(candidates.length === 0) return;
+  const pick = candidates[Math.floor(Math.random() * candidates.length)];
+  grid[pick] = KIDS_SAPER_LUCKY_TEXT;
+}
 document.getElementById('kidsSaperHideTasksBtn').addEventListener('click', ()=>{
   state.kidsSaperTasksHidden = !state.kidsSaperTasksHidden;
+  if(state.kidsSaperTasksHidden) kidsSaperEnsureLuckyCell();
+  else kidsSaperRemoveLuckyCell();
   saveState();
   updateKidsSaperHideTasksBtn();
   renderKidsSaperGrid();
