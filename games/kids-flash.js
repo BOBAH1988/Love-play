@@ -124,14 +124,39 @@ function drawFlashCard(){
           ${learn ? `
             <div class="flash-transcription">[${card.transcription}]</div>
             <div class="flash-translation">${card.translation}</div>
-          ` : ''}
+          ` : `
+            <div class="flash-transcription" id="flashTranscription" style="display:none;">[${card.transcription}]</div>
+            <div class="flash-translation" id="flashTranslation" style="display:none;">${card.translation}</div>
+          `}
         </div>
       </div>
       <div class="memes-tts-hint" id="flashTtsHint">🔊</div>
     `;
+  }, ()=>{
+    // onDone — карточка уже реально отрисована (fadeSwapEl может отложить
+    // перерисовку на 220мс), только теперь в DOM точно есть #flashTtsHint.
+    updateFlashAutoSpeakBtn();
+    updateFlashAnswerBtn();
+    if(state.flashAutoSpeak) speakFlashWord();
   });
-  updateFlashAutoSpeakBtn();
-  if(state.flashAutoSpeak) speakFlashWord();
+}
+// "Ответ" — только в режиме "Повторение": транскрипция и перевод скрыты по
+// умолчанию (см. drawFlashCard), кнопка открывает их для текущей карточки.
+// В режиме "Обучение" ответ виден сразу, кнопка не нужна и скрыта.
+function updateFlashAnswerBtn(){
+  const btn = document.getElementById('flashAnswerBtn');
+  if(!btn) return;
+  const learn = state.flashMode === 'learn';
+  btn.style.display = learn ? 'none' : '';
+  btn.disabled = false;
+}
+function revealFlashAnswer(){
+  const t = document.getElementById('flashTranscription');
+  const tr = document.getElementById('flashTranslation');
+  if(t) t.style.display = '';
+  if(tr) tr.style.display = '';
+  const btn = document.getElementById('flashAnswerBtn');
+  if(btn) btn.disabled = true;
 }
 
 function finishFlashSession(){
@@ -195,6 +220,10 @@ document.getElementById('flashAutoSpeakBtn').addEventListener('click', ()=>{
   updateFlashAutoSpeakBtn();
   playSuccessSound();
   if(state.flashAutoSpeak) speakFlashWord();
+});
+document.getElementById('flashAnswerBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  revealFlashAnswer();
 });
 document.getElementById('flashNextBtn').addEventListener('click', ()=>{
   playSuccessSound();
