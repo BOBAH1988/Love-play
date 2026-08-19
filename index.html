@@ -940,8 +940,8 @@
     background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
   }
   #znayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
-  #znayuCard .znayu-answers .znayu-skip-btn:not(.answer-correct):not(.answer-wrong){
-    color:rgba(255,255,255,.5); border-color:rgba(255,255,255,.2);
+  #znayuCard .znayu-skip-btn:not(.answer-correct):not(.answer-wrong){
+    color:rgba(255,255,255,.85); border-color:rgba(255,255,255,.4);
   }
   /* Карточка "Викторины" — переиспользует компонент вопрос/ответы
      (.znayu-answers), кнопки которого по умолчанию тёмные полупрозрачные
@@ -1037,6 +1037,29 @@
     border-radius:14px; padding:12px;
   }
   .flash-theme-name{ font-weight:800; font-size:15px; margin-bottom:10px; }
+  /* "Оцени бизнес" — карточка сценария: заголовок бизнеса, таблица его
+     данных (цена/себестоимость/расходы/продажи), затем сам вопрос и
+     варианты ответа (games/business-observer.js, .znayu-question-text/
+     .znayu-answers переиспользованы из "Викторины"). */
+  .bizobs-scenario-title{ font-size:18px; font-weight:800; margin-bottom:6px; }
+  .bizobs-scenario-data{
+    width:100%; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    border-radius:14px; padding:2px 14px; margin-bottom:10px;
+  }
+  .bizobs-data-row{
+    display:flex; justify-content:space-between; gap:10px; padding:5px 0; font-size:14px;
+  }
+  .bizobs-data-row + .bizobs-data-row{ border-top:1px solid rgba(255,255,255,.1); }
+  .bizobs-data-row span:first-child{ opacity:.75; }
+  .bizobs-data-row span:last-child{ font-weight:700; }
+  /* Контента на карточке ощутимо больше, чем в обычной "Викторине" (иконка +
+     заголовок + таблица данных + вопрос + 4 кнопки), поэтому вместо
+     стандартного центрирования по высоте (которое при переполнении
+     накладывает верх и низ друг на друга) — выравнивание по верху и скролл
+     самой карточки, если контент всё равно не помещается на маленьком экране. */
+  #bizObsCard{ overflow-y:auto; }
+  #bizObsCard .card-body{ justify-content:flex-start; }
+  #bizObsCard .znayu-question-text{ margin-top:4px; }
   #krokodilCard .card-icon{font-size:76px; margin-bottom:14px; filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}
   /* Слово в "Крокодиле" — крупно, по центру карточки (card-body уже центрирует
      содержимое и по горизонтали, и по вертикали), сверху крупная иконка-подсказка. */
@@ -1117,6 +1140,11 @@
     background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
     color:#fff;
   }
+  /* Текст вопроса — тёплый золотой вместо плоского белого, чтобы не
+     сливаться с холодным сине-голубым фоном карточки; кнопки ответов
+     остаются белыми (не вопрос, читаются нормально на своём полупрозрачном
+     фоне). */
+  #partyQuizCard .znayu-question-text{ color:#ffd166; }
   #partyQuizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
     background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
   }
@@ -1589,6 +1617,10 @@
     box-shadow:0 20px 50px rgba(0,0,0,.5);
   }
   .modal-title{font-size:20px; font-weight:800; text-align:center; margin-bottom:16px;}
+  /* Меню паузы — название игры на первой строке, "Пауза" отдельной строкой
+     ниже (не одной длинной фразой через тире, которая раньше рвалась
+     переносом посреди слова на узких экранах), см. PAUSE_MENU_TITLES. */
+  .pause-title-sub{ display:block; font-size:15px; font-weight:700; color:#5c3a52; margin-top:4px; }
   .modal-card .intro-text{color:#5c3a52; max-width:none;}
   .modal-rules{
     margin:0 0 20px; padding-left:20px;
@@ -2007,8 +2039,8 @@
   .wishlist-progress-label{font-size:12px; color:#cba0bf; white-space:nowrap; min-width:44px; text-align:right;}
   /* Заголовок пункта — как раньше card-text; описание — компактный подзаголовок
      под ним, чтобы обе части гарантированно помещались в карточку на телефоне. */
-  .wishlist-item-title{font-size:18px; font-weight:700; line-height:1.3;}
-  .wishlist-item-desc{font-size:13.5px; font-weight:500; line-height:1.4; color:#7a5a72; margin-top:8px; padding:0 4px;}
+  .wishlist-item-title{font-size:22px; font-weight:700; line-height:1.3;}
+  .wishlist-item-desc{font-size:16px; font-weight:500; line-height:1.4; color:#7a5a72; margin-top:8px; padding:0 4px;}
   .wishlist-actions-row{display:flex; gap:10px; margin-top:14px;}
   .wishlist-actions-row .btn{flex:1;}
   .wishlist-actions-row #wishlistNoBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
@@ -2223,7 +2255,7 @@
         <div class="game-select-list" id="businessGameSelectList">
           <button type="button" class="btn btn-menu-item" id="gameBusiness1Btn"><span class="menu-icon">🍋</span> Лимонадный ларёк</button>
           <button type="button" class="btn btn-menu-item" id="gameShopBtn"><span class="menu-icon">🛍️</span> Магазин</button>
-          <button type="button" class="btn btn-menu-item" id="gameBusiness2Btn"><span class="menu-icon">🎯</span> Игра 2</button>
+          <button type="button" class="btn btn-menu-item" id="gameBizObserverBtn"><span class="menu-icon">🔍</span> Оцени бизнес</button>
         </div>
       </div>
 
@@ -2513,11 +2545,9 @@
     <div class="field" style="margin-top:10px;">
       <label>Настройки</label>
       <div class="toggle-row">
-        <button type="button" class="toggle-pill" id="favoritesOnlyBtn" aria-pressed="false">⭐ Избранное</button>
-      </div>
-      <div class="toggle-row">
         <button type="button" class="toggle-pill rules-pill" id="rulesBtn">Правила</button>
         <button type="button" class="toggle-pill" id="addCardBtn">Своё задание</button>
+        <button type="button" class="toggle-pill" id="favoritesOnlyBtn" aria-pressed="false" aria-label="Избранное" style="flex:0 0 46px; width:46px; padding:0; font-size:19px;">⭐</button>
       </div>
     </div>
 
@@ -3117,6 +3147,81 @@
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
       <button class="btn btn-primary" id="closeShopRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ОЦЕНИ БИЗНЕС (БИЗНЕС): НАСТРОЙКА ===== -->
+  <section id="bizObsSetup" class="screen">
+    <h1 class="title">🔍 Оцени бизнес</h1>
+    <div class="subtitle">Тренажёр по чтению бизнеса в цифрах: маржинальность, наценка, точка безубыточности и прибыль — на случайных сценариях вроде кофейни или шаурмичной. Отвечайте по очереди, 4 варианта, только один верный.</div>
+
+    <div class="field">
+      <label>Вопросов на игрока</label>
+      <div class="starter-group timer-duration-group" id="bizObsQuestionCountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="3">3</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="7">7</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="bizObsSetupStartBtn">Начать</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="bizObsSetupRulesBtn">Правила</button>
+    </div>
+
+    <button class="btn btn-secondary" id="bizObsSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== ОЦЕНИ БИЗНЕС (БИЗНЕС): ИГРА ===== -->
+  <section id="bizObsGame" class="screen">
+    <div class="krokodil-score-row" id="bizObsScoreRow"></div>
+    <div class="td-turn-label" id="bizObsTurnLabel">Отвечает: Игрок 1</div>
+    <div class="wishlist-progress-row" id="bizObsProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="bizObsProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="bizObsProgressLabel">0 / 5</div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="bizObsCard">
+        <div class="card-inner"><div class="card-body"><div class="card-text">Загрузка…</div></div></div>
+      </div>
+    </div>
+
+    <div class="wishlist-actions-row" id="bizObsHandoffRow" style="display:none;">
+      <button type="button" class="btn btn-primary" id="bizObsHandoffStartBtn">Начать</button>
+    </div>
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-secondary btn-pause" id="bizObsExitBtn">Выход</button>
+    </div>
+  </section>
+
+  <!-- ===== ОЦЕНИ БИЗНЕС (БИЗНЕС): ИТОГИ ИГРЫ ===== -->
+  <div class="modal-overlay" id="bizObsSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text">Вот кто лучше всех прочитал бизнес в цифрах:</div>
+      <div class="krokodil-summary-list" id="bizObsSummaryList"></div>
+      <button class="btn btn-primary" id="closeBizObsSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ОЦЕНИ БИЗНЕС" ===== -->
+  <div class="modal-overlay" id="bizObsRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🔍 Правила игры «Оцени бизнес»</div>
+      <div class="intro-text">Учимся читать любой бизнес в цифрах — как в Уровне 2 «Наблюдатель».</div>
+      <ol class="modal-rules">
+        <li>На карточке — случайный бизнес (кофейня, шаурмичная, магазин одежды и т.п.) с его данными: цена, себестоимость, постоянные расходы в месяц и объём продаж.</li>
+        <li><b>Маржинальность</b> — сколько % от цены остаётся прибылью: (Цена − Себестоимость) / Цена × 100%.</li>
+        <li><b>Наценка</b> — во сколько раз цена выше себестоимости: Цена / Себестоимость.</li>
+        <li><b>Точка безубыточности</b> — сколько нужно продать в месяц, чтобы выйти в ноль: Постоянные расходы / Маржа с 1 шт.</li>
+        <li><b>Прибыль (или убыток) за месяц</b> — Маржа с 1 шт. × Продано − Постоянные расходы. Если продано меньше точки безубыточности, получится убыток — это не ошибка игры, а нормальный правильный ответ.</li>
+        <li>Выберите один из 4 вариантов — верный подсветится зелёным. Игроки отвечают по очереди: каждый — заданное число вопросов подряд, потом карточка «Передайте телефон» следующему.</li>
+        <li>В конце — таблица результатов по числу верных ответов.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeBizObsRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -5323,78 +5428,79 @@
   </div>
 </div>
 
-<script src="cards/cards_fants.js?v=20260817av"></script>
-<script src="cards/cards_fants_users.js?v=20260817av"></script>
-<script src="cards/cards_poses.js?v=20260817av"></script>
-<script src="cards/cards_sexshop.js?v=20260817av"></script>
-<script src="cards/cards_collection.js?v=20260817av"></script>
-<script src="cards/cards_desires_women.js?v=20260817av"></script>
-<script src="cards/cards_desires_men.js?v=20260817av"></script>
-<script src="cards/cards_sex_coach_tips.js?v=20260817av"></script>
-<script src="cards/cards_sex_coach_qa.js?v=20260817av"></script>
-<script src="cards/cards_kamasutra_caresses.js?v=20260817av"></script>
-<script src="cards/cards_kamasutra_positions.js?v=20260817av"></script>
-<script src="cards/cards_video.js?v=20260817av"></script>
-<script src="cards/cards_bingo.js?v=20260817av"></script>
-<script src="cards/cards_timer.js?v=20260817av"></script>
-<script src="cards/cards_wishlist.js?v=20260817av"></script>
-<script src="cards/cards_znayu.js?v=20260817av"></script>
-<script src="cards/cards_krokodil.js?v=20260817av"></script>
-<script src="cards/cards_memes.js?v=20260817av"></script>
-<script src="cards/cards_party_never.js?v=20260817av"></script>
-<script src="cards/cards_party_fants.js?v=20260817av"></script>
-<script src="cards/cards_party_td.js?v=20260817av"></script>
-<script src="cards/cards_fam_znayu.js?v=20260817av"></script>
-<script src="cards/cards_lucky.js?v=20260817av"></script>
-<script src="cards/cards_kids_memory.js?v=20260817av"></script>
-<script src="cards/cards_kids_td.js?v=20260817av"></script>
-<script src="cards/cards_quiz.js?v=20260817av"></script>
-<script src="cards/cards_party_quiz.js?v=20260817av"></script>
-<script src="cards/cards_kids_quiz.js?v=20260817av"></script>
-<script src="cards/cards_ideas.js?v=20260817av"></script>
-<script src="cards/cards_sexquest.js?v=20260817av"></script>
-<script src="cards/cards_whattoplay.js?v=20260817av"></script>
-<script src="cards/cards_kids_krokodil.js?v=20260817av"></script>
-<script src="cards/cards_kids_memes.js?v=20260817av"></script>
-<script src="cards/cards_flash.js?v=20260817av"></script>
-<script src="cards/cards_kids_saper.js?v=20260817av"></script>
-<script src="cards/cards_party_hangman.js?v=20260817av"></script>
-<script src="cards/cards_shop.js?v=20260817av"></script>
-<script src="games/core.js?v=20260817av"></script>
-<script src="games/twister.js?v=20260817av"></script>
-<script src="games/party-hangman.js?v=20260817av"></script>
-<script src="games/solo-quiz.js?v=20260817av"></script>
-<script src="games/solo-memory.js?v=20260817av"></script>
-<script src="games/solo-xo.js?v=20260817av"></script>
-<script src="games/shop.js?v=20260817av"></script>
-<script src="games/party-roulette.js?v=20260817av"></script>
-<script src="games/business-lemonade.js?v=20260817av"></script>
-<script src="games/kids-xo.js?v=20260817av"></script>
-<script src="games/kids-battleship.js?v=20260817av"></script>
-<script src="games/truth-dare.js?v=20260817av"></script>
-<script src="games/bingo.js?v=20260817av"></script>
-<script src="games/timer-game.js?v=20260817av"></script>
-<script src="games/krokodil.js?v=20260817av"></script>
-<script src="games/memes.js?v=20260817av"></script>
-<script src="games/party-never.js?v=20260817av"></script>
-<script src="games/party-fants.js?v=20260817av"></script>
-<script src="games/party-td.js?v=20260817av"></script>
-<script src="games/fam-znayu.js?v=20260817av"></script>
-<script src="games/lucky.js?v=20260817av"></script>
-<script src="games/kids-memory.js?v=20260817av"></script>
-<script src="games/kids-krokodil.js?v=20260817av"></script>
-<script src="games/kids-memes.js?v=20260817av"></script>
-<script src="games/kids-flash.js?v=20260817av"></script>
-<script src="games/kids-saper.js?v=20260817av"></script>
-<script src="games/kids-td.js?v=20260817av"></script>
-<script src="games/quiz.js?v=20260817av"></script>
-<script src="games/party-quiz.js?v=20260817av"></script>
-<script src="games/kids-quiz.js?v=20260817av"></script>
-<script src="games/wishlist.js?v=20260817av"></script>
-<script src="games/znayu.js?v=20260817av"></script>
-<script src="games/ideas.js?v=20260817av"></script>
-<script src="games/sexquest.js?v=20260817av"></script>
-<script src="games/whattoplay.js?v=20260817av"></script>
-<script src="games/init.js?v=20260817av"></script>
+<script src="cards/cards_fants.js?v=20260817bl"></script>
+<script src="cards/cards_fants_users.js?v=20260817bl"></script>
+<script src="cards/cards_poses.js?v=20260817bl"></script>
+<script src="cards/cards_sexshop.js?v=20260817bl"></script>
+<script src="cards/cards_collection.js?v=20260817bl"></script>
+<script src="cards/cards_desires_women.js?v=20260817bl"></script>
+<script src="cards/cards_desires_men.js?v=20260817bl"></script>
+<script src="cards/cards_sex_coach_tips.js?v=20260817bl"></script>
+<script src="cards/cards_sex_coach_qa.js?v=20260817bl"></script>
+<script src="cards/cards_kamasutra_caresses.js?v=20260817bl"></script>
+<script src="cards/cards_kamasutra_positions.js?v=20260817bl"></script>
+<script src="cards/cards_video.js?v=20260817bl"></script>
+<script src="cards/cards_bingo.js?v=20260817bl"></script>
+<script src="cards/cards_timer.js?v=20260817bl"></script>
+<script src="cards/cards_wishlist.js?v=20260817bl"></script>
+<script src="cards/cards_znayu.js?v=20260817bl"></script>
+<script src="cards/cards_krokodil.js?v=20260817bl"></script>
+<script src="cards/cards_memes.js?v=20260817bl"></script>
+<script src="cards/cards_party_never.js?v=20260817bl"></script>
+<script src="cards/cards_party_fants.js?v=20260817bl"></script>
+<script src="cards/cards_party_td.js?v=20260817bl"></script>
+<script src="cards/cards_fam_znayu.js?v=20260817bl"></script>
+<script src="cards/cards_lucky.js?v=20260817bl"></script>
+<script src="cards/cards_kids_memory.js?v=20260817bl"></script>
+<script src="cards/cards_kids_td.js?v=20260817bl"></script>
+<script src="cards/cards_quiz.js?v=20260817bl"></script>
+<script src="cards/cards_party_quiz.js?v=20260817bl"></script>
+<script src="cards/cards_kids_quiz.js?v=20260817bl"></script>
+<script src="cards/cards_ideas.js?v=20260817bl"></script>
+<script src="cards/cards_sexquest.js?v=20260817bl"></script>
+<script src="cards/cards_whattoplay.js?v=20260817bl"></script>
+<script src="cards/cards_kids_krokodil.js?v=20260817bl"></script>
+<script src="cards/cards_kids_memes.js?v=20260817bl"></script>
+<script src="cards/cards_flash.js?v=20260817bl"></script>
+<script src="cards/cards_kids_saper.js?v=20260817bl"></script>
+<script src="cards/cards_party_hangman.js?v=20260817bl"></script>
+<script src="cards/cards_shop.js?v=20260817bl"></script>
+<script src="games/core.js?v=20260817bl"></script>
+<script src="games/twister.js?v=20260817bl"></script>
+<script src="games/party-hangman.js?v=20260817bl"></script>
+<script src="games/solo-quiz.js?v=20260817bl"></script>
+<script src="games/solo-memory.js?v=20260817bl"></script>
+<script src="games/solo-xo.js?v=20260817bl"></script>
+<script src="games/shop.js?v=20260817bl"></script>
+<script src="games/business-observer.js?v=20260817bl"></script>
+<script src="games/party-roulette.js?v=20260817bl"></script>
+<script src="games/business-lemonade.js?v=20260817bl"></script>
+<script src="games/kids-xo.js?v=20260817bl"></script>
+<script src="games/kids-battleship.js?v=20260817bl"></script>
+<script src="games/truth-dare.js?v=20260817bl"></script>
+<script src="games/bingo.js?v=20260817bl"></script>
+<script src="games/timer-game.js?v=20260817bl"></script>
+<script src="games/krokodil.js?v=20260817bl"></script>
+<script src="games/memes.js?v=20260817bl"></script>
+<script src="games/party-never.js?v=20260817bl"></script>
+<script src="games/party-fants.js?v=20260817bl"></script>
+<script src="games/party-td.js?v=20260817bl"></script>
+<script src="games/fam-znayu.js?v=20260817bl"></script>
+<script src="games/lucky.js?v=20260817bl"></script>
+<script src="games/kids-memory.js?v=20260817bl"></script>
+<script src="games/kids-krokodil.js?v=20260817bl"></script>
+<script src="games/kids-memes.js?v=20260817bl"></script>
+<script src="games/kids-flash.js?v=20260817bl"></script>
+<script src="games/kids-saper.js?v=20260817bl"></script>
+<script src="games/kids-td.js?v=20260817bl"></script>
+<script src="games/quiz.js?v=20260817bl"></script>
+<script src="games/party-quiz.js?v=20260817bl"></script>
+<script src="games/kids-quiz.js?v=20260817bl"></script>
+<script src="games/wishlist.js?v=20260817bl"></script>
+<script src="games/znayu.js?v=20260817bl"></script>
+<script src="games/ideas.js?v=20260817bl"></script>
+<script src="games/sexquest.js?v=20260817bl"></script>
+<script src="games/whattoplay.js?v=20260817bl"></script>
+<script src="games/init.js?v=20260817bl"></script>
 </body>
 </html>

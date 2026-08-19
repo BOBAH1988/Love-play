@@ -130,6 +130,10 @@ let state = {
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании"
   businessPlayers:['Игрок 1','Игрок 2'],
+  // Оцени бизнес (тренажёр маржи/наценки/точки безубыточности, Уровень 2
+  // "Наблюдатель") — вопросы генерируются на лету, игроки из businessPlayers
+  // отвечают по очереди bizObsQuestionCount вопросов подряд, см. games/business-observer.js.
+  bizObsQuestionCount:5, bizObsQueue:[], bizObsIndex:0, bizObsCurrentPlayerIndex:0, bizObsCorrect:[],
   // Во что поиграть? (дети) — без уровней, единая колода описаний игр
   whatToPlayUsed:[], whatToPlayFavorites:[], whatToPlayFavView:false,
   // Крокодил (дети) — уровень берётся из kidsAge, игроки из kidsPlayers
@@ -423,11 +427,14 @@ document.getElementById('gameBusiness1Btn').addEventListener('click', ()=>{
   playSuccessSound();
   goToBusinessLemonadeSetup();
 });
-document.getElementById('gameBusiness2Btn').addEventListener('click', ()=>{
-  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+// "Оцени бизнес" — goToBizObsSetup() определена в games/business-observer.js.
+document.getElementById('gameBizObserverBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToBizObsSetup();
 });
 // "Секс квест" реализован (см. games/sexquest.js: goToSexQuestSetup).
-// "Карта секса" пока остаётся заглушкой, как "Игра 2" в бизнес-играх.
+// "Карта секса" пока остаётся заглушкой.
 document.getElementById('gameSexQuestBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToSexQuestSetup();
@@ -1144,6 +1151,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   // Флеш карты (дети) — очередь текущей партии; настройки режима/темы/
   // количества карточек не трогаем, это сохранённые предпочтения.
   state.flashQueue = []; state.flashIndex = 0;
+  state.bizObsQueue = []; state.bizObsIndex = 0; state.bizObsCorrect = [];
   // Сапёр (дети)
   state.kidsSaperGrid = []; state.kidsSaperChecked = []; state.kidsSaperWonLines = [];
   state.kidsSaperUsedBonus = []; state.kidsSaperCurrentLevel = 1;
@@ -1371,23 +1379,23 @@ document.addEventListener('click', (e)=>{
 // "Продолжить игру", "Закончить игру", кнопка звука) для абсолютно всех
 // игр приложения, по центру экрана поверх всего (см. #pauseMenuModal).
 const PAUSE_MENU_TITLES = {
-  fanty: '💘 Фанты — на паузе',
-  davay: '🎬 Давай попробуем — на паузе',
-  td: '❓ Правда/Действие — на паузе',
-  bingo: '🎱 Секс-бинго — на паузе',
-  timer: '⏱️ Таймер страсти — на паузе',
-  wishlist: '💌 Твои желания — на паузе',
-  znayu: '💑 Тайные ответы — на паузе',
-  krokodil: '🐊 Крокодил — на паузе',
-  partyFants: '🎉 Фанты — на паузе',
-  partyTd: '🗣️ Правда/Действие (компания) — на паузе',
-  famZnayu: '🧠 Знаю тебя — на паузе',
-  lucky: '🎫 Счастливый билет — на паузе',
-  kidsMemory: '🧠 Мемори — на паузе',
-  kidsTd: '🗣️ Правда/Действие — на паузе',
-  quiz: '🎯 Викторина — на паузе',
-  partyQuiz: '🎯 Викторина — на паузе',
-  kidsQuiz: '🎯 Викторина — на паузе',
+  fanty: '💘 Фанты',
+  davay: '🎬 Давай попробуем',
+  td: '❓ Правда/Действие',
+  bingo: '🎱 Секс-бинго',
+  timer: '⏱️ Таймер страсти',
+  wishlist: '💌 Твои желания',
+  znayu: '💑 Тайные ответы',
+  krokodil: '🐊 Крокодил',
+  partyFants: '🎉 Фанты',
+  partyTd: '🗣️ Правда/Действие (компания)',
+  famZnayu: '🧠 Знаю тебя',
+  lucky: '🎫 Счастливый билет',
+  kidsMemory: '🧠 Мемори',
+  kidsTd: '🗣️ Правда/Действие',
+  quiz: '🎯 Викторина',
+  partyQuiz: '🎯 Викторина',
+  kidsQuiz: '🎯 Викторина',
 };
 function updateResumeUI(){
   const pauseModal = document.getElementById('pauseMenuModal');
@@ -1397,7 +1405,10 @@ function updateResumeUI(){
   // кнопки "Продолжить игру"/"Закончить игру" у Фантов пропадали.
   if(pauseModal) pauseModal.classList.toggle('show', !!state.pausedMode);
   const pauseTitle = document.getElementById('pauseMenuTitle');
-  if(pauseTitle) pauseTitle.textContent = PAUSE_MENU_TITLES[state.pausedMode] || '⏸️ Игра на паузе';
+  if(pauseTitle){
+    const name = PAUSE_MENU_TITLES[state.pausedMode] || '⏸️ Игра';
+    pauseTitle.innerHTML = `${name}<span class="pause-title-sub">Пауза</span>`;
+  }
   // В меню паузы (когда видны "Продолжить игру"/"Закончить игру") незачем
   // показывать выбор другой игры и резервную копию — только сама пауза.
   const gameSelectField = document.getElementById('gameSelectField');

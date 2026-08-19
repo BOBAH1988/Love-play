@@ -14,6 +14,17 @@ const LUCKY_LINES = [
   [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
   [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24]
 ];
+// "Счастливая" клетка — не задание, а пропуск хода, тот же приём, что
+// BINGO_LUCKY_TEXT в games/bingo.js (та же зелёная подсветка через общий
+// класс .bingo-lucky), но в отличие от "Секс-бинго" — не одна на всю
+// партию, а по одной на каждом из 3 уровней: при включённом режиме "Скрыть
+// задания" свежая счастливая клетка подбирается и на старте, и при каждом
+// повышении уровня (см. escalateLuckyTo). LUCKY_LUCKY_COUNT — максимум
+// незайденных счастливых клеток одновременно на поле (не общий лимит на
+// партию). Появляется только пока карта скрыта — открытая состоит только
+// из настоящих заданий.
+const LUCKY_LUCKY_TEXT = 'Пропустите ход';
+const LUCKY_LUCKY_COUNT = 1;
 function getLuckyTasksList(level){
   if(typeof LUCKY_TASKS === 'undefined' || !Array.isArray(LUCKY_TASKS)) return [];
   return LUCKY_TASKS.filter(i=>i.level===level);
@@ -241,9 +252,13 @@ function renderLuckyGrid(){
   if(!state.luckyRevealed) state.luckyRevealed = grid.map(()=>true);
   const actor = luckyCurrentActor(state.luckyCurrentTeamIndex || 0);
   grid.forEach((text, i)=>{
-    const isHidden = !!state.luckyTasksHidden && !checked[i] && !state.luckyRevealed[i];
+    const isLucky = text === LUCKY_LUCKY_TEXT;
+    // "Пропустите ход" остаётся закрытой 🎁 независимо от общего переключателя
+    // "Скрыть/Показать задания" — иначе сюрприз теряет смысл, если текст виден
+    // заранее (тот же приём, что и в renderBingoGrid).
+    const isHidden = !checked[i] && (isLucky || (!!state.luckyTasksHidden && !state.luckyRevealed[i]));
     const cell = document.createElement('div');
-    cell.className = 'bingo-cell' + (checked[i] ? ' checked' : '') + (isHidden ? ' hidden' : '');
+    cell.className = 'bingo-cell' + (checked[i] ? ' checked' : '') + (isHidden ? ' hidden' : '') + (checked[i] && isLucky ? ' bingo-lucky' : '');
     cell.textContent = isHidden ? '🎁' : resolveLuckyActorGenderText(text, actor.actorIsM);
     if(!checked[i] && !state.luckyFinished) cell.addEventListener('click', ()=>clickLuckyCell(i));
     wrap.appendChild(cell);
@@ -319,6 +334,11 @@ function advanceLuckyStage(){
 // Все ещё не отмеченные клетки заменяются заданиями нового уровня. Уже
 // отмеченные клетки не трогаем — они остаются как подтверждение, что
 // задание выполнено (тот же приём, что и escalateBingoTo в "Секс-бинго").
+// Счастливая клетка предыдущего уровня, если её ещё не нашли, заменяется
+// обычным заданием вместе со всеми остальными — и если "Скрыть задания"
+// всё ещё включён, для нового уровня сразу подбирается своя свежая
+// счастливая клетка (luckyEnsureLuckyCell ниже): одна штука на каждом
+// уровне, а не одна на всю партию.
 function escalateLuckyTo(nextLevel){
   const pool = shuffle(getLuckyTasksList(nextLevel));
   const usedTexts = new Set(state.luckyGrid);
@@ -334,6 +354,7 @@ function escalateLuckyTo(nextLevel){
     }
   }
   state.luckyLevel = nextLevel;
+  if(state.luckyTasksHidden) luckyEnsureLuckyCell();
   renderLuckyGrid();
   showLuckyBonus(nextLevel);
 }
@@ -580,13 +601,44 @@ function updateLuckyHideTasksBtn(){
   if(!btn) return;
   btn.textContent = state.luckyTasksHidden ? '👀 Показать задания' : '🙈 Скрыть задания';
 }
+// Случайно выбирает одну ещё не отмеченную клетку и превращает её в
+// счастливую (если такой на поле ещё нет) — вызывается при включении
+// "Скрыть задания". Тот же приём, что bingoEnsureLuckyCell в "Секс-бинго".
+function luckyEnsureLuckyCell(){
+  const grid = state.luckyGrid || [];
+  const hasLucky = grid.filter(t => t === LUCKY_LUCKY_TEXT).length;
+  if(hasLucky >= LUCKY_LUCKY_COUNT) return;
+  const candidates = [];
+  grid.forEach((t,i)=>{ if(!state.luckyChecked[i] && t !== LUCKY_LUCKY_TEXT) candidates.push(i); });
+  if(candidates.length === 0) return;
+  const pick = candidates[Math.floor(Math.random() * candidates.length)];
+  state.luckyGrid[pick] = LUCKY_LUCKY_TEXT;
+}
+// Возвращает счастливую клетку обратно в обычное задание — вызывается при
+// выключении "Скрыть задания" (тот же приём, что bingoRemoveLuckyCells).
+function luckyRemoveLuckyCells(){
+  const grid = state.luckyGrid || [];
+  const level = state.luckyLevel || 1;
+  const pool = shuffle(getLuckyTasksList(level));
+  const usedTexts = new Set(grid);
+  let p = 0;
+  grid.forEach((t,i)=>{
+    if(t !== LUCKY_LUCKY_TEXT) return;
+    while(p < pool.length && usedTexts.has(pool[p].text)) p++;
+    const item = pool[p];
+    grid[i] = item ? item.text : '—';
+    if(item){ usedTexts.add(item.text); p++; }
+  });
+}
 document.getElementById('luckyHideTasksBtn').addEventListener('click', ()=>{
   state.luckyTasksHidden = !state.luckyTasksHidden;
   const grid = state.luckyGrid || [];
   if(state.luckyTasksHidden){
     state.luckyRevealed = grid.map(()=>false);
+    luckyEnsureLuckyCell();
   } else {
     state.luckyRevealed = grid.map(()=>true);
+    luckyRemoveLuckyCells();
   }
   saveState();
   updateLuckyHideTasksBtn();

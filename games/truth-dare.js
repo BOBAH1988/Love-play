@@ -290,7 +290,6 @@ document.getElementById('tdLevelUpBtn').addEventListener('click', ()=>{ if(tdLoc
 document.getElementById('tdPauseBtn').addEventListener('click', ()=>{
   playSuccessSound();
   pauseTdGame();
-  showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('tdSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.add('show'); });
 document.getElementById('closeTdRulesBtn').addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.remove('show'); });
