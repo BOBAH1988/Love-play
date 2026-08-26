@@ -461,10 +461,17 @@ function suggestRandomBingoCell(){
   const cellEl = wrap.children[idx];
   if(cellEl) cellEl.classList.add('bingo-suggested');
   playNeutralSound();
-  document.addEventListener('pointerdown', function clearBingoSuggestion(){
+  // Тап по самой подсвеченной клетке не должен мгновенно гасить подсказку —
+  // эту клетку игрок и собирается отметить (она всё равно перерисуется по
+  // клику). Снимаем подсветку только при тапе в любом другом месте.
+  const suggestionHandler = function(e){
+    const sug = e.target && e.target.closest ? e.target.closest('.bingo-suggested') : null;
+    if(sug) return; // тап по подсвеченной клетке — оставляем подсветку
     const w = document.getElementById('bingoGrid');
     if(w) w.querySelectorAll('.bingo-cell.bingo-suggested').forEach(c=>c.classList.remove('bingo-suggested'));
-  }, {capture:true, once:true});
+    document.removeEventListener('pointerdown', suggestionHandler, true);
+  };
+  document.addEventListener('pointerdown', suggestionHandler, true);
 }
 document.getElementById('bingoRandomBtn').addEventListener('click', ()=>{
   suggestRandomBingoCell();

@@ -169,7 +169,7 @@ let state = {
   // таблица лидеров — топ-10 {name, timeMs}, отсортированных по времени.
   soloMemoryLevel:1, soloMemoryDeck:[], soloMemorySteps:0, soloMemoryElapsedMs:0,
   soloMemoryLeaderboard:[], soloMemoryLastName:'',
-  // Лимонадный ларёк (бизнес) — партия из 5 дней: утро (погода/событие/
+  // Лимонадный ларёк (бизнес) — партия из 7 дней: утро (погода/событие/
   // апгрейды) → место → время работы → закупка → цена → итоги дня, капитал
   // переносится между днями (не может уйти ниже 0), после 7-го дня — мини-проверка.
   businessLemonadeDay:1, businessLemonadeCapital:200,
@@ -436,6 +436,7 @@ document.getElementById('gameBizObserverBtn').addEventListener('click', ()=>{
 // "Секс квест" реализован (см. games/sexquest.js: goToSexQuestSetup).
 // "Карта секса" пока остаётся заглушкой.
 document.getElementById('gameSexQuestBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
   playSuccessSound();
   goToSexQuestSetup();
 });
@@ -4030,7 +4031,29 @@ document.getElementById('closePhotoRulesBtn').addEventListener('click', ()=>{
 document.getElementById('photoRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'photoRulesModal') e.currentTarget.classList.remove('show');
 });
+// Кнопка «Установить»: на платформах, где доступен системный диалог установки
+// (Chrome/Android, новая версия Chromium-браузеров на десктопе), вызываем его
+// напрямую (beforeinstallprompt). Везде, где события нет (iOS Safari, уже
+// установленное приложение), показываем модалку с инструкцией по установке —
+// именно для этого у нас и есть #installModal.
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Не даём браузеру показать свой авто-баннер — мы берём установку на себя.
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+});
 document.getElementById('installBtn').addEventListener('click', ()=>{
+  if (deferredInstallPrompt) {
+    // Есть системный диалог установки (beforeinstallprompt) — вызываем его.
+    // prompt() можно вызвать на событии один раз; после вызова объект обнуляем.
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt = null;
+    return;
+  }
+  // Системной установки нет — показываем пошаговую инструкцию.
   document.getElementById('installModal').classList.add('show');
 });
 document.getElementById('closeInstallBtn').addEventListener('click', ()=>{
