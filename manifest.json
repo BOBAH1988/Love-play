@@ -1,12 +1,23 @@
 {
+  "id": "./index.html",
   "name": "Весёлые игры",
   "short_name": "Весёлые игры",
+  "description": "Простые игры для тёплых вечеров — вдвоём, компанией, с детьми или для команды. Викторины, крокодил, бинго, мемори, крестики-нолики и другие мини-игры прямо в браузере, без установки.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait",
   "background_color": "#2b0f2e",
   "theme_color": "#3a1030",
+  "categories": [
+    "games",
+    "entertainment"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon-180.png",
@@ -15,10 +26,22 @@
       "purpose": "any"
     },
     {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

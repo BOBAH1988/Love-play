@@ -5502,5 +5502,22 @@
 <script src="games/sexquest.js?v=20260817bl"></script>
 <script src="games/whattoplay.js?v=20260817bl"></script>
 <script src="games/init.js?v=20260817bl"></script>
+<!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
+     Работает только на https (или localhost); на file:// браузер его игнорирует. -->
+<script>
+  if ('serviceWorker' in navigator) {
+    var isLocalhost = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+    var isSecure = (location.protocol === 'https:' || isLocalhost);
+    if (isSecure) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').catch(function (e) {
+          // Не роняем приложение, если регистрация не удалась (например, при
+          // открытии через file:// в браузере без поддержки).
+          console.warn('Service Worker registration failed:', e);
+        });
+      });
+    }
+  }
+</script>
 </body>
 </html>
