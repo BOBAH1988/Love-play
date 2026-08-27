@@ -160,7 +160,7 @@ const WISHLIST_HISTORY_PAGINATION_IDS = {list:'wishlistHistoryList', pagination:
 let wishlistSummaryMatches = [];
 let wishlistSummaryPage = 0;
 let wishlistHistoryPage = 0;
-function renderWishlistPage(items, page, ids){
+function renderWishlistPage(items, page, ids, deletable){
   const listEl = document.getElementById(ids.list);
   const paginationEl = document.getElementById(ids.pagination);
   const labelEl = document.getElementById(ids.label);
@@ -169,7 +169,15 @@ function renderWishlistPage(items, page, ids){
   const totalPages = Math.max(1, Math.ceil(items.length / WISHLIST_PAGE_SIZE));
   const clampedPage = Math.min(Math.max(page, 0), totalPages - 1);
   const start = clampedPage * WISHLIST_PAGE_SIZE;
-  listEl.innerHTML = items.slice(start, start + WISHLIST_PAGE_SIZE).map(t=>`<li>${t}</li>`).join('');
+  listEl.innerHTML = items.slice(start, start + WISHLIST_PAGE_SIZE).map((t,i)=>{
+    // В истории "Совпадения" (deletable=true) у каждого пункта — красный
+    // крестик справа, удаляющий его из сохранённой истории. data-idx —
+    // индекс в ПОЛНОМ массиве (с учётом текущей страницы).
+    if(deletable){
+      return `<li><div class="match-item-row"><div class="match-item-main">${t}</div><button type="button" class="match-item-del" data-idx="${start + i}" aria-label="Удалить совпадение">✕</button></div></li>`;
+    }
+    return `<li>${t}</li>`;
+  }).join('');
   if(items.length > WISHLIST_PAGE_SIZE){
     paginationEl.style.display = 'flex';
     labelEl.textContent = `${clampedPage+1} / ${totalPages}`;
@@ -223,7 +231,7 @@ function finishWishlistSummary(){
   saveState();
   document.getElementById('wishlistSummaryModal').classList.add('show');
 }
-function renderWishlistHistory(){
+function renderWishlistHistory(page){
   const introEl = document.getElementById('wishlistHistoryIntro');
   const history = state.wishlistMatchHistory || [];
   if(history.length === 0){
@@ -231,7 +239,19 @@ function renderWishlistHistory(){
   } else {
     introEl.textContent = `Вы оба хотели попробовать за всё время (${history.length}):`;
   }
-  wishlistHistoryPage = renderWishlistPage(history, 0, WISHLIST_HISTORY_PAGINATION_IDS);
+  // История — удаляемая: у каждого пункта красный крестик (см. deleteWishlistMatch).
+  wishlistHistoryPage = renderWishlistPage(history, page || 0, WISHLIST_HISTORY_PAGINATION_IDS, true);
+}
+// Удаление одного совпадения из общей истории (красный крестик в "Совпадениях").
+// Скрытие пунктов (wishlistHidden) не трогаем — это отдельная механика будущих игр.
+function deleteWishlistMatch(idx){
+  const history = state.wishlistMatchHistory || [];
+  if(idx < 0 || idx >= history.length) return;
+  playErrorSound();
+  history.splice(idx, 1);
+  saveState();
+  showToast('Совпадение удалено из истории 🗑️');
+  renderWishlistHistory(wishlistHistoryPage); // перерисовка текущей страницы
 }
 document.getElementById('wishlistSetupExitBtn').addEventListener('click', exitWishlistSetup);
 document.getElementById('wishlistSetupStartBtn').addEventListener('click', ()=>{
@@ -359,10 +379,10 @@ document.getElementById('wishlistSummaryNextBtn').addEventListener('click', ()=>
   wishlistSummaryPage = renderWishlistPage(wishlistSummaryMatches, wishlistSummaryPage + 1, WISHLIST_SUMMARY_PAGINATION_IDS);
 });
 document.getElementById('wishlistHistoryPrevBtn').addEventListener('click', ()=>{
-  wishlistHistoryPage = renderWishlistPage(state.wishlistMatchHistory || [], wishlistHistoryPage - 1, WISHLIST_HISTORY_PAGINATION_IDS);
+  wishlistHistoryPage = renderWishlistPage(state.wishlistMatchHistory || [], wishlistHistoryPage - 1, WISHLIST_HISTORY_PAGINATION_IDS, true);
 });
 document.getElementById('wishlistHistoryNextBtn').addEventListener('click', ()=>{
-  wishlistHistoryPage = renderWishlistPage(state.wishlistMatchHistory || [], wishlistHistoryPage + 1, WISHLIST_HISTORY_PAGINATION_IDS);
+  wishlistHistoryPage = renderWishlistPage(state.wishlistMatchHistory || [], wishlistHistoryPage + 1, WISHLIST_HISTORY_PAGINATION_IDS, true);
 });
 // Клик по строке в списке совпадений (за игру или за всё время) открывает
 // карточку с заголовком и полным описанием этого пункта.
@@ -378,8 +398,17 @@ document.getElementById('wishlistSummaryList').addEventListener('click', (e)=>{
   if(li) showWishlistItemDetail(li.textContent);
 });
 document.getElementById('wishlistHistoryList').addEventListener('click', (e)=>{
+  // Красный крестик — удаление из истории, деталь-карточку не открываем.
+  const del = e.target.closest('.match-item-del');
+  if(del){
+    deleteWishlistMatch(parseInt(del.dataset.idx, 10));
+    return;
+  }
   const li = e.target.closest('li');
-  if(li) showWishlistItemDetail(li.textContent);
+  if(!li) return;
+  // Текст пункта берём без крестика (он лежит в .match-item-main рядом).
+  const main = li.querySelector('.match-item-main');
+  showWishlistItemDetail((main ? main.textContent : li.textContent).trim());
 });
 document.getElementById('closeWishlistItemBtn').addEventListener('click', ()=>{ document.getElementById('wishlistItemModal').classList.remove('show'); });
 document.getElementById('wishlistItemModal').addEventListener('click', (e)=>{ if(e.target.id === 'wishlistItemModal') e.currentTarget.classList.remove('show'); });

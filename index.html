@@ -907,6 +907,12 @@
   #wishlistCard .card-turn-name, #znayuCard .card-turn-name, #sexQuestCard .card-turn-name{
     color:#fff;
   }
+  /* Название желания в "Секс-квесте" крупнее базового (19px) на ~25% —
+     это главный текст карточки знакомства и вопросов квеста. */
+  #sexQuestCard .card-turn-name{
+    font-size:24px;
+    line-height:1.2;
+  }
   /* Описание пункта желаний рассчитано на светлый фон (приглушённый
      тёмно-фиолетовый) — на тёмной карточке было почти невидимо. */
   #wishlistCard .wishlist-item-desc{
@@ -1744,6 +1750,20 @@
   .sexquest-history-items > li + li{ border-top:1px solid rgba(255,255,255,.14); padding-top:10px; }
   .sexquest-history-steps{ margin:6px 0 0; padding-left:18px; font-size:12px; color:rgba(255,255,255,.6); line-height:1.5; }
   .sexquest-history-steps li{ margin-bottom:2px; }
+  /* Строка сохранённого задания в "Пройденных": слева — название/итог/шаги,
+     справа — красный крестик, удаляющий задание из сохранённого чек-листа.
+     Те же классы-алиасы (.match-item-*) используются в списках "Совпадения"
+     ("Твои желания", "Тайные ответы") — стиль один на все три места. */
+  .sexquest-item-row, .match-item-row{ display:flex; align-items:flex-start; gap:10px; }
+  .sexquest-item-main, .match-item-main{ flex:1; min-width:0; }
+  .sexquest-item-del, .match-item-del{
+    flex:0 0 auto; width:26px; height:26px; border-radius:50%;
+    border:1px solid rgba(255,99,110,.55); background:rgba(255,99,110,.12);
+    color:#ffc2c8; font-size:13px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0;
+  }
+  .sexquest-item-del:active, .match-item-del:active{ background:rgba(255,99,110,.3); }
   .sexquest-step-agreed{ color:#4cd964; font-weight:700; }
   #sexQuestHistoryBtn:disabled{ opacity:.4; cursor:default; }
   /* Модалка "Выбор вопросов" — светлый .modal-card, поэтому пункты чек-листа
@@ -2023,6 +2043,12 @@
   }
   .timer-actions-bottom{display:flex; gap:10px;}
   .timer-actions-bottom .btn{flex:1; height:40px; padding:0 10px;}
+  /* Секс-квест: «Выход» по умолчанию на всю ширину ряда. Только на карточке
+     знакомства (класс sexquest-intro на секции), где рядом стоит «▶ Начать»,
+     она сжимается до минимума. */
+  .timer-actions-bottom #sexQuestExitBtn{flex:1;}
+  #sexQuestGame.sexquest-intro .timer-actions-bottom #sexQuestExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .timer-actions-bottom #sexQuestStartPlayBtn{flex:1;}
 
   /* ---- Плейлист желаний ---- */
   .wishlist-player-row{display:flex; gap:10px; margin-bottom:10px;}
@@ -2756,6 +2782,7 @@
         <button type="button" class="btn btn-secondary" id="sexQuestNoBtn">Нет, пока не готовы</button>
       </div>
       <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary" id="sexQuestStartPlayBtn" hidden>▶ Начать</button>
         <button type="button" class="btn btn-secondary btn-pause" id="sexQuestExitBtn">Выход</button>
       </div>
     </div>

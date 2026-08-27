@@ -2,15 +2,13 @@
 // Загружается через <script src="games/sexquest.js"></script> в index.html,
 // данные — cards/cards_sexquest.js (SEXQUEST_WISHES).
 //
-// Механика: на каждое желание сперва спрашивается "Выполнить сейчас?".
-//   Да  — желание сразу засчитывается полностью (3 очка), переход к следующему.
-//   Нет — начинается "квест преодоления" из мягких шагов (SEXQUEST_WISHES[i].quest,
-//         количество шагов у разных желаний может отличаться) — первый шаг
-//         мягко намекает на саму конечную цель желания, а дальше с каждым
-//         отказом предложение становится всё проще и безопаснее.
-//         На каждом шаге — свой вопрос "Да/Нет":
-//           Да — желание засчитывается облегчённой версией (1 очко), показывается
-//                текст yesAction как итог, переход к следующему желанию.
+// Механика: каждое желание показывается в два этапа.
+//   Этап 1 — карточка знакомства: title + text желания, кнопки «▶ Начать»
+//         (включает вопрос) и «Выход». Кнопки «Да/Нет» здесь скрыты.
+//   Этап 2 — вопросы квеста quest[] (по очереди, начиная с первого):
+//         На каждом шаге — свой вопрос «Да/Нет»:
+//           Да — желание засчитывается облегчённой версией (+1 очко),
+//                показывается текст yesAction как итог, переход к следующему желанию.
 //           Нет — переход к следующему, более мягкому шагу квеста.
 //         Если "Нет" на всех шагах — желание откладывается без давления
 //         (SEXQUEST_SOFT_EXIT_TEXT), переход к следующему желанию.
@@ -27,7 +25,6 @@
 // на чём остановились в прошлый раз, и с чего продолжать.
 
 const SEXQUEST_SOFT_EXIT_TEXT = 'Без проблем. Откладываем это желание — комфорт и доверие важнее. Переходим дальше.';
-const SEXQUEST_MAX_SCORE_PER_DIRECT = 3;
 const SEXQUEST_MAX_SCORE_PER_LIGHT = 1;
 
 let sexQuestCurrentWish = null;
@@ -196,6 +193,9 @@ function startSexQuestGame(){
   document.getElementById('sexQuestGame').classList.add('active');
   updateMuteBtn();
   requestWakeLock();
+  // Показываем ОПИСАНИЕ желания (title + text): кнопки «Да/Нет» ещё скрыты,
+  // вместо них кнопка «▶ Начать» — она открывает первый вопрос квеста
+  // (см. обработчик sexQuestStartPlayBtn и renderSexQuestStep).
   showCurrentSexQuestWish();
 }
 
@@ -209,8 +209,8 @@ function showCurrentSexQuestWish(){
   const wish = currentSexQuestWishObj();
   if(!wish){ finishSexQuestGame(); return; }
   sexQuestCurrentWish = wish;
-  sexQuestCurrentStepIndex = -1;
-  renderSexQuestPrompt();
+  sexQuestCurrentStepIndex = -1; // -1 = показано описание, вопрос квеста ещё не начат
+  renderSexQuestIntroCard();
 }
 
 function updateSexQuestProgress(){
@@ -220,7 +220,7 @@ function updateSexQuestProgress(){
   if(scoreEl) scoreEl.textContent = `${state.sexQuestScore} 🏆`;
 }
 
-function renderSexQuestPrompt(){
+function renderSexQuestIntroCard(){
   updateSexQuestProgress();
   fadeSwapEl('sexQuestCard', (el)=>{
     el.className = 'card';
@@ -229,20 +229,23 @@ function renderSexQuestPrompt(){
         <div class="card-header">
           <div class="card-turn">
             <div class="card-turn-label">Желание · уровень ${sexQuestCurrentWish.level}/10</div>
-            <div class="card-turn-name">Выполнить сейчас?</div>
+            <div class="card-turn-name">${sexQuestCurrentWish.title}</div>
           </div>
         </div>
         <div class="card-body">
           <div class="card-icon">🧩</div>
-          <div class="card-split-title">${sexQuestCurrentWish.title}</div>
           <div class="card-text">${sexQuestCurrentWish.text}</div>
         </div>
       </div>
     `;
   });
-  document.getElementById('sexQuestYesBtn').textContent = 'Да, выполняем';
-  document.getElementById('sexQuestNoBtn').style.display = 'flex';
-  document.getElementById('sexQuestNoBtn').textContent = 'Нет, пока не готовы';
+  // На карточке знакомства решений не спрашиваем: «Да/Нет» скрыты,
+  // вопрос откроется по кнопке «▶ Начать» (renderSexQuestStep).
+  document.getElementById('sexQuestYesBtn').style.display = 'none';
+  document.getElementById('sexQuestNoBtn').style.display = 'none';
+  document.getElementById('sexQuestStartPlayBtn').style.display = 'flex';
+  // Ряд с кнопками в "интро"-режиме: «▶ Начать» + минимальная «Выход».
+  document.getElementById('sexQuestGame').classList.add('sexquest-intro');
 }
 
 function renderSexQuestStep(){
@@ -266,7 +269,12 @@ function renderSexQuestStep(){
     `;
   });
   document.getElementById('sexQuestYesBtn').textContent = 'Да';
+  document.getElementById('sexQuestYesBtn').style.display = 'flex';
   document.getElementById('sexQuestNoBtn').textContent = 'Нет';
+  document.getElementById('sexQuestNoBtn').style.display = 'flex';
+  document.getElementById('sexQuestStartPlayBtn').style.display = 'none';
+  // Вопросы квеста — «Выход» снова на всю ширину (интро-режим выключен).
+  document.getElementById('sexQuestGame').classList.remove('sexquest-intro');
 }
 
 function renderSexQuestOutcome(text, icon){
@@ -283,7 +291,10 @@ function renderSexQuestOutcome(text, icon){
     `;
   });
   document.getElementById('sexQuestYesBtn').textContent = 'Дальше';
+  document.getElementById('sexQuestYesBtn').style.display = 'flex';
   document.getElementById('sexQuestNoBtn').style.display = 'none';
+  document.getElementById('sexQuestStartPlayBtn').style.display = 'none';
+  document.getElementById('sexQuestGame').classList.remove('sexquest-intro');
 }
 
 function recordSexQuestResult(outcome, agreedStep){
@@ -308,16 +319,10 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
     return;
   }
   playSuccessSound();
-  if(sexQuestCurrentStepIndex === -1){
-    // Ответили "Да" сразу на главный вопрос — полное выполнение.
-    state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_DIRECT;
-    recordSexQuestResult('direct', null);
-    saveState();
-    sexQuestAwaitingNext = true;
-    renderSexQuestOutcome('Отлично, порадуйте свою половинку!<br><br>Желание засчитано полностью — 3 очка.', '✅');
-    return;
-  }
-  // Ответили "Да" на шаге квеста — облегчённая версия.
+  // Подстраховка: «Да» активна только на вопросах квеста (на карточке
+  // знакомства она скрыта, а stepIndex там = -1).
+  if(sexQuestCurrentStepIndex < 0) return;
+  // "Да" на вопросе квеста — облегчённая версия желания.
   const step = sexQuestCurrentWish.quest[sexQuestCurrentStepIndex];
   state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_LIGHT;
   recordSexQuestResult('light', sexQuestCurrentStepIndex);
@@ -336,12 +341,6 @@ document.getElementById('sexQuestNoBtn').addEventListener('click', ()=>{
     return;
   }
   playNeutralSound();
-  if(sexQuestCurrentStepIndex === -1){
-    // Начинаем квест преодоления с первого шага.
-    sexQuestCurrentStepIndex = 0;
-    renderSexQuestStep();
-    return;
-  }
   if(sexQuestCurrentStepIndex < sexQuestCurrentWish.quest.length - 1){
     sexQuestCurrentStepIndex++;
     renderSexQuestStep();
@@ -411,6 +410,13 @@ document.getElementById('sexQuestExitBtn').addEventListener('click', ()=>{
   document.getElementById('sexQuestGame').classList.remove('active');
   document.getElementById('sexQuestSetup').classList.add('active');
 });
+// Кнопка «▶ Начать» на карточке знакомства: открываем ПЕРВЫЙ вопрос квеста
+// этого желания (quest[0]) — появляются кнопки «Да»/«Нет».
+document.getElementById('sexQuestStartPlayBtn').addEventListener('click', ()=>{
+  playSuccessSound();
+  sexQuestCurrentStepIndex = 0;
+  renderSexQuestStep();
+});
 
 /* ============ ЧЕК-ЛИСТЫ (ИСТОРИЯ ПРОШЛЫХ ИГР) ============ */
 function updateSexQuestHistoryBtn(){
@@ -434,11 +440,16 @@ function goToSexQuestHistory(){
       <div class="sexquest-history-entry">
         <div class="sexquest-history-date">${formatSexQuestDate(cl.date)} · счёт ${cl.score} 🏆</div>
         <ul class="sexquest-history-items">
-          ${cl.items.map(item=>`
+          ${cl.items.map((item, itemIdx)=>`
             <li>
-              <div class="sexquest-summary-title">${item.title}</div>
-              <div class="sexquest-summary-outcome">${sexQuestOutcomeLabel(item.outcome)}</div>
-              ${item.steps && item.steps.length ? `<ol class="sexquest-history-steps">${item.steps.map((s,i)=>`<li${item.agreedStep===i ? ' class="sexquest-step-agreed"' : ''}>${s}</li>`).join('')}</ol>` : ''}
+              <div class="sexquest-item-row">
+                <div class="sexquest-item-main">
+                  <div class="sexquest-summary-title">${item.title}</div>
+                  <div class="sexquest-summary-outcome">${sexQuestOutcomeLabel(item.outcome)}</div>
+                  ${item.steps && item.steps.length ? `<ol class="sexquest-history-steps">${item.steps.map((s,i)=>`<li${item.agreedStep===i ? ' class="sexquest-step-agreed"' : ''}>${s}</li>`).join('')}</ol>` : ''}
+                </div>
+                <button type="button" class="sexquest-item-del" data-cl="${idx}" data-item="${itemIdx}" aria-label="Удалить задание из пройденных">✕</button>
+              </div>
             </li>
           `).join('')}
         </ul>
@@ -449,9 +460,39 @@ function goToSexQuestHistory(){
   document.getElementById('sexQuestSetup').classList.remove('active');
   document.getElementById('sexQuestHistory').classList.add('active');
 }
+// Удаление одного сохранённого задания из чек-листа истории (по красному
+// крестику в "Пройденных"). Счёт чек-листа пересчитывается по оставшимся
+// пунктам; если пунктов не осталось — чек-лист удаляется целиком.
+function deleteSexQuestHistoryItem(clIdx, itemIdx){
+  const cl = (state.sexQuestChecklists || [])[clIdx];
+  if(!cl || !Array.isArray(cl.items) || !cl.items[itemIdx]) return;
+  playErrorSound();
+  cl.items.splice(itemIdx, 1);
+  cl.score = cl.items.reduce((sum,item)=>{
+    if(item.outcome === 'direct') return sum + 3;
+    if(item.outcome === 'light') return sum + SEXQUEST_MAX_SCORE_PER_LIGHT;
+    return sum;
+  }, 0);
+  let removedWholeChecklist = false;
+  if(cl.items.length === 0){
+    state.sexQuestChecklists.splice(clIdx, 1);
+    removedWholeChecklist = true;
+  }
+  saveState();
+  showToast(removedWholeChecklist ? 'Чек-лист пуст и удалён' : 'Задание удалено из пройденных 🗑️');
+  goToSexQuestHistory(); // перерисовываем список с учётом удаления
+}
+// Один делегированный обработчик на весь список — работает для всех
+// крестиков, включая появившиеся после перерисовки.
+document.getElementById('sexQuestHistoryList').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.sexquest-item-del');
+  if(!btn) return;
+  deleteSexQuestHistoryItem(parseInt(btn.dataset.cl, 10), parseInt(btn.dataset.item, 10));
+});
 function exitSexQuestHistory(){
   document.getElementById('sexQuestHistory').classList.remove('active');
   document.getElementById('sexQuestSetup').classList.add('active');
+  updateSexQuestHistoryBtn(); // после удалений кнопка «✅ Пройденные» может стать неактивной
 }
 document.getElementById('sexQuestHistoryBtn').addEventListener('click', ()=>{ goToSexQuestHistory(); });
 document.getElementById('sexQuestHistoryExitBtn').addEventListener('click', ()=>{ exitSexQuestHistory(); });

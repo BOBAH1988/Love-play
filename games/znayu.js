@@ -244,7 +244,7 @@ const ZNAYU_HISTORY_PAGINATION_IDS = {list:'znayuHistoryList', pagination:'znayu
 let znayuSummaryMatches = [];
 let znayuSummaryPage = 0;
 let znayuHistoryPage = 0;
-function renderZnayuPage(items, page, ids){
+function renderZnayuPage(items, page, ids, deletable){
   const listEl = document.getElementById(ids.list);
   const paginationEl = document.getElementById(ids.pagination);
   const labelEl = document.getElementById(ids.label);
@@ -253,7 +253,15 @@ function renderZnayuPage(items, page, ids){
   const totalPages = Math.max(1, Math.ceil(items.length / ZNAYU_PAGE_SIZE));
   const clampedPage = Math.min(Math.max(page, 0), totalPages - 1);
   const start = clampedPage * ZNAYU_PAGE_SIZE;
-  listEl.innerHTML = items.slice(start, start + ZNAYU_PAGE_SIZE).map(t=>`<li>${t}</li>`).join('');
+  listEl.innerHTML = items.slice(start, start + ZNAYU_PAGE_SIZE).map((t,i)=>{
+    // В истории "Совпадения" (deletable=true) у каждого пункта — красный
+    // крестик справа, удаляющий его из сохранённой истории. data-idx —
+    // индекс в ПОЛНОМ массиве (с учётом текущей страницы).
+    if(deletable){
+      return `<li><div class="match-item-row"><div class="match-item-main">${t}</div><button type="button" class="match-item-del" data-idx="${start + i}" aria-label="Удалить совпадение">✕</button></div></li>`;
+    }
+    return `<li>${t}</li>`;
+  }).join('');
   if(items.length > ZNAYU_PAGE_SIZE){
     paginationEl.style.display = 'flex';
     labelEl.textContent = `${clampedPage+1} / ${totalPages}`;
@@ -312,7 +320,7 @@ function finishZnayuSummary(){
   saveState();
   document.getElementById('znayuSummaryModal').classList.add('show');
 }
-function renderZnayuHistory(){
+function renderZnayuHistory(page){
   const introEl = document.getElementById('znayuHistoryIntro');
   const history = state.znayuMatchHistory || [];
   if(history.length === 0){
@@ -320,7 +328,18 @@ function renderZnayuHistory(){
   } else {
     introEl.textContent = `Ваши совпавшие ответы за всё время (${history.length}):`;
   }
-  znayuHistoryPage = renderZnayuPage(history, 0, ZNAYU_HISTORY_PAGINATION_IDS);
+  // История — удаляемая: у каждого пункта красный крестик (см. deleteZnayuMatch).
+  znayuHistoryPage = renderZnayuPage(history, page || 0, ZNAYU_HISTORY_PAGINATION_IDS, true);
+}
+// Удаление одного совпадения из общей истории (красный крестик в "Совпадениях").
+function deleteZnayuMatch(idx){
+  const history = state.znayuMatchHistory || [];
+  if(idx < 0 || idx >= history.length) return;
+  playErrorSound();
+  history.splice(idx, 1);
+  saveState();
+  showToast('Совпадение удалено из истории 🗑️');
+  renderZnayuHistory(znayuHistoryPage); // перерисовка текущей страницы
 }
 document.getElementById('znayuSetupExitBtn').addEventListener('click', exitZnayuSetup);
 document.getElementById('znayuSetupStartBtn').addEventListener('click', ()=>{
@@ -417,10 +436,16 @@ document.getElementById('znayuSummaryNextBtn').addEventListener('click', ()=>{
   znayuSummaryPage = renderZnayuPage(znayuSummaryMatches, znayuSummaryPage + 1, ZNAYU_SUMMARY_PAGINATION_IDS);
 });
 document.getElementById('znayuHistoryPrevBtn').addEventListener('click', ()=>{
-  znayuHistoryPage = renderZnayuPage(state.znayuMatchHistory || [], znayuHistoryPage - 1, ZNAYU_HISTORY_PAGINATION_IDS);
+  znayuHistoryPage = renderZnayuPage(state.znayuMatchHistory || [], znayuHistoryPage - 1, ZNAYU_HISTORY_PAGINATION_IDS, true);
 });
 document.getElementById('znayuHistoryNextBtn').addEventListener('click', ()=>{
-  znayuHistoryPage = renderZnayuPage(state.znayuMatchHistory || [], znayuHistoryPage + 1, ZNAYU_HISTORY_PAGINATION_IDS);
+  znayuHistoryPage = renderZnayuPage(state.znayuMatchHistory || [], znayuHistoryPage + 1, ZNAYU_HISTORY_PAGINATION_IDS, true);
+});
+// Красный крестик в списке истории — удаление совпадения (см. deleteZnayuMatch).
+document.getElementById('znayuHistoryList').addEventListener('click', (e)=>{
+  const del = e.target.closest('.match-item-del');
+  if(!del) return;
+  deleteZnayuMatch(parseInt(del.dataset.idx, 10));
 });
 if(!getSortedActiveLevels().includes(state.levelCap)) state.levelCap = getSortedActiveLevels()[0];
 renderLevelToggles();
