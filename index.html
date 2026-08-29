@@ -1631,10 +1631,10 @@
   .modal-title{font-size:20px; font-weight:800; text-align:center; margin-bottom:16px;}
   .modal-close-btn{
     position:absolute; top:10px; right:12px;
-    background:none; border:none; color:#9b7a92; font-size:22px; line-height:1;
+    background:none; border:none; color:#ff4d4d; font-size:22px; line-height:1;
     cursor:pointer; padding:4px; z-index:10;
   }
-  .modal-close-btn:active{color:#2b0f2e;}
+  .modal-close-btn:active{color:#c62828;}
   /* Меню паузы — название игры на первой строке, "Пауза" отдельной строкой
      ниже (не одной длинной фразой через тире, которая раньше рвалась
      переносом посреди слова на узких экранах), см. PAUSE_MENU_TITLES. */
@@ -1886,6 +1886,7 @@
   }
   .kids-xo-mark-x{ color:#3ddc84; }
   .xo-green-x{ color:#3ddc84; font-weight:900; }
+  .xo-o{ color:#ff5e8e; font-weight:900; display:inline-block; text-align:center; }
   .kids-xo-mark-o{ color:#ff5e8e; }
   .kids-xo-cell.kids-xo-win .kids-xo-mark-x, .kids-xo-cell.kids-xo-win .kids-xo-mark-o{ color:#fff; }
   /* Морской бой (дети) — поле 10×10, клетки поменьше, чем в крестиках-ноликах. */
@@ -2316,7 +2317,7 @@
           <button type="button" class="btn btn-menu-item" id="gamePartyHangmanBtn"><span class="menu-icon">🪢</span> Виселица</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
-          <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span>⭕</span> Крестики-нолики</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики-нолики</button>
         </div>
       </div>
 
@@ -3466,7 +3467,7 @@
     <div class="field">
       <label>Выбери игру</label>
       <div class="game-select-list">
-        <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span>⭕</span> Крестики-нолики</button>
+        <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики-нолики</button>
         <button type="button" class="btn btn-menu-item" id="gameKidsBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
       </div>
     </div>
@@ -3475,7 +3476,7 @@
 
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЕТИ): НАСТРОЙКА ===== -->
   <section id="kidsXoSetup" class="screen">
-    <h1 class="title"><span class="xo-green-x">X</span>⭕ Крестики-нолики</h1>
+    <h1 class="title"><span class="xo-green-x">X</span><span class="xo-o">O</span> Крестики-нолики</h1>
     <div class="subtitle" id="kidsXoSetupSubtitle">Классическая игра для двоих — поле 3×3, три в ряд побеждают</div>
 
     <div class="field">
@@ -3497,7 +3498,7 @@
 
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЕТИ): ИГРА ===== -->
   <section id="kidsXoGame" class="screen">
-    <h1 class="title" style="font-size:20px;"><span class="xo-green-x">X</span>⭕ Крестики-нолики</h1>
+    <h1 class="title" style="font-size:20px;"><span class="xo-green-x">X</span><span class="xo-o">O</span> Крестики-нолики</h1>
     <div class="krokodil-score-row" id="kidsXoScoreRow"></div>
     <div class="td-turn-label" id="kidsXoTurnLabel">Ходит: Игрок 1</div>
 
@@ -3524,7 +3525,7 @@
   <!-- ===== ПРАВИЛА "КРЕСТИКИ-НОЛИКИ" ===== -->
   <div class="modal-overlay" id="kidsXoRulesModal">
     <div class="modal-card">
-      <div class="modal-title"><span class="xo-green-x">X</span>⭕ Правила игры «Крестики-нолики»</div>
+      <div class="modal-title"><span class="xo-green-x">X</span><span class="xo-o">O</span> Правила игры «Крестики-нолики»</div>
       <div class="intro-text">Классика для двоих — на выбор поле 3×3 или 5×5.</div>
       <ol class="modal-rules">
         <li>На экране настройки выберите размер поля: 3×3 (три своих знака подряд — победа) или 5×5 (поле больше, для победы нужно уже четыре своих знака подряд).</li>
@@ -3543,7 +3544,7 @@
        Копия детской версии, но без выбора участников — игрок всегда играет
        крестиками против бота (см. games/solo-xo.js). -->
   <section id="soloXoSetup" class="screen">
-    <h1 class="title"><span class="xo-green-x">X</span>⭕ Крестики-нолики</h1>
+    <h1 class="title"><span class="xo-green-x">X</span><span class="xo-o">O</span> Крестики-нолики</h1>
     <div class="subtitle" id="soloXoSetupSubtitle">Против бота — поле 3×3, три в ряд побеждают</div>
 
     <div class="field">
@@ -3565,7 +3566,7 @@
 
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЛЯ ОДНОГО): ИГРА ===== -->
   <section id="soloXoGame" class="screen">
-    <h1 class="title" style="font-size:20px;"><span class="xo-green-x">X</span>⭕ Крестики-нолики</h1>
+    <h1 class="title" style="font-size:20px;"><span class="xo-green-x">X</span><span class="xo-o">O</span> Крестики-нолики</h1>
     <div class="krokodil-score-row" id="soloXoScoreRow"></div>
     <div class="td-turn-label" id="soloXoTurnLabel">Ходит: Вы</div>
 
@@ -3592,7 +3593,7 @@
   <!-- ===== ПРАВИЛА "КРЕСТИКИ-НОЛИКИ" (ДЛЯ ОДНОГО) ===== -->
   <div class="modal-overlay" id="soloXoRulesModal">
     <div class="modal-card">
-      <div class="modal-title"><span class="xo-green-x">X</span>⭕ Правила игры «Крестики-нолики»</div>
+      <div class="modal-title"><span class="xo-green-x">X</span><span class="xo-o">O</span> Правила игры «Крестики-нолики»</div>
       <div class="intro-text">Классика против бота — на выбор поле 3×3 или 5×5.</div>
       <ol class="modal-rules">
         <li>На экране настройки выберите размер поля: 3×3 (три своих знака подряд — победа) или 5×5 (поле больше, для победы нужно уже четыре своих знака подряд).</li>
