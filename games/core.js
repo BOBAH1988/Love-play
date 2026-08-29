@@ -149,8 +149,11 @@ let state = {
   // (фиксированное количество, не бесконечная колода).
   flashMode:'learn', flashTheme:'english', flashThemeSize:100, flashTimeSub:'digital', flashCount:25,
   flashQueue:[], flashIndex:0, flashAutoSpeak:false,
-  // Сапёр (дети) — механика скопирована с "Секс-бинго"
-  kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperWonLines:[], kidsSaperUsedBonus:[],
+  // Сапёр (дети) — настоящая сапёрская механика (минное поле, цифры,
+  // флажки, победа/поражение). kidsSaperWonLines/kidsSaperEscalated* — устарели,
+  // оставлены для обратной совместимости со старыми сохранениями.
+  kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperFlags:[], kidsSaperWonLines:[],
+  kidsSaperUsedBonus:[],
   kidsSaperCurrentLevel:1, kidsSaperEscalatedTo2:false, kidsSaperEscalatedTo3:false,
   kidsSaperFinished:false, kidsSaperBonusChecklist:[], kidsSaperTasksHidden:true,
   // Виселица (компания) — без уровней, общий счёт побед/поражений
@@ -310,6 +313,12 @@ function showSetupView(name){
     const el = document.getElementById(id);
     if(el) el.classList.toggle('section-open', id === name);
   });
+  // Перерисовываем список игроков в открываемом разделе — чтобы изменения
+  // (из localStorage после перезагрузки/обновления, импорт, переименование)
+  // сразу отражались в полях ввода, а не оставались старыми дефолтами.
+  if(name === 'kidsView' && typeof renderKidsPlayers === 'function') renderKidsPlayers();
+  else if(name === 'businessView' && typeof renderBusinessPlayers === 'function') renderBusinessPlayers();
+  else if((name === 'companyView' || name === 'twoPlayerView') && typeof renderPartyPlayers === 'function') renderPartyPlayers();
 }
 document.getElementById('homeTwoPlayerBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('twoPlayerView'); });
 document.getElementById('homeCompanyBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('companyView'); });
@@ -1046,9 +1055,15 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   if(!confirm('Сбросить весь прогресс во всех играх? Счёт, избранное, имена команд и историю совпадений будет не вернуть. Свои добавленные задания в «Фантах» при этом сохранятся. Это действие нельзя отменить.')){
     return;
   }
-  // Обычная игра (карточки)
-  state.hiddenIndexes = [];
-  state.usedIndexes = [];
+   // Обычная игра (карточки)
+   state.hiddenIndexes = [];
+   state.usedIndexes = [];
+   // Имена игроков (команд) — сбрасываются на дефолтные, как обещано в диалоге
+   // подтверждения ("имена команд… будут сброшены"). Возраст ребёнка (kidsAge)
+   // остается — это настройка, а не прогресс.
+   state.kidsPlayers = ['Игрок 1','Игрок 2'];
+   state.businessPlayers = ['Игрок 1','Игрок 2'];
+   state.partyPlayers = ['Игрок 1','Игрок 2'];
   state.gameMode = 'hot';
   state.activeLevels = [3,4,5,6];
   state.levelCap = 3;
@@ -1155,7 +1170,8 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.flashQueue = []; state.flashIndex = 0;
   state.bizObsQueue = []; state.bizObsIndex = 0; state.bizObsCorrect = [];
   // Сапёр (дети)
-  state.kidsSaperGrid = []; state.kidsSaperChecked = []; state.kidsSaperWonLines = [];
+  state.kidsSaperGrid = []; state.kidsSaperChecked = []; state.kidsSaperFlags = [];
+  state.kidsSaperWonLines = [];
   state.kidsSaperUsedBonus = []; state.kidsSaperCurrentLevel = 1;
   state.kidsSaperEscalatedTo2 = false; state.kidsSaperEscalatedTo3 = false;
   state.kidsSaperFinished = false; state.kidsSaperBonusChecklist = [];

@@ -1919,14 +1919,15 @@
   .bingo-cell.bingo-suggested{
     box-shadow:0 0 0 3px var(--accent) inset;
   }
-  /* Сапёр (дети) — клетка закрыта иконкой на всю клетку, пока не нажали;
-     после нажатия открывается текст задания (обычный .bingo-cell.checked
-     стиль), кроме "счастливых" клеток пропуска хода — те при открытии
-     подсвечиваются зелёным вместо розового. */
-  .kids-saper-cell.closed{ font-size:min(15vw, 64px); line-height:1; padding:0; }
-  .bingo-cell.checked.kids-saper-lucky, .bingo-cell.checked.bingo-lucky{
-    background:linear-gradient(135deg,#4cd964,#2ecc71); color:#0b3d1f;
-  }
+  /* Сапёр (дети) — настоящий минный ландшафт. */
+  .kids-saper-cell.kids-saper-closed{ font-size:min(15vw, 64px); line-height:1; padding:0; cursor:pointer; }
+  .kids-saper-cell.kids-saper-flagged{ color:#ffd166; }
+  .kids-saper-cell.kids-saper-mine{ background:linear-gradient(135deg,#ff8a5e,#ff3b5c); color:#1a0b00; border-color:transparent; }
+  .kids-saper-cell.kids-saper-task{ background:linear-gradient(135deg,#43c5f0,#48e0c0); color:#0b2a3d; border-color:transparent; }
+  .kids-saper-cell.kids-saper-number{ font-size:min(11vw, 46px); font-weight:800; line-height:1; }
+  .kids-saper-cell.kids-saper-suggested{ box-shadow:0 0 0 3px var(--accent) inset; }
+  /* Счастливые клетки «пропустите ход» — зелёные (Секс-бинго; в Сапёре больше нет). */
+  .bingo-cell.checked.bingo-lucky{ background:linear-gradient(135deg,#4cd964,#2ecc71); color:#0b3d1f; }
 
   /* ---- Мемори (игры с детьми) ---- */
   .memory-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0; max-width:100%;}
@@ -3070,7 +3071,7 @@
   <!-- ===== САПЁР (ДЕТИ): НАСТРОЙКА ===== -->
   <section id="kidsSaperSetup" class="screen">
     <h1 class="title">💣 Сапёр</h1>
-    <div class="subtitle">Собирайте линии — уровень растёт и открывает бонус</div>
+    <div class="subtitle">Раскрывайте безопасные клетки, не врвавшись на 💣 — уровень растёт с победами</div>
 
     <button class="btn btn-primary" id="kidsSaperSetupStartBtn">Начать</button>
 
@@ -3084,16 +3085,16 @@
   <!-- ===== САПЁР (ДЕТИ): ИГРА ===== -->
   <section id="kidsSaperGame" class="screen">
     <h1 class="title" style="font-size:20px;">💣 Сапёр</h1>
-    <div class="subtitle" style="margin-bottom:2px;">Собирайте линии — уровень растёт и открывает бонус</div>
+    <div class="subtitle" style="margin-bottom:2px;">Раскрывайте безопасные клетки, не врвавшись на 💣 — уровень растёт с победами</div>
     <div class="bingo-level-label" id="kidsSaperLevelLabel"></div>
     <div class="bingo-grid" id="kidsSaperGrid"></div>
     <div class="bingo-actions-row">
       <button type="button" class="btn btn-secondary" id="kidsSaperRandomBtn">🎲 Случайно</button>
       <button type="button" class="btn btn-secondary" id="kidsSaperHideTasksBtn">👀 Показать задания</button>
     </div>
-    <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-rules" id="kidsSaperGameRulesBtn">Правила</button>
+    <div class="bingo-actions-row bingo-actions-bottom" style="justify-content:flex-start;">
       <button type="button" class="btn btn-secondary btn-pause" id="kidsSaperExitBtn">Выход</button>
+      <button type="button" class="btn btn-secondary btn-rules" id="kidsSaperGameRulesBtn">Правила</button>
     </div>
     <div class="bingo-bonus-checklist-block" id="kidsSaperBonusChecklistBlock" style="display:none;">
       <div class="bingo-bonus-checklist-title">🎁 Бонусные задания</div>
@@ -3108,7 +3109,10 @@
       <div class="intro-text" id="kidsSaperSummaryScore"></div>
       <div class="intro-text" id="kidsSaperSummaryCounts"></div>
       <div class="intro-text" id="kidsSaperSummaryBonusText" style="margin-top:10px; font-weight:700; display:none;"></div>
-      <button class="btn btn-primary" id="closeKidsSaperSummaryBtn">Завершить игру</button>
+      <div class="modal-actions" style="display:flex; gap:10px; margin-top:14px;">
+        <button class="btn btn-secondary" id="kidsSaperReplayBtn">Сыграть снова</button>
+        <button class="btn btn-primary" id="closeKidsSaperSummaryBtn">Завершить игру</button>
+      </div>
     </div>
   </div>
 
@@ -5198,15 +5202,14 @@
   <div class="modal-overlay" id="kidsSaperRulesModal">
     <div class="modal-card">
       <div class="modal-title">💣 Правила игры «Сапёр»</div>
-      <div class="intro-text">Собирайте линии на игровой карте всей семьёй — сложность и веселье растут сами по ходу игры.</div>
+      <div class="intro-text">Настоящий сапёр для детей и семьи: на поле 5×5 спрятаны 💣-мины. Открывайте безопасные клетки — рядом с минами показывают число соседных мин, пустые зоны дарят весёлые семейные задания. Победа — раскрыть всё, не нажав на мину; уровень растёт с каждой победы (до уровня 3 «Взрыв веселья»).</div>
       <ol class="modal-rules">
-        <li>Игра начинается с уровня 🔍 «Разведка» — карта заполнится 25 случайными весёлыми заданиями.</li>
-        <li>Выполнили задание из клетки — нажмите на неё, чтобы отметить. Отметили по ошибке — зажмите клетку, чтобы снять отметку.</li>
-        <li>Собрали 5 отмеченных клеток подряд по горизонтали или вертикали — линия засчитана.</li>
-        <li>Собрали 1-ю линию — уровень повышается до 💥 «Обезвреживание», собрали 3-ю — до 🎉 «Взрыв веселья».</li>
-        <li>Игра завершается сама, как только собрано 5 любых линий или отмечены все 25 клеток — на экране появится окно с итогом партии и бонусным призом.</li>
-        <li>Клетки закрыты 💣 до нажатия — «👀 Показать задания» откроет все сразу для предпросмотра, «🙈 Скрыть задания» спрячет их обратно. «🎲 Случайно» подскажет, какую клетку выбрать следующей.</li>
-        <li>Полученный приз добавляется в блок «🎁 Бонусные задания» под картой и остаётся там до выполнения.</li>
+        <li>Игра начинается с уровня 🔍 «Разведка» — на поле 5×5 спрятано 5 мин. С каждой победой уровень растёт, а мин становится больше (7, затем 9).</li>
+        <li>Одиночное нажатие открывает клетку: цифра — это количество мин в окружающих 8 клетках; пустая клетка с заданием — значит мин рядом нет и она автоматически раскрывает ближайшие пустые зоны (как в классическом сапёре).</li>
+        <li>Чтобы не врваться на мину, поставьте 🚩: зажмите клетку (long press) или нажмите правой кнопкой мыши — флажок ставится/снимается на закрытой клетке.</li>
+        <li>💥 Открыли мину — игра окончена: все открытые выстрелы показываются, выбирайте «Сыграть снова» или «Завершить игру».</li>
+        <li>🏆 Открыли все безопасные клетки — победа: на экране итог с бонусным призом (заданием для семьи), которое сохраняется в блок «🎁 Бонусные задания» под полем.</li>
+        <li>Клетки закрыты 💣-иконкой до нажатия — «👀 Показать задания» раскроет весь ландшафт (числа, задания и 💣-мины) для подсмотра, «🎲 Случайно» подскажет безопасную клетку, «Выход» вернёт в меню «Дети».</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsSaperRulesBtn">Понятно</button>
     </div>
