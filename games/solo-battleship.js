@@ -47,8 +47,8 @@ function soloBsAllSunk(board){
 }
 
 function renderSoloBsBoards(){
-  renderSoloBsBoard('#soloBsPlayerBoard', state.soloBsPlayerBoard, false);
-  renderSoloBsBoard('#soloBsEnemyBoard', state.soloBsBotBoard, true);
+  renderSoloBsBoard('soloBsPlayerBoard', state.soloBsPlayerBoard, false);
+  renderSoloBsBoard('soloBsEnemyBoard', state.soloBsBotBoard, true);
 }
 
 // isEnemy — чужое поле: корабли скрыты, клик стреляет (только ход игрока).
@@ -108,7 +108,7 @@ function fireSoloBsShot(i){
     resultText = '🌊 Мимо! Ход бота.';
     playNeutralSound();
   }
-  renderSoloBsBoard('#soloBsEnemyBoard', board, true);
+  renderSoloBsBoard('soloBsEnemyBoard', board, true);
   if(soloBsAllSunk(board)){
     state.soloBsWinner = 'player';
     state.soloBsWins.player = (state.soloBsWins.player || 0) + 1;
@@ -156,7 +156,7 @@ function soloBsBotMove(){
     resultText = '🌊 Бот промахнулся. Ваш ход.';
     playNeutralSound();
   }
-  renderSoloBsBoard('#soloBsPlayerBoard', board, false);
+  renderSoloBsBoard('soloBsPlayerBoard', board, false);
   if(soloBsAllSunk(board)){
     state.soloBsWinner = 'bot';
     state.soloBsWins.bot = (state.soloBsWins.bot || 0) + 1;
