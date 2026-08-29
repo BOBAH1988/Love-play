@@ -104,17 +104,10 @@ function renderFlashThemeGroup(){
       btn.classList.toggle('on', btn.dataset.value === state.flashTheme);
     });
   }
-  // Динамическая подпись блока темы: "(<название темы>):",
-  // по умолчанию "(Английский язык):".
-  const label = document.getElementById('flashThemeLabel');
-  if(label){
-    let themeName = 'Английский язык';
-    if(typeof FLASH_THEMES !== 'undefined' && Array.isArray(FLASH_THEMES)){
-      const th = FLASH_THEMES.find(t => t.id === state.flashTheme);
-      if(th) themeName = th.name;
-    }
-    label.textContent = `(${themeName}):`;
-  }
+   // Подпись блока темы — постоянный заголовок "Темы" (без скобок,
+   // без динамического имени темы — согласно ТЗ).
+   const label = document.getElementById('flashThemeLabel');
+   if(label){ label.textContent = 'Темы'; }
   // Блок «объём словаря» (100/250) — только для «Английский язык»;
   // блок подразделов «Механические/Цифровые» — только для «Время».
   const sizeBlock = document.getElementById('flashEnglishSizeBlock');
