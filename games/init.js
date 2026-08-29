@@ -38,11 +38,11 @@ if(state.inProgress){
     state.davayQuizP1Done = false;
     state.davayQuizP2Done = false;
     state.davayQuizPendingNext = 0;
-    // Морской бой (одиночка) — не допускаем продолжения половины партии после
-    // перезаписи страницы: всё заново.
-    state.soloBsPlayerBoard = []; state.soloBsBotBoard = []; state.soloBsWinner = null;
-    state.soloBsCurrentPlayer = 'player';
   }
+  // Морской бой (одиночка) — не допускаем продолжения половины партии после
+  // перезаписи страницы: всё заново.
+  state.soloBsPlayerBoard = []; state.soloBsBotBoard = []; state.soloBsWinner = null;
+  state.soloBsCurrentPlayer = 'player';
   state.pausedMode = null;
   saveState();
 }
