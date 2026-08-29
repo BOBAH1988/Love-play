@@ -126,9 +126,8 @@ function goToKidsBattleshipGame(){
 
 function showKidsBattleshipHandoff(){
   const idx = state.battleshipCurrentPlayer || 0;
-  const oppIdx = idx === 0 ? 1 : 0;
   const textEl = document.getElementById('kidsBattleshipHandoffText');
-  if(textEl) textEl.textContent = `Передайте телефон игроку «${bsPlayerName(idx)}» — ваш ход по флоту игрока «${bsPlayerName(oppIdx)}»`;
+  if(textEl) textEl.textContent = `Передайте телефон игроку ${idx === 0 ? 1 : 2}`;
   const modal = document.getElementById('kidsBattleshipHandoffModal');
   if(modal) modal.classList.add('show');
 }
@@ -147,7 +146,14 @@ function updateKidsBattleshipTurnLabel(){
   const idx = state.battleshipCurrentPlayer || 0;
   const el = document.getElementById('kidsBattleshipTurnLabel');
   if(!el) return;
-  el.textContent = `Ходит: ${bsPlayerName(idx)}`;
+  const p0 = bsPlayerName(0);
+  const p1 = bsPlayerName(1);
+  const activeName = idx === 0 ? p0 : p1;
+  const inactiveName = idx === 0 ? p1 : p0;
+  // Имена игроков разного цвета (синий/розовый), активный — золотом, чтобы
+  // сразу было видно, кому телефон передан (чей ход).
+  const inactiveColor = idx === 0 ? '#7db8e8' : '#e0b0ff';
+  el.innerHTML = `Ходит: <span class="bs-name" style="color:#ffd166;font-weight:900;">${activeName}</span> <span class="bs-name" style="color:${inactiveColor};">${inactiveName}</span>`;
 }
 
 function updateKidsBattleshipStatus(text){

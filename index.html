@@ -1914,14 +1914,25 @@
   .battleship-cell.bs-miss{ background:rgba(255,255,255,.04); color:#7d93bf; }
   .battleship-cell.bs-hit{ background:linear-gradient(135deg,#ff8a5e,#ff3b5c); border-color:transparent; }
   .battleship-cell.bs-sunk{ background:linear-gradient(135deg,#5a1620,#2b0f2e); border-color:transparent; }
+  /* Свои корабли на поле игрока (одиночка) — тоненькая подсказка, не заглушающая
+     выстрелы бота. */
+  .bs-own-ship{ color:rgba(255,255,255,.35); }
+  /* Имена игроков в подписях хода — разного цвета, активный — золотом, чтобы
+     сразу было видно, кому телефон/ход. */
+  .bs-name{ font-weight:800; }
+  #kidsBattleshipTurnLabel,
+  #soloBattleshipTurnLabel{
+    text-align:center; font-size:40px; font-weight:900; color:#ffd166;
+    min-height:48px; line-height:1.15; margin:2px 0 4px;
+  }
+  .bs-board-title{
+    text-align:center; font-size:12px; font-weight:600; color:rgba(255,255,255,.6);
+    margin:6px 0 2px; letter-spacing:.5px;
+  }
   #kidsBattleshipGrid.player1 .battleship-cell{ background:rgba(255,255,255,.08); }
   #kidsBattleshipGrid.player1 .battleship-cell.bs-miss{ background:rgba(255,255,255,.04); color:#7d93bf; }
   #kidsBattleshipGrid.player2 .battleship-cell{ background:rgba(110,198,255,.15); border-color:rgba(110,198,255,.3); }
   #kidsBattleshipGrid.player2 .battleship-cell.bs-miss{ background:rgba(110,198,255,.08); color:#7db8e8; }
-  #kidsBattleshipTurnLabel{
-    text-align:center; font-size:40px; font-weight:900; color:#ffd166;
-    min-height:48px; line-height:1.15; margin:2px 0 4px;
-  }
   .bingo-actions-row{display:flex; gap:10px; margin-top:6px;}
   .bingo-actions-row .btn{flex:1;}
   .bingo-actions-bottom{margin-top:8px;}
@@ -2346,6 +2357,7 @@
           <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики-нолики</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloFlashBtn"><span class="menu-icon">🗂️</span> Флеш карты</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
         </div>
       </div>
 
@@ -3719,6 +3731,76 @@
         <li>«Выход» в любой момент завершает партию без объявления победителя.</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsBattleshipRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== МОРСКОЙ БОЙ (ДЛЯ ОДНОГО): НАСТРОЙКА ===== -->
+  <section id="soloBattleshipSetup" class="screen">
+    <h1 class="title">🚢 Морской бой</h1>
+    <div class="subtitle">Против бота на одном экране — топите флот противника по очереди</div>
+
+    <button class="btn btn-primary" id="soloBattleshipSetupStartBtn">Начать</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill rules-pill" id="soloBattleshipSetupRulesBtn">Правила</button>
+    </div>
+
+    <button class="btn btn-secondary" id="soloBattleshipSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== МОРСКОЙ БОЙ (ДЛЯ ОДНОГО): ИГРА ===== -->
+  <section id="soloBattleshipGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🚢 Морской бой</h1>
+    <div class="bs-turn-label" id="soloBattleshipTurnLabel"></div>
+    <div class="intro-text" id="soloBattleshipStatusText" style="text-align:center; min-height:40px; margin-bottom:6px;"></div>
+
+    <!-- Своё поле (видим свои корабли и попадания бота) -->
+    <div class="bs-player-board">
+      <div class="bs-board-title">Ваше поле</div>
+      <div class="battleship-grid" id="soloBsPlayerBoard"></div>
+    </div>
+
+    <!-- Поле бота — стреляем сюда -->
+    <div class="bs-enemy-board">
+      <div class="bs-board-title">Флот противника</div>
+      <div class="battleship-grid" id="soloBsEnemyBoard"></div>
+    </div>
+
+    <div class="bingo-stats-row" id="soloBattleshipStatsRow" style="text-align:center; font-size:13px; color:#cba0bf; margin-top:8px;">
+      <span id="soloBattleshipStatPlayer">Вы: 0 побед</span>
+      <span style="margin:0 8px;">·</span>
+      <span id="soloBattleshipStatBot">Бот: 0 побед</span>
+    </div>
+
+    <div class="bingo-actions-row bingo-actions-bottom">
+      <button type="button" class="btn btn-secondary btn-rules" id="soloBattleshipGameRulesBtn">Правила</button>
+      <button type="button" class="btn btn-secondary" id="soloBattleshipExitBtn">Выход</button>
+    </div>
+  </section>
+
+  <!-- ===== МОРСКОЙ БОЙ (ДЛЯ ОДНОГО): ИТОГИ ===== -->
+  <div class="modal-overlay" id="soloBattleshipSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="soloBattleshipSummaryIntro"></div>
+      <button class="btn btn-primary" id="closeSoloBattleshipSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "МОРСКОГО БОЯ" (ДЛЯ ОДНОГО) ===== -->
+  <div class="modal-overlay" id="soloBattleshipRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🚢 Правила игры «Морской бой»</div>
+      <div class="intro-text">Классика против бота на одном экране: флоты расставляются случайно, вы стреляете по полю бота, бот — по вашему. Ваш ход первым.</div>
+      <ol class="modal-rules">
+        <li>Флоты обоих сторон расставляются случайно и автоматически: 1 четырёхпалубный, 2 трёхпалубных, 3 двухпалубных и 4 однопалубных корабля (10 кораблей, 20 клеток), корабли не касаются друг друга даже углами — как в классической игре.</li>
+        <li>Вы всегда «Вы» — стреляете по полю бота. Попал — стреляете снова; промахнули — бот отвечает на вашем поле.</li>
+        <li>Бот сначала стреляет рядом с вашими ранеными кораблями, а если рядом ничего нет — в случайную свободную клетку.</li>
+        <li>Стреляйте по полю противника: 🌊 — мимо, 🔥 — попадание, 💀 — корабль потоплен полностью. Ваше поле показывает свои корабли и выстрелы бота.</li>
+        <li>Побеждает тот, кто первым потопит весь флот противника.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeSoloBattleshipRulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -5573,6 +5655,7 @@
 <script src="games/business-lemonade.js?v=20260829b"></script>
 <script src="games/kids-xo.js?v=20260829b"></script>
 <script src="games/kids-battleship.js?v=20260829b"></script>
+<script src="games/solo-battleship.js?v=20260829b"></script>
 <script src="games/truth-dare.js?v=20260829b"></script>
 <script src="games/bingo.js?v=20260829b"></script>
 <script src="games/timer-game.js?v=20260829b"></script>

@@ -198,8 +198,12 @@ let state = {
   // Морской бой (дети) — battleshipBoards[0]/[1] — флоты игроков 0/1, каждый
   // {cells:[{ship,shipId,shot}], ships:[{id,size,hits,sunk}]}; ходит всегда
   // тот, чей индекс в battleshipCurrentPlayer — стреляет по ДРУГОМУ игроку.
-  battleshipBoards:[], battleshipCurrentPlayer:0, battleshipWinner:null, battleshipShotsCount:[0,0], battleshipWins:[0,0]
-};
+   battleshipBoards:[], battleshipCurrentPlayer:0, battleshipWinner:null, battleshipShotsCount:[0,0], battleshipWins:[0,0],
+   // Морской бой (одиночка, против бота). soloBsPlayerBoard — наше поле
+   // (бот туда стреляет), soloBsBotBoard — поле бота (стреляем мы); ходит
+   // тот, чей ход в soloBsCurrentPlayer ('player'|'bot').
+   soloBsPlayerBoard:[], soloBsBotBoard:[], soloBsCurrentPlayer:'player', soloBsWinner:null, soloBsShots:{player:0,bot:0}, soloBsWins:{player:0,bot:0}
+ };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
 function pickStartingPlayerValue(v){
@@ -547,6 +551,12 @@ document.getElementById('gameKidsQuizBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToKidsQuizSetup();
+});
+// "Морской бой" (игры для одного) — goToSoloBattleshipSetup() определена в games/solo-battleship.js.
+document.getElementById('gameSoloBattleshipBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToSoloBattleshipSetup();
 });
 // "Флеш карты" (игры для одного) — goToFlashSetup() определена в games/kids-flash.js.
 document.getElementById('gameSoloFlashBtn').addEventListener('click', ()=>{
@@ -1220,9 +1230,11 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.soloXoBoard = []; state.soloXoCurrentPlayer = 'X'; state.soloXoRoundOver = false;
   state.soloXoStartingPlayer = 'X'; state.soloXoScorePlayer = 0; state.soloXoScoreBot = 0; state.soloXoDraws = 0;
   // Морской бой (дети)
-  state.battleshipBoards = []; state.battleshipCurrentPlayer = 0; state.battleshipWinner = null;
-  state.battleshipShotsCount = [0,0];
-  // Фанты (компания)
+   state.battleshipBoards = []; state.battleshipCurrentPlayer = 0; state.battleshipWinner = null;
+   state.battleshipShotsCount = [0,0];
+   // Морской бой (одиночка, против бота)
+   state.soloBsPlayerBoard = []; state.soloBsBotBoard = []; state.soloBsCurrentPlayer = 'player';
+   state.soloBsWinner = null; state.soloBsShots = {player:0,bot:0};
   state.partyFantsUsed = {};
   state.partyFantsCompleted = []; state.partyFantsSkipped = []; state.partyFantsCurrentPlayerIndex = 0;
   // Правда/Действие (компания)
