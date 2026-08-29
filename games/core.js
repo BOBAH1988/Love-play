@@ -216,7 +216,19 @@ function getSortedActiveLevels(){ return [...state.activeLevels].sort((a,b)=>a-b
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ const s = JSON.parse(raw); state = Object.assign(state, s); }
+    if(raw){
+      const s = JSON.parse(raw);
+      state = Object.assign(state, s);
+      // Миграция старых сейвов: flashAutoSpeak раньше был false по умолчанию,
+      // из-за этого после обновления он оставался выключенным у существующих
+      // пользователей. Включаем один раз (отдельный флаг — как у
+      // age-verified/kids-mode) без затирания их последующего ручного выключения.
+      if(localStorage.getItem('couple-game-flash-migrated-v1') !== '1'){
+        state.flashAutoSpeak = true;
+        localStorage.setItem('couple-game-flash-migrated-v1','1');
+        saveState();
+      }
+    }
   }catch(e){}
 }
 function saveState(){

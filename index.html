@@ -364,9 +364,9 @@
   }
 
   .starter-group{display:flex; gap:8px;}
-  /* Темы «Флеш карт» — 3 кнопки в ряду (оборачиваются на 4-й). */
-  .starter-group-3{flex-wrap:wrap;}
-  .starter-group-3 .starter-btn{flex:1 1 calc(33.333% - 6px);}
+  /* Темы «Флеш карт» — 2 кнопки в ряд (оборачиваются на 3-й/4-й). */
+  .starter-group-2{flex-wrap:wrap;}
+  .starter-group-2 .starter-btn{flex:1 1 calc(50% - 6px); max-width:calc(50% - 6px);}
   .starter-btn{
     flex:1; padding:9px 8px; border-radius:14px;
     border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);
@@ -3021,11 +3021,11 @@
 
     <div class="field">
       <label id="flashThemeLabel">Темы</label>
-      <div class="starter-group starter-group-3" id="flashThemeGroup">
+      <div class="starter-group starter-group-2" id="flashThemeGroup">
         <button type="button" class="starter-btn mode-btn" data-value="english">🇬🇧 Популярные слова</button>
-        <button type="button" class="starter-btn mode-btn" data-value="animals">🐾 Животные</button>
-        <button type="button" class="starter-btn mode-btn" data-value="verbs">Глаголы</button>
-        <button type="button" class="starter-btn mode-btn" data-value="time">Время</button>
+        <button type="button" class="starter-btn mode-btn" data-value="animals">Животные</button>
+        <button type="button" class="starter-btn mode-btn" data-value="verbs">🔤 Глаголы</button>
+        <button type="button" class="starter-btn mode-btn" data-value="time">🕐 Время</button>
       </div>
       <div class="flash-theme-block" id="flashEnglishSizeBlock">
         <div class="flash-theme-name">Объём словаря</div>
@@ -5524,80 +5524,80 @@
   </div>
 </div>
 
-<script src="cards/cards_fants.js?v=20260829a"></script>
-<script src="cards/cards_fants_users.js?v=20260829a"></script>
-<script src="cards/cards_poses.js?v=20260829a"></script>
-<script src="cards/cards_sexshop.js?v=20260829a"></script>
-<script src="cards/cards_collection.js?v=20260829a"></script>
-<script src="cards/cards_desires_women.js?v=20260829a"></script>
-<script src="cards/cards_desires_men.js?v=20260829a"></script>
-<script src="cards/cards_sex_coach_tips.js?v=20260829a"></script>
-<script src="cards/cards_sex_coach_qa.js?v=20260829a"></script>
-<script src="cards/cards_kamasutra_caresses.js?v=20260829a"></script>
-<script src="cards/cards_kamasutra_positions.js?v=20260829a"></script>
-<script src="cards/cards_video.js?v=20260829a"></script>
-<script src="cards/cards_bingo.js?v=20260829a"></script>
-<script src="cards/cards_timer.js?v=20260829a"></script>
-<script src="cards/cards_wishlist.js?v=20260829a"></script>
-<script src="cards/cards_znayu.js?v=20260829a"></script>
-<script src="cards/cards_krokodil.js?v=20260829a"></script>
-<script src="cards/cards_memes.js?v=20260829a"></script>
-<script src="cards/cards_party_never.js?v=20260829a"></script>
-<script src="cards/cards_party_fants.js?v=20260829a"></script>
-<script src="cards/cards_party_td.js?v=20260829a"></script>
-<script src="cards/cards_fam_znayu.js?v=20260829a"></script>
-<script src="cards/cards_lucky.js?v=20260829a"></script>
-<script src="cards/cards_kids_memory.js?v=20260829a"></script>
-<script src="cards/cards_kids_td.js?v=20260829a"></script>
-<script src="cards/cards_quiz.js?v=20260829a"></script>
-<script src="cards/cards_party_quiz.js?v=20260829a"></script>
-<script src="cards/cards_kids_quiz.js?v=20260829a"></script>
-<script src="cards/cards_ideas.js?v=20260829a"></script>
-<script src="cards/cards_sexquest.js?v=20260829a"></script>
-<script src="cards/cards_whattoplay.js?v=20260829a"></script>
-<script src="cards/cards_kids_krokodil.js?v=20260829a"></script>
-<script src="cards/cards_kids_memes.js?v=20260829a"></script>
-<script src="cards/cards_flash.js?v=20260829a"></script>
-<script src="cards/cards_kids_saper.js?v=20260829a"></script>
-<script src="cards/cards_party_hangman.js?v=20260829a"></script>
-<script src="cards/cards_shop.js?v=20260829a"></script>
-<script src="games/core.js?v=20260829a"></script>
-<script src="games/twister.js?v=20260829a"></script>
-<script src="games/party-hangman.js?v=20260829a"></script>
-<script src="games/solo-quiz.js?v=20260829a"></script>
-<script src="games/solo-memory.js?v=20260829a"></script>
-<script src="games/solo-xo.js?v=20260829a"></script>
-<script src="games/shop.js?v=20260829a"></script>
-<script src="games/business-observer.js?v=20260829a"></script>
-<script src="games/party-roulette.js?v=20260829a"></script>
-<script src="games/business-lemonade.js?v=20260829a"></script>
-<script src="games/kids-xo.js?v=20260829a"></script>
-<script src="games/kids-battleship.js?v=20260829a"></script>
-<script src="games/truth-dare.js?v=20260829a"></script>
-<script src="games/bingo.js?v=20260829a"></script>
-<script src="games/timer-game.js?v=20260829a"></script>
-<script src="games/krokodil.js?v=20260829a"></script>
-<script src="games/memes.js?v=20260829a"></script>
-<script src="games/party-never.js?v=20260829a"></script>
-<script src="games/party-fants.js?v=20260829a"></script>
-<script src="games/party-td.js?v=20260829a"></script>
-<script src="games/fam-znayu.js?v=20260829a"></script>
-<script src="games/lucky.js?v=20260829a"></script>
-<script src="games/kids-memory.js?v=20260829a"></script>
-<script src="games/kids-krokodil.js?v=20260829a"></script>
-<script src="games/kids-memes.js?v=20260829a"></script>
-<script src="games/kids-flash.js?v=20260829a"></script>
-<script src="games/kids-saper.js?v=20260829a"></script>
-<script src="games/kids-td.js?v=20260829a"></script>
-<script src="games/quiz.js?v=20260829a"></script>
-<script src="games/party-quiz.js?v=20260829a"></script>
-<script src="games/kids-quiz.js?v=20260829a"></script>
-<script src="games/wishlist.js?v=20260829a"></script>
-<script src="games/znayu.js?v=20260829a"></script>
-<script src="games/ideas.js?v=20260829a"></script>
-<script src="games/sexquest.js?v=20260829a"></script>
-<script src="games/whattoplay.js?v=20260829a"></script>
-<script src="games/init.js?v=20260829a"></script>
+<script src="cards/cards_fants.js?v=20260829b"></script>
+<script src="cards/cards_fants_users.js?v=20260829b"></script>
+<script src="cards/cards_poses.js?v=20260829b"></script>
+<script src="cards/cards_sexshop.js?v=20260829b"></script>
+<script src="cards/cards_collection.js?v=20260829b"></script>
+<script src="cards/cards_desires_women.js?v=20260829b"></script>
+<script src="cards/cards_desires_men.js?v=20260829b"></script>
+<script src="cards/cards_sex_coach_tips.js?v=20260829b"></script>
+<script src="cards/cards_sex_coach_qa.js?v=20260829b"></script>
+<script src="cards/cards_kamasutra_caresses.js?v=20260829b"></script>
+<script src="cards/cards_kamasutra_positions.js?v=20260829b"></script>
+<script src="cards/cards_video.js?v=20260829b"></script>
+<script src="cards/cards_bingo.js?v=20260829b"></script>
+<script src="cards/cards_timer.js?v=20260829b"></script>
+<script src="cards/cards_wishlist.js?v=20260829b"></script>
+<script src="cards/cards_znayu.js?v=20260829b"></script>
+<script src="cards/cards_krokodil.js?v=20260829b"></script>
+<script src="cards/cards_memes.js?v=20260829b"></script>
+<script src="cards/cards_party_never.js?v=20260829b"></script>
+<script src="cards/cards_party_fants.js?v=20260829b"></script>
+<script src="cards/cards_party_td.js?v=20260829b"></script>
+<script src="cards/cards_fam_znayu.js?v=20260829b"></script>
+<script src="cards/cards_lucky.js?v=20260829b"></script>
+<script src="cards/cards_kids_memory.js?v=20260829b"></script>
+<script src="cards/cards_kids_td.js?v=20260829b"></script>
+<script src="cards/cards_quiz.js?v=20260829b"></script>
+<script src="cards/cards_party_quiz.js?v=20260829b"></script>
+<script src="cards/cards_kids_quiz.js?v=20260829b"></script>
+<script src="cards/cards_ideas.js?v=20260829b"></script>
+<script src="cards/cards_sexquest.js?v=20260829b"></script>
+<script src="cards/cards_whattoplay.js?v=20260829b"></script>
+<script src="cards/cards_kids_krokodil.js?v=20260829b"></script>
+<script src="cards/cards_kids_memes.js?v=20260829b"></script>
+<script src="cards/cards_flash.js?v=20260829b"></script>
+<script src="cards/cards_kids_saper.js?v=20260829b"></script>
+<script src="cards/cards_party_hangman.js?v=20260829b"></script>
+<script src="cards/cards_shop.js?v=20260829b"></script>
+<script src="games/core.js?v=20260829b"></script>
+<script src="games/twister.js?v=20260829b"></script>
+<script src="games/party-hangman.js?v=20260829b"></script>
+<script src="games/solo-quiz.js?v=20260829b"></script>
+<script src="games/solo-memory.js?v=20260829b"></script>
+<script src="games/solo-xo.js?v=20260829b"></script>
+<script src="games/shop.js?v=20260829b"></script>
+<script src="games/business-observer.js?v=20260829b"></script>
+<script src="games/party-roulette.js?v=20260829b"></script>
+<script src="games/business-lemonade.js?v=20260829b"></script>
+<script src="games/kids-xo.js?v=20260829b"></script>
+<script src="games/kids-battleship.js?v=20260829b"></script>
+<script src="games/truth-dare.js?v=20260829b"></script>
+<script src="games/bingo.js?v=20260829b"></script>
+<script src="games/timer-game.js?v=20260829b"></script>
+<script src="games/krokodil.js?v=20260829b"></script>
+<script src="games/memes.js?v=20260829b"></script>
+<script src="games/party-never.js?v=20260829b"></script>
+<script src="games/party-fants.js?v=20260829b"></script>
+<script src="games/party-td.js?v=20260829b"></script>
+<script src="games/fam-znayu.js?v=20260829b"></script>
+<script src="games/lucky.js?v=20260829b"></script>
+<script src="games/kids-memory.js?v=20260829b"></script>
+<script src="games/kids-krokodil.js?v=20260829b"></script>
+<script src="games/kids-memes.js?v=20260829b"></script>
+<script src="games/kids-flash.js?v=20260829b"></script>
+<script src="games/kids-saper.js?v=20260829b"></script>
+<script src="games/kids-td.js?v=20260829b"></script>
+<script src="games/quiz.js?v=20260829b"></script>
+<script src="games/party-quiz.js?v=20260829b"></script>
+<script src="games/kids-quiz.js?v=20260829b"></script>
+<script src="games/wishlist.js?v=20260829b"></script>
+<script src="games/znayu.js?v=20260829b"></script>
+<script src="games/ideas.js?v=20260829b"></script>
+<script src="games/sexquest.js?v=20260829b"></script>
+<script src="games/whattoplay.js?v=20260829b"></script>
+<script src="games/init.js?v=20260829b"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует. -->
 <script>
