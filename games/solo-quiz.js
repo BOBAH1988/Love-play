@@ -230,6 +230,8 @@ function showSoloQuizSummaryModal(){
 function goToSoloQuizGame(){
   state.soloQuizCorrect = 0;
   state.soloQuizTimeMs = 0;
+  state.soloQuizUsed = state.soloQuizUsed || {};
+  state.soloQuizUsed[state.soloQuizSelectedLevel || 1] = [];
   drawSoloQuizQueue();
   document.getElementById('soloQuizSetup').classList.remove('active');
   document.getElementById('soloQuizGame').classList.add('active');

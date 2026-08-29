@@ -324,12 +324,14 @@ function goToKidsQuizGame(){
   abandonPausedFantySession();
   abandonPausedQuizSession();
   abandonPausedPartyQuizSession();
-  abandonCachedSoloBsSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   const players = kidsQuizPlayersList();
   state.kidsQuizCorrect = new Array(players.length).fill(0);
   state.kidsQuizTimeMs = new Array(players.length).fill(0);
   state.kidsQuizCurrentPlayerIndex = Math.floor(Math.random() * players.length);
+  state.kidsQuizUsed = state.kidsQuizUsed || {};
+  state.kidsQuizUsed[state.kidsAge || 1] = [];
   drawKidsQuizQueue();
   state.inProgress = true;
   saveState();

@@ -100,7 +100,7 @@ function goToPartyFantsGame(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedFantySession();
-  abandonCachedSoloBsSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   if(!state.partyPlayers || state.partyPlayers.length < 2){
     state.partyPlayers = ['Игрок 1','Игрок 2'];

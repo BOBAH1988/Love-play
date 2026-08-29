@@ -122,7 +122,7 @@ function goToKidsTdGame(){
   abandonPausedLuckySession();
   abandonPausedFantySession();
   abandonPausedKidsMemorySession();
-  abandonCachedSoloBsSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   if(!state.kidsPlayers || state.kidsPlayers.length < 2){
     state.kidsPlayers = ['Игрок 1','Игрок 2'];

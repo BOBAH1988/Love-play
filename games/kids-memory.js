@@ -184,7 +184,7 @@ function goToKidsMemoryGame(){
   abandonPausedLuckySession();
   abandonPausedKidsTdSession();
   abandonPausedFantySession();
-  abandonCachedSoloBsSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   document.getElementById('kidsMemorySetup').classList.remove('active');
   document.getElementById('kidsMemoryGame').classList.add('active');

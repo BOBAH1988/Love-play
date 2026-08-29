@@ -177,7 +177,7 @@ function goToTdGame(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedFantySession();
-  abandonCachedSoloBsSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();

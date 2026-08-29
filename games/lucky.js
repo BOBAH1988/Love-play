@@ -464,7 +464,7 @@ function goToLuckyGame(){
   abandonPausedPartyFantsSession();
   abandonPausedPartyTdSession();
   abandonPausedFamZnayuSession();
-  abandonCachedSoloBsSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   // Счастливый билет использует СВОИ 2 фиксированные команды (state.luckyTeams,
   // в каждой мужчина и женщина) — заполняются на своём экране настройки

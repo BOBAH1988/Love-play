@@ -358,7 +358,7 @@ function goToFamZnayuGame(){
   abandonPausedPartyTdSession();
   abandonPausedLuckySession();
   abandonPausedFantySession();
-  abandonCachedSoloBsSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   syncFamZnayuFamiliesArray();
   state.famZnayuCurrentFamilyIndex = 0;
