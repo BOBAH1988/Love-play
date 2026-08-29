@@ -1058,6 +1058,20 @@
     border-radius:14px; padding:12px;
   }
   .flash-theme-name{ font-weight:800; font-size:15px; margin-bottom:10px; }
+  /* Множественный выбор для карточек темы «Время» */
+  .flash-time-options{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:16px;
+  }
+  .flash-time-option{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    border-radius:12px; padding:12px; font-size:18px; font-weight:600;
+    color:rgba(255,255,255,.85); cursor:pointer; text-align:center;
+    transition:all .18s ease;
+  }
+  .flash-time-option:hover{ background:rgba(255,255,255,.12); }
+  .flash-time-option.correct{ background:rgba(76,175,80,.3); border-color:rgba(76,175,80,.6); color:#4caf50; }
+  .flash-time-option.wrong{ background:rgba(244,67,54,.3); border-color:rgba(244,67,54,.6); color:#f44336; }
+  .flash-time-option:disabled{ cursor:default; }
   /* "Оцени бизнес" — карточка сценария: заголовок бизнеса, таблица его
      данных (цена/себестоимость/расходы/продажи), затем сам вопрос и
      варианты ответа (games/business-observer.js, .znayu-question-text/
@@ -5668,7 +5682,7 @@
 <script src="games/kids-memory.js?v=20260829g"></script>
 <script src="games/kids-krokodil.js?v=20260829g"></script>
 <script src="games/kids-memes.js?v=20260829g"></script>
- <script src="games/kids-flash.js?v=20260829h"></script>
+ <script src="games/kids-flash.js?v=20260829i"></script>
 <script src="games/kids-saper.js?v=20260829g"></script>
 <script src="games/kids-td.js?v=20260829g"></script>
 <script src="games/quiz.js?v=20260829g"></script>

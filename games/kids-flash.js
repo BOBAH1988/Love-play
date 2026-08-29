@@ -171,6 +171,9 @@ function goToFlashGame(){
   requestWakeLock();
 }
 
+function isFlashTimeCard(card){
+  return card && card.theme === 'time';
+}
 function drawFlashCard(){
   const card = state.flashQueue[state.flashIndex];
   if(!card){ finishFlashSession(); return; }
@@ -178,29 +181,50 @@ function drawFlashCard(){
   stopFlashSpeech();
   updateFlashProgress();
   const learn = state.flashMode === 'learn';
+  const isTime = isFlashTimeCard(card);
   fadeSwapEl('flashCard', (el)=>{
     el.className = 'card';
-    el.innerHTML = `
-      <div class="card-inner">
-        <div class="card-body">
-          <div class="flash-word">${card.word}</div>
-          ${learn ? `
-            <div class="flash-transcription">[${card.transcription}]</div>
-            <div class="flash-translation">${card.translation}</div>
-          ` : `
-            <div class="flash-transcription" id="flashTranscription" style="display:none;">[${card.transcription}]</div>
-            <div class="flash-translation" id="flashTranslation" style="display:none;">${card.translation}</div>
-          `}
+    if(isTime){
+      const options = card.options || [];
+      const correctIdx = (typeof card.answer === 'number') ? card.answer : -1;
+      const optsHtml = options.map((opt, i)=>{
+        const cls = learn ? (i === correctIdx ? 'flash-time-option correct' : 'flash-time-option') : 'flash-time-option';
+        return `<button type="button" class="${cls}" data-time-idx="${i}" data-time-correct="${i === correctIdx}">${opt}</button>`;
+      }).join('');
+      el.innerHTML = `
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="flash-word">${card.word}</div>
+            <div class="flash-time-options">
+              ${optsHtml}
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="memes-tts-hint" id="flashTtsHint">🔊</div>
-    `;
+        <div class="memes-tts-hint" id="flashTtsHint" style="display:none;">🔊</div>
+      `;
+    } else {
+      el.innerHTML = `
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="flash-word">${card.word}</div>
+            ${learn ? `
+              <div class="flash-transcription">[${card.transcription}]</div>
+              <div class="flash-translation">${card.translation}</div>
+            ` : `
+              <div class="flash-transcription" id="flashTranscription" style="display:none;">[${card.transcription}]</div>
+              <div class="flash-translation" id="flashTranslation" style="display:none;">${card.translation}</div>
+            `}
+          </div>
+        </div>
+        <div class="memes-tts-hint" id="flashTtsHint">🔊</div>
+      `;
+    }
   }, ()=>{
-    // onDone — карточка уже реально отрисована (fadeSwapEl может отложить
-    // перерисовку на 220мс), только теперь в DOM точно есть #flashTtsHint.
+    // onDone
     updateFlashAutoSpeakBtn();
     updateFlashAnswerBtn();
-    if(state.flashAutoSpeak) speakFlashWord();
+    updateFlashTimeOptionsState();
+    if(state.flashAutoSpeak && !isTime) speakFlashWord();
   });
 }
 // "Ответ" — только в режиме "Повторение": транскрипция и перевод скрыты по
@@ -210,7 +234,8 @@ function updateFlashAnswerBtn(){
   const btn = document.getElementById('flashAnswerBtn');
   if(!btn) return;
   const learn = state.flashMode === 'learn';
-  btn.style.display = learn ? 'none' : '';
+  const isTime = isFlashTimeCard(flashCurrentCard);
+  btn.style.display = (isTime || learn) ? 'none' : '';
   btn.disabled = false;
 }
 function revealFlashAnswer(){
@@ -220,6 +245,26 @@ function revealFlashAnswer(){
   if(tr) tr.style.display = '';
   const btn = document.getElementById('flashAnswerBtn');
   if(btn) btn.disabled = true;
+  revealFlashTimeCorrect();
+}
+function revealFlashTimeCorrect(){
+  const wrap = document.getElementById('flashCard');
+  if(!wrap) return;
+  wrap.querySelectorAll('[data-time-correct="true"]').forEach(el=>{
+    el.classList.add('correct');
+    el.classList.add('revealed');
+  });
+}
+function updateFlashTimeOptionsState(){
+  const card = flashCurrentCard;
+  if(!card || !isFlashTimeCard(card)) return;
+  const learn = state.flashMode === 'learn';
+  const wrap = document.getElementById('flashCard');
+  if(!wrap) return;
+  const btns = wrap.querySelectorAll('.flash-time-option');
+  btns.forEach(btn=>{
+    btn.disabled = learn; // В режиме Обучение варианты не кликаются (ответ виден)
+  });
 }
 
 function finishFlashSession(){
@@ -240,7 +285,7 @@ function stopFlashSpeech(){
   if(hint) hint.classList.remove('speaking');
 }
 function speakFlashWord(){
-  if(!flashCurrentCard || !('speechSynthesis' in window)) return;
+  if(!flashCurrentCard || isFlashTimeCard(flashCurrentCard) || !('speechSynthesis' in window)) return;
   const synth = window.speechSynthesis;
   const card = flashCurrentCard;
   const utter = new SpeechSynthesisUtterance(card.word);
@@ -269,12 +314,42 @@ function speakFlashWord(){
     fire();
   }
 }
-document.getElementById('flashCard').addEventListener('click', ()=>{
-  speakFlashWord();
+function handleFlashTimeOption(btn){
+  const learn = state.flashMode === 'learn';
+  if(learn) return;
+  const wrap = document.getElementById('flashCard');
+  if(!wrap) return;
+  const alreadySelected = wrap.querySelector('.flash-time-option.selected');
+  if(alreadySelected) return;
+  const isCorrect = btn.getAttribute('data-time-correct') === 'true';
+  btn.classList.add('selected');
+  const allBtns = wrap.querySelectorAll('.flash-time-option');
+  if(isCorrect){
+    btn.classList.add('correct');
+    playSuccessSound();
+    showToast('✅ Верно!');
+  } else {
+    btn.classList.add('wrong');
+    wrap.querySelectorAll('[data-time-correct="true"]').forEach(el=>{ el.classList.add('correct'); });
+    playFailSound();
+    showToast('❌ Неверно');
+  }
+  allBtns.forEach(b=>b.disabled = true);
+}
+document.getElementById('flashCard').addEventListener('click', (e)=>{
+  if(e.target.classList.contains('flash-time-option')){
+    handleFlashTimeOption(e.target);
+    return;
+  }
+  if(!isFlashTimeCard(flashCurrentCard)){
+    speakFlashWord();
+  }
 });
 function updateFlashAutoSpeakBtn(){
   const btn = document.getElementById('flashAutoSpeakBtn');
   if(!btn) return;
+  const isTime = isFlashTimeCard(flashCurrentCard);
+  btn.style.display = isTime ? 'none' : '';
   btn.classList.toggle('on', !!state.flashAutoSpeak);
 }
 document.getElementById('flashAutoSpeakBtn').addEventListener('click', ()=>{
@@ -282,7 +357,7 @@ document.getElementById('flashAutoSpeakBtn').addEventListener('click', ()=>{
   saveState();
   updateFlashAutoSpeakBtn();
   playSuccessSound();
-  if(state.flashAutoSpeak) speakFlashWord();
+  if(state.flashAutoSpeak && !isFlashTimeCard(flashCurrentCard)) speakFlashWord();
 });
 document.getElementById('flashAnswerBtn').addEventListener('click', ()=>{
   playSuccessSound();
