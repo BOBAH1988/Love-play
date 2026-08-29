@@ -1,13 +1,15 @@
 // cards/cards_flash.js — данные для игры «Флеш карты» (games/kids-flash.js).
-// FLASH_THEMES — список тем (пока одна — английский язык, другие темы
-//   добавятся позже).
+// FLASH_THEMES — список тем.
 // FLASH_WORDS — карточки: { theme, group, word, transcription, translation }.
-//   group — размер пула, в который входит карточка: в подборку "100 слов"
-//   входят карточки group<=100, в подборку "250 слов" — все карточки этой
-//   темы (те же 100 базовых + 150 более сложных, без повторов).
+//   group — размер пула, в который входит карточка (для темы 'english'):
+//   в подборку "100 слов" входят карточки group<=100, в подборку "250 слов"
+//   — все карточки этой темы (те же 100 базовых + 150 более сложных, без
+//   повторов). Для других тем (например, 'animals') поле group не влияет на
+//   выборку — берутся все карточки темы.
 
 const FLASH_THEMES = [
   { id: 'english', icon: '🇬🇧', name: 'Английский язык' },
+  { id: 'animals', icon: '🐾', name: 'Животные' },
 ];
 
 const FLASH_WORDS = [
@@ -261,4 +263,82 @@ const FLASH_WORDS = [
   { theme: 'english', group: 250, word: 'wrong', transcription: 'rɒŋ', translation: 'неправильный' },
   { theme: 'english', group: 250, word: 'today', transcription: 'təˈdeɪ', translation: 'сегодня' },
   { theme: 'english', group: 250, word: 'tomorrow', transcription: 'təˈmɒrəʊ', translation: 'завтра' },
+
+  // ---------- Тема: Животные (animals) ----------
+  { theme: 'animals', group: 1, word: 'cat', transcription: 'kæt', translation: 'кошка' },
+  { theme: 'animals', group: 1, word: 'dog', transcription: 'dɒɡ', translation: 'собака' },
+  { theme: 'animals', group: 1, word: 'cow', transcription: 'kaʊ', translation: 'корова' },
+  { theme: 'animals', group: 1, word: 'pig', transcription: 'pɪɡ', translation: 'свинья' },
+  { theme: 'animals', group: 1, word: 'sheep', transcription: 'ʃiːp', translation: 'овца' },
+  { theme: 'animals', group: 1, word: 'goat', transcription: 'ɡəʊt', translation: 'коза' },
+  { theme: 'animals', group: 1, word: 'horse', transcription: 'hɔːs', translation: 'лошадь' },
+  { theme: 'animals', group: 1, word: 'donkey', transcription: 'ˈdɒŋki', translation: 'осёл' },
+  { theme: 'animals', group: 1, word: 'rabbit', transcription: 'ˈræbɪt', translation: 'кролик' },
+  { theme: 'animals', group: 1, word: 'mouse', transcription: 'maʊs', translation: 'мышь' },
+  { theme: 'animals', group: 1, word: 'rat', transcription: 'ræt', translation: 'крыса' },
+  { theme: 'animals', group: 1, word: 'hamster', transcription: 'ˈhæmstə', translation: 'хомяк' },
+  { theme: 'animals', group: 1, word: 'guinea pig', transcription: 'ˈɡɪni pɪɡ', translation: 'морская свинка' },
+  { theme: 'animals', group: 1, word: 'bird', transcription: 'bɜːd', translation: 'птица' },
+  { theme: 'animals', group: 1, word: 'duck', transcription: 'dʌk', translation: 'утка' },
+  { theme: 'animals', group: 1, word: 'chicken', transcription: 'ˈtʃɪkɪn', translation: 'курица' },
+  { theme: 'animals', group: 1, word: 'goose', transcription: 'ɡuːs', translation: 'гусь' },
+  { theme: 'animals', group: 1, word: 'turkey', transcription: 'ˈtɜːki', translation: 'индюк' },
+  { theme: 'animals', group: 1, word: 'fish', transcription: 'fɪʃ', translation: 'рыба' },
+  { theme: 'animals', group: 1, word: 'frog', transcription: 'frɒɡ', translation: 'лягушка' },
+  { theme: 'animals', group: 1, word: 'turtle', transcription: 'ˈtɜːtl', translation: 'черепаха' },
+  { theme: 'animals', group: 1, word: 'snake', transcription: 'sneɪk', translation: 'змея' },
+  { theme: 'animals', group: 1, word: 'lizard', transcription: 'ˈlɪzəd', translation: 'ящерица' },
+  { theme: 'animals', group: 1, word: 'crocodile', transcription: 'ˈkrɒkədaɪl', translation: 'крокодил' },
+  { theme: 'animals', group: 1, word: 'bee', transcription: 'biː', translation: 'пчела' },
+  { theme: 'animals', group: 1, word: 'butterfly', transcription: 'ˈbʌtəflaɪ', translation: 'бабочка' },
+  { theme: 'animals', group: 1, word: 'spider', transcription: 'ˈspaɪdə', translation: 'паук' },
+  { theme: 'animals', group: 1, word: 'ant', transcription: 'ænt', translation: 'муравей' },
+  { theme: 'animals', group: 1, word: 'ladybug', transcription: 'ˈleɪdɪbʌɡ', translation: 'божья коровка' },
+  { theme: 'animals', group: 1, word: 'bear', transcription: 'beə', translation: 'медведь' },
+  { theme: 'animals', group: 1, word: 'wolf', transcription: 'wʊlf', translation: 'волк' },
+  { theme: 'animals', group: 1, word: 'fox', transcription: 'fɒks', translation: 'лиса' },
+  { theme: 'animals', group: 1, word: 'deer', transcription: 'dɪə', translation: 'олень' },
+  { theme: 'animals', group: 1, word: 'hare', transcription: 'heə', translation: 'заяц' },
+  { theme: 'animals', group: 1, word: 'squirrel', transcription: 'ˈskwɪrəl', translation: 'белка' },
+  { theme: 'animals', group: 1, word: 'hedgehog', transcription: 'ˈhedʒhɒɡ', translation: 'ёж' },
+  { theme: 'animals', group: 1, word: 'lion', transcription: 'ˈlaɪən', translation: 'лев' },
+  { theme: 'animals', group: 1, word: 'tiger', transcription: 'ˈtaɪɡə', translation: 'тигр' },
+  { theme: 'animals', group: 1, word: 'elephant', transcription: 'ˈelɪfənt', translation: 'слон' },
+  { theme: 'animals', group: 1, word: 'giraffe', transcription: 'dʒɪˈrɑːf', translation: 'жираф' },
+  { theme: 'animals', group: 1, word: 'monkey', transcription: 'ˈmʌŋki', translation: 'обезьяна' },
+  { theme: 'animals', group: 1, word: 'zebra', transcription: 'ˈziːbrə', translation: 'зебра' },
+  { theme: 'animals', group: 1, word: 'hippo', transcription: 'ˈhɪpəʊ', translation: 'бегемот' },
+  { theme: 'animals', group: 1, word: 'rhino', transcription: 'ˈraɪnəʊ', translation: 'носорог' },
+  { theme: 'animals', group: 1, word: 'camel', transcription: 'ˈkæml', translation: 'верблюд' },
+  { theme: 'animals', group: 1, word: 'kangaroo', transcription: 'ˌkæŋɡəˈruː', translation: 'кенгуру' },
+  { theme: 'animals', group: 1, word: 'penguin', transcription: 'ˈpeŋɡwɪn', translation: 'пингвин' },
+  { theme: 'animals', group: 1, word: 'owl', transcription: 'aʊl', translation: 'сова' },
+  { theme: 'animals', group: 1, word: 'eagle', transcription: 'ˈiːɡl', translation: 'орёл' },
+  { theme: 'animals', group: 1, word: 'parrot', transcription: 'ˈpærət', translation: 'попугай' },
+  { theme: 'animals', group: 1, word: 'swan', transcription: 'swɒn', translation: 'лебедь' },
+  { theme: 'animals', group: 1, word: 'rooster', transcription: 'ˈruːstə', translation: 'петух' },
+  { theme: 'animals', group: 1, word: 'crab', transcription: 'kræb', translation: 'краб' },
+  { theme: 'animals', group: 1, word: 'shrimp', transcription: 'ʃrɪmp', translation: 'креветка' },
+  { theme: 'animals', group: 1, word: 'whale', transcription: 'weɪl', translation: 'кит' },
+  { theme: 'animals', group: 1, word: 'dolphin', transcription: 'ˈdɒlfɪn', translation: 'дельфин' },
+  { theme: 'animals', group: 1, word: 'shark', transcription: 'ʃɑːk', translation: 'акула' },
+  { theme: 'animals', group: 1, word: 'octopus', transcription: 'ˈɒktəpəs', translation: 'осьминог' },
+  { theme: 'animals', group: 1, word: 'seal', transcription: 'siːl', translation: 'тюлень' },
+  { theme: 'animals', group: 1, word: 'panda', transcription: 'ˈpændə', translation: 'панда' },
+  { theme: 'animals', group: 1, word: 'koala', transcription: 'kəʊˈɑːlə', translation: 'коала' },
+  { theme: 'animals', group: 1, word: 'bat', transcription: 'bæt', translation: 'летучая мышь' },
+  { theme: 'animals', group: 1, word: 'snail', transcription: 'sneɪl', translation: 'улитка' },
+  { theme: 'animals', group: 1, word: 'worm', transcription: 'wɜːm', translation: 'червь' },
+  { theme: 'animals', group: 1, word: 'caterpillar', transcription: 'ˈkætəpɪlə', translation: 'гусеница' },
+  { theme: 'animals', group: 1, word: 'grasshopper', transcription: 'ˈɡrɑːshɒpə', translation: 'кузнечик' },
+  { theme: 'animals', group: 1, word: 'beetle', transcription: 'ˈbiːtl', translation: 'жук' },
+  { theme: 'animals', group: 1, word: 'lamb', transcription: 'læm', translation: 'ягнёнок' },
+  { theme: 'animals', group: 1, word: 'calf', transcription: 'kɑːf', translation: 'телёнок' },
+  { theme: 'animals', group: 1, word: 'puppy', transcription: 'ˈpʌpi', translation: 'щенок' },
+  { theme: 'animals', group: 1, word: 'kitten', transcription: 'ˈkɪtn', translation: 'котёнок' },
+  { theme: 'animals', group: 1, word: 'ox', transcription: 'ɒks', translation: 'бык' },
+  { theme: 'animals', group: 1, word: 'buffalo', transcription: 'ˈbʌfələʊ', translation: 'буйвол' },
+  { theme: 'animals', group: 1, word: 'peacock', transcription: 'ˈpiːkɒk', translation: 'павлин' },
+  { theme: 'animals', group: 1, word: 'flamingo', transcription: 'fləˈmɪŋɡəʊ', translation: 'фламинго' },
+  { theme: 'animals', group: 1, word: 'ostrich', transcription: 'ˈɒstrɪtʃ', translation: 'страус' },
 ];

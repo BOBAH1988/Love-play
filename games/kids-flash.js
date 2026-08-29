@@ -18,6 +18,10 @@ let flashCurrentCard = null;
 
 function getFlashPool(size){
   if(typeof FLASH_WORDS === 'undefined' || !Array.isArray(FLASH_WORDS)) return [];
+  if(state.flashTheme === 'animals'){
+    return FLASH_WORDS.filter(w => w.theme === 'animals');
+  }
+  // Английский язык: size задаёт объём подборки слов.
   if(size === 100) return FLASH_WORDS.filter(w => w.theme === 'english' && w.group <= 100);
   return FLASH_WORDS.filter(w => w.theme === 'english' && w.group > 100 && w.group <= 250);
 }
@@ -26,6 +30,7 @@ function goToFlashSetup(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('flashSetup').classList.add('active');
   renderFlashModeGroup();
+  renderFlashThemeGroup();
   renderFlashThemeSizeGroup();
   renderFlashCountGroup();
 }
@@ -77,6 +82,31 @@ document.querySelectorAll('#flashCountGroup .starter-btn').forEach(btn=>{
     state.flashCount = parseInt(btn.dataset.value, 10);
     saveState();
     renderFlashCountGroup();
+  });
+});
+
+function renderFlashThemeGroup(){
+  if(typeof FLASH_THEMES !== 'undefined' && Array.isArray(FLASH_THEMES) && FLASH_THEMES.length){
+    if(!FLASH_THEMES.some(t => t.id === state.flashTheme)){ state.flashTheme = FLASH_THEMES[0].id; saveState(); }
+  } else if(state.flashTheme !== 'english'){
+    state.flashTheme = 'english'; saveState();
+  }
+  const group = document.getElementById('flashThemeGroup');
+  if(group){
+    group.querySelectorAll('.starter-btn').forEach(btn=>{
+      btn.classList.toggle('on', btn.dataset.value === state.flashTheme);
+    });
+  }
+  // Блок «объём словаря» (100/250) относится только к теме «Английский язык».
+  const sizeBlock = document.getElementById('flashEnglishSizeBlock');
+  if(sizeBlock) sizeBlock.style.display = (state.flashTheme === 'english') ? '' : 'none';
+}
+document.querySelectorAll('#flashThemeGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    playSuccessSound();
+    state.flashTheme = btn.dataset.value;
+    saveState();
+    renderFlashThemeGroup();
   });
 });
 

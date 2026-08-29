@@ -143,10 +143,11 @@ let state = {
   kidsKrokodilTurnsPlayed:0,
   // Мемасики (дети) — уровень берётся из kidsAge
   kidsMemesUsed:{}, kidsMemesHidden:[], kidsMemesAutoSpeak:false,
-  // Флеш карты (дети) — flashThemeSize: 100 или 250 (объём подборки слов
-  // выбранной темы). flashQueue/flashIndex — карточки текущей партии
+  // Флеш карты (дети) — flashTheme: тема подборки ('english'/'animals'),
+  // flashThemeSize: 100 или 250 (объём подборки слов английского языка).
+  // flashQueue/flashIndex — карточки текущей партии
   // (фиксированное количество, не бесконечная колода).
-  flashMode:'learn', flashThemeSize:100, flashCount:25,
+  flashMode:'learn', flashTheme:'english', flashThemeSize:100, flashCount:25,
   flashQueue:[], flashIndex:0, flashAutoSpeak:false,
   // Сапёр (дети) — механика скопирована с "Секс-бинго"
   kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperWonLines:[], kidsSaperUsedBonus:[],
