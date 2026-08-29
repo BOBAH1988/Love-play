@@ -1960,6 +1960,7 @@
   .kids-saper-cell.kids-saper-mine{ background:linear-gradient(135deg,#ff8a5e,#ff3b5c); color:#1a0b00; border-color:transparent; }
   .kids-saper-cell.kids-saper-task{ background:linear-gradient(135deg,#43c5f0,#48e0c0); color:#0b2a3d; border-color:transparent; }
   .kids-saper-cell.kids-saper-number{ font-size:min(11vw, 46px); font-weight:800; line-height:1; }
+  .kids-saper-cell.kids-saper-green{ background:linear-gradient(135deg,#4cd964,#2ecc71); color:#0b3d1f; border-color:transparent; font-size:min(6vw, 22px); font-weight:700; line-height:1.2; }
   .kids-saper-cell.kids-saper-suggested{ box-shadow:0 0 0 3px var(--accent) inset; }
   /* Счастливые клетки «пропустите ход» — зелёные (Секс-бинго; в Сапёре больше нет). */
   .bingo-cell.checked.bingo-lucky{ background:linear-gradient(135deg,#4cd964,#2ecc71); color:#0b3d1f; }
@@ -3138,8 +3139,9 @@
   <section id="kidsSaperGame" class="screen">
     <h1 class="title" style="font-size:20px;">💣 Сапёр</h1>
     <div class="subtitle" style="margin-bottom:2px;">Раскрывайте безопасные клетки, не врвавшись на 💣 — уровень растёт с победами</div>
-    <div class="bingo-level-label" id="kidsSaperLevelLabel"></div>
-    <div class="bingo-grid" id="kidsSaperGrid"></div>
+     <div class="bingo-level-label" id="kidsSaperLevelLabel"></div>
+     <div class="bingo-level-label" id="kidsSaperStatusLabel" style="font-size:14px; margin-top:4px;"></div>
+     <div class="bingo-grid" id="kidsSaperGrid"></div>
     <div class="bingo-actions-row">
       <button type="button" class="btn btn-secondary" id="kidsSaperRandomBtn">🎲 Случайно</button>
       <button type="button" class="btn btn-secondary" id="kidsSaperHideTasksBtn">👀 Показать задания</button>
@@ -4540,7 +4542,7 @@
       <div class="modal-title">🎯 Правила игры «Викторина»</div>
       <div class="intro-text">Компания по очереди отвечает на вопросы — 4 варианта ответа, только один верный.</div>
       <ol class="modal-rules">
-        <li>На главном экране, в блоке «Игры для компании», впишите имена игроков (от 2 до 10). На экране настройки выберите уровень, время на ответ (10, 15 или 20 секунд) и сколько всего вопросов будет в игре (1, 3, 5 или 10).</li>
+         <li>На главном экране, в блоке «Игры для компании», впишите имена игроков (от 2 до 10). На экране настройки выберите уровень, время на ответ (10, 15 или 20 секунд) и сколько всего вопросов будет в игре (3, 5, 7 или 10).</li>
         <li>Вопросы задаются по очереди: ответил игрок — телефон переходит следующему, показывается карточка «Передайте телефон».</li>
         <li>На каждый вопрос — 4 варианта ответа, верный только один. Кнопки «Пропустить» нет — нужно успеть выбрать вариант, пока идёт отсчёт времени.</li>
         <li>Если время вышло, а ответ не выбран — вопрос засчитывается как неверный.</li>
@@ -4632,7 +4634,7 @@
       <div class="modal-title">🎯 Правила игры «Викторина»</div>
       <div class="intro-text">Отвечайте на вопросы в одиночку — 4 варианта ответа, только один верный.</div>
       <ol class="modal-rules">
-        <li>Выберите уровень сложности, время на ответ (10/15/20 сек) и число вопросов в игре (5/10/15/20).</li>
+         <li>Выберите уровень сложности, время на ответ (10/15/20 сек) и число вопросов в игре (3, 5, 7 или 10).</li>
         <li>На каждый вопрос — 4 варианта ответа. Не успели выбрать за отведённое время — вопрос засчитывается как неверный.</li>
         <li>Тап по карточке озвучивает вопрос вслух, если это поддерживает браузер.</li>
         <li>В конце — итог: сколько вопросов угадано и сколько заняло времени.</li>
@@ -5326,11 +5328,11 @@
       <div class="intro-text">Настоящий сапёр для детей и семьи: на поле 5×5 спрятаны 💣-мины. Открывайте безопасные клетки — рядом с минами показывают число соседных мин, пустые зоны дарят весёлые семейные задания. Победа — раскрыть всё, не нажав на мину; уровень растёт с каждой победы (до уровня 3 «Взрыв веселья»).</div>
       <ol class="modal-rules">
         <li>Игра начинается с уровня 🔍 «Разведка» — на поле 5×5 спрятано 5 мин. С каждой победой уровень растёт, а мин становится больше (7, затем 9).</li>
-        <li>Одиночное нажатие открывает клетку: цифра — это количество мин в окружающих 8 клетках; пустая клетка с заданием — значит мин рядом нет и она автоматически раскрывает ближайшие пустые зоны (как в классическом сапёре).</li>
+         <li>Одиночное нажатие открывает клетку: цифра — это количество мин в окружающих 8 клетках; пустая клетка с заданием — значит мин рядом нет и она автоматически раскрывает ближайшие пустые зоны (как в классическом сапёре); зелёная клетка — «Вам повезло, пропустите ход!» (половина пустых клеток — зелёные).</li>
         <li>Чтобы не врваться на мину, поставьте 🚩: зажмите клетку (long press) или нажмите правой кнопкой мыши — флажок ставится/снимается на закрытой клетке.</li>
         <li>💥 Открыли мину — игра окончена: все открытые выстрелы показываются, выбирайте «Сыграть снова» или «Завершить игру».</li>
         <li>🏆 Открыли все безопасные клетки — победа: на экране итог с бонусным призом (заданием для семьи), которое сохраняется в блок «🎁 Бонусные задания» под полем.</li>
-        <li>Клетки закрыты 💣-иконкой до нажатия — «👀 Показать задания» раскроет весь ландшафт (числа, задания и 💣-мины) для подсмотра, «🎲 Случайно» подскажет безопасную клетку, «Выход» вернёт в меню «Дети».</li>
+         <li>Клетки закрыты 💣-иконкой до нажатия — «👀 Показать задания» раскроет весь ландшафт (числа, задания и 💣-мины) для подсмотра, «🎲 Случайно» подскажет безопасную клетку, «Выход» вернёт в меню «Дети». Четвёртая строка состояния показывает сколько клеток открыто и сколько 🚩 стоит.</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsSaperRulesBtn">Понятно</button>
     </div>
@@ -5653,7 +5655,7 @@
 <script src="cards/cards_kids_krokodil.js?v=20260829g"></script>
 <script src="cards/cards_kids_memes.js?v=20260829g"></script>
 <script src="cards/cards_flash.js?v=20260829i"></script>
-<script src="cards/cards_kids_saper.js?v=20260829g"></script>
+<script src="cards/cards_kids_saper.js?v=20260829i"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
 <script src="games/core.js?v=20260829g"></script>
@@ -5682,8 +5684,8 @@
 <script src="games/kids-memory.js?v=20260829g"></script>
 <script src="games/kids-krokodil.js?v=20260829g"></script>
 <script src="games/kids-memes.js?v=20260829g"></script>
- <script src="games/kids-flash.js?v=20260829i"></script>
-<script src="games/kids-saper.js?v=20260829g"></script>
+<script src="games/kids-flash.js?v=20260829i"></script>
+<script src="games/kids-saper.js?v=20260829i"></script>
 <script src="games/kids-td.js?v=20260829g"></script>
 <script src="games/quiz.js?v=20260829g"></script>
 <script src="games/party-quiz.js?v=20260829g"></script>

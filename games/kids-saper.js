@@ -115,13 +115,28 @@ function generateKidsSaperGrid(level){
     cell.count = neighbors.filter(n => cells[n].mine).length;
   });
 
-  // Пустым клеткам (count === 0) — весёлые семейные задания.
+  // Пустым клеткам (count === 0) — весёлые семейные задания или зелёные «пропусти ход».
+  // Половина пустых клеток — зелёные (если заданий нет — все зелёные).
   const pool = shuffle(getKidsSaperItemsList(level)).map(p => p.text);
-  let p = 0;
+  const emptyCells = [];
   cells.forEach((cell, i)=>{
-    if(!cell.mine && cell.count === 0){
-      cell.text = pool.length ? (pool[p] || '—') : '—';
-      p = (p + 1) % pool.length;
+    if(!cell.mine && cell.count === 0) emptyCells.push(i);
+  });
+  const greenCount = Math.floor(emptyCells.length / 2);
+  const greenIndices = new Set();
+  const shuffledEmpty = shuffle(emptyCells);
+  for(let i = 0; i < greenCount; i++){
+    greenIndices.add(shuffledEmpty[i]);
+  }
+  let pt = 0;
+  cells.forEach((cell, i)=>{
+    if(greenIndices.has(i)){
+      cell.text = 'Вам повезло — пропустите ход!';
+      cell.green = true;
+    } else if(!cell.mine && cell.count === 0){
+      cell.text = pool.length ? (pool[pt] || '—') : '—';
+      cell.green = false;
+      pt = (pt + 1) % pool.length;
     }
   });
 
@@ -142,6 +157,16 @@ function updateKidsSaperLevelLabel(){
   const lvl = getKidsSaperLevelById(state.kidsSaperCurrentLevel || 1);
   const mineCount = getKidsSaperMinesForLevel(state.kidsSaperCurrentLevel || 1);
   el.textContent = lvl ? `Уровень: ${lvl.icon} ${lvl.name} · 💣 мин: ${mineCount}` : '';
+}
+function updateKidsSaperStatusLabel(){
+  const el = document.getElementById('kidsSaperStatusLabel');
+  if(!el) return;
+  const grid = state.kidsSaperGrid || [];
+  const totalSafe = grid.filter(c => !c.mine).length;
+  const openedSafe = grid.reduce((acc, c, i) => acc + ((!c.mine && state.kidsSaperChecked[i]) ? 1 : 0), 0);
+  const flags = state.kidsSaperFlags.filter(f => f).length;
+  const mineCount = getKidsSaperMinesForLevel(state.kidsSaperCurrentLevel || 1);
+  el.textContent = `Открыто: ${openedSafe}/${totalSafe} · 🚩: ${flags}/${mineCount}`;
 }
 
 function fitKidsSaperCellText(cell){
@@ -182,6 +207,9 @@ function renderKidsSaperGrid(){
         cellEl.textContent = String(cell.count);
         cellEl.classList.add('kids-saper-number');
         cellEl.style.color = KIDS_SAPER_NUMBER_COLORS[cell.count] || '#fff';
+      } else if(cell.green){
+        cellEl.textContent = cell.text || '💚';
+        cellEl.classList.add('kids-saper-green');
       } else {
         cellEl.textContent = cell.text || '—';
         cellEl.classList.add('kids-saper-task');
@@ -197,8 +225,9 @@ function renderKidsSaperGrid(){
     wrap.appendChild(cellEl);
     if(!cellEl.classList.contains('kids-saper-number') && !cellEl.classList.contains('kids-saper-flagged')) fitKidsSaperCellText(cellEl);
   });
-  updateKidsSaperLevelLabel();
-  updateKidsSaperHideTasksBtn();
+   updateKidsSaperLevelLabel();
+   updateKidsSaperStatusLabel();
+   updateKidsSaperHideTasksBtn();
 }
 
 const KIDS_SAPER_LONG_PRESS_MS = 550;
@@ -248,6 +277,7 @@ function toggleKidsSaperFlag(i){
   saveState();
   renderKidsSaperGrid();
   playNeutralSound();
+  updateKidsSaperStatusLabel();
 }
 
 function openKidsSaperCell(i){
