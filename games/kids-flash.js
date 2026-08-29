@@ -18,8 +18,9 @@ let flashCurrentCard = null;
 
 function getFlashPool(size){
   if(typeof FLASH_WORDS === 'undefined' || !Array.isArray(FLASH_WORDS)) return [];
-  if(state.flashTheme === 'animals'){
-    return FLASH_WORDS.filter(w => w.theme === 'animals');
+  if(state.flashTheme !== 'english'){
+    // Тематические наборы (Животные, Глаголы и др.) — берём все карточки темы.
+    return FLASH_WORDS.filter(w => w.theme === state.flashTheme);
   }
   // Английский язык: size задаёт объём подборки слов.
   if(size === 100) return FLASH_WORDS.filter(w => w.theme === 'english' && w.group <= 100);
