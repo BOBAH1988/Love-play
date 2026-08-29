@@ -147,7 +147,7 @@ let state = {
   // flashThemeSize: 100 или 250 (объём подборки слов английского языка).
   // flashQueue/flashIndex — карточки текущей партии
   // (фиксированное количество, не бесконечная колода).
-  flashMode:'learn', flashTheme:'english', flashThemeSize:100, flashCount:25,
+  flashMode:'learn', flashTheme:'english', flashThemeSize:100, flashTimeSub:'digital', flashCount:25,
   flashQueue:[], flashIndex:0, flashAutoSpeak:false,
   // Сапёр (дети) — механика скопирована с "Секс-бинго"
   kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperWonLines:[], kidsSaperUsedBonus:[],

@@ -18,6 +18,10 @@ let flashCurrentCard = null;
 
 function getFlashPool(size){
   if(typeof FLASH_WORDS === 'undefined' || !Array.isArray(FLASH_WORDS)) return [];
+  if(state.flashTheme === 'time'){
+    // Тема «Время» делится на подразделы: механические / цифровые часы.
+    return FLASH_WORDS.filter(w => w.theme === 'time' && w.sub === state.flashTimeSub);
+  }
   if(state.flashTheme !== 'english'){
     // Тематические наборы (Животные, Глаголы и др.) — берём все карточки темы.
     return FLASH_WORDS.filter(w => w.theme === state.flashTheme);
@@ -98,9 +102,13 @@ function renderFlashThemeGroup(){
       btn.classList.toggle('on', btn.dataset.value === state.flashTheme);
     });
   }
-  // Блок «объём словаря» (100/250) относится только к теме «Английский язык».
+  // Блок «объём словаря» (100/250) — только для «Английский язык»;
+  // блок подразделов «Механические/Цифровые» — только для «Время».
   const sizeBlock = document.getElementById('flashEnglishSizeBlock');
   if(sizeBlock) sizeBlock.style.display = (state.flashTheme === 'english') ? '' : 'none';
+  const timeBlock = document.getElementById('flashTimeSubBlock');
+  if(timeBlock) timeBlock.style.display = (state.flashTheme === 'time') ? '' : 'none';
+  if(state.flashTheme === 'time') renderFlashTimeSubGroup();
 }
 document.querySelectorAll('#flashThemeGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -108,6 +116,24 @@ document.querySelectorAll('#flashThemeGroup .starter-btn').forEach(btn=>{
     state.flashTheme = btn.dataset.value;
     saveState();
     renderFlashThemeGroup();
+  });
+});
+
+function renderFlashTimeSubGroup(){
+  if(state.flashTimeSub !== 'mech' && state.flashTimeSub !== 'digital'){ state.flashTimeSub = 'digital'; saveState(); }
+  const group = document.getElementById('flashTimeSubGroup');
+  if(group){
+    group.querySelectorAll('.starter-btn').forEach(btn=>{
+      btn.classList.toggle('on', btn.dataset.value === state.flashTimeSub);
+    });
+  }
+}
+document.querySelectorAll('#flashTimeSubGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    playSuccessSound();
+    state.flashTimeSub = btn.dataset.value;
+    saveState();
+    renderFlashTimeSubGroup();
   });
 });
 
