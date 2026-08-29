@@ -27,8 +27,10 @@ function getFlashPool(size){
     return FLASH_WORDS.filter(w => w.theme === state.flashTheme);
   }
   // Английский язык: size задаёт объём подборки слов.
+  // "100 слов" — базовые (group<=100), "250 слов" — остальные (group>100):
+  // 150 промежуточных + 100 новых = ровно 250, без пересечения с базовыми 100.
   if(size === 100) return FLASH_WORDS.filter(w => w.theme === 'english' && w.group <= 100);
-  return FLASH_WORDS.filter(w => w.theme === 'english' && w.group > 100 && w.group <= 250);
+  return FLASH_WORDS.filter(w => w.theme === 'english' && w.group > 100);
 }
 
 function goToFlashSetup(){
@@ -101,6 +103,17 @@ function renderFlashThemeGroup(){
     group.querySelectorAll('.starter-btn').forEach(btn=>{
       btn.classList.toggle('on', btn.dataset.value === state.flashTheme);
     });
+  }
+  // Динамическая подпись блока темы: "(<название темы>):",
+  // по умолчанию "(Английский язык):".
+  const label = document.getElementById('flashThemeLabel');
+  if(label){
+    let themeName = 'Английский язык';
+    if(typeof FLASH_THEMES !== 'undefined' && Array.isArray(FLASH_THEMES)){
+      const th = FLASH_THEMES.find(t => t.id === state.flashTheme);
+      if(th) themeName = th.name;
+    }
+    label.textContent = `(${themeName}):`;
   }
   // Блок «объём словаря» (100/250) — только для «Английский язык»;
   // блок подразделов «Механические/Цифровые» — только для «Время».
@@ -296,6 +309,15 @@ function exitFlashGame(){
 document.getElementById('flashSetupStartBtn').addEventListener('click', ()=>{ goToFlashGame(); });
 document.getElementById('flashSetupExitBtn').addEventListener('click', ()=>{ exitFlashSetup(); });
 document.getElementById('flashExitBtn').addEventListener('click', ()=>{ exitFlashGame(); });
+// "Дополнительно": раскрывает/сворачивает строку с автоозвучкой, правилами и выходом.
+document.getElementById('flashMoreBtn').addEventListener('click', ()=>{
+  const row = document.getElementById('flashExtraRow');
+  if(!row) return;
+  const expanded = row.style.display !== 'none';
+  row.style.display = expanded ? 'none' : '';
+  const btn = document.getElementById('flashMoreBtn');
+  if(btn){ btn.setAttribute('aria-expanded', String(!expanded)); }
+});
 document.getElementById('flashSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('flashRulesModal').classList.add('show'); });
 document.getElementById('flashGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('flashRulesModal').classList.add('show'); });
 document.getElementById('closeFlashRulesBtn').addEventListener('click', ()=>{ document.getElementById('flashRulesModal').classList.remove('show'); });

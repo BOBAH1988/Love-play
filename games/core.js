@@ -148,7 +148,7 @@ let state = {
   // flashQueue/flashIndex — карточки текущей партии
   // (фиксированное количество, не бесконечная колода).
   flashMode:'learn', flashTheme:'english', flashThemeSize:100, flashTimeSub:'digital', flashCount:25,
-  flashQueue:[], flashIndex:0, flashAutoSpeak:false,
+  flashQueue:[], flashIndex:0, flashAutoSpeak:true,
   // Сапёр (дети) — настоящая сапёрская механика (минное поле, цифры,
   // флажки, победа/поражение). kidsSaperWonLines/kidsSaperEscalated* — устарели,
   // оставлены для обратной совместимости со старыми сохранениями.
@@ -536,8 +536,8 @@ document.getElementById('gameKidsQuizBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToKidsQuizSetup();
 });
-// "Флеш карты" (дети) — goToFlashSetup() определена в games/kids-flash.js.
-document.getElementById('gameKidsFlashBtn').addEventListener('click', ()=>{
+// "Флеш карты" (игры для одного) — goToFlashSetup() определена в games/kids-flash.js.
+document.getElementById('gameSoloFlashBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToFlashSetup();

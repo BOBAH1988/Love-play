@@ -364,6 +364,9 @@
   }
 
   .starter-group{display:flex; gap:8px;}
+  /* Темы «Флеш карт» — 3 кнопки в ряду (оборачиваются на 4-й). */
+  .starter-group-3{flex-wrap:wrap;}
+  .starter-group-3 .starter-btn{flex:1 1 calc(33.333% - 6px);}
   .starter-btn{
     flex:1; padding:9px 8px; border-radius:14px;
     border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);
@@ -1046,7 +1049,7 @@
     margin-top:10px;
   }
   .flash-translation{
-    font-size:22px; font-weight:700; margin-top:14px;
+    font-size:22px; font-weight:700; margin-top:14px; color:#ffd166;
   }
   /* Блок темы в настройках — название темы подписью над кнопками выбора
      объёма подборки слов (100/250), другие темы добавятся сюда же позже. */
@@ -2058,19 +2061,31 @@
      (games/memes.js, games/kids-memes.js), только квадратной иконкой в общем
      ряду с "Далее"/"Скрыть", а не отдельной строкой у "Паузы". "Скрыть" —
      та же квадратная иконка без текста, минимальной ширины. */
-  .timer-actions-top #memesAutoSpeakBtn,
-  .timer-actions-top #kidsMemesAutoSpeakBtn,
-  .timer-actions-top #memesHideBtn,
-  .timer-actions-top #kidsMemesHideBtn,
-  .timer-actions-top #flashAutoSpeakBtn{
-    flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:26px;
-    display:flex; align-items:center; justify-content:center; line-height:1;
-  }
-  .timer-actions-top #memesAutoSpeakBtn.on,
-  .timer-actions-top #kidsMemesAutoSpeakBtn.on,
-  .timer-actions-top #flashAutoSpeakBtn.on{
-    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
-  }
+   .timer-actions-top #memesAutoSpeakBtn,
+   .timer-actions-top #kidsMemesAutoSpeakBtn,
+   .timer-actions-top #memesHideBtn,
+   .timer-actions-top #kidsMemesHideBtn{
+     flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:26px;
+     display:flex; align-items:center; justify-content:center; line-height:1;
+   }
+   /* Автоозвучка "Флеш карт" переехала в скрытую строку "Дополнительно" — та же
+      квадратная кнопка-плеер, теперь часть ряда #flashExtraRow. */
+   .timer-actions-extra-row #flashAutoSpeakBtn,
+   .timer-actions-bottom #flashAutoSpeakBtn{
+     flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:26px;
+     display:flex; align-items:center; justify-content:center; line-height:1;
+   }
+   .timer-actions-top #memesAutoSpeakBtn.on,
+   .timer-actions-top #kidsMemesAutoSpeakBtn.on,
+   .timer-actions-extra-row #flashAutoSpeakBtn.on{
+     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+   }
+   /* "Дополнительно" в "Флеш картах": сворачиваемая строка с автоозвучкой,
+      правилами и выходом под кнопкой-переключателем. */
+   .timer-actions-extra{display:flex; flex-direction:column; gap:8px;}
+   .timer-actions-extra-row{display:flex; gap:8px;}
+   .timer-actions-extra-row .btn{flex:1; height:40px;}
+   .more-pill{font-size:12px; padding:6px 10px; white-space:nowrap; cursor:pointer;}
   .timer-actions-bottom{display:flex; gap:10px;}
   .timer-actions-bottom .btn{flex:1; height:40px; padding:0 10px;}
   /* Секс-квест: «Выход» по умолчанию на всю ширину ряда. Только на карточке
@@ -2283,9 +2298,8 @@
           <button type="button" class="btn btn-menu-item" id="gameKidsKrokodilBtn"><span class="menu-icon">🐊</span> Крокодил</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsMemesBtn"><span class="menu-icon">😂</span> Мемасики</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsTdBtn"><span class="menu-icon">🗣️</span> Правда/Действие</button>
+           <button type="button" class="btn btn-menu-item" id="gameKidsTdBtn"><span class="menu-icon">🗣️</span> Правда/Действие</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsFlashBtn"><span class="menu-icon">🗂️</span> Флеш карты</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsMinesweeperBtn"><span class="menu-icon">💣</span> Сапёр</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsWhatToPlayBtn"><span class="menu-icon">🎲</span> Во что поиграть?</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsBoardGamesBtn"><span class="menu-icon">♟️</span> Настольные игры</button>
@@ -2331,6 +2345,7 @@
           <button type="button" class="btn btn-menu-item" id="gameSoloQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики-нолики</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloFlashBtn"><span class="menu-icon">🗂️</span> Флеш карты</button>
         </div>
       </div>
 
@@ -3005,12 +3020,12 @@
     </div>
 
     <div class="field">
-      <label>Темы</label>
-      <div class="starter-group" id="flashThemeGroup">
-        <button type="button" class="starter-btn mode-btn" data-value="english">🇬🇧 Английский язык</button>
+      <label id="flashThemeLabel">Темы</label>
+      <div class="starter-group starter-group-3" id="flashThemeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="english">🇬🇧 Популярные слова</button>
         <button type="button" class="starter-btn mode-btn" data-value="animals">🐾 Животные</button>
-        <button type="button" class="starter-btn mode-btn" data-value="verbs">🔤 Глаголы</button>
-        <button type="button" class="starter-btn mode-btn" data-value="time">🕐 Время</button>
+        <button type="button" class="starter-btn mode-btn" data-value="verbs">Глаголы</button>
+        <button type="button" class="starter-btn mode-btn" data-value="time">Время</button>
       </div>
       <div class="flash-theme-block" id="flashEnglishSizeBlock">
         <div class="flash-theme-name">Объём словаря</div>
@@ -3062,17 +3077,21 @@
       </div>
     </div>
 
-    <div class="timer-actions-row">
-      <div class="timer-actions-top">
-        <button type="button" class="btn btn-primary" id="flashNextBtn">Далее</button>
-        <button type="button" class="btn btn-secondary" id="flashAnswerBtn">Ответ</button>
-        <button type="button" class="btn btn-secondary" id="flashAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
-      </div>
-      <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-rules" id="flashGameRulesBtn">Правила</button>
-        <button type="button" class="btn btn-secondary btn-pause" id="flashExitBtn">Выход</button>
-      </div>
-    </div>
+     <div class="timer-actions-row">
+       <div class="timer-actions-top">
+         <button type="button" class="btn btn-primary" id="flashNextBtn">Далее</button>
+         <button type="button" class="btn btn-secondary" id="flashAnswerBtn">Ответ</button>
+       </div>
+       <!-- Скрытая строка "Дополнительно": автоозвучка (перед правилами) + правила + выход. -->
+       <div class="timer-actions-extra">
+         <button type="button" class="btn btn-secondary toggle-pill more-pill" id="flashMoreBtn" aria-expanded="false">Дополнительно ▼</button>
+         <div class="timer-actions-extra-row" id="flashExtraRow" style="display:none;">
+           <button type="button" class="btn btn-secondary" id="flashAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
+           <button type="button" class="btn btn-secondary btn-rules" id="flashGameRulesBtn">Правила</button>
+           <button type="button" class="btn btn-secondary btn-pause" id="flashExitBtn">Выход</button>
+         </div>
+       </div>
+     </div>
   </section>
 
   <!-- ===== САПЁР (ДЕТИ): НАСТРОЙКА ===== -->
