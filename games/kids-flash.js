@@ -181,7 +181,7 @@ function drawFlashCard(){
   stopFlashSpeech();
   updateFlashProgress();
   const learn = state.flashMode === 'learn';
-  const isTime = isFlashTimeCard(card);
+  const isTime = isFlashTimeCard(card) && Array.isArray(card.options);
   fadeSwapEl('flashCard', (el)=>{
     el.className = 'card';
     if(isTime){
