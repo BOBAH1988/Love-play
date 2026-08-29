@@ -327,6 +327,7 @@ function goToBingoGame(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedFantySession();
+  abandonCachedSoloBsSession();
   state.pausedMode = null;
   // Игра всегда начинается с уровня 1 (Нежное) — выбор уровня в настройке
   // убран, дальше карта повышает сложность сама по ходу игры.

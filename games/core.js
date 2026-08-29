@@ -743,7 +743,8 @@ const PAUSED_MODE_LABELS = {
   kidsTd: '«Правда/Действие» (дети)',
   quiz: '«Викторина»',
   partyQuiz: '«Викторина» (компания)',
-  kidsQuiz: '«Викторина» (дети)',
+   kidsQuiz: '«Викторина» (дети)',
+   soloBs: '«Морской бой» (бот)',
 };
 function blockedByDavayPause(){
   if(!state.pausedMode) return false;
@@ -842,8 +843,17 @@ function abandonPausedPartyQuizSession(){
     state.pausedMode = null;
   }
 }
+// Симметрично остальным — сбрасывает "чужую" паузу «Викторины» (дети)
+// (страховка).
 function abandonPausedKidsQuizSession(){
   if(state.pausedMode === 'kidsQuiz'){
+    state.pausedMode = null;
+  }
+}
+// Симметрично остальным — сбрасывает "чужую" паузу «Морского боя (бот)»
+// (страховка).
+function abandonPausedSoloBsSession(){
+  if(state.pausedMode === 'soloBs'){
     state.pausedMode = null;
   }
 }
@@ -1048,6 +1058,10 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'kidsQuiz'){
     resumeKidsQuizGame();
+    return;
+  }
+  if(state.pausedMode === 'soloBs'){
+    resumeSoloBsGame();
     return;
   }
   goToGame();
@@ -1339,6 +1353,7 @@ function goToGame(){
   abandonPausedQuizSession();
   abandonPausedPartyQuizSession();
   abandonPausedKidsQuizSession();
+  abandonPausedSoloBsSession();
   // Своя пауза Фантов сбрасывается явно (не через abandonPausedFantySession
   // — это возврат в СВОЮ же игру после паузы, а не "чужая" сессия), и здесь
   // же нужно закрыть глобальную модалку паузы (см. правку с пропавшими
@@ -1437,7 +1452,8 @@ const PAUSE_MENU_TITLES = {
   kidsTd: '🗣️ Правда/Действие',
   quiz: '🎯 Викторина',
   partyQuiz: '🎯 Викторина',
-  kidsQuiz: '🎯 Викторина',
+   kidsQuiz: '🎯 Викторина',
+   soloBs: '🚢 Морской бой (бот)',
 };
 function updateResumeUI(){
   const pauseModal = document.getElementById('pauseMenuModal');
@@ -1460,11 +1476,14 @@ function updateResumeUI(){
   // же список игроков), хотя сами кнопки паузы теперь всегда в модалке.
   const isPartyPause = state.pausedMode === 'krokodil' || state.pausedMode === 'partyFants' || state.pausedMode === 'partyTd' || state.pausedMode === 'famZnayu' || state.pausedMode === 'lucky' || state.pausedMode === 'partyQuiz';
   const isKidsPause = state.pausedMode === 'kidsMemory' || state.pausedMode === 'kidsTd' || state.pausedMode === 'kidsQuiz';
-  const isTwoPlayerPause = !!state.pausedMode && !isPartyPause && !isKidsPause;
+  const isSoloPause = state.pausedMode === 'soloBs';
+  const isTwoPlayerPause = !!state.pausedMode && !isPartyPause && !isKidsPause && !isSoloPause;
   const partyGameSelectField = document.getElementById('partyGameSelectField');
   if(partyGameSelectField) partyGameSelectField.style.display = (state.inProgress && !isPartyPause) ? 'none' : '';
   const kidsGameSelectField = document.getElementById('kidsGameSelectField');
   if(kidsGameSelectField) kidsGameSelectField.style.display = (state.inProgress && !isKidsPause) ? 'none' : '';
+  const soloGameSelectList = document.getElementById('soloGameSelectList');
+  if(soloGameSelectList) soloGameSelectList.style.display = (state.inProgress && !isSoloPause) ? 'none' : '';
   const backupField = document.getElementById('backupField');
   if(backupField) backupField.style.display = state.inProgress ? 'none' : '';
   // Пока игра компании на паузе — заголовок и описание блока меняются на
@@ -1488,6 +1507,7 @@ function updateResumeUI(){
   // "Закончить игру" не приходилось лишний раз возвращаться туда через главную.
   if(isPartyPause) showSetupView('companyView');
   else if(isKidsPause) showSetupView('kidsView');
+  else if(isSoloPause) showSetupView('soloView');
   else if(isTwoPlayerPause) showSetupView('twoPlayerView');
   updateSettingsLockUI();
 }
@@ -2467,6 +2487,7 @@ async function goToVideoGame(){
   abandonPausedQuizSession();
   abandonPausedPartyQuizSession();
   abandonPausedKidsQuizSession();
+  abandonPausedSoloBsSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -2547,6 +2568,7 @@ async function goToVideoFavoritesView(){
   abandonPausedQuizSession();
   abandonPausedPartyQuizSession();
   abandonPausedKidsQuizSession();
+  abandonPausedSoloBsSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -3198,6 +3220,7 @@ function goToDavayFavoritesView(){
   abandonPausedQuizSession();
   abandonPausedPartyQuizSession();
   abandonPausedKidsQuizSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   state.inProgress = true;
   davayLevel = (state.davaySelectedLevel || 3) - 2;
@@ -3380,6 +3403,7 @@ function goToPlaceholderGame(){
   abandonPausedQuizSession();
   abandonPausedPartyQuizSession();
   abandonPausedKidsQuizSession();
+  abandonPausedSoloBsSession();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -3463,6 +3487,7 @@ function goToPhotoFavoritesView(){
   abandonPausedQuizSession();
   abandonPausedPartyQuizSession();
   abandonPausedKidsQuizSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   state.inProgress = true;
   state.photoFavView = true;
@@ -3997,13 +4022,17 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
     showToast('Игра завершена');
     return;
   }
-  if(state.pausedMode === 'kidsQuiz'){
-    finishKidsQuizGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if((state.score1||0) === 0 && (state.score2||0) === 0){ goToSetup(); return; }
-  showSummary();
+   if(state.pausedMode === 'kidsQuiz'){
+     finishKidsQuizGame();
+     showToast('Игра завершена');
+     return;
+   }
+   if(state.pausedMode === 'soloBs'){
+     finishSoloBsGame();
+     return;
+   }
+   if((state.score1||0) === 0 && (state.score2||0) === 0){ goToSetup(); return; }
+   showSummary();
 });
 
 // Определяет, что делать при закрытии общего окна итогов (#summaryModal) —

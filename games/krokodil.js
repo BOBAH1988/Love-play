@@ -359,6 +359,7 @@ function goToKrokodilGame(){
   abandonPausedDavaySession();
   abandonPausedTdSession();
   abandonPausedBingoSession();
+  abandonCachedSoloBsSession();
   state.pausedMode = null;
   document.getElementById('krokodilSetup').classList.remove('active');
   document.getElementById('krokodilGame').classList.add('active');

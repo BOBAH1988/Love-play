@@ -417,6 +417,7 @@ function goToQuizGame(){
   abandonPausedFantySession();
   abandonPausedPartyQuizSession();
   abandonPausedKidsQuizSession();
+  abandonPausedSoloBsSession();
   state.pausedMode = null;
   const players = quizPlayersList();
   state.quizCorrect = new Array(players.length).fill(0);

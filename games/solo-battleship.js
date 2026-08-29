@@ -12,6 +12,7 @@ const SOLO_BS = {
   bot:    { name: 'Бот', idle: '#7db8e8' }, // синий — цвет бота
 };
 const SOLO_BS_ACTIVE = '#ffd166'; // золотой — подсвечивает ходящего
+let soloBsTimerId = null;
 
 function goToSoloBattleshipSetup(){
   document.getElementById('setup').classList.remove('active');
@@ -32,9 +33,9 @@ function startSoloBattleshipGame(){
   state.soloBsShots = {player:0, bot:0};
   if(!state.soloBsWins) state.soloBsWins = {player:0, bot:0};
   state.inProgress = true;
+  state.pausedMode = null;
   saveState();
   renderSoloBsBoards();
-  updateSoloBattleshipTurnLabel();
   updateSoloBattleshipStatus('');
   updateSoloBattleshipStats();
   updateMuteBtn();
@@ -121,8 +122,7 @@ function fireSoloBsShot(i){
   saveState();
   if(!hit){
     state.soloBsCurrentPlayer = 'bot';
-    updateSoloBattleshipTurnLabel();
-    setTimeout(soloBsBotMove, 900);
+    soloBsTimerId = setTimeout(soloBsBotMove, 900);
   }
 }
 
@@ -168,10 +168,9 @@ function soloBsBotMove(){
   updateSoloBattleshipStatus(resultText);
   saveState();
   if(hit){
-    setTimeout(soloBsBotMove, 800); // бот стреляет снова
+    soloBsTimerId = setTimeout(soloBsBotMove, 800); // бот стреляет снова
   } else {
     state.soloBsCurrentPlayer = 'player';
-    updateSoloBattleshipTurnLabel();
   }
 }
 
@@ -210,14 +209,6 @@ function soloBsPickBotCell(board){
   return free[Math.floor(Math.random() * free.length)];
 }
 
-function updateSoloBattleshipTurnLabel(){
-  const el = document.getElementById('soloBattleshipTurnLabel');
-  if(!el) return;
-  const cur = state.soloBsCurrentPlayer;
-  const other = cur === 'player' ? 'bot' : 'player';
-  el.innerHTML = `Ходит: <span class="bs-name" style="color:${SOLO_BS_ACTIVE};font-weight:900;">${SOLO_BS[cur].name}</span>
-    <span class="bs-name" style="color:${cur === 'player' ? SOLO_BS.bot.idle : SOLO_BS.player.idle};">vs ${cur === 'player' ? SOLO_BS.bot.name : SOLO_BS.player.name}</span>`;
-}
 function updateSoloBattleshipStatus(text){
   const el = document.getElementById('soloBattleshipStatusText');
   if(!el) return;
@@ -248,14 +239,50 @@ function exitSoloBattleshipGame(){
   document.getElementById('soloBattleshipSetup').classList.add('active');
   state.soloBsPlayerBoard = []; state.soloBsBotBoard = [];
   state.soloBsWinner = null; state.inProgress = false;
+  state.pausedMode = null;
   saveState();
+}
+// Пауза: сохраняем поле и очередь, возвращаемся в меню — продолжить позже
+// через общий блок «Продолжить игру» / «Закончить игру» (см. core.js).
+function pauseSoloBattleshipGame(){
+  if(state.pausedMode === 'soloBs') return;
+  if(soloBsTimerId){ clearTimeout(soloBsTimerId); soloBsTimerId = null; }
+  state.pausedMode = 'soloBs';
+  saveState();
+  document.getElementById('soloBattleshipGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  updateResumeUI();
+}
+// Возвращаемся из паузы — снова показываем поле и, если ход бота,
+// продолжаем цепочку выстрелов бота с небольшой задержкой.
+function resumeSoloBsGame(){
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('soloBattleshipGame').classList.add('active');
+  renderSoloBsBoards();
+  updateSoloBattleshipStats();
+  updateMuteBtn();
+  requestWakeLock();
+  if(state.soloBsCurrentPlayer === 'bot' && state.soloBsWinner === null){
+    soloBsTimerId = setTimeout(soloBsBotMove, 600);
+  }
+}
+// Закончить игру из меню паузы — сбрасываем состояние и возвращаемся в меню.
+function finishSoloBsGame(){
+  if(soloBsTimerId){ clearTimeout(soloBsTimerId); soloBsTimerId = null; }
+  document.getElementById('pauseMenuModal').classList.remove('show');
+  exitSoloBattleshipGame();
+  updateResumeUI();
+  showToast('Игра завершена');
 }
 
 document.getElementById('soloBattleshipSetupStartBtn').addEventListener('click', ()=>{
   playSuccessSound(); startSoloBattleshipGame();
 });
 document.getElementById('soloBattleshipSetupExitBtn').addEventListener('click', ()=>{ exitSoloBattleshipSetup(); });
-document.getElementById('soloBattleshipExitBtn').addEventListener('click', ()=>{ exitSoloBattleshipGame(); });
+document.getElementById('soloBattleshipExitBtn').addEventListener('click', ()=>{ pauseSoloBattleshipGame(); });
 document.getElementById('closeSoloBattleshipSummaryBtn').addEventListener('click', ()=>{
   document.getElementById('soloBattleshipSummaryModal').classList.remove('show');
   exitSoloBattleshipGame();

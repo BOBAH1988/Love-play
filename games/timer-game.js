@@ -298,6 +298,7 @@ function goToTimerGame(){
   abandonPausedKrokodilSession();
   abandonPausedWishlistSession();
   abandonPausedZnayuSession();
+  abandonCachedSoloBsSession();
   state.pausedMode = null;
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();

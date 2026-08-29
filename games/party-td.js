@@ -120,6 +120,7 @@ function goToPartyTdGame(){
   abandonPausedFamZnayuSession();
   abandonPausedLuckySession();
   abandonPausedFantySession();
+  abandonCachedSoloBsSession();
   state.pausedMode = null;
   if(!state.partyPlayers || state.partyPlayers.length < 2){
     state.partyPlayers = ['Игрок 1','Игрок 2'];
