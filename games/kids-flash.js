@@ -188,8 +188,7 @@ function drawFlashCard(){
       const options = card.options || [];
       const correctIdx = (typeof card.answer === 'number') ? card.answer : -1;
       const optsHtml = options.map((opt, i)=>{
-        const cls = learn ? (i === correctIdx ? 'flash-time-option correct' : 'flash-time-option') : 'flash-time-option';
-        return `<button type="button" class="${cls}" data-time-idx="${i}" data-time-correct="${i === correctIdx}">${opt}</button>`;
+        return `<button type="button" class="flash-time-option" data-time-idx="${i}" data-time-correct="${i === correctIdx}">${opt}</button>`;
       }).join('');
       el.innerHTML = `
         <div class="card-inner">
@@ -235,7 +234,7 @@ function updateFlashAnswerBtn(){
   if(!btn) return;
   const learn = state.flashMode === 'learn';
   const isTime = isFlashTimeCard(flashCurrentCard);
-  btn.style.display = (isTime || learn) ? 'none' : '';
+  btn.style.display = (learn && !isTime) ? 'none' : '';
   btn.disabled = false;
 }
 function revealFlashAnswer(){
@@ -258,12 +257,11 @@ function revealFlashTimeCorrect(){
 function updateFlashTimeOptionsState(){
   const card = flashCurrentCard;
   if(!card || !isFlashTimeCard(card)) return;
-  const learn = state.flashMode === 'learn';
   const wrap = document.getElementById('flashCard');
   if(!wrap) return;
   const btns = wrap.querySelectorAll('.flash-time-option');
   btns.forEach(btn=>{
-    btn.disabled = learn; // В режиме Обучение варианты не кликаются (ответ виден)
+    btn.disabled = false;
   });
 }
 
@@ -315,8 +313,6 @@ function speakFlashWord(){
   }
 }
 function handleFlashTimeOption(btn){
-  const learn = state.flashMode === 'learn';
-  if(learn) return;
   const wrap = document.getElementById('flashCard');
   if(!wrap) return;
   const alreadySelected = wrap.querySelector('.flash-time-option.selected');
