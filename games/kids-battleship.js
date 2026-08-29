@@ -118,7 +118,7 @@ function goToKidsBattleshipGame(){
   if(!state.battleshipWins) state.battleshipWins = [0, 0];
   state.inProgress = true;
   saveState();
-  showKidsBattleshipHandoff();
+  showKidsBattleshipGrid();
   updateKidsBattleshipStats();
   updateMuteBtn();
   requestWakeLock();
@@ -129,19 +129,25 @@ function showKidsBattleshipHandoff(){
   const oppIdx = idx === 0 ? 1 : 0;
   const textEl = document.getElementById('kidsBattleshipHandoffText');
   if(textEl) textEl.textContent = `Передайте телефон игроку «${bsPlayerName(idx)}» — ваш ход по флоту игрока «${bsPlayerName(oppIdx)}»`;
-  document.getElementById('kidsBattleshipHandoffCardArea').style.display = 'flex';
-  document.getElementById('kidsBattleshipHandoffRow').style.display = 'flex';
-  document.getElementById('kidsBattleshipGrid').style.display = 'none';
-  document.getElementById('kidsBattleshipStatusText').textContent = '';
+  const modal = document.getElementById('kidsBattleshipHandoffModal');
+  if(modal) modal.classList.add('show');
 }
 
 function showKidsBattleshipGrid(){
-  document.getElementById('kidsBattleshipHandoffCardArea').style.display = 'none';
-  document.getElementById('kidsBattleshipHandoffRow').style.display = 'none';
+  const modal = document.getElementById('kidsBattleshipHandoffModal');
+  if(modal) modal.classList.remove('show');
   document.getElementById('kidsBattleshipGrid').style.display = '';
   renderKidsBattleshipGrid();
+  updateKidsBattleshipTurnLabel();
   updateKidsBattleshipStatus();
   updateKidsBattleshipStats();
+}
+
+function updateKidsBattleshipTurnLabel(){
+  const idx = state.battleshipCurrentPlayer || 0;
+  const el = document.getElementById('kidsBattleshipTurnLabel');
+  if(!el) return;
+  el.textContent = `Ходит: ${bsPlayerName(idx)}`;
 }
 
 function updateKidsBattleshipStatus(text){
@@ -276,7 +282,7 @@ document.getElementById('kidsBattleshipSetupStartBtn').addEventListener('click',
   goToKidsBattleshipGame();
 });
 document.getElementById('kidsBattleshipSetupExitBtn').addEventListener('click', () => { exitKidsBattleshipSetup(); });
-document.getElementById('kidsBattleshipHandoffStartBtn').addEventListener('click', () => {
+document.getElementById('kidsBattleshipHandoffContinueBtn').addEventListener('click', () => {
   playSuccessSound();
   showKidsBattleshipGrid();
 });

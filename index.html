@@ -1907,6 +1907,10 @@
   #kidsBattleshipGrid.player1 .battleship-cell.bs-miss{ background:rgba(255,255,255,.04); color:#7d93bf; }
   #kidsBattleshipGrid.player2 .battleship-cell{ background:rgba(110,198,255,.15); border-color:rgba(110,198,255,.3); }
   #kidsBattleshipGrid.player2 .battleship-cell.bs-miss{ background:rgba(110,198,255,.08); color:#7db8e8; }
+  #kidsBattleshipTurnLabel{
+    text-align:center; font-size:22px; font-weight:900; color:#ffd166;
+    min-height:30px; line-height:1.2; margin:2px 0 4px;
+  }
   .bingo-actions-row{display:flex; gap:10px; margin-top:6px;}
   .bingo-actions-row .btn{flex:1;}
   .bingo-actions-bottom{margin-top:8px;}
@@ -3635,21 +3639,10 @@
   <!-- ===== МОРСКОЙ БОЙ (ДЕТИ): ИГРА ===== -->
   <section id="kidsBattleshipGame" class="screen">
     <h1 class="title" style="font-size:20px;">🚢 Морской бой</h1>
-    <div class="intro-text" id="kidsBattleshipStatusText" style="text-align:center; min-height:22px; margin-bottom:6px;"></div>
+    <div class="bs-turn-label" id="kidsBattleshipTurnLabel"></div>
+    <div class="intro-text" id="kidsBattleshipStatusText" style="text-align:center; min-height:40px; margin-bottom:6px;"></div>
 
-    <div class="card-area" id="kidsBattleshipHandoffCardArea" style="display:none;">
-      <div class="card" id="kidsBattleshipHandoffCard">
-        <div class="card-inner"><div class="card-body">
-          <div class="card-icon">🚢</div>
-          <div class="card-text" id="kidsBattleshipHandoffText">Передайте телефон</div>
-        </div></div>
-      </div>
-    </div>
-    <div class="wishlist-actions-row" id="kidsBattleshipHandoffRow" style="display:none;">
-      <button type="button" class="btn btn-primary" id="kidsBattleshipHandoffStartBtn">Начать</button>
-    </div>
-
-    <div class="battleship-grid" id="kidsBattleshipGrid" style="display:none;"></div>
+    <div class="battleship-grid" id="kidsBattleshipGrid"></div>
 
     <div class="bingo-stats-row" id="kidsBattleshipStatsRow" style="text-align:center; font-size:13px; color:#cba0bf; margin-top:8px;">
       <span id="kidsBattleshipStatP1">Игрок 1 победил: 0 раз</span>
@@ -3669,6 +3662,15 @@
       <div class="modal-title">🏆 Игра окончена</div>
       <div class="intro-text" id="kidsBattleshipSummaryIntro"></div>
       <button class="btn btn-primary" id="closeKidsBattleshipSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== МОРСКОЙ БОЙ (ДЕТИ): ПЕРЕДАЧА ТЕЛЕФОНА ===== -->
+  <div class="modal-overlay" id="kidsBattleshipHandoffModal">
+    <div class="modal-card">
+      <div class="modal-title">🚢 Передайте телефон</div>
+      <div class="intro-text" id="kidsBattleshipHandoffText"></div>
+      <button class="btn btn-primary" id="kidsBattleshipHandoffContinueBtn">Продолжить</button>
     </div>
   </div>
 
