@@ -115,7 +115,7 @@ function updateSoloXoScoreUI(){
   const el = document.getElementById('soloXoScoreRow');
   if(!el) return;
   el.innerHTML = `
-    <span class="krokodil-score-item">Вы (❌): ${state.soloXoScorePlayer || 0}</span>
+    <span class="krokodil-score-item">Вы (<span class="xo-green-x">X</span>): ${state.soloXoScorePlayer || 0}</span>
     <span class="krokodil-score-item">Бот (⭕): ${state.soloXoScoreBot || 0}</span>
     <span class="krokodil-score-item">Ничьи: ${state.soloXoDraws || 0}</span>
   `;
@@ -123,7 +123,7 @@ function updateSoloXoScoreUI(){
 function updateSoloXoTurnLabel(){
   const el = document.getElementById('soloXoTurnLabel');
   if(!el) return;
-  el.textContent = (state.soloXoCurrentPlayer || 'X') === 'X' ? 'Ходит: Вы (❌)' : 'Ходит: Бот (⭕)';
+  el.innerHTML = (state.soloXoCurrentPlayer || 'X') === 'X' ? 'Ходит: Вы (<span class="xo-green-x">X</span>)' : 'Ходит: Бот (⭕)';
 }
 function renderSoloXoGrid(winLine){
   const wrap = document.getElementById('soloXoGrid');
@@ -226,7 +226,7 @@ function showSoloXoSummaryModal(){
   if(p === b) resultLine = '🤝 Ничья по общему счёту!';
   else resultLine = p > b ? '🏆 Победили вы!' : '🤖 Победил бот!';
   document.getElementById('soloXoSummaryIntro').innerHTML = `
-    Вы (❌): ${p} побед<br>
+    Вы (<span class="xo-green-x">X</span>): ${p} побед<br>
     Бот (⭕): ${b} побед<br>
     Ничьих: ${draws}<br><br>
     ${resultLine}

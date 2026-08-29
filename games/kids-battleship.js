@@ -115,9 +115,11 @@ function goToKidsBattleshipGame(){
   state.battleshipCurrentPlayer = Math.random() < 0.5 ? 0 : 1;
   state.battleshipWinner = null;
   state.battleshipShotsCount = [0, 0];
+  if(!state.battleshipWins) state.battleshipWins = [0, 0];
   state.inProgress = true;
   saveState();
   showKidsBattleshipHandoff();
+  updateKidsBattleshipStats();
   updateMuteBtn();
   requestWakeLock();
 }
@@ -139,6 +141,7 @@ function showKidsBattleshipGrid(){
   document.getElementById('kidsBattleshipGrid').style.display = '';
   renderKidsBattleshipGrid();
   updateKidsBattleshipStatus();
+  updateKidsBattleshipStats();
 }
 
 function updateKidsBattleshipStatus(text){
@@ -150,11 +153,20 @@ function updateKidsBattleshipStatus(text){
   if(!el) return;
   el.textContent = text || `Стреляет: ${bsPlayerName(idx)} · Осталось кораблей у «${bsPlayerName(oppIdx)}»: ${remaining} из ${oppBoard.ships.length}`;
 }
+function updateKidsBattleshipStats(){
+  const wins = state.battleshipWins || [0, 0];
+  const p1 = document.getElementById('kidsBattleshipStatP1');
+  const p2 = document.getElementById('kidsBattleshipStatP2');
+  if(p1) p1.textContent = `${bsPlayerName(0)} победил: ${wins[0] || 0} раз`;
+  if(p2) p2.textContent = `${bsPlayerName(1)} победил: ${wins[1] || 0} раз`;
+}
 
 function renderKidsBattleshipGrid(){
   const wrap = document.getElementById('kidsBattleshipGrid');
   if(!wrap) return;
   const idx = state.battleshipCurrentPlayer || 0;
+  wrap.classList.remove('player1', 'player2');
+  wrap.classList.add(idx === 0 ? 'player1' : 'player2');
   const oppIdx = idx === 0 ? 1 : 0;
   const board = state.battleshipBoards[oppIdx];
   if(!board) return;
@@ -215,8 +227,11 @@ function fireKidsBattleshipShot(i){
   const allSunk = board.ships.every(s => s.sunk);
   if(allSunk){
     state.battleshipWinner = idx;
+    if(!state.battleshipWins) state.battleshipWins = [0, 0];
+    state.battleshipWins[idx] = (state.battleshipWins[idx] || 0) + 1;
     saveState();
     updateKidsBattleshipStatus(resultText);
+    updateKidsBattleshipStats();
     setTimeout(showKidsBattleshipSummary, 700);
     return;
   }
@@ -236,10 +251,13 @@ function showKidsBattleshipSummary(){
   const winnerIdx = state.battleshipWinner;
   const loserIdx = winnerIdx === 0 ? 1 : 0;
   const shots = state.battleshipShotsCount || [0, 0];
+  const wins = state.battleshipWins || [0, 0];
   document.getElementById('kidsBattleshipSummaryIntro').innerHTML = `
     🏆 Победитель: ${bsPlayerName(winnerIdx)}!<br>
     Флот игрока «${bsPlayerName(loserIdx)}» потоплен полностью.<br><br>
-    Выстрелов: ${bsPlayerName(0)} — ${shots[0] || 0}, ${bsPlayerName(1)} — ${shots[1] || 0}
+    Выстрелов: ${bsPlayerName(0)} — ${shots[0] || 0}, ${bsPlayerName(1)} — ${shots[1] || 0}<br><br>
+    ${bsPlayerName(0)} победил: ${wins[0] || 0} раз<br>
+    ${bsPlayerName(1)} победил: ${wins[1] || 0} раз
   `;
   document.getElementById('kidsBattleshipSummaryModal').classList.add('show');
 }

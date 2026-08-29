@@ -903,6 +903,10 @@
     text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px;
   }
   #ideasCard .card-icon{ font-size:76px; }
+  #whatToPlayCard .card-split-title{
+    color:#ffd166; font-size:15px; font-weight:900;
+    text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px;
+  }
   #card .card-turn-name, #tdCard .card-turn-name, #timerCard .card-turn-name,
   #wishlistCard .card-turn-name, #znayuCard .card-turn-name, #sexQuestCard .card-turn-name{
     color:#fff;
@@ -1618,12 +1622,19 @@
   #imageZoomModal{background:rgba(10,3,10,.95); padding:20px; z-index:260;}
   #imageZoomModal img{max-width:100%; max-height:100%; object-fit:contain; border-radius:12px;}
   .modal-card{
+    position:relative;
     background:var(--card-bg); color:#2b0f2e; border-radius:22px;
     padding:26px 22px; max-width:360px; width:100%; max-height:80vh; overflow-y:auto;
     overscroll-behavior:contain;
     box-shadow:0 20px 50px rgba(0,0,0,.5);
   }
   .modal-title{font-size:20px; font-weight:800; text-align:center; margin-bottom:16px;}
+  .modal-close-btn{
+    position:absolute; top:10px; right:12px;
+    background:none; border:none; color:#9b7a92; font-size:22px; line-height:1;
+    cursor:pointer; padding:4px; z-index:10;
+  }
+  .modal-close-btn:active{color:#2b0f2e;}
   /* Меню паузы — название игры на первой строке, "Пауза" отдельной строкой
      ниже (не одной длинной фразой через тире, которая раньше рвалась
      переносом посреди слова на узких экранах), см. PAUSE_MENU_TITLES. */
@@ -1874,6 +1885,7 @@
     background:linear-gradient(135deg,#ff5e8e,#ff8a5e); border-color:transparent;
   }
   .kids-xo-mark-x{ color:#3ddc84; }
+  .xo-green-x{ color:#3ddc84; font-weight:900; }
   .kids-xo-mark-o{ color:#ff5e8e; }
   .kids-xo-cell.kids-xo-win .kids-xo-mark-x, .kids-xo-cell.kids-xo-win .kids-xo-mark-o{ color:#fff; }
   /* Морской бой (дети) — поле 10×10, клетки поменьше, чем в крестиках-ноликах. */
@@ -1890,6 +1902,10 @@
   .battleship-cell.bs-miss{ background:rgba(255,255,255,.04); color:#7d93bf; }
   .battleship-cell.bs-hit{ background:linear-gradient(135deg,#ff8a5e,#ff3b5c); border-color:transparent; }
   .battleship-cell.bs-sunk{ background:linear-gradient(135deg,#5a1620,#2b0f2e); border-color:transparent; }
+  #kidsBattleshipGrid.player1 .battleship-cell{ background:rgba(255,255,255,.08); }
+  #kidsBattleshipGrid.player1 .battleship-cell.bs-miss{ background:rgba(255,255,255,.04); color:#7d93bf; }
+  #kidsBattleshipGrid.player2 .battleship-cell{ background:rgba(110,198,255,.15); border-color:rgba(110,198,255,.3); }
+  #kidsBattleshipGrid.player2 .battleship-cell.bs-miss{ background:rgba(110,198,255,.08); color:#7db8e8; }
   .bingo-actions-row{display:flex; gap:10px; margin-top:6px;}
   .bingo-actions-row .btn{flex:1;}
   .bingo-actions-bottom{margin-top:8px;}
@@ -2300,7 +2316,7 @@
           <button type="button" class="btn btn-menu-item" id="gamePartyHangmanBtn"><span class="menu-icon">🪢</span> Виселица</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
-          <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon">❌⭕</span> Крестики-нолики</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span>⭕</span> Крестики-нолики</button>
         </div>
       </div>
 
@@ -3446,7 +3462,7 @@
     <div class="field">
       <label>Выбери игру</label>
       <div class="game-select-list">
-        <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon">❌⭕</span> Крестики-нолики</button>
+        <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span>⭕</span> Крестики-нолики</button>
         <button type="button" class="btn btn-menu-item" id="gameKidsBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
       </div>
     </div>
@@ -3455,7 +3471,7 @@
 
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЕТИ): НАСТРОЙКА ===== -->
   <section id="kidsXoSetup" class="screen">
-    <h1 class="title">❌⭕ Крестики-нолики</h1>
+    <h1 class="title"><span class="xo-green-x">X</span>⭕ Крестики-нолики</h1>
     <div class="subtitle" id="kidsXoSetupSubtitle">Классическая игра для двоих — поле 3×3, три в ряд побеждают</div>
 
     <div class="field">
@@ -3477,7 +3493,7 @@
 
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЕТИ): ИГРА ===== -->
   <section id="kidsXoGame" class="screen">
-    <h1 class="title" style="font-size:20px;">❌⭕ Крестики-нолики</h1>
+    <h1 class="title" style="font-size:20px;"><span class="xo-green-x">X</span>⭕ Крестики-нолики</h1>
     <div class="krokodil-score-row" id="kidsXoScoreRow"></div>
     <div class="td-turn-label" id="kidsXoTurnLabel">Ходит: Игрок 1</div>
 
@@ -3504,7 +3520,7 @@
   <!-- ===== ПРАВИЛА "КРЕСТИКИ-НОЛИКИ" ===== -->
   <div class="modal-overlay" id="kidsXoRulesModal">
     <div class="modal-card">
-      <div class="modal-title">❌⭕ Правила игры «Крестики-нолики»</div>
+      <div class="modal-title"><span class="xo-green-x">X</span>⭕ Правила игры «Крестики-нолики»</div>
       <div class="intro-text">Классика для двоих — на выбор поле 3×3 или 5×5.</div>
       <ol class="modal-rules">
         <li>На экране настройки выберите размер поля: 3×3 (три своих знака подряд — победа) или 5×5 (поле больше, для победы нужно уже четыре своих знака подряд).</li>
@@ -3523,7 +3539,7 @@
        Копия детской версии, но без выбора участников — игрок всегда играет
        крестиками против бота (см. games/solo-xo.js). -->
   <section id="soloXoSetup" class="screen">
-    <h1 class="title">❌⭕ Крестики-нолики</h1>
+    <h1 class="title"><span class="xo-green-x">X</span>⭕ Крестики-нолики</h1>
     <div class="subtitle" id="soloXoSetupSubtitle">Против бота — поле 3×3, три в ряд побеждают</div>
 
     <div class="field">
@@ -3545,7 +3561,7 @@
 
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЛЯ ОДНОГО): ИГРА ===== -->
   <section id="soloXoGame" class="screen">
-    <h1 class="title" style="font-size:20px;">❌⭕ Крестики-нолики</h1>
+    <h1 class="title" style="font-size:20px;"><span class="xo-green-x">X</span>⭕ Крестики-нолики</h1>
     <div class="krokodil-score-row" id="soloXoScoreRow"></div>
     <div class="td-turn-label" id="soloXoTurnLabel">Ходит: Вы</div>
 
@@ -3572,7 +3588,7 @@
   <!-- ===== ПРАВИЛА "КРЕСТИКИ-НОЛИКИ" (ДЛЯ ОДНОГО) ===== -->
   <div class="modal-overlay" id="soloXoRulesModal">
     <div class="modal-card">
-      <div class="modal-title">❌⭕ Правила игры «Крестики-нолики»</div>
+      <div class="modal-title"><span class="xo-green-x">X</span>⭕ Правила игры «Крестики-нолики»</div>
       <div class="intro-text">Классика против бота — на выбор поле 3×3 или 5×5.</div>
       <ol class="modal-rules">
         <li>На экране настройки выберите размер поля: 3×3 (три своих знака подряд — победа) или 5×5 (поле больше, для победы нужно уже четыре своих знака подряд).</li>
@@ -3620,6 +3636,12 @@
     </div>
 
     <div class="battleship-grid" id="kidsBattleshipGrid" style="display:none;"></div>
+
+    <div class="bingo-stats-row" id="kidsBattleshipStatsRow" style="text-align:center; font-size:13px; color:#cba0bf; margin-top:8px;">
+      <span id="kidsBattleshipStatP1">Игрок 1 победил: 0 раз</span>
+      <span style="margin:0 8px;">·</span>
+      <span id="kidsBattleshipStatP2">Игрок 2 победил: 0 раз</span>
+    </div>
 
     <div class="bingo-actions-row bingo-actions-bottom">
       <button type="button" class="btn btn-secondary btn-rules" id="kidsBattleshipGameRulesBtn">Правила</button>
@@ -5546,6 +5568,26 @@
       });
     }
   }
+</script>
+<script>
+  (function(){
+    document.querySelectorAll('.modal-overlay .modal-card').forEach(function(card){
+      if (!card.querySelector('.modal-close-btn')) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'modal-close-btn';
+        btn.setAttribute('aria-label', 'Закрыть');
+        btn.textContent = '✕';
+        card.appendChild(btn);
+      }
+    });
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('.modal-close-btn');
+      if (!btn) return;
+      var modal = btn.closest('.modal-overlay');
+      if (modal) modal.classList.remove('show');
+    });
+  })();
 </script>
 </body>
 </html>

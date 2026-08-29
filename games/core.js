@@ -194,7 +194,7 @@ let state = {
   // Морской бой (дети) — battleshipBoards[0]/[1] — флоты игроков 0/1, каждый
   // {cells:[{ship,shipId,shot}], ships:[{id,size,hits,sunk}]}; ходит всегда
   // тот, чей индекс в battleshipCurrentPlayer — стреляет по ДРУГОМУ игроку.
-  battleshipBoards:[], battleshipCurrentPlayer:0, battleshipWinner:null, battleshipShotsCount:[0,0]
+  battleshipBoards:[], battleshipCurrentPlayer:0, battleshipWinner:null, battleshipShotsCount:[0,0], battleshipWins:[0,0]
 };
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */

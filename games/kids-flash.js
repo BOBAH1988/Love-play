@@ -18,8 +18,8 @@ let flashCurrentCard = null;
 
 function getFlashPool(size){
   if(typeof FLASH_WORDS === 'undefined' || !Array.isArray(FLASH_WORDS)) return [];
-  const max = size === 250 ? 250 : 100;
-  return FLASH_WORDS.filter(w => w.theme === 'english' && w.group <= max);
+  if(size === 100) return FLASH_WORDS.filter(w => w.theme === 'english' && w.group <= 100);
+  return FLASH_WORDS.filter(w => w.theme === 'english' && w.group > 100 && w.group <= 250);
 }
 
 function goToFlashSetup(){

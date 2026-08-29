@@ -88,7 +88,7 @@ function updateKidsXoScoreUI(){
   const el = document.getElementById('kidsXoScoreRow');
   if(!el) return;
   el.innerHTML = `
-    <span class="krokodil-score-item">${kidsXoPlayerName('X')} (❌): ${state.kidsXoScoreX || 0}</span>
+    <span class="krokodil-score-item">${kidsXoPlayerName('X')} (<span class="xo-green-x">X</span>): ${state.kidsXoScoreX || 0}</span>
     <span class="krokodil-score-item">${kidsXoPlayerName('O')} (⭕): ${state.kidsXoScoreO || 0}</span>
     <span class="krokodil-score-item">Ничьи: ${state.kidsXoDraws || 0}</span>
   `;
@@ -97,7 +97,7 @@ function updateKidsXoTurnLabel(){
   const el = document.getElementById('kidsXoTurnLabel');
   if(!el) return;
   const mark = state.kidsXoCurrentPlayer || 'X';
-  el.textContent = `Ходит: ${kidsXoPlayerName(mark)} (${mark === 'X' ? '❌' : '⭕'})`;
+  el.innerHTML = `Ходит: ${kidsXoPlayerName(mark)} (${mark === 'X' ? '<span class="xo-green-x">X</span>' : '⭕'})`;
 }
 function kidsXoCheckWin(board){
   const { size, winLen } = kidsXoConfig();
@@ -201,7 +201,7 @@ function showKidsXoSummaryModal(){
   if(x === o) resultLine = '🤝 Ничья по общему счёту!';
   else resultLine = `🏆 Победитель партии: ${kidsXoPlayerName(x > o ? 'X' : 'O')}`;
   document.getElementById('kidsXoSummaryIntro').innerHTML = `
-    ${kidsXoPlayerName('X')} (❌): ${x} побед<br>
+    ${kidsXoPlayerName('X')} (<span class="xo-green-x">X</span>): ${x} побед<br>
     ${kidsXoPlayerName('O')} (⭕): ${o} побед<br>
     Ничьих: ${draws}<br><br>
     ${resultLine}
