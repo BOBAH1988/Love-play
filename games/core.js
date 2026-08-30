@@ -306,17 +306,15 @@ function importGameDataFromFile(file){
   };
   reader.readAsText(file, 'utf-8');
 }
-document.getElementById('exportDataBtn').addEventListener('click', exportGameData);
-document.getElementById('importDataBtn').addEventListener('click', ()=>{
-  document.getElementById('importDataInput').click();
-});
+// Кнопки старого блока резервного копирования (#exportDataBtn/#importDataBtn/
+// #backupToggle и контейнер #backupField) удалены из разметки при переносе
+// экспорта/импорта в глобальное меню (#menuExportBtn/#menuImportBtn, см.
+// обработчики ниже). Здесь остаётся только обработчик выбора файла — к нему
+// ведут оба пути импорта (кнопка меню вызывает #importDataInput.click()).
 document.getElementById('importDataInput').addEventListener('change', (e)=>{
   const file = e.target.files && e.target.files[0];
   e.target.value = '';
   importGameDataFromFile(file);
-});
-document.getElementById('backupToggle').addEventListener('click', ()=>{
-  document.getElementById('backupField').classList.toggle('backup-open');
 });
 // Главная страница (#setup) содержит 4 блока-«вида» (главный хаб, игры для
 // двоих, игры для компании, заглушка игр с детьми), но всегда остаётся тем
