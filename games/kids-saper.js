@@ -361,8 +361,9 @@ function goToKidsSaperGame(){
   state.kidsSaperUsed = {};
   state.kidsSaperGrid = generateKidsSaperGrid(1);
   state.kidsSaperChecked = new Array(25).fill(false);
-  state.kidsSaperTasksHidden = false;
-  state.kidsSaperRevealed = state.kidsSaperGrid.map(()=>true);
+  state.kidsSaperTasksHidden = true;
+  state.kidsSaperRevealed = state.kidsSaperGrid.map(()=>false);
+  kidsSaperEnsureLuckyCell();
   state.kidsSaperCompleted = new Array(2).fill(0);
   state.kidsSaperWonLines = [];
   state.kidsSaperEscalated2 = false;
