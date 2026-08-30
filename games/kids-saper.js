@@ -241,6 +241,7 @@ function advanceKidsSaperStage(){
 }
 function escalateKidsSaperTo(nextLevel){
   const pool = shuffle(getKidsSaperItemsList(nextLevel));
+  if(pool.length === 0) return;
   const usedTexts = new Set(state.kidsSaperGrid.map(c=>c.text));
   let p = 0;
   for(let i=0;i<25;i++){
@@ -256,6 +257,9 @@ function escalateKidsSaperTo(nextLevel){
   state.kidsSaperLevel = nextLevel;
   if(state.kidsSaperTasksHidden) kidsSaperEnsureLuckyCell();
   renderKidsSaperGrid();
+  showKidsSaperBonus(nextLevel);
+  const info = getKidsSaperLevelById(nextLevel);
+  showToast(`Уровень повышен: ${info ? info.icon + ' ' + info.name : nextLevel}! Задания обновлены 🔀`);
 }
 function showKidsSaperBonus(level){
   playLevelUpSound();
