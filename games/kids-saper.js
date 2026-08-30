@@ -303,12 +303,14 @@ function pickKidsSaperFinalTask(){
 function kidsSaperEnsureLuckyCell(){
   const grid = state.kidsSaperGrid || [];
   const hasLucky = grid.filter(c => c.green).length;
-  if(hasLucky >= KIDS_SAPER_LUCKY_COUNT) return;
+  const need = KIDS_SAPER_LUCKY_COUNT - hasLucky;
+  if(need <= 0) return;
   const candidates = [];
   grid.forEach((c,i)=>{ if(!state.kidsSaperChecked[i] && !c.green) candidates.push(i); });
-  if(candidates.length === 0) return;
-  const pick = candidates[Math.floor(Math.random() * candidates.length)];
-  state.kidsSaperGrid[pick] = {text: KIDS_SAPER_LUCKY_TEXT, green: true};
+  const shuffled = shuffle(candidates);
+  for(let i = 0; i < Math.min(need, shuffled.length); i++){
+    state.kidsSaperGrid[shuffled[i]] = {text: KIDS_SAPER_LUCKY_TEXT, green: true};
+  }
 }
 function kidsSaperRemoveLuckyCells(){
   const grid = state.kidsSaperGrid || [];
