@@ -4100,6 +4100,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     const muteText = document.getElementById('menuMuteText');
     if(muteText) muteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
   });
+  menuModal.addEventListener('click', (e)=>{
+    if(e.target.id === 'globalMenuModal') menuModal.classList.remove('show');
+  });
   document.getElementById('globalMenuCloseBtn').addEventListener('click', ()=>{
     menuModal.classList.remove('show');
   });
