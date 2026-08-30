@@ -240,9 +240,8 @@ function showKidsSaperBonus(level){
 }
 function checkKidsSaperGameFinished(){
   if(state.kidsSaperFinished) return;
-  const total = state.kidsSaperWonLines.length;
   const allChecked = state.kidsSaperChecked.length === 25 && state.kidsSaperChecked.every(Boolean);
-  if(total >= 5 || allChecked){
+  if(allChecked){
     state.kidsSaperFinished = true;
     state.inProgress = false;
     saveState();
