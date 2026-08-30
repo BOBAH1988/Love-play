@@ -3514,10 +3514,16 @@
       <button type="button" class="btn btn-primary" id="bizToBuyBtn" style="margin-top:10px;" disabled>Дальше: закупка остального →</button>
     </div>
 
-    <!-- Шаг 4: закупка — сколько стаканов приготовить -->
+    <!-- Шаг 4: приготовление напитков -->
     <div class="biz-phase" id="bizPhaseBuy">
-      <div class="biz-step-title">Шаг 4. Закупка продуктов</div>
-      <div class="intro-text">Чтобы сделать стакан лимонада, нужны лимоны (уже куплены про запас), сахар, вода и стаканчики. Выбери, сколько стаканов приготовить, и добавь опции по вкусу.</div>
+      <div class="biz-step-title">Приготовление напитков</div>
+      <div class="field">
+        <label>Что готовим?</label>
+        <div class="starter-group" id="bizDrinkTypeGroup">
+          <button type="button" class="starter-btn mode-btn" data-value="lemonade">🍋 Лимонад</button>
+          <button type="button" class="starter-btn mode-btn" data-value="tea">☕ Чай</button>
+        </div>
+      </div>
       <div class="field">
         <label>Сколько стаканов приготовить?</label>
         <div class="starter-group timer-duration-group" id="bizQuantityGroup">
@@ -3539,21 +3545,32 @@
       <button type="button" class="btn btn-primary" id="bizToPriceBtn">Дальше: назначить цену →</button>
     </div>
 
-    <!-- Шаг 4: цена -->
+    <!-- Шаг 5: цена -->
     <div class="biz-phase" id="bizPhasePrice">
-      <div class="biz-step-title">Шаг 5. Назначь цену</div>
+      <div class="biz-step-title">Назначь цену</div>
       <div class="biz-formula-line" id="bizPriceCostReminder">Себестоимость одного стакана: — ₽</div>
       <div class="biz-event-card" id="bizCompetitorNote" style="display:none; background:rgba(255,107,107,.14); border-color:rgba(255,107,107,.3); color:#ff9d9d;"></div>
       <div class="field" style="margin-top:10px;">
-        <label>Цена за стакан</label>
+        <label>Цена за стакан лимонада</label>
         <div class="starter-group timer-duration-group" id="bizPriceGroup">
-          <button type="button" class="starter-btn mode-btn" data-value="5">5 ₽</button>
           <button type="button" class="starter-btn mode-btn" data-value="10">10 ₽</button>
           <button type="button" class="starter-btn mode-btn" data-value="20">20 ₽</button>
           <button type="button" class="starter-btn mode-btn" data-value="30">30 ₽</button>
           <button type="button" class="starter-btn mode-btn" data-value="40">40 ₽</button>
           <button type="button" class="starter-btn mode-btn" data-value="50">50 ₽</button>
           <button type="button" class="starter-btn mode-btn" data-value="60">60 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="70">70 ₽</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Цена за стакан чая</label>
+        <div class="starter-group timer-duration-group" id="bizTeaPriceGroup">
+          <button type="button" class="starter-btn mode-btn" data-value="5">5 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="10">10 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="15">15 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="20">20 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="25">25 ₽</button>
+          <button type="button" class="starter-btn mode-btn" data-value="30">30 ₽</button>
         </div>
       </div>
       <button type="button" class="btn btn-primary" id="bizSellBtn" style="margin-top:14px;">🍋 Продавать!</button>
@@ -5761,7 +5778,7 @@
 <script src="games/shop.js?v=20260829g"></script>
 <script src="games/business-observer.js?v=20260829g"></script>
 <script src="games/party-roulette.js?v=20260829g"></script>
-<script src="games/business-lemonade.js?v=20260830l"></script>
+<script src="games/business-lemonade.js?v=20260830m"></script>
 <script src="games/kids-xo.js?v=20260829g"></script>
 <script src="games/kids-battleship.js?v=20260829g"></script>
 <script src="games/solo-battleship.js?v=20260829g"></script>

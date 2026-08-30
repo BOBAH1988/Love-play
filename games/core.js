@@ -182,7 +182,7 @@ let state = {
   businessLemonadeHours:null, businessLemonadeOptions:{},
   businessLemonadeLemonStock:0, businessLemonadeLemonBoughtDay:null, businessLemonadeTeaStock:0, businessLemonadeCompetitorPrice:null,
   businessLemonadeLoanOwed:0, businessLemonadeLoanDueDay:null,
-  businessLemonadeCups:10, businessLemonadePrice:40, businessLemonadeSold:0,
+  businessLemonadeCups:10, businessLemonadePrice:40, businessLemonadeTeaCups:10, businessLemonadeTeaPrice:15, businessLemonadeDrinkType:'lemonade', businessLemonadeSold:0,
   businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[], businessLemonadeDayLog:[],
   businessLemonadeQuizIndex:0, businessLemonadeQuizCorrect:0, businessLemonadeQuizItems:[],
   // Крестики-нолики (дети) — счёт партии переживает раунды, обнуляется только при выходе.
