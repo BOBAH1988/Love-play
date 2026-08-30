@@ -2163,6 +2163,8 @@
   .fab-menu-btn:active{background:rgba(255,255,255,.3);}
   /* Кнопка "Назад" справа */
   .fab-back-btn{left:auto; right:12px; font-size:22px; line-height:1; transition:opacity .2s ease;}
+  /* Скрываем все кнопки выхода — теперь навигация через глобальную кнопку "←" */
+  [id$="ExitBtn"], [id$="exitBtn"]{display:none !important;}
   .menu-modal-card{
     max-width:300px; padding:20px 16px;
     background:var(--card-bg); color:#2b0f2e; border-radius:22px;
