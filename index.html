@@ -2145,6 +2145,21 @@
   .wishlist-setup-actions-row{display:flex; gap:10px; margin-top:10px;}
   .wishlist-setup-actions-row #wishlistHistoryBtn, .wishlist-setup-actions-row #znayuHistoryBtn{flex:1;}
   .wishlist-setup-actions-row #wishlistSetupExitBtn, .wishlist-setup-actions-row #znayuSetupExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+
+  /* ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== */
+  .fab-menu-btn{
+    position:fixed; top:12px; right:12px; z-index:150;
+    width:44px; height:44px; border-radius:50%;
+    background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25);
+    color:#fff; font-size:20px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    transition:background .2s ease;
+  }
+  .fab-menu-btn:hover{background:rgba(255,255,255,.25);}
+  .fab-menu-btn:active{background:rgba(255,255,255,.35);}
+  .menu-modal-card{max-width:320px;}
+  .menu-list{display:flex; flex-direction:column; gap:8px;}
 </style>
 </head>
 <body>
@@ -2184,7 +2199,25 @@
 </div>
 <div id="app">
 
-  <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) =====
+  <!-- ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== -->
+  <button type="button" class="fab-menu-btn" id="globalMenuBtn" aria-label="Меню">☰</button>
+
+  <!-- ===== МОДАЛЬНОЕ ОКНО МЕНЮ ===== -->
+  <div class="modal-overlay" id="globalMenuModal">
+    <div class="modal-card menu-modal-card">
+      <div class="modal-title">⚙️ Меню</div>
+      <div class="menu-list">
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon">📋</span> Правила игры</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn"><span class="menu-icon">🔊</span> <span id="menuMuteText">Звук включён</span></button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon">⬆</span> Экспортировать данные</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon">⬇</span> Импортировать данные</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuUpdateBtn"><span class="menu-icon">🔄</span> Обновить приложение</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuInstallBtn"><span class="menu-icon">📲</span> Установить</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑</span> Сбросить прогресс</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExitBtn"><span class="menu-icon">❌</span> Выход в меню</button>
+      </div>
+    </div>
+  </div>
        Внутри одного экрана #setup — 4 переключаемых блока (.field-collapsible,
        у активного добавлен класс .section-open, у остальных его нет — тот же
        механизм показа/скрытия, что раньше использовался для сворачивания
@@ -2208,7 +2241,7 @@
         <button type="button" class="btn btn-menu-item" id="homeSoloBtn"><span class="menu-icon">📱</span> Игры для одного</button>
       </div>
 
-      <div class="field" id="backupField" style="margin-top:22px;">
+      <div class="field" id="backupField" style="margin-top:22px; display:none;">
         <label id="backupToggle" style="cursor:pointer; user-select:none;">Резервная копия <span class="backup-toggle-arrow">▾</span></label>
         <div class="toggle-row" id="backupContent" style="margin-bottom:0;">
           <button type="button" class="toggle-pill" id="exportDataBtn">⬆ Экспортировать данные</button>
@@ -2217,13 +2250,13 @@
         <input type="file" id="importDataInput" accept="application/json,.json" style="display:none">
       </div>
 
-      <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:14px;">
+      <div style="display:none; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:14px;">
         <span class="btn-ghost" id="updateAppBtn">Обновить приложение</span>
         <span class="btn-ghost" id="resetHiddenBtn">Сбросить прогресс</span>
         <span class="btn-ghost" id="installBtn">📲 Установить</span>
       </div>
 
-      <div class="toggle-row" style="justify-content:center; margin-top:14px;">
+      <div class="toggle-row" style="display:none; justify-content:center; margin-top:14px;">
         <button type="button" class="toggle-pill" id="muteBtn" aria-label="Выключить звук">🔊 Звук включён</button>
       </div>
     </div>

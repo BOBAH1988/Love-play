@@ -1534,6 +1534,8 @@ function updateMuteBtn(){
     resumeBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
     resumeBtn.classList.toggle('on', !!state.muted);
   }
+  const menuMuteText = document.getElementById('menuMuteText');
+  if(menuMuteText) menuMuteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
 }
 document.getElementById('muteBtn').addEventListener('click', ()=>{
   state.muted = !state.muted;
@@ -4086,6 +4088,68 @@ document.getElementById('closeRulesBtn').addEventListener('click', ()=>{
 document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'rulesModal') e.currentTarget.classList.remove('show');
 });
+
+// ===== ГЛОБАЛЬНОЕ МЕНЮ =====
+(function(){
+  const menuBtn = document.getElementById('globalMenuBtn');
+  const menuModal = document.getElementById('globalMenuModal');
+  if(!menuBtn || !menuModal) return;
+
+  menuBtn.addEventListener('click', ()=>{
+    menuModal.classList.add('show');
+    const muteText = document.getElementById('menuMuteText');
+    if(muteText) muteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
+  });
+  menuModal.addEventListener('click', (e)=>{
+    if(e.target.id === 'globalMenuModal') menuModal.classList.remove('show');
+  });
+
+  const closeMenu = ()=> menuModal.classList.remove('show');
+
+  document.getElementById('menuRulesBtn').addEventListener('click', ()=>{
+    closeMenu();
+    document.getElementById('rulesModal').classList.add('show');
+  });
+  document.getElementById('menuMuteBtn').addEventListener('click', ()=>{
+    state.muted = !state.muted;
+    saveState();
+    updateMuteBtn();
+    const muteText = document.getElementById('menuMuteText');
+    if(muteText) muteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
+  });
+  document.getElementById('menuExportBtn').addEventListener('click', ()=>{
+    closeMenu();
+    exportGameData();
+  });
+  document.getElementById('menuImportBtn').addEventListener('click', ()=>{
+    closeMenu();
+    document.getElementById('importDataInput').click();
+  });
+  document.getElementById('menuUpdateBtn').addEventListener('click', ()=>{
+    closeMenu();
+    location.reload(true);
+  });
+  document.getElementById('menuInstallBtn').addEventListener('click', ()=>{
+    closeMenu();
+    document.getElementById('installModal').classList.add('show');
+  });
+  document.getElementById('menuResetBtn').addEventListener('click', ()=>{
+    closeMenu();
+    if(confirm('Сбросить весь прогресс во всех играх? Счёт, избранное, имена команд и историю совпадений будет не вернуть. Свои добавленные задания в «Фантах» при этом сохранятся. Это действие нельзя отменить.')){
+      state.hiddenIndexes = [];
+      state.usedIndexes = [];
+      state.kidsPlayers = ['Игрок 1','Игрок 2'];
+      state.businessPlayers = ['Игрок 1','Игрок 2'];
+      state.partyPlayers = ['Игрок 1','Игрок 2'];
+      saveState();
+      showToast('Прогресс сброшен 🗑');
+    }
+  });
+  document.getElementById('menuExitBtn').addEventListener('click', ()=>{
+    closeMenu();
+    goToSetup();
+  });
+})();
 document.getElementById('davaySetupRulesBtn').addEventListener('click', ()=>{
   document.getElementById('davayRulesModal').classList.add('show');
 });
