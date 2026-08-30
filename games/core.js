@@ -180,7 +180,7 @@ let state = {
   businessLemonadeUpgrades:{sign:false, music:false, recipe:false, seller:false, secondStand:false},
   businessLemonadeWeatherKey:'normal', businessLemonadeEventIdx:-1, businessLemonadeLocation:null,
   businessLemonadeHours:null, businessLemonadeOptions:{},
-  businessLemonadeLemonStock:0, businessLemonadeLemonBoughtDay:null, businessLemonadeCompetitorPrice:null,
+  businessLemonadeLemonStock:0, businessLemonadeLemonBoughtDay:null, businessLemonadeTeaStock:0, businessLemonadeCompetitorPrice:null,
   businessLemonadeLoanOwed:0, businessLemonadeLoanDueDay:null,
   businessLemonadeCups:10, businessLemonadePrice:40, businessLemonadeSold:0,
   businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[], businessLemonadeDayLog:[],
@@ -1233,7 +1233,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.businessLemonadeUpgrades = {sign:false, music:false, recipe:false, seller:false, secondStand:false};
   state.businessLemonadeWeatherKey = 'normal'; state.businessLemonadeEventIdx = -1;
   state.businessLemonadeLocation = null; state.businessLemonadeHours = null; state.businessLemonadeOptions = {};
-  state.businessLemonadeLemonStock = 0; state.businessLemonadeLemonBoughtDay = null;
+  state.businessLemonadeLemonStock = 0; state.businessLemonadeLemonBoughtDay = null; state.businessLemonadeTeaStock = 0;
   state.businessLemonadeCompetitorPrice = null;
   state.businessLemonadeLoanOwed = 0; state.businessLemonadeLoanDueDay = null;
   state.businessLemonadeCups = 10; state.businessLemonadePrice = 40; state.businessLemonadeSold = 0;

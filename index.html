@@ -3500,12 +3500,17 @@
       <button type="button" class="btn btn-primary" id="bizToLemonsBtn" style="margin-top:10px;" disabled>Дальше: закупка лимонов →</button>
     </div>
 
-    <!-- Шаг 3: закупка лимонов про запас (портятся через 3 дня) -->
+    <!-- Шаг 3: закупка лимонов и чая -->
     <div class="biz-phase" id="bizPhaseLemons">
-      <div class="biz-step-title">Шаг 3. Закупка лимонов</div>
-      <div class="intro-text">Лимоны — единственный продукт, который портится: если пролежат больше 3 дней, придётся выбросить. Оптом дешевле за штуку, но покупай с умом!</div>
-      <div class="biz-weather-card" id="bizLemonStockCard">Лимонов нет</div>
-      <div class="biz-options-grid" id="bizLemonTiersGrid" style="grid-template-columns:1fr;"></div>
+      <div class="biz-step-title">Закупка</div>
+      <div class="field">
+        <label>Лимоны</label>
+        <div class="biz-options-grid" id="bizLemonTiersGrid" style="grid-template-columns:1fr;"></div>
+      </div>
+      <div class="field">
+        <label>Пакетики чая</label>
+        <div class="biz-options-grid" id="bizTeaTiersGrid" style="grid-template-columns:1fr;"></div>
+      </div>
       <button type="button" class="btn btn-primary" id="bizToBuyBtn" style="margin-top:10px;" disabled>Дальше: закупка остального →</button>
     </div>
 
@@ -5756,7 +5761,7 @@
 <script src="games/shop.js?v=20260829g"></script>
 <script src="games/business-observer.js?v=20260829g"></script>
 <script src="games/party-roulette.js?v=20260829g"></script>
-<script src="games/business-lemonade.js?v=20260830k"></script>
+<script src="games/business-lemonade.js?v=20260830l"></script>
 <script src="games/kids-xo.js?v=20260829g"></script>
 <script src="games/kids-battleship.js?v=20260829g"></script>
 <script src="games/solo-battleship.js?v=20260829g"></script>

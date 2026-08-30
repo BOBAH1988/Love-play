@@ -119,8 +119,12 @@ const BIZ_LEMON_TIERS = [
   { qty: 10, pricePerUnit: 4 },
   { qty: 20, pricePerUnit: 3 },
   { qty: 40, pricePerUnit: 2 },
-  { qty: 60, pricePerUnit: 2 },
   { qty: 100, pricePerUnit: 1 },
+];
+const BIZ_TEA_TIERS = [
+  { qty: 10, pricePerUnit: 3 },
+  { qty: 20, pricePerUnit: 3 },
+  { qty: 50, pricePerUnit: 2 },
 ];
 const BIZ_LEMON_SHELF_DAYS = 3;
 
