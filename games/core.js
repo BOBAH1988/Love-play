@@ -4160,13 +4160,24 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   const backBtn = document.getElementById('globalBackBtn');
   if(!backBtn) return;
 
-  // Определяем текущий активный экран игры (не #setup)
-  function getActiveGameScreenId(){
-    const active = document.querySelectorAll('.screen.active');
-    for(const s of active){
-      if(s.id !== 'setup') return s.id;
-    }
-    return null;
+  // Собираем ВСЕ активные экраны игр (не #setup)
+  function getActiveGameScreenIds(){
+    const ids = [];
+    document.querySelectorAll('.screen.active').forEach(s=>{
+      if(s.id !== 'setup') ids.push(s.id);
+    });
+    return ids;
+  }
+
+  // Гарантирует, что активен только #setup — чинит "экран, поделённый на 2 части"
+  function ensureSingleActiveScreen(){
+    const screens = document.querySelectorAll('.screen.active');
+    if(screens.length <= 1) return false;
+    const setup = document.getElementById('setup');
+    screens.forEach(s=>{ if(s !== setup) s.classList.remove('active'); });
+    if(setup && !setup.classList.contains('active')) setup.classList.add('active');
+    window.scrollTo(0, 0);
+    return true;
   }
 
   backBtn.addEventListener('click', ()=>{
@@ -4224,7 +4235,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     }
 
     // 4. Игра активна — ставим на паузу через ФУНКЦИЮ ИГРЫ
-    const screenId = getActiveGameScreenId();
+    const screenIds = getActiveGameScreenIds();
     const PAUSE_MAP = {
       game: 'pauseGame',
       bingoGame: 'pauseBingoGame',
@@ -4250,21 +4261,32 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       soloBsSetup: 'pauseSoloBattleshipGame', soloBsGame: 'pauseSoloBattleshipGame',
       soloBattleshipSetup: 'pauseSoloBattleshipGame', soloBattleshipGame: 'pauseSoloBattleshipGame',
     };
-    const fnName = screenId && PAUSE_MAP[screenId];
+    // Ищем pause-функцию по ЛЮБОМУ из активных экранов
+    let fnName = null;
+    for(const sid of screenIds){
+      if(PAUSE_MAP[sid]){ fnName = PAUSE_MAP[sid]; break; }
+    }
     if(fnName && typeof window[fnName] === 'function'){
       window[fnName]();
+      // Страховка: pause-функция могла оставить лишний экран активным
+      setTimeout(ensureSingleActiveScreen, 0);
       return;
     }
-    // Fallback: для игр без dedicated pause-функции — универсальная пауза
-    if(screenId && typeof state !== 'undefined'){
-      const gameScreen = document.getElementById(screenId);
-      if(gameScreen) gameScreen.classList.remove('active');
-      if(setup) setup.classList.add('active');
-      if(screenId.includes('fanty') || screenId === 'game') state.pausedMode = 'fanty';
-      else if(screenId.includes('biz') && screenId.includes('Lemonade')) state.pausedMode = null;
+    // Fallback: для игр без dedicated pause-функции — универсальная пауза.
+    // ВАЖНО: скрываем ВСЕ активные игровые экраны, иначе экран делится на 2 части
+    if(screenIds.length && typeof state !== 'undefined'){
+      const setupEl2 = document.getElementById('setup');
+      screenIds.forEach(sid=>{
+        const gameScreen = document.getElementById(sid);
+        if(gameScreen) gameScreen.classList.remove('active');
+      });
+      if(setupEl2) setupEl2.classList.add('active');
+      const mainId = screenIds.includes('game') ? 'game' : screenIds[0];
+      if(mainId.includes('fanty') || mainId === 'game') state.pausedMode = 'fanty';
       else state.pausedMode = null;
       saveState();
       if(typeof updateResumeUI === 'function') updateResumeUI();
+      window.scrollTo(0, 0);
     }
   });
 
