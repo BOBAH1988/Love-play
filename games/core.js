@@ -4100,8 +4100,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     const muteText = document.getElementById('menuMuteText');
     if(muteText) muteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
   });
-  menuModal.addEventListener('click', (e)=>{
-    if(e.target.id === 'globalMenuModal') menuModal.classList.remove('show');
+  document.getElementById('globalMenuCloseBtn').addEventListener('click', ()=>{
+    menuModal.classList.remove('show');
   });
 
   const closeMenu = ()=> menuModal.classList.remove('show');
@@ -4144,10 +4144,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       saveState();
       showToast('Прогресс сброшен 🗑');
     }
-  });
-  document.getElementById('menuExitBtn').addEventListener('click', ()=>{
-    closeMenu();
-    goToSetup();
   });
 })();
 document.getElementById('davaySetupRulesBtn').addEventListener('click', ()=>{

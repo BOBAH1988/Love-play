@@ -2164,8 +2164,14 @@
     box-shadow:0 20px 50px rgba(0,0,0,.5);
   }
   .menu-modal-card .modal-title{
-    color:#2b0f2e; margin-bottom:12px;
+    color:#2b0f2e; margin-bottom:12px; position:relative; padding-right:32px;
   }
+  .menu-modal-card .modal-close-btn{
+    position:absolute; top:-4px; right:0;
+    background:none; border:none; color:#ff4d4d; font-size:20px; line-height:1;
+    cursor:pointer; padding:4px;
+  }
+  .menu-modal-card .modal-close-btn:hover{color:#ff6b6b;}
   .menu-list{display:flex; flex-direction:column; gap:6px;}
   .menu-list .btn-secondary{
     background:rgba(43,15,46,.06); border:1px solid rgba(43,15,46,.12);
@@ -2220,16 +2226,15 @@
   <!-- ===== МОДАЛЬНОЕ ОКНО МЕНЮ ===== -->
   <div class="modal-overlay" id="globalMenuModal">
     <div class="modal-card menu-modal-card">
-      <div class="modal-title">⚙️ Меню</div>
+      <div class="modal-title">⚙️ Меню <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button></div>
       <div class="menu-list">
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon">📋</span> Правила игры</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn"><span class="menu-icon">🔊</span> <span id="menuMuteText">Звук включён</span></button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon">⬆</span> Экспортировать данные</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon">⬇</span> Импортировать данные</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuUpdateBtn"><span class="menu-icon">🔄</span> Обновить приложение</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuInstallBtn"><span class="menu-icon">📲</span> Установить</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑</span> Сбросить прогресс</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExitBtn"><span class="menu-icon">❌</span> Выход в меню</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn">Правила игры</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn"><span id="menuMuteText">Звук включён</span></button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn">Экспортировать данные</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn">Импортировать данные</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuUpdateBtn">Обновить приложение</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuInstallBtn">Установить приложение</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn">Сбросить прогресс</button>
       </div>
     </div>
   </div>
