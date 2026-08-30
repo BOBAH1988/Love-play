@@ -4090,10 +4090,10 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 });
 
 // ===== ГЛОБАЛЬНОЕ МЕНЮ =====
-(function(){
+document.addEventListener('DOMContentLoaded', function(){
   const menuBtn = document.getElementById('globalMenuBtn');
   const menuModal = document.getElementById('globalMenuModal');
-  if(!menuBtn || !menuModal) return;
+  if(!menuBtn ||!menuModal) return;
 
   menuBtn.addEventListener('click', ()=>{
     menuModal.classList.add('show');
@@ -4149,7 +4149,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     closeMenu();
     goToSetup();
   });
-})();
+});
 document.getElementById('davaySetupRulesBtn').addEventListener('click', ()=>{
   document.getElementById('davayRulesModal').classList.add('show');
 });
