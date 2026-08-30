@@ -891,6 +891,8 @@ function bizSellDay(){
   document.getElementById('bizResCost').textContent = `${Math.round(costPerCup * 10) / 10} ₽`;
   document.getElementById('bizResPrice').textContent = `${price} ₽`;
   document.getElementById('bizResProfitPerCup').textContent = `${Math.round(profitPerCup * 10) / 10} ₽`;
+  const soldLabel = document.getElementById('bizResSoldLabel');
+  if(soldLabel) soldLabel.textContent = `Продано стаканов (${isTea ? 'чай' : 'лимонад'})`;
   document.getElementById('bizResSold').textContent = `${sold} из ${cups}`;
   document.getElementById('bizResRevenue').textContent = `${revenue} ₽`;
   document.getElementById('bizResNetProfit').textContent = `${netProfit} ₽`;
@@ -1067,6 +1069,29 @@ function showBizSummaryModal(){
   document.getElementById('bizSummaryIntro').textContent = `За ${daysPlayed} ${dayWord} ты накопил ${totalProfit >= 0 ? '+' : ''}${totalProfit} ₽ чистыми и достиг цели «${name}» (${goal} ₽). Правильных ответов в проверке: ${correct} из ${total}.`;
   const log = (state.businessLemonadeDayLog || []).filter(Boolean);
   renderBizWeekChart(log);
+  // Разделение по напиткам: сколько стаканов продано, потрачено и заработано
+  // по лимонаду и чаю отдельно (собираем из дневного лога партии).
+  const drinkStats = {};
+  log.forEach(rec=>{
+    const key = rec.drinkType === 'Чай' ? 'Чай' : 'Лимонад';
+    if(!drinkStats[key]) drinkStats[key] = { sold:0, cups:0, expenses:0, revenue:0, netProfit:0 };
+    const d = drinkStats[key];
+    d.sold += rec.sold; d.cups += rec.cups;
+    d.expenses += rec.expenses; d.revenue += rec.revenue; d.netProfit += rec.netProfit;
+  });
+  const drinkIcons = { 'Лимонад': '🍋', 'Чай': '☕' };
+  const drinksBox = document.getElementById('bizSummaryDrinksBox');
+  if(drinksBox){
+    drinksBox.innerHTML = Object.keys(drinkStats).map(key=>{
+      const d = drinkStats[key];
+      return `
+        <div class="biz-breakdown-row biz-total"><span>${drinkIcons[key]} ${key}</span><span>${d.sold} из ${d.cups} стаканов</span></div>
+        <div class="biz-breakdown-row"><span>· Потрачено (расходы)</span><span>${d.expenses} ₽</span></div>
+        <div class="biz-breakdown-row"><span>· Заработано (выручка)</span><span>${d.revenue} ₽</span></div>
+        <div class="biz-breakdown-row"><span>· Чистая прибыль</span><span>${d.netProfit >= 0 ? '+' : ''}${d.netProfit} ₽</span></div>
+      `;
+    }).join('');
+  }
   document.getElementById('bizSummaryDaysBox').innerHTML = log.map(rec=>`
     <div class="biz-breakdown-row"><span>${rec.dowShort} ${rec.locationIcon} ${rec.locationName} ${rec.weatherIcon}</span><span>${rec.netProfit >= 0 ? '+' : ''}${rec.netProfit} ₽</span></div>
   `).join('');
