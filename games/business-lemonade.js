@@ -73,13 +73,20 @@ function bizCompetitorMult(price, competitorPrice){
 }
 // Развитие стоит дороже, чем стартовый капитал (200 ₽) — сходу купить
 // ничего нельзя, сначала нужно честно заработать хотя бы день-два.
+// Цена зависит от оставшихся дней: 7 дней — полная цена, далее пропорционально ниже.
 const BIZ_UPGRADES = {
-  recipe:      { name: '🧪 Улучшенный рецепт', price: 220, mult: 0.12, desc: 'Вкуснее лимонад — +12% к числу покупателей' },
-  music:       { name: '🎵 Весёлая колонка', price: 260, mult: 0.10, desc: '+10% к числу покупателей до конца партии' },
-  sign:        { name: '🪧 Яркая вывеска', price: 320, mult: 0.15, desc: '+15% к числу покупателей до конца партии' },
-  seller:      { name: '🧑‍💼 Позвать друга помогать', price: 420, mult: 0.20, desc: 'Меньше очередей — +20% к числу покупателей' },
-  secondStand: { name: '🛒 Вторая тележка', price: 600, mult: 0.35, desc: 'Продажи ещё в одном месте — +35% к числу покупателей' },
+  recipe:      { name: '🧪 Улучшенный рецепт', basePrice: 220, mult: 0.10, desc: 'Вкуснее лимонад — +10% к числу покупателей' },
+  music:       { name: '🎵 Весёлая колонка', basePrice: 350, mult: 0.15, desc: '+15% к числу покупателей до конца партии' },
+  sign:        { name: '🪧 Яркая вывеска', basePrice: 500, mult: 0.20, desc: '+20% к числу покупателей до конца партии' },
+  seller:      { name: '🧑‍💼 Позвать друга помогать', basePrice: 750, mult: 0.30, desc: 'Меньше очередей — +30% к числу покупателей' },
+  secondStand: { name: '🛒 Вторая тележка', basePrice: 1250, mult: 0.50, desc: 'Продажи ещё в одном месте — +50% к числу покупателей' },
 };
+// Расчёт цены улучшения с учётом оставшихся дней (7 дней = 100%, 1 день = ~14%)
+function bizUpgradePrice(basePrice){
+  const daysLeft = BIZ_TOTAL_DAYS - (state.businessLemonadeDay || 1);
+  const factor = Math.max(1, daysLeft) / BIZ_TOTAL_DAYS;
+  return Math.round(basePrice * factor);
+}
 const BIZ_WORK_HOURS = [
   { hours: 1, mult: 0.35 },
   { hours: 3, mult: 0.7 },
@@ -284,15 +291,17 @@ function renderBizUpgradeOffers(){
   box.style.display = 'block';
   btnsWrap.innerHTML = keys.map(k=>{
     const u = BIZ_UPGRADES[k];
-    const affordable = (state.businessLemonadeCapital || 0) >= u.price;
-    return `<button type="button" class="biz-upgrade-btn${affordable ? '' : ' biz-upgrade-owned'}" data-key="${k}" ${affordable ? '' : 'disabled'}>${u.name} — ${u.desc}<span class="biz-upgrade-price">${u.price} ₽</span></button>`;
+    const price = bizUpgradePrice(u.basePrice);
+    const affordable = (state.businessLemonadeCapital || 0) >= price;
+    return `<button type="button" class="biz-upgrade-btn${affordable ? '' : ' biz-upgrade-owned'}" data-key="${k}" ${affordable ? '' : 'disabled'}>${u.name} — ${u.desc}<span class="biz-upgrade-price">${price} ₽</span></button>`;
   }).join('');
   btnsWrap.querySelectorAll('.biz-upgrade-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const k = btn.dataset.key;
       const u = BIZ_UPGRADES[k];
-      if((state.businessLemonadeCapital || 0) < u.price) return;
-      state.businessLemonadeCapital -= u.price;
+      const price = bizUpgradePrice(u.basePrice);
+      if((state.businessLemonadeCapital || 0) < price) return;
+      state.businessLemonadeCapital -= price;
       state.businessLemonadeUpgrades[k] = true;
       saveState();
       playSuccessSound();
