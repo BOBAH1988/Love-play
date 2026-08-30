@@ -4158,10 +4158,28 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     if(menuModal) menuModal.classList.remove('show');
     // Закрываем все открытые модалки
     document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
-    // Скрываем все экраны, показываем главный
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+
+    // Определяем текущее состояние
     const setup = document.getElementById('setup');
+    const homeView = document.getElementById('homeView');
+    const isSetupActive = setup && setup.classList.contains('active');
+    const isHomeView = homeView && homeView.classList.contains('section-open');
+
+    if(isSetupActive && isHomeView){
+      // Уже на главном хабе — ничего не делаем
+      return;
+    }
+
+    if(isSetupActive && !isHomeView){
+      // В группе игр (twoPlayerView, companyView и т.д.) — возвращаем на главный хаб
+      if(typeof showSetupView === 'function') showSetupView('homeView');
+      return;
+    }
+
+    // В игре — полный выход на главный хаб
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     if(setup) setup.classList.add('active');
+    if(typeof showSetupView === 'function') showSetupView('homeView');
     // Сбрасываем состояние игры если нужно
     if(typeof state !== 'undefined'){
       state.inProgress = false;
@@ -4173,11 +4191,20 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 
   // Автоматическое скрытие/показ кнопки "Назад" при переключении экранов
   const setupEl = document.getElementById('setup');
-  if(setupEl && 'MutationObserver' in window){
-    new MutationObserver(()=>{
-      backBtn.style.opacity = setupEl.classList.contains('active') ? '0' : '1';
-      backBtn.style.pointerEvents = setupEl.classList.contains('active') ? 'none' : 'auto';
-    }).observe(setupEl, {attributes:true, attributeFilter:['class']});
+  const homeViewEl = document.getElementById('homeView');
+  if(setupEl && homeViewEl && 'MutationObserver' in window){
+    function updateBackBtn(){
+      const isSetupActive = setupEl.classList.contains('active');
+      const isHomeView = homeViewEl.classList.contains('section-open');
+      const visible = isSetupActive && !isHomeView; // Видна в группах игр
+      const inGame = !isSetupActive; // Видна в играх
+      backBtn.style.opacity = (visible || inGame) ? '1' : '0';
+      backBtn.style.pointerEvents = (visible || inGame) ? 'auto' : 'none';
+    }
+    // Наблюдаем за классами #setup и #homeView
+    new MutationObserver(updateBackBtn).observe(setupEl, {attributes:true, attributeFilter:['class']});
+    new MutationObserver(updateBackBtn).observe(homeViewEl, {attributes:true, attributeFilter:['class']});
+    updateBackBtn(); // Начальное состояние
   }
 })();
 
