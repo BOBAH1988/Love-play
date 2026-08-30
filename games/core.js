@@ -4148,63 +4148,115 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   });
 })();
 
-// ===== КНОПКА "НАЗАД" (ВЫХОД В ГЛАВНОЕ МЕНЮ) =====
+// ===== КНОПКА "НАЗАД" (ПАУЗА / НАЗАД НА 1 УРОВЕНЬ) =====
 (function(){
   const backBtn = document.getElementById('globalBackBtn');
   if(!backBtn) return;
+
+  // Определяем текущий активный экран игры (не #setup)
+  function getActiveGameScreen(){
+    const active = document.querySelectorAll('.screen.active');
+    for(const s of active){
+      if(s.id !== 'setup') return s;
+    }
+    return null;
+  }
+
   backBtn.addEventListener('click', ()=>{
-    // Закрываем открытое модальное меню, если есть
+    // Закрываем глобальное меню если открыто
     const menuModal = document.getElementById('globalMenuModal');
     if(menuModal) menuModal.classList.remove('show');
-    // Закрываем все открытые модалки
-    document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
 
-    // Определяем текущее состояние
     const setup = document.getElementById('setup');
     const homeView = document.getElementById('homeView');
     const isSetupActive = setup && setup.classList.contains('active');
     const isHomeView = homeView && homeView.classList.contains('section-open');
+    const pauseModal = document.getElementById('pauseMenuModal');
+    const isPauseShown = pauseModal && pauseModal.classList.contains('show');
 
-    if(isSetupActive && isHomeView){
-      // Уже на главном хабе — ничего не делаем
-      return;
-    }
+    // 1. Главный хаб — ничего не делаем
+    if(isSetupActive && isHomeView) return;
 
+    // 2. Группа игр (не homeView) — возврат на главный хаб
     if(isSetupActive && !isHomeView){
-      // В группе игр (twoPlayerView, companyView и т.д.) — возвращаем на главный хаб
       if(typeof showSetupView === 'function') showSetupView('homeView');
       return;
     }
 
-    // В игре — полный выход на главный хаб
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-    if(setup) setup.classList.add('active');
-    if(typeof showSetupView === 'function') showSetupView('homeView');
-    // Сбрасываем состояние игры если нужно
-    if(typeof state !== 'undefined'){
-      state.inProgress = false;
-      state.pausedMode = null;
+    // 3. В игре
+    // Если меню паузы показано — выходим из игры полностью
+    if(isPauseShown){
+      // Закрываем меню паузы
+      if(pauseModal) pauseModal.classList.remove('show');
+      // Скрываем все экраны
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      // Показываем главный хаб
+      if(setup) setup.classList.add('active');
+      if(typeof showSetupView === 'function') showSetupView('homeView');
+      // Сбрасываем состояние
+      if(typeof state !== 'undefined'){
+        state.inProgress = false;
+        state.pausedMode = null;
+      }
+      if(typeof updateResumeUI === 'function') updateResumeUI();
+      return;
     }
-    // Обновляем UI главного экрана
-    if(typeof updateResumeUI === 'function') updateResumeUI();
+
+    // Если игра активна — ставим на паузу
+    const gameScreen = getActiveGameScreen();
+    if(gameScreen){
+      if(typeof state !== 'undefined'){
+        // Определяем pausedMode по активному экрану
+        const screenId = gameScreen.id;
+        if(screenId.includes('fanty') || screenId === 'game') state.pausedMode = 'fanty';
+        else if(screenId.includes('bingo')) state.pausedMode = 'bingo';
+        else if(screenId.includes('krokodil')) state.pausedMode = 'krokodil';
+        else if(screenId.includes('truth') || screenId.includes('td')) state.pausedMode = 'td';
+        else if(screenId.includes('wishlist') || screenId.includes('desire')) state.pausedMode = 'wishlist';
+        else if(screenId.includes('znayu')) state.pausedMode = 'znayu';
+        else if(screenId.includes('timer')) state.pausedMode = 'timer';
+        else if(screenId.includes('quiz')) state.pausedMode = 'quiz';
+        else if(screenId.includes('sexquest') || screenId.includes('sexQuest')) state.pausedMode = 'sexquest';
+        else if(screenId.includes('lucky')) state.pausedMode = 'lucky';
+        else if(screenId.includes('kidsMemory')) state.pausedMode = 'kidsMemory';
+        else if(screenId.includes('kidsTd')) state.pausedMode = 'kidsTd';
+        else if(screenId.includes('kidsQuiz')) state.pausedMode = 'kidsQuiz';
+        else if(screenId.includes('famZnayu')) state.pausedMode = 'famZnayu';
+        else if(screenId.includes('davay')) state.pausedMode = 'davay';
+        else if(screenId.includes('memes')) state.pausedMode = 'memes';
+        else if(screenId.includes('shop')) state.pausedMode = 'shop';
+        else if(screenId.includes('ideas')) state.pausedMode = 'ideas';
+        else if(screenId.includes('partyFants')) state.pausedMode = 'partyFants';
+        else if(screenId.includes('partyTd')) state.pausedMode = 'partyTd';
+        else if(screenId.includes('partyQuiz')) state.pausedMode = 'partyQuiz';
+        else if(screenId.includes('soloBs') || screenId.includes('battleship')) state.pausedMode = 'soloBs';
+        else if(screenId.includes('kidsFlash') || screenId.includes('flash')) state.pausedMode = 'flash';
+        else if(screenId.includes('kidsSaper') || screenId.includes('saper')) state.pausedMode = 'saper';
+        else if(screenId.includes('business')) state.pausedMode = 'business';
+        else if(screenId.includes('twister')) state.pausedMode = 'twister';
+        else if(screenId.includes('photo')) state.pausedMode = 'photo';
+        else if(screenId.includes('whattoplay')) state.pausedMode = 'whattoplay';
+        else state.pausedMode = 'fanty'; // fallback
+        saveState();
+      }
+      if(typeof updateResumeUI === 'function') updateResumeUI();
+    }
   });
 
-  // Автоматическое скрытие/показ кнопки "Назад" при переключении экранов
+  // Автоматическое скрытие/показ кнопки "Назад"
   const setupEl = document.getElementById('setup');
   const homeViewEl = document.getElementById('homeView');
   if(setupEl && homeViewEl && 'MutationObserver' in window){
     function updateBackBtn(){
       const isSetupActive = setupEl.classList.contains('active');
       const isHomeView = homeViewEl.classList.contains('section-open');
-      const visible = isSetupActive && !isHomeView; // Видна в группах игр
-      const inGame = !isSetupActive; // Видна в играх
-      backBtn.style.opacity = (visible || inGame) ? '1' : '0';
-      backBtn.style.pointerEvents = (visible || inGame) ? 'auto' : 'none';
+      const isHome = isSetupActive && isHomeView;
+      backBtn.style.opacity = isHome ? '0' : '1';
+      backBtn.style.pointerEvents = isHome ? 'none' : 'auto';
     }
-    // Наблюдаем за классами #setup и #homeView
     new MutationObserver(updateBackBtn).observe(setupEl, {attributes:true, attributeFilter:['class']});
     new MutationObserver(updateBackBtn).observe(homeViewEl, {attributes:true, attributeFilter:['class']});
-    updateBackBtn(); // Начальное состояние
+    updateBackBtn();
   }
 })();
 
