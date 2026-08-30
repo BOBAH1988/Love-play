@@ -75,49 +75,17 @@ function renderKidsSaperBonusChecklist(){
   });
 }
 function ensureKidsSaperTeams(){
-  if(!Array.isArray(state.kidsSaperTeams) || state.kidsSaperTeams.length !== 2){
-    state.kidsSaperTeams = [{name:'Команда 1', m:'Он', f:'Она'},{name:'Команда 2', m:'Он', f:'Она'}];
+  if(!Array.isArray(state.partyPlayers) || state.partyPlayers.length < 2){
+    state.partyPlayers = ['Игрок 1','Игрок 2'];
   }
-  state.kidsSaperTeams.forEach((t,i)=>{
-    if(!t.name) t.name = 'Команда ' + (i+1);
-    if(!t.m) t.m = 'Он';
-    if(!t.f) t.f = 'Она';
-  });
 }
-function renderKidsSaperTeams(){
-  ensureKidsSaperTeams();
-  const wrap = document.getElementById('kidsSaperTeamsList');
-  if(!wrap) return;
-  wrap.innerHTML = '';
-  state.kidsSaperTeams.forEach((team, idx)=>{
-    const block = document.createElement('div');
-    block.className = 'fam-znayu-family-block';
-    const label = document.createElement('div');
-    label.className = 'fam-znayu-family-label';
-    label.textContent = 'Команда ' + (idx + 1);
-    block.appendChild(label);
-    const nameRow = document.createElement('div');
-    nameRow.className = 'fam-znayu-family-inputs';
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.maxLength = 14;
-    nameInput.placeholder = 'Команда ' + (idx + 1);
-    nameInput.value = team.name;
-    nameInput.addEventListener('input', ()=>{
-      state.kidsSaperTeams[idx].name = nameInput.value.trim() || ('Команда ' + (idx + 1));
-      saveState();
-    });
-    nameRow.appendChild(nameInput);
-    block.appendChild(nameRow);
-    wrap.appendChild(block);
-  });
+function kidsSaperTeamName(i){
+  return state.partyPlayers[i] || ('Команда ' + (i+1));
 }
 function kidsSaperCurrentActor(idx){
-  ensureKidsSaperTeams();
-  const team = state.kidsSaperTeams[idx] || {name:'Команда ' + (idx+1), m:'Он', f:'Она'};
   const turnCount = (state.kidsSaperTeamTurnCount || [0,0])[idx] || 0;
   const actorIsM = turnCount % 2 === 0;
-  return { actorName: actorIsM ? team.m : team.f, actorIsM };
+  return { actorName: kidsSaperTeamName(idx), actorIsM };
 }
 function generateKidsSaperGrid(level){
   const all = getKidsSaperItemsList(level);
@@ -135,24 +103,22 @@ function generateKidsSaperGrid(level){
   return picked.map(c=>({text:c.text, green:false}));
 }
 function updateKidsSaperScoreUI(){
-  ensureKidsSaperTeams();
-  const teams = state.kidsSaperTeams;
   const completed = state.kidsSaperCompleted || [];
   const idx = state.kidsSaperCurrentTeamIndex || 0;
   const wrap = document.getElementById('kidsSaperScoreRow');
   if(wrap){
     wrap.innerHTML = '';
-    teams.forEach((team, i)=>{
+    [0,1].forEach(i=>{
       const span = document.createElement('span');
       span.className = 'krokodil-score-item' + (i === idx ? ' active' : '');
-      span.textContent = team.name + ': ' + (completed[i] || 0);
+      span.textContent = kidsSaperTeamName(i) + ': ' + (completed[i] || 0);
       wrap.appendChild(span);
     });
   }
-  const teamName = (teams[idx] && teams[idx].name) || 'Команда 1';
+  const teamName = kidsSaperTeamName(idx);
   const actor = kidsSaperCurrentActor(idx);
   const turnLabel = document.getElementById('kidsSaperTurnLabel');
-  if(turnLabel) turnLabel.textContent = `Ходит: ${teamName} — ${actor.actorName}`;
+  if(turnLabel) turnLabel.textContent = `Ходит: ${teamName}`;
   const level = state.kidsSaperLevel || 1;
   const info = getKidsSaperLevelById(level);
   const linesTotal = (state.kidsSaperWonLines || []).length;
@@ -265,7 +231,7 @@ function showKidsSaperBonus(level){
   playLevelUpSound();
   const info = getKidsSaperLevelById(level);
   ensureKidsSaperTeams();
-  const teamName = (state.kidsSaperTeams[state.kidsSaperCurrentTeamIndex || 0] || {}).name || 'Команда 1';
+  const teamName = kidsSaperTeamName(state.kidsSaperCurrentTeamIndex || 0);
   const introEl = document.getElementById('kidsSaperBonusIntro');
   if(introEl) introEl.textContent = `🏆 Линия собрана командой «${teamName}»! Уровень повышен: ${info ? info.icon + ' ' + info.name : ''}`;
   const textEl = document.getElementById('kidsSaperBonusText');
@@ -286,9 +252,8 @@ function checkKidsSaperGameFinished(){
 function showKidsSaperSummaryModal(){
   document.getElementById('kidsSaperBonusModal').classList.remove('show');
   ensureKidsSaperTeams();
-  const teams = state.kidsSaperTeams;
   const completed = state.kidsSaperCompleted || [];
-  const ranking = teams.map((t,i)=>({n:t.name, score: completed[i] || 0})).sort((a,b)=>b.score-a.score);
+  const ranking = [0,1].map(i=>({n: kidsSaperTeamName(i), score: completed[i] || 0})).sort((a,b)=>b.score-a.score);
   const medals = ['🥇','🥈'];
   const listHtml = ranking.map((r,i)=>{
     const place = medals[i] || `${i+1}.`;
@@ -385,7 +350,6 @@ function suggestRandomKidsSaperCell(){
 function goToKidsSaperSetup(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('kidsSaperSetup').classList.add('active');
-  renderKidsSaperTeams();
 }
 function exitKidsSaperSetup(){
   document.getElementById('kidsSaperSetup').classList.remove('active');
