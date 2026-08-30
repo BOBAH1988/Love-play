@@ -4156,10 +4156,10 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(!backBtn) return;
 
   // Определяем текущий активный экран игры (не #setup)
-  function getActiveGameScreen(){
+  function getActiveGameScreenId(){
     const active = document.querySelectorAll('.screen.active');
     for(const s of active){
-      if(s.id !== 'setup') return s;
+      if(s.id !== 'setup') return s.id;
     }
     return null;
   }
@@ -4169,11 +4169,10 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     const menuModal = document.getElementById('globalMenuModal');
     if(menuModal) menuModal.classList.remove('show');
 
-    // Если показано итоговое окно — закрываем и выходим на уровень выше
+    // Если показано итоговое окно — закрываем и выходим на главный хаб
     const summaryModal = document.getElementById('summaryModal');
     if(summaryModal && summaryModal.classList.contains('show')){
       summaryModal.classList.remove('show');
-      // Скрываем все экраны, показываем главный хаб
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
       const setup = document.getElementById('setup');
       if(setup) setup.classList.add('active');
@@ -4204,18 +4203,13 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       return;
     }
 
-    // 3. В игре
-    // Если меню паузы показано — выходим из игры полностью
+    // 3. В игре — если пауза показана, выходим полностью
     if(isPauseShown){
-      // Закрываем меню паузы
       if(pauseModal) pauseModal.classList.remove('show');
-      // Скрываем все экраны
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-      // Показываем главный хаб
       if(setup) setup.classList.add('active');
       if(typeof showSetupView === 'function') showSetupView('homeView');
       window.scrollTo(0, 0);
-      // Сбрасываем состояние
       if(typeof state !== 'undefined'){
         state.inProgress = false;
         state.pausedMode = null;
@@ -4224,43 +4218,47 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       return;
     }
 
-    // Если игра активна — ставим на паузу
-    const gameScreen = getActiveGameScreen();
-    if(gameScreen){
-      if(typeof state !== 'undefined'){
-        // Определяем pausedMode по активному экрану
-        const screenId = gameScreen.id;
-        if(screenId.includes('fanty') || screenId === 'game') state.pausedMode = 'fanty';
-        else if(screenId.includes('bingo')) state.pausedMode = 'bingo';
-        else if(screenId.includes('krokodil')) state.pausedMode = 'krokodil';
-        else if(screenId.includes('truth') || screenId.includes('td')) state.pausedMode = 'td';
-        else if(screenId.includes('wishlist') || screenId.includes('desire')) state.pausedMode = 'wishlist';
-        else if(screenId.includes('znayu')) state.pausedMode = 'znayu';
-        else if(screenId.includes('timer')) state.pausedMode = 'timer';
-        else if(screenId.includes('quiz')) state.pausedMode = 'quiz';
-        else if(screenId.includes('sexquest') || screenId.includes('sexQuest')) state.pausedMode = 'sexquest';
-        else if(screenId.includes('lucky')) state.pausedMode = 'lucky';
-        else if(screenId.includes('kidsMemory')) state.pausedMode = 'kidsMemory';
-        else if(screenId.includes('kidsTd')) state.pausedMode = 'kidsTd';
-        else if(screenId.includes('kidsQuiz')) state.pausedMode = 'kidsQuiz';
-        else if(screenId.includes('famZnayu')) state.pausedMode = 'famZnayu';
-        else if(screenId.includes('davay')) state.pausedMode = 'davay';
-        else if(screenId.includes('memes')) state.pausedMode = 'memes';
-        else if(screenId.includes('shop')) state.pausedMode = 'shop';
-        else if(screenId.includes('ideas')) state.pausedMode = 'ideas';
-        else if(screenId.includes('partyFants')) state.pausedMode = 'partyFants';
-        else if(screenId.includes('partyTd')) state.pausedMode = 'partyTd';
-        else if(screenId.includes('partyQuiz')) state.pausedMode = 'partyQuiz';
-        else if(screenId.includes('soloBs') || screenId.includes('battleship')) state.pausedMode = 'soloBs';
-        else if(screenId.includes('kidsFlash') || screenId.includes('flash')) state.pausedMode = 'flash';
-        else if(screenId.includes('kidsSaper') || screenId.includes('saper')) state.pausedMode = 'saper';
-        else if(screenId.includes('business')) state.pausedMode = 'business';
-        else if(screenId.includes('twister')) state.pausedMode = 'twister';
-        else if(screenId.includes('photo')) state.pausedMode = 'photo';
-        else if(screenId.includes('whattoplay')) state.pausedMode = 'whattoplay';
-        else state.pausedMode = 'fanty'; // fallback
-        saveState();
-      }
+    // 4. Игра активна — ставим на паузу через ФУНКЦИЮ ИГРЫ
+    const screenId = getActiveGameScreenId();
+    const PAUSE_MAP = {
+      game: 'pauseGame',
+      bingoGame: 'pauseBingoGame',
+      krokodilSetup: 'pauseKrokodilGame', krokodilGame: 'pauseKrokodilGame',
+      tdSetup: 'pauseTdGame', tdGame: 'pauseTdGame',
+      truthDareSetup: 'pauseTdGame', truthDareGame: 'pauseTdGame',
+      wishlistSetup: 'pauseWishlistGame', wishlistGame: 'pauseWishlistGame',
+      desireSetup: 'pauseWishlistGame', desireGame: 'pauseWishlistGame',
+      znayuSetup: 'pauseZnayuGame', znayuGame: 'pauseZnayuGame',
+      timerSetup: 'pauseTimerGame', timerGame: 'pauseTimerGame',
+      quizSetup: 'pauseQuizGame', quizGame: 'pauseQuizGame',
+      partyQuizSetup: 'pausePartyQuizGame', partyQuizGame: 'pausePartyQuizGame',
+      partyFantsSetup: 'pausePartyFantsGame', partyFantsGame: 'pausePartyFantsGame',
+      partyTdSetup: 'pausePartyTdGame', partyTdGame: 'pausePartyTdGame',
+      luckySetup: 'pauseLuckyGame', luckyGame: 'pauseLuckyGame',
+      kidsMemorySetup: 'pauseKidsMemoryGame', kidsMemoryGame: 'pauseKidsMemoryGame',
+      kidsTdSetup: 'pauseKidsTdGame', kidsTdGame: 'pauseKidsTdGame',
+      kidsTdChoice: 'pauseKidsTdGame',
+      kidsQuizSetup: 'pauseKidsQuizGame', kidsQuizGame: 'pauseKidsQuizGame',
+      kidsSaperSetup: 'pauseKidsSaperGame', kidsSaperGame: 'pauseKidsSaperGame',
+      famZnayuSetup: 'pauseFamZnayuGame', famZnayuGame: 'pauseFamZnayuGame',
+      davaySetup: 'pauseDavayGame', davayGame: 'pauseDavayGame', davayQuiz: 'pauseDavayGame',
+      soloBsSetup: 'pauseSoloBattleshipGame', soloBsGame: 'pauseSoloBattleshipGame',
+      soloBattleshipSetup: 'pauseSoloBattleshipGame', soloBattleshipGame: 'pauseSoloBattleshipGame',
+    };
+    const fnName = screenId && PAUSE_MAP[screenId];
+    if(fnName && typeof window[fnName] === 'function'){
+      window[fnName]();
+      return;
+    }
+    // Fallback: для игр без dedicated pause-функции — универсальная пауза
+    if(screenId && typeof state !== 'undefined'){
+      const gameScreen = document.getElementById(screenId);
+      if(gameScreen) gameScreen.classList.remove('active');
+      if(setup) setup.classList.add('active');
+      if(screenId.includes('fanty') || screenId === 'game') state.pausedMode = 'fanty';
+      else if(screenId.includes('biz') && screenId.includes('Lemonade')) state.pausedMode = null;
+      else state.pausedMode = null;
+      saveState();
       if(typeof updateResumeUI === 'function') updateResumeUI();
     }
   });
