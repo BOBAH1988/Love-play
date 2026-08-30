@@ -437,7 +437,7 @@
   /* Иконка в начале названия игры — крупнее самого текста, чтобы список игр
      читался быстрее (сама надпись остаётся прежнего размера). */
   .game-select-list .btn .menu-icon{
-    font-size:1.7em; line-height:1; margin-right:6px; flex-shrink:0;
+    font-size:1.7em; line-height:1; margin-right:12px; flex-shrink:0;
   }
   /* Главная страница (хаб) — 3 крупные кнопки формата игры, всегда в один
      столбец (не сетка), чтобы они читались как главный выбор, а не как
@@ -454,6 +454,7 @@
     border:1px solid rgba(255,255,255,.32);
     box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
     font-weight:700;
+    display:flex; align-items:center; gap:6px;
   }
   .btn-menu-item:active{background:rgba(255,94,142,.32); border-color:rgba(255,255,255,.5);}
   .btn-ghost{
