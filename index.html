@@ -708,6 +708,10 @@
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
     border-radius:16px; padding:14px; margin:12px 0;
   }
+  /* Итоги партии: отдельные карточки по лимонаду и чаю */
+  .biz-summary-drinks{ margin:12px 0; }
+  .biz-summary-drinks .biz-breakdown-box{ margin:10px 0; }
+  .biz-drink-title{ font-weight:800; font-size:15px; margin-bottom:6px; }
   .biz-breakdown-row{ display:flex; justify-content:space-between; gap:10px; font-size:14px; padding:4px 0; }
   .biz-breakdown-row.biz-total{
     font-weight:800; font-size:16px; border-top:1px solid rgba(255,255,255,.15); margin-top:6px; padding-top:8px;
@@ -3634,7 +3638,7 @@
       <div class="modal-title" id="bizSummaryTitle">🍋 Партия завершена!</div>
       <div class="intro-text" id="bizSummaryIntro"></div>
       <div class="biz-chart" id="bizSummaryChart"></div>
-      <div class="biz-breakdown-box" id="bizSummaryDrinksBox" style="margin-bottom:10px;"></div>
+      <div class="biz-summary-drinks" id="bizSummaryDrinksBox"></div>
       <div class="biz-breakdown-box" id="bizSummaryDaysBox"></div>
       <div class="krokodil-summary-list" id="bizSummaryList"></div>
       <button class="btn btn-primary" id="bizPlayAgainBtn">Попробовать снова</button>
@@ -5800,7 +5804,7 @@
 <script src="games/shop.js?v=20260829g"></script>
 <script src="games/business-observer.js?v=20260829g"></script>
 <script src="games/party-roulette.js?v=20260829g"></script>
-<script src="games/business-lemonade.js?v=20260830s"></script>
+<script src="games/business-lemonade.js?v=20260830t"></script>
 <script src="games/kids-xo.js?v=20260829g"></script>
 <script src="games/kids-battleship.js?v=20260829g"></script>
 <script src="games/solo-battleship.js?v=20260829g"></script>

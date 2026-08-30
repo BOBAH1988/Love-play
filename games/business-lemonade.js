@@ -1128,13 +1128,19 @@ function showBizSummaryModal(){
   const drinkIcons = { 'Лимонад': '🍋', 'Чай': '☕' };
   const drinksBox = document.getElementById('bizSummaryDrinksBox');
   if(drinksBox){
-    drinksBox.innerHTML = Object.keys(drinkStats).map(key=>{
+    // Отдельный расчёт по лимонаду, ниже — отдельный по чаю (если продавался).
+    const order = ['Лимонад', 'Чай'].filter(k => drinkStats[k]);
+    drinksBox.innerHTML = order.map(key=>{
       const d = drinkStats[key];
       return `
-        <div class="biz-breakdown-row biz-total"><span>${drinkIcons[key]} ${key}</span><span>${d.sold} из ${d.cups} стаканов</span></div>
-        <div class="biz-breakdown-row"><span>· Потрачено (расходы)</span><span>${d.expenses} ₽</span></div>
-        <div class="biz-breakdown-row"><span>· Заработано (выручка)</span><span>${d.revenue} ₽</span></div>
-        <div class="biz-breakdown-row"><span>· Чистая прибыль</span><span>${d.netProfit >= 0 ? '+' : ''}${d.netProfit} ₽</span></div>
+        <div class="biz-breakdown-box">
+          <div class="biz-drink-title">${drinkIcons[key]} ${key}</div>
+          <div class="biz-breakdown-row"><span>Приготовлено стаканов</span><span>${d.cups}</span></div>
+          <div class="biz-breakdown-row"><span>Продано стаканов</span><span>${d.sold} из ${d.cups}</span></div>
+          <div class="biz-breakdown-row"><span>· Потрачено (расходы)</span><span>${d.expenses} ₽</span></div>
+          <div class="biz-breakdown-row"><span>· Заработано (выручка)</span><span>${d.revenue} ₽</span></div>
+          <div class="biz-breakdown-row biz-total"><span>Чистая прибыль</span><span>${d.netProfit >= 0 ? '+' : ''}${d.netProfit} ₽</span></div>
+        </div>
       `;
     }).join('');
   }
