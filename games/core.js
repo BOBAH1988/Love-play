@@ -4178,6 +4178,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       const setup = document.getElementById('setup');
       if(setup) setup.classList.add('active');
       if(typeof showSetupView === 'function') showSetupView('homeView');
+      window.scrollTo(0, 0);
       if(typeof state !== 'undefined'){
         state.inProgress = false;
         state.pausedMode = null;
@@ -4199,6 +4200,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     // 2. Группа игр (не homeView) — возврат на главный хаб
     if(isSetupActive && !isHomeView){
       if(typeof showSetupView === 'function') showSetupView('homeView');
+      window.scrollTo(0, 0);
       return;
     }
 
@@ -4212,6 +4214,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       // Показываем главный хаб
       if(setup) setup.classList.add('active');
       if(typeof showSetupView === 'function') showSetupView('homeView');
+      window.scrollTo(0, 0);
       // Сбрасываем состояние
       if(typeof state !== 'undefined'){
         state.inProgress = false;
