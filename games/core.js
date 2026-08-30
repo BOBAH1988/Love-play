@@ -564,11 +564,11 @@ document.getElementById('gameSoloFlashBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToFlashSetup();
 });
-// "Сапёр" (дети) — goToKidsSaperSetup() определена в games/kids-saper.js.
+// "Сапёр" (дети) — goToKidsSaperGame() определена в games/kids-saper.js.
 document.getElementById('gameKidsMinesweeperBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsSaperSetup();
+  goToKidsSaperGame();
 });
 
 /* ============ УТИЛИТЫ ============ */
