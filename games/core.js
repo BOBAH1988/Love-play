@@ -4147,6 +4147,22 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     }
   });
 })();
+
+// ===== КНОПКА "НАЗАД" (ВЫХОД В ГЛАВНОЕ МЕНЮ) =====
+(function(){
+  const backBtn = document.getElementById('globalBackBtn');
+  if(!backBtn) return;
+  backBtn.addEventListener('click', ()=>{
+    // Скрываем все экраны игр, показываем главный экран
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const setup = document.getElementById('setup');
+    if(setup) setup.classList.add('active');
+    // Закрываем открытое модальное меню, если есть
+    const menuModal = document.getElementById('globalMenuModal');
+    if(menuModal) menuModal.classList.remove('show');
+  });
+})();
+
 document.getElementById('davaySetupRulesBtn').addEventListener('click', ()=>{
   document.getElementById('davayRulesModal').classList.add('show');
 });
