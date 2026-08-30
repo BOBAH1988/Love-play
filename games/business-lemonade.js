@@ -545,7 +545,10 @@ function renderBizLemonsPhase(){
   document.getElementById('bizToBuyBtn').disabled = lemonStock <= 0 && teaStock <= 0;
 }
 document.getElementById('bizToBuyBtn').addEventListener('click', ()=>{
-  if((state.businessLemonadeLemonStock || 0) <= 0) return;
+  // Пускаем дальше, если есть хоть какой-то запас: лимоны ИЛИ пакетики чая.
+  // Раньше здесь требовались только лимоны — при остатке одного чая переход
+  // молча не срабатывал («ничего не происходит»).
+  if((state.businessLemonadeLemonStock || 0) <= 0 && (state.businessLemonadeTeaStock || 0) <= 0) return;
   playSuccessSound();
   renderBizDrinkTypeGroup();
   renderBizQuantityGroup();
@@ -569,12 +572,12 @@ function bizBuyBreakdown(cups, options, locationKey, hours){
   });
   let materials, sugarCost, cupCost, waterCost;
   if(isTea){
-    // Чай: пакетик + сахар + вода(0) + стаканчик
-    const teaBagCost = cups * BIZ_TEA_COSTS.teaBag;
+    // Чай: сахар + вода(0) + стаканчик. Пакетики уже куплены про запас (шаг 3),
+    // поэтому в расходы дня они входят как 0 ₽ — так же, как лимоны у лимонада.
     sugarCost = cups * BIZ_TEA_COSTS.sugar;
     cupCost = cups * BIZ_TEA_COSTS.cup;
     waterCost = cups * BIZ_TEA_COSTS.water;
-    materials = teaBagCost + sugarCost + cupCost + waterCost + optionsCost;
+    materials = sugarCost + cupCost + waterCost + optionsCost;
   } else {
     // Лимонад: лимоны(уже куплены) + сахар + вода(0) + стаканчик
     sugarCost = cups * BIZ_SUGAR_PER_CUP;
@@ -640,7 +643,7 @@ function updateBizBuyBreakdownUI(){
   const stockLabel = isTea ? '🍵 Пакетики чая (из запаса)' : '🍋 Лимоны (из запаса)';
   let rowsHtml = `<div class="biz-breakdown-row"><span>${stockLabel}</span><span>${Math.min(cups, stock)} шт. · 0 ₽</span></div>`;
   if(isTea){
-    rowsHtml += `<div class="biz-breakdown-row"><span>🧾 Чай: пакетик + сахар + стакан</span><span>${b.sugarCost + b.cupCost} ₽</span></div>`;
+    rowsHtml += `<div class="biz-breakdown-row"><span>🧾 Чай: сахар + стакан (пакетик из запаса)</span><span>${b.sugarCost + b.cupCost} ₽</span></div>`;
   } else {
     rowsHtml += Object.keys(BIZ_INGREDIENT_LABELS).map(key=>
       `<div class="biz-breakdown-row"><span>${BIZ_INGREDIENT_LABELS[key]}</span><span>${b[key]} ₽</span></div>`
@@ -665,10 +668,24 @@ function updateBizBuyBreakdownUI(){
     if(lemonShort) problems.push(`не хватает ${stockName}: нужно ${cups} шт., в запасе ${stock} шт.`);
     if(overBudget) problems.push(`не хватает денег: расходы ${b.total} ₽ больше, чем капитал ${capital} ₽`);
     warnEl.style.display = problems.length ? 'block' : 'none';
-    warnEl.textContent = problems.length ? `Пока нельзя продолжить: ${problems.join('; ')}. Уменьши количество стаканов, отключи опции или докупи ${stockNameAcc} кнопкой выше.` : '';
+    warnEl.textContent = problems.length ? `Пока нельзя продолжить: ${problems.join('; ')}. Уменьши количество стаканов, отключи опции или докупи ${stockNameAcc} кнопкой выше${overBudget ? ' (или попроси у друга в долг кнопкой ниже)' : ''}.` : '';
   }
   const nextBtn = document.getElementById('bizToPriceBtn');
   if(nextBtn) nextBtn.disabled = overBudget || lemonShort;
+  // Кнопка займа: показываем только когда денег на день не хватает — так игрок
+  // никогда не застревает на шаге «Приготовление напитков» из-за пустого капитала.
+  const loanBtn = document.getElementById('bizLoanBtn');
+  if(loanBtn){
+    if(overBudget){
+      const need = b.total - capital;
+      const borrow = bizLoanAmountForNeed(need);
+      const owed = Math.round(borrow * BIZ_LOAN_INTEREST);
+      loanBtn.style.display = 'block';
+      loanBtn.textContent = (state.businessLemonadeLoanOwed > 0 ? '🤝 Занять у друга ещё ' : '🤝 Занять у друга ') + `${borrow} ₽ (вернуть ${owed} ₽)`;
+    } else {
+      loanBtn.style.display = 'none';
+    }
+  }
   renderBizQuickBuy();
 }
 
@@ -746,6 +763,35 @@ document.getElementById('bizQuickBuyTeaBtn').addEventListener('click', function(
   renderBizQuantityGroup();
   updateBizBuyBreakdownUI();
 });
+/* --- Займ у друга прямо на шаге 4: страховка от застревания без денег --- */
+/* --- Займ у друга: единый расчёт суммы --- */
+// Одалживает максимум из минимальной суммы на день и точной нехватки,
+// округляя вверх до кратности 5 ₽, чтобы у ребёнка были круглые числа.
+function bizLoanAmountForNeed(need){
+  return Math.ceil(Math.max(BIZ_MIN_CAPITAL_FOR_DAY, Math.max(0, need)) / 5) * 5;
+}
+document.getElementById('bizLoanBtn').addEventListener('click', ()=>{
+  const isTea = state.businessLemonadeDrinkType === 'tea';
+  const cups = isTea ? (state.businessLemonadeTeaCups || 10) : (state.businessLemonadeCups || 10);
+  const b = bizBuyBreakdown(cups, state.businessLemonadeOptions, state.businessLemonadeLocation, state.businessLemonadeHours || 1);
+  const capital = state.businessLemonadeCapital || 0;
+  const need = b.total - capital;
+  if(need <= 0) return;
+  const borrow = bizLoanAmountForNeed(need);
+  const owed = Math.round(borrow * BIZ_LOAN_INTEREST);
+  state.businessLemonadeCapital = capital + borrow;
+  // Долги суммируются: можно попросить у друга несколько раз, если денег
+  // всё равно не хватает. Возвращать до ближайшего из сроков.
+  state.businessLemonadeLoanOwed = (state.businessLemonadeLoanOwed || 0) + owed;
+  state.businessLemonadeLoanDueDay = Math.max(state.businessLemonadeLoanDueDay || 0, (state.businessLemonadeDay || 1) + BIZ_LOAN_DUE_DAYS);
+  saveState();
+  playSuccessSound();
+  showToast(`🤝 Друг одолжил ${borrow} ₽. Верни ${state.businessLemonadeLoanOwed} ₽ до дня ${state.businessLemonadeLoanDueDay}`);
+  updateBizHeaderUI();
+  updateBizContextBar();
+  renderBizQuantityGroup();
+  updateBizBuyBreakdownUI();
+});
 document.querySelectorAll('#bizQuantityGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     if(btn.disabled) return;
@@ -766,7 +812,7 @@ document.getElementById('bizToPriceBtn').addEventListener('click', ()=>{
   const cups = state.businessLemonadeCups || 10;
   const b = bizBuyBreakdown(cups, state.businessLemonadeOptions, state.businessLemonadeLocation, state.businessLemonadeHours || 1);
   const costPerCup = Math.round((b.total / cups) * 10) / 10;
-  document.getElementById('bizPriceCostReminder').textContent = `Себестоимость одного стакана: ${costPerCup} ₽ (расходы ${b.total} ₽ ÷ ${cups} стаканов, лимоны уже оплачены)`;
+  document.getElementById('bizPriceCostReminder').textContent = `Себестоимость одного стакана: ${costPerCup} ₽ (расходы ${b.total} ₽ ÷ ${cups} стаканов, сырьё из запаса уже оплачено)`;
   renderBizPriceGroup();
   const competitorEl = document.getElementById('bizCompetitorNote');
   const cp = state.businessLemonadeCompetitorPrice;
