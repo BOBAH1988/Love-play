@@ -31,12 +31,11 @@ function bizDayOfWeek(day){ return BIZ_DAYS_OF_WEEK[(Math.max(1, day) - 1) % 7];
 // weekdayMult/weekendMult — во сколько раз меняется поток людей в будни и
 // в выходные (перемножается с погодным множителем demand).
 const BIZ_LOCATIONS = {
-  school:  { name: 'У школы', icon: '🏫', rent: 10, hint: 'В будни многолюдно, по выходным почти пусто', demand: { hot: 1.0, normal: 1.0, rain: 0.9 }, weekdayMult: 1.3, weekendMult: 0.3 },
-  station: { name: 'У остановки', icon: '🚌', rent: 8,  hint: 'Много спешащих мимо людей в будни', demand: { hot: 1.0, normal: 1.0, rain: 0.95 }, weekdayMult: 1.25, weekendMult: 0.6 },
-  mall:    { name: 'У торгового центра', icon: '🏬', rent: 15, hint: 'Людно каждый день, но аренда подороже', demand: { hot: 1.0, normal: 1.05, rain: 1.1 }, weekdayMult: 1.0, weekendMult: 1.15 },
-  park:    { name: 'В парке', icon: '🌳', rent: 5,  hint: 'По выходным сюда приходят гулять семьями', demand: { hot: 0.9, normal: 0.85, rain: 0.9 }, weekdayMult: 0.8, weekendMult: 1.3 },
-  beach:   { name: 'На пляже', icon: '🏖️', rent: 20, hint: 'Отлично в жару, но пусто в дождь', demand: { hot: 1.5, normal: 1.0, rain: 0.4 }, weekdayMult: 0.9, weekendMult: 1.2 },
-  stadium: { name: 'У стадиона', icon: '🏟️', rent: 12, hint: 'Тихо в будни, но толпы в дни матчей на выходных', demand: { hot: 1.1, normal: 1.0, rain: 0.7 }, weekdayMult: 0.4, weekendMult: 1.6 },
+  school:  { name: 'У школы', icon: '🏫', rentPerHour: 3, hint: 'В будни многолюдно, по выходным почти пусто', demand: { hot: 1.0, normal: 1.0, rain: 0.9 }, weekdayMult: 1.3, weekendMult: 0.3 },
+  station: { name: 'У остановки', icon: '🚌', rentPerHour: 0, hint: 'Много спешащих мимо людей в будни, аренда бесплатная', demand: { hot: 1.0, normal: 1.0, rain: 0.95 }, weekdayMult: 1.25, weekendMult: 0.6 },
+  mall:    { name: 'У торгового центра', icon: '🏬', rentPerHour: 5, hint: 'Людно каждый день, но аренда подороже', demand: { hot: 1.0, normal: 1.05, rain: 1.1 }, weekdayMult: 1.0, weekendMult: 1.15 },
+  park:    { name: 'В парке', icon: '🌳', rentPerHour: 2, hint: 'По выходным сюда приходят гулять семьями', demand: { hot: 0.9, normal: 0.85, rain: 0.9 }, weekdayMult: 0.8, weekendMult: 1.3 },
+  beach:   { name: 'На пляже', icon: '🏖️', rentPerHour: 6, hint: 'Отлично в жару, но пусто в дождь', demand: { hot: 1.5, normal: 1.0, rain: 0.4 }, weekdayMult: 0.9, weekendMult: 1.2 },
 };
 const BIZ_WEATHERS = [
   { key: 'hot', icon: '☀️', name: 'Жара' },
@@ -55,7 +54,6 @@ const BIZ_EVENTS = [
   { icon: '🚧', name: 'Рядом ремонт дороги — часть людей идёт в обход', mult: 0.8, locations: null },
   { icon: '📣', name: 'О тебе рассказали соседям — пришли новые покупатели', mult: 1.25, locations: null },
   { icon: '🎪', name: 'В парке сегодня ярмарка — прохожих в разы больше!', mult: 1.6, locations: ['park'] },
-  { icon: '⚽', name: 'У стадиона сегодня матч — толпы болельщиков', mult: 1.7, locations: ['stadium'] },
   { icon: '🚍', name: 'На пляж приехал автобус с отдыхающими', mult: 1.4, locations: ['beach'] },
   { icon: '🚌', name: 'У остановки сломался автобус — люди толпятся в ожидании', mult: 1.3, locations: ['station'] },
   { icon: '🛍️', name: 'В торговом центре распродажа — очень людно', mult: 1.3, locations: ['mall'] },
@@ -100,11 +98,12 @@ const BIZ_OPTIONS = {
   umbrella: { name: 'Зонтик', icon: '☂️', costType: 'perCup', cost: 1, mult: 1.06, hint: 'Красивая мелочь в стакане' },
   colorCup: { name: 'Цветной стакан', icon: '🧋', costType: 'perCup', cost: 1, mult: 1.08, hint: 'Ярче — заметнее издалека' },
   straw:    { name: 'Узорная трубочка', icon: '🥤', costType: 'perCup', cost: 1, mult: 1.05, hint: 'Приятная мелочь для покупателей' },
+  hotTea:   { name: 'Горячий чай', icon: '☕', costType: 'perCup', cost: 3,  weatherKey: 'rain', onMult: 1.4, offMult: 0.5, hint: 'В дождь покупатели хотят горячий напиток' },
 };
 // Доля раскупленных стаканов в зависимости от цены (до умножения на погоду/
 // место/событие/апгрейды/опции/время работы/конкурента) — до 40 ₽ раскупают
 // всё, выше — спрос падает.
-const BIZ_LEMONADE_DEMAND = { 5: 1, 10: 1, 20: 1, 30: 1, 40: 1, 50: 0.7, 60: 0.4 };
+const BIZ_LEMONADE_DEMAND = { 10: 1, 20: 1, 30: 1, 40: 1, 50: 0.7, 60: 0.4, 70: 0.2 };
 
 // Лимоны — единственный продукт, который закупается заранее про запас (а не
 // свежим каждый день) и портится, если пролежит больше 3 дней. Покупка
@@ -113,6 +112,8 @@ const BIZ_LEMON_TIERS = [
   { qty: 10, pricePerUnit: 4 },
   { qty: 20, pricePerUnit: 3 },
   { qty: 40, pricePerUnit: 2 },
+  { qty: 60, pricePerUnit: 2 },
+  { qty: 100, pricePerUnit: 1 },
 ];
 const BIZ_LEMON_SHELF_DAYS = 3;
 
@@ -122,64 +123,24 @@ const BIZ_LEMON_SHELF_DAYS = 3;
 // одолживает деньги друг — под процент и с сроком возврата (см.
 // bizHandleDailyFinance) — это честный способ не дать партии застрять и
 // заодно показать, что долг обходится дороже, чем занятая сумма.
-const BIZ_MIN_CAPITAL_FOR_DAY = BIZ_LEMON_TIERS[0].qty * BIZ_LEMON_TIERS[0].pricePerUnit + 5 * (BIZ_SUGAR_PER_CUP + BIZ_CUP_PER_CUP) + BIZ_LOCATIONS.park.rent;
+const BIZ_MIN_CAPITAL_FOR_DAY = BIZ_LEMON_TIERS[0].qty * BIZ_LEMON_TIERS[0].pricePerUnit + 5 * (BIZ_SUGAR_PER_CUP + BIZ_CUP_PER_CUP) + BIZ_LOCATIONS.park.rentPerHour;
 const BIZ_LOAN_INTEREST = 1.2; // друг просит вернуть на 20% больше
 const BIZ_LOAN_DUE_DAYS = 2;
 
 const BIZ_QUIZ_CONCEPT_POOL = [
   {
-    q: 'Почему лимонад нельзя продавать дешевле, чем он тебе обошёлся?',
-    options: ['Можно, разницы нет', 'Останешься в убытке — потратил больше, чем получил', 'Потому что цена должна быть круглым числом', 'Это не имеет значения'],
-    correct: 1
-  },
-  {
-    q: 'Зачем тратить деньги на развитие (вывеску, колонку, друга-помощника), если можно оставить их себе?',
-    options: ['Незачем, это просто трата денег', 'Это привлечёт больше покупателей и принесёт больше денег в будущем', 'Чтобы стало красивее и всё', 'Это не влияет на бизнес'],
-    correct: 1
-  },
-  {
-    q: 'Почему в дождливый день невыгодно торговать на пляже?',
-    options: ['В дождь на пляже почти нет людей', 'Дождь портит лимоны', 'На пляже всегда дорогая аренда', 'Это не имеет значения'],
+    q: 'Куда лучше встать с лимонадом в жаркий день?',
+    options: ['На пляж — люди хотят пить', 'В парк — там прохладно', 'У школы — там дети'],
     correct: 0
   },
   {
-    q: 'Что такое выручка?',
-    options: ['Все деньги, которые заплатили покупатели', 'Деньги, оставшиеся после расходов', 'Деньги, потраченные на продукты', 'Стоимость одного стакана'],
-    correct: 0
-  },
-  {
-    q: 'Что такое чистая прибыль?',
-    options: ['То же самое, что выручка', 'Деньги, потраченные на продукты и аренду', 'Выручка минус расходы — то, что реально заработал', 'Цена одного стакана'],
-    correct: 2
-  },
-  {
-    q: 'Почему у школы в выходные меньше покупателей, чем в будни?',
-    options: ['По выходным школа закрыта, и рядом почти никого нет', 'Погода в выходные всегда хуже', 'В выходные лимонад невкусный', 'Это не имеет значения'],
-    correct: 0
-  },
-  {
-    q: 'Ты работал у тележки всего 1 час вместо 6. Что вероятнее всего произойдёт с продажами?',
-    options: ['Продашь столько же, время не важно', 'Продашь меньше — меньше людей успеет зайти', 'Продашь больше — покупатели любят спешку', 'Это никак не связано'],
+    q: 'Что выгоднее: купить 10 лимонов или 40 лимонов?',
+    options: ['10 — меньше потрачу', '40 — каждый лимон стоит дешевле', 'Одинаково'],
     correct: 1
   },
   {
-    q: 'Зачем покупать лимоны про запас, если их можно закупать каждый день понемногу?',
-    options: ['Незачем, выгоды никакой', 'Оптом дешевле за штуку', 'Про запас лимоны никогда не портятся', 'Это просто традиция'],
-    correct: 1
-  },
-  {
-    q: 'Что случится, если купить слишком много лимонов и не успеть их использовать?',
-    options: ['Ничего, лимоны хранятся вечно', 'Они испортятся через несколько дней, и деньги за них пропадут', 'Их можно будет продать дороже', 'Это никак не влияет на бизнес'],
-    correct: 1
-  },
-  {
-    q: 'Рядом появился конкурент и продаёт лимонад дешевле тебя. Что вероятнее всего произойдёт?',
-    options: ['Ничего, покупатели тебя не бросят', 'Часть покупателей уйдёт к конкуренту', 'У тебя купят ещё больше', 'Конкуренты не влияют на продажи'],
-    correct: 1
-  },
-  {
-    q: 'Друг одолжил тебе денег, чтобы бизнес не остановился. Почему вернуть нужно больше, чем занял?',
-    options: ['Это ошибка, вернуть нужно ровно столько же', 'За одолженные деньги обычно платят проценты — это цена займа', 'Друг просто хочет заработать на тебе', 'Так принято отвечать в игре'],
+    q: 'Рядом конкурент продаёт лимонад дешевле тебя. Что делать?',
+    options: ['Закрыться и уйти', 'Сделать вкуснее или привлечь внимание', 'Тоже снизить цену до нуля'],
     correct: 1
   },
 ];
@@ -367,7 +328,7 @@ function renderBizLocationList(){
     const flowNote = flowMult >= 1.15 ? ' · сегодня людно' : (flowMult <= 0.6 ? ' · сегодня малолюдно' : '');
     return `<button type="button" class="biz-location-item${on ? ' on' : ''}" data-key="${key}">
       <div class="biz-location-name">${loc.icon} ${loc.name}</div>
-      <div class="biz-location-hint">${loc.hint} · аренда ${loc.rent} ₽/день${flowNote}</div>
+      <div class="biz-location-hint">${loc.hint} · аренда ${loc.rentPerHour} ₽/час${flowNote}</div>
     </button>`;
   }).join('');
   wrap.querySelectorAll('.biz-location-item').forEach(btn=>{
@@ -477,7 +438,7 @@ document.getElementById('bizToBuyBtn').addEventListener('click', ()=>{
 /* ============ ШАГ 4: ЗАКУПКА ОСТАЛЬНЫХ ПРОДУКТОВ ============ */
 // Лимоны сюда не входят — они уже оплачены и просто расходуются из запаса
 // (см. "Шаг 3"), поэтому в бюджет дня их стоимость не добавляется повторно.
-function bizBuyBreakdown(cups, options, locationKey){
+function bizBuyBreakdown(cups, options, locationKey, hours){
   const sugarCost = cups * BIZ_SUGAR_PER_CUP;
   const cupCost = cups * BIZ_CUP_PER_CUP;
   const waterCost = cups * BIZ_WATER_PER_CUP;
@@ -490,7 +451,8 @@ function bizBuyBreakdown(cups, options, locationKey){
     optionCosts[key] = cost;
     optionsCost += cost;
   });
-  const rent = (BIZ_LOCATIONS[locationKey] || { rent: 0 }).rent;
+  const rentPerHour = (BIZ_LOCATIONS[locationKey] || { rentPerHour: 0 }).rentPerHour;
+  const rent = rentPerHour * (hours || 1);
   const materials = sugarCost + cupCost + waterCost + optionsCost;
   return { sugarCost, cupCost, waterCost, optionCosts, optionsCost, rent, total: materials + rent };
 }
@@ -533,7 +495,7 @@ function updateBizBuyBreakdownUI(){
   const cups = state.businessLemonadeCups || 10;
   const options = state.businessLemonadeOptions || {};
   const stock = state.businessLemonadeLemonStock || 0;
-  const b = bizBuyBreakdown(cups, options, state.businessLemonadeLocation);
+  const b = bizBuyBreakdown(cups, options, state.businessLemonadeLocation, state.businessLemonadeHours || 1);
   const rowsEl = document.getElementById('bizBuyBreakdownRows');
   let rowsHtml = `<div class="biz-breakdown-row"><span>🍋 Лимоны (из запаса)</span><span>${Math.min(cups, stock)} шт. · 0 ₽</span></div>`;
   rowsHtml += Object.keys(BIZ_INGREDIENT_LABELS).map(key=>
@@ -573,7 +535,7 @@ document.getElementById('bizToPriceBtn').addEventListener('click', ()=>{
   if(document.getElementById('bizToPriceBtn').disabled) return;
   playSuccessSound();
   const cups = state.businessLemonadeCups || 10;
-  const b = bizBuyBreakdown(cups, state.businessLemonadeOptions, state.businessLemonadeLocation);
+  const b = bizBuyBreakdown(cups, state.businessLemonadeOptions, state.businessLemonadeLocation, state.businessLemonadeHours || 1);
   const costPerCup = Math.round((b.total / cups) * 10) / 10;
   document.getElementById('bizPriceCostReminder').textContent = `Себестоимость одного стакана: ${costPerCup} ₽ (расходы ${b.total} ₽ ÷ ${cups} стаканов, лимоны уже оплачены)`;
   renderBizPriceGroup();
@@ -634,7 +596,7 @@ function bizSellDay(){
   const cups = state.businessLemonadeCups || 10;
   const price = state.businessLemonadePrice || 40;
   const options = state.businessLemonadeOptions || {};
-  const b = bizBuyBreakdown(cups, options, state.businessLemonadeLocation);
+  const b = bizBuyBreakdown(cups, options, state.businessLemonadeLocation, state.businessLemonadeHours || 1);
   const expenses = b.total;
   const costPerCup = expenses / cups;
   const profitPerCup = price - costPerCup;
