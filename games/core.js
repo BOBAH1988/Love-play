@@ -4169,6 +4169,23 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     const menuModal = document.getElementById('globalMenuModal');
     if(menuModal) menuModal.classList.remove('show');
 
+    // Если показано итоговое окно — закрываем и выходим на уровень выше
+    const summaryModal = document.getElementById('summaryModal');
+    if(summaryModal && summaryModal.classList.contains('show')){
+      summaryModal.classList.remove('show');
+      // Скрываем все экраны, показываем главный хаб
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      const setup = document.getElementById('setup');
+      if(setup) setup.classList.add('active');
+      if(typeof showSetupView === 'function') showSetupView('homeView');
+      if(typeof state !== 'undefined'){
+        state.inProgress = false;
+        state.pausedMode = null;
+      }
+      if(typeof updateResumeUI === 'function') updateResumeUI();
+      return;
+    }
+
     const setup = document.getElementById('setup');
     const homeView = document.getElementById('homeView');
     const isSetupActive = setup && setup.classList.contains('active');
