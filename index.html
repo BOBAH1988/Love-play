@@ -2165,28 +2165,31 @@
   /* Скрываем все кнопки выхода — теперь навигация через глобальную кнопку "←" */
   [id$="ExitBtn"], [id$="exitBtn"]{display:none !important;}
   .menu-modal-card{
-    max-width:300px; padding:20px 16px;
-    background:var(--card-bg); color:#2b0f2e; border-radius:22px;
-    box-shadow:0 20px 50px rgba(0,0,0,.5);
+    max-width:260px; padding:14px 12px;
+    background:rgba(30,10,28,.85); color:#fff; border-radius:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.1);
   }
   .menu-modal-card .modal-title{
-    color:#2b0f2e; margin-bottom:12px; position:relative; padding-right:32px;
+    color:rgba(255,255,255,.7); margin-bottom:10px; position:relative; padding-right:28px;
+    font-size:14px; font-weight:500;
   }
   .menu-modal-card .modal-close-btn{
-    position:absolute; top:-4px; right:0;
-    background:none; border:none; color:#ff4d4d; font-size:20px; line-height:1;
+    position:absolute; top:-2px; right:0;
+    background:none; border:none; color:rgba(255,255,255,.5); font-size:18px; line-height:1;
     cursor:pointer; padding:4px;
   }
-  .menu-modal-card .modal-close-btn:hover{color:#ff6b6b;}
-  .menu-list{display:flex; flex-direction:column; gap:6px;}
+  .menu-modal-card .modal-close-btn:hover{color:#fff;}
+  .menu-list{display:flex; flex-direction:column; gap:4px;}
   .menu-list .btn-secondary{
-    background:rgba(43,15,46,.06); border:1px solid rgba(43,15,46,.12);
-    color:#2b0f2e; justify-content:flex-start; text-align:left;
-    padding:10px 14px; border-radius:12px; font-size:15px;
+    background:transparent; border:1px solid rgba(255,255,255,.08);
+    color:rgba(255,255,255,.85); justify-content:flex-start; text-align:left;
+    padding:10px 12px; border-radius:10px; font-size:14px;
   }
-  .menu-list .btn-secondary:hover{background:rgba(43,15,46,.1);}
-  .menu-list .btn-secondary:active{background:rgba(43,15,46,.15);}
-  .menu-icon{font-size:16px; width:22px; text-align:center; flex-shrink:0;}
+  .menu-list .btn-secondary:hover{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.15);}
+  .menu-list .btn-secondary:active{background:rgba(255,255,255,.12);}
+  .menu-icon{font-size:15px; width:20px; text-align:center; flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -2227,7 +2230,7 @@
 <div id="app">
 
   <!-- ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== -->
-  <button type="button" class="fab-menu-btn" id="globalMenuBtn" aria-label="Меню"></button>
+  <button type="button" class="fab-menu-btn" id="globalMenuBtn" aria-label="Меню">☰</button>
   <button type="button" class="fab-menu-btn fab-back-btn" id="globalBackBtn" aria-label="Назад">←</button>
 
   <!-- ===== МОДАЛЬНОЕ ОКНО МЕНЮ ===== -->
