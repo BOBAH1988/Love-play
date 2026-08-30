@@ -2148,7 +2148,7 @@
 
   /* ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== */
   .fab-menu-btn{
-    position:fixed; top:12px; right:12px; z-index:150;
+    position:fixed; top:12px; left:12px; z-index:150;
     width:44px; height:44px; border-radius:50%;
     background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25);
     color:#fff; font-size:20px; line-height:1; cursor:pointer;
@@ -2198,6 +2198,26 @@
   <div class="rotate-stub-sub">Эта игра работает только в вертикальной ориентации — «Видеорулетка» и «Давай попробуем» можно смотреть и горизонтально.</div>
 </div>
 <div id="app">
+
+  <!-- ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== -->
+  <button type="button" class="fab-menu-btn" id="globalMenuBtn" aria-label="Меню">☰</button>
+
+  <!-- ===== МОДАЛЬНОЕ ОКНО МЕНЮ ===== -->
+  <div class="modal-overlay" id="globalMenuModal">
+    <div class="modal-card menu-modal-card">
+      <div class="modal-title">⚙️ Меню</div>
+      <div class="menu-list">
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon">📋</span> Правила игры</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn"><span class="menu-icon">🔊</span> <span id="menuMuteText">Звук включён</span></button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon">⬆</span> Экспортировать данные</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon">⬇</span> Импортировать данные</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuUpdateBtn"><span class="menu-icon">🔄</span> Обновить приложение</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuInstallBtn"><span class="menu-icon">📲</span> Установить</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑</span> Сбросить прогресс</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExitBtn"><span class="menu-icon">❌</span> Выход в меню</button>
+      </div>
+    </div>
+  </div>
   <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) =====
         Внутри одного экрана #setup — 5 переключаемых блоков (.field-collapsible,
         у активного добавлен класс .section-open, у остальных его нет — тот же
@@ -5760,25 +5780,5 @@
     });
   })();
 </script>
-
-  <!-- ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== -->
-  <button type="button" class="fab-menu-btn" id="globalMenuBtn" aria-label="Меню">☰</button>
-
-  <!-- ===== МОДАЛЬНОЕ ОКНО МЕНЮ ===== -->
-  <div class="modal-overlay" id="globalMenuModal">
-    <div class="modal-card menu-modal-card">
-      <div class="modal-title">⚙️ Меню</div>
-      <div class="menu-list">
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon">📋</span> Правила игры</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn"><span class="menu-icon">🔊</span> <span id="menuMuteText">Звук включён</span></button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon">⬆</span> Экспортировать данные</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon">⬇</span> Импортировать данные</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuUpdateBtn"><span class="menu-icon">🔄</span> Обновить приложение</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuInstallBtn"><span class="menu-icon">📲</span> Установить</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑</span> Сбросить прогресс</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExitBtn"><span class="menu-icon">❌</span> Выход в меню</button>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
