@@ -328,7 +328,8 @@ function renderBizLocationList(){
     const flowNote = flowMult >= 1.15 ? ' · сегодня людно' : (flowMult <= 0.6 ? ' · сегодня малолюдно' : '');
     return `<button type="button" class="biz-location-item${on ? ' on' : ''}" data-key="${key}">
       <div class="biz-location-name">${loc.icon} ${loc.name}</div>
-      <div class="biz-location-hint">${loc.hint} · аренда ${loc.rentPerHour} ₽/час${flowNote}</div>
+      <div class="biz-location-hint">${loc.hint}${flowNote}</div>
+      <div class="biz-location-rent">🏠 Аренда: ${loc.rentPerHour} ₽/час</div>
     </button>`;
   }).join('');
   wrap.querySelectorAll('.biz-location-item').forEach(btn=>{
