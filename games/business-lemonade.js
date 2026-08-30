@@ -371,6 +371,18 @@ function renderBizHoursGroup(){
   document.querySelectorAll('#bizHoursGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === state.businessLemonadeHours);
   });
+  // Показываем расчёт аренды для выбранного времени
+  const preview = document.getElementById('bizRentPreview');
+  if(preview){
+    const hours = state.businessLemonadeHours;
+    const loc = BIZ_LOCATIONS[state.businessLemonadeLocation];
+    if(hours && loc){
+      const rent = loc.rentPerHour * hours;
+      preview.textContent = `🏠 Аренда: ${loc.rentPerHour} ₽/час × ${hours} ч = ${rent} ₽`;
+    } else {
+      preview.textContent = '';
+    }
+  }
 }
 document.querySelectorAll('#bizHoursGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
