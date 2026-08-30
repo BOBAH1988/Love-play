@@ -4153,14 +4153,32 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   const backBtn = document.getElementById('globalBackBtn');
   if(!backBtn) return;
   backBtn.addEventListener('click', ()=>{
-    // Скрываем все экраны игр, показываем главный экран
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-    const setup = document.getElementById('setup');
-    if(setup) setup.classList.add('active');
     // Закрываем открытое модальное меню, если есть
     const menuModal = document.getElementById('globalMenuModal');
     if(menuModal) menuModal.classList.remove('show');
+    // Закрываем все открытые модалки
+    document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
+    // Скрываем все экраны, показываем главный
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const setup = document.getElementById('setup');
+    if(setup) setup.classList.add('active');
+    // Сбрасываем состояние игры если нужно
+    if(typeof state !== 'undefined'){
+      state.inProgress = false;
+      state.pausedMode = null;
+    }
+    // Обновляем UI главного экрана
+    if(typeof updateResumeUI === 'function') updateResumeUI();
   });
+
+  // Автоматическое скрытие/показ кнопки "Назад" при переключении экранов
+  const setupEl = document.getElementById('setup');
+  if(setupEl && 'MutationObserver' in window){
+    new MutationObserver(()=>{
+      backBtn.style.opacity = setupEl.classList.contains('active') ? '0' : '1';
+      backBtn.style.pointerEvents = setupEl.classList.contains('active') ? 'none' : 'auto';
+    }).observe(setupEl, {attributes:true, attributeFilter:['class']});
+  }
 })();
 
 document.getElementById('davaySetupRulesBtn').addEventListener('click', ()=>{
