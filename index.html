@@ -2271,6 +2271,7 @@
         <button type="button" class="btn btn-menu-item" id="homeKidsBtn"><span class="menu-icon">🧸</span> Игры с детьми</button>
         <button type="button" class="btn btn-menu-item" id="homeBusinessBtn"><span class="menu-icon">💼</span> Бизнес игры</button>
         <button type="button" class="btn btn-menu-item" id="homeSoloBtn"><span class="menu-icon">📱</span> Игры для одного</button>
+        <button type="button" class="btn btn-menu-item" id="homeLearningBtn"><span class="menu-icon">📚</span> Обучающие игры</button>
       </div>
 
 
@@ -2429,12 +2430,26 @@
           <button type="button" class="btn btn-menu-item" id="gameSoloQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики-нолики</button>
-          <button type="button" class="btn btn-menu-item" id="gameSoloFlashBtn"><span class="menu-icon">🗂️</span> Флеш карты</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
         </div>
       </div>
 
       <button type="button" class="btn btn-secondary" id="soloExitBtn" style="margin-top:10px;">Выход</button>
+    </div>
+
+    <!-- ---- Обучающие игры ---- -->
+    <div class="field-collapsible" id="learningView">
+      <h1 class="title">📚 Обучающие игры</h1>
+      <div class="subtitle">Изучайте новое в игровой форме</div>
+
+      <div class="field">
+        <label>Выбери игру</label>
+        <div class="game-select-list" id="learningGameSelectList">
+          <button type="button" class="btn btn-menu-item" id="gameLearningFlashBtn"><span class="menu-icon">🗂️</span> Флеш карты</button>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-secondary" id="learningExitBtn" style="margin-top:10px;">Выход</button>
     </div>
 
   </section>
@@ -5727,7 +5742,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260830e"></script>
+<script src="games/core.js?v=20260830f"></script>
 <script src="games/twister.js?v=20260829g"></script>
 <script src="games/party-hangman.js?v=20260829g"></script>
 <script src="games/solo-quiz.js?v=20260829g"></script>

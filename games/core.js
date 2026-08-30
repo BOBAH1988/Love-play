@@ -321,7 +321,7 @@ document.getElementById('importDataInput').addEventListener('change', (e)=>{
 // же самым экраном #setup — переходы "назад в #setup" из любой игры трогать
 // не нужно, они как и раньше просто делают #setup активным экраном. Здесь
 // только переключение, какой из 4 блоков внутри него показан.
-const SETUP_VIEW_IDS = ['homeView','twoPlayerView','companyView','kidsView','businessView','soloView'];
+const SETUP_VIEW_IDS = ['homeView','twoPlayerView','companyView','kidsView','businessView','soloView','learningView'];
 function showSetupView(name){
   SETUP_VIEW_IDS.forEach(id=>{
     const el = document.getElementById(id);
@@ -339,11 +339,13 @@ document.getElementById('homeCompanyBtn').addEventListener('click', ()=>{ playSu
 document.getElementById('homeKidsBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('kidsView'); });
 document.getElementById('homeBusinessBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('businessView'); });
 document.getElementById('homeSoloBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('soloView'); });
+document.getElementById('homeLearningBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('learningView'); });
 document.getElementById('twoPlayerExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('companyExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('kidsExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('businessExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('soloExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
+document.getElementById('learningExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 
 // Список игроков для "Игры с детьми" — тот же паттерн, что renderPartyPlayers
 // в games/krokodil.js, но отдельное состояние (kidsPlayers), т.к. это не
@@ -556,8 +558,8 @@ document.getElementById('gameSoloBattleshipBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToSoloBattleshipSetup();
 });
-// "Флеш карты" (игры для одного) — goToFlashSetup() определена в games/kids-flash.js.
-document.getElementById('gameSoloFlashBtn').addEventListener('click', ()=>{
+// "Флеш карты" (обучающие игры) — goToFlashSetup() определена в games/kids-flash.js.
+document.getElementById('gameLearningFlashBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToFlashSetup();
