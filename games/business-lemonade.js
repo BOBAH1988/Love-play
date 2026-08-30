@@ -39,11 +39,11 @@ function bizDayOfWeek(day){ return BIZ_DAYS_OF_WEEK[(Math.max(1, day) - 1) % 7];
 // weekdayMult/weekendMult — во сколько раз меняется поток людей в будни и
 // в выходные (перемножается с погодным множителем demand).
 const BIZ_LOCATIONS = {
-  school:  { name: 'У школы', icon: '🏫', rentPerHour: 3, hint: 'В будни многолюдно, по выходным почти пусто', demand: { hot: 1.0, normal: 1.0, rain: 0.9 }, weekdayMult: 1.3, weekendMult: 0.3 },
+  school:  { name: 'У школы', icon: '🏫', rentPerHour: 9, hint: 'В будни многолюдно, по выходным почти пусто', demand: { hot: 1.0, normal: 1.0, rain: 0.9 }, weekdayMult: 1.3, weekendMult: 0.3 },
   station: { name: 'У остановки', icon: '🚌', rentPerHour: 0, hint: 'Много спешащих мимо людей в будни, аренда бесплатная', demand: { hot: 1.0, normal: 1.0, rain: 0.95 }, weekdayMult: 1.25, weekendMult: 0.6 },
-  mall:    { name: 'У торгового центра', icon: '🏬', rentPerHour: 5, hint: 'Людно каждый день, но аренда подороже', demand: { hot: 1.0, normal: 1.05, rain: 1.1 }, weekdayMult: 1.0, weekendMult: 1.15 },
-  park:    { name: 'В парке', icon: '🌳', rentPerHour: 2, hint: 'По выходным сюда приходят гулять семьями', demand: { hot: 0.9, normal: 0.85, rain: 0.9 }, weekdayMult: 0.8, weekendMult: 1.3 },
-  beach:   { name: 'На пляже', icon: '🏖️', rentPerHour: 6, hint: 'Отлично в жару, но пусто в дождь', demand: { hot: 1.5, normal: 1.0, rain: 0.4 }, weekdayMult: 0.9, weekendMult: 1.2 },
+  mall:    { name: 'У торгового центра', icon: '🏬', rentPerHour: 15, hint: 'Людно каждый день, но аренда подороже', demand: { hot: 1.0, normal: 1.05, rain: 1.1 }, weekdayMult: 1.0, weekendMult: 1.15 },
+  park:    { name: 'В парке', icon: '🌳', rentPerHour: 6, hint: 'По выходным сюда приходят гулять семьями', demand: { hot: 0.9, normal: 0.85, rain: 0.9 }, weekdayMult: 0.8, weekendMult: 1.3 },
+  beach:   { name: 'На пляже', icon: '🏖️', rentPerHour: 18, hint: 'Отлично в жару, но пусто в дождь', demand: { hot: 1.5, normal: 1.0, rain: 0.4 }, weekdayMult: 0.9, weekendMult: 1.2 },
 };
 const BIZ_WEATHERS = [
   { key: 'hot', icon: '☀️', name: 'Жара' },
@@ -488,9 +488,9 @@ function renderBizLemonsPhase(){
     stockParts.push(`🍵 пакетики чая: ${teaStock} шт.`);
   }
   if(stockParts.length > 0){
-    stockCard.textContent = `В запасе: ${stockParts.join(' · ')}`;
+    if(stockCard) stockCard.textContent = `В запасе: ${stockParts.join(' · ')}`;
   } else {
-    stockCard.textContent = 'Запасов нет — купи лимоны и/или пакетики чая, чтобы было из чего готовить напитки.';
+    if(stockCard) stockCard.textContent = 'Запасов нет — купи лимоны и/или пакетики чая, чтобы было из чего готовить напитки.';
   }
   const capital = state.businessLemonadeCapital || 0;
   const wrap = document.getElementById('bizLemonTiersGrid');
