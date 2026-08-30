@@ -1,7 +1,8 @@
 // games/business-lemonade.js — «Лимонадный ларёк» (раздел «Бизнес игры»).
 // Симулятор жизни школьника, который торгует лимонадом с тележки —
 // обучающая игра для одного игрока (рассчитана на понимание от 7 лет).
-// Партия из 7 дней (Пн–Вс). Каждый день: погода, день недели, развитие
+// Партия без ограничения по дням: продолжается, пока не накоплена цель
+// (выбирается на старте). Каждый день: погода, день недели, развитие
 // (покупается один раз на партию), место торговли (там же — случайное
 // событие, привязанное к месту), время работы, закупка лимонов про запас
 // (портятся через 3 дня), закупка остальных продуктов + опции к напитку,
@@ -11,7 +12,14 @@
 // сроком возврата. В конце партии — суммарная прибыль, график по дням,
 // оценка по уровню и мини-проверка с числами из этой же партии.
 
-const BIZ_TOTAL_DAYS = 7;
+// Цели накопления (выбираются на стартовом экране): партия продолжается,
+// пока суммарная чистая прибыль не достигнет выбранной суммы.
+const BIZ_GOALS = [
+  { sum: 500,  name: 'кино',         icon: '🎬' },
+  { sum: 1000, name: 'кафе',         icon: '☕' },
+  { sum: 2500, name: 'аттракционы',  icon: '🎡' },
+  { sum: 5000, name: 'подарок',      icon: '🎁' },
+];
 const BIZ_START_CAPITAL = 200;
 const BIZ_SUGAR_PER_CUP = 2;
 const BIZ_CUP_PER_CUP = 3;
@@ -73,7 +81,7 @@ function bizCompetitorMult(price, competitorPrice){
 }
 // Развитие стоит дороже, чем стартовый капитал (200 ₽) — сходу купить
 // ничего нельзя, сначала нужно честно заработать хотя бы день-два.
-// Цена зависит от оставшихся дней: 7 дней — полная цена, далее пропорционально ниже.
+// Цена улучшения фиксированная: партия больше не ограничена числом дней.
 const BIZ_UPGRADES = {
   recipe:      { name: '🧪 Улучшенный рецепт', basePrice: 220, mult: 0.10, desc: 'Вкуснее лимонад — +10% к числу покупателей' },
   music:       { name: '🎵 Весёлая колонка', basePrice: 350, mult: 0.15, desc: '+15% к числу покупателей до конца партии' },
@@ -81,11 +89,10 @@ const BIZ_UPGRADES = {
   seller:      { name: '🧑‍💼 Позвать друга помогать', basePrice: 750, mult: 0.30, desc: 'Меньше очередей — +30% к числу покупателей' },
   secondStand: { name: '🛒 Вторая тележка', basePrice: 1250, mult: 0.50, desc: 'Продажи ещё в одном месте — +50% к числу покупателей' },
 };
-// Расчёт цены улучшения с учётом оставшихся дней (7 дней = 100%, 1 день = ~14%)
+// Цена улучшения фиксированная: партия больше не ограничена числом дней,
+// поэтому снижать стоимость к концу партии больше не нужно.
 function bizUpgradePrice(basePrice){
-  const daysLeft = BIZ_TOTAL_DAYS - (state.businessLemonadeDay || 1);
-  const factor = Math.max(1, daysLeft) / BIZ_TOTAL_DAYS;
-  return Math.round(basePrice * factor);
+  return basePrice;
 }
 const BIZ_WORK_HOURS = [
   { hours: 1, mult: 0.35 },
@@ -163,10 +170,28 @@ function bizWeatherInfo(){ return BIZ_WEATHERS.find(w => w.key === state.busines
 function bizEventInfo(){ return state.businessLemonadeEventIdx >= 0 ? BIZ_EVENTS[state.businessLemonadeEventIdx] : null; }
 function bizLocationInfo(){ return BIZ_LOCATIONS[state.businessLemonadeLocation] || null; }
 
+// Суммарная чистая прибыль за все сыгранные дни — «накоплено чистыми».
+function bizTotalNet(){
+  const dayProfits = state.businessLemonadeDayProfits || [];
+  return dayProfits.reduce((a,b)=>a+(b||0), 0);
+}
+function bizGoalInfo(){
+  const goal = state.businessLemonadeGoal || 1000;
+  const name = state.businessLemonadeGoalName || 'кафе';
+  const item = BIZ_GOALS.find(g => g.sum === goal) || BIZ_GOALS[1];
+  return { goal, name, icon: item.icon };
+}
+function bizGoalReached(){
+  return bizTotalNet() >= (state.businessLemonadeGoal || 1000);
+}
 function updateBizHeaderUI(){
   const day = state.businessLemonadeDay || 1;
-  document.getElementById('bizDayFill').style.width = ((day - 1) / BIZ_TOTAL_DAYS * 100) + '%';
-  document.getElementById('bizDayLabel').textContent = `День ${day} из ${BIZ_TOTAL_DAYS}`;
+  const totalNet = bizTotalNet();
+  const { goal, name, icon } = bizGoalInfo();
+  // Прогресс-бар теперь показывает путь к цели накопления, а не дни.
+  const pct = Math.max(0, Math.min(100, Math.round(totalNet / goal * 100)));
+  document.getElementById('bizDayFill').style.width = pct + '%';
+  document.getElementById('bizDayLabel').textContent = `День ${day} · ${icon} ${totalNet} из ${goal} ₽ (${name})`;
   document.getElementById('bizCapitalRow').textContent = `Капитал: ${state.businessLemonadeCapital} ₽`;
 }
 function goToBizPhase(phaseId){
@@ -793,7 +818,7 @@ function bizSellDay(){
   document.getElementById('bizResSold').textContent = `${sold} из ${cups}`;
   document.getElementById('bizResRevenue').textContent = `${revenue} ₽`;
   document.getElementById('bizResNetProfit').textContent = `${netProfit} ₽`;
-  document.getElementById('bizNextDayBtn').textContent = (state.businessLemonadeDay || 1) >= BIZ_TOTAL_DAYS ? 'Итоги партии →' : 'Следующий день →';
+  document.getElementById('bizNextDayBtn').textContent = bizGoalReached() ? '🎯 Цель достигнута! Итоги →' : 'Следующий день →';
   updateBizHeaderUI();
   updateBizContextBar();
   if(netProfit >= 0) playSuccessSound(); else playErrorSound();
@@ -801,7 +826,7 @@ function bizSellDay(){
 }
 document.getElementById('bizNextDayBtn').addEventListener('click', ()=>{
   playSuccessSound();
-  if((state.businessLemonadeDay || 1) >= BIZ_TOTAL_DAYS){
+  if(bizGoalReached()){
     startBizQuiz();
     return;
   }
@@ -810,7 +835,7 @@ document.getElementById('bizNextDayBtn').addEventListener('click', ()=>{
   startBizDay();
 });
 
-/* ============ ПРОВЕРКА СЕБЯ (после 7-го дня) — вопросы каждый раз разные:
+/* ============ ПРОВЕРКА СЕБЯ (когда цель накопления достигнута) — вопросы каждый раз разные:
    часть построена на реальных числах именно этой партии (день лога
    выбирается случайно), часть — концептуальные вопросы из перемешанного
    пула с перемешанными вариантами ответа. ============ */
@@ -835,7 +860,7 @@ function bizNumericQuizFromLog(){
     ()=>{
       const correct = Math.round(rec.expenses / rec.cups);
       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-      return { q: `В день ${rec.day} (${rec.dowShort}, ${rec.locationName}) ты потратил ${rec.expenses} ₽ и сделал ${rec.cups} стаканов лимонада. Сколько стоил один стакан (себестоимость)?`, options, correct: idx };
+      return { q: `В день ${rec.day} (${rec.dowShort}, ${rec.locationName}) ты потратил ${rec.expenses} ₽ и сделал ${rec.cups} стаканов ${(rec.drinkType || "Лимонад").toLowerCase()}. Сколько стоил один стакан (себестоимость)?`, options, correct: idx };
     },
     ()=>{
       const correct = Math.round(rec.price - rec.costPerCup);
@@ -845,7 +870,7 @@ function bizNumericQuizFromLog(){
     ()=>{
       const correct = rec.sold * rec.price;
       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-      return { q: `В день ${rec.day} (${rec.locationName}) ты продал ${rec.sold} стаканов лимонада по ${rec.price} ₽ за стакан. Какая была выручка (сколько всего заплатили покупатели)?`, options, correct: idx };
+      return { q: `В день ${rec.day} (${rec.locationName}) ты продал ${rec.sold} стаканов ${(rec.drinkType || "Лимонад").toLowerCase()} по ${rec.price} ₽ за стакан. Какая была выручка (сколько всего заплатили покупатели)?`, options, correct: idx };
     },
     ()=>{
       const correct = rec.netProfit;
@@ -959,8 +984,11 @@ function showBizSummaryModal(){
   const dayProfits = state.businessLemonadeDayProfits || [];
   const totalProfit = dayProfits.reduce((a,b)=>a+(b||0), 0);
   const tier = bizResultTier(totalProfit);
-  document.getElementById('bizSummaryTitle').textContent = `${tier.icon} ${tier.name}`;
-  document.getElementById('bizSummaryIntro').textContent = `За 7 дней партии чистая прибыль: ${totalProfit >= 0 ? '+' : ''}${totalProfit} ₽. Правильных ответов в проверке: ${correct} из ${total}.`;
+  const { goal, name, icon } = bizGoalInfo();
+  const daysPlayed = (state.businessLemonadeDayLog || []).filter(Boolean).length;
+  const dayWord = daysPlayed === 1 ? 'день' : (daysPlayed < 5 ? 'дня' : 'дней');
+  document.getElementById('bizSummaryTitle').textContent = `${tier.icon} Цель достигнута: ${icon} ${name}!`;
+  document.getElementById('bizSummaryIntro').textContent = `За ${daysPlayed} ${dayWord} ты накопил ${totalProfit >= 0 ? '+' : ''}${totalProfit} ₽ чистыми и достиг цели «${name}» (${goal} ₽). Правильных ответов в проверке: ${correct} из ${total}.`;
   const log = (state.businessLemonadeDayLog || []).filter(Boolean);
   renderBizWeekChart(log);
   document.getElementById('bizSummaryDaysBox').innerHTML = log.map(rec=>`
@@ -988,6 +1016,7 @@ document.getElementById('closeBusinessLemonadeSummaryBtn').addEventListener('cli
 function goToBusinessLemonadeSetup(){
   document.getElementById('setup').classList.remove('active');
   document.getElementById('businessLemonadeSetup').classList.add('active');
+  renderBizGoalButtons();
 }
 function exitBusinessLemonadeSetup(){
   document.getElementById('businessLemonadeSetup').classList.remove('active');
@@ -1027,6 +1056,22 @@ function exitBusinessLemonadeGame(){
   document.getElementById('businessLemonadeGame').classList.remove('active');
   document.getElementById('businessLemonadeSetup').classList.add('active');
 }
+// Выбор цели накопления на стартовом экране: запоминается в state и
+// определяет условие завершения партии (накопить сумму чистыми).
+function renderBizGoalButtons(){
+  document.querySelectorAll('#bizGoalGroup .starter-btn').forEach(b=>{
+    b.classList.toggle('on', parseInt(b.dataset.sum, 10) === (state.businessLemonadeGoal || 1000));
+  });
+}
+document.querySelectorAll('#bizGoalGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    playSuccessSound();
+    state.businessLemonadeGoal = parseInt(btn.dataset.sum, 10);
+    state.businessLemonadeGoalName = btn.dataset.name;
+    saveState();
+    renderBizGoalButtons();
+  });
+});
 document.getElementById('businessLemonadeSetupStartBtn').addEventListener('click', ()=>{ goToBusinessLemonadeGame(); });
 document.getElementById('businessLemonadeSetupExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeSetup(); });
 document.getElementById('businessLemonadeExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeGame(); });

@@ -173,9 +173,11 @@ let state = {
   // таблица лидеров — топ-10 {name, timeMs}, отсортированных по времени.
   soloMemoryLevel:1, soloMemoryDeck:[], soloMemorySteps:0, soloMemoryElapsedMs:0,
   soloMemoryLeaderboard:[], soloMemoryLastName:'',
-  // Лимонадный ларёк (бизнес) — партия из 7 дней: утро (погода/событие/
-  // апгрейды) → место → время работы → закупка → цена → итоги дня, капитал
-  // переносится между днями (не может уйти ниже 0), после 7-го дня — мини-проверка.
+  // Лимонадный ларёк (бизнес) — партия без ограничения по дням: утро
+  // (погода/событие/апгрейды) → место → время работы → закупка →
+  // приготовление напитков → цена → итоги дня, капитал переносится между
+  // днями (не может уйти ниже 0). Партия завершается, когда накопленная
+  // чистая прибыль достигнет цели (businessLemonadeGoal), затем мини-проверка.
   businessLemonadeDay:1, businessLemonadeCapital:200,
   businessLemonadeUpgrades:{sign:false, music:false, recipe:false, seller:false, secondStand:false},
   businessLemonadeWeatherKey:'normal', businessLemonadeEventIdx:-1, businessLemonadeLocation:null,
@@ -183,6 +185,7 @@ let state = {
   businessLemonadeLemonStock:0, businessLemonadeLemonBoughtDay:null, businessLemonadeTeaStock:0, businessLemonadeCompetitorPrice:null,
   businessLemonadeLoanOwed:0, businessLemonadeLoanDueDay:null,
   businessLemonadeCups:10, businessLemonadePrice:40, businessLemonadeTeaCups:10, businessLemonadeTeaPrice:15, businessLemonadeDrinkType:'lemonade', businessLemonadeSold:0,
+  businessLemonadeGoal:1000, businessLemonadeGoalName:'кафе',
   businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[], businessLemonadeDayLog:[],
   businessLemonadeQuizIndex:0, businessLemonadeQuizCorrect:0, businessLemonadeQuizItems:[],
   // Крестики-нолики (дети) — счёт партии переживает раунды, обнуляется только при выходе.
@@ -1237,8 +1240,10 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.businessLemonadeCompetitorPrice = null;
   state.businessLemonadeLoanOwed = 0; state.businessLemonadeLoanDueDay = null;
   state.businessLemonadeCups = 10; state.businessLemonadePrice = 40; state.businessLemonadeSold = 0;
+  state.businessLemonadeTeaCups = 10; state.businessLemonadeTeaPrice = 15; state.businessLemonadeTeaStock = 0; state.businessLemonadeDrinkType = 'lemonade';
   state.businessLemonadeRevenue = 0; state.businessLemonadeNetProfit = 0; state.businessLemonadeDayProfits = [];
   state.businessLemonadeDayLog = [];
+  state.businessLemonadeGoal = 1000; state.businessLemonadeGoalName = 'кафе';
   state.businessLemonadeQuizIndex = 0; state.businessLemonadeQuizCorrect = 0; state.businessLemonadeQuizItems = [];
   // Крестики-нолики (дети)
   state.kidsXoBoard = []; state.kidsXoCurrentPlayer = 'X'; state.kidsXoRoundOver = false;
