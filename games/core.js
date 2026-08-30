@@ -1068,18 +1068,21 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
 });
 
 
-document.getElementById('updateAppBtn').addEventListener('click', ()=>{
-  // Жёсткое обновление: перезагружаем текущий URL с cache-busting параметром,
-  // чтобы браузер подтянул свежую версию index.html. Этого одного недостаточно —
-  // браузер кеширует каждый <script src="games/*.js"> ОТДЕЛЬНО по его
-  // собственному URL, независимо от параметра на странице, поэтому старый
-  // закэшированный JS мог продолжать грузиться даже после "обновления"
-  // (так было с card/games/*.js — при правках файлов кнопка не помогала).
-  // Поэтому у каждого <script src> в index.html есть общий "?v=ДАТАбуква"
-  // (см. низ файла) — при любой правке games/*.js или cards/*.js эту версию
-  // нужно менять (например 20260813a → 20260813b), иначе новый index.html
-  // всё равно сошлётся на те же URL скриптов, которые браузер уже закэшировал.
-  try{ sessionStorage.setItem('appJustUpdated', '1'); }catch(e){}
+document.getElementById('updateAppBtn').addEventListener('click', async ()=>{
+  // Жёсткое обновление: сбрасываем Service Worker, очищаем ВСЕ кэши и
+  // перезагружаем страницу. Это гарантирует, что браузер подтянет свежие
+  // версии ВСЕХ файлов (JS, CSS, HTML), а не закэшированные.
+  try{
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    if('caches' in window){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+    sessionStorage.setItem('appJustUpdated', '1');
+  }catch(e){}
   const url = new URL(location.href);
   url.searchParams.set('_r', Date.now());
   location.replace(url.toString());
