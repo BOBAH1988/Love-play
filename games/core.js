@@ -4159,7 +4159,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   });
   document.getElementById('menuInstallBtn').addEventListener('click', ()=>{
     closeMenu();
-    document.getElementById('installModal').classList.add('show');
+    // Используем общую логику: если есть системный диалог установки (PWA) —
+    // вызываем его, иначе показываем инструкцию #installModal.
+    tryInstallApp();
   });
   document.getElementById('menuResetBtn').addEventListener('click', ()=>{
     closeMenu();
@@ -4468,7 +4470,11 @@ window.addEventListener('beforeinstallprompt', (e) => {
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
 });
-document.getElementById('installBtn').addEventListener('click', ()=>{
+// Общая функция установки: если браузер поддерживает установку PWA
+// (сработал beforeinstallprompt и приложение ещё не установлено) — вызываем
+// системный диалог установки. Иначе (iOS Safari, уже установлено, без
+// поддержки) — показываем пошаговую инструкцию #installModal.
+function tryInstallApp(){
   if (deferredInstallPrompt) {
     // Есть системный диалог установки (beforeinstallprompt) — вызываем его.
     // prompt() можно вызвать на событии один раз; после вызова объект обнуляем.
@@ -4478,6 +4484,9 @@ document.getElementById('installBtn').addEventListener('click', ()=>{
   }
   // Системной установки нет — показываем пошаговую инструкцию.
   document.getElementById('installModal').classList.add('show');
+}
+document.getElementById('installBtn').addEventListener('click', ()=>{
+  tryInstallApp();
 });
 document.getElementById('closeInstallBtn').addEventListener('click', ()=>{
   document.getElementById('installModal').classList.remove('show');
