@@ -266,8 +266,7 @@ function goToShopGame(){
   requestWakeLock();
 }
 function exitShopGame(){
-  document.getElementById('shopGame').classList.remove('active');
-  document.getElementById('shopSetup').classList.add('active');
+  exitGame('shopGame', 'shopSetup');
 }
 document.getElementById('shopSetupStartBtn').addEventListener('click', ()=>{ goToShopGame(); });
 document.getElementById('shopSetupExitBtn').addEventListener('click', ()=>{ exitShopSetup(); });

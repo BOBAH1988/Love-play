@@ -216,8 +216,7 @@ function exitSoloMemoryGame(){
   soloMemoryFlipped = [];
   soloMemoryBusy = false;
   saveState();
-  document.getElementById('soloMemoryGame').classList.remove('active');
-  document.getElementById('soloMemorySetup').classList.add('active');
+  exitGame('soloMemoryGame', 'soloMemorySetup');
   renderSoloMemoryLeaderboard();
 }
 document.getElementById('soloMemorySetupStartBtn').addEventListener('click', ()=>{ goToSoloMemoryGame(); });

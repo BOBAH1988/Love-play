@@ -274,8 +274,7 @@ function exitKidsKrokodilGame(){
   state.kidsKrokodilTurnsPlayed = 0;
   state.kidsKrokodilCurrentPlayerIndex = 0;
   saveState();
-  document.getElementById('kidsKrokodilGame').classList.remove('active');
-  document.getElementById('kidsKrokodilSetup').classList.add('active');
+  exitGame('kidsKrokodilGame', 'kidsKrokodilSetup');
 }
 document.getElementById('kidsKrokodilSetupStartBtn').addEventListener('click', ()=>{ goToKidsKrokodilGame(); });
 document.getElementById('kidsKrokodilSetupExitBtn').addEventListener('click', ()=>{ exitKidsKrokodilSetup(); });

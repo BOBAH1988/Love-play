@@ -435,8 +435,7 @@ function exitKidsSaperGame(){
   state.inProgress = false;
   state.pausedMode = null;
   saveState();
-  document.getElementById('kidsSaperGame').classList.remove('active');
-  document.getElementById('kidsSaperSetup').classList.add('active');
+  exitGame('kidsSaperGame', 'kidsSaperSetup');
 }
 function updateKidsSaperHideTasksBtn(){
   const btn = document.getElementById('kidsSaperHideTasksBtn');

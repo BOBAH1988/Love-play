@@ -81,8 +81,7 @@ function goToIdeasGame(){
   requestWakeLock();
 }
 function exitIdeasGame(){
-  document.getElementById('ideasGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
+  exitGame('ideasGame', 'setup');
   showSetupView('companyView');
 }
 

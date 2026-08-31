@@ -274,8 +274,7 @@ function showKidsBattleshipSummary(){
 }
 
 function exitKidsBattleshipGame(){
-  document.getElementById('kidsBattleshipGame').classList.remove('active');
-  document.getElementById('kidsBattleshipSetup').classList.add('active');
+  exitGame('kidsBattleshipGame', 'kidsBattleshipSetup');
   state.battleshipBoards = [];
   state.battleshipWinner = null;
   state.inProgress = false;

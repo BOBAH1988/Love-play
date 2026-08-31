@@ -1207,8 +1207,7 @@ function goToBusinessLemonadeGame(){
   startBizDay();
 }
 function exitBusinessLemonadeGame(){
-  document.getElementById('businessLemonadeGame').classList.remove('active');
-  document.getElementById('businessLemonadeSetup').classList.add('active');
+  exitGame('businessLemonadeGame', 'businessLemonadeSetup');
 }
 // Выбор цели накопления на стартовом экране: запоминается в state и
 // определяет условие завершения партии (накопить сумму чистыми).

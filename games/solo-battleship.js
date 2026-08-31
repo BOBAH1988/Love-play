@@ -235,8 +235,7 @@ function showSoloBsSummary(){
   document.getElementById('soloBattleshipSummaryModal').classList.add('show');
 }
 function exitSoloBattleshipGame(){
-  document.getElementById('soloBattleshipGame').classList.remove('active');
-  document.getElementById('soloBattleshipSetup').classList.add('active');
+  exitGame('soloBattleshipGame', 'soloBattleshipSetup');
   state.soloBsPlayerBoard = []; state.soloBsBotBoard = [];
   state.soloBsWinner = null; state.inProgress = false;
   state.pausedMode = null;

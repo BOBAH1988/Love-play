@@ -351,8 +351,7 @@ document.getElementById('flashNextBtn').addEventListener('click', ()=>{
 });
 function exitFlashGame(){
   stopFlashSpeech();
-  document.getElementById('flashGame').classList.remove('active');
-  document.getElementById('flashSetup').classList.add('active');
+  exitGame('flashGame', 'flashSetup');
 }
 document.getElementById('flashSetupStartBtn').addEventListener('click', ()=>{ goToFlashGame(); });
 document.getElementById('flashSetupExitBtn').addEventListener('click', ()=>{ exitFlashSetup(); });

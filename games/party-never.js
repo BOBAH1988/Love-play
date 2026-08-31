@@ -70,8 +70,7 @@ function goToPartyNeverGame(){
   requestWakeLock();
 }
 function exitPartyNeverGame(){
-  document.getElementById('partyNeverGame').classList.remove('active');
-  document.getElementById('partyNeverSetup').classList.add('active');
+  exitGame('partyNeverGame', 'partyNeverSetup');
 }
 document.getElementById('partyNeverSetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToPartyNeverGame(); });
 document.getElementById('partyNeverSetupExitBtn').addEventListener('click', ()=>{ exitPartyNeverSetup(); });

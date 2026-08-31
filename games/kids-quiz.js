@@ -378,8 +378,7 @@ function exitKidsQuizGame(){
   if(typeof stopKidsQuizSpeech === 'function') stopKidsQuizSpeech();
   document.getElementById('kidsQuizSummaryModal').classList.remove('show');
   finishKidsQuizGame();
-  document.getElementById('kidsQuizGame').classList.remove('active');
-  document.getElementById('kidsQuizSetup').classList.add('active');
+  exitGame('kidsQuizGame', 'kidsQuizSetup');
 }
 // ===== Озвучка вопроса "Викторина" (по тапу на карточку) =====
 // Тот же приём, что и в games/memes.js (speakMemesCard) — необязательная

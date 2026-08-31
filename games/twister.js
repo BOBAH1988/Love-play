@@ -154,9 +154,8 @@ function goToTwisterGame(){
 }
 function exitTwisterGame(){
   stopTwisterInterval();
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  document.getElementById('twisterGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
+  stopSpeech();
+  exitGame('twisterGame', 'setup');
 }
 
 document.getElementById('twisterPauseBtn').addEventListener('click', (e)=>{

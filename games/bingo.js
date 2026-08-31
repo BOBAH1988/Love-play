@@ -223,8 +223,7 @@ function showBingoSummary(){
   document.getElementById('summaryModal').classList.add('show');
 }
 function exitBingoGameToSetup(){
-  document.getElementById('bingoGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
+  exitGame('bingoGame', 'setup');
   showSetupView('twoPlayerView');
   finishBingoGame();
 }

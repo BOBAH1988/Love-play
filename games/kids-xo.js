@@ -209,8 +209,7 @@ function showKidsXoSummaryModal(){
   document.getElementById('kidsXoSummaryModal').classList.add('show');
 }
 function exitKidsXoGame(){
-  document.getElementById('kidsXoGame').classList.remove('active');
-  document.getElementById('kidsXoSetup').classList.add('active');
+  exitGame('kidsXoGame', 'kidsXoSetup');
   const { size } = kidsXoConfig();
   state.kidsXoBoard = new Array(size * size).fill('');
   state.kidsXoScoreX = 0;

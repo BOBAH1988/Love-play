@@ -234,8 +234,7 @@ function showSoloXoSummaryModal(){
   document.getElementById('soloXoSummaryModal').classList.add('show');
 }
 function exitSoloXoGame(){
-  document.getElementById('soloXoGame').classList.remove('active');
-  document.getElementById('soloXoSetup').classList.add('active');
+  exitGame('soloXoGame', 'soloXoSetup');
   const { size } = soloXoConfig();
   state.soloXoBoard = new Array(size * size).fill('');
   state.soloXoScorePlayer = 0;

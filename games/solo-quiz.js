@@ -242,8 +242,7 @@ function exitSoloQuizGame(){
   stopSoloQuizInterval();
   stopSoloQuizSpeech();
   document.getElementById('soloQuizSummaryModal').classList.remove('show');
-  document.getElementById('soloQuizGame').classList.remove('active');
-  document.getElementById('soloQuizSetup').classList.add('active');
+  exitGame('soloQuizGame', 'soloQuizSetup');
 }
 /* ===== Озвучка вопроса по тапу — тот же приём, что в party-quiz.js ===== */
 function pickSoloQuizVoice(){

@@ -108,8 +108,7 @@ function goToKidsMemesGame(){
 }
 function exitKidsMemesGame(){
   stopKidsMemesSpeech();
-  document.getElementById('kidsMemesGame').classList.remove('active');
-  document.getElementById('kidsMemesSetup').classList.add('active');
+  exitGame('kidsMemesGame', 'kidsMemesSetup');
 }
 document.getElementById('kidsMemesSetupStartBtn').addEventListener('click', ()=>{ goToKidsMemesGame(); });
 document.getElementById('kidsMemesSetupExitBtn').addEventListener('click', ()=>{ exitKidsMemesSetup(); });

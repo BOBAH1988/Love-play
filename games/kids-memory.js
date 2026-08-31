@@ -218,8 +218,7 @@ function exitKidsMemoryGame(){
   kidsMemoryFlipped = [];
   kidsMemoryBusy = false;
   saveState();
-  document.getElementById('kidsMemoryGame').classList.remove('active');
-  document.getElementById('kidsMemorySetup').classList.add('active');
+  exitGame('kidsMemoryGame', 'kidsMemorySetup');
 }
 // Пауза: вернуться в главное меню, не сбрасывая поле и счёт — можно
 // продолжить позже через общий блок "Продолжить игру"/"Закончить игру".

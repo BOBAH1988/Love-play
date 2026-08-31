@@ -335,8 +335,7 @@ function goToBizObsGame(){
 }
 function exitBizObsGame(){
   document.getElementById('bizObsSummaryModal').classList.remove('show');
-  document.getElementById('bizObsGame').classList.remove('active');
-  document.getElementById('bizObsSetup').classList.add('active');
+  exitGame('bizObsGame', 'bizObsSetup');
 }
 document.getElementById('bizObsSetupStartBtn').addEventListener('click', ()=>{
   playSuccessSound();

@@ -78,8 +78,7 @@ function goToWhatToPlayGame(){
   requestWakeLock();
 }
 function exitWhatToPlayGame(){
-  document.getElementById('whatToPlayGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
+  exitGame('whatToPlayGame', 'setup');
 }
 
 document.getElementById('whatToPlayNextBtn').addEventListener('click', ()=>{

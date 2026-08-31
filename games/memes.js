@@ -135,8 +135,7 @@ function goToMemesGame(){
 }
 function exitMemesGame(){
   stopMemesSpeech();
-  document.getElementById('memesGame').classList.remove('active');
-  document.getElementById('memesSetup').classList.add('active');
+  exitGame('memesGame', 'memesSetup');
 }
 document.getElementById('memesSetupStartBtn').addEventListener('click', ()=>{ goToMemesGame(); });
 document.getElementById('memesSetupExitBtn').addEventListener('click', ()=>{ exitMemesSetup(); });

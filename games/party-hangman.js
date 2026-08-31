@@ -152,8 +152,7 @@ function goToPartyHangmanGame(){
   requestWakeLock();
 }
 function exitPartyHangmanGame(){
-  document.getElementById('partyHangmanGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
+  exitGame('partyHangmanGame', 'setup');
   showSetupView('companyView');
 }
 

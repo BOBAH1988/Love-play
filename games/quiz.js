@@ -464,8 +464,7 @@ function exitQuizGame(){
   if(typeof stopQuizSpeech === 'function') stopQuizSpeech();
   document.getElementById('quizSummaryModal').classList.remove('show');
   finishQuizGame();
-  document.getElementById('quizGame').classList.remove('active');
-  document.getElementById('quizSetup').classList.add('active');
+  exitGame('quizGame', 'quizSetup');
 }
 document.getElementById('quizSetupStartBtn').addEventListener('click', ()=>{
   playSuccessSound();

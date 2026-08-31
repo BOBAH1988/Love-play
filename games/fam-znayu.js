@@ -424,8 +424,7 @@ function finishFamZnayuGame(){
 function exitFamZnayuGame(){
   document.getElementById('famZnayuSummaryModal').classList.remove('show');
   finishFamZnayuGame();
-  document.getElementById('famZnayuGame').classList.remove('active');
-  document.getElementById('famZnayuSetup').classList.add('active');
+  exitGame('famZnayuGame', 'famZnayuSetup');
 }
 document.getElementById('famZnayuSetupStartBtn').addEventListener('click', ()=>{
   playSuccessSound();

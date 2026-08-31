@@ -326,8 +326,7 @@ function exitTimerGame(){
   state.inProgress = false;
   state.pausedMode = null;
   saveState();
-  document.getElementById('timerGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
+  exitGame('timerGame', 'setup');
   updateResumeUI();
 }
 // Пауза: вернуться в главное меню, не сбрасывая счёт — можно продолжить

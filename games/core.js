@@ -670,6 +670,28 @@ function stopSpeech(hintId){
     if(hint) hint.classList.remove('speaking');
   }
 }
+
+/* ============ УНИВЕРСАЛЬНЫЕ ПЕРЕХОДЫ МЕЖДУ ЭКРАНАМИ ============ */
+// Раньше каждая игра дублировала пары:
+//   document.getElementById('XxxSetup').classList.remove('active');
+//   document.getElementById('XxxGame').classList.add('active');
+// и обратную (exitXxxGame). Теперь оба перехода — одна строка.
+function goToGame(setupId, gameId){
+  if(setupId){
+    const setup = document.getElementById(setupId);
+    if(setup) setup.classList.remove('active');
+  }
+  const game = document.getElementById(gameId);
+  if(game) game.classList.add('active');
+}
+function exitGame(gameId, setupId){
+  const game = document.getElementById(gameId);
+  if(game) game.classList.remove('active');
+  if(setupId){
+    const setup = document.getElementById(setupId);
+    if(setup) setup.classList.add('active');
+  }
+}
 // Правило для «Только избранное»: либо 10+ карточек на двоих, либо минимум по 5 карточек,
 // доступных каждому партнёру отдельно (общая карточка засчитывается обоим).
 function favoritesEligibility(){

@@ -377,8 +377,7 @@ function exitPartyQuizGame(){
   if(typeof stopPartyQuizSpeech === 'function') stopPartyQuizSpeech();
   document.getElementById('partyQuizSummaryModal').classList.remove('show');
   finishPartyQuizGame();
-  document.getElementById('partyQuizGame').classList.remove('active');
-  document.getElementById('partyQuizSetup').classList.add('active');
+  exitGame('partyQuizGame', 'partyQuizSetup');
 }
 // ===== Озвучка вопроса "Викторина" (по тапу на карточку) =====
 // Тот же приём, что и в games/memes.js (speakMemesCard) — необязательная
