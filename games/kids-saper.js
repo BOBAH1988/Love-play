@@ -192,14 +192,14 @@ function checkKidsSaperLinesAndAdvance(){
 }
 function advanceKidsSaperStage(){
   const total = state.kidsSaperWonLines.length;
-  if(!state.kidsSaperEscalated2 && total >= 1){
-    state.kidsSaperEscalated2 = true;
+  if(!state.kidsSaperEscalatedTo2 && total >= 1){
+    state.kidsSaperEscalatedTo2 = true;
     escalateKidsSaperTo(2);
     saveState();
     return;
   }
-  if(state.kidsSaperEscalated2 && !state.kidsSaperEscalated3 && total >= 3){
-    state.kidsSaperEscalated3 = true;
+  if(state.kidsSaperEscalatedTo2 && !state.kidsSaperEscalatedTo3 && total >= 3){
+    state.kidsSaperEscalatedTo3 = true;
     escalateKidsSaperTo(3);
     saveState();
     return;
@@ -368,8 +368,8 @@ function goToKidsSaperGame(){
   kidsSaperEnsureLuckyCell();
   state.kidsSaperCompleted = new Array(2).fill(0);
   state.kidsSaperWonLines = [];
-  state.kidsSaperEscalated2 = false;
-  state.kidsSaperEscalated3 = false;
+  state.kidsSaperEscalatedTo2 = false;
+  state.kidsSaperEscalatedTo3 = false;
   state.kidsSaperFinished = false;
   state.kidsSaperCurrentTeamIndex = Math.floor(Math.random() * 2);
   state.kidsSaperTeamTurnCount = [0,0];
@@ -411,8 +411,8 @@ function finishKidsSaperGame(){
   state.kidsSaperCompleted = [];
   state.kidsSaperWonLines = [];
   state.kidsSaperLevel = 1;
-  state.kidsSaperEscalated2 = false;
-  state.kidsSaperEscalated3 = false;
+  state.kidsSaperEscalatedTo2 = false;
+  state.kidsSaperEscalatedTo3 = false;
   state.kidsSaperFinished = false;
   state.kidsSaperCurrentTeamIndex = 0;
   state.kidsSaperTeamTurnCount = [0,0];
@@ -428,8 +428,8 @@ function exitKidsSaperGame(){
   state.kidsSaperCompleted = [];
   state.kidsSaperWonLines = [];
   state.kidsSaperLevel = 1;
-  state.kidsSaperEscalated2 = false;
-  state.kidsSaperEscalated3 = false;
+  state.kidsSaperEscalatedTo2 = false;
+  state.kidsSaperEscalatedTo3 = false;
   state.kidsSaperFinished = false;
   state.kidsSaperCurrentTeamIndex = 0;
   state.kidsSaperTeamTurnCount = [0,0];

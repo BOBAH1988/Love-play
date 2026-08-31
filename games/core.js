@@ -242,9 +242,24 @@ function loadState(){
       }
     }
   }catch(e){}
+  // Миграция полей, добавленных в новых версиях — старые сохранения
+  // (без этих полей) могли ронять логику из-за undefined в условиях.
+  if(state.kidsSaperLevel === undefined) state.kidsSaperLevel = 1;
+  if(state.kidsSaperCurrentTeamIndex === undefined) state.kidsSaperCurrentTeamIndex = 0;
+  if(!state.kidsSaperTeamTurnCount) state.kidsSaperTeamTurnCount = [0,0];
+  if(!state.kidsSaperCompleted) state.kidsSaperCompleted = [];
+  if(state.luckyLevel === undefined) state.luckyLevel = 1;
+  if(state.luckyCurrentTeamIndex === undefined) state.luckyCurrentTeamIndex = 0;
+  if(!state.luckyTeamTurnCount) state.luckyTeamTurnCount = [0,0];
 }
 function saveState(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){
+    // Квота localStorage исчерпана — уведомляем пользователя, чтобы он
+    // знал, почему прогресс может не сохраниться.
+    if(e && e.name === 'QuotaExceededError' && typeof showToast === 'function'){
+      showToast('⚠️ Хранилище переполнено — очистите историю или сделайте сброс');
+    }
+  }
 }
 
 // ===== Резервная копия данных (без сервера и регистрации) =====
@@ -5083,6 +5098,26 @@ document.getElementById('favoritesOnlyBtn').addEventListener('click', ()=>{
   saveState();
   updateFavoritesOnlyBtn();
 });
+
+/* ============ УТИЛИТЫ ЗАЩИТЫ ============ */
+// Глобальный обработчик неперехваченных ошибок — не «роняем» приложение,
+// а только логируем в консоль, чтобы баг было проще отловить на устройстве
+// пользователя (DevTools не всегда доступны).
+window.addEventListener('error', (ev)=>{
+  try{ console.warn('[Love-play] uncaught:', ev.message, '@', ev.filename + ':' + ev.lineno); }catch(_){}
+});
+// debounce(fn, ms) — обёртка: пропускает вызов fn, пока между нажатиями не
+// прошло ms миллисекунд. Используется для кнопок с быстрым повтором
+// (например, бинго/сапёр), где двойное нажатие за <300мс часто случайно.
+function debounce(fn, ms){
+  let last = 0, timer = null;
+  return function(...args){
+    const now = Date.now();
+    const wait = Math.max(0, ms - (now - last));
+    clearTimeout(timer);
+    timer = setTimeout(()=>{ last = Date.now(); fn.apply(this, args); }, wait);
+  };
+}
 
 /* ============ СВОИ ЗАДАНИЯ ============ */
 let newCardType = 'truth';

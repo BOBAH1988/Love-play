@@ -375,6 +375,7 @@ function finishKidsQuizGame(){
   updateResumeUI();
 }
 function exitKidsQuizGame(){
+  if(typeof stopKidsQuizSpeech === 'function') stopKidsQuizSpeech();
   document.getElementById('kidsQuizSummaryModal').classList.remove('show');
   finishKidsQuizGame();
   document.getElementById('kidsQuizGame').classList.remove('active');

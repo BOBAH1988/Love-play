@@ -374,6 +374,7 @@ function finishPartyQuizGame(){
   updateResumeUI();
 }
 function exitPartyQuizGame(){
+  if(typeof stopPartyQuizSpeech === 'function') stopPartyQuizSpeech();
   document.getElementById('partyQuizSummaryModal').classList.remove('show');
   finishPartyQuizGame();
   document.getElementById('partyQuizGame').classList.remove('active');
