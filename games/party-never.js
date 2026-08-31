@@ -79,6 +79,6 @@ document.getElementById('partyNeverNextBtn').addEventListener('click', ()=>{
   drawPartyNeverCard();
 });
 document.getElementById('partyNeverExitBtn').addEventListener('click', ()=>{ exitPartyNeverGame(); });
-document.getElementById('partyNeverSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('partyNeverRulesModal').classList.add('show'); });
+(document.getElementById('partyNeverSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('partyNeverRulesModal').classList.add('show'); });
 document.getElementById('closePartyNeverRulesBtn').addEventListener('click', ()=>{ document.getElementById('partyNeverRulesModal').classList.remove('show'); });
 document.getElementById('partyNeverRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'partyNeverRulesModal') e.currentTarget.classList.remove('show'); });

@@ -316,6 +316,6 @@ document.getElementById('soloQuizSetupStartBtn').addEventListener('click', ()=>{
 document.getElementById('soloQuizSetupExitBtn').addEventListener('click', ()=>{ exitSoloQuizSetup(); });
 document.getElementById('soloQuizExitBtn').addEventListener('click', ()=>{ exitSoloQuizGame(); });
 document.getElementById('closeSoloQuizSummaryBtn').addEventListener('click', ()=>{ exitSoloQuizGame(); });
-document.getElementById('soloQuizSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloQuizRulesModal').classList.add('show'); });
+(document.getElementById('soloQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloQuizRulesModal').classList.add('show'); });
 document.getElementById('closeSoloQuizRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloQuizRulesModal').classList.remove('show'); });
 document.getElementById('soloQuizRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'soloQuizRulesModal') e.currentTarget.classList.remove('show'); });

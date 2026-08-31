@@ -264,7 +264,7 @@ document.getElementById('kidsMemoryExitBtn').addEventListener('click', ()=>{
   pauseKidsMemoryGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-document.getElementById('kidsMemorySetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsMemoryRulesModal').classList.add('show'); });
-document.getElementById('kidsMemoryGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsMemoryRulesModal').classList.add('show'); });
+(document.getElementById('kidsMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsMemoryRulesModal').classList.add('show'); });
+(document.getElementById('kidsMemoryGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsMemoryRulesModal').classList.add('show'); });
 document.getElementById('closeKidsMemoryRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsMemoryRulesModal').classList.remove('show'); });
 document.getElementById('kidsMemoryRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsMemoryRulesModal') e.currentTarget.classList.remove('show'); });

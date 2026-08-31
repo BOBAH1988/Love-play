@@ -413,7 +413,7 @@ document.getElementById('timerExitBtn').addEventListener('click', ()=>{
   pauseTimerGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-document.getElementById('timerSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('timerRulesModal').classList.add('show'); });
+(document.getElementById('timerSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('timerRulesModal').classList.add('show'); });
 document.getElementById('closeTimerRulesBtn').addEventListener('click', ()=>{ document.getElementById('timerRulesModal').classList.remove('show'); });
 document.getElementById('timerRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'timerRulesModal') e.currentTarget.classList.remove('show'); });
 

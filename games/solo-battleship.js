@@ -287,8 +287,8 @@ document.getElementById('closeSoloBattleshipSummaryBtn').addEventListener('click
   document.getElementById('soloBattleshipSummaryModal').classList.remove('show');
   exitSoloBattleshipGame();
 });
-document.getElementById('soloBattleshipSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloBattleshipRulesModal').classList.add('show'); });
-document.getElementById('soloBattleshipGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloBattleshipRulesModal').classList.add('show'); });
+(document.getElementById('soloBattleshipSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloBattleshipRulesModal').classList.add('show'); });
+(document.getElementById('soloBattleshipGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloBattleshipRulesModal').classList.add('show'); });
 document.getElementById('closeSoloBattleshipRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloBattleshipRulesModal').classList.remove('show'); });
 document.getElementById('soloBattleshipRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'soloBattleshipRulesModal') e.currentTarget.classList.remove('show');

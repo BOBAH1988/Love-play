@@ -198,7 +198,7 @@ document.getElementById('partyFantsExitBtn').addEventListener('click', ()=>{
   pausePartyFantsGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-document.getElementById('partyFantsSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('partyFantsRulesModal').classList.add('show'); });
+(document.getElementById('partyFantsSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('partyFantsRulesModal').classList.add('show'); });
 document.getElementById('closePartyFantsRulesBtn').addEventListener('click', ()=>{ document.getElementById('partyFantsRulesModal').classList.remove('show'); });
 document.getElementById('partyFantsRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'partyFantsRulesModal') e.currentTarget.classList.remove('show'); });
 document.getElementById('closePartyFantsSummaryBtn').addEventListener('click', ()=>{ exitPartyFantsGame(); });

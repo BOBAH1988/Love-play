@@ -364,7 +364,7 @@ document.getElementById('closeWishlistSummaryBtn').addEventListener('click', ()=
   saveState();
   renderWishlistSetupStarterGroup();
 });
-document.getElementById('wishlistSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('wishlistRulesModal').classList.add('show'); });
+(document.getElementById('wishlistSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('wishlistRulesModal').classList.add('show'); });
 document.getElementById('closeWishlistRulesBtn').addEventListener('click', ()=>{ document.getElementById('wishlistRulesModal').classList.remove('show'); });
 document.getElementById('wishlistRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'wishlistRulesModal') e.currentTarget.classList.remove('show'); });
 document.getElementById('wishlistHistoryBtn').addEventListener('click', ()=>{

@@ -1228,6 +1228,6 @@ document.querySelectorAll('#bizGoalGroup .starter-btn').forEach(btn=>{
 document.getElementById('businessLemonadeSetupStartBtn').addEventListener('click', ()=>{ goToBusinessLemonadeGame(); });
 document.getElementById('businessLemonadeSetupExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeSetup(); });
 document.getElementById('businessLemonadeExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeGame(); });
-document.getElementById('businessLemonadeSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('businessLemonadeRulesModal').classList.add('show'); });
+(document.getElementById('businessLemonadeSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('businessLemonadeRulesModal').classList.add('show'); });
 document.getElementById('closeBusinessLemonadeRulesBtn').addEventListener('click', ()=>{ document.getElementById('businessLemonadeRulesModal').classList.remove('show'); });
 document.getElementById('businessLemonadeRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'businessLemonadeRulesModal') e.currentTarget.classList.remove('show'); });

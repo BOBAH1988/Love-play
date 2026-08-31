@@ -461,6 +461,6 @@ document.getElementById('partyQuizExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('closePartyQuizSummaryBtn').addEventListener('click', ()=>{ exitPartyQuizGame(); });
-document.getElementById('partyQuizSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('partyQuizRulesModal').classList.add('show'); });
+(document.getElementById('partyQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('partyQuizRulesModal').classList.add('show'); });
 document.getElementById('closePartyQuizRulesBtn').addEventListener('click', ()=>{ document.getElementById('partyQuizRulesModal').classList.remove('show'); });
 document.getElementById('partyQuizRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'partyQuizRulesModal') e.currentTarget.classList.remove('show'); });

@@ -227,7 +227,7 @@ document.getElementById('closeSoloMemorySummaryBtn').addEventListener('click', (
   exitSoloMemoryGame();
 });
 document.getElementById('soloMemoryExitBtn').addEventListener('click', ()=>{ exitSoloMemoryGame(); });
-document.getElementById('soloMemorySetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.add('show'); });
-document.getElementById('soloMemoryGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.add('show'); });
+(document.getElementById('soloMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.add('show'); });
+(document.getElementById('soloMemoryGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.add('show'); });
 document.getElementById('closeSoloMemoryRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.remove('show'); });
 document.getElementById('soloMemoryRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'soloMemoryRulesModal') e.currentTarget.classList.remove('show'); });

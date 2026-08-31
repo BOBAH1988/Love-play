@@ -226,7 +226,7 @@ document.getElementById('closeKidsXoSummaryBtn').addEventListener('click', ()=>{
   document.getElementById('kidsXoSummaryModal').classList.remove('show');
   exitKidsXoGame();
 });
-document.getElementById('kidsXoSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsXoRulesModal').classList.add('show'); });
-document.getElementById('kidsXoGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsXoRulesModal').classList.add('show'); });
+(document.getElementById('kidsXoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsXoRulesModal').classList.add('show'); });
+(document.getElementById('kidsXoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsXoRulesModal').classList.add('show'); });
 document.getElementById('closeKidsXoRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsXoRulesModal').classList.remove('show'); });
 document.getElementById('kidsXoRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsXoRulesModal') e.currentTarget.classList.remove('show'); });

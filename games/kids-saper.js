@@ -433,7 +433,7 @@ function updateKidsSaperHideTasksBtn(){
 }
 document.getElementById('kidsSaperSetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToKidsSaperGame(); });
 document.getElementById('kidsSaperSetupExitBtn').addEventListener('click', ()=>{ exitKidsSaperSetup(); });
-document.getElementById('kidsSaperSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsSaperRulesModal').classList.add('show'); });
+(document.getElementById('kidsSaperSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsSaperRulesModal').classList.add('show'); });
 document.getElementById('kidsSaperRandomBtn').addEventListener('click', ()=>{ suggestRandomKidsSaperCell(); });
 document.getElementById('kidsSaperHideTasksBtn').addEventListener('click', ()=>{
   state.kidsSaperTasksHidden = !state.kidsSaperTasksHidden;

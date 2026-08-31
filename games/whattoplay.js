@@ -115,6 +115,6 @@ document.getElementById('whatToPlayFavViewBtn').addEventListener('click', ()=>{
   drawWhatToPlayCard();
 });
 document.getElementById('whatToPlayExitBtn').addEventListener('click', ()=>{ exitWhatToPlayGame(); });
-document.getElementById('whatToPlayGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('whatToPlayRulesModal').classList.add('show'); });
+(document.getElementById('whatToPlayGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('whatToPlayRulesModal').classList.add('show'); });
 document.getElementById('closeWhatToPlayRulesBtn').addEventListener('click', ()=>{ document.getElementById('whatToPlayRulesModal').classList.remove('show'); });
 document.getElementById('whatToPlayRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'whatToPlayRulesModal') e.currentTarget.classList.remove('show'); });

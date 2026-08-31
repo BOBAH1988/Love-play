@@ -482,7 +482,7 @@ document.getElementById('bingoPauseBtn').addEventListener('click', ()=>{
   pauseBingoGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-document.getElementById('bingoGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('bingoRulesModal').classList.add('show'); });
+(document.getElementById('bingoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('bingoRulesModal').classList.add('show'); });
 document.getElementById('closeBingoRulesBtn').addEventListener('click', ()=>{ document.getElementById('bingoRulesModal').classList.remove('show'); });
 document.getElementById('bingoRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'bingoRulesModal') e.currentTarget.classList.remove('show'); });
 

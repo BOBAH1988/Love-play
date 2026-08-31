@@ -238,7 +238,7 @@ document.getElementById('kidsTdChoiceExitBtn').addEventListener('click', ()=>{
   pauseKidsTdGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-document.getElementById('kidsTdSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsTdRulesModal').classList.add('show'); });
+(document.getElementById('kidsTdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsTdRulesModal').classList.add('show'); });
 document.getElementById('closeKidsTdRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsTdRulesModal').classList.remove('show'); });
 document.getElementById('kidsTdRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsTdRulesModal') e.currentTarget.classList.remove('show'); });
 document.getElementById('closeKidsTdSummaryBtn').addEventListener('click', ()=>{ exitKidsTdGame(); });

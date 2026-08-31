@@ -462,6 +462,6 @@ document.getElementById('kidsQuizExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('closeKidsQuizSummaryBtn').addEventListener('click', ()=>{ exitKidsQuizGame(); });
-document.getElementById('kidsQuizSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsQuizRulesModal').classList.add('show'); });
+(document.getElementById('kidsQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsQuizRulesModal').classList.add('show'); });
 document.getElementById('closeKidsQuizRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsQuizRulesModal').classList.remove('show'); });
 document.getElementById('kidsQuizRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsQuizRulesModal') e.currentTarget.classList.remove('show'); });

@@ -168,7 +168,7 @@ document.getElementById('memesHideBtn').addEventListener('click', ()=>{
   drawMemesCard();
 });
 document.getElementById('memesExitBtn').addEventListener('click', ()=>{ exitMemesGame(); });
-document.getElementById('memesSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('memesRulesModal').classList.add('show'); });
+(document.getElementById('memesSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('memesRulesModal').classList.add('show'); });
 document.getElementById('closeMemesRulesBtn').addEventListener('click', ()=>{ document.getElementById('memesRulesModal').classList.remove('show'); });
 document.getElementById('memesRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'memesRulesModal') e.currentTarget.classList.remove('show'); });
 

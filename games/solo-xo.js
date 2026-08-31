@@ -251,7 +251,7 @@ document.getElementById('closeSoloXoSummaryBtn').addEventListener('click', ()=>{
   document.getElementById('soloXoSummaryModal').classList.remove('show');
   exitSoloXoGame();
 });
-document.getElementById('soloXoSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloXoRulesModal').classList.add('show'); });
-document.getElementById('soloXoGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloXoRulesModal').classList.add('show'); });
+(document.getElementById('soloXoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloXoRulesModal').classList.add('show'); });
+(document.getElementById('soloXoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloXoRulesModal').classList.add('show'); });
 document.getElementById('closeSoloXoRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloXoRulesModal').classList.remove('show'); });
 document.getElementById('soloXoRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'soloXoRulesModal') e.currentTarget.classList.remove('show'); });

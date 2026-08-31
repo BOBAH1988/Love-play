@@ -4084,7 +4084,7 @@ document.getElementById('closeSummaryBtn').addEventListener('click', ()=>{
   goToSetup();
 });
 
-document.getElementById('rulesBtn').addEventListener('click', ()=>{
+(document.getElementById('rulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{
   document.getElementById('rulesModal').classList.add('show');
 });
 document.getElementById('closeRulesBtn').addEventListener('click', ()=>{
@@ -4116,7 +4116,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 
   document.getElementById('menuRulesBtn').addEventListener('click', ()=>{
     closeMenu();
-    document.getElementById('rulesModal').classList.add('show');
+    if(window.__openRulesHub) window.__openRulesHub();
   });
   document.getElementById('menuMuteBtn').addEventListener('click', ()=>{
     state.muted = !state.muted;
@@ -4155,6 +4155,111 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   });
 })();
 
+// ===== СТРАНИЦА ПРАВИЛ ВСЕХ ИГР (меню → «Правила игр») =====
+// Структура: группа → игра → вложенная игра (если есть).
+// Каждая игра переиспользует свою существующую модалку правил.
+(function(){
+  const hub = document.getElementById('rulesHubModal');
+  const list = document.getElementById('rulesHubList');
+  if(!hub || !list) return;
+
+  const RULES_HUB = [
+    { icon:'💕', name:'Игры для пар 18+', games:[
+      ['🎯','Викторина','quizRulesModal'],
+      ['💬','Ответы на вопросы','ideasRulesModal'],
+      ['💘','Фанты','rulesModal'],
+      ['❓','Правда/Действие','tdRulesModal'],
+      ['💑','Тайные ответы','znayuRulesModal'],
+      ['💌','Твои желания','wishlistRulesModal'],
+      ['🎱','Секс-бинго','bingoRulesModal'],
+      ['⏱️','Таймер страсти','timerRulesModal'],
+      ['💃','Предложи партнеру','photoRulesModal'],
+      ['🎬','Давай попробуем','davayRulesModal'],
+      ['🧩','Секс квест','sexQuestRulesModal'],
+    ]},
+    { icon:'🎉', name:'Игры для компании', games:[
+      ['🐊','Крокодил','krokodilRulesModal'],
+      ['😂','Мемасики','memesRulesModal'],
+      ['🎉','Фанты','partyFantsRulesModal'],
+      ['🗣️','Правда/Действие','partyTdRulesModal'],
+      ['🧠','Знаю тебя','famZnayuRulesModal'],
+      ['🎫','Счастливый билет','luckyRulesModal'],
+      ['🎯','Викторина','partyQuizRulesModal'],
+      ['🤸','Твистер','twisterRulesModal'],
+      ['🎡','Рулетка','partyRouletteRulesModal'],
+      ['🙊','Я никогда не','partyNeverRulesModal'],
+    ]},
+    { icon:'🧸', name:'Игры с детьми', games:[
+      ['🐊','Крокодил','kidsKrokodilRulesModal'],
+      ['😂','Мемасики','kidsMemesRulesModal'],
+      ['🧠','Мемори','kidsMemoryRulesModal'],
+      ['🗣️','Правда/Действие','kidsTdRulesModal'],
+      ['🎯','Викторина','kidsQuizRulesModal'],
+      ['💣','Сапёр','kidsSaperRulesModal'],
+      ['🎲','Во что поиграть?','whatToPlayRulesModal'],
+      { sub:'♟️ Настольные игры', games:[
+        ['⭕','Крестики-нолики','kidsXoRulesModal'],
+        ['🚢','Морской бой','kidsBattleshipRulesModal'],
+      ]},
+    ]},
+    { icon:'💼', name:'Бизнес игры', games:[
+      ['🍋','Лимонадный ларёк','businessLemonadeRulesModal'],
+      ['🛍️','Магазин','shopRulesModal'],
+      ['🔍','Оцени бизнес','bizObsRulesModal'],
+    ]},
+    { icon:'📱', name:'Игры для одного', games:[
+      ['🪢','Виселица','partyHangmanRulesModal'],
+      ['🎯','Викторина','soloQuizRulesModal'],
+      ['🧠','Мемори','soloMemoryRulesModal'],
+      ['⭕','Крестики-нолики','soloXoRulesModal'],
+      ['🚢','Морской бой','soloBattleshipRulesModal'],
+    ]},
+    { icon:'📚', name:'Обучающие игры', games:[
+      ['🗂️','Флеш карты','flashRulesModal'],
+    ]},
+  ];
+
+  // Рендер групп и игр
+  list.innerHTML = RULES_HUB.map(g=>{
+    const items = g.games.map(it=>{
+      if(Array.isArray(it)){
+        return `<button type="button" class="rules-item" data-rules-modal="${it[2]}"><span>${it[0]}</span> ${it[1]}<span class="rules-chev">›</span></button>`;
+      }
+      return `<div class="rules-subgroup">${it.sub}</div>` + it.games.map(n=>
+        `<button type="button" class="rules-item nested" data-rules-modal="${n[2]}"><span>${n[0]}</span> ${n[1]}<span class="rules-chev">›</span></button>`
+      ).join('');
+    }).join('');
+    return `<div class="rules-group"><button type="button" class="rules-group-head"><span>${g.icon} ${g.name}</span><span class="rules-chev">▸</span></button><div class="rules-group-body">${items}</div></div>`;
+  }).join('');
+
+  // Раскрытие групп
+  list.querySelectorAll('.rules-group-head').forEach(h=>{
+    h.addEventListener('click', ()=> h.closest('.rules-group').classList.toggle('open'));
+  });
+
+  // Открытие правил конкретной игры
+  list.querySelectorAll('.rules-item').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const modal = document.getElementById(btn.dataset.rulesModal);
+      if(modal) modal.classList.add('show');
+    });
+  });
+
+  // Закрытие хаба
+  const closeHub = ()=> hub.classList.remove('show');
+  document.getElementById('rulesHubCloseBtn').addEventListener('click', closeHub);
+  hub.addEventListener('click', (e)=>{ if(e.target.id === 'rulesHubModal') closeHub(); });
+
+  // Любую модалку правил можно закрыть кликом по фону
+  document.querySelectorAll('.modal-overlay[id$="RulesModal"], #rulesModal').forEach(ov=>{
+    ov.addEventListener('click', (e)=>{ if(e.target === ov) ov.classList.remove('show'); });
+  });
+
+  // Для меню и кнопки «назад»
+  window.__openRulesHub = ()=> hub.classList.add('show');
+  window.__closeRulesHub = closeHub;
+})();
+
 // ===== КНОПКА "НАЗАД" (ПАУЗА / НАЗАД НА 1 УРОВЕНЬ) =====
 (function(){
   const backBtn = document.getElementById('globalBackBtn');
@@ -4184,6 +4289,10 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     // Закрываем глобальное меню если открыто
     const menuModal = document.getElementById('globalMenuModal');
     if(menuModal) menuModal.classList.remove('show');
+
+    // Если открыта страница правил — закрываем её
+    const rulesHub = document.getElementById('rulesHubModal');
+    if(rulesHub && rulesHub.classList.contains('show')){ rulesHub.classList.remove('show'); return; }
 
     // Если показано итоговое окно — закрываем и выходим на главный хаб
     const summaryModal = document.getElementById('summaryModal');
@@ -4307,7 +4416,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   }
 })();
 
-document.getElementById('davaySetupRulesBtn').addEventListener('click', ()=>{
+(document.getElementById('davaySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{
   document.getElementById('davayRulesModal').classList.add('show');
 });
 document.getElementById('closeDavayRulesBtn').addEventListener('click', ()=>{
@@ -4316,7 +4425,7 @@ document.getElementById('closeDavayRulesBtn').addEventListener('click', ()=>{
 document.getElementById('davayRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'davayRulesModal') e.currentTarget.classList.remove('show');
 });
-document.getElementById('photoSetupRulesBtn').addEventListener('click', ()=>{
+(document.getElementById('photoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{
   document.getElementById('photoRulesModal').classList.add('show');
 });
 document.getElementById('closePhotoRulesBtn').addEventListener('click', ()=>{

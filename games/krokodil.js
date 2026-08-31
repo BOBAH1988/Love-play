@@ -474,7 +474,7 @@ document.getElementById('krokodilExitBtn').addEventListener('click', ()=>{
   pauseKrokodilGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-document.getElementById('krokodilSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('krokodilRulesModal').classList.add('show'); });
+(document.getElementById('krokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('krokodilRulesModal').classList.add('show'); });
 document.getElementById('closeKrokodilRulesBtn').addEventListener('click', ()=>{ document.getElementById('krokodilRulesModal').classList.remove('show'); });
 document.getElementById('krokodilRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'krokodilRulesModal') e.currentTarget.classList.remove('show'); });
 

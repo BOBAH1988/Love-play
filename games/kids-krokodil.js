@@ -294,6 +294,6 @@ document.getElementById('kidsKrokodilNextPlayerBtn').addEventListener('click', (
 document.getElementById('kidsKrokodilFinishBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
 document.getElementById('closeKidsKrokodilSummaryBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
 document.getElementById('kidsKrokodilExitBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
-document.getElementById('kidsKrokodilSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsKrokodilRulesModal').classList.add('show'); });
+(document.getElementById('kidsKrokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsKrokodilRulesModal').classList.add('show'); });
 document.getElementById('closeKidsKrokodilRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsKrokodilRulesModal').classList.remove('show'); });
 document.getElementById('kidsKrokodilRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsKrokodilRulesModal') e.currentTarget.classList.remove('show'); });

@@ -271,6 +271,6 @@ function exitShopGame(){
 document.getElementById('shopSetupStartBtn').addEventListener('click', ()=>{ goToShopGame(); });
 document.getElementById('shopSetupExitBtn').addEventListener('click', ()=>{ exitShopSetup(); });
 document.getElementById('shopExitBtn').addEventListener('click', ()=>{ exitShopGame(); });
-document.getElementById('shopGameRulesBtn').addEventListener('click', ()=>{ document.getElementById('shopRulesModal').classList.add('show'); });
+(document.getElementById('shopGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('shopRulesModal').classList.add('show'); });
 document.getElementById('closeShopRulesBtn').addEventListener('click', ()=>{ document.getElementById('shopRulesModal').classList.remove('show'); });
 document.getElementById('shopRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'shopRulesModal') e.currentTarget.classList.remove('show'); });

@@ -425,6 +425,29 @@
   .placeholder-row .btn{flex:1 1 140px; padding:10px; font-size:14px;}
   /* Список игр на главной странице — единый спокойный стиль вместо разноцветных градиентов;
      сетка сама переходит на 2 колонки, если хватает ширины экрана. */
+  /* ===== Страница правил всех игр ===== */
+  .rules-hub-card{ width:min(430px,94vw); max-height:80vh; overflow-y:auto; }
+  .rules-group{ margin-top:10px; }
+  .rules-group-head{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:11px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05); color:#fff; font-size:15px; font-weight:700;
+    text-align:left; cursor:pointer;
+  }
+  .rules-group-head .rules-chev{ transition:transform .2s; color:#e8c9dd; }
+  .rules-group.open .rules-group-head .rules-chev{ transform:rotate(90deg); }
+  .rules-group-body{ display:none; flex-direction:column; gap:6px; margin-top:6px; }
+  .rules-group.open .rules-group-body{ display:flex; }
+  .rules-item{
+    display:flex; align-items:center; gap:8px; width:100%; padding:9px 12px;
+    border-radius:10px; border:1px solid rgba(255,255,255,.1); background:transparent;
+    color:#fff; font-size:14px; text-align:left; cursor:pointer;
+  }
+  .rules-item:active{ background:rgba(255,255,255,.08); }
+  .rules-item .rules-chev{ margin-left:auto; color:#e8c9dd; }
+  .rules-subgroup{ margin:8px 0 2px; font-size:12px; color:#e8c9dd; font-weight:700; }
+  .rules-item.nested{ margin-left:14px; width:calc(100% - 14px); }
+
   .game-select-list{
     display:grid;
     grid-template-columns:repeat(2, 1fr);
@@ -2249,7 +2272,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title">⚙️ Меню <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button></div>
       <div class="menu-list">
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn">Правила игры</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn">Правила игр</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn"><span id="menuMuteText">Звук включён</span></button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn">Экспортировать данные</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn">Импортировать данные</button>
@@ -2260,6 +2283,17 @@
     </div>
   </div>
   <input type="file" id="importDataInput" accept="application/json,.json" style="display:none">
+
+  <!-- ===== СТРАНИЦА ПРАВИЛ ВСЕХ ИГР (меню → «Правила игр») =====
+       Структура: группа → игра → вложенная игра (если есть).
+       Каждая игра переиспользует свою существующую модалку правил. -->
+  <div class="modal-overlay" id="rulesHubModal">
+    <div class="modal-card rules-hub-card">
+      <div class="modal-title">📖 Правила игр <button type="button" class="modal-close-btn" id="rulesHubCloseBtn" aria-label="Закрыть">✕</button></div>
+      <div class="intro-text">Выберите группу, затем игру — откроются её правила.</div>
+      <div id="rulesHubList"></div>
+    </div>
+  </div>
   <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) =====
         Внутри одного экрана #setup — 5 переключаемых блоков (.field-collapsible,
         у активного добавлен класс .section-open, у остальных его нет — тот же
@@ -2478,7 +2512,6 @@
     <button class="btn btn-primary" id="kidsMemorySetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="kidsMemorySetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="kidsMemorySetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -2493,7 +2526,6 @@
     <div class="memory-grid" id="kidsMemoryGrid"></div>
 
     <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-rules" id="kidsMemoryGameRulesBtn">Правила</button>
       <button type="button" class="btn btn-secondary btn-pause" id="kidsMemoryExitBtn">Пауза</button>
     </div>
   </section>
@@ -2533,7 +2565,6 @@
     <button class="btn btn-primary" id="kidsTdSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="kidsTdSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="kidsTdSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -2630,7 +2661,6 @@
     <button class="btn btn-primary" id="kidsQuizSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="kidsQuizSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="kidsQuizSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -2728,7 +2758,6 @@
     <div class="field" style="margin-top:10px;">
       <label>Настройки</label>
       <div class="toggle-row">
-        <button type="button" class="toggle-pill rules-pill" id="rulesBtn">Правила</button>
         <button type="button" class="toggle-pill" id="addCardBtn">Своё задание</button>
         <button type="button" class="toggle-pill" id="favoritesOnlyBtn" aria-pressed="false" aria-label="Избранное" style="flex:0 0 46px; width:46px; padding:0; font-size:19px;">⭐</button>
       </div>
@@ -2762,7 +2791,6 @@
       <button type="button" class="btn btn-secondary" id="davaySetupVideoFavBtn" style="flex:0 0 46px; width:46px; padding:0; font-size:19px;" aria-label="Избранное из видеорулетки">❤️</button>
     </div>
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="davaySetupRulesBtn">Правила</button>
       <button type="button" class="toggle-pill" id="davaySetupFavoritesBtn">❤️ Избранное</button>
       <button type="button" class="toggle-pill" id="davaySetupImportBtn">➕ Добавить видео</button>
       <button type="button" class="toggle-pill" id="davaySetupSoundBtn" aria-label="Включить звук видео">🔇 Звук выключен</button>
@@ -2788,7 +2816,6 @@
     <button class="btn btn-primary" id="photoSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="photoSetupRulesBtn">Правила</button>
       <button type="button" class="toggle-pill" id="photoSetupFavoritesBtn">❤️ Избранное</button>
     </div>
 
@@ -2875,7 +2902,6 @@
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary" id="ideasFavViewBtn">⭐ Избранное</button>
-        <button type="button" class="btn btn-secondary btn-rules" id="ideasGameRulesBtn">Правила</button>
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary btn-pause" id="ideasExitBtn">Выход</button>
@@ -2908,7 +2934,6 @@
     <button class="btn btn-primary" id="sexQuestStartBtn" style="margin-top:16px;">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="sexQuestSetupRulesBtn">Правила</button>
       <button type="button" class="toggle-pill" id="sexQuestHistoryBtn">✅ Пройденные</button>
     </div>
 
@@ -2984,7 +3009,6 @@
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary" id="whatToPlayFavViewBtn">⭐ Избранное</button>
-        <button type="button" class="btn btn-secondary btn-rules" id="whatToPlayGameRulesBtn">Правила</button>
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary btn-pause" id="whatToPlayExitBtn">Выход</button>
@@ -3028,7 +3052,6 @@
     <button class="btn btn-primary" id="kidsKrokodilSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="kidsKrokodilSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="kidsKrokodilSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3087,7 +3110,6 @@
     <button class="btn btn-primary" id="kidsMemesSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="kidsMemesSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="kidsMemesSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3167,7 +3189,6 @@
     <button class="btn btn-primary" id="flashSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="flashSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="flashSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3198,7 +3219,6 @@
          <button type="button" class="btn btn-secondary toggle-pill more-pill" id="flashMoreBtn" aria-expanded="false">Дополнительно ▼</button>
          <div class="timer-actions-extra-row" id="flashExtraRow" style="display:none;">
            <button type="button" class="btn btn-secondary" id="flashAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
-           <button type="button" class="btn btn-secondary btn-rules" id="flashGameRulesBtn">Правила</button>
            <button type="button" class="btn btn-secondary btn-pause" id="flashExitBtn">Выход</button>
          </div>
        </div>
@@ -3213,7 +3233,6 @@
     <button class="btn btn-primary" id="kidsSaperSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="kidsSaperSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="kidsSaperSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3233,7 +3252,6 @@
     <div class="timer-actions-extra">
       <button type="button" class="btn btn-secondary toggle-pill more-pill" id="kidsSaperMoreBtn" aria-expanded="false">Дополнительно ▼</button>
       <div class="timer-actions-extra-row" id="kidsSaperExtraRow" style="display:none;">
-        <button type="button" class="btn btn-secondary btn-rules" id="kidsSaperGameRulesBtn">Правила</button>
         <button type="button" class="btn btn-secondary btn-pause" id="kidsSaperExitBtn">Пауза</button>
       </div>
     </div>
@@ -3281,7 +3299,6 @@
     <button class="btn btn-primary" id="shopSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="shopGameRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="shopSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3384,7 +3401,6 @@
     <button class="btn btn-primary" id="bizObsSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="bizObsSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="bizObsSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3459,7 +3475,6 @@
     <button class="btn btn-primary" id="businessLemonadeSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="businessLemonadeSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="businessLemonadeSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3699,7 +3714,6 @@
     <button class="btn btn-primary" id="kidsXoSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="kidsXoSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="kidsXoSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3717,7 +3731,6 @@
     <button type="button" class="btn btn-primary" id="kidsXoNextRoundBtn" style="display:none;">Следующий раунд →</button>
 
     <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-rules" id="kidsXoGameRulesBtn">Правила</button>
       <button type="button" class="btn btn-secondary" id="kidsXoExitBtn">Выход</button>
     </div>
   </section>
@@ -3767,7 +3780,6 @@
     <button class="btn btn-primary" id="soloXoSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="soloXoSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="soloXoSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3785,7 +3797,6 @@
     <button type="button" class="btn btn-primary" id="soloXoNextRoundBtn" style="display:none;">Следующий раунд →</button>
 
     <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-rules" id="soloXoGameRulesBtn">Правила</button>
       <button type="button" class="btn btn-secondary" id="soloXoExitBtn">Выход</button>
     </div>
   </section>
@@ -3826,7 +3837,6 @@
     <button class="btn btn-primary" id="kidsBattleshipSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="kidsBattleshipSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="kidsBattleshipSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3847,7 +3857,6 @@
     </div>
 
     <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-rules" id="kidsBattleshipGameRulesBtn">Правила</button>
       <button type="button" class="btn btn-secondary" id="kidsBattleshipExitBtn">Выход</button>
     </div>
   </section>
@@ -3895,7 +3904,6 @@
     <button class="btn btn-primary" id="soloBattleshipSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="soloBattleshipSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="soloBattleshipSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -3925,7 +3933,6 @@
     </div>
 
     <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-rules" id="soloBattleshipGameRulesBtn">Правила</button>
       <button type="button" class="btn btn-secondary btn-pause" id="soloBattleshipExitBtn">Пауза</button>
     </div>
   </section>
@@ -3969,7 +3976,6 @@
     <button class="btn btn-primary" id="tdSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="tdSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="tdSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4016,7 +4022,6 @@
       <button type="button" class="btn btn-secondary" id="bingoHideTasksBtn">🙈 Скрыть задания</button>
     </div>
     <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-rules" id="bingoGameRulesBtn">Правила</button>
       <button type="button" class="btn btn-secondary btn-pause" id="bingoPauseBtn">Пауза</button>
     </div>
     <div class="bingo-bonus-checklist-block" id="bingoBonusChecklistBlock" style="display:none;">
@@ -4071,7 +4076,6 @@
     <button class="btn btn-primary" id="timerSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="timerSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="timerSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4151,7 +4155,6 @@
     <button class="btn btn-primary" id="krokodilSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="krokodilSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="krokodilSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4215,7 +4218,6 @@
     <button class="btn btn-primary" id="memesSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="memesSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="memesSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4258,7 +4260,6 @@
     <button class="btn btn-primary" id="partyNeverSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="partyNeverSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="partyNeverSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4315,7 +4316,6 @@
     <button class="btn btn-primary" id="partyFantsSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="partyFantsSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="partyFantsSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4370,7 +4370,6 @@
     <button class="btn btn-primary" id="partyTdSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="partyTdSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="partyTdSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4448,7 +4447,6 @@
     <button class="btn btn-primary" id="famZnayuSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="famZnayuSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="famZnayuSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4505,7 +4503,6 @@
     <button class="btn btn-primary" id="luckySetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="luckySetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="luckySetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4586,7 +4583,6 @@
     <button class="btn btn-primary" id="partyQuizSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="partyQuizSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="partyQuizSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4667,7 +4663,6 @@
         <button type="button" class="btn btn-secondary" id="twisterNextBtn">Следующий ход</button>
       </div>
       <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-rules" id="twisterGameRulesBtn">Правила</button>
         <button type="button" class="btn btn-secondary btn-pause" id="twisterExitBtn">Выход</button>
       </div>
     </div>
@@ -4722,7 +4717,6 @@
     <button class="btn btn-primary" id="soloQuizSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="soloQuizSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="soloQuizSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4794,7 +4788,6 @@
     <button class="btn btn-primary" id="soloMemorySetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="soloMemorySetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="soloMemorySetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4812,7 +4805,6 @@
     <div class="memory-grid" id="soloMemoryGrid"></div>
 
     <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-rules" id="soloMemoryGameRulesBtn">Правила</button>
       <button type="button" class="btn btn-secondary btn-pause" id="soloMemoryExitBtn">Выход</button>
     </div>
   </section>
@@ -4894,7 +4886,6 @@
         <button type="button" class="btn btn-primary" id="partyHangmanNextBtn" style="display:none;">Следующее слово</button>
       </div>
       <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-rules" id="partyHangmanGameRulesBtn">Правила</button>
         <button type="button" class="btn btn-secondary btn-pause" id="partyHangmanExitBtn">Выход</button>
       </div>
     </div>
@@ -4954,7 +4945,6 @@
         <button type="button" class="btn btn-secondary" id="rouletteClearBetsBtn">Сброс ставок</button>
       </div>
       <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-rules" id="rouletteGameRulesBtn">Правила</button>
         <button type="button" class="btn btn-secondary btn-pause" id="rouletteExitBtn">Выход</button>
       </div>
     </div>
@@ -4997,7 +4987,6 @@
     </div>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="wishlistSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="wishlistSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -5053,7 +5042,6 @@
     </div>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="znayuSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="znayuSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -5117,7 +5105,6 @@
     <button class="btn btn-primary" id="quizSetupStartBtn">Начать</button>
 
     <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill rules-pill" id="quizSetupRulesBtn">Правила</button>
     </div>
 
     <button class="btn btn-secondary" id="quizSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -5795,43 +5782,43 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260830l"></script>
-<script src="games/twister.js?v=20260829g"></script>
-<script src="games/party-hangman.js?v=20260829g"></script>
-<script src="games/solo-quiz.js?v=20260829g"></script>
-<script src="games/solo-memory.js?v=20260829g"></script>
-<script src="games/solo-xo.js?v=20260829g"></script>
-<script src="games/shop.js?v=20260829g"></script>
-<script src="games/business-observer.js?v=20260829g"></script>
-<script src="games/party-roulette.js?v=20260829g"></script>
-<script src="games/business-lemonade.js?v=20260830t"></script>
-<script src="games/kids-xo.js?v=20260829g"></script>
-<script src="games/kids-battleship.js?v=20260829g"></script>
-<script src="games/solo-battleship.js?v=20260829g"></script>
-<script src="games/truth-dare.js?v=20260829g"></script>
-<script src="games/bingo.js?v=20260829g"></script>
-<script src="games/timer-game.js?v=20260829g"></script>
-<script src="games/krokodil.js?v=20260829g"></script>
-<script src="games/memes.js?v=20260829g"></script>
-<script src="games/party-never.js?v=20260829g"></script>
-<script src="games/party-fants.js?v=20260829g"></script>
-<script src="games/party-td.js?v=20260829g"></script>
-<script src="games/fam-znayu.js?v=20260829g"></script>
-<script src="games/lucky.js?v=20260829g"></script>
-<script src="games/kids-memory.js?v=20260829g"></script>
-<script src="games/kids-krokodil.js?v=20260829g"></script>
-<script src="games/kids-memes.js?v=20260829g"></script>
-<script src="games/kids-flash.js?v=20260829k"></script>
-<script src="games/kids-saper.js?v=20260829k"></script>
-<script src="games/kids-td.js?v=20260829g"></script>
-<script src="games/quiz.js?v=20260829g"></script>
-<script src="games/party-quiz.js?v=20260829g"></script>
-<script src="games/kids-quiz.js?v=20260829g"></script>
-<script src="games/wishlist.js?v=20260829g"></script>
-<script src="games/znayu.js?v=20260829g"></script>
-<script src="games/ideas.js?v=20260829g"></script>
-<script src="games/sexquest.js?v=20260829g"></script>
-<script src="games/whattoplay.js?v=20260829g"></script>
+<script src="games/core.js?v=20260830u"></script>
+<script src="games/twister.js?v=20260830u"></script>
+<script src="games/party-hangman.js?v=20260830u"></script>
+<script src="games/solo-quiz.js?v=20260830u"></script>
+<script src="games/solo-memory.js?v=20260830u"></script>
+<script src="games/solo-xo.js?v=20260830u"></script>
+<script src="games/shop.js?v=20260830u"></script>
+<script src="games/business-observer.js?v=20260830u"></script>
+<script src="games/party-roulette.js?v=20260830u"></script>
+<script src="games/business-lemonade.js?v=20260830u"></script>
+<script src="games/kids-xo.js?v=20260830u"></script>
+<script src="games/kids-battleship.js?v=20260830u"></script>
+<script src="games/solo-battleship.js?v=20260830u"></script>
+<script src="games/truth-dare.js?v=20260830u"></script>
+<script src="games/bingo.js?v=20260830u"></script>
+<script src="games/timer-game.js?v=20260830u"></script>
+<script src="games/krokodil.js?v=20260830u"></script>
+<script src="games/memes.js?v=20260830u"></script>
+<script src="games/party-never.js?v=20260830u"></script>
+<script src="games/party-fants.js?v=20260830u"></script>
+<script src="games/party-td.js?v=20260830u"></script>
+<script src="games/fam-znayu.js?v=20260830u"></script>
+<script src="games/lucky.js?v=20260830u"></script>
+<script src="games/kids-memory.js?v=20260830u"></script>
+<script src="games/kids-krokodil.js?v=20260830u"></script>
+<script src="games/kids-memes.js?v=20260830u"></script>
+<script src="games/kids-flash.js?v=20260830u"></script>
+<script src="games/kids-saper.js?v=20260830u"></script>
+<script src="games/kids-td.js?v=20260830u"></script>
+<script src="games/quiz.js?v=20260830u"></script>
+<script src="games/party-quiz.js?v=20260830u"></script>
+<script src="games/kids-quiz.js?v=20260830u"></script>
+<script src="games/wishlist.js?v=20260830u"></script>
+<script src="games/znayu.js?v=20260830u"></script>
+<script src="games/ideas.js?v=20260830u"></script>
+<script src="games/sexquest.js?v=20260830u"></script>
+<script src="games/whattoplay.js?v=20260830u"></script>
 <script src="games/init.js?v=20260829g"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует. -->

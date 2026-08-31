@@ -292,7 +292,7 @@ document.getElementById('tdPauseBtn').addEventListener('click', ()=>{
   playSuccessSound();
   pauseTdGame();
 });
-document.getElementById('tdSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.add('show'); });
+(document.getElementById('tdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.add('show'); });
 document.getElementById('closeTdRulesBtn').addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.remove('show'); });
 document.getElementById('tdRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'tdRulesModal') e.currentTarget.classList.remove('show'); });
 

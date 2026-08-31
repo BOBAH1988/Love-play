@@ -421,7 +421,7 @@ function finishZnayuGame(){
   saveState();
   updateResumeUI();
 }
-document.getElementById('znayuSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('znayuRulesModal').classList.add('show'); });
+(document.getElementById('znayuSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('znayuRulesModal').classList.add('show'); });
 document.getElementById('closeZnayuRulesBtn').addEventListener('click', ()=>{ document.getElementById('znayuRulesModal').classList.remove('show'); });
 document.getElementById('znayuRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'znayuRulesModal') e.currentTarget.classList.remove('show'); });
 document.getElementById('znayuHistoryBtn').addEventListener('click', ()=>{

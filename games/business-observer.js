@@ -348,6 +348,6 @@ document.getElementById('bizObsHandoffStartBtn').addEventListener('click', ()=>{
 });
 document.getElementById('bizObsExitBtn').addEventListener('click', ()=>{ exitBizObsGame(); });
 document.getElementById('closeBizObsSummaryBtn').addEventListener('click', ()=>{ exitBizObsGame(); });
-document.getElementById('bizObsSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('bizObsRulesModal').classList.add('show'); });
+(document.getElementById('bizObsSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('bizObsRulesModal').classList.add('show'); });
 document.getElementById('closeBizObsRulesBtn').addEventListener('click', ()=>{ document.getElementById('bizObsRulesModal').classList.remove('show'); });
 document.getElementById('bizObsRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'bizObsRulesModal') e.currentTarget.classList.remove('show'); });

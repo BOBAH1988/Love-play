@@ -443,7 +443,7 @@ document.getElementById('famZnayuExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('closeFamZnayuSummaryBtn').addEventListener('click', ()=>{ exitFamZnayuGame(); });
-document.getElementById('famZnayuSetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('famZnayuRulesModal').classList.add('show'); });
+(document.getElementById('famZnayuSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('famZnayuRulesModal').classList.add('show'); });
 document.getElementById('closeFamZnayuRulesBtn').addEventListener('click', ()=>{ document.getElementById('famZnayuRulesModal').classList.remove('show'); });
 document.getElementById('famZnayuRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'famZnayuRulesModal') e.currentTarget.classList.remove('show'); });
 

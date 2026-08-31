@@ -655,7 +655,7 @@ document.getElementById('luckyBonusAcceptBtn').addEventListener('click', ()=>{
   document.getElementById('luckyBonusModal').classList.remove('show');
 });
 document.getElementById('closeLuckySummaryBtn').addEventListener('click', ()=>{ exitLuckyGame(); });
-document.getElementById('luckySetupRulesBtn').addEventListener('click', ()=>{ document.getElementById('luckyRulesModal').classList.add('show'); });
+(document.getElementById('luckySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('luckyRulesModal').classList.add('show'); });
 document.getElementById('closeLuckyRulesBtn').addEventListener('click', ()=>{ document.getElementById('luckyRulesModal').classList.remove('show'); });
 document.getElementById('luckyRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'luckyRulesModal') e.currentTarget.classList.remove('show'); });
 
