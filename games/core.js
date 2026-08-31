@@ -3501,7 +3501,7 @@ function resumeDavayGame(){
 
 // Полностью отменить незавершённую паузу "Давай попробуем" — используется,
 // если игрок вместо "Продолжить" запускает какую-то другую игру.
-function abandonPausedSession('davay'){
+function abandonPausedDavaySession(){
   if(state.pausedMode === 'davay'){
     state.pausedMode = null;
     state.davayUsed = {};
