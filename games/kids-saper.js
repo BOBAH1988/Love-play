@@ -392,6 +392,17 @@ function pauseKidsSaperGame(){
   showSetupView('kidsView');
   updateResumeUI();
 }
+function resumeKidsSaperGame(){
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('kidsSaperGame').classList.add('active');
+  renderKidsSaperGrid();
+  updateKidsSaperHideTasksBtn();
+  renderKidsSaperBonusChecklist();
+  requestWakeLock();
+}
 function finishKidsSaperGame(){
   state.kidsSaperGrid = [];
   state.kidsSaperChecked = [];
