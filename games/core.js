@@ -32,7 +32,7 @@ let state = {
   davayQuizActivePlayer:0, davayQuizQueue:[], davayQuizIndex:0, davayQuizAnswers:{},
   davayQuizP1Done:false, davayQuizP2Done:false, davayQuizPendingNext:0,
   davayStarter:'random', davaySelectedLevel:3, davaySoundOn:false,
-  pausedMode:null,
+  pausedMode:null, lastSectionOnPause:null,
   // Правда или действие
   tdSelectedLevel:3, tdCurrentPlayer:1, tdScore1:0, tdScore2:0, tdUsed:{}, tdHidden:[],
   tdCompletedCount:0, tdSkippedCount:0,
@@ -251,6 +251,7 @@ function loadState(){
   if(state.luckyLevel === undefined) state.luckyLevel = 1;
   if(state.luckyCurrentTeamIndex === undefined) state.luckyCurrentTeamIndex = 0;
   if(!state.luckyTeamTurnCount) state.luckyTeamTurnCount = [0,0];
+  if(state.lastSectionOnPause === undefined) state.lastSectionOnPause = null;
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){
@@ -4352,6 +4353,94 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     return true;
   }
 
+  // Карта "идентификатор экрана → ID группы внутри #setup".
+  // По ней определяется, в какую группу возвращаться после паузы или
+  // из экрана настроек.
+  const SECTION_FOR_SCREEN = {
+    fantySetup:'twoPlayerView', game:'twoPlayerView',
+    photoSetup:'twoPlayerView', photoGame:'twoPlayerView',
+    ideasGame:'twoPlayerView',
+    davaySetup:'twoPlayerView', davayGame:'twoPlayerView', davayQuiz:'twoPlayerView',
+    bingoSetup:'twoPlayerView', bingoGame:'twoPlayerView',
+    timerSetup:'twoPlayerView', timerGame:'twoPlayerView',
+    truthDareSetup:'twoPlayerView', tdSetup:'twoPlayerView',
+    truthDareGame:'twoPlayerView', tdGame:'twoPlayerView',
+    quizSetup:'twoPlayerView', quizGame:'twoPlayerView',
+    wishlistSetup:'twoPlayerView', wishlistGame:'twoPlayerView',
+    desireSetup:'twoPlayerView', desireGame:'twoPlayerView',
+    znayuSetup:'twoPlayerView', znayuGame:'twoPlayerView',
+    sexQuestSetup:'twoPlayerView', sexQuestGame:'twoPlayerView',
+    shopSetup:'twoPlayerView', videoGame:'twoPlayerView',
+    partyFantsSetup:'companyView', partyFantsGame:'companyView',
+    partyTdSetup:'companyView', partyTdGame:'companyView',
+    partyQuizSetup:'companyView', partyQuizGame:'companyView',
+    krokodilSetup:'companyView', krokodilGame:'companyView',
+    twisterSetup:'companyView', twisterGame:'companyView',
+    partyHangmanSetup:'companyView', partyHangmanGame:'companyView',
+    partyRouletteSetup:'companyView', partyRouletteGame:'companyView',
+    partyNeverSetup:'companyView', partyNeverGame:'companyView',
+    partyMemesSetup:'companyView', partyMemesGame:'companyView',
+    famZnayuSetup:'companyView', famZnayuGame:'companyView',
+    luckySetup:'companyView', luckyGame:'companyView',
+    kidsMemorySetup:'kidsView', kidsMemoryGame:'kidsView',
+    kidsQuizSetup:'kidsView', kidsQuizGame:'kidsView',
+    kidsTdSetup:'kidsView', kidsTdGame:'kidsView', kidsTdChoice:'kidsView',
+    kidsSaperSetup:'kidsView', kidsSaperGame:'kidsView',
+    kidsXoSetup:'kidsView', kidsXoGame:'kidsView',
+    kidsBattleshipSetup:'kidsView', kidsBattleshipGame:'kidsView',
+    kidsKrokodilSetup:'kidsView', kidsKrokodilGame:'kidsView',
+    kidsMemesSetup:'kidsView', kidsMemesGame:'kidsView',
+    kidsFlashSetup:'kidsView', kidsFlashGame:'kidsView',
+    kidsWhatToPlay:'kidsView',
+    soloMemorySetup:'soloView', soloMemoryGame:'soloView',
+    soloQuizSetup:'soloView', soloQuizGame:'soloView',
+    soloXoSetup:'soloView', soloXoGame:'soloView',
+    soloBsSetup:'soloView', soloBsGame:'soloView',
+    soloBattleshipSetup:'soloView', soloBattleshipGame:'soloView',
+    whatToPlayGame:'soloView',
+    businessLemonadeSetup:'businessView', businessLemonadeGame:'businessView',
+    bizObsSetup:'businessView', bizObsGame:'businessView',
+    flashSetup:'learningView', flashGame:'learningView',
+  };
+  // Экраны настроек (не запущенной партии) — для них "Назад" возвращает в
+  // группу БЕЗ открытия меню паузы.
+  const SETUP_ONLY_SCREENS = new Set([
+    'fantySetup','photoSetup','bingoSetup','timerSetup','truthDareSetup','tdSetup',
+    'quizSetup','wishlistSetup','desireSetup','znayuSetup','sexQuestSetup','shopSetup',
+    'davaySetup','ideasGame',
+    'partyFantsSetup','partyTdSetup','partyQuizSetup','krokodilSetup','twisterSetup',
+    'partyHangmanSetup','partyRouletteSetup','partyNeverSetup','partyMemesSetup',
+    'famZnayuSetup','luckySetup',
+    'kidsMemorySetup','kidsQuizSetup','kidsTdSetup','kidsSaperSetup','kidsXoSetup',
+    'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','kidsFlashSetup',
+    'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBsSetup','soloBattleshipSetup',
+    'businessLemonadeSetup','bizObsSetup','flashSetup',
+  ]);
+  function sectionForScreenId(sid){
+    if(SECTION_FOR_SCREEN[sid]) return SECTION_FOR_SCREEN[sid];
+    if(sid.includes('Saper')) return 'kidsView';
+    if(sid.includes('Memory')) return sid.includes('Solo') ? 'soloView' : 'kidsView';
+    if(sid.includes('Flash')) return sid.includes('Kids') ? 'kidsView' : 'learningView';
+    if(sid.includes('Krokodil')) return sid.includes('Kids') ? 'kidsView' : 'companyView';
+    if(sid.includes('Memes')) return sid.includes('Kids') ? 'kidsView' : 'companyView';
+    if(sid.includes('Xo') || sid.includes('Battleship') || sid.includes('Bs')) return 'soloView';
+    if(sid.includes('Quiz')) return sid.includes('Kids') ? 'kidsView' : (sid.includes('Party') ? 'companyView' : 'twoPlayerView');
+    if(sid.includes('Td') || sid.includes('TruthDare')) return sid.includes('Kids') ? 'kidsView' : (sid.includes('Party') ? 'companyView' : 'twoPlayerView');
+    if(sid.includes('Fants')) return sid.includes('Party') ? 'companyView' : 'twoPlayerView';
+    if(sid.includes('Znayu')) return sid.includes('Fam') ? 'companyView' : 'twoPlayerView';
+    if(sid.includes('Lucky') || sid.includes('Hangman') || sid.includes('Twister') || sid.includes('Roulette') || sid.includes('Never')) return 'companyView';
+    if(sid.includes('Business') || sid.includes('bizObs')) return 'businessView';
+    if(sid.includes('What') || sid.includes('whatToPlay')) return 'soloView';
+    return 'twoPlayerView';
+  }
+  function returnToGroup(sectionId){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const setup = document.getElementById('setup');
+    if(setup) setup.classList.add('active');
+    if(typeof showSetupView === 'function') showSetupView(sectionId);
+    window.scrollTo(0, 0);
+  }
+
   backBtn.addEventListener('click', ()=>{
     // Закрываем глобальное меню если открыто
     const menuModal = document.getElementById('globalMenuModal');
@@ -4365,15 +4454,22 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     const summaryModal = document.getElementById('summaryModal');
     if(summaryModal && summaryModal.classList.contains('show')){
       summaryModal.classList.remove('show');
+      if(typeof state !== 'undefined'){
+        state.inProgress = false;
+        state.pausedMode = null;
+        const lastSection = state.lastSectionOnPause || 'homeView';
+        state.lastSectionOnPause = null;
+        if(lastSection !== 'homeView'){
+          returnToGroup(lastSection);
+          if(typeof updateResumeUI === 'function') updateResumeUI();
+          return;
+        }
+      }
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
       const setup = document.getElementById('setup');
       if(setup) setup.classList.add('active');
       if(typeof showSetupView === 'function') showSetupView('homeView');
       window.scrollTo(0, 0);
-      if(typeof state !== 'undefined'){
-        state.inProgress = false;
-        state.pausedMode = null;
-      }
       if(typeof updateResumeUI === 'function') updateResumeUI();
       return;
     }
@@ -4398,20 +4494,32 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     // 3. В игре — если пауза показана, выходим полностью
     if(isPauseShown){
       if(pauseModal) pauseModal.classList.remove('show');
-      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-      if(setup) setup.classList.add('active');
-      if(typeof showSetupView === 'function') showSetupView('homeView');
-      window.scrollTo(0, 0);
+      const lastSection = (typeof state !== 'undefined' && state.lastSectionOnPause) ? state.lastSectionOnPause : 'homeView';
       if(typeof state !== 'undefined'){
         state.inProgress = false;
         state.pausedMode = null;
+        state.lastSectionOnPause = null;
       }
+      returnToGroup(lastSection);
       if(typeof updateResumeUI === 'function') updateResumeUI();
       return;
     }
 
-    // 4. Игра активна — ставим на паузу через ФУНКЦИЮ ИГРЫ
+    // 4. Определяем активный экран(ы)
     const screenIds = getActiveGameScreenIds();
+    if(screenIds.length === 0) return;
+    const onlySetupScreen = screenIds.every(sid => SETUP_ONLY_SCREENS.has(sid));
+    if(onlySetupScreen){
+      const sectionId = sectionForScreenId(screenIds[0]);
+      returnToGroup(sectionId);
+      return;
+    }
+    const mainScreenId = screenIds.includes('game') ? 'game' : screenIds[0];
+    const sectionId = sectionForScreenId(mainScreenId);
+    if(typeof state !== 'undefined'){
+      state.lastSectionOnPause = sectionId;
+      saveState();
+    }
     const PAUSE_MAP = {
       game: 'pauseGame',
       bingoGame: 'pauseBingoGame',
