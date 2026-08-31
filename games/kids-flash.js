@@ -278,9 +278,7 @@ function pickEnglishVoice(){
   return en[0] || voices[0] || null;
 }
 function stopFlashSpeech(){
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  const hint = document.getElementById('flashTtsHint');
-  if(hint) hint.classList.remove('speaking');
+  stopSpeech('flashTtsHint');
 }
 function speakFlashWord(){
   if(!flashCurrentCard || isFlashTimeCard(flashCurrentCard) || !('speechSynthesis' in window)) return;

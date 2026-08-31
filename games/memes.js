@@ -85,9 +85,7 @@ function pickMemesFemaleVoice(){
   return female || pool[0] || null;
 }
 function stopMemesSpeech(){
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  const hint = document.getElementById('memesTtsHint');
-  if(hint) hint.classList.remove('speaking');
+  stopSpeech('memesTtsHint');
 }
 // Синтезатор речи озвучивает символы кавычек (« » " " ' и т.п.) отдельным
 // словом ("кавычки"), что режет слух — для самой озвучки убираем их из

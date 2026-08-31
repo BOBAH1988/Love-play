@@ -64,9 +64,7 @@ function pickKidsMemesFemaleVoice(){
   return female || pool[0] || null;
 }
 function stopKidsMemesSpeech(){
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  const hint = document.getElementById('kidsMemesTtsHint');
-  if(hint) hint.classList.remove('speaking');
+  stopSpeech('kidsMemesTtsHint');
 }
 function speakKidsMemesCard(){
   if(!kidsMemesCurrentCard || !('speechSynthesis' in window)) return;

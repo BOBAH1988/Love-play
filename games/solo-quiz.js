@@ -255,9 +255,7 @@ function pickSoloQuizVoice(){
   return female || pool[0] || null;
 }
 function stopSoloQuizSpeech(){
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  const hint = document.getElementById('soloQuizTtsHint');
-  if(hint) hint.classList.remove('speaking');
+  stopSpeech('soloQuizTtsHint');
 }
 function speakSoloQuizCard(){
   const item = state.soloQuizQueue && state.soloQuizQueue[state.soloQuizIndex];

@@ -658,6 +658,18 @@ function showToast(msg, duration){
   clearTimeout(showToast._tm);
   showToast._tm = setTimeout(()=>t.classList.remove('show'), duration || 1800);
 }
+
+/* ============ УНИВЕРСАЛЬНАЯ ОСТАНОВКА РЕЧИ (TTS) ============ */
+// Все stopXxxSpeech() были идентичными обёртками над speechSynthesis.cancel()
+// + снятием класса .speaking с hint-элемента. Теперь одна функция на всех.
+// hintId — id элемента с подсказкой TTS (опционально).
+function stopSpeech(hintId){
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  if(hintId){
+    const hint = document.getElementById(hintId);
+    if(hint) hint.classList.remove('speaking');
+  }
+}
 // Правило для «Только избранное»: либо 10+ карточек на двоих, либо минимум по 5 карточек,
 // доступных каждому партнёру отдельно (общая карточка засчитывается обоим).
 function favoritesEligibility(){
