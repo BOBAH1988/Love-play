@@ -169,7 +169,6 @@ function showKidsQuizHandoffCard(){
   });
   updateKidsQuizScoreUI();
   updateKidsQuizProgressBar();
-  updateKidsQuizAutoSpeakBtn();
 }
 function showKidsQuizQuestion(){
   stopKidsQuizInterval();
@@ -212,8 +211,7 @@ function showKidsQuizQuestion(){
   updateKidsQuizBar(kidsQuizDurationMs, kidsQuizDurationMs);
   updateKidsQuizScoreUI();
   updateKidsQuizProgressBar();
-  updateKidsQuizAutoSpeakBtn();
-  if(state.kidsQuizAutoSpeak) speakKidsQuizCard();
+  if(state.autoSpeak) speakKidsQuizCard();
   kidsQuizIntervalId = setInterval(kidsQuizTick, 100);
 }
 function kidsQuizTick(){
@@ -431,18 +429,6 @@ function speakKidsQuizCard(){
     fire();
   }
 }
-function updateKidsQuizAutoSpeakBtn(){
-  const btn = document.getElementById('kidsQuizAutoSpeakBtn');
-  if(!btn) return;
-  btn.classList.toggle('on', !!state.kidsQuizAutoSpeak);
-}
-document.getElementById('kidsQuizAutoSpeakBtn').addEventListener('click', ()=>{
-  state.kidsQuizAutoSpeak = !state.kidsQuizAutoSpeak;
-  saveState();
-  updateKidsQuizAutoSpeakBtn();
-  playSuccessSound();
-  if(state.kidsQuizAutoSpeak && kidsQuizShowingQuestion) speakKidsQuizCard();
-});
 document.getElementById('kidsQuizCard').addEventListener('click', (e)=>{
   if(e.target.closest('.znayu-answer-btn')) return;
   if(!kidsQuizShowingQuestion) return;

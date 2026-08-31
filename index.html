@@ -1779,18 +1779,7 @@
     pointer-events:none;
   }
   .quiz-tts-hint.speaking{opacity:.9;}
-  /* Кнопка автоозвучки вопросов "Викторины" — рядом с "Паузой", включает
-     проговаривание каждого нового вопроса голосом сразу при показе, без
-     тапа по карточке (см. quizAutoSpeakBtn/speakQuizCard в games/quiz.js). */
-  .quiz-pause-row{ display:flex; gap:8px; align-items:stretch; margin-top:10px; }
-  .quiz-pause-row .btn-pause{ flex:1; margin-top:0; }
-  .quiz-pause-row .quiz-autospeak-btn{
-    flex:0 0 72px; width:72px; padding:0; font-size:34px;
-    display:flex; align-items:center; justify-content:center; line-height:1;
-  }
-  .quiz-pause-row .quiz-autospeak-btn.on{
-    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
-  }
+  /* Кнопка автоозвучки вопросов "Викторины" — удалена, управление перенесено в меню. */
   .modal-pagination{display:flex; align-items:center; justify-content:center; gap:16px; margin:2px 0 18px;}
   .modal-pagination .modal-pagination-btn{flex:0 0 auto; width:44px; height:40px; padding:0; font-size:16px;}
   .modal-pagination-label{font-size:13px; color:#5c3a52; min-width:56px; text-align:center;}
@@ -2119,29 +2108,7 @@
   .timer-actions-top #whatToPlayFavBtn{
     flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:22px;
   }
-  /* Автоозвучка "Мемасиков" — та же кнопка-плеер, что и у "Викторины"
-     (games/memes.js, games/kids-memes.js), только квадратной иконкой в общем
-     ряду с "Далее"/"Скрыть", а не отдельной строкой у "Паузы". "Скрыть" —
-     та же квадратная иконка без текста, минимальной ширины. */
-   .timer-actions-top #memesAutoSpeakBtn,
-   .timer-actions-top #kidsMemesAutoSpeakBtn,
-   .timer-actions-top #memesHideBtn,
-   .timer-actions-top #kidsMemesHideBtn{
-     flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:26px;
-     display:flex; align-items:center; justify-content:center; line-height:1;
-   }
-   /* Автоозвучка "Флеш карт" переехала в скрытую строку "Дополнительно" — та же
-      квадратная кнопка-плеер, теперь часть ряда #flashExtraRow. */
-   .timer-actions-extra-row #flashAutoSpeakBtn,
-   .timer-actions-bottom #flashAutoSpeakBtn{
-     flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:26px;
-     display:flex; align-items:center; justify-content:center; line-height:1;
-   }
-   .timer-actions-top #memesAutoSpeakBtn.on,
-   .timer-actions-top #kidsMemesAutoSpeakBtn.on,
-   .timer-actions-extra-row #flashAutoSpeakBtn.on{
-     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
-   }
+  /* Автоозвучка "Мемасиков" и "Флеш карт" удалена, управление перенесено в меню. */
    /* "Дополнительно" в "Флеш картах": сворачиваемая строка с автоозвучкой,
       правилами и выходом под кнопкой-переключателем. */
    .timer-actions-extra{display:flex; flex-direction:column; gap:8px;}
@@ -2273,8 +2240,9 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title">⚙️ Меню <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button></div>
       <div class="menu-list">
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn"><span class="menu-icon">🔊</span><span id="menuMuteText">Звук включён</span></button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuUpdateBtn"><span class="menu-icon">🔄</span>Обновить приложение</button>
+         <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn"><span class="menu-icon">🔊</span><span id="menuMuteText">Звук включён</span></button>
+         <button type="button" class="btn btn-secondary btn-menu-item" id="menuAutoSpeakBtn"><span class="menu-icon">🔊</span><span id="menuAutoSpeakText">Автовоспроизведение включено</span></button>
+         <button type="button" class="btn btn-secondary btn-menu-item" id="menuUpdateBtn"><span class="menu-icon">🔄</span>Обновить приложение</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuInstallBtn"><span class="menu-icon">📲</span>Установить приложение</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon">📖</span>Правила игр</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑️</span>Сброс настроек</button>
@@ -2695,7 +2663,6 @@
     </div>
     <div class="quiz-pause-row">
       <button type="button" class="btn btn-secondary btn-pause" id="kidsQuizExitBtn">Пауза</button>
-      <button type="button" class="btn btn-secondary quiz-autospeak-btn" id="kidsQuizAutoSpeakBtn" aria-label="Автоозвучка вопросов">▶️</button>
     </div>
   </section>
 
@@ -3132,7 +3099,6 @@
       <div class="timer-actions-top">
         <button type="button" class="btn btn-primary" id="kidsMemesNextBtn">Далее</button>
         <button type="button" class="btn btn-secondary" id="kidsMemesHideBtn" aria-label="Скрыть">🚫</button>
-        <button type="button" class="btn btn-secondary" id="kidsMemesAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary btn-pause" id="kidsMemesExitBtn">Выход</button>
@@ -3215,14 +3181,13 @@
          <button type="button" class="btn btn-primary" id="flashNextBtn">Далее</button>
          <button type="button" class="btn btn-secondary" id="flashAnswerBtn">Ответ</button>
        </div>
-       <!-- Скрытая строка "Дополнительно": автоозвучка (перед правилами) + правила + выход. -->
-    <div class="timer-actions-extra" style="margin-top:10px;">
-         <button type="button" class="btn btn-secondary toggle-pill more-pill" id="flashMoreBtn" aria-expanded="false">Дополнительно ▼</button>
-         <div class="timer-actions-extra-row" id="flashExtraRow" style="display:none;">
-           <button type="button" class="btn btn-secondary" id="flashAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
-           <button type="button" class="btn btn-secondary btn-pause" id="flashExitBtn">Выход</button>
-         </div>
-       </div>
+        <!-- Скрытая строка "Дополнительно": правила и выход под кнопкой-переключателем. -->
+        <div class="timer-actions-extra" style="margin-top:10px;">
+          <button type="button" class="btn btn-secondary toggle-pill more-pill" id="flashMoreBtn" aria-expanded="false">Дополнительно ▼</button>
+          <div class="timer-actions-extra-row" id="flashExtraRow" style="display:none;">
+            <button type="button" class="btn btn-secondary btn-pause" id="flashExitBtn">Выход</button>
+          </div>
+        </div>
      </div>
   </section>
 
@@ -4240,7 +4205,6 @@
       <div class="timer-actions-top">
         <button type="button" class="btn btn-primary" id="memesNextBtn">Далее</button>
         <button type="button" class="btn btn-secondary" id="memesHideBtn" aria-label="Скрыть">🚫</button>
-        <button type="button" class="btn btn-secondary" id="memesAutoSpeakBtn" aria-label="Автоозвучка">▶️</button>
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary btn-pause" id="memesExitBtn">Выход</button>
@@ -4617,7 +4581,6 @@
     </div>
     <div class="quiz-pause-row">
       <button type="button" class="btn btn-secondary btn-pause" id="partyQuizExitBtn">Пауза</button>
-      <button type="button" class="btn btn-secondary quiz-autospeak-btn" id="partyQuizAutoSpeakBtn" aria-label="Автоозвучка вопросов">▶️</button>
     </div>
   </section>
 
@@ -4747,7 +4710,6 @@
 
     <div class="quiz-pause-row">
       <button type="button" class="btn btn-secondary btn-pause" id="soloQuizExitBtn">Выход</button>
-      <button type="button" class="btn btn-secondary quiz-autospeak-btn" id="soloQuizAutoSpeakBtn" aria-label="Автоозвучка вопросов">▶️</button>
     </div>
   </section>
 
@@ -5139,7 +5101,6 @@
     </div>
     <div class="quiz-pause-row">
       <button type="button" class="btn btn-secondary btn-pause" id="quizExitBtn">Пауза</button>
-      <button type="button" class="btn btn-secondary quiz-autospeak-btn" id="quizAutoSpeakBtn" aria-label="Автоозвучка вопросов">▶️</button>
     </div>
   </section>
 

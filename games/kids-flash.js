@@ -220,10 +220,9 @@ function drawFlashCard(){
     }
   }, ()=>{
     // onDone
-    updateFlashAutoSpeakBtn();
     updateFlashAnswerBtn();
     updateFlashTimeOptionsState();
-    if(state.flashAutoSpeak && !isTime) speakFlashWord();
+    if(state.autoSpeak && !isTime) speakFlashWord();
   });
 }
 // "Ответ" — только в режиме "Повторение": транскрипция и перевод скрыты по
@@ -340,20 +339,6 @@ document.getElementById('flashCard').addEventListener('click', (e)=>{
   if(!isFlashTimeCard(flashCurrentCard)){
     speakFlashWord();
   }
-});
-function updateFlashAutoSpeakBtn(){
-  const btn = document.getElementById('flashAutoSpeakBtn');
-  if(!btn) return;
-  const isTime = isFlashTimeCard(flashCurrentCard);
-  btn.style.display = isTime ? 'none' : '';
-  btn.classList.toggle('on', !!state.flashAutoSpeak);
-}
-document.getElementById('flashAutoSpeakBtn').addEventListener('click', ()=>{
-  state.flashAutoSpeak = !state.flashAutoSpeak;
-  saveState();
-  updateFlashAutoSpeakBtn();
-  playSuccessSound();
-  if(state.flashAutoSpeak && !isFlashTimeCard(flashCurrentCard)) speakFlashWord();
 });
 document.getElementById('flashAnswerBtn').addEventListener('click', ()=>{
   playSuccessSound();

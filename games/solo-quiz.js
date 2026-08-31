@@ -174,8 +174,7 @@ function showSoloQuizQuestion(){
   updateSoloQuizBar(soloQuizDurationMs, soloQuizDurationMs);
   updateSoloQuizScoreUI();
   updateSoloQuizProgressBar();
-  updateSoloQuizAutoSpeakBtn();
-  if(state.soloQuizAutoSpeak) speakSoloQuizCard();
+  if(state.autoSpeak) speakSoloQuizCard();
   soloQuizIntervalId = setInterval(soloQuizTick, 100);
 }
 function soloQuizTick(){
@@ -292,18 +291,6 @@ function speakSoloQuizCard(){
     fire();
   }
 }
-function updateSoloQuizAutoSpeakBtn(){
-  const btn = document.getElementById('soloQuizAutoSpeakBtn');
-  if(!btn) return;
-  btn.classList.toggle('on', !!state.soloQuizAutoSpeak);
-}
-document.getElementById('soloQuizAutoSpeakBtn').addEventListener('click', ()=>{
-  state.soloQuizAutoSpeak = !state.soloQuizAutoSpeak;
-  saveState();
-  updateSoloQuizAutoSpeakBtn();
-  playSuccessSound();
-  if(state.soloQuizAutoSpeak && soloQuizShowingQuestion) speakSoloQuizCard();
-});
 document.getElementById('soloQuizCard').addEventListener('click', (e)=>{
   if(e.target.closest('.znayu-answer-btn')) return;
   if(!soloQuizShowingQuestion) return;

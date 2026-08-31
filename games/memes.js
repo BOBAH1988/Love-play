@@ -66,8 +66,7 @@ function drawMemesCard(){
   }, ()=>{
     // onDone — карточка уже реально отрисована (fadeSwapEl может отложить
     // перерисовку на 220мс), только теперь в DOM точно есть #memesTtsHint.
-    updateMemesAutoSpeakBtn();
-    if(state.memesAutoSpeak) speakMemesCard();
+    if(state.autoSpeak) speakMemesCard();
   });
 }
 // ===== Озвучка карточки "Мемасики" (по тапу на карточку) =====
@@ -127,18 +126,6 @@ function speakMemesCard(){
 }
 document.getElementById('memesCard').addEventListener('click', ()=>{
   speakMemesCard();
-});
-function updateMemesAutoSpeakBtn(){
-  const btn = document.getElementById('memesAutoSpeakBtn');
-  if(!btn) return;
-  btn.classList.toggle('on', !!state.memesAutoSpeak);
-}
-document.getElementById('memesAutoSpeakBtn').addEventListener('click', ()=>{
-  state.memesAutoSpeak = !state.memesAutoSpeak;
-  saveState();
-  updateMemesAutoSpeakBtn();
-  playSuccessSound();
-  if(state.memesAutoSpeak) speakMemesCard();
 });
 function goToMemesGame(){
   document.getElementById('memesSetup').classList.remove('active');

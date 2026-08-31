@@ -21,7 +21,7 @@ let state = {
   currentPlayer:1, score1:0, score2:0,
   levelTurnCounts:{1:0, 2:0}, pendingLevelUp:false,
   levelCap:3, usedIndexes:[], hiddenIndexes:[],
-  muted:false, inProgress:false, completedCount:0, skippedCount:0,
+  muted:false, autoSpeak:true, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
   photoOrderMode:false, photoSeqIndex:{},
@@ -233,6 +233,11 @@ function loadState(){
       if(localStorage.getItem('couple-game-flash-migrated-v1') !== '1'){
         state.flashAutoSpeak = true;
         localStorage.setItem('couple-game-flash-migrated-v1','1');
+        saveState();
+      }
+      if(localStorage.getItem('couple-game-autospeak-migrated-v1') !== '1'){
+        state.autoSpeak = true;
+        localStorage.setItem('couple-game-autospeak-migrated-v1','1');
         saveState();
       }
     }
@@ -1541,6 +1546,10 @@ function updateMuteBtn(){
   }
   const menuMuteText = document.getElementById('menuMuteText');
   if(menuMuteText) menuMuteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
+}
+function updateAutoSpeakBtn(){
+  const text = document.getElementById('menuAutoSpeakText');
+  if(text) text.textContent = state.autoSpeak ? 'Автовоспроизведение включено' : 'Автовоспроизведение выключено';
 }
 document.getElementById('muteBtn').addEventListener('click', ()=>{
   state.muted = !state.muted;
@@ -4124,6 +4133,12 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     updateMuteBtn();
     const muteText = document.getElementById('menuMuteText');
     if(muteText) muteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
+  });
+  document.getElementById('menuAutoSpeakBtn').addEventListener('click', ()=>{
+    state.autoSpeak = !state.autoSpeak;
+    saveState();
+    updateAutoSpeakBtn();
+    playSuccessSound();
   });
   document.getElementById('menuExportBtn').addEventListener('click', ()=>{
     closeMenu();

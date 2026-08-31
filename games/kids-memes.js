@@ -52,8 +52,7 @@ function drawKidsMemesCard(){
   }, ()=>{
     // onDone — карточка уже реально отрисована (fadeSwapEl может отложить
     // перерисовку на 220мс), только теперь в DOM точно есть #kidsMemesTtsHint.
-    updateKidsMemesAutoSpeakBtn();
-    if(state.kidsMemesAutoSpeak) speakKidsMemesCard();
+    if(state.autoSpeak) speakKidsMemesCard();
   });
 }
 function pickKidsMemesFemaleVoice(){
@@ -101,18 +100,6 @@ function speakKidsMemesCard(){
 }
 document.getElementById('kidsMemesCard').addEventListener('click', ()=>{
   speakKidsMemesCard();
-});
-function updateKidsMemesAutoSpeakBtn(){
-  const btn = document.getElementById('kidsMemesAutoSpeakBtn');
-  if(!btn) return;
-  btn.classList.toggle('on', !!state.kidsMemesAutoSpeak);
-}
-document.getElementById('kidsMemesAutoSpeakBtn').addEventListener('click', ()=>{
-  state.kidsMemesAutoSpeak = !state.kidsMemesAutoSpeak;
-  saveState();
-  updateKidsMemesAutoSpeakBtn();
-  playSuccessSound();
-  if(state.kidsMemesAutoSpeak) speakKidsMemesCard();
 });
 function goToKidsMemesGame(){
   document.getElementById('kidsMemesSetup').classList.remove('active');
