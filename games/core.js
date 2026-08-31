@@ -887,7 +887,7 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
   state.levelCap = getSortedActiveLevels()[0];
   state.inProgress = true;
   saveState();
-  goToGame();
+  resumeFantyGame();
 });
 document.getElementById('videoExtraToggle').addEventListener('click', ()=>{
   document.querySelector('.controls').classList.toggle('video-extra-open');
@@ -1178,7 +1178,7 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
     resumeKidsSaperGame();
     return;
   }
-  goToGame();
+  resumeFantyGame();
 });
 
 
@@ -1454,7 +1454,7 @@ function drawFromPool(forceLevel){
 }
 
 /* ============ GAME SCREEN ============ */
-function goToGame(){
+function resumeFantyGame(){
   abandonPausedSession('davay');
   abandonPausedSession('td');
   abandonPausedSession('bingo');
@@ -1478,7 +1478,7 @@ function goToGame(){
   // — это возврат в СВОЮ же игру после паузы, а не "чужая" сессия), и здесь
   // же нужно закрыть глобальную модалку паузы (см. правку с пропавшими
   // кнопками паузы у базовых "Фантов" — раньше модалка не была скрыта
-  // при resume, потому что goToGame() не вызывал updateResumeUI()).
+  // при resume, потому что resumeFantyGame() не вызывал updateResumeUI()).
   state.pausedMode = null;
   state.inProgress = true;
   saveState();
