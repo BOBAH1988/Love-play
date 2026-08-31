@@ -81,7 +81,7 @@ function exitSoloQuizSetup(){
   document.getElementById('setup').classList.add('active');
 }
 function stopSoloQuizInterval(){
-  if(soloQuizIntervalId){ clearInterval(soloQuizIntervalId); soloQuizIntervalId = null; }
+  soloQuizIntervalId = stopInterval(soloQuizIntervalId);
 }
 function updateSoloQuizScoreUI(){
   const el = document.getElementById('soloQuizScoreRow');

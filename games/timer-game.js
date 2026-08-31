@@ -97,7 +97,7 @@ function exitTimerSetup(){
   document.getElementById('setup').classList.add('active');
 }
 function stopMtInterval(){
-  if(mtIntervalId){ clearInterval(mtIntervalId); mtIntervalId = null; }
+  mtIntervalId = stopInterval(mtIntervalId);
   mtRunning = false;
 }
 function updateMtBar(){

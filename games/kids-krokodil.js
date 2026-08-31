@@ -76,7 +76,7 @@ function exitKidsKrokodilSetup(){
   showSetupView('kidsView');
 }
 function stopKkrInterval(){
-  if(kkrIntervalId){ clearInterval(kkrIntervalId); kkrIntervalId = null; }
+  kkrIntervalId = stopInterval(kkrIntervalId);
 }
 function updateKkrBar(){
   const fill = document.getElementById('kidsKrokodilBarFill');

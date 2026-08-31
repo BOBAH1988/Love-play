@@ -79,7 +79,7 @@ function updateSoloMemoryTimerLabel(){
   el.textContent = `⏱️ ${fmtSoloMemoryTime(elapsed)}`;
 }
 function stopSoloMemoryTimer(){
-  if(soloMemoryTimerId){ clearInterval(soloMemoryTimerId); soloMemoryTimerId = null; }
+  soloMemoryTimerId = stopInterval(soloMemoryTimerId);
 }
 function startSoloMemoryTimer(){
   stopSoloMemoryTimer();

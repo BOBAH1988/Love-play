@@ -78,7 +78,7 @@ function kidsQuizPlayersList(){
   return state.kidsPlayers;
 }
 function stopKidsQuizInterval(){
-  if(kidsQuizIntervalId){ clearInterval(kidsQuizIntervalId); kidsQuizIntervalId = null; }
+  kidsQuizIntervalId = stopInterval(kidsQuizIntervalId);
 }
 function updateKidsQuizScoreUI(){
   const players = kidsQuizPlayersList();

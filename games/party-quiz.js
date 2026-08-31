@@ -79,7 +79,7 @@ function partyQuizPlayersList(){
   return state.partyPlayers;
 }
 function stopPartyQuizInterval(){
-  if(partyQuizIntervalId){ clearInterval(partyQuizIntervalId); partyQuizIntervalId = null; }
+  partyQuizIntervalId = stopInterval(partyQuizIntervalId);
 }
 function updatePartyQuizScoreUI(){
   const players = partyQuizPlayersList();

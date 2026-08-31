@@ -29,7 +29,7 @@ let twisterRunning = false;
 let twisterStarted = false;
 
 function stopTwisterInterval(){
-  if(twisterIntervalId){ clearInterval(twisterIntervalId); twisterIntervalId = null; }
+  twisterIntervalId = stopInterval(twisterIntervalId);
   twisterRunning = false;
 }
 

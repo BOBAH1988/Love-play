@@ -91,7 +91,7 @@ function quizPlayersList(){
   return [state.name1 || 'Игрок 1', state.name2 || 'Игрок 2'];
 }
 function stopQuizInterval(){
-  if(quizIntervalId){ clearInterval(quizIntervalId); quizIntervalId = null; }
+  quizIntervalId = stopInterval(quizIntervalId);
 }
 function updateQuizScoreUI(){
   const players = quizPlayersList();

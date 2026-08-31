@@ -151,7 +151,7 @@ function exitKrokodilSetup(){
   showSetupView('companyView');
 }
 function stopKrInterval(){
-  if(krIntervalId){ clearInterval(krIntervalId); krIntervalId = null; }
+  krIntervalId = stopInterval(krIntervalId);
 }
 function updateKrBar(){
   const fill = document.getElementById('krokodilBarFill');
