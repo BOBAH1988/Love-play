@@ -470,6 +470,6 @@ populateNewCardLevelSelect();
 try{
   if(sessionStorage.getItem('appJustUpdated')){
     sessionStorage.removeItem('appJustUpdated');
-    setTimeout(()=>showToast('У вас последняя версия'), 400);
+    setTimeout(()=>showToast('Обновлено до последней версии'), 400);
   }
 }catch(e){}
