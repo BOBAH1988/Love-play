@@ -348,18 +348,18 @@ function showFamZnayuSummaryModal(){
   showModal('famZnayuSummaryModal');
 }
 function goToFamZnayuGame(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedLuckySession();
-  abandonPausedFantySession();
-  abandonPausedSoloBsSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('lucky');
+  abandonPausedSession('fanty');
+  abandonPausedSession('soloBs');
   state.pausedMode = null;
   syncFamZnayuFamiliesArray();
   state.famZnayuCurrentFamilyIndex = 0;

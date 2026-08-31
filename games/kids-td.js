@@ -110,20 +110,20 @@ function kidsTdNextTurn(){
   updateKidsTdScoreUI();
 }
 function goToKidsTdGame(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedLuckySession();
-  abandonPausedFantySession();
-  abandonPausedKidsMemorySession();
-  abandonPausedSoloBsSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('fanty');
+  abandonPausedSession('kidsMemory');
+  abandonPausedSession('soloBs');
   state.pausedMode = null;
   if(!state.kidsPlayers || state.kidsPlayers.length < 2){
     state.kidsPlayers = ['Игрок 1','Игрок 2'];

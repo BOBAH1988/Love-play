@@ -315,19 +315,19 @@ function renderBingoBonusChecklist(){
   });
 }
 function goToBingoGame(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedLuckySession();
-  abandonPausedFantySession();
-  abandonPausedSoloBsSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('fanty');
+  abandonPausedSession('soloBs');
   state.pausedMode = null;
   // Игра всегда начинается с уровня 1 (Нежное) — выбор уровня в настройке
   // убран, дальше карта повышает сложность сама по ходу игры.

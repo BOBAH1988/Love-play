@@ -906,116 +906,48 @@ function blockedByDavayPause(){
   showToast(`Сначала завершите ${label} — «Продолжить игру» или «Закончить игру»`);
   return true;
 }
+// Универсальная функция сброса паузы (все abandonPausedXxxSession() — алиасы)
+function abandonPausedSession(key){
+  if(state.pausedMode === key) state.pausedMode = null;
+}
 // Симметрично остальным abandonPausedXSession() — сбрасывает "чужую" паузу
 // базовой парной игры "Фанты" (через общую pauseGame()), если вдруг
 // начинается другая игра (страховка).
-function abandonPausedFantySession(){
-  if(state.pausedMode === 'fanty'){
-    state.pausedMode = null;
-  }
-}
-// Симметрично abandonPausedDavaySession() — сбрасывает "чужую" паузу
+function abandonPausedFantySession(){ abandonPausedSession('fanty'); }
+// Симметрично abandonPausedSession('davay') — сбрасывает "чужую" паузу
 // "Правда или действие", если вдруг начинается другая игра (страховка,
 // т.к. в обычном UI выбор игры скрыт, пока есть активная пауза).
-function abandonPausedTdSession(){
-  if(state.pausedMode === 'td'){
-    state.pausedMode = null;
-  }
-}
-// Симметрично abandonPausedTdSession() — сбрасывает "чужую" паузу
+function abandonPausedTdSession(){ abandonPausedSession('td'); }
+// Симметрично abandonPausedSession('td') — сбрасывает "чужую" паузу
 // "Секс-бинго", если вдруг начинается другая игра (страховка).
-function abandonPausedBingoSession(){
-  if(state.pausedMode === 'bingo'){
-    state.pausedMode = null;
-  }
-}
+function abandonPausedBingoSession(){ abandonPausedSession('bingo'); }
 // Симметрично остальным — сбрасывает "чужую" паузу «Крокодила» (страховка).
-function abandonPausedKrokodilSession(){
-  if(state.pausedMode === 'krokodil'){
-    state.pausedMode = null;
-  }
-}
+function abandonPausedKrokodilSession(){ abandonPausedSession('krokodil'); }
 // Симметрично остальным — сбрасывает "чужие" паузы «Твоих желаний»,
 // «Тайных ответов» и «Таймера страсти» (страховка).
-function abandonPausedWishlistSession(){
-  if(state.pausedMode === 'wishlist'){
-    state.pausedMode = null;
-  }
-}
-function abandonPausedZnayuSession(){
-  if(state.pausedMode === 'znayu'){
-    state.pausedMode = null;
-  }
-}
-function abandonPausedTimerSession(){
-  if(state.pausedMode === 'timer'){
-    state.pausedMode = null;
-  }
-}
-function abandonPausedPartyFantsSession(){
-  if(state.pausedMode === 'partyFants'){
-    state.pausedMode = null;
-  }
-}
-function abandonPausedPartyTdSession(){
-  if(state.pausedMode === 'partyTd'){
-    state.pausedMode = null;
-  }
-}
-function abandonPausedFamZnayuSession(){
-  if(state.pausedMode === 'famZnayu'){
-    state.pausedMode = null;
-  }
-}
-function abandonPausedLuckySession(){
-  if(state.pausedMode === 'lucky'){
-    state.pausedMode = null;
-  }
-}
+function abandonPausedWishlistSession(){ abandonPausedSession('wishlist'); }
+function abandonPausedZnayuSession(){ abandonPausedSession('znayu'); }
+function abandonPausedTimerSession(){ abandonPausedSession('timer'); }
+function abandonPausedPartyFantsSession(){ abandonPausedSession('partyFants'); }
+function abandonPausedPartyTdSession(){ abandonPausedSession('partyTd'); }
+function abandonPausedFamZnayuSession(){ abandonPausedSession('famZnayu'); }
+function abandonPausedLuckySession(){ abandonPausedSession('lucky'); }
 // Симметрично остальным — сбрасывает "чужую" паузу «Мемори» (страховка).
-function abandonPausedKidsMemorySession(){
-  if(state.pausedMode === 'kidsMemory'){
-    state.pausedMode = null;
-  }
-}
+function abandonPausedKidsMemorySession(){ abandonPausedSession('kidsMemory'); }
 // Симметрично остальным — сбрасывает "чужую" паузу «Правда/Действие» (дети).
-function abandonPausedKidsTdSession(){
-  if(state.pausedMode === 'kidsTd'){
-    state.pausedMode = null;
-  }
-}
+function abandonPausedKidsTdSession(){ abandonPausedSession('kidsTd'); }
 // Симметрично остальным — сбрасывает "чужие" паузы «Викторины» во всех трёх
 // разделах (пары/компания/дети) — каждый раздел хранит свою игру отдельно.
-function abandonPausedQuizSession(){
-  if(state.pausedMode === 'quiz'){
-    state.pausedMode = null;
-  }
-}
-function abandonPausedPartyQuizSession(){
-  if(state.pausedMode === 'partyQuiz'){
-    state.pausedMode = null;
-  }
-}
+function abandonPausedQuizSession(){ abandonPausedSession('quiz'); }
+function abandonPausedPartyQuizSession(){ abandonPausedSession('partyQuiz'); }
 // Симметрично остальным — сбрасывает "чужую" паузу «Викторины» (дети)
 // (страховка).
-function abandonPausedKidsQuizSession(){
-  if(state.pausedMode === 'kidsQuiz'){
-    state.pausedMode = null;
-  }
-}
+function abandonPausedKidsQuizSession(){ abandonPausedSession('kidsQuiz'); }
 // Симметрично остальным — сбрасывает "чужую" паузу «Морского боя (бот)»
 // (страховка).
-function abandonPausedSoloBsSession(){
-  if(state.pausedMode === 'soloBs'){
-    state.pausedMode = null;
-  }
-}
+function abandonPausedSoloBsSession(){ abandonPausedSession('soloBs'); }
 // Симметрично остальным — сбрасывает "чужую" паузу «Сапёра» (страховка).
-function abandonPausedKidsSaperSession(){
-  if(state.pausedMode === 'kidsSaper'){
-    state.pausedMode = null;
-  }
-}
+function abandonPausedKidsSaperSession(){ abandonPausedSession('kidsSaper'); }
 document.getElementById('gameFantyBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
@@ -1504,25 +1436,25 @@ function drawFromPool(forceLevel){
 
 /* ============ GAME SCREEN ============ */
 function goToGame(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedLuckySession();
-  abandonPausedKidsMemorySession();
-  abandonPausedKidsTdSession();
-  abandonPausedFantySession();
-  abandonPausedQuizSession();
-  abandonPausedPartyQuizSession();
-  abandonPausedKidsQuizSession();
-  abandonPausedSoloBsSession();
-  abandonPausedKidsSaperSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('kidsMemory');
+  abandonPausedSession('kidsTd');
+  abandonPausedSession('fanty');
+  abandonPausedSession('quiz');
+  abandonPausedSession('partyQuiz');
+  abandonPausedSession('kidsQuiz');
+  abandonPausedSession('soloBs');
+  abandonPausedSession('kidsSaper');
   // Своя пауза Фантов сбрасывается явно (не через abandonPausedFantySession
   // — это возврат в СВОЮ же игру после паузы, а не "чужая" сессия), и здесь
   // же нужно закрыть глобальную модалку паузы (см. правку с пропавшими
@@ -2654,25 +2586,25 @@ function renderVideoCard(card, level){
 }
 
 async function goToVideoGame(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedLuckySession();
-  abandonPausedKidsMemorySession();
-  abandonPausedKidsTdSession();
-  abandonPausedFantySession();
-  abandonPausedQuizSession();
-  abandonPausedPartyQuizSession();
-  abandonPausedKidsQuizSession();
-  abandonPausedSoloBsSession();
-  abandonPausedKidsSaperSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('kidsMemory');
+  abandonPausedSession('kidsTd');
+  abandonPausedSession('fanty');
+  abandonPausedSession('quiz');
+  abandonPausedSession('partyQuiz');
+  abandonPausedSession('kidsQuiz');
+  abandonPausedSession('soloBs');
+  abandonPausedSession('kidsSaper');
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -2736,25 +2668,25 @@ function pickVideoFavoritesStartLevel(){
 // избранного "Давай попробуем" (state.davayLiked), т.к. лайки ставятся по
 // каждой игре отдельно, хотя видео и берутся из одного каталога.
 async function goToVideoFavoritesView(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedLuckySession();
-  abandonPausedKidsMemorySession();
-  abandonPausedKidsTdSession();
-  abandonPausedFantySession();
-  abandonPausedQuizSession();
-  abandonPausedPartyQuizSession();
-  abandonPausedKidsQuizSession();
-  abandonPausedSoloBsSession();
-  abandonPausedKidsSaperSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('kidsMemory');
+  abandonPausedSession('kidsTd');
+  abandonPausedSession('fanty');
+  abandonPausedSession('quiz');
+  abandonPausedSession('partyQuiz');
+  abandonPausedSession('kidsQuiz');
+  abandonPausedSession('soloBs');
+  abandonPausedSession('kidsSaper');
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -3389,24 +3321,24 @@ function goToDavayFavoritesView(){
     showToast('Пока нет избранных видео — сначала пройдите игру');
     return;
   }
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedLuckySession();
-  abandonPausedKidsMemorySession();
-  abandonPausedKidsTdSession();
-  abandonPausedFantySession();
-  abandonPausedQuizSession();
-  abandonPausedPartyQuizSession();
-  abandonPausedKidsQuizSession();
-  abandonPausedSoloBsSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('kidsMemory');
+  abandonPausedSession('kidsTd');
+  abandonPausedSession('fanty');
+  abandonPausedSession('quiz');
+  abandonPausedSession('partyQuiz');
+  abandonPausedSession('kidsQuiz');
+  abandonPausedSession('soloBs');
   state.pausedMode = null;
   state.inProgress = true;
   davayLevel = (state.davaySelectedLevel || 3) - 2;
@@ -3557,7 +3489,7 @@ function resumeDavayGame(){
 
 // Полностью отменить незавершённую паузу "Давай попробуем" — используется,
 // если игрок вместо "Продолжить" запускает какую-то другую игру.
-function abandonPausedDavaySession(){
+function abandonPausedSession('davay'){
   if(state.pausedMode === 'davay'){
     state.pausedMode = null;
     state.davayUsed = {};
@@ -3572,25 +3504,25 @@ function abandonPausedDavaySession(){
 }
 
 function goToPlaceholderGame(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedLuckySession();
-  abandonPausedKidsMemorySession();
-  abandonPausedKidsTdSession();
-  abandonPausedFantySession();
-  abandonPausedQuizSession();
-  abandonPausedPartyQuizSession();
-  abandonPausedKidsQuizSession();
-  abandonPausedSoloBsSession();
-  abandonPausedKidsSaperSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('kidsMemory');
+  abandonPausedSession('kidsTd');
+  abandonPausedSession('fanty');
+  abandonPausedSession('quiz');
+  abandonPausedSession('partyQuiz');
+  abandonPausedSession('kidsQuiz');
+  abandonPausedSession('soloBs');
+  abandonPausedSession('kidsSaper');
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Men';
@@ -3657,24 +3589,24 @@ function goToPhotoFavoritesView(){
     showToast('Пока нет избранного — сначала отметьте карточки ❤️');
     return;
   }
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedLuckySession();
-  abandonPausedKidsMemorySession();
-  abandonPausedKidsTdSession();
-  abandonPausedFantySession();
-  abandonPausedQuizSession();
-  abandonPausedPartyQuizSession();
-  abandonPausedKidsQuizSession();
-  abandonPausedSoloBsSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('kidsMemory');
+  abandonPausedSession('kidsTd');
+  abandonPausedSession('fanty');
+  abandonPausedSession('quiz');
+  abandonPausedSession('partyQuiz');
+  abandonPausedSession('kidsQuiz');
+  abandonPausedSession('soloBs');
   state.pausedMode = null;
   state.inProgress = true;
   state.photoFavView = true;
@@ -4129,7 +4061,7 @@ document.getElementById('pauseBtn').addEventListener('click', ()=>{
 document.getElementById('finishGameBtn').addEventListener('click', ()=>{
   if(state.pausedMode === 'davay'){
     state.inProgress = false;
-    abandonPausedDavaySession();
+    abandonPausedSession('davay');
     saveState();
     updateResumeUI();
     showToast('Игра завершена');

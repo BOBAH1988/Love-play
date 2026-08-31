@@ -172,20 +172,20 @@ function showKidsMemorySummaryModal(){
   showModal('kidsMemorySummaryModal');
 }
 function goToKidsMemoryGame(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedLuckySession();
-  abandonPausedKidsTdSession();
-  abandonPausedFantySession();
-  abandonPausedSoloBsSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('kidsTd');
+  abandonPausedSession('fanty');
+  abandonPausedSession('soloBs');
   state.pausedMode = null;
   document.getElementById('kidsMemorySetup').classList.remove('active');
   goToGame(null, 'kidsMemoryGame');

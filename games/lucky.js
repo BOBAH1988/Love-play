@@ -455,17 +455,17 @@ function showLuckySummaryModal(){
   showModal('luckySummaryModal');
 }
 function goToLuckyGame(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedKrokodilSession();
-  abandonPausedWishlistSession();
-  abandonPausedZnayuSession();
-  abandonPausedTimerSession();
-  abandonPausedPartyFantsSession();
-  abandonPausedPartyTdSession();
-  abandonPausedFamZnayuSession();
-  abandonPausedSoloBsSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('soloBs');
   state.pausedMode = null;
   // Счастливый билет использует СВОИ 2 фиксированные команды (state.luckyTeams,
   // в каждой мужчина и женщина) — заполняются на своём экране настройки

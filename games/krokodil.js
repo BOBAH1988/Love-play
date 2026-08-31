@@ -350,10 +350,10 @@ function krNextPlayerRound(){
   });
 }
 function goToKrokodilGame(){
-  abandonPausedDavaySession();
-  abandonPausedTdSession();
-  abandonPausedBingoSession();
-  abandonPausedSoloBsSession();
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('soloBs');
   state.pausedMode = null;
   goToGame('krokodilSetup', 'krokodilGame');
   if(!state.partyPlayers || state.partyPlayers.length < 2){
