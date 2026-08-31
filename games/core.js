@@ -1394,7 +1394,10 @@ function isPlaceholderMode(){
   return !!(el && el.classList.contains('placeholder-mode'));
 }
 function returnToSetupUI(){
-  document.getElementById('game').classList.remove('active');
+  // Сначала убираем active со ВСЕХ экранов, затем активируем только #setup —
+  // это предотвращает «экран, поделённый на 2 части», когда при возврате
+  // из игры/предыдущей сессии несколько экранов остаются активными.
+  document.querySelectorAll('.screen.active').forEach(s=>s.classList.remove('active'));
   document.getElementById('setup').classList.add('active');
   document.getElementById('name1').value = state.name1 || '';
   document.getElementById('name2').value = state.name2 || '';
