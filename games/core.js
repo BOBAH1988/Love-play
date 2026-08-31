@@ -4171,7 +4171,15 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       state.kidsPlayers = ['Игрок 1','Игрок 2'];
       state.businessPlayers = ['Игрок 1','Игрок 2'];
       state.partyPlayers = ['Игрок 1','Игрок 2'];
+      // Сбрасываем и возможную «зависшую» паузу — если пользователь попал
+      // в состояние, когда pausedMode выставлен, а выйти из него невозможно
+      // (например, пропала модалка паузы), сброс прогресса вернёт управление.
+      if(state.pausedMode){
+        state.pausedMode = null;
+        state.inProgress = false;
+      }
       saveState();
+      updateResumeUI();
       showToast('Прогресс сброшен 🗑');
     }
   });
