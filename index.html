@@ -1699,7 +1699,11 @@
      ниже (не одной длинной фразой через тире, которая раньше рвалась
      переносом посреди слова на узких экранах), см. PAUSE_MENU_TITLES. */
   .pause-title-sub{ display:block; font-size:15px; font-weight:700; color:#5c3a52; margin-top:4px; }
-  .modal-card .intro-text{color:#5c3a52; max-width:none;}
+  /* Внутри .rules-hub-card (тёмный градиент) текст .intro-text должен быть
+     светлым, иначе .modal-card .intro-text (color:#5c3a52) перекрывает
+     светлый color:#fff и текст становится тёмно-фиолетовым на тёмном фоне,
+     почти невидимым. Правило идёт ПОСЛЕ общего .modal-card .intro-text. */
+  .rules-hub-card .intro-text{color:#fff; max-width:none;}
   .modal-rules{
     margin:0 0 20px; padding-left:20px;
     display:flex; flex-direction:column; gap:11px;
