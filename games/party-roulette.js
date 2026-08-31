@@ -235,6 +235,6 @@ function exitPartyRouletteGame(){
 }
 document.getElementById('rouletteClearBetsBtn').addEventListener('click', ()=>{ clearRouletteBets(); });
 document.getElementById('rouletteExitBtn').addEventListener('click', ()=>{ exitPartyRouletteGame(); });
-(document.getElementById('rouletteGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyRouletteRulesModal'); });
+openRulesModal('rouletteGameRulesBtn', 'partyRouletteRulesModal');
 setupRulesModal('partyRouletteRulesModal', 'closePartyRouletteRulesBtn');
 

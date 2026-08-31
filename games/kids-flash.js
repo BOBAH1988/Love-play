@@ -365,6 +365,6 @@ document.getElementById('flashMoreBtn').addEventListener('click', ()=>{
   if(btn){ btn.setAttribute('aria-expanded', String(!expanded)); }
 });
 (document.getElementById('flashSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('flashRulesModal'); });
-(document.getElementById('flashGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('flashRulesModal'); });
+openRulesModal('flashGameRulesBtn', 'flashRulesModal');
 setupRulesModal('flashRulesModal', 'closeFlashRulesBtn');
 

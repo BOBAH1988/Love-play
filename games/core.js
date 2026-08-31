@@ -711,6 +711,13 @@ function setupRulesModal(modalId, closeBtnId){
   if(modal) modal.addEventListener('click', (e)=>{ if(e.target.id === modalId) hideModal(modalId); });
 }
 
+// Открытие RulesModal по кнопке (с защитой от отсутствующего элемента).
+// Заменяет длинную конструкцию: (document.getElementById('xxx')||{...}).addEventListener(...)
+function openRulesModal(openBtnId, modalId){
+  const btn = document.getElementById(openBtnId);
+  if(btn) btn.addEventListener('click', ()=>{ showModal(modalId); });
+}
+
 /* ============ УНИВЕРСАЛЬНЫЙ ПРОГРЕСС-БАР (таймер) ============ */
 // updateKkrBar / updateKrBar / updateMtBar / updateTwisterBar —
 // все делают одно и то же: ширина fill + текст label (MM:SS или SS).

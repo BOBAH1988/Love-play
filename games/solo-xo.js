@@ -250,6 +250,6 @@ document.getElementById('closeSoloXoSummaryBtn').addEventListener('click', ()=>{
   exitSoloXoGame();
 });
 (document.getElementById('soloXoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloXoRulesModal'); });
-(document.getElementById('soloXoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloXoRulesModal'); });
+openRulesModal('soloXoGameRulesBtn', 'soloXoRulesModal');
 setupRulesModal('soloXoRulesModal', 'closeSoloXoRulesBtn');
 

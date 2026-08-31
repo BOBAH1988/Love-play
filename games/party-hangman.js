@@ -160,6 +160,6 @@ document.getElementById('partyHangmanNextBtn').addEventListener('click', ()=>{
   partyHangmanDrawWord();
 });
 document.getElementById('partyHangmanExitBtn').addEventListener('click', ()=>{ exitPartyHangmanGame(); });
-(document.getElementById('partyHangmanGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyHangmanRulesModal'); });
+openRulesModal('partyHangmanGameRulesBtn', 'partyHangmanRulesModal');
 setupRulesModal('partyHangmanRulesModal', 'closePartyHangmanRulesBtn');
 

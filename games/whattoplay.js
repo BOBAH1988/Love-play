@@ -113,6 +113,6 @@ document.getElementById('whatToPlayFavViewBtn').addEventListener('click', ()=>{
   drawWhatToPlayCard();
 });
 document.getElementById('whatToPlayExitBtn').addEventListener('click', ()=>{ exitWhatToPlayGame(); });
-(document.getElementById('whatToPlayGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('whatToPlayRulesModal'); });
+openRulesModal('whatToPlayGameRulesBtn', 'whatToPlayRulesModal');
 setupRulesModal('whatToPlayRulesModal', 'closeWhatToPlayRulesBtn');
 

@@ -225,6 +225,6 @@ document.getElementById('closeKidsXoSummaryBtn').addEventListener('click', ()=>{
   exitKidsXoGame();
 });
 (document.getElementById('kidsXoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsXoRulesModal'); });
-(document.getElementById('kidsXoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsXoRulesModal'); });
+openRulesModal('kidsXoGameRulesBtn', 'kidsXoRulesModal');
 setupRulesModal('kidsXoRulesModal', 'closeKidsXoRulesBtn');
 

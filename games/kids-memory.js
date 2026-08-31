@@ -266,6 +266,6 @@ document.getElementById('kidsMemoryExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 (document.getElementById('kidsMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsMemoryRulesModal'); });
-(document.getElementById('kidsMemoryGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsMemoryRulesModal'); });
+openRulesModal('kidsMemoryGameRulesBtn', 'kidsMemoryRulesModal');
 setupRulesModal('kidsMemoryRulesModal', 'closeKidsMemoryRulesBtn');
 

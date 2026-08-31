@@ -287,7 +287,7 @@ document.getElementById('closeSoloBattleshipSummaryBtn').addEventListener('click
   exitSoloBattleshipGame();
 });
 (document.getElementById('soloBattleshipSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloBattleshipRulesModal'); });
-(document.getElementById('soloBattleshipGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloBattleshipRulesModal'); });
+openRulesModal('soloBattleshipGameRulesBtn', 'soloBattleshipRulesModal');
 setupRulesModal('soloBattleshipRulesModal', 'closeSoloBattleshipRulesBtn');
 document.getElementById('soloBattleshipRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'soloBattleshipRulesModal') e.currentTarget.classList.remove('show');

@@ -117,6 +117,6 @@ document.getElementById('ideasFavViewBtn').addEventListener('click', ()=>{
   drawIdeaCard();
 });
 document.getElementById('ideasExitBtn').addEventListener('click', ()=>{ exitIdeasGame(); });
-(document.getElementById('ideasGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('ideasRulesModal'); });
+openRulesModal('ideasGameRulesBtn', 'ideasRulesModal');
 setupRulesModal('ideasRulesModal', 'closeIdeasRulesBtn');
 

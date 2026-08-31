@@ -177,6 +177,6 @@ document.getElementById('twisterNextBtn').addEventListener('click', ()=>{
   startTwisterTimer();
 });
 document.getElementById('twisterExitBtn').addEventListener('click', ()=>{ exitTwisterGame(); });
-(document.getElementById('twisterGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('twisterRulesModal'); });
+openRulesModal('twisterGameRulesBtn', 'twisterRulesModal');
 setupRulesModal('twisterRulesModal', 'closeTwisterRulesBtn');
 

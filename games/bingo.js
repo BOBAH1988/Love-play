@@ -483,7 +483,7 @@ document.getElementById('bingoPauseBtn').addEventListener('click', ()=>{
   pauseBingoGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-(document.getElementById('bingoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('bingoRulesModal'); });
+openRulesModal('bingoGameRulesBtn', 'bingoRulesModal');
 setupRulesModal('bingoRulesModal', 'closeBingoRulesBtn');
 
 
