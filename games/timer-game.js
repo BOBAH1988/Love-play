@@ -85,12 +85,12 @@ document.querySelectorAll('#timerLevelUpGroup .starter-btn').forEach(btn=>{
   });
 });
 function goToTimerSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('timerSetup').classList.add('active');
-  renderTimerModeGroup();
-  renderTimerDurationGroup();
-  renderTimerLevelUpGroup();
-  renderTimerSetupLevels();
+  goToGameSetup('timerSetup', null, ()=>{
+    renderTimerModeGroup();
+    renderTimerDurationGroup();
+    renderTimerLevelUpGroup();
+    renderTimerSetupLevels();
+  });
 }
 function exitTimerSetup(){
   document.getElementById('timerSetup').classList.remove('active');

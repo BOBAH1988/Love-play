@@ -158,9 +158,9 @@ document.querySelectorAll('#bizObsQuestionCountGroup .starter-btn').forEach(btn=
   });
 });
 function goToBizObsSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('bizObsSetup').classList.add('active');
-  renderBizObsQuestionCountGroup();
+  goToGameSetup('bizObsSetup', null, ()=>{
+    renderBizObsQuestionCountGroup();
+  });
 }
 function exitBizObsSetup(){
   document.getElementById('bizObsSetup').classList.remove('active');

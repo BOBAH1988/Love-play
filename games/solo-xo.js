@@ -83,9 +83,9 @@ function soloXoPickBotMove(board){
 }
 
 function goToSoloXoSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('soloXoSetup').classList.add('active');
-  renderSoloXoSizeGroup();
+  goToGameSetup('soloXoSetup', null, ()=>{
+    renderSoloXoSizeGroup();
+  });
 }
 function exitSoloXoSetup(){
   document.getElementById('soloXoSetup').classList.remove('active');

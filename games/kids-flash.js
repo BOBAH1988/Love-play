@@ -34,12 +34,12 @@ function getFlashPool(size){
 }
 
 function goToFlashSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('flashSetup').classList.add('active');
-  renderFlashModeGroup();
-  renderFlashThemeGroup();
-  renderFlashThemeSizeGroup();
-  renderFlashCountGroup();
+  goToGameSetup('flashSetup', null, ()=>{
+    renderFlashModeGroup();
+    renderFlashThemeGroup();
+    renderFlashThemeSizeGroup();
+    renderFlashCountGroup();
+  });
 }
 function exitFlashSetup(){
   document.getElementById('flashSetup').classList.remove('active');

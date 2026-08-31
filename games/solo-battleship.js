@@ -15,8 +15,7 @@ const SOLO_BS_ACTIVE = '#ffd166'; // золотой — подсвечивает
 let soloBsTimerId = null;
 
 function goToSoloBattleshipSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('soloBattleshipSetup').classList.add('active');
+  goToGameSetup('soloBattleshipSetup');
 }
 function exitSoloBattleshipSetup(){
   document.getElementById('soloBattleshipSetup').classList.remove('active');

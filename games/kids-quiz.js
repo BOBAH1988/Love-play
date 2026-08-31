@@ -62,11 +62,11 @@ document.querySelectorAll('#kidsQuizQuestionCountGroup .starter-btn').forEach(bt
   });
 });
 function goToKidsQuizSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsQuizSetup').classList.add('active');
-  updateKidsQuizSetupSubtitle();
-  renderKidsQuizAnswerTimeGroup();
-  renderKidsQuizQuestionCountGroup();
+  goToGameSetup('kidsQuizSetup', null, ()=>{
+    updateKidsQuizSetupSubtitle();
+    renderKidsQuizAnswerTimeGroup();
+    renderKidsQuizQuestionCountGroup();
+  });
 }
 function exitKidsQuizSetup(){
   document.getElementById('kidsQuizSetup').classList.remove('active');

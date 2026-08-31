@@ -170,9 +170,9 @@ function renderLuckyTeams(){
   });
 }
 function goToLuckySetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('luckySetup').classList.add('active');
-  renderLuckyTeams();
+  goToGameSetup('luckySetup', null, ()=>{
+    renderLuckyTeams();
+  });
 }
 function exitLuckySetup(){
   document.getElementById('luckySetup').classList.remove('active');

@@ -43,11 +43,11 @@ function sexQuestResolvedCount(){
 }
 
 function goToSexQuestSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('sexQuestSetup').classList.add('active');
-  updateSexQuestHistoryBtn();
-  renderSexQuestCountGroup();
-  renderSexQuestModeGroup();
+  goToGameSetup('sexQuestSetup', null, ()=>{
+    updateSexQuestHistoryBtn();
+    renderSexQuestCountGroup();
+    renderSexQuestModeGroup();
+  });
 }
 
 function renderSexQuestCountGroup(){

@@ -1167,9 +1167,9 @@ document.getElementById('closeBusinessLemonadeSummaryBtn').addEventListener('cli
 
 /* ============ ВХОД/ВЫХОД ============ */
 function goToBusinessLemonadeSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('businessLemonadeSetup').classList.add('active');
-  renderBizGoalButtons();
+  goToGameSetup('businessLemonadeSetup', null, ()=>{
+    renderBizGoalButtons();
+  });
 }
 function exitBusinessLemonadeSetup(){
   document.getElementById('businessLemonadeSetup').classList.remove('active');

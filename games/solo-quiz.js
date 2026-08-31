@@ -70,11 +70,11 @@ document.querySelectorAll('#soloQuizQuestionCountGroup .starter-btn').forEach(bt
   });
 });
 function goToSoloQuizSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('soloQuizSetup').classList.add('active');
-  renderSoloQuizSetupLevels();
-  renderSoloQuizAnswerTimeGroup();
-  renderSoloQuizQuestionCountGroup();
+  goToGameSetup('soloQuizSetup', null, ()=>{
+    renderSoloQuizSetupLevels();
+    renderSoloQuizAnswerTimeGroup();
+    renderSoloQuizQuestionCountGroup();
+  });
 }
 function exitSoloQuizSetup(){
   document.getElementById('soloQuizSetup').classList.remove('active');

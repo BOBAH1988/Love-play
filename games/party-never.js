@@ -26,9 +26,9 @@ function renderPartyNeverSetupLevels(){
   });
 }
 function goToPartyNeverSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyNeverSetup').classList.add('active');
-  renderPartyNeverSetupLevels();
+  goToGameSetup('partyNeverSetup', null, ()=>{
+    renderPartyNeverSetupLevels();
+  });
 }
 function exitPartyNeverSetup(){
   document.getElementById('partyNeverSetup').classList.remove('active');

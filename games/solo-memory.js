@@ -28,10 +28,10 @@ function renderSoloMemoryLevels(){
   });
 }
 function goToSoloMemorySetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('soloMemorySetup').classList.add('active');
-  renderSoloMemoryLevels();
-  renderSoloMemoryLeaderboard();
+  goToGameSetup('soloMemorySetup', null, ()=>{
+    renderSoloMemoryLevels();
+    renderSoloMemoryLeaderboard();
+  });
 }
 function exitSoloMemorySetup(){
   document.getElementById('soloMemorySetup').classList.remove('active');

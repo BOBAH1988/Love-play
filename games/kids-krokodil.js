@@ -64,11 +64,11 @@ document.querySelectorAll('#kidsKrokodilWordsCountGroup .starter-btn').forEach(b
   });
 });
 function goToKidsKrokodilSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsKrokodilSetup').classList.add('active');
-  renderKidsKrokodilModeGroup();
-  renderKidsKrokodilDurationGroup();
-  renderKidsKrokodilWordsCountGroup();
+  goToGameSetup('kidsKrokodilSetup', null, ()=>{
+    renderKidsKrokodilModeGroup();
+    renderKidsKrokodilDurationGroup();
+    renderKidsKrokodilWordsCountGroup();
+  });
 }
 function exitKidsKrokodilSetup(){
   document.getElementById('kidsKrokodilSetup').classList.remove('active');

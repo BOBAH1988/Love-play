@@ -100,8 +100,7 @@ function bsPlayerName(idx){
 }
 
 function goToKidsBattleshipSetup(){
-  document.getElementById('kidsBoardGamesMenu').classList.remove('active');
-  document.getElementById('kidsBattleshipSetup').classList.add('active');
+  goToGameSetup('kidsBattleshipSetup');
 }
 function exitKidsBattleshipSetup(){
   document.getElementById('kidsBattleshipSetup').classList.remove('active');

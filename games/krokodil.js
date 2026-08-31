@@ -138,12 +138,12 @@ document.querySelectorAll('#krokodilWordsCountGroup .starter-btn').forEach(btn=>
   });
 });
 function goToKrokodilSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('krokodilSetup').classList.add('active');
-  renderKrokodilSetupLevels();
-  renderKrokodilModeGroup();
-  renderKrokodilDurationGroup();
-  renderKrokodilWordsCountGroup();
+  goToGameSetup('krokodilSetup', null, ()=>{
+    renderKrokodilSetupLevels();
+    renderKrokodilModeGroup();
+    renderKrokodilDurationGroup();
+    renderKrokodilWordsCountGroup();
+  });
 }
 function exitKrokodilSetup(){
   document.getElementById('krokodilSetup').classList.remove('active');

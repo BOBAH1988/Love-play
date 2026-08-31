@@ -75,11 +75,11 @@ document.querySelectorAll('#quizQuestionCountGroup .starter-btn').forEach(btn=>{
   });
 });
 function goToQuizSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('quizSetup').classList.add('active');
-  renderQuizSetupLevels();
-  renderQuizAnswerTimeGroup();
-  renderQuizQuestionCountGroup();
+  goToGameSetup('quizSetup', null, ()=>{
+    renderQuizSetupLevels();
+    renderQuizAnswerTimeGroup();
+    renderQuizQuestionCountGroup();
+  });
 }
 function exitQuizSetup(){
   document.getElementById('quizSetup').classList.remove('active');

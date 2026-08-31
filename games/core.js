@@ -371,6 +371,53 @@ document.getElementById('businessExitBtn').addEventListener('click', ()=>{ showS
 document.getElementById('soloExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 document.getElementById('learningExitBtn').addEventListener('click', ()=>{ showSetupView('homeView'); });
 
+/* ============ УНИВЕРСАЛЬНЫЙ ПЕРЕХОД В НАСТРОЙКИ ИГРЫ ============ */
+// Вместо ~50 одинаковых функций goToXxxSetup() (каждая просто
+// переключает #setup и нужный #xxxSetup) — единый помощник.
+//   goToGameSetup('fantySetup')           // просто переключает экраны
+//   goToGameSetup('fantySetup', 'twoPlayerView')  // + открывает нужный раздел
+//   goToGameSetup('quizSetup', () => renderQuizExtra())
+//   goToGameSetup('favoritesSetup', null, () => { ... }) // кастомный cleanup
+//
+// Поведение:
+//  1) гасит экран #setup (на случай, если шли из #xxxSetup назад на #setup, а
+//     потом хотим вернуться в этот же #xxxSetup — он не должен оставаться
+//     активным, иначе будут наложения),
+//  2) включает #gameSetupId,
+//  3) опционально открывает нужный раздел главного меню (#homeView и т.п.) —
+//     полезно, если настройка спрятана в подменю, и нужно сразу подсветить
+//     группу, из которой мы пришли,
+//  4) опционально зовёт beforeSwitch() — для лёгкого «сброса фильтров»
+//     конкретной настройки (например, подтянуть актуальные данные из state).
+//
+// Все ранее существовавшие goToXxxSetup() определены как алиасы через эту
+// функцию (см. games/<game>.js), чтобы не ломать ни обработчики в core.js,
+// ни обратную совместимость с уже подключёнными файлами.
+function goToGameSetup(gameSetupId, targetView, beforeSwitch){
+  if(typeof gameSetupId !== 'string' || !gameSetupId){
+    console.warn('goToGameSetup: не передан id экрана настроек');
+    return;
+  }
+  // 1) гасим #setup (на случай, если он активен)
+  const setupEl = document.getElementById('setup');
+  if(setupEl) setupEl.classList.remove('active');
+  // 2) включаем нужный экран настроек
+  const targetEl = document.getElementById(gameSetupId);
+  if(targetEl){
+    targetEl.classList.add('active');
+  } else {
+    console.warn('goToGameSetup: экран #'+gameSetupId+' не найден в DOM');
+  }
+  // 3) опционально переключаем внутренний раздел #setup
+  if(targetView && typeof showSetupView === 'function'){
+    showSetupView(targetView);
+  }
+  // 4) опциональный pre-render / cleanup
+  if(typeof beforeSwitch === 'function'){
+    try { beforeSwitch(); } catch(e){ console.error('goToGameSetup.beforeSwitch:', e); }
+  }
+}
+
 // Список игроков для "Игры с детьми" — тот же паттерн, что renderPartyPlayers
 // в games/krokodil.js, но отдельное состояние (kidsPlayers), т.к. это не
 // связано с "Играми для компании": от 2 до 10, поля добавляются/удаляются
@@ -1017,9 +1064,9 @@ document.getElementById('gameZnayuBtn').addEventListener('click', ()=>{
   goToZnayuSetup();
 });
 function goToFantySetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('fantySetup').classList.add('active');
-  updateResumeUI();
+  goToGameSetup('fantySetup', null, ()=>{
+    updateResumeUI();
+  });
 }
 document.getElementById('fantyExitBtn').addEventListener('click', ()=>{
   document.getElementById('fantySetup').classList.remove('active');
@@ -3136,12 +3183,12 @@ document.getElementById('name1').addEventListener('input', updateDavaySetupStart
 document.getElementById('name2').addEventListener('input', updateDavaySetupStarterLabels);
 
 function goToDavaySetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('davaySetup').classList.add('active');
-  renderDavaySetupStarterGroup();
-  renderDavaySetupLevels();
-  updateDavaySetupStarterLabels();
-  updateDavaySetupSoundBtn();
+  goToGameSetup('davaySetup', null, ()=>{
+    renderDavaySetupStarterGroup();
+    renderDavaySetupLevels();
+    updateDavaySetupStarterLabels();
+    updateDavaySetupSoundBtn();
+  });
 }
 function exitDavaySetup(){
   document.getElementById('davaySetup').classList.remove('active');
@@ -3229,10 +3276,10 @@ function renderPhotoSetupLevels(){
   });
 }
 function goToPhotoSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('photoSetup').classList.add('active');
-  renderPhotoSetupLevels();
-  updateMuteBtn();
+  goToGameSetup('photoSetup', null, ()=>{
+    renderPhotoSetupLevels();
+    updateMuteBtn();
+  });
 }
 function exitPhotoSetup(){
   document.getElementById('photoSetup').classList.remove('active');

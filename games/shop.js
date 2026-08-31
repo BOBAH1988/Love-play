@@ -40,9 +40,9 @@ document.querySelectorAll('#shopModeGroup .starter-btn').forEach(btn=>{
   });
 });
 function goToShopSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('shopSetup').classList.add('active');
-  renderShopModeGroup();
+  goToGameSetup('shopSetup', null, ()=>{
+    renderShopModeGroup();
+  });
 }
 function exitShopSetup(){
   document.getElementById('shopSetup').classList.remove('active');

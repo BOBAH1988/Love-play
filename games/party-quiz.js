@@ -63,11 +63,11 @@ document.querySelectorAll('#partyQuizQuestionCountGroup .starter-btn').forEach(b
   });
 });
 function goToPartyQuizSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyQuizSetup').classList.add('active');
-  renderPartyQuizSetupLevels();
-  renderPartyQuizAnswerTimeGroup();
-  renderPartyQuizQuestionCountGroup();
+  goToGameSetup('partyQuizSetup', null, ()=>{
+    renderPartyQuizSetupLevels();
+    renderPartyQuizAnswerTimeGroup();
+    renderPartyQuizQuestionCountGroup();
+  });
 }
 function exitPartyQuizSetup(){
   document.getElementById('partyQuizSetup').classList.remove('active');

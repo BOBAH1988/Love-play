@@ -26,9 +26,9 @@ function renderPartyTdSetupLevels(){
   });
 }
 function goToPartyTdSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyTdSetup').classList.add('active');
-  renderPartyTdSetupLevels();
+  goToGameSetup('partyTdSetup', null, ()=>{
+    renderPartyTdSetupLevels();
+  });
 }
 function exitPartyTdSetup(){
   document.getElementById('partyTdSetup').classList.remove('active');

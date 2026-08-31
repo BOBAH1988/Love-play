@@ -11,8 +11,7 @@ function getKidsMemesCardsList(level){
   return KIDS_MEMES_CARDS.filter(c=>c.level===level);
 }
 function goToKidsMemesSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsMemesSetup').classList.add('active');
+  goToGameSetup('kidsMemesSetup');
 }
 function exitKidsMemesSetup(){
   document.getElementById('kidsMemesSetup').classList.remove('active');

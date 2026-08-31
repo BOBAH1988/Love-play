@@ -123,12 +123,12 @@ function renderFamZnayuSetupLevels(){
   });
 }
 function goToFamZnayuSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('famZnayuSetup').classList.add('active');
-  syncFamZnayuFamiliesArray();
-  renderFamZnayuFamilyCountGroup();
-  renderFamZnayuFamiliesFields();
-  renderFamZnayuSetupLevels();
+  goToGameSetup('famZnayuSetup', null, ()=>{
+    syncFamZnayuFamiliesArray();
+    renderFamZnayuFamilyCountGroup();
+    renderFamZnayuFamiliesFields();
+    renderFamZnayuSetupLevels();
+  });
 }
 function exitFamZnayuSetup(){
   document.getElementById('famZnayuSetup').classList.remove('active');

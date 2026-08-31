@@ -31,9 +31,9 @@ function renderKidsMemoryLevels(){
   });
 }
 function goToKidsMemorySetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsMemorySetup').classList.add('active');
-  renderKidsMemoryLevels();
+  goToGameSetup('kidsMemorySetup', null, ()=>{
+    renderKidsMemoryLevels();
+  });
 }
 function exitKidsMemorySetup(){
   document.getElementById('kidsMemorySetup').classList.remove('active');

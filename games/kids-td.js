@@ -26,9 +26,9 @@ function updateKidsTdSetupSubtitle(){
     : 'Выбирайте Правду или Действие по очереди';
 }
 function goToKidsTdSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsTdSetup').classList.add('active');
-  updateKidsTdSetupSubtitle();
+  goToGameSetup('kidsTdSetup', null, ()=>{
+    updateKidsTdSetupSubtitle();
+  });
 }
 function exitKidsTdSetup(){
   document.getElementById('kidsTdSetup').classList.remove('active');

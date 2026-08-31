@@ -15,9 +15,9 @@ document.querySelectorAll('#wishlistSetupStarterGroup .starter-btn').forEach(btn
   });
 });
 function goToWishlistSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('wishlistSetup').classList.add('active');
-  renderWishlistSetupStarterGroup();
+  goToGameSetup('wishlistSetup', null, ()=>{
+    renderWishlistSetupStarterGroup();
+  });
 }
 function exitWishlistSetup(){
   document.getElementById('wishlistSetup').classList.remove('active');

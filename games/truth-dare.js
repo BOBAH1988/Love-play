@@ -27,10 +27,10 @@ function renderTdSetupLevels(){
   });
 }
 function goToTdSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('tdSetup').classList.add('active');
-  renderTdSetupLevels();
-  updateMuteBtn();
+  goToGameSetup('tdSetup', null, ()=>{
+    renderTdSetupLevels();
+    updateMuteBtn();
+  });
 }
 function exitTdSetup(){
   document.getElementById('tdSetup').classList.remove('active');

@@ -19,12 +19,12 @@ function goToZnayuSetup(){
   // приложение закрыли посреди вопросов), state.znayuActivePlayer мог
   // остаться не равным 0 — на всякий случай сбрасываем прогресс уже здесь,
   // а не только по кнопке "Начать", чтобы новая партия точно стартовала чисто.
-  if(state.znayuActivePlayer !== 0 || state.znayuP1Done || state.znayuP2Done){
-    resetZnayuQuiz();
-  }
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('znayuSetup').classList.add('active');
-  renderZnayuSetupStarterGroup();
+  goToGameSetup('znayuSetup', null, ()=>{
+    if(state.znayuActivePlayer !== 0 || state.znayuP1Done || state.znayuP2Done){
+      resetZnayuQuiz();
+    }
+    renderZnayuSetupStarterGroup();
+  });
 }
 function exitZnayuSetup(){
   document.getElementById('znayuSetup').classList.remove('active');

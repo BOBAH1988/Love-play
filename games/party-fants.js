@@ -26,9 +26,9 @@ function renderPartyFantsSetupLevels(){
   });
 }
 function goToPartyFantsSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyFantsSetup').classList.add('active');
-  renderPartyFantsSetupLevels();
+  goToGameSetup('partyFantsSetup', null, ()=>{
+    renderPartyFantsSetupLevels();
+  });
 }
 function exitPartyFantsSetup(){
   document.getElementById('partyFantsSetup').classList.remove('active');

@@ -24,9 +24,9 @@ function renderMemesSetupLevels(){
   });
 }
 function goToMemesSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('memesSetup').classList.add('active');
-  renderMemesSetupLevels();
+  goToGameSetup('memesSetup', null, ()=>{
+    renderMemesSetupLevels();
+  });
 }
 function exitMemesSetup(){
   document.getElementById('memesSetup').classList.remove('active');

@@ -349,8 +349,7 @@ function suggestRandomKidsSaperCell(){
   }, {capture:true, once:true});
 }
 function goToKidsSaperSetup(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsSaperSetup').classList.add('active');
+  goToGameSetup('kidsSaperSetup');
 }
 function exitKidsSaperSetup(){
   document.getElementById('kidsSaperSetup').classList.remove('active');
