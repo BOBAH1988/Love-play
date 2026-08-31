@@ -154,6 +154,7 @@ function goToPartyHangmanGame(){
 function exitPartyHangmanGame(){
   document.getElementById('partyHangmanGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
 }
 
 document.getElementById('partyHangmanNextBtn').addEventListener('click', ()=>{

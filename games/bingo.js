@@ -225,6 +225,7 @@ function showBingoSummary(){
 function exitBingoGameToSetup(){
   document.getElementById('bingoGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
   finishBingoGame();
 }
 // Все ещё не отмеченные клетки заменяются заданиями нового уровня. Уже
@@ -350,6 +351,7 @@ function pauseBingoGame(){
   saveState();
   document.getElementById('bingoGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
   updateResumeUI();
 }
 function resumeBingoGame(){

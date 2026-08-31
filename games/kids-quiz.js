@@ -71,6 +71,7 @@ function goToKidsQuizSetup(){
 function exitKidsQuizSetup(){
   document.getElementById('kidsQuizSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
 }
 function kidsQuizPlayersList(){
   if(!state.kidsPlayers || state.kidsPlayers.length < 2) state.kidsPlayers = ['Игрок 1','Игрок 2'];
@@ -347,6 +348,7 @@ function pauseKidsQuizGame(){
   saveState();
   document.getElementById('kidsQuizGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
   updateResumeUI();
 }
 function resumeKidsQuizGame(){

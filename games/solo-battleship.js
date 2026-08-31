@@ -21,6 +21,7 @@ function goToSoloBattleshipSetup(){
 function exitSoloBattleshipSetup(){
   document.getElementById('soloBattleshipSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
 }
 
 function startSoloBattleshipGame(){
@@ -251,6 +252,7 @@ function pauseSoloBattleshipGame(){
   saveState();
   document.getElementById('soloBattleshipGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
   updateResumeUI();
 }
 // Возвращаемся из паузы — снова показываем поле и, если ход бота,

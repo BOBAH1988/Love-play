@@ -1174,6 +1174,7 @@ function goToBusinessLemonadeSetup(){
 function exitBusinessLemonadeSetup(){
   document.getElementById('businessLemonadeSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('businessView');
 }
 function goToBusinessLemonadeGame(){
   document.getElementById('businessLemonadeSetup').classList.remove('active');

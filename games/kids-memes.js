@@ -17,6 +17,7 @@ function goToKidsMemesSetup(){
 function exitKidsMemesSetup(){
   document.getElementById('kidsMemesSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
 }
 function drawKidsMemesCard(){
   const level = state.kidsAge || 2;

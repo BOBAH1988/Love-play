@@ -38,6 +38,7 @@ function goToKidsMemorySetup(){
 function exitKidsMemorySetup(){
   document.getElementById('kidsMemorySetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
 }
 // Случайно берёт из пула ровно столько картинок, сколько пар нужно на выбранном
 // уровне, дублирует и перемешивает — новая колода на каждую партию.
@@ -229,6 +230,7 @@ function pauseKidsMemoryGame(){
   saveState();
   document.getElementById('kidsMemoryGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
   updateResumeUI();
 }
 function resumeKidsMemoryGame(){

@@ -36,6 +36,7 @@ function goToSoloMemorySetup(){
 function exitSoloMemorySetup(){
   document.getElementById('soloMemorySetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
 }
 function generateSoloMemoryDeck(levelId){
   const levelInfo = (typeof KIDS_MEMORY_LEVELS !== 'undefined' ? KIDS_MEMORY_LEVELS.find(l=>l.id===levelId) : null) || {pairs:6};

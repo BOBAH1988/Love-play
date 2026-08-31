@@ -233,6 +233,7 @@ function exitPartyRouletteGame(){
   saveState();
   document.getElementById('partyRouletteGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
 }
 document.getElementById('rouletteClearBetsBtn').addEventListener('click', ()=>{ clearRouletteBets(); });
 document.getElementById('rouletteExitBtn').addEventListener('click', ()=>{ exitPartyRouletteGame(); });

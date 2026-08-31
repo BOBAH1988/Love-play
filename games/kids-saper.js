@@ -355,6 +355,7 @@ function goToKidsSaperSetup(){
 function exitKidsSaperSetup(){
   document.getElementById('kidsSaperSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
 }
 function goToKidsSaperGame(){
   ensureKidsSaperTeams();
@@ -388,6 +389,7 @@ function pauseKidsSaperGame(){
   saveState();
   document.getElementById('kidsSaperGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
   updateResumeUI();
 }
 function finishKidsSaperGame(){

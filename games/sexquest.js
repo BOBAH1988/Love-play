@@ -154,6 +154,7 @@ document.getElementById('sexQuestPickModal').addEventListener('click', (e)=>{
 function exitSexQuestSetup(){
   document.getElementById('sexQuestSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
 }
 document.getElementById('sexQuestSetupExitBtn').addEventListener('click', ()=>{ exitSexQuestSetup(); });
 (document.getElementById('sexQuestSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('sexQuestRulesModal').classList.add('show'); });
@@ -393,6 +394,7 @@ function renderSexQuestSummary(checklist){
 function exitSexQuestSummary(){
   document.getElementById('sexQuestSummary').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
 }
 document.getElementById('sexQuestSummaryExitBtn').addEventListener('click', ()=>{ exitSexQuestSummary(); });
 

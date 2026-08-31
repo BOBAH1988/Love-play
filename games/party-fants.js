@@ -33,6 +33,7 @@ function goToPartyFantsSetup(){
 function exitPartyFantsSetup(){
   document.getElementById('partyFantsSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
 }
 function updatePartyFantsScoreUI(){
   const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
@@ -124,6 +125,7 @@ function pausePartyFantsGame(){
   saveState();
   document.getElementById('partyFantsGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
   updateResumeUI();
 }
 function resumePartyFantsGame(){

@@ -148,6 +148,7 @@ function goToKrokodilSetup(){
 function exitKrokodilSetup(){
   document.getElementById('krokodilSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
 }
 function stopKrInterval(){
   if(krIntervalId){ clearInterval(krIntervalId); krIntervalId = null; }
@@ -412,6 +413,7 @@ function pauseKrokodilGame(){
   saveState();
   document.getElementById('krokodilGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
   updateResumeUI();
 }
 function resumeKrokodilGame(){

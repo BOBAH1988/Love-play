@@ -73,6 +73,7 @@ function goToKidsKrokodilSetup(){
 function exitKidsKrokodilSetup(){
   document.getElementById('kidsKrokodilSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
 }
 function stopKkrInterval(){
   if(kkrIntervalId){ clearInterval(kkrIntervalId); kkrIntervalId = null; }

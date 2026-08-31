@@ -72,6 +72,7 @@ function goToPartyQuizSetup(){
 function exitPartyQuizSetup(){
   document.getElementById('partyQuizSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
 }
 function partyQuizPlayersList(){
   if(!state.partyPlayers || state.partyPlayers.length < 2) state.partyPlayers = ['Игрок 1','Игрок 2'];
@@ -346,6 +347,7 @@ function pausePartyQuizGame(){
   saveState();
   document.getElementById('partyQuizGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
   updateResumeUI();
 }
 function resumePartyQuizGame(){

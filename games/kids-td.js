@@ -33,6 +33,7 @@ function goToKidsTdSetup(){
 function exitKidsTdSetup(){
   document.getElementById('kidsTdSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
 }
 function updateKidsTdScoreUI(){
   const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
@@ -146,6 +147,7 @@ function pauseKidsTdGame(){
   saveState();
   document.getElementById('kidsTdGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
   updateResumeUI();
 }
 function resumeKidsTdGame(){

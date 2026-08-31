@@ -165,6 +165,7 @@ function goToBizObsSetup(){
 function exitBizObsSetup(){
   document.getElementById('bizObsSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('businessView');
 }
 
 /* ============ ХОД ИГРЫ (по очереди, без таймера) ============ */

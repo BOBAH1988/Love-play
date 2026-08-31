@@ -33,6 +33,7 @@ function goToPartyNeverSetup(){
 function exitPartyNeverSetup(){
   document.getElementById('partyNeverSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
 }
 function drawPartyNeverCard(){
   const level = state.partyNeverSelectedLevel || 1;

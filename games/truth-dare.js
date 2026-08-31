@@ -35,6 +35,7 @@ function goToTdSetup(){
 function exitTdSetup(){
   document.getElementById('tdSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
 }
 function tdUpdateScoreUI(){
   document.getElementById('tdScore1').textContent = (state.name1 || 'Игрок 1') + ': ' + state.tdScore1;
@@ -202,6 +203,7 @@ function pauseTdGame(){
   saveState();
   document.getElementById('tdGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
   updateResumeUI();
 }
 function resumeTdGame(){

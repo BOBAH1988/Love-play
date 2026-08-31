@@ -84,6 +84,7 @@ function goToQuizSetup(){
 function exitQuizSetup(){
   document.getElementById('quizSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
 }
 // Ровно 2 игрока — те же имена, что в общих настройках "Игры для пар 18+".
 function quizPlayersList(){
@@ -428,6 +429,7 @@ function pauseQuizGame(){
   saveState();
   document.getElementById('quizGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('companyView');
   updateResumeUI();
 }
 function resumeQuizGame(){
