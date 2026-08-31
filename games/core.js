@@ -4135,6 +4135,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   });
   document.getElementById('menuUpdateBtn').addEventListener('click', ()=>{
     closeMenu();
+    try{ sessionStorage.setItem('appJustUpdated', '1'); }catch(e){}
     location.reload(true);
   });
   document.getElementById('menuInstallBtn').addEventListener('click', ()=>{
