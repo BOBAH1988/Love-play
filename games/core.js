@@ -1549,8 +1549,6 @@ function updateMuteBtn(){
     const icon = menuMuteBtn.querySelector('.menu-icon');
     if(icon) icon.textContent = state.muted ? '🔇' : '🔊';
   }
-  const menuMuteText = document.getElementById('menuMuteText');
-  if(menuMuteText) menuMuteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
 }
 function updateAutoSpeakBtn(){
   const menuAutoSpeakBtn = document.getElementById('menuAutoSpeakBtn');
@@ -1558,8 +1556,6 @@ function updateAutoSpeakBtn(){
     const icon = menuAutoSpeakBtn.querySelector('.menu-icon');
     if(icon) icon.textContent = state.autoSpeak ? '🔊' : '🔇';
   }
-  const text = document.getElementById('menuAutoSpeakText');
-  if(text) text.textContent = state.autoSpeak ? 'Автовоспроизведение включено' : 'Автовоспроизведение выключено';
 }
 document.getElementById('muteBtn').addEventListener('click', ()=>{
   state.muted = !state.muted;
