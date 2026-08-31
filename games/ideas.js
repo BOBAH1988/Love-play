@@ -73,8 +73,7 @@ function drawIdeaCard(){
 
 function goToIdeasGame(){
   state.ideasFavView = false;
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('ideasGame').classList.add('active');
+  goToGame('setup', 'ideasGame');
   updateIdeasFavViewBtn();
   drawIdeaCard();
   updateMuteBtn();

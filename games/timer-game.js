@@ -312,8 +312,7 @@ function goToTimerGame(){
   state.timerPendingLevelUp = false;
   state.inProgress = true;
   saveState();
-  document.getElementById('timerSetup').classList.remove('active');
-  document.getElementById('timerGame').classList.add('active');
+  goToGame('timerSetup', 'timerGame');
   mtUpdateScoreUI();
   mtDrawCard();
 }

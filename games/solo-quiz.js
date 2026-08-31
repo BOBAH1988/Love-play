@@ -233,7 +233,7 @@ function goToSoloQuizGame(){
   state.soloQuizUsed[state.soloQuizSelectedLevel || 1] = [];
   drawSoloQuizQueue();
   document.getElementById('soloQuizSetup').classList.remove('active');
-  document.getElementById('soloQuizGame').classList.add('active');
+  goToGame(null, 'soloQuizGame');
   updateMuteBtn();
   requestWakeLock();
   showSoloQuizQuestion();

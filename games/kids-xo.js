@@ -181,8 +181,7 @@ document.getElementById('kidsXoNextRoundBtn').addEventListener('click', ()=>{
   startKidsXoRound(state.kidsXoStartingPlayer || 'X');
 });
 function goToKidsXoGame(){
-  document.getElementById('kidsXoSetup').classList.remove('active');
-  document.getElementById('kidsXoGame').classList.add('active');
+  goToGame('kidsXoSetup', 'kidsXoGame');
   state.kidsXoScoreX = 0;
   state.kidsXoScoreO = 0;
   state.kidsXoDraws = 0;

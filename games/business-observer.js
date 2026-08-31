@@ -327,8 +327,7 @@ function goToBizObsGame(){
   state.bizObsCurrentPlayerIndex = Math.floor(Math.random() * players.length);
   bizObsDrawQueue();
   saveState();
-  document.getElementById('bizObsSetup').classList.remove('active');
-  document.getElementById('bizObsGame').classList.add('active');
+  goToGame('bizObsSetup', 'bizObsGame');
   updateMuteBtn();
   requestWakeLock();
   bizObsShowHandoffCard();

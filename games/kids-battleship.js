@@ -108,8 +108,7 @@ function exitKidsBattleshipSetup(){
 }
 
 function goToKidsBattleshipGame(){
-  document.getElementById('kidsBattleshipSetup').classList.remove('active');
-  document.getElementById('kidsBattleshipGame').classList.add('active');
+  goToGame('kidsBattleshipSetup', 'kidsBattleshipGame');
   state.battleshipBoards = [bsGenerateBoard(), bsGenerateBoard()];
   state.battleshipCurrentPlayer = Math.random() < 0.5 ? 0 : 1;
   state.battleshipWinner = null;

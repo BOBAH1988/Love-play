@@ -136,8 +136,7 @@ function goToKidsTdGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('kidsTdSetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsTdGame').classList.add('active');
+  goToGame(null, 'kidsTdGame');
   updateKidsTdScoreUI();
 }
 // Пауза: вернуться в главное меню, не сбрасывая счёт и очередь — можно

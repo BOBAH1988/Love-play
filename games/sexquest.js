@@ -191,7 +191,7 @@ function startSexQuestGame(){
   state.sexQuestResults = []; // {wishId, title, outcome:'direct'|'light'|'deferred', steps:[question,...], agreedStep:number|null}
   saveState();
   document.getElementById('sexQuestSetup').classList.remove('active');
-  document.getElementById('sexQuestGame').classList.add('active');
+  goToGame(null, 'sexQuestGame');
   updateMuteBtn();
   requestWakeLock();
   // Показываем ОПИСАНИЕ желания (title + text): кнопки «Да/Нет» ещё скрыты,

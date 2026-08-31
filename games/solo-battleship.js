@@ -24,8 +24,7 @@ function exitSoloBattleshipSetup(){
 }
 
 function startSoloBattleshipGame(){
-  document.getElementById('soloBattleshipSetup').classList.remove('active');
-  document.getElementById('soloBattleshipGame').classList.add('active');
+  goToGame('soloBattleshipSetup', 'soloBattleshipGame');
   state.soloBsPlayerBoard = bsGenerateBoard(); // наше поле (бот туда стреляет)
   state.soloBsBotBoard = bsGenerateBoard();    // поле бота (мы туда стреляем)
   state.soloBsCurrentPlayer = 'player';        // человек ходит первым — видит поле
@@ -260,7 +259,7 @@ function resumeSoloBsGame(){
   saveState();
   updateResumeUI();
   document.getElementById('setup').classList.remove('active');
-  document.getElementById('soloBattleshipGame').classList.add('active');
+  goToGame(null, 'soloBattleshipGame');
   renderSoloBsBoards();
   updateSoloBattleshipStats();
   updateMuteBtn();

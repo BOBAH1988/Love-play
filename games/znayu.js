@@ -365,7 +365,7 @@ document.getElementById('znayuSetupStartBtn').addEventListener('click', ()=>{
   state.inProgress = true;
   saveState();
   document.getElementById('znayuSetup').classList.remove('active');
-  document.getElementById('znayuGame').classList.add('active');
+  goToGame(null, 'znayuGame');
   updateZnayuPlayerButtons();
   startZnayuPlayer(pickStartingPlayerValue(state.znayuStarter || 'random'));
 });

@@ -1177,8 +1177,7 @@ function exitBusinessLemonadeSetup(){
   showSetupView('businessView');
 }
 function goToBusinessLemonadeGame(){
-  document.getElementById('businessLemonadeSetup').classList.remove('active');
-  document.getElementById('businessLemonadeGame').classList.add('active');
+  goToGame('businessLemonadeSetup', 'businessLemonadeGame');
   state.businessLemonadeDay = 1;
   state.businessLemonadeCapital = BIZ_START_CAPITAL;
   state.businessLemonadeUpgrades = { sign: false, music: false, recipe: false, seller: false, secondStand: false };

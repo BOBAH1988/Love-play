@@ -212,8 +212,7 @@ function resolveRouletteSpin(n){
 let rouletteInited = false;
 function goToPartyRouletteGame(){
   ensureRouletteBalances();
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyRouletteGame').classList.add('active');
+  goToGame('setup', 'partyRouletteGame');
   if(!rouletteInited){
     renderRouletteNumberGrid();
     rouletteBindOutsideBets();

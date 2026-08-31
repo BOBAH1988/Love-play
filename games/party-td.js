@@ -134,8 +134,7 @@ function goToPartyTdGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('partyTdSetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyTdGame').classList.add('active');
+  goToGame(null, 'partyTdGame');
   updatePartyTdScoreUI();
 }
 // Пауза: вернуться в главное меню, не сбрасывая счёт и очередь — можно

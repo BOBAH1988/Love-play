@@ -70,8 +70,7 @@ function drawWhatToPlayCard(){
 
 function goToWhatToPlayGame(){
   state.whatToPlayFavView = false;
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('whatToPlayGame').classList.add('active');
+  goToGame('setup', 'whatToPlayGame');
   updateWhatToPlayFavViewBtn();
   drawWhatToPlayCard();
   updateMuteBtn();

@@ -338,7 +338,7 @@ function goToBingoGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('setup').classList.remove('active');
-  document.getElementById('bingoGame').classList.add('active');
+  goToGame(null, 'bingoGame');
   renderBingoGrid();
   updateBingoHideTasksBtn();
   renderBingoBonusChecklist();

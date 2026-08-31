@@ -127,8 +127,7 @@ document.getElementById('memesCard').addEventListener('click', ()=>{
   speakMemesCard();
 });
 function goToMemesGame(){
-  document.getElementById('memesSetup').classList.remove('active');
-  document.getElementById('memesGame').classList.add('active');
+  goToGame('memesSetup', 'memesGame');
   drawMemesCard();
   updateMuteBtn();
   requestWakeLock();

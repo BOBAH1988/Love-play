@@ -371,8 +371,7 @@ function goToFamZnayuGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('famZnayuSetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('famZnayuGame').classList.add('active');
+  goToGame(null, 'famZnayuGame');
   updateFamZnayuHeaderUI();
   showFamZnayuHandoffCard(1);
 }

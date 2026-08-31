@@ -100,8 +100,7 @@ document.getElementById('kidsMemesCard').addEventListener('click', ()=>{
   speakKidsMemesCard();
 });
 function goToKidsMemesGame(){
-  document.getElementById('kidsMemesSetup').classList.remove('active');
-  document.getElementById('kidsMemesGame').classList.add('active');
+  goToGame('kidsMemesSetup', 'kidsMemesGame');
   drawKidsMemesCard();
   updateMuteBtn();
   requestWakeLock();

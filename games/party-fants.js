@@ -113,8 +113,7 @@ function goToPartyFantsGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('partyFantsSetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyFantsGame').classList.add('active');
+  goToGame(null, 'partyFantsGame');
   updatePartyFantsScoreUI();
   drawPartyFantsCard();
 }

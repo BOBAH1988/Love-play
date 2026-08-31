@@ -191,8 +191,7 @@ function goToTdGame(){
   state.tdLevelTurnCounts = {1:0, 2:0}; state.tdPendingLevelUp = false;
   state.inProgress = true;
   saveState();
-  document.getElementById('tdSetup').classList.remove('active');
-  document.getElementById('tdGame').classList.add('active');
+  goToGame('tdSetup', 'tdGame');
   tdUpdateScoreUI();
   tdShowChoice();
 }

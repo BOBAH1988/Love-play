@@ -676,7 +676,8 @@ function stopSpeech(hintId){
 //   document.getElementById('XxxSetup').classList.remove('active');
 //   document.getElementById('XxxGame').classList.add('active');
 // и обратную (exitXxxGame). Теперь оба перехода — одна строка.
-function goToGame(setupId, gameId){
+function goToGame(setupId, gameId, beforeSwitch){
+  if(beforeSwitch) beforeSwitch();
   if(setupId){
     const setup = document.getElementById(setupId);
     if(setup) setup.classList.remove('active');

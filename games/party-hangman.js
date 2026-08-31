@@ -144,8 +144,7 @@ function partyHangmanDrawWord(){
 }
 
 function goToPartyHangmanGame(){
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyHangmanGame').classList.add('active');
+  goToGame('setup', 'partyHangmanGame');
   updatePartyHangmanScoreUI();
   partyHangmanDrawWord();
   updateMuteBtn();

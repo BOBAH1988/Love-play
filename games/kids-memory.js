@@ -188,7 +188,7 @@ function goToKidsMemoryGame(){
   abandonPausedSoloBsSession();
   state.pausedMode = null;
   document.getElementById('kidsMemorySetup').classList.remove('active');
-  document.getElementById('kidsMemoryGame').classList.add('active');
+  goToGame(null, 'kidsMemoryGame');
   if(!state.kidsPlayers || state.kidsPlayers.length < 2){
     state.kidsPlayers = ['Игрок 1','Игрок 2'];
   }

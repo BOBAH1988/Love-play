@@ -334,8 +334,7 @@ function goToPartyQuizGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('partyQuizSetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyQuizGame').classList.add('active');
+  goToGame(null, 'partyQuizGame');
   updateMuteBtn();
   requestWakeLock();
   showPartyQuizHandoffCard();

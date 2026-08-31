@@ -206,8 +206,7 @@ document.getElementById('soloXoNextRoundBtn').addEventListener('click', ()=>{
   startSoloXoRound(state.soloXoStartingPlayer || 'X');
 });
 function goToSoloXoGame(){
-  document.getElementById('soloXoSetup').classList.remove('active');
-  document.getElementById('soloXoGame').classList.add('active');
+  goToGame('soloXoSetup', 'soloXoGame');
   state.soloXoScorePlayer = 0;
   state.soloXoScoreBot = 0;
   state.soloXoDraws = 0;

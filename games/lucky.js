@@ -492,8 +492,7 @@ function goToLuckyGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('luckySetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('luckyGame').classList.add('active');
+  goToGame(null, 'luckyGame');
   renderLuckyGrid();
   updateLuckyHideTasksBtn();
   renderLuckyBonusChecklist();

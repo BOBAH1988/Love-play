@@ -376,8 +376,7 @@ function goToKidsSaperGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('kidsSaperSetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsSaperGame').classList.add('active');
+  goToGame(null, 'kidsSaperGame');
   renderKidsSaperGrid();
   updateKidsSaperHideTasksBtn();
   renderKidsSaperBonusChecklist();

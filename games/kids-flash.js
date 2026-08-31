@@ -165,8 +165,7 @@ function goToFlashGame(){
   state.flashQueue = shuffleFlashPool(pool).slice(0, count);
   state.flashIndex = 0;
   saveState();
-  document.getElementById('flashSetup').classList.remove('active');
-  document.getElementById('flashGame').classList.add('active');
+  goToGame('flashSetup', 'flashGame');
   drawFlashCard();
   updateMuteBtn();
   requestWakeLock();

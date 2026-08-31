@@ -362,8 +362,7 @@ function goToKrokodilGame(){
   abandonPausedBingoSession();
   abandonPausedSoloBsSession();
   state.pausedMode = null;
-  document.getElementById('krokodilSetup').classList.remove('active');
-  document.getElementById('krokodilGame').classList.add('active');
+  goToGame('krokodilSetup', 'krokodilGame');
   if(!state.partyPlayers || state.partyPlayers.length < 2){
     state.partyPlayers = ['Игрок 1','Игрок 2'];
   }

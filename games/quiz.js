@@ -413,8 +413,7 @@ function goToQuizGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('quizSetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('quizGame').classList.add('active');
+  goToGame(null, 'quizGame');
   updateMuteBtn();
   requestWakeLock();
   showQuizHandoffCard();

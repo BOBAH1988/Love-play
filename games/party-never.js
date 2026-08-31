@@ -63,8 +63,7 @@ function drawPartyNeverCard(){
   });
 }
 function goToPartyNeverGame(){
-  document.getElementById('partyNeverSetup').classList.remove('active');
-  document.getElementById('partyNeverGame').classList.add('active');
+  goToGame('partyNeverSetup', 'partyNeverGame');
   drawPartyNeverCard();
   updateMuteBtn();
   requestWakeLock();

@@ -239,8 +239,7 @@ function kkrNextPlayerRound(){
   });
 }
 function goToKidsKrokodilGame(){
-  document.getElementById('kidsKrokodilSetup').classList.remove('active');
-  document.getElementById('kidsKrokodilGame').classList.add('active');
+  goToGame('kidsKrokodilSetup', 'kidsKrokodilGame');
   if(!state.kidsPlayers || state.kidsPlayers.length < 2){
     state.kidsPlayers = ['Игрок 1','Игрок 2'];
   }

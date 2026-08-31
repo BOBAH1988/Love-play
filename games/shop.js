@@ -244,8 +244,7 @@ document.getElementById('shopNextSaleBtn').addEventListener('click', ()=>{
 
 /* ============ ВХОД/ВЫХОД ИЗ ИГРЫ ============ */
 function goToShopGame(){
-  document.getElementById('shopSetup').classList.remove('active');
-  document.getElementById('shopGame').classList.add('active');
+  goToGame('shopSetup', 'shopGame');
   const mode = state.shopMode || 'buyer';
   document.getElementById('shopBuyerShopping').style.display = mode === 'buyer' ? '' : 'none';
   document.getElementById('shopSellerPanel').style.display = mode === 'seller' ? '' : 'none';

@@ -277,7 +277,7 @@ document.getElementById('wishlistSetupStartBtn').addEventListener('click', ()=>{
   state.inProgress = true;
   saveState();
   document.getElementById('wishlistSetup').classList.remove('active');
-  document.getElementById('wishlistGame').classList.add('active');
+  goToGame(null, 'wishlistGame');
   updateWishlistPlayerButtons();
   startWishlistPlayer(pickStartingPlayerValue(state.wishlistStarter || 'random'));
 });

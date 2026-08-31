@@ -137,8 +137,7 @@ function startTwisterTimer(){
 function goToTwisterGame(){
   const players = (state.partyPlayers && state.partyPlayers.length >= 2) ? state.partyPlayers : ['Игрок 1', 'Игрок 2'];
   twisterPlayerIdx = Math.floor(Math.random() * players.length);
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('twisterGame').classList.add('active');
+  goToGame(null, 'twisterGame');
   renderTwisterDurationGroup();
   stopTwisterInterval();
   twisterStarted = false;

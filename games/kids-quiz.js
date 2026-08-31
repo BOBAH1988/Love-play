@@ -335,8 +335,7 @@ function goToKidsQuizGame(){
   state.inProgress = true;
   saveState();
   document.getElementById('kidsQuizSetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsQuizGame').classList.add('active');
+  goToGame(null, 'kidsQuizGame');
   updateMuteBtn();
   requestWakeLock();
   showKidsQuizHandoffCard();
