@@ -4243,10 +4243,10 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   list.innerHTML = RULES_HUB.map(g=>{
     const items = g.games.map(it=>{
       if(Array.isArray(it)){
-        return `<button type="button" class="rules-item" data-rules-modal="${it[2]}"><span>${it[0]}</span> ${it[1]}<span class="rules-chev">›</span></button>`;
+        return `<button type="button" class="rules-item" data-rules-modal="${it[2]}"><span class="rules-icon">${it[0]}</span><span class="rules-name">${it[1]}</span><span class="rules-chev">›</span></button>`;
       }
       return `<div class="rules-subgroup">${it.sub}</div>` + it.games.map(n=>
-        `<button type="button" class="rules-item nested" data-rules-modal="${n[2]}"><span>${n[0]}</span> ${n[1]}<span class="rules-chev">›</span></button>`
+        `<button type="button" class="rules-item nested" data-rules-modal="${n[2]}"><span class="rules-icon">${n[0]}</span><span class="rules-name">${n[1]}</span><span class="rules-chev">›</span></button>`
       ).join('');
     }).join('');
     return `<div class="rules-group"><button type="button" class="rules-group-head"><span>${g.icon} ${g.name}</span><span class="rules-chev">▸</span></button><div class="rules-group-body">${items}</div></div>`;
