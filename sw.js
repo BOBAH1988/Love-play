@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-/* sw.js — Service Worker PWA-приложения «Весёлые игры».
+/* sw.js — Service Worker PWA-приложения «Давай играй».
  * Директива выше подключает типы Service Worker (waitUntil/respondWith/
  * clients/skipWaiting) — их нет в стандартной lib.dom, иначе VS Code/TS
  * показывали бы ложные ошибки на каждом событии воркера.
