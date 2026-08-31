@@ -1544,10 +1544,20 @@ function updateMuteBtn(){
     resumeBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
     resumeBtn.classList.toggle('on', !!state.muted);
   }
+  const menuMuteBtn = document.getElementById('menuMuteBtn');
+  if(menuMuteBtn){
+    const icon = menuMuteBtn.querySelector('.menu-icon');
+    if(icon) icon.textContent = state.muted ? '🔇' : '🔊';
+  }
   const menuMuteText = document.getElementById('menuMuteText');
   if(menuMuteText) menuMuteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
 }
 function updateAutoSpeakBtn(){
+  const menuAutoSpeakBtn = document.getElementById('menuAutoSpeakBtn');
+  if(menuAutoSpeakBtn){
+    const icon = menuAutoSpeakBtn.querySelector('.menu-icon');
+    if(icon) icon.textContent = state.autoSpeak ? '🔊' : '🔇';
+  }
   const text = document.getElementById('menuAutoSpeakText');
   if(text) text.textContent = state.autoSpeak ? 'Автовоспроизведение включено' : 'Автовоспроизведение выключено';
 }
@@ -4111,8 +4121,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 
   menuBtn.addEventListener('click', ()=>{
     menuModal.classList.add('show');
-    const muteText = document.getElementById('menuMuteText');
-    if(muteText) muteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
+    updateMuteBtn();
+    updateAutoSpeakBtn();
   });
   menuModal.addEventListener('click', (e)=>{
     if(e.target.id === 'globalMenuModal') menuModal.classList.remove('show');
@@ -4131,8 +4141,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     state.muted = !state.muted;
     saveState();
     updateMuteBtn();
-    const muteText = document.getElementById('menuMuteText');
-    if(muteText) muteText.textContent = state.muted ? 'Звук выключен' : 'Звук включён';
   });
   document.getElementById('menuAutoSpeakBtn').addEventListener('click', ()=>{
     state.autoSpeak = !state.autoSpeak;
