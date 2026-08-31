@@ -101,14 +101,7 @@ function stopMtInterval(){
   mtRunning = false;
 }
 function updateMtBar(){
-  const fill = document.getElementById('timerBarFill');
-  const label = document.getElementById('timerLabel');
-  if(!fill || !label) return;
-  const pct = mtTotal > 0 ? Math.round((mtRemaining / mtTotal) * 100) : 0;
-  fill.style.width = pct + '%';
-  const mm = String(Math.floor(mtRemaining / 60)).padStart(2,'0');
-  const ss = String(mtRemaining % 60).padStart(2,'0');
-  label.textContent = mm + ':' + ss;
+  updateProgressBar('timerBarFill', 'timerLabel', mtRemaining, mtTotal, true);
 }
 function mtUpdateScoreUI(){
   document.getElementById('timerScore1').textContent = (state.name1 || 'Игрок 1') + ': ' + state.timerScore1;

@@ -154,14 +154,7 @@ function stopKrInterval(){
   krIntervalId = stopInterval(krIntervalId);
 }
 function updateKrBar(){
-  const fill = document.getElementById('krokodilBarFill');
-  const label = document.getElementById('krokodilLabel');
-  if(!fill || !label) return;
-  const pct = krTotal > 0 ? Math.round((krRemaining / krTotal) * 100) : 0;
-  fill.style.width = pct + '%';
-  const mm = String(Math.floor(krRemaining / 60)).padStart(2,'0');
-  const ss = String(krRemaining % 60).padStart(2,'0');
-  label.textContent = mm + ':' + ss;
+  updateProgressBar('krokodilBarFill', 'krokodilLabel', krRemaining, krTotal, true);
 }
 function updateKrScoreUI(){
   const players = state.partyPlayers || ['Игрок 1','Игрок 2'];

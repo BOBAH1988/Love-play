@@ -47,12 +47,7 @@ document.querySelectorAll('#twisterDurationGroup .starter-btn').forEach(btn=>{
 });
 
 function updateTwisterBar(){
-  const fill = document.getElementById('twisterBarFill');
-  const label = document.getElementById('twisterTimeLabel');
-  if(!fill || !label) return;
-  const pct = twisterTotal > 0 ? Math.round((twisterRemaining / twisterTotal) * 100) : 0;
-  fill.style.width = pct + '%';
-  label.textContent = '00:' + String(twisterRemaining).padStart(2, '0');
+  updateProgressBar('twisterBarFill', 'twisterTimeLabel', twisterRemaining, twisterTotal, false);
 }
 
 function pickTwisterVoice(){

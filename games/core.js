@@ -699,6 +699,24 @@ function hideModal(id){
   if(m) m.classList.remove('show');
 }
 
+/* ============ УНИВЕРСАЛЬНЫЙ ПРОГРЕСС-БАР (таймер) ============ */
+// updateKkrBar / updateKrBar / updateMtBar / updateTwisterBar —
+// все делают одно и то же: ширина fill + текст label (MM:SS или SS).
+function updateProgressBar(fillId, labelId, remaining, total, showMinutes){
+  const fill = document.getElementById(fillId);
+  const label = document.getElementById(labelId);
+  if(!fill || !label) return;
+  const pct = total > 0 ? Math.round((remaining / total) * 100) : 0;
+  fill.style.width = pct + '%';
+  if(showMinutes){
+    const mm = String(Math.floor(remaining / 60)).padStart(2,'0');
+    const ss = String(remaining % 60).padStart(2,'0');
+    label.textContent = mm + ':' + ss;
+  } else {
+    label.textContent = '00:' + String(remaining).padStart(2,'0');
+  }
+}
+
 /* ============ УНИВЕРСАЛЬНЫЕ ПЕРЕХОДЫ МЕЖДУ ЭКРАНАМИ ============ */
 // Раньше каждая игра дублировала пары:
 //   document.getElementById('XxxSetup').classList.remove('active');

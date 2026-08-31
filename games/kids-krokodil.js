@@ -79,14 +79,7 @@ function stopKkrInterval(){
   kkrIntervalId = stopInterval(kkrIntervalId);
 }
 function updateKkrBar(){
-  const fill = document.getElementById('kidsKrokodilBarFill');
-  const label = document.getElementById('kidsKrokodilLabel');
-  if(!fill || !label) return;
-  const pct = kkrTotal > 0 ? Math.round((kkrRemaining / kkrTotal) * 100) : 0;
-  fill.style.width = pct + '%';
-  const mm = String(Math.floor(kkrRemaining / 60)).padStart(2,'0');
-  const ss = String(kkrRemaining % 60).padStart(2,'0');
-  label.textContent = mm + ':' + ss;
+  updateProgressBar('kidsKrokodilBarFill', 'kidsKrokodilLabel', kkrRemaining, kkrTotal, true);
 }
 function updateKkrScoreUI(){
   const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
