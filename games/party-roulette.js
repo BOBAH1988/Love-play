@@ -235,6 +235,6 @@ function exitPartyRouletteGame(){
 }
 document.getElementById('rouletteClearBetsBtn').addEventListener('click', ()=>{ clearRouletteBets(); });
 document.getElementById('rouletteExitBtn').addEventListener('click', ()=>{ exitPartyRouletteGame(); });
-(document.getElementById('rouletteGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('partyRouletteRulesModal').classList.add('show'); });
-document.getElementById('closePartyRouletteRulesBtn').addEventListener('click', ()=>{ document.getElementById('partyRouletteRulesModal').classList.remove('show'); });
+(document.getElementById('rouletteGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyRouletteRulesModal'); });
+document.getElementById('closePartyRouletteRulesBtn').addEventListener('click', ()=>{ hideModal('partyRouletteRulesModal'); });
 document.getElementById('partyRouletteRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'partyRouletteRulesModal') e.currentTarget.classList.remove('show'); });

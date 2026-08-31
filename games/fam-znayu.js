@@ -345,7 +345,7 @@ function showFamZnayuSummaryModal(){
   const introEl = document.getElementById('famZnayuSummaryIntro');
   if(introEl) introEl.textContent = 'Вот кто лучше всех знает друг друга:';
   document.getElementById('famZnayuSummaryList').innerHTML = listHtml;
-  document.getElementById('famZnayuSummaryModal').classList.add('show');
+  showModal('famZnayuSummaryModal');
 }
 function goToFamZnayuGame(){
   abandonPausedDavaySession();
@@ -421,7 +421,7 @@ function finishFamZnayuGame(){
   updateResumeUI();
 }
 function exitFamZnayuGame(){
-  document.getElementById('famZnayuSummaryModal').classList.remove('show');
+  hideModal('famZnayuSummaryModal');
   finishFamZnayuGame();
   exitGame('famZnayuGame', 'famZnayuSetup');
 }
@@ -443,7 +443,7 @@ document.getElementById('famZnayuExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('closeFamZnayuSummaryBtn').addEventListener('click', ()=>{ exitFamZnayuGame(); });
-(document.getElementById('famZnayuSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('famZnayuRulesModal').classList.add('show'); });
-document.getElementById('closeFamZnayuRulesBtn').addEventListener('click', ()=>{ document.getElementById('famZnayuRulesModal').classList.remove('show'); });
+(document.getElementById('famZnayuSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('famZnayuRulesModal'); });
+document.getElementById('closeFamZnayuRulesBtn').addEventListener('click', ()=>{ hideModal('famZnayuRulesModal'); });
 document.getElementById('famZnayuRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'famZnayuRulesModal') e.currentTarget.classList.remove('show'); });
 

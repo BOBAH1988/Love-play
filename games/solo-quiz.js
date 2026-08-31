@@ -224,7 +224,7 @@ function showSoloQuizSummaryModal(){
   const total = state.soloQuizQuestionCount || 10;
   const correct = state.soloQuizCorrect || 0;
   document.getElementById('soloQuizSummaryIntro').textContent = `Верно: ${correct} из ${total} · Общее время: ${fmtSoloQuizTime(state.soloQuizTimeMs || 0)}`;
-  document.getElementById('soloQuizSummaryModal').classList.add('show');
+  showModal('soloQuizSummaryModal');
 }
 function goToSoloQuizGame(){
   state.soloQuizCorrect = 0;
@@ -241,7 +241,7 @@ function goToSoloQuizGame(){
 function exitSoloQuizGame(){
   stopSoloQuizInterval();
   stopSoloQuizSpeech();
-  document.getElementById('soloQuizSummaryModal').classList.remove('show');
+  hideModal('soloQuizSummaryModal');
   exitGame('soloQuizGame', 'soloQuizSetup');
 }
 /* ===== Озвучка вопроса по тапу — тот же приём, что в party-quiz.js ===== */
@@ -300,6 +300,6 @@ document.getElementById('soloQuizSetupStartBtn').addEventListener('click', ()=>{
 document.getElementById('soloQuizSetupExitBtn').addEventListener('click', ()=>{ exitSoloQuizSetup(); });
 document.getElementById('soloQuizExitBtn').addEventListener('click', ()=>{ exitSoloQuizGame(); });
 document.getElementById('closeSoloQuizSummaryBtn').addEventListener('click', ()=>{ exitSoloQuizGame(); });
-(document.getElementById('soloQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloQuizRulesModal').classList.add('show'); });
-document.getElementById('closeSoloQuizRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloQuizRulesModal').classList.remove('show'); });
+(document.getElementById('soloQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloQuizRulesModal'); });
+document.getElementById('closeSoloQuizRulesBtn').addEventListener('click', ()=>{ hideModal('soloQuizRulesModal'); });
 document.getElementById('soloQuizRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'soloQuizRulesModal') e.currentTarget.classList.remove('show'); });

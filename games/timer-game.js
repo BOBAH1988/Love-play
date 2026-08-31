@@ -363,7 +363,7 @@ function showTimerSummary(){
   }
   document.getElementById('summaryScore').textContent = `${name1}: ${state.timerScore1}  ·  ${name2}: ${state.timerScore2}`;
   document.getElementById('summaryCounts').textContent = `Выполнено: ${state.timerCompletedCount||0}  ·  Отказов: ${state.timerSkippedCount||0}`;
-  document.getElementById('summaryModal').classList.add('show');
+  showModal('summaryModal');
 }
 document.getElementById('timerSetupExitBtn').addEventListener('click', exitTimerSetup);
 document.getElementById('timerSetupStartBtn').addEventListener('click', ()=>{
@@ -411,7 +411,7 @@ document.getElementById('timerExitBtn').addEventListener('click', ()=>{
   pauseTimerGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-(document.getElementById('timerSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('timerRulesModal').classList.add('show'); });
-document.getElementById('closeTimerRulesBtn').addEventListener('click', ()=>{ document.getElementById('timerRulesModal').classList.remove('show'); });
+(document.getElementById('timerSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('timerRulesModal'); });
+document.getElementById('closeTimerRulesBtn').addEventListener('click', ()=>{ hideModal('timerRulesModal'); });
 document.getElementById('timerRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'timerRulesModal') e.currentTarget.classList.remove('show'); });
 

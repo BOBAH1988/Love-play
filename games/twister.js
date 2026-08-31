@@ -182,6 +182,6 @@ document.getElementById('twisterNextBtn').addEventListener('click', ()=>{
   startTwisterTimer();
 });
 document.getElementById('twisterExitBtn').addEventListener('click', ()=>{ exitTwisterGame(); });
-(document.getElementById('twisterGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('twisterRulesModal').classList.add('show'); });
-document.getElementById('closeTwisterRulesBtn').addEventListener('click', ()=>{ document.getElementById('twisterRulesModal').classList.remove('show'); });
+(document.getElementById('twisterGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('twisterRulesModal'); });
+document.getElementById('closeTwisterRulesBtn').addEventListener('click', ()=>{ hideModal('twisterRulesModal'); });
 document.getElementById('twisterRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'twisterRulesModal') e.currentTarget.classList.remove('show'); });

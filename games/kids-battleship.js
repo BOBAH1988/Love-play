@@ -269,7 +269,7 @@ function showKidsBattleshipSummary(){
     ${bsPlayerName(0)} победил: ${wins[0] || 0} раз<br>
     ${bsPlayerName(1)} победил: ${wins[1] || 0} раз
   `;
-  document.getElementById('kidsBattleshipSummaryModal').classList.add('show');
+  showModal('kidsBattleshipSummaryModal');
 }
 
 function exitKidsBattleshipGame(){
@@ -291,10 +291,10 @@ document.getElementById('kidsBattleshipHandoffContinueBtn').addEventListener('cl
 });
 document.getElementById('kidsBattleshipExitBtn').addEventListener('click', () => { exitKidsBattleshipGame(); });
 document.getElementById('closeKidsBattleshipSummaryBtn').addEventListener('click', () => {
-  document.getElementById('kidsBattleshipSummaryModal').classList.remove('show');
+  hideModal('kidsBattleshipSummaryModal');
   exitKidsBattleshipGame();
 });
-(document.getElementById('kidsBattleshipSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', () => { document.getElementById('kidsBattleshipRulesModal').classList.add('show'); });
-(document.getElementById('kidsBattleshipGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', () => { document.getElementById('kidsBattleshipRulesModal').classList.add('show'); });
-document.getElementById('closeKidsBattleshipRulesBtn').addEventListener('click', () => { document.getElementById('kidsBattleshipRulesModal').classList.remove('show'); });
+(document.getElementById('kidsBattleshipSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', () => { showModal('kidsBattleshipRulesModal'); });
+(document.getElementById('kidsBattleshipGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', () => { showModal('kidsBattleshipRulesModal'); });
+document.getElementById('closeKidsBattleshipRulesBtn').addEventListener('click', () => { hideModal('kidsBattleshipRulesModal'); });
 document.getElementById('kidsBattleshipRulesModal').addEventListener('click', (e) => { if(e.target.id === 'kidsBattleshipRulesModal') e.currentTarget.classList.remove('show'); });

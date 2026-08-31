@@ -125,6 +125,6 @@ document.getElementById('kidsMemesHideBtn').addEventListener('click', ()=>{
   drawKidsMemesCard();
 });
 document.getElementById('kidsMemesExitBtn').addEventListener('click', ()=>{ exitKidsMemesGame(); });
-(document.getElementById('kidsMemesSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsMemesRulesModal').classList.add('show'); });
-document.getElementById('closeKidsMemesRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsMemesRulesModal').classList.remove('show'); });
+(document.getElementById('kidsMemesSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsMemesRulesModal'); });
+document.getElementById('closeKidsMemesRulesBtn').addEventListener('click', ()=>{ hideModal('kidsMemesRulesModal'); });
 document.getElementById('kidsMemesRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsMemesRulesModal') e.currentTarget.classList.remove('show'); });

@@ -364,7 +364,7 @@ document.getElementById('flashMoreBtn').addEventListener('click', ()=>{
   const btn = document.getElementById('flashMoreBtn');
   if(btn){ btn.setAttribute('aria-expanded', String(!expanded)); }
 });
-(document.getElementById('flashSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('flashRulesModal').classList.add('show'); });
-(document.getElementById('flashGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('flashRulesModal').classList.add('show'); });
-document.getElementById('closeFlashRulesBtn').addEventListener('click', ()=>{ document.getElementById('flashRulesModal').classList.remove('show'); });
+(document.getElementById('flashSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('flashRulesModal'); });
+(document.getElementById('flashGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('flashRulesModal'); });
+document.getElementById('closeFlashRulesBtn').addEventListener('click', ()=>{ hideModal('flashRulesModal'); });
 document.getElementById('flashRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'flashRulesModal') e.currentTarget.classList.remove('show'); });

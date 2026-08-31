@@ -169,7 +169,7 @@ function showKidsMemorySummaryModal(){
   const introEl = document.getElementById('kidsMemorySummaryIntro');
   if(introEl) introEl.textContent = `Все ${totalPairs} пар найдены!` + (isTopTie ? ' 🤝 Ничья за 1-е место!' : ' Вот кто справился лучше всех:');
   document.getElementById('kidsMemorySummaryList').innerHTML = listHtml;
-  document.getElementById('kidsMemorySummaryModal').classList.add('show');
+  showModal('kidsMemorySummaryModal');
 }
 function goToKidsMemoryGame(){
   abandonPausedDavaySession();
@@ -209,7 +209,7 @@ function goToKidsMemoryGame(){
 // Полный выход из партии (кнопка "Завершить игру" на итоговом экране) —
 // сбрасывает поле и счёт, возвращает на экран настройки Мемори.
 function exitKidsMemoryGame(){
-  document.getElementById('kidsMemorySummaryModal').classList.remove('show');
+  hideModal('kidsMemorySummaryModal');
   state.kidsMemoryDeck = [];
   state.kidsMemoryScores = [];
   state.kidsMemoryCurrentPlayerIndex = 0;
@@ -265,7 +265,7 @@ document.getElementById('kidsMemoryExitBtn').addEventListener('click', ()=>{
   pauseKidsMemoryGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-(document.getElementById('kidsMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsMemoryRulesModal').classList.add('show'); });
-(document.getElementById('kidsMemoryGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsMemoryRulesModal').classList.add('show'); });
-document.getElementById('closeKidsMemoryRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsMemoryRulesModal').classList.remove('show'); });
+(document.getElementById('kidsMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsMemoryRulesModal'); });
+(document.getElementById('kidsMemoryGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsMemoryRulesModal'); });
+document.getElementById('closeKidsMemoryRulesBtn').addEventListener('click', ()=>{ hideModal('kidsMemoryRulesModal'); });
 document.getElementById('kidsMemoryRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsMemoryRulesModal') e.currentTarget.classList.remove('show'); });

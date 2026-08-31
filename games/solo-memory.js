@@ -144,7 +144,7 @@ function showSoloMemorySummaryModal(){
   if(statsEl) statsEl.textContent = `👣 Пройдено за ${state.soloMemorySteps || 0} ходов · ⏱️ Время: ${fmtSoloMemoryTime(state.soloMemoryElapsedMs || 0)}`;
   const nameInput = document.getElementById('soloMemoryNameInput');
   if(nameInput) nameInput.value = state.soloMemoryLastName || '';
-  document.getElementById('soloMemorySummaryModal').classList.add('show');
+  showModal('soloMemorySummaryModal');
 }
 function renderSoloMemoryLeaderboard(){
   const wrap = document.getElementById('soloMemoryLeaderboardList');
@@ -209,7 +209,7 @@ function goToSoloMemoryGame(){
 }
 function exitSoloMemoryGame(){
   stopSoloMemoryTimer();
-  document.getElementById('soloMemorySummaryModal').classList.remove('show');
+  hideModal('soloMemorySummaryModal');
   state.soloMemoryDeck = [];
   state.soloMemorySteps = 0;
   state.soloMemoryElapsedMs = 0;
@@ -227,7 +227,7 @@ document.getElementById('closeSoloMemorySummaryBtn').addEventListener('click', (
   exitSoloMemoryGame();
 });
 document.getElementById('soloMemoryExitBtn').addEventListener('click', ()=>{ exitSoloMemoryGame(); });
-(document.getElementById('soloMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.add('show'); });
-(document.getElementById('soloMemoryGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.add('show'); });
-document.getElementById('closeSoloMemoryRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloMemoryRulesModal').classList.remove('show'); });
+(document.getElementById('soloMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloMemoryRulesModal'); });
+(document.getElementById('soloMemoryGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloMemoryRulesModal'); });
+document.getElementById('closeSoloMemoryRulesBtn').addEventListener('click', ()=>{ hideModal('soloMemoryRulesModal'); });
 document.getElementById('soloMemoryRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'soloMemoryRulesModal') e.currentTarget.classList.remove('show'); });

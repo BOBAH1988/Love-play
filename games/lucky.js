@@ -375,7 +375,7 @@ function showLuckyBonus(level){
   if(introEl) introEl.textContent = `🏆 Линия собрана командой «${teamName}»! Уровень повышен: ${info.icon} ${info.name}`;
   const textEl = document.getElementById('luckyBonusText');
   if(textEl) textEl.textContent = 'Поздравьте друг друга аплодисментами!';
-  document.getElementById('luckyBonusModal').classList.add('show');
+  showModal('luckyBonusModal');
 }
 // Партия завершается сама, как только собрано 5 любых линий или отмечены
 // все 25 клеток — точно как checkBingoGameFinished в "Секс-бинго".
@@ -391,7 +391,7 @@ function checkLuckyGameFinished(){
   }
 }
 function showLuckySummaryModal(){
-  document.getElementById('luckyBonusModal').classList.remove('show');
+  hideModal('luckyBonusModal');
   ensureLuckyTeams();
   const teams = state.luckyTeams;
   const completed = state.luckyCompleted || [];
@@ -452,7 +452,7 @@ function showLuckySummaryModal(){
     }
   }
   saveState();
-  document.getElementById('luckySummaryModal').classList.add('show');
+  showModal('luckySummaryModal');
 }
 function goToLuckyGame(){
   abandonPausedDavaySession();
@@ -545,7 +545,7 @@ function finishLuckyGame(){
 // и уровень, возвращает на экран настройки Счастливого билета (как
 // exitKrokodilGame в "Крокодиле").
 function exitLuckyGame(){
-  document.getElementById('luckySummaryModal').classList.remove('show');
+  hideModal('luckySummaryModal');
   state.luckyGrid = [];
   state.luckyChecked = [];
   state.luckyCompleted = [];
@@ -653,10 +653,10 @@ document.getElementById('luckyExitBtn').addEventListener('click', ()=>{
 });
 document.getElementById('luckyBonusAcceptBtn').addEventListener('click', ()=>{
   playSuccessSound();
-  document.getElementById('luckyBonusModal').classList.remove('show');
+  hideModal('luckyBonusModal');
 });
 document.getElementById('closeLuckySummaryBtn').addEventListener('click', ()=>{ exitLuckyGame(); });
-(document.getElementById('luckySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('luckyRulesModal').classList.add('show'); });
-document.getElementById('closeLuckyRulesBtn').addEventListener('click', ()=>{ document.getElementById('luckyRulesModal').classList.remove('show'); });
+(document.getElementById('luckySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('luckyRulesModal'); });
+document.getElementById('closeLuckyRulesBtn').addEventListener('click', ()=>{ hideModal('luckyRulesModal'); });
 document.getElementById('luckyRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'luckyRulesModal') e.currentTarget.classList.remove('show'); });
 

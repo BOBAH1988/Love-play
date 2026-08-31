@@ -1154,14 +1154,14 @@ function showBizSummaryModal(){
       <span class="krokodil-summary-name">${text}</span>
     </div>
   `).join('');
-  document.getElementById('businessLemonadeSummaryModal').classList.add('show');
+  showModal('businessLemonadeSummaryModal');
 }
 document.getElementById('bizPlayAgainBtn').addEventListener('click', ()=>{
-  document.getElementById('businessLemonadeSummaryModal').classList.remove('show');
+  hideModal('businessLemonadeSummaryModal');
   goToBusinessLemonadeGame();
 });
 document.getElementById('closeBusinessLemonadeSummaryBtn').addEventListener('click', ()=>{
-  document.getElementById('businessLemonadeSummaryModal').classList.remove('show');
+  hideModal('businessLemonadeSummaryModal');
   exitBusinessLemonadeGame();
 });
 
@@ -1227,6 +1227,6 @@ document.querySelectorAll('#bizGoalGroup .starter-btn').forEach(btn=>{
 document.getElementById('businessLemonadeSetupStartBtn').addEventListener('click', ()=>{ goToBusinessLemonadeGame(); });
 document.getElementById('businessLemonadeSetupExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeSetup(); });
 document.getElementById('businessLemonadeExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeGame(); });
-(document.getElementById('businessLemonadeSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('businessLemonadeRulesModal').classList.add('show'); });
-document.getElementById('closeBusinessLemonadeRulesBtn').addEventListener('click', ()=>{ document.getElementById('businessLemonadeRulesModal').classList.remove('show'); });
+(document.getElementById('businessLemonadeSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('businessLemonadeRulesModal'); });
+document.getElementById('closeBusinessLemonadeRulesBtn').addEventListener('click', ()=>{ hideModal('businessLemonadeRulesModal'); });
 document.getElementById('businessLemonadeRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'businessLemonadeRulesModal') e.currentTarget.classList.remove('show'); });

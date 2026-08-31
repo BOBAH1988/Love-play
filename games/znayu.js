@@ -318,7 +318,7 @@ function finishZnayuSummary(){
     });
   }
   saveState();
-  document.getElementById('znayuSummaryModal').classList.add('show');
+  showModal('znayuSummaryModal');
 }
 function renderZnayuHistory(page){
   const introEl = document.getElementById('znayuHistoryIntro');
@@ -380,7 +380,7 @@ document.getElementById('znayuExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('closeZnayuSummaryBtn').addEventListener('click', ()=>{
-  document.getElementById('znayuSummaryModal').classList.remove('show');
+  hideModal('znayuSummaryModal');
   document.getElementById('znayuGame').classList.remove('active');
   document.getElementById('znayuSetup').classList.add('active');
   resetZnayuQuiz();
@@ -421,14 +421,14 @@ function finishZnayuGame(){
   saveState();
   updateResumeUI();
 }
-(document.getElementById('znayuSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('znayuRulesModal').classList.add('show'); });
-document.getElementById('closeZnayuRulesBtn').addEventListener('click', ()=>{ document.getElementById('znayuRulesModal').classList.remove('show'); });
+(document.getElementById('znayuSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('znayuRulesModal'); });
+document.getElementById('closeZnayuRulesBtn').addEventListener('click', ()=>{ hideModal('znayuRulesModal'); });
 document.getElementById('znayuRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'znayuRulesModal') e.currentTarget.classList.remove('show'); });
 document.getElementById('znayuHistoryBtn').addEventListener('click', ()=>{
   renderZnayuHistory();
-  document.getElementById('znayuHistoryModal').classList.add('show');
+  showModal('znayuHistoryModal');
 });
-document.getElementById('closeZnayuHistoryBtn').addEventListener('click', ()=>{ document.getElementById('znayuHistoryModal').classList.remove('show'); });
+document.getElementById('closeZnayuHistoryBtn').addEventListener('click', ()=>{ hideModal('znayuHistoryModal'); });
 document.getElementById('znayuHistoryModal').addEventListener('click', (e)=>{ if(e.target.id === 'znayuHistoryModal') e.currentTarget.classList.remove('show'); });
 document.getElementById('znayuSummaryPrevBtn').addEventListener('click', ()=>{
   znayuSummaryPage = renderZnayuPage(znayuSummaryMatches, znayuSummaryPage - 1, ZNAYU_SUMMARY_PAGINATION_IDS);

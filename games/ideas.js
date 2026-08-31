@@ -117,6 +117,6 @@ document.getElementById('ideasFavViewBtn').addEventListener('click', ()=>{
   drawIdeaCard();
 });
 document.getElementById('ideasExitBtn').addEventListener('click', ()=>{ exitIdeasGame(); });
-(document.getElementById('ideasGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('ideasRulesModal').classList.add('show'); });
-document.getElementById('closeIdeasRulesBtn').addEventListener('click', ()=>{ document.getElementById('ideasRulesModal').classList.remove('show'); });
+(document.getElementById('ideasGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('ideasRulesModal'); });
+document.getElementById('closeIdeasRulesBtn').addEventListener('click', ()=>{ hideModal('ideasRulesModal'); });
 document.getElementById('ideasRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'ideasRulesModal') e.currentTarget.classList.remove('show'); });

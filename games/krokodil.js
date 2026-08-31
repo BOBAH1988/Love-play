@@ -323,7 +323,7 @@ function showKrokodilSummaryModal(){
   document.getElementById('krokodilSummaryTitle').textContent = '🏆 Игра окончена';
   document.getElementById('krokodilSummaryIntro').textContent = `Сыграно раундов: ${players.length * (state.krokodilRoundsPerPlayer || 5)} — вот кто справился лучше всех:`;
   document.getElementById('krokodilSummaryList').innerHTML = renderKrokodilSummaryList();
-  document.getElementById('krokodilSummaryModal').classList.add('show');
+  showModal('krokodilSummaryModal');
 }
 // Досрочный выход через общее меню паузы ("Пауза" на экране игры → на
 // главном экране "Закончить игру") — раньше в этом случае партия просто
@@ -341,7 +341,7 @@ function showKrokodilExitSummary(){
   document.getElementById('krokodilSummaryTitle').textContent = '⏸️ Партия прервана';
   document.getElementById('krokodilSummaryIntro').textContent = `Сыграно раундов: ${state.krokodilTurnsPlayed || 0}. Текущий счёт:`;
   document.getElementById('krokodilSummaryList').innerHTML = renderKrokodilSummaryList();
-  document.getElementById('krokodilSummaryModal').classList.add('show');
+  showModal('krokodilSummaryModal');
 }
 function krNextPlayerRound(){
   const n = (state.partyPlayers || []).length || 1;
@@ -393,7 +393,7 @@ function goToKrokodilGame(){
 // сбрасывает счёт и возвращает на экран настройки Крокодила.
 function exitKrokodilGame(){
   stopKrInterval();
-  document.getElementById('krokodilSummaryModal').classList.remove('show');
+  hideModal('krokodilSummaryModal');
   state.krokodilScores = [];
   state.krokodilSkipCounts = [];
   state.krokodilTurnsPlayed = 0;
@@ -465,7 +465,7 @@ document.getElementById('krokodilNextPlayerBtn').addEventListener('click', ()=>{
 document.getElementById('krokodilFinishBtn').addEventListener('click', ()=>{ exitKrokodilGame(); });
 document.getElementById('closeKrokodilSummaryBtn').addEventListener('click', ()=>{
   if(krokodilSummaryIsExit){
-    document.getElementById('krokodilSummaryModal').classList.remove('show');
+    hideModal('krokodilSummaryModal');
     finishKrokodilGame();
   } else {
     exitKrokodilGame();
@@ -475,7 +475,7 @@ document.getElementById('krokodilExitBtn').addEventListener('click', ()=>{
   pauseKrokodilGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-(document.getElementById('krokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('krokodilRulesModal').classList.add('show'); });
-document.getElementById('closeKrokodilRulesBtn').addEventListener('click', ()=>{ document.getElementById('krokodilRulesModal').classList.remove('show'); });
+(document.getElementById('krokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('krokodilRulesModal'); });
+document.getElementById('closeKrokodilRulesBtn').addEventListener('click', ()=>{ hideModal('krokodilRulesModal'); });
 document.getElementById('krokodilRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'krokodilRulesModal') e.currentTarget.classList.remove('show'); });
 

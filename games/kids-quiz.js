@@ -304,7 +304,7 @@ function showKidsQuizSummaryModal(){
     `;
   }).join('');
   document.getElementById('kidsQuizSummaryList').innerHTML = listHtml;
-  document.getElementById('kidsQuizSummaryModal').classList.add('show');
+  showModal('kidsQuizSummaryModal');
 }
 function goToKidsQuizGame(){
   abandonPausedDavaySession();
@@ -375,7 +375,7 @@ function finishKidsQuizGame(){
 }
 function exitKidsQuizGame(){
   if(typeof stopKidsQuizSpeech === 'function') stopKidsQuizSpeech();
-  document.getElementById('kidsQuizSummaryModal').classList.remove('show');
+  hideModal('kidsQuizSummaryModal');
   finishKidsQuizGame();
   exitGame('kidsQuizGame', 'kidsQuizSetup');
 }
@@ -447,6 +447,6 @@ document.getElementById('kidsQuizExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('closeKidsQuizSummaryBtn').addEventListener('click', ()=>{ exitKidsQuizGame(); });
-(document.getElementById('kidsQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsQuizRulesModal').classList.add('show'); });
-document.getElementById('closeKidsQuizRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsQuizRulesModal').classList.remove('show'); });
+(document.getElementById('kidsQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsQuizRulesModal'); });
+document.getElementById('closeKidsQuizRulesBtn').addEventListener('click', ()=>{ hideModal('kidsQuizRulesModal'); });
 document.getElementById('kidsQuizRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsQuizRulesModal') e.currentTarget.classList.remove('show'); });

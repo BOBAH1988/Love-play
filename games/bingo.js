@@ -220,7 +220,7 @@ function showBingoSummary(){
     bonusEl.style.display = 'none';
   }
   saveState();
-  document.getElementById('summaryModal').classList.add('show');
+  showModal('summaryModal');
 }
 function exitBingoGameToSetup(){
   exitGame('bingoGame', 'setup');
@@ -392,7 +392,7 @@ function showBingoExitSummary(){
     bonusEl.textContent = '';
     bonusEl.style.display = 'none';
   }
-  document.getElementById('summaryModal').classList.add('show');
+  showModal('summaryModal');
 }
 function updateBingoHideTasksBtn(){
   const btn = document.getElementById('bingoHideTasksBtn');
@@ -483,7 +483,7 @@ document.getElementById('bingoPauseBtn').addEventListener('click', ()=>{
   pauseBingoGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-(document.getElementById('bingoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('bingoRulesModal').classList.add('show'); });
-document.getElementById('closeBingoRulesBtn').addEventListener('click', ()=>{ document.getElementById('bingoRulesModal').classList.remove('show'); });
+(document.getElementById('bingoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('bingoRulesModal'); });
+document.getElementById('closeBingoRulesBtn').addEventListener('click', ()=>{ hideModal('bingoRulesModal'); });
 document.getElementById('bingoRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'bingoRulesModal') e.currentTarget.classList.remove('show'); });
 

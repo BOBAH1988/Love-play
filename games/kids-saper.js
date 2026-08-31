@@ -236,7 +236,7 @@ function showKidsSaperBonus(level){
   if(introEl) introEl.textContent = `🏆 Линия собрана командой «${teamName}»! Уровень повышен: ${info ? info.icon + ' ' + info.name : ''}`;
   const textEl = document.getElementById('kidsSaperBonusText');
   if(textEl) textEl.textContent = 'Поздравьте друг друга аплодисментами!';
-  document.getElementById('kidsSaperBonusModal').classList.add('show');
+  showModal('kidsSaperBonusModal');
 }
 function checkKidsSaperGameFinished(){
   if(state.kidsSaperFinished) return;
@@ -249,7 +249,7 @@ function checkKidsSaperGameFinished(){
   }
 }
 function showKidsSaperSummaryModal(){
-  document.getElementById('kidsSaperBonusModal').classList.remove('show');
+  hideModal('kidsSaperBonusModal');
   ensureKidsSaperTeams();
   const completed = state.kidsSaperCompleted || [];
   const ranking = [0,1].map(i=>({n: kidsSaperTeamName(i), score: completed[i] || 0})).sort((a,b)=>b.score-a.score);
@@ -294,7 +294,7 @@ function showKidsSaperSummaryModal(){
     }
   }
   saveState();
-  document.getElementById('kidsSaperSummaryModal').classList.add('show');
+  showModal('kidsSaperSummaryModal');
 }
 function pickKidsSaperFinalTask(){
   if(typeof KIDS_SAPER_FINAL === 'undefined' || !Array.isArray(KIDS_SAPER_FINAL) || KIDS_SAPER_FINAL.length === 0) return null;
@@ -420,7 +420,7 @@ function finishKidsSaperGame(){
   updateResumeUI();
 }
 function exitKidsSaperGame(){
-  document.getElementById('kidsSaperSummaryModal').classList.remove('show');
+  hideModal('kidsSaperSummaryModal');
   state.kidsSaperGrid = [];
   state.kidsSaperChecked = [];
   state.kidsSaperCompleted = [];
@@ -443,7 +443,7 @@ function updateKidsSaperHideTasksBtn(){
 }
 document.getElementById('kidsSaperSetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToKidsSaperGame(); });
 document.getElementById('kidsSaperSetupExitBtn').addEventListener('click', ()=>{ exitKidsSaperSetup(); });
-(document.getElementById('kidsSaperSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsSaperRulesModal').classList.add('show'); });
+(document.getElementById('kidsSaperSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsSaperRulesModal'); });
 document.getElementById('kidsSaperRandomBtn').addEventListener('click', ()=>{ suggestRandomKidsSaperCell(); });
 document.getElementById('kidsSaperHideTasksBtn').addEventListener('click', ()=>{
   state.kidsSaperTasksHidden = !state.kidsSaperTasksHidden;
@@ -474,7 +474,7 @@ document.getElementById('kidsSaperExitBtn').addEventListener('click', ()=>{
 });
 document.getElementById('kidsSaperBonusAcceptBtn').addEventListener('click', ()=>{
   playSuccessSound();
-  document.getElementById('kidsSaperBonusModal').classList.remove('show');
+  hideModal('kidsSaperBonusModal');
 });
 document.getElementById('closeKidsSaperSummaryBtn').addEventListener('click', ()=>{ exitKidsSaperGame(); });
 document.getElementById('kidsSaperRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsSaperRulesModal') e.currentTarget.classList.remove('show'); });

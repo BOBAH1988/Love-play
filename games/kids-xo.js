@@ -205,7 +205,7 @@ function showKidsXoSummaryModal(){
     Ничьих: ${draws}<br><br>
     ${resultLine}
   `;
-  document.getElementById('kidsXoSummaryModal').classList.add('show');
+  showModal('kidsXoSummaryModal');
 }
 function exitKidsXoGame(){
   exitGame('kidsXoGame', 'kidsXoSetup');
@@ -221,10 +221,10 @@ document.getElementById('kidsXoSetupStartBtn').addEventListener('click', ()=>{ p
 document.getElementById('kidsXoSetupExitBtn').addEventListener('click', ()=>{ exitKidsXoSetup(); });
 document.getElementById('kidsXoExitBtn').addEventListener('click', ()=>{ showKidsXoSummaryModal(); });
 document.getElementById('closeKidsXoSummaryBtn').addEventListener('click', ()=>{
-  document.getElementById('kidsXoSummaryModal').classList.remove('show');
+  hideModal('kidsXoSummaryModal');
   exitKidsXoGame();
 });
-(document.getElementById('kidsXoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsXoRulesModal').classList.add('show'); });
-(document.getElementById('kidsXoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsXoRulesModal').classList.add('show'); });
-document.getElementById('closeKidsXoRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsXoRulesModal').classList.remove('show'); });
+(document.getElementById('kidsXoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsXoRulesModal'); });
+(document.getElementById('kidsXoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsXoRulesModal'); });
+document.getElementById('closeKidsXoRulesBtn').addEventListener('click', ()=>{ hideModal('kidsXoRulesModal'); });
 document.getElementById('kidsXoRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsXoRulesModal') e.currentTarget.classList.remove('show'); });

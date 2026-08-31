@@ -685,6 +685,20 @@ function stopInterval(id){
   return null;
 }
 
+/* ============ УНИВЕРСАЛЬНОЕ ПОКАЗАТЬ / СКРЫТЬ МОДАЛКУ ============ */
+// Самый частый паттерн в проекте (~200 вхождений в 37 файлах):
+//   showModal('xxxModal');   // открыть
+//   hideModal('xxxModal'); // закрыть
+// Теперь одна строка в обе стороны.
+function showModal(id){
+  const m = document.getElementById(id);
+  if(m) m.classList.add('show');
+}
+function hideModal(id){
+  const m = document.getElementById(id);
+  if(m) m.classList.remove('show');
+}
+
 /* ============ УНИВЕРСАЛЬНЫЕ ПЕРЕХОДЫ МЕЖДУ ЭКРАНАМИ ============ */
 // Раньше каждая игра дублировала пары:
 //   document.getElementById('XxxSetup').classList.remove('active');
@@ -4210,10 +4224,10 @@ function showSummary(){
   }
   document.getElementById('summaryScore').textContent = `${state.name1}: ${state.score1}  ·  ${state.name2}: ${state.score2}`;
   document.getElementById('summaryCounts').textContent = `Выполнено: ${state.completedCount||0}  ·  Пропущено: ${state.skippedCount||0}`;
-  document.getElementById('summaryModal').classList.add('show');
+  showModal('summaryModal');
 }
 document.getElementById('closeSummaryBtn').addEventListener('click', ()=>{
-  document.getElementById('summaryModal').classList.remove('show');
+  hideModal('summaryModal');
   if(summaryModalMode === 'td'){
     finishTdGame();
     return;
@@ -4234,10 +4248,10 @@ document.getElementById('closeSummaryBtn').addEventListener('click', ()=>{
 });
 
 (document.getElementById('rulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{
-  document.getElementById('rulesModal').classList.add('show');
+  showModal('rulesModal');
 });
 document.getElementById('closeRulesBtn').addEventListener('click', ()=>{
-  document.getElementById('rulesModal').classList.remove('show');
+  hideModal('rulesModal');
 });
 document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'rulesModal') e.currentTarget.classList.remove('show');
@@ -4688,19 +4702,19 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 })();
 
 (document.getElementById('davaySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{
-  document.getElementById('davayRulesModal').classList.add('show');
+  showModal('davayRulesModal');
 });
 document.getElementById('closeDavayRulesBtn').addEventListener('click', ()=>{
-  document.getElementById('davayRulesModal').classList.remove('show');
+  hideModal('davayRulesModal');
 });
 document.getElementById('davayRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'davayRulesModal') e.currentTarget.classList.remove('show');
 });
 (document.getElementById('photoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{
-  document.getElementById('photoRulesModal').classList.add('show');
+  showModal('photoRulesModal');
 });
 document.getElementById('closePhotoRulesBtn').addEventListener('click', ()=>{
-  document.getElementById('photoRulesModal').classList.remove('show');
+  hideModal('photoRulesModal');
 });
 document.getElementById('photoRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'photoRulesModal') e.currentTarget.classList.remove('show');
@@ -4732,13 +4746,13 @@ function tryInstallApp(){
     return;
   }
   // Системной установки нет — показываем пошаговую инструкцию.
-  document.getElementById('installModal').classList.add('show');
+  showModal('installModal');
 }
 document.getElementById('installBtn').addEventListener('click', ()=>{
   tryInstallApp();
 });
 document.getElementById('closeInstallBtn').addEventListener('click', ()=>{
-  document.getElementById('installModal').classList.remove('show');
+  hideModal('installModal');
 });
 document.getElementById('installModal').addEventListener('click', (e)=>{
   if(e.target.id === 'installModal') e.currentTarget.classList.remove('show');
@@ -4767,11 +4781,11 @@ function applyKidsModeRestrictions(){
 }
 document.getElementById('ageGateAdultBtn').addEventListener('click', ()=>{
   try{ localStorage.setItem('couple-game-age-verified-v1', '1'); }catch(e){}
-  document.getElementById('ageGateModal').classList.remove('show');
+  hideModal('ageGateModal');
 });
 document.getElementById('ageGateMinorBtn').addEventListener('click', ()=>{
   try{ localStorage.setItem('couple-game-kids-mode-v1', '1'); }catch(e){}
-  document.getElementById('ageGateModal').classList.remove('show');
+  hideModal('ageGateModal');
   applyKidsModeRestrictions();
 });
 // Долгое нажатие (1.5 сек) на заголовок "Давай играй" — скрытый способ для
@@ -5009,14 +5023,14 @@ function showDavaySummaryModal(matchYes, matchLater, matchNo){
   if(modal) modal.classList.add('show');
 }
 document.getElementById('closeDavaySummaryBtn').addEventListener('click', ()=>{
-  document.getElementById('davaySummaryModal').classList.remove('show');
+  hideModal('davaySummaryModal');
   exitDavayGame(true);
 });
 document.getElementById('davaySummaryModal').addEventListener('click', (e)=>{
   if(e.target.id === 'davaySummaryModal') e.currentTarget.classList.remove('show');
 });
 document.getElementById('davaySummaryFavBtn').addEventListener('click', ()=>{
-  document.getElementById('davaySummaryModal').classList.remove('show');
+  hideModal('davaySummaryModal');
   if(!state.davayFavoritesOnly){
     state.davayFavoritesOnly = true;
     saveState();
@@ -5470,10 +5484,10 @@ document.getElementById('importCardsInput').addEventListener('change', (e)=>{
 document.getElementById('addCardBtn').addEventListener('click', ()=>{
   populateNewCardLevelSelect();
   renderCustomCardsList();
-  document.getElementById('addCardModal').classList.add('show');
+  showModal('addCardModal');
 });
 document.getElementById('closeAddCardBtn').addEventListener('click', ()=>{
-  document.getElementById('addCardModal').classList.remove('show');
+  hideModal('addCardModal');
 });
 document.getElementById('addCardModal').addEventListener('click', (e)=>{
   if(e.target.id === 'addCardModal') e.currentTarget.classList.remove('show');

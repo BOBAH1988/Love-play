@@ -183,16 +183,16 @@ function showKidsTdSummaryModal(){
     `;
   }).join('');
   document.getElementById('kidsTdSummaryList').innerHTML = listHtml;
-  document.getElementById('kidsTdSummaryModal').classList.add('show');
+  showModal('kidsTdSummaryModal');
 }
 function finishKidsTdGame(){
-  document.getElementById('pauseMenuModal').classList.remove('show');
+  hideModal('pauseMenuModal');
   showKidsTdSummaryModal();
 }
 // Полный выход из партии (по кнопке "Завершить игру" на итоговом экране) —
 // сбрасывает счёт и очередь, закрывает модалку итогов.
 function exitKidsTdGame(){
-  document.getElementById('kidsTdSummaryModal').classList.remove('show');
+  hideModal('kidsTdSummaryModal');
   state.kidsTdCompleted = [];
   state.kidsTdSkipped = [];
   state.kidsTdCurrentPlayerIndex = 0;
@@ -239,7 +239,7 @@ document.getElementById('kidsTdChoiceExitBtn').addEventListener('click', ()=>{
   pauseKidsTdGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-(document.getElementById('kidsTdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsTdRulesModal').classList.add('show'); });
-document.getElementById('closeKidsTdRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsTdRulesModal').classList.remove('show'); });
+(document.getElementById('kidsTdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsTdRulesModal'); });
+document.getElementById('closeKidsTdRulesBtn').addEventListener('click', ()=>{ hideModal('kidsTdRulesModal'); });
 document.getElementById('kidsTdRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsTdRulesModal') e.currentTarget.classList.remove('show'); });
 document.getElementById('closeKidsTdSummaryBtn').addEventListener('click', ()=>{ exitKidsTdGame(); });

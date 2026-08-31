@@ -91,7 +91,7 @@ document.getElementById('sexQuestPickBtn').addEventListener('click', ()=>{
   saveState();
   renderSexQuestModeGroup();
   renderSexQuestPickList();
-  document.getElementById('sexQuestPickModal').classList.add('show');
+  showModal('sexQuestPickModal');
 });
 document.querySelectorAll('#sexQuestModeGroup .starter-btn[data-value="random"]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -146,7 +146,7 @@ function renderSexQuestPickList(){
   });
 }
 document.getElementById('sexQuestPickDoneBtn').addEventListener('click', ()=>{
-  document.getElementById('sexQuestPickModal').classList.remove('show');
+  hideModal('sexQuestPickModal');
 });
 document.getElementById('sexQuestPickModal').addEventListener('click', (e)=>{
   if(e.target.id === 'sexQuestPickModal') e.currentTarget.classList.remove('show');
@@ -157,8 +157,8 @@ function exitSexQuestSetup(){
   showSetupView('soloView');
 }
 document.getElementById('sexQuestSetupExitBtn').addEventListener('click', ()=>{ exitSexQuestSetup(); });
-(document.getElementById('sexQuestSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('sexQuestRulesModal').classList.add('show'); });
-document.getElementById('closeSexQuestRulesBtn').addEventListener('click', ()=>{ document.getElementById('sexQuestRulesModal').classList.remove('show'); });
+(document.getElementById('sexQuestSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('sexQuestRulesModal'); });
+document.getElementById('closeSexQuestRulesBtn').addEventListener('click', ()=>{ hideModal('sexQuestRulesModal'); });
 document.getElementById('sexQuestRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'sexQuestRulesModal') e.currentTarget.classList.remove('show'); });
 
 function shuffleIds(ids){
@@ -402,7 +402,7 @@ document.getElementById('sexQuestStartBtn').addEventListener('click', ()=>{
   if(state.sexQuestMode === 'manual' && (!state.sexQuestManualIds || !state.sexQuestManualIds.length)){
     showToast('Выберите хотя бы одно желание');
     renderSexQuestPickList();
-    document.getElementById('sexQuestPickModal').classList.add('show');
+    showModal('sexQuestPickModal');
     return;
   }
   playSuccessSound();

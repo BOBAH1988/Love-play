@@ -229,7 +229,7 @@ function finishWishlistSummary(){
     });
   }
   saveState();
-  document.getElementById('wishlistSummaryModal').classList.add('show');
+  showModal('wishlistSummaryModal');
 }
 function renderWishlistHistory(page){
   const introEl = document.getElementById('wishlistHistoryIntro');
@@ -355,7 +355,7 @@ document.getElementById('wishlistExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('closeWishlistSummaryBtn').addEventListener('click', ()=>{
-  document.getElementById('wishlistSummaryModal').classList.remove('show');
+  hideModal('wishlistSummaryModal');
   document.getElementById('wishlistGame').classList.remove('active');
   document.getElementById('wishlistSetup').classList.add('active');
   resetWishlistQuiz();
@@ -364,14 +364,14 @@ document.getElementById('closeWishlistSummaryBtn').addEventListener('click', ()=
   saveState();
   renderWishlistSetupStarterGroup();
 });
-(document.getElementById('wishlistSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('wishlistRulesModal').classList.add('show'); });
-document.getElementById('closeWishlistRulesBtn').addEventListener('click', ()=>{ document.getElementById('wishlistRulesModal').classList.remove('show'); });
+(document.getElementById('wishlistSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('wishlistRulesModal'); });
+document.getElementById('closeWishlistRulesBtn').addEventListener('click', ()=>{ hideModal('wishlistRulesModal'); });
 document.getElementById('wishlistRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'wishlistRulesModal') e.currentTarget.classList.remove('show'); });
 document.getElementById('wishlistHistoryBtn').addEventListener('click', ()=>{
   renderWishlistHistory();
-  document.getElementById('wishlistHistoryModal').classList.add('show');
+  showModal('wishlistHistoryModal');
 });
-document.getElementById('closeWishlistHistoryBtn').addEventListener('click', ()=>{ document.getElementById('wishlistHistoryModal').classList.remove('show'); });
+document.getElementById('closeWishlistHistoryBtn').addEventListener('click', ()=>{ hideModal('wishlistHistoryModal'); });
 document.getElementById('wishlistHistoryModal').addEventListener('click', (e)=>{ if(e.target.id === 'wishlistHistoryModal') e.currentTarget.classList.remove('show'); });
 document.getElementById('wishlistSummaryPrevBtn').addEventListener('click', ()=>{
   wishlistSummaryPage = renderWishlistPage(wishlistSummaryMatches, wishlistSummaryPage - 1, WISHLIST_SUMMARY_PAGINATION_IDS);
@@ -392,7 +392,7 @@ function showWishlistItemDetail(title){
   const item = items.find(i=>i.text === title);
   document.getElementById('wishlistItemModalTitle').textContent = '💜 ' + title;
   document.getElementById('wishlistItemModalDesc').textContent = item && item.desc ? item.desc : '';
-  document.getElementById('wishlistItemModal').classList.add('show');
+  showModal('wishlistItemModal');
 }
 document.getElementById('wishlistSummaryList').addEventListener('click', (e)=>{
   const li = e.target.closest('li');
@@ -411,6 +411,6 @@ document.getElementById('wishlistHistoryList').addEventListener('click', (e)=>{
   const main = li.querySelector('.match-item-main');
   showWishlistItemDetail((main ? main.textContent : li.textContent).trim());
 });
-document.getElementById('closeWishlistItemBtn').addEventListener('click', ()=>{ document.getElementById('wishlistItemModal').classList.remove('show'); });
+document.getElementById('closeWishlistItemBtn').addEventListener('click', ()=>{ hideModal('wishlistItemModal'); });
 document.getElementById('wishlistItemModal').addEventListener('click', (e)=>{ if(e.target.id === 'wishlistItemModal') e.currentTarget.classList.remove('show'); });
 

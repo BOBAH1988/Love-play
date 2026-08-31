@@ -231,7 +231,7 @@ function showSoloBsSummary(){
     Выстрелов — Вы: ${state.soloBsShots.player || 0}, Бот: ${state.soloBsShots.bot || 0}<br>
     Побед — Вы: ${wins.player || 0}, Бот: ${wins.bot || 0}
   `;
-  document.getElementById('soloBattleshipSummaryModal').classList.add('show');
+  showModal('soloBattleshipSummaryModal');
 }
 function exitSoloBattleshipGame(){
   exitGame('soloBattleshipGame', 'soloBattleshipSetup');
@@ -271,7 +271,7 @@ function resumeSoloBsGame(){
 // Закончить игру из меню паузы — сбрасываем состояние и возвращаемся в меню.
 function finishSoloBsGame(){
   if(soloBsTimerId){ clearTimeout(soloBsTimerId); soloBsTimerId = null; }
-  document.getElementById('pauseMenuModal').classList.remove('show');
+  hideModal('pauseMenuModal');
   exitSoloBattleshipGame();
   updateResumeUI();
   showToast('Игра завершена');
@@ -283,12 +283,12 @@ document.getElementById('soloBattleshipSetupStartBtn').addEventListener('click',
 document.getElementById('soloBattleshipSetupExitBtn').addEventListener('click', ()=>{ exitSoloBattleshipSetup(); });
 document.getElementById('soloBattleshipExitBtn').addEventListener('click', ()=>{ pauseSoloBattleshipGame(); });
 document.getElementById('closeSoloBattleshipSummaryBtn').addEventListener('click', ()=>{
-  document.getElementById('soloBattleshipSummaryModal').classList.remove('show');
+  hideModal('soloBattleshipSummaryModal');
   exitSoloBattleshipGame();
 });
-(document.getElementById('soloBattleshipSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloBattleshipRulesModal').classList.add('show'); });
-(document.getElementById('soloBattleshipGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('soloBattleshipRulesModal').classList.add('show'); });
-document.getElementById('closeSoloBattleshipRulesBtn').addEventListener('click', ()=>{ document.getElementById('soloBattleshipRulesModal').classList.remove('show'); });
+(document.getElementById('soloBattleshipSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloBattleshipRulesModal'); });
+(document.getElementById('soloBattleshipGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloBattleshipRulesModal'); });
+document.getElementById('closeSoloBattleshipRulesBtn').addEventListener('click', ()=>{ hideModal('soloBattleshipRulesModal'); });
 document.getElementById('soloBattleshipRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'soloBattleshipRulesModal') e.currentTarget.classList.remove('show');
 });

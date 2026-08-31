@@ -237,7 +237,7 @@ function showTdSummary(){
   }
   document.getElementById('summaryScore').textContent = `${name1}: ${state.tdScore1}  ·  ${name2}: ${state.tdScore2}`;
   document.getElementById('summaryCounts').textContent = `Выполнено: ${state.tdCompletedCount||0}  ·  Отказов: ${state.tdSkippedCount||0}`;
-  document.getElementById('summaryModal').classList.add('show');
+  showModal('summaryModal');
 }
 // Повышение уровня в "Правда или действие" тоже откладывается, пока оба
 // партнёра не сыграют поровну карточек текущего уровня (см. tdNextTurn()).
@@ -293,7 +293,7 @@ document.getElementById('tdPauseBtn').addEventListener('click', ()=>{
   playSuccessSound();
   pauseTdGame();
 });
-(document.getElementById('tdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.add('show'); });
-document.getElementById('closeTdRulesBtn').addEventListener('click', ()=>{ document.getElementById('tdRulesModal').classList.remove('show'); });
+(document.getElementById('tdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('tdRulesModal'); });
+document.getElementById('closeTdRulesBtn').addEventListener('click', ()=>{ hideModal('tdRulesModal'); });
 document.getElementById('tdRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'tdRulesModal') e.currentTarget.classList.remove('show'); });
 

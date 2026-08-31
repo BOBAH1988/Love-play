@@ -317,7 +317,7 @@ function bizObsShowSummaryModal(){
     `;
   }).join('');
   document.getElementById('bizObsSummaryList').innerHTML = listHtml;
-  document.getElementById('bizObsSummaryModal').classList.add('show');
+  showModal('bizObsSummaryModal');
 }
 
 /* ============ ВХОД/ВЫХОД ИЗ ИГРЫ ============ */
@@ -333,7 +333,7 @@ function goToBizObsGame(){
   bizObsShowHandoffCard();
 }
 function exitBizObsGame(){
-  document.getElementById('bizObsSummaryModal').classList.remove('show');
+  hideModal('bizObsSummaryModal');
   exitGame('bizObsGame', 'bizObsSetup');
 }
 document.getElementById('bizObsSetupStartBtn').addEventListener('click', ()=>{
@@ -347,6 +347,6 @@ document.getElementById('bizObsHandoffStartBtn').addEventListener('click', ()=>{
 });
 document.getElementById('bizObsExitBtn').addEventListener('click', ()=>{ exitBizObsGame(); });
 document.getElementById('closeBizObsSummaryBtn').addEventListener('click', ()=>{ exitBizObsGame(); });
-(document.getElementById('bizObsSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('bizObsRulesModal').classList.add('show'); });
-document.getElementById('closeBizObsRulesBtn').addEventListener('click', ()=>{ document.getElementById('bizObsRulesModal').classList.remove('show'); });
+(document.getElementById('bizObsSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('bizObsRulesModal'); });
+document.getElementById('closeBizObsRulesBtn').addEventListener('click', ()=>{ hideModal('bizObsRulesModal'); });
 document.getElementById('bizObsRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'bizObsRulesModal') e.currentTarget.classList.remove('show'); });

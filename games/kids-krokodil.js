@@ -223,7 +223,7 @@ function showKidsKrokodilSummaryModal(){
   }).join('');
   document.getElementById('kidsKrokodilSummaryIntro').textContent = `Сыграно раундов: ${players.length * (state.kidsKrokodilRoundsPerPlayer || 5)} — вот кто справился лучше всех:`;
   document.getElementById('kidsKrokodilSummaryList').innerHTML = listHtml;
-  document.getElementById('kidsKrokodilSummaryModal').classList.add('show');
+  showModal('kidsKrokodilSummaryModal');
 }
 function kkrNextPlayerRound(){
   const n = (state.kidsPlayers || []).length || 1;
@@ -267,7 +267,7 @@ function goToKidsKrokodilGame(){
 }
 function exitKidsKrokodilGame(){
   stopKkrInterval();
-  document.getElementById('kidsKrokodilSummaryModal').classList.remove('show');
+  hideModal('kidsKrokodilSummaryModal');
   state.kidsKrokodilScores = [];
   state.kidsKrokodilSkipCounts = [];
   state.kidsKrokodilTurnsPlayed = 0;
@@ -293,6 +293,6 @@ document.getElementById('kidsKrokodilNextPlayerBtn').addEventListener('click', (
 document.getElementById('kidsKrokodilFinishBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
 document.getElementById('closeKidsKrokodilSummaryBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
 document.getElementById('kidsKrokodilExitBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
-(document.getElementById('kidsKrokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ document.getElementById('kidsKrokodilRulesModal').classList.add('show'); });
-document.getElementById('closeKidsKrokodilRulesBtn').addEventListener('click', ()=>{ document.getElementById('kidsKrokodilRulesModal').classList.remove('show'); });
+(document.getElementById('kidsKrokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsKrokodilRulesModal'); });
+document.getElementById('closeKidsKrokodilRulesBtn').addEventListener('click', ()=>{ hideModal('kidsKrokodilRulesModal'); });
 document.getElementById('kidsKrokodilRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsKrokodilRulesModal') e.currentTarget.classList.remove('show'); });
