@@ -118,5 +118,5 @@ document.getElementById('ideasFavViewBtn').addEventListener('click', ()=>{
 });
 document.getElementById('ideasExitBtn').addEventListener('click', ()=>{ exitIdeasGame(); });
 (document.getElementById('ideasGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('ideasRulesModal'); });
-document.getElementById('closeIdeasRulesBtn').addEventListener('click', ()=>{ hideModal('ideasRulesModal'); });
-document.getElementById('ideasRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'ideasRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('ideasRulesModal', 'closeIdeasRulesBtn');
+

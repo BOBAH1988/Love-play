@@ -405,6 +405,6 @@ document.getElementById('timerExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 (document.getElementById('timerSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('timerRulesModal'); });
-document.getElementById('closeTimerRulesBtn').addEventListener('click', ()=>{ hideModal('timerRulesModal'); });
-document.getElementById('timerRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'timerRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('timerRulesModal', 'closeTimerRulesBtn');
+
 

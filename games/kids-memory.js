@@ -267,5 +267,5 @@ document.getElementById('kidsMemoryExitBtn').addEventListener('click', ()=>{
 });
 (document.getElementById('kidsMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsMemoryRulesModal'); });
 (document.getElementById('kidsMemoryGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsMemoryRulesModal'); });
-document.getElementById('closeKidsMemoryRulesBtn').addEventListener('click', ()=>{ hideModal('kidsMemoryRulesModal'); });
-document.getElementById('kidsMemoryRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsMemoryRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('kidsMemoryRulesModal', 'closeKidsMemoryRulesBtn');
+

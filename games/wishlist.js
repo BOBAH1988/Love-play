@@ -365,8 +365,8 @@ document.getElementById('closeWishlistSummaryBtn').addEventListener('click', ()=
   renderWishlistSetupStarterGroup();
 });
 (document.getElementById('wishlistSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('wishlistRulesModal'); });
-document.getElementById('closeWishlistRulesBtn').addEventListener('click', ()=>{ hideModal('wishlistRulesModal'); });
-document.getElementById('wishlistRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'wishlistRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('wishlistRulesModal', 'closeWishlistRulesBtn');
+
 document.getElementById('wishlistHistoryBtn').addEventListener('click', ()=>{
   renderWishlistHistory();
   showModal('wishlistHistoryModal');

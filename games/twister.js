@@ -178,5 +178,5 @@ document.getElementById('twisterNextBtn').addEventListener('click', ()=>{
 });
 document.getElementById('twisterExitBtn').addEventListener('click', ()=>{ exitTwisterGame(); });
 (document.getElementById('twisterGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('twisterRulesModal'); });
-document.getElementById('closeTwisterRulesBtn').addEventListener('click', ()=>{ hideModal('twisterRulesModal'); });
-document.getElementById('twisterRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'twisterRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('twisterRulesModal', 'closeTwisterRulesBtn');
+

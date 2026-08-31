@@ -229,5 +229,5 @@ document.getElementById('closeSoloMemorySummaryBtn').addEventListener('click', (
 document.getElementById('soloMemoryExitBtn').addEventListener('click', ()=>{ exitSoloMemoryGame(); });
 (document.getElementById('soloMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloMemoryRulesModal'); });
 (document.getElementById('soloMemoryGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloMemoryRulesModal'); });
-document.getElementById('closeSoloMemoryRulesBtn').addEventListener('click', ()=>{ hideModal('soloMemoryRulesModal'); });
-document.getElementById('soloMemoryRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'soloMemoryRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('soloMemoryRulesModal', 'closeSoloMemoryRulesBtn');
+

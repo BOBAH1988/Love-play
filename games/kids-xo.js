@@ -226,5 +226,5 @@ document.getElementById('closeKidsXoSummaryBtn').addEventListener('click', ()=>{
 });
 (document.getElementById('kidsXoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsXoRulesModal'); });
 (document.getElementById('kidsXoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsXoRulesModal'); });
-document.getElementById('closeKidsXoRulesBtn').addEventListener('click', ()=>{ hideModal('kidsXoRulesModal'); });
-document.getElementById('kidsXoRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsXoRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('kidsXoRulesModal', 'closeKidsXoRulesBtn');
+

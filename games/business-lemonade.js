@@ -1228,5 +1228,5 @@ document.getElementById('businessLemonadeSetupStartBtn').addEventListener('click
 document.getElementById('businessLemonadeSetupExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeSetup(); });
 document.getElementById('businessLemonadeExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeGame(); });
 (document.getElementById('businessLemonadeSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('businessLemonadeRulesModal'); });
-document.getElementById('closeBusinessLemonadeRulesBtn').addEventListener('click', ()=>{ hideModal('businessLemonadeRulesModal'); });
-document.getElementById('businessLemonadeRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'businessLemonadeRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('businessLemonadeRulesModal', 'closeBusinessLemonadeRulesBtn');
+

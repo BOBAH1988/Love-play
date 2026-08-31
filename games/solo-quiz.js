@@ -301,5 +301,5 @@ document.getElementById('soloQuizSetupExitBtn').addEventListener('click', ()=>{ 
 document.getElementById('soloQuizExitBtn').addEventListener('click', ()=>{ exitSoloQuizGame(); });
 document.getElementById('closeSoloQuizSummaryBtn').addEventListener('click', ()=>{ exitSoloQuizGame(); });
 (document.getElementById('soloQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloQuizRulesModal'); });
-document.getElementById('closeSoloQuizRulesBtn').addEventListener('click', ()=>{ hideModal('soloQuizRulesModal'); });
-document.getElementById('soloQuizRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'soloQuizRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('soloQuizRulesModal', 'closeSoloQuizRulesBtn');
+

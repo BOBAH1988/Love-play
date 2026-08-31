@@ -232,7 +232,7 @@ document.getElementById('partyTdChoiceExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 (document.getElementById('partyTdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyTdRulesModal'); });
-document.getElementById('closePartyTdRulesBtn').addEventListener('click', ()=>{ hideModal('partyTdRulesModal'); });
-document.getElementById('partyTdRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'partyTdRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('partyTdRulesModal', 'closePartyTdRulesBtn');
+
 document.getElementById('closePartyTdSummaryBtn').addEventListener('click', ()=>{ exitPartyTdGame(); });
 

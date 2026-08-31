@@ -287,5 +287,5 @@ document.getElementById('kidsKrokodilFinishBtn').addEventListener('click', ()=>{
 document.getElementById('closeKidsKrokodilSummaryBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
 document.getElementById('kidsKrokodilExitBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
 (document.getElementById('kidsKrokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsKrokodilRulesModal'); });
-document.getElementById('closeKidsKrokodilRulesBtn').addEventListener('click', ()=>{ hideModal('kidsKrokodilRulesModal'); });
-document.getElementById('kidsKrokodilRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsKrokodilRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('kidsKrokodilRulesModal', 'closeKidsKrokodilRulesBtn');
+

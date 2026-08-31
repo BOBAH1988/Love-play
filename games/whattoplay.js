@@ -114,5 +114,5 @@ document.getElementById('whatToPlayFavViewBtn').addEventListener('click', ()=>{
 });
 document.getElementById('whatToPlayExitBtn').addEventListener('click', ()=>{ exitWhatToPlayGame(); });
 (document.getElementById('whatToPlayGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('whatToPlayRulesModal'); });
-document.getElementById('closeWhatToPlayRulesBtn').addEventListener('click', ()=>{ hideModal('whatToPlayRulesModal'); });
-document.getElementById('whatToPlayRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'whatToPlayRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('whatToPlayRulesModal', 'closeWhatToPlayRulesBtn');
+

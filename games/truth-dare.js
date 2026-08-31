@@ -294,6 +294,6 @@ document.getElementById('tdPauseBtn').addEventListener('click', ()=>{
   pauseTdGame();
 });
 (document.getElementById('tdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('tdRulesModal'); });
-document.getElementById('closeTdRulesBtn').addEventListener('click', ()=>{ hideModal('tdRulesModal'); });
-document.getElementById('tdRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'tdRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('tdRulesModal', 'closeTdRulesBtn');
+
 

@@ -153,6 +153,6 @@ document.getElementById('memesHideBtn').addEventListener('click', ()=>{
 });
 document.getElementById('memesExitBtn').addEventListener('click', ()=>{ exitMemesGame(); });
 (document.getElementById('memesSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('memesRulesModal'); });
-document.getElementById('closeMemesRulesBtn').addEventListener('click', ()=>{ hideModal('memesRulesModal'); });
-document.getElementById('memesRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'memesRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('memesRulesModal', 'closeMemesRulesBtn');
+
 

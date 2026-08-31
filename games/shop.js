@@ -271,5 +271,5 @@ document.getElementById('shopSetupStartBtn').addEventListener('click', ()=>{ goT
 document.getElementById('shopSetupExitBtn').addEventListener('click', ()=>{ exitShopSetup(); });
 document.getElementById('shopExitBtn').addEventListener('click', ()=>{ exitShopGame(); });
 (document.getElementById('shopGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('shopRulesModal'); });
-document.getElementById('closeShopRulesBtn').addEventListener('click', ()=>{ hideModal('shopRulesModal'); });
-document.getElementById('shopRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'shopRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('shopRulesModal', 'closeShopRulesBtn');
+

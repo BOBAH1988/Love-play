@@ -699,6 +699,18 @@ function hideModal(id){
   if(m) m.classList.remove('show');
 }
 
+/* ============ УНИВЕРСАЛЬНОЕ ПОДКЛЮЧЕНИЕ RULES-МОДАЛКИ ============ */
+// Каждая игра дублировала 2 строки:
+//   closeXxxRulesBtn.click -> hideModal('xxxRulesModal')
+//   xxxRulesModal.click (backdrop) -> hideModal('xxxRulesModal')
+// Теперь одна функция: setupRulesModal(modalId, closeBtnId)
+function setupRulesModal(modalId, closeBtnId){
+  const closeBtn = document.getElementById(closeBtnId);
+  if(closeBtn) closeBtn.addEventListener('click', ()=>{ hideModal(modalId); });
+  const modal = document.getElementById(modalId);
+  if(modal) modal.addEventListener('click', (e)=>{ if(e.target.id === modalId) hideModal(modalId); });
+}
+
 /* ============ УНИВЕРСАЛЬНЫЙ ПРОГРЕСС-БАР (таймер) ============ */
 // updateKkrBar / updateKrBar / updateMtBar / updateTwisterBar —
 // все делают одно и то же: ширина fill + текст label (MM:SS или SS).

@@ -484,6 +484,6 @@ document.getElementById('bingoPauseBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 (document.getElementById('bingoGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('bingoRulesModal'); });
-document.getElementById('closeBingoRulesBtn').addEventListener('click', ()=>{ hideModal('bingoRulesModal'); });
-document.getElementById('bingoRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'bingoRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('bingoRulesModal', 'closeBingoRulesBtn');
+
 

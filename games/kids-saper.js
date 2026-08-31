@@ -477,4 +477,4 @@ document.getElementById('kidsSaperBonusAcceptBtn').addEventListener('click', ()=
   hideModal('kidsSaperBonusModal');
 });
 document.getElementById('closeKidsSaperSummaryBtn').addEventListener('click', ()=>{ exitKidsSaperGame(); });
-document.getElementById('kidsSaperRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsSaperRulesModal') e.currentTarget.classList.remove('show'); });
+

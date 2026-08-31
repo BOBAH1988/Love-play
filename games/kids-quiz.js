@@ -448,5 +448,5 @@ document.getElementById('kidsQuizExitBtn').addEventListener('click', ()=>{
 });
 document.getElementById('closeKidsQuizSummaryBtn').addEventListener('click', ()=>{ exitKidsQuizGame(); });
 (document.getElementById('kidsQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsQuizRulesModal'); });
-document.getElementById('closeKidsQuizRulesBtn').addEventListener('click', ()=>{ hideModal('kidsQuizRulesModal'); });
-document.getElementById('kidsQuizRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'kidsQuizRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('kidsQuizRulesModal', 'closeKidsQuizRulesBtn');
+

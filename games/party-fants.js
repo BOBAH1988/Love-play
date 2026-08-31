@@ -200,7 +200,7 @@ document.getElementById('partyFantsExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 (document.getElementById('partyFantsSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyFantsRulesModal'); });
-document.getElementById('closePartyFantsRulesBtn').addEventListener('click', ()=>{ hideModal('partyFantsRulesModal'); });
-document.getElementById('partyFantsRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'partyFantsRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('partyFantsRulesModal', 'closePartyFantsRulesBtn');
+
 document.getElementById('closePartyFantsSummaryBtn').addEventListener('click', ()=>{ exitPartyFantsGame(); });
 

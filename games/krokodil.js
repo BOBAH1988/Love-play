@@ -469,6 +469,6 @@ document.getElementById('krokodilExitBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 (document.getElementById('krokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('krokodilRulesModal'); });
-document.getElementById('closeKrokodilRulesBtn').addEventListener('click', ()=>{ hideModal('krokodilRulesModal'); });
-document.getElementById('krokodilRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'krokodilRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('krokodilRulesModal', 'closeKrokodilRulesBtn');
+
 

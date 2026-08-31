@@ -158,8 +158,8 @@ function exitSexQuestSetup(){
 }
 document.getElementById('sexQuestSetupExitBtn').addEventListener('click', ()=>{ exitSexQuestSetup(); });
 (document.getElementById('sexQuestSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('sexQuestRulesModal'); });
-document.getElementById('closeSexQuestRulesBtn').addEventListener('click', ()=>{ hideModal('sexQuestRulesModal'); });
-document.getElementById('sexQuestRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'sexQuestRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('sexQuestRulesModal', 'closeSexQuestRulesBtn');
+
 
 function shuffleIds(ids){
   const arr = ids.slice();

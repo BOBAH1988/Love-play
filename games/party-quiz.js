@@ -447,5 +447,5 @@ document.getElementById('partyQuizExitBtn').addEventListener('click', ()=>{
 });
 document.getElementById('closePartyQuizSummaryBtn').addEventListener('click', ()=>{ exitPartyQuizGame(); });
 (document.getElementById('partyQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyQuizRulesModal'); });
-document.getElementById('closePartyQuizRulesBtn').addEventListener('click', ()=>{ hideModal('partyQuizRulesModal'); });
-document.getElementById('partyQuizRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'partyQuizRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('partyQuizRulesModal', 'closePartyQuizRulesBtn');
+

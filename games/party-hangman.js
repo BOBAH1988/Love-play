@@ -161,5 +161,5 @@ document.getElementById('partyHangmanNextBtn').addEventListener('click', ()=>{
 });
 document.getElementById('partyHangmanExitBtn').addEventListener('click', ()=>{ exitPartyHangmanGame(); });
 (document.getElementById('partyHangmanGameRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyHangmanRulesModal'); });
-document.getElementById('closePartyHangmanRulesBtn').addEventListener('click', ()=>{ hideModal('partyHangmanRulesModal'); });
-document.getElementById('partyHangmanRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'partyHangmanRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('partyHangmanRulesModal', 'closePartyHangmanRulesBtn');
+

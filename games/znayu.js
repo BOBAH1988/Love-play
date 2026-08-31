@@ -422,8 +422,8 @@ function finishZnayuGame(){
   updateResumeUI();
 }
 (document.getElementById('znayuSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('znayuRulesModal'); });
-document.getElementById('closeZnayuRulesBtn').addEventListener('click', ()=>{ hideModal('znayuRulesModal'); });
-document.getElementById('znayuRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'znayuRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('znayuRulesModal', 'closeZnayuRulesBtn');
+
 document.getElementById('znayuHistoryBtn').addEventListener('click', ()=>{
   renderZnayuHistory();
   showModal('znayuHistoryModal');

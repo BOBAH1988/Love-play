@@ -444,6 +444,6 @@ document.getElementById('famZnayuExitBtn').addEventListener('click', ()=>{
 });
 document.getElementById('closeFamZnayuSummaryBtn').addEventListener('click', ()=>{ exitFamZnayuGame(); });
 (document.getElementById('famZnayuSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('famZnayuRulesModal'); });
-document.getElementById('closeFamZnayuRulesBtn').addEventListener('click', ()=>{ hideModal('famZnayuRulesModal'); });
-document.getElementById('famZnayuRulesModal').addEventListener('click', (e)=>{ if(e.target.id === 'famZnayuRulesModal') e.currentTarget.classList.remove('show'); });
+setupRulesModal('famZnayuRulesModal', 'closeFamZnayuRulesBtn');
+
 
