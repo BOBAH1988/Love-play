@@ -398,9 +398,10 @@ function goToGameSetup(gameSetupId, targetView, beforeSwitch){
     console.warn('goToGameSetup: не передан id экрана настроек');
     return;
   }
-  // 1) гасим #setup (на случай, если он активен)
-  const setupEl = document.getElementById('setup');
-  if(setupEl) setupEl.classList.remove('active');
+  // 1) гасим ВСЕ активные экраны (не только #setup: подменю вроде
+  //    #kidsBoardGamesMenu и другие настройки тоже должны гаснуть), чтобы
+  //    не оставалось «экрана, поделённого на 2 части» при наложении.
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   // 2) включаем нужный экран настроек
   const targetEl = document.getElementById(gameSetupId);
   if(targetEl){
@@ -743,20 +744,23 @@ function updateProgressBar(fillId, labelId, remaining, total, showMinutes){
 // и обратную (exitXxxGame). Теперь оба перехода — одна строка.
 function goToGame(setupId, gameId, beforeSwitch){
   if(beforeSwitch) beforeSwitch();
-  if(setupId){
-    const setup = document.getElementById(setupId);
-    if(setup) setup.classList.remove('active');
-  }
+  // Гарантируем единственный активный экран: убираем active со всех текущих
+  // экранов (включая #setup и подменю вроде #kidsBoardGamesMenu), затем
+  // включаем только целевой игровой экран. setupId больше не нужен для
+  // точечного снятия, но сигнатура сохранена ради совместимости.
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   const game = document.getElementById(gameId);
   if(game) game.classList.add('active');
 }
 function exitGame(gameId, setupId){
   const game = document.getElementById(gameId);
   if(game) game.classList.remove('active');
-  if(setupId){
-    const setup = document.getElementById(setupId);
-    if(setup) setup.classList.add('active');
-  }
+  // Убираем active со всех оставшихся экранов — иначе по дороге назад могут
+  // остаться висеть подменю (например, после выхода из «Морского боя» у детей
+  // оставался активным #kidsBoardGamesMenu) и экраны наложатся друг на друга.
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
+  const setup = document.getElementById(setupId || 'setup');
+  if(setup) setup.classList.add('active');
 }
 // Правило для «Только избранное»: либо 10+ карточек на двоих, либо минимум по 5 карточек,
 // доступных каждому партнёру отдельно (общая карточка засчитывается обоим).
