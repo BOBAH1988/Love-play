@@ -425,8 +425,16 @@
   .placeholder-row .btn{flex:1 1 140px; padding:10px; font-size:14px;}
   /* Список игр на главной странице — единый спокойный стиль вместо разноцветных градиентов;
      сетка сама переходит на 2 колонки, если хватает ширины экрана. */
-  /* ===== Страница правил всех игр ===== */
-  .rules-hub-card{ width:min(430px,94vw); max-height:80vh; overflow-y:auto;
+  /* ===== Страница правил всех игр =====
+     ВАЖНО: селектор именно .modal-card.rules-hub-card, а не просто
+     .rules-hub-card. У карточки два класса, и .modal-card объявлен в
+     таблице стилей ПОЗЖЕ — при равной специфичности его
+     background:var(--card-bg) (#fff) перебивал тёмный градиент: карточка
+     становилась белой, а белые названия игр на белом фоне пропадали
+     (видны только иконки). Двойной класс повышает специфичность и
+     гарантирует тёмный фон + белый текст независимо от порядка правил. */
+  .modal-card.rules-hub-card{ width:min(430px,94vw); max-width:min(430px,94vw);
+    max-height:80vh; overflow-y:auto;
     background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20); color:#fff; }
   .rules-group{ margin-top:10px; }
   .rules-group-head{
