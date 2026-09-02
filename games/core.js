@@ -196,6 +196,12 @@ let state = {
   // всегда крестики (X), бот всегда нолики (O).
   soloXoBoard:[], soloXoBoardSize:3, soloXoCurrentPlayer:'X', soloXoRoundOver:false, soloXoStartingPlayer:'X',
   soloXoScorePlayer:0, soloXoScoreBot:0, soloXoDraws:0,
+  // «Четыре в ряд» (дети) — поле 7 колонок × 6 рядов, шашки падают вниз.
+  // kidsC4Board — 42 ячейки (индекс = row*7+col, row 0 — верхний ряд);
+  // 'R' — красные (игрок 1), 'Y' — жёлтые (игрок 2). Счёт партии переживает
+  // раунды, обнуляется только при выходе (см. games/kids-connect4.js).
+  kidsC4Board:[], kidsC4CurrentPlayer:'R', kidsC4RoundOver:false, kidsC4StartingPlayer:'R',
+  kidsC4ScoreR:0, kidsC4ScoreY:0, kidsC4Draws:0,
   // "Я никогда не" (компания)
   partyNeverSelectedLevel:1, partyNeverUsed:{},
   // Морской бой (дети) — battleshipBoards[0]/[1] — флоты игроков 0/1, каждый
@@ -612,6 +618,12 @@ document.getElementById('gameKidsBattleshipBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToKidsBattleshipSetup();
+});
+// «Четыре в ряд» (дети) — goToKidsC4Setup() определена в games/kids-connect4.js.
+document.getElementById('gameKidsC4Btn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToKidsC4Setup();
 });
 // "Правда/Действие" (дети) — goToKidsTdSetup() определена в games/kids-td.js.
 document.getElementById('gameKidsTdBtn').addEventListener('click', ()=>{
@@ -4351,6 +4363,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       { sub:'♟️ Настольные игры', games:[
         ['⭕','Крестики-нолики','kidsXoRulesModal'],
         ['🚢','Морской бой','kidsBattleshipRulesModal'],
+        ['🔴','Четыре в ряд','kidsC4RulesModal'],
       ]},
     ]},
     { icon:'💼', name:'Бизнес игры', games:[

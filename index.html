@@ -1895,7 +1895,7 @@
     font-size:22px; color:#cba0bf; margin-bottom:4px;
   }
   .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd; margin-bottom:10px;}
-  #kidsXoTurnLabel, #soloXoTurnLabel{ font-size:28px; font-weight:900; }
+  #kidsXoTurnLabel, #soloXoTurnLabel, #kidsC4TurnLabel{ font-size:28px; font-weight:900; }
   .td-actions-row{display:flex; gap:10px; margin-top:10px;}
   .td-actions-row .btn{flex:1;}
   .td-actions-row #tdPauseBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
@@ -1943,6 +1943,24 @@
   .kids-xo-mark-x{ color:#3ddc84; }
   .xo-green-x{ color:#3ddc84; font-weight:900; }
   .xo-o{ color:#ff5e8e; font-weight:900; display:inline-block; text-align:center; }
+  /* «Четыре в ряд» (дети) — поле 7 колонок × 6 рядов, шашки падают вниз.
+     Заполненная ячейка — цветной диск (фон), пустая — тусклый кружок,
+     куда упадёт шашка выбранной колонки — помечена стрелкой ⬇. */
+  .kids-c4-grid{
+    display:grid; grid-template-columns:repeat(7,1fr); gap:5px;
+    width:100%; max-width:380px; margin:14px auto;
+  }
+  .kids-c4-cell{
+    aspect-ratio:1/1; border-radius:50%; border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.08); color:rgba(255,255,255,.6);
+    font-size:min(5vw,22px); font-weight:800; line-height:1; padding:0;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .kids-c4-cell:disabled{ cursor:default; }
+  .kids-c4-cell.kids-c4-red{ background:#e53935; border-color:transparent; }
+  .kids-c4-cell.kids-c4-yellow{ background:#fdd835; border-color:transparent; }
+  .kids-c4-cell.kids-c4-win{ outline:3px solid #3ddc84; outline-offset:-3px; }
+  .kids-c4-hint{ opacity:.7; }
   .kids-xo-mark-o{ color:#ff5e8e; }
   .kids-xo-cell.kids-xo-win .kids-xo-mark-x, .kids-xo-cell.kids-xo-win .kids-xo-mark-o{ color:#fff; }
   /* Морской бой (дети) — поле 10×10, клетки поменьше, чем в крестиках-ноликах. */
@@ -3665,6 +3683,7 @@
       <div class="game-select-list">
         <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики-нолики</button>
         <button type="button" class="btn btn-menu-item" id="gameKidsBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
+        <button type="button" class="btn btn-menu-item" id="gameKidsC4Btn"><span class="menu-icon">🔴</span> Четыре в ряд</button>
       </div>
     </div>
     <button type="button" class="btn btn-secondary" id="kidsBoardGamesExitBtn" style="margin-top:10px;">Выход</button>
@@ -3731,6 +3750,58 @@
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsXoRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ЧЕТЫРЕ В РЯД (ДЕТИ): НАСТРОЙКА ===== -->
+  <section id="kidsC4Setup" class="screen">
+    <h1 class="title">🔴🟡 Четыре в ряд</h1>
+    <div class="subtitle">Классика для двоих — собери четыре шашки своего цвета в линию по горизонтали, вертикали или диагонали</div>
+
+    <button class="btn btn-primary" id="kidsC4SetupStartBtn">Начать</button>
+
+    <button class="btn btn-secondary" id="kidsC4SetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== ЧЕТЫРЕ В РЯД (ДЕТИ): ИГРА ===== -->
+  <section id="kidsC4Game" class="screen">
+    <h1 class="title" style="font-size:20px;">🔴🟡 Четыре в ряд</h1>
+    <div class="krokodil-score-row" id="kidsC4ScoreRow"></div>
+    <div class="td-turn-label" id="kidsC4TurnLabel">Ходит: Игрок 1</div>
+
+    <div class="kids-c4-grid" id="kidsC4Grid"></div>
+
+    <div class="intro-text" id="kidsC4ResultText" style="text-align:center; min-height:22px; margin-top:10px;"></div>
+    <button type="button" class="btn btn-primary" id="kidsC4NextRoundBtn" style="display:none;">Следующий раунд →</button>
+
+    <div class="bingo-actions-row bingo-actions-bottom">
+      <button type="button" class="btn btn-secondary" id="kidsC4ExitBtn">Выход</button>
+    </div>
+  </section>
+
+  <!-- ===== ЧЕТЫРЕ В РЯД (ДЕТИ): ИТОГИ ===== -->
+  <div class="modal-overlay" id="kidsC4SummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="kidsC4SummaryIntro"></div>
+      <button class="btn btn-primary" id="closeKidsC4SummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА «ЧЕТЫРЕ В РЯД» ===== -->
+  <div class="modal-overlay" id="kidsC4RulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🔴🟡 Правила игры «Четыре в ряд»</div>
+      <div class="intro-text">Классика для двоих — поле 7 колонок и 6 рядов.</div>
+      <ol class="modal-rules">
+        <li>Игроки по очереди бросают шашки своего цвета в одну из 7 колонок: нажми на любую клетку колонки — шашка упадёт в самую нижнюю свободную позицию (клетка со стрелкой ⬇).</li>
+        <li>Кто ходит первым в самой первой партии — решает случай, дальше первым всегда ходит победитель предыдущего раунда (при ничьей право первого хода переходит другому игроку).</li>
+        <li>Побеждает тот, кто первым соберёт четыре свои шашки подряд — по горизонтали, вертикали или диагонали.</li>
+        <li>Если все 42 клетки заполнены, а линии нет — ничья.</li>
+        <li>Счёт побед и ничьих ведётся по всей партии — итог покажем при выходе.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeKidsC4RulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -5750,7 +5821,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260902a"></script>
+<script src="games/core.js?v=20260902b"></script>
 <script src="games/twister.js?v=20260830u"></script>
 <script src="games/party-hangman.js?v=20260830u"></script>
 <script src="games/solo-quiz.js?v=20260830u"></script>
@@ -5762,6 +5833,7 @@
 <script src="games/business-lemonade.js?v=20260830u"></script>
 <script src="games/kids-xo.js?v=20260830u"></script>
 <script src="games/kids-battleship.js?v=20260830u"></script>
+<script src="games/kids-connect4.js?v=20260902a"></script>
 <script src="games/solo-battleship.js?v=20260830u"></script>
 <script src="games/truth-dare.js?v=20260830u"></script>
 <script src="games/bingo.js?v=20260830u"></script>
