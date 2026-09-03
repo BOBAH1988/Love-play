@@ -40,6 +40,18 @@ function exitTdSetup(){
 function tdUpdateScoreUI(){
   document.getElementById('tdScore1').textContent = (state.name1 || 'Игрок 1') + ': ' + state.tdScore1;
   document.getElementById('tdScore2').textContent = (state.name2 || 'Игрок 2') + ': ' + state.tdScore2;
+  // Единая система: обновляем turn-label и подсвечиваем активного игрока
+  const turnLabel = document.getElementById('tdTurnLabel');
+  if(turnLabel){
+    const currentName = state.tdCurrentPlayer === 1 ? (state.name1 || 'Men') : (state.name2 || 'Sexy');
+    turnLabel.textContent = 'Выбирает: ' + currentName;
+  }
+  const scoreRow = document.getElementById('tdScoreRow');
+  if(scoreRow){
+    scoreRow.querySelectorAll('.krokodil-score-item').forEach((el, i)=>{
+      el.classList.toggle('active', i === (state.tdCurrentPlayer - 1));
+    });
+  }
 }
 // Оформление карточки скопировано со стиля игры "Фанты" (border-top по полу
 // игрока, шапка с именем/уровнем, плашка типа карточки) — только без

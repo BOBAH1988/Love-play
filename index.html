@@ -4175,9 +4175,11 @@
 
   <!-- ===== ПРАВДА ИЛИ ДЕЙСТВИЕ: ИГРА ===== -->
   <section id="tdGame" class="screen">
-    <div class="td-score-row">
-      <span id="tdScore1">Men: 0</span>
-      <span id="tdScore2">Sexy: 0</span>
+    <!-- Единая система: turn-label между FAB, имена по краям (two-player) -->
+    <div class="td-turn-label" id="tdTurnLabel">Выбирает: Men</div>
+    <div class="krokodil-score-row two-player" id="tdScoreRow">
+      <span id="tdScore1" class="krokodil-score-item">Men: 0</span>
+      <span id="tdScore2" class="krokodil-score-item">Sexy: 0</span>
     </div>
 
     <div class="card-area">
