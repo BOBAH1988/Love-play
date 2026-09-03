@@ -954,6 +954,16 @@ const PAUSED_MODE_LABELS = {
 };
 function blockedByDavayPause(){
   if(!state.pausedMode) return false;
+  // Если пользователь уже в меню настроек (#setup активно) — сбрасываем
+  // зависший pausedMode и разрешаем вход. Это защита от бага, когда после
+  // выхода из игры pausedMode остаётся установленным и блокирует вход.
+  const setupEl = document.getElementById('setup');
+  if(setupEl && setupEl.classList.contains('active')){
+    state.pausedMode = null;
+    state.inProgress = false;
+    updateResumeUI();
+    return false;
+  }
   playErrorSound();
   const label = PAUSED_MODE_LABELS[state.pausedMode] || '«Правда/Действие»';
   showToast(`Сначала завершите ${label} — «Продолжить игру» или «Закончить игру»`);
