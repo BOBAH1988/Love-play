@@ -1355,9 +1355,13 @@
   }
   /* Строка счёта "Крокодила" — от 2 до 10 игроков, поэтому вместо
      space-between (как в остальных играх на двоих) — перенос строк по центру. */
+  /* Единая верхняя панель игр с именами игроков:
+     [☰ меню] [turn-label по центру] [← стрелка]
+     [Имя1] ······················ [Имя2]   <- krokodil-score-row по краям
+     [игровое поле] */
   .krokodil-score-row{
-    display:flex; flex-wrap:wrap; justify-content:center; gap:6px 8px;
-    margin-bottom:10px;
+    display:flex; flex-wrap:wrap; justify-content:space-between;
+    gap:6px 8px; margin-bottom:10px;
   }
   .krokodil-score-row .krokodil-score-item{
     padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700;
@@ -1365,6 +1369,10 @@
   }
   .krokodil-score-row .krokodil-score-item.active{
     background:rgba(255,255,255,.22); color:#fff;
+  }
+  /* Если игроков > 2 (party/company) — равномерно распределяем по ширине */
+  .krokodil-score-row.multi-player .krokodil-score-item{
+    flex: 1 1 auto; text-align:center;
   }
   .card-empty .card-inner{align-items:center; justify-content:center;}
   .card-empty .card-icon{font-size:52px;}
@@ -1921,6 +1929,22 @@
     font-size:22px; color:#cba0bf; margin-bottom:4px;
   }
   .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd; margin-bottom:10px;}
+  /* Desktop: turn-label между FAB-кнопками, krokodil-score-row с именами по краям */
+  @media (min-width:640px){
+    .td-turn-label{
+      position:absolute; top:12px; left:50%; transform:translateX(-50%);
+      z-index:10; margin-bottom:0;
+    }
+    .krokodil-score-row{
+      justify-content:space-between;
+    }
+    .krokodil-score-row.multi-player .krokodil-score-item{
+      flex:1 1 auto; text-align:center;
+    }
+    .screen:has(> .td-turn-label){
+      padding-top: 48px;
+    }
+  }
   #kidsXoTurnLabel, #soloXoTurnLabel, #kidsC4TurnLabel{ font-size:28px; font-weight:900; }
   .td-actions-row{display:flex; gap:10px; margin-top:10px;}
   .td-actions-row .btn{flex:1;}
@@ -2232,11 +2256,7 @@
       left:12px;
       right: auto;
     }
-    /* Отступ сверху для экранов с score-row + turn-label (≈50px высота)
-       + 12px зазор до кнопок сверху, итого 70px. */
-    .screen:has(> .krokodil-score-row) {
-      padding-top: 70px;
-    }
+    /* Убран дубль — единый селектор в .td-turn-label блоке выше */
   }
   /* Скрываем все кнопки выхода — теперь навигация через глобальную кнопку "←" */
   [id$="ExitBtn"], [id$="exitBtn"]{display:none !important;}
