@@ -2016,7 +2016,15 @@
   }
   .kids-xo-mark-x{ color:#3ddc84; }
   .xo-green-x{ color:#3ddc84; font-weight:900; }
-  .xo-o{ color:#ff5e8e; font-weight:900; display:inline-block; text-align:center; }
+  .xo-o{ color:#ff5e8e; font-weight:900; }
+  /* XO в меню: горизонтально (X слева, O справа) — увеличиваем ширину иконки и
+     используем flex, чтобы они не переносились. Для остальных иконок (эмодзи)
+     сохраняем 32px фиксировано. */
+  .btn-menu-item .menu-icon.xo-icon{ width:38px; min-width:38px; display:flex; gap:0; }
+  .btn-menu-item .menu-icon.xo-icon > .xo-green-x,
+  .btn-menu-item .menu-icon.xo-icon > .xo-o{
+    display:inline-block; width:18px; text-align:center; line-height:1;
+  }
   /* «Четыре в ряд» (дети) — поле 7 колонок × 6 рядов, шашки падают вниз.
      Заполненная ячейка — цветной диск (фон), пустая — тусклый кружок,
      куда упадёт шашка выбранной колонки — помечена стрелкой ⬇. */
@@ -2567,7 +2575,7 @@
           <button type="button" class="btn btn-menu-item" id="gamePartyHangmanBtn"><span class="menu-icon">🪢</span> Виселица</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
-          <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики нолики</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon xo-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики нолики</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloC4Btn"><span class="menu-icon">🔴</span> Четыре в ряд</button>
         </div>
@@ -3808,7 +3816,7 @@
     <div class="field">
       <label>Выбери игру</label>
       <div class="game-select-list">
-        <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики нолики</button>
+        <button type="button" class="btn btn-menu-item" id="gameKidsXoBtn"><span class="menu-icon xo-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики нолики</button>
         <button type="button" class="btn btn-menu-item" id="gameKidsBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
         <button type="button" class="btn btn-menu-item" id="gameKidsC4Btn"><span class="menu-icon">🔴</span> Четыре в ряд</button>
       </div>
