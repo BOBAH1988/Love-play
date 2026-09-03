@@ -1302,12 +1302,6 @@
   .fam-znayu-gender-btn.on{
     background:rgba(255,255,255,.9); color:#2b0f2e; border-color:rgba(255,255,255,.9);
   }
-  .fam-znayu-turn-label{
-    text-align:center;
-    font-size:14px;
-    opacity:.75;
-    margin-bottom:6px;
-  }
   /* Метка роли над вопросом в "Знаю тебя" — поясняет, что именно нужно
      сделать с этим конкретным вопросом: ответить как есть (герой раунда)
      или угадать ответ героя (второй игрок семьи). Роль случайно меняется
@@ -3359,8 +3353,8 @@
   <section id="kidsSaperGame" class="screen">
     <h1 class="title" style="font-size:20px;">💣 Сапёр</h1>
     <div class="bingo-level-label" id="kidsSaperLevelLabel">Уровень: 🔍 Разведка</div>
-    <div class="krokodil-score-row" id="kidsSaperScoreRow"></div>
-    <div class="fam-znayu-turn-label" id="kidsSaperTurnLabel">Ходит: Команда 1</div>
+    <div class="td-turn-label" id="kidsSaperTurnLabel">Ходит: Команда 1</div>
+    <div class="krokodil-score-row two-player" id="kidsSaperScoreRow"></div>
     <div class="bingo-grid" id="kidsSaperGrid"></div>
     <div class="bingo-actions-row">
       <button type="button" class="btn btn-secondary" id="kidsSaperRandomBtn">🎲 Случайно</button>
@@ -4506,7 +4500,7 @@
   <!-- ===== ФАНТЫ (КОМПАНИЯ): ИГРА ===== -->
   <section id="partyFantsGame" class="screen">
     <div class="td-turn-label" id="partyFantsTurnLabel">Тянет: Игрок 1</div>
-    <div class="krokodil-score-row two-player" id="partyFantsScoreRow"></div>
+    <div class="krokodil-score-row multi-player" id="partyFantsScoreRow"></div>
 
     <div class="card-area">
       <div class="card" id="partyFantsCard">
@@ -4557,7 +4551,7 @@
   <!-- ===== ПРАВДА/ДЕЙСТВИЕ (КОМПАНИЯ): ИГРА ===== -->
   <section id="partyTdGame" class="screen">
     <div class="td-turn-label" id="partyTdTurnLabel">Выбирает: Игрок 1</div>
-    <div class="krokodil-score-row two-player" id="partyTdScoreRow"></div>
+    <div class="krokodil-score-row multi-player" id="partyTdScoreRow"></div>
 
     <div class="party-td-choice-row" id="partyTdChoiceRow">
       <button type="button" class="btn btn-primary" id="partyTdTruthBtn">🗣️ Правда</button>
@@ -4630,7 +4624,7 @@
 
   <!-- ===== ЗНАЮ ТЕБЯ (КОМПАНИЯ, СЕМЬЯМИ): ИГРА ===== -->
   <section id="famZnayuGame" class="screen">
-    <div class="fam-znayu-turn-label" id="famZnayuFamilyLabel">Семья 1 из 2</div>
+    <div class="td-turn-label" id="famZnayuFamilyLabel">Семья 1 из 2</div>
     <div class="wishlist-player-row" id="famZnayuPlayerRow">
       <button type="button" class="btn btn-secondary" id="famZnayuPlayer1Btn">Игрок 1</button>
       <button type="button" class="btn btn-secondary" id="famZnayuPlayer2Btn">Игрок 2</button>
@@ -4684,8 +4678,8 @@
   <!-- ===== СЧАСТЛИВЫЙ БИЛЕТ: ИГРА ===== -->
   <section id="luckyGame" class="screen">
     <div class="lucky-level-label" id="luckyLevelLabel">Уровень: 🤝 Знакомство</div>
-    <div class="krokodil-score-row" id="luckyScoreRow"></div>
-    <div class="fam-znayu-turn-label" id="luckyTurnLabel">Ходит: Игрок 1</div>
+    <div class="td-turn-label" id="luckyTurnLabel">Ходит: Игрок 1</div>
+    <div class="krokodil-score-row multi-player" id="luckyScoreRow"></div>
     <div class="lucky-grid" id="luckyGrid"></div>
     <div class="timer-actions-row">
       <div class="timer-actions-top">
@@ -4761,7 +4755,7 @@
   <!-- ===== ВИКТОРИНА (КОМПАНИЯ): ИГРА ===== -->
   <section id="partyQuizGame" class="screen">
     <div class="td-turn-label" id="partyQuizTurnLabel">Отвечает: Игрок 1</div>
-    <div class="krokodil-score-row two-player" id="partyQuizScoreRow"></div>
+    <div class="krokodil-score-row multi-player" id="partyQuizScoreRow"></div>
     <div class="wishlist-progress-row" id="partyQuizProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="partyQuizProgressFill"></div></div>
       <div class="wishlist-progress-label" id="partyQuizProgressLabel">0 / 3</div>
