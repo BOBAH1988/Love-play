@@ -31,7 +31,7 @@ function goToMemesSetup(){
 function exitMemesSetup(){
   document.getElementById('memesSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('companyView');
+    showSetupView('companyView');
 }
 function drawMemesCard(){
   const level = state.memesSelectedLevel || 1;

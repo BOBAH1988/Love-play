@@ -154,7 +154,7 @@ document.getElementById('sexQuestPickModal').addEventListener('click', (e)=>{
 function exitSexQuestSetup(){
   document.getElementById('sexQuestSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('soloView');
+  showSetupView('twoPlayerView');
 }
 document.getElementById('sexQuestSetupExitBtn').addEventListener('click', ()=>{ exitSexQuestSetup(); });
 (document.getElementById('sexQuestSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('sexQuestRulesModal'); });

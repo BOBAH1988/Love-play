@@ -34,7 +34,7 @@ function goToFlashSetup(){
 function exitFlashSetup(){
   document.getElementById('flashSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('kidsView');
+  showSetupView('learningView');
 }
 
 function renderFlashModeGroup(){

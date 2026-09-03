@@ -148,7 +148,7 @@ function goToKrokodilSetup(){
 function exitKrokodilSetup(){
   document.getElementById('krokodilSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('companyView');
+    showSetupView('companyView');
 }
 function stopKrInterval(){
   krIntervalId = stopInterval(krIntervalId);

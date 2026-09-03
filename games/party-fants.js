@@ -33,7 +33,7 @@ function goToPartyFantsSetup(){
 function exitPartyFantsSetup(){
   document.getElementById('partyFantsSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('companyView');
+    showSetupView('companyView');
 }
 function updatePartyFantsScoreUI(){
   const players = state.partyPlayers || ['Игрок 1','Игрок 2'];

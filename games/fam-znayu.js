@@ -133,7 +133,7 @@ function goToFamZnayuSetup(){
 function exitFamZnayuSetup(){
   document.getElementById('famZnayuSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('companyView');
+    showSetupView('companyView');
 }
 // Вопросы одного раунда (для одной семьи) тянутся без повторов внутри
 // уровня, пока пул не закончится — тот же принцип, что и во всех остальных

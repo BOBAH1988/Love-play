@@ -47,7 +47,7 @@ function goToShopSetup(){
 function exitShopSetup(){
   document.getElementById('shopSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('soloView');
+  showSetupView('businessView');
 }
 
 /* ============ ОБЩИЙ ДЕНЕЖНЫЙ ЛОТОК (и оплата, и сдача) ============ */

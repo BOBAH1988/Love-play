@@ -72,7 +72,7 @@ function goToPartyQuizSetup(){
 function exitPartyQuizSetup(){
   document.getElementById('partyQuizSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('companyView');
+    showSetupView('companyView');
 }
 function partyQuizPlayersList(){
   if(!state.partyPlayers || state.partyPlayers.length < 2) state.partyPlayers = ['Игрок 1','Игрок 2'];

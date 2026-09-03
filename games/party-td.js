@@ -33,7 +33,7 @@ function goToPartyTdSetup(){
 function exitPartyTdSetup(){
   document.getElementById('partyTdSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('companyView');
+    showSetupView('companyView');
 }
 function updatePartyTdScoreUI(){
   const players = state.partyPlayers || ['Игрок 1','Игрок 2'];

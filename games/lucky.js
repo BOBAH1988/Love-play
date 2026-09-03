@@ -177,7 +177,7 @@ function goToLuckySetup(){
 function exitLuckySetup(){
   document.getElementById('luckySetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('companyView');
+    showSetupView('companyView');
 }
 // Поле на 25 клеток — без повторов внутри одного уровня, пока пул не
 // закончится (тот же принцип дедупликации, что и в остальных играх
