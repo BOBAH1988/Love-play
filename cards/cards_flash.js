@@ -11,7 +11,6 @@ const FLASH_THEMES = [
   { id: 'english', icon: '🇬🇧', name: 'Английский язык' },
   { id: 'animals', icon: '🐾', name: 'Животные' },
   { id: 'verbs', icon: '🔤', name: 'Глаголы' },
-  { id: 'time', icon: '🕐', name: 'Время' },
 ];
 
 const FLASH_WORDS = [

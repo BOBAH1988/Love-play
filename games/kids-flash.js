@@ -1,12 +1,11 @@
-// games/kids-flash.js — игра «Флеш карты» (раздел «Игры с детьми»).
-// Загружается через <script src="games/kids-flash.js"></script> в index.html,
-// данные — cards/cards_flash.js (FLASH_THEMES/FLASH_WORDS).
+// games/kids-flash.js — обучающая игра «Английский язык» (раздел
+// «Обучающие игры»). Загружается через <script src="games/kids-flash.js">
+// в index.html, данные — cards/cards_flash.js (FLASH_WORDS, theme==='english').
 //
-// Настройки: режим игры (обучение/повторение), тема со своей подборкой слов
-// (пока только «Английский язык», 100 или 250 слов), количество карточек за
-// партию (5/10/25/50). Партия — это фиксированный набор случайных карточек
-// из выбранной подборки; после последней карточки партия завершается и игрок
-// возвращается в настройки — это не бесконечная колода, как в "Мемасиках".
+// Настройки: режим игры (обучение/повторение), объём подборки слов
+// (100 или 250 слов), количество карточек за партию (5/10/25/50).
+// Партия — фиксированный набор случайных карточек из подборки; после
+// последней карточки партия завершается и игрок возвращается в настройки.
 //
 // Обучение — карточка показывает слово, транскрипцию и перевод сразу.
 // Повторение — только слово, без подсказок: играющие проверяют себя сами.
@@ -18,14 +17,6 @@ let flashCurrentCard = null;
 
 function getFlashPool(size){
   if(typeof FLASH_WORDS === 'undefined' || !Array.isArray(FLASH_WORDS)) return [];
-  if(state.flashTheme === 'time'){
-    // Тема «Время» делится на подразделы: механические / цифровые часы.
-    return FLASH_WORDS.filter(w => w.theme === 'time' && w.sub === state.flashTimeSub);
-  }
-  if(state.flashTheme !== 'english'){
-    // Тематические наборы (Животные, Глаголы и др.) — берём все карточки темы.
-    return FLASH_WORDS.filter(w => w.theme === state.flashTheme);
-  }
   // Английский язык: size задаёт объём подборки слов.
   // "100 слов" — базовые (group<=100), "250 слов" — остальные (group>100):
   // 150 промежуточных + 100 новых = ровно 250, без пересечения с базовыми 100.
@@ -36,7 +27,6 @@ function getFlashPool(size){
 function goToFlashSetup(){
   goToGameSetup('flashSetup', null, ()=>{
     renderFlashModeGroup();
-    renderFlashThemeGroup();
     renderFlashThemeSizeGroup();
     renderFlashCountGroup();
   });
@@ -76,6 +66,31 @@ document.querySelectorAll('#flashThemeSizeGroup .starter-btn').forEach(btn=>{
     renderFlashThemeSizeGroup();
   });
 });
+document.querySelectorAll('#flashThemeGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    playSuccessSound();
+    state.flashTheme = btn.dataset.value;
+    saveState();
+    renderFlashThemeGroup();
+  });
+});
+
+function renderFlashThemeGroup(){
+  if(typeof FLASH_THEMES !== 'undefined' && Array.isArray(FLASH_THEMES) && FLASH_THEMES.length){
+    if(!FLASH_THEMES.some(t => t.id === state.flashTheme)){ state.flashTheme = FLASH_THEMES[0].id; saveState(); }
+  } else if(state.flashTheme !== 'english'){
+    state.flashTheme = 'english'; saveState();
+  }
+  const group = document.getElementById('flashThemeGroup');
+  if(group){
+    group.querySelectorAll('.starter-btn').forEach(btn=>{
+      btn.classList.toggle('on', btn.dataset.value === state.flashTheme);
+    });
+  }
+  // Блок «объём словаря» (100/250) — только для «Английский язык».
+  const sizeBlock = document.getElementById('flashEnglishSizeBlock');
+  if(sizeBlock) sizeBlock.style.display = (state.flashTheme === 'english') ? '' : 'none';
+}
 
 const FLASH_COUNT_VALUES = [5, 10, 25, 50];
 function renderFlashCountGroup(){
@@ -93,56 +108,6 @@ document.querySelectorAll('#flashCountGroup .starter-btn').forEach(btn=>{
   });
 });
 
-function renderFlashThemeGroup(){
-  if(typeof FLASH_THEMES !== 'undefined' && Array.isArray(FLASH_THEMES) && FLASH_THEMES.length){
-    if(!FLASH_THEMES.some(t => t.id === state.flashTheme)){ state.flashTheme = FLASH_THEMES[0].id; saveState(); }
-  } else if(state.flashTheme !== 'english'){
-    state.flashTheme = 'english'; saveState();
-  }
-  const group = document.getElementById('flashThemeGroup');
-  if(group){
-    group.querySelectorAll('.starter-btn').forEach(btn=>{
-      btn.classList.toggle('on', btn.dataset.value === state.flashTheme);
-    });
-  }
-   // Подпись блока темы — постоянный заголовок "Темы" (без скобок,
-   // без динамического имени темы — согласно ТЗ).
-   const label = document.getElementById('flashThemeLabel');
-   if(label){ label.textContent = 'Темы'; }
-  // Блок «объём словаря» (100/250) — только для «Английский язык»;
-  // блок подразделов «Механические/Цифровые» — только для «Время».
-  const sizeBlock = document.getElementById('flashEnglishSizeBlock');
-  if(sizeBlock) sizeBlock.style.display = (state.flashTheme === 'english') ? '' : 'none';
-  const timeBlock = document.getElementById('flashTimeSubBlock');
-  if(timeBlock) timeBlock.style.display = (state.flashTheme === 'time') ? '' : 'none';
-  if(state.flashTheme === 'time') renderFlashTimeSubGroup();
-}
-document.querySelectorAll('#flashThemeGroup .starter-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    playSuccessSound();
-    state.flashTheme = btn.dataset.value;
-    saveState();
-    renderFlashThemeGroup();
-  });
-});
-
-function renderFlashTimeSubGroup(){
-  if(state.flashTimeSub !== 'mech' && state.flashTimeSub !== 'digital'){ state.flashTimeSub = 'digital'; saveState(); }
-  const group = document.getElementById('flashTimeSubGroup');
-  if(group){
-    group.querySelectorAll('.starter-btn').forEach(btn=>{
-      btn.classList.toggle('on', btn.dataset.value === state.flashTimeSub);
-    });
-  }
-}
-document.querySelectorAll('#flashTimeSubGroup .starter-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    playSuccessSound();
-    state.flashTimeSub = btn.dataset.value;
-    saveState();
-    renderFlashTimeSubGroup();
-  });
-});
 
 function shuffleFlashPool(pool){
   const arr = pool.slice();
@@ -171,9 +136,6 @@ function goToFlashGame(){
   requestWakeLock();
 }
 
-function isFlashTimeCard(card){
-  return card && card.theme === 'time';
-}
 function drawFlashCard(){
   const card = state.flashQueue[state.flashIndex];
   if(!card){ finishFlashSession(); return; }
@@ -181,28 +143,9 @@ function drawFlashCard(){
   stopFlashSpeech();
   updateFlashProgress();
   const learn = state.flashMode === 'learn';
-  const isTime = isFlashTimeCard(card) && Array.isArray(card.options);
-  fadeSwapEl('flashCard', (el)=>{
+  fadeSwapEl('flashCard', function(el){
     el.className = 'card';
-    if(isTime){
-      const options = card.options || [];
-      const correctIdx = (typeof card.answer === 'number') ? card.answer : -1;
-      const optsHtml = options.map((opt, i)=>{
-        return `<button type="button" class="flash-time-option" data-time-idx="${i}" data-time-correct="${i === correctIdx}">${opt}</button>`;
-      }).join('');
-      el.innerHTML = `
-        <div class="card-inner">
-          <div class="card-body">
-            <div class="flash-word">${card.word}</div>
-            <div class="flash-time-options">
-              ${optsHtml}
-            </div>
-          </div>
-        </div>
-        <div class="memes-tts-hint" id="flashTtsHint" style="display:none;">🔊</div>
-      `;
-    } else {
-      el.innerHTML = `
+    el.innerHTML = `
         <div class="card-inner">
           <div class="card-body">
             <div class="flash-word">${card.word}</div>
@@ -217,12 +160,10 @@ function drawFlashCard(){
         </div>
         <div class="memes-tts-hint" id="flashTtsHint">🔊</div>
       `;
-    }
-  }, ()=>{
+  }, function(){
     // onDone
     updateFlashAnswerBtn();
-    updateFlashTimeOptionsState();
-    if(state.autoSpeak && !isTime) speakFlashWord();
+    if(state.autoSpeak) speakFlashWord();
   });
 }
 // "Ответ" — только в режиме "Повторение": транскрипция и перевод скрыты по
@@ -232,8 +173,7 @@ function updateFlashAnswerBtn(){
   const btn = document.getElementById('flashAnswerBtn');
   if(!btn) return;
   const learn = state.flashMode === 'learn';
-  const isTime = isFlashTimeCard(flashCurrentCard);
-  btn.style.display = (learn && !isTime) ? 'none' : '';
+  btn.style.display = learn ? 'none' : '';
   btn.disabled = false;
 }
 function revealFlashAnswer(){
@@ -243,25 +183,6 @@ function revealFlashAnswer(){
   if(tr) tr.style.display = '';
   const btn = document.getElementById('flashAnswerBtn');
   if(btn) btn.disabled = true;
-  revealFlashTimeCorrect();
-}
-function revealFlashTimeCorrect(){
-  const wrap = document.getElementById('flashCard');
-  if(!wrap) return;
-  wrap.querySelectorAll('[data-time-correct="true"]').forEach(el=>{
-    el.classList.add('correct');
-    el.classList.add('revealed');
-  });
-}
-function updateFlashTimeOptionsState(){
-  const card = flashCurrentCard;
-  if(!card || !isFlashTimeCard(card)) return;
-  const wrap = document.getElementById('flashCard');
-  if(!wrap) return;
-  const btns = wrap.querySelectorAll('.flash-time-option');
-  btns.forEach(btn=>{
-    btn.disabled = false;
-  });
 }
 
 function finishFlashSession(){
@@ -280,7 +201,7 @@ function stopFlashSpeech(){
   stopSpeech('flashTtsHint');
 }
 function speakFlashWord(){
-  if(!flashCurrentCard || isFlashTimeCard(flashCurrentCard) || !('speechSynthesis' in window)) return;
+  if(!flashCurrentCard || !('speechSynthesis' in window)) return;
   const synth = window.speechSynthesis;
   const card = flashCurrentCard;
   const utter = new SpeechSynthesisUtterance(card.word);
@@ -309,32 +230,8 @@ function speakFlashWord(){
     fire();
   }
 }
-function handleFlashTimeOption(btn){
-  const wrap = document.getElementById('flashCard');
-  if(!wrap) return;
-  const alreadySelected = wrap.querySelector('.flash-time-option.selected');
-  if(alreadySelected) return;
-  const isCorrect = btn.getAttribute('data-time-correct') === 'true';
-  btn.classList.add('selected');
-  const allBtns = wrap.querySelectorAll('.flash-time-option');
-  if(isCorrect){
-    btn.classList.add('correct');
-    playSuccessSound();
-    showToast('✅ Верно!');
-  } else {
-    btn.classList.add('wrong');
-    wrap.querySelectorAll('[data-time-correct="true"]').forEach(el=>{ el.classList.add('correct'); });
-    playFailSound();
-    showToast('❌ Неверно');
-  }
-  allBtns.forEach(b=>b.disabled = true);
-}
 document.getElementById('flashCard').addEventListener('click', (e)=>{
-  if(e.target.classList.contains('flash-time-option')){
-    handleFlashTimeOption(e.target);
-    return;
-  }
-  if(!isFlashTimeCard(flashCurrentCard)){
+  {
     speakFlashWord();
   }
 });

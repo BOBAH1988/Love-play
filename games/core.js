@@ -143,12 +143,14 @@ let state = {
   kidsKrokodilTurnsPlayed:0,
   // Мемасики (дети) — уровень берётся из kidsAge
   kidsMemesUsed:{}, kidsMemesHidden:[], kidsMemesAutoSpeak:false,
-  // Флеш карты (дети) — flashTheme: тема подборки ('english'/'animals'),
+  // Английский язык (дети) — flashTheme: тема подборки ('english'/'animals'/'verbs'),
   // flashThemeSize: 100 или 250 (объём подборки слов английского языка).
   // flashQueue/flashIndex — карточки текущей партии
   // (фиксированное количество, не бесконечная колода).
   flashMode:'learn', flashTheme:'english', flashThemeSize:100, flashTimeSub:'digital', flashCount:25,
   flashQueue:[], flashIndex:0, flashAutoSpeak:true,
+  // «Время» (обучающая игра — часы) — вынесена в отдельную игру (games/kids-flash-time.js).
+  flashTimePool:[], flashTimeIndex:0, flashTimeScore:0, flashTimeErrors:0,
   // Сапёр (дети) — настоящая сапёрская механика (минное поле, цифры,
   // флажки, победа/поражение). kidsSaperWonLines/kidsSaperEscalated* — устарели,
   // оставлены для обратной совместимости со старыми сохранениями.
@@ -642,11 +644,17 @@ document.getElementById('gameSoloBattleshipBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToSoloBattleshipSetup();
 });
-// "Флеш карты" (обучающие игры) — goToFlashSetup() определена в games/kids-flash.js.
+// "Английский язык" (обучающие игры) — goToFlashSetup() определена в games/kids-flash.js.
 document.getElementById('gameLearningFlashBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToFlashSetup();
+});
+// «Время» (обучающая игра — часы) — goToFlashTimeSetup() определена в games/kids-flash-time.js.
+document.getElementById('gameFlashTimeBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToFlashTimeSetup();
 });
 // "Сапёр" (дети) — goToKidsSaperGame() определена в games/kids-saper.js.
 document.getElementById('gameKidsMinesweeperBtn').addEventListener('click', ()=>{
@@ -4379,7 +4387,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🚢','Морской бой','soloBattleshipRulesModal'],
     ]},
     { icon:'📚', name:'Обучающие игры', games:[
-      ['🗂️','Флеш карты','flashRulesModal'],
+      ['🗂️','Английский язык','flashRulesModal'],
+      ['🕐','Время','flashTimeRulesModal'],
     ]},
   ];
 
@@ -4497,6 +4506,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     businessLemonadeSetup:'businessView', businessLemonadeGame:'businessView',
     bizObsSetup:'businessView', bizObsGame:'businessView',
     flashSetup:'learningView', flashGame:'learningView',
+    flashTimeSetup:'learningView', flashTimeGame:'learningView',
   };
   // Экраны настроек (не запущенной партии) — для них "Назад" возвращает в
   // группу БЕЗ открытия меню паузы.
@@ -4508,7 +4518,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'partyHangmanSetup','partyRouletteSetup','partyNeverSetup','partyMemesSetup',
     'famZnayuSetup','luckySetup',
     'kidsMemorySetup','kidsQuizSetup','kidsTdSetup','kidsSaperSetup','kidsXoSetup',
-    'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','kidsFlashSetup',
+    'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','kidsFlashSetup','flashTimeSetup',
     'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBsSetup','soloBattleshipSetup',
     'businessLemonadeSetup','bizObsSetup','flashSetup',
   ]);

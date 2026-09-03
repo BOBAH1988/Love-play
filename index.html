@@ -1132,6 +1132,10 @@
   .flash-time-option.correct{ background:rgba(76,175,80,.3); border-color:rgba(76,175,80,.6); color:#4caf50; }
   .flash-time-option.wrong{ background:rgba(244,67,54,.3); border-color:rgba(244,67,54,.6); color:#f44336; }
   .flash-time-option:disabled{ cursor:default; }
+  .flash-time-display{ font-size:48px; font-weight:800; text-align:center; margin:20px 0; color:#fff; }
+  .flash-time-digital{ font-family:'Courier New',monospace; letter-spacing:4px; }
+  .flash-time-mechanical{ font-family:Georgia,serif; font-style:italic; }
+  .flash-card-progress{ text-align:center; font-size:13px; color:#e8c9dd; margin-top:10px; }
   /* "Оцени бизнес" — карточка сценария: заголовок бизнеса, таблица его
      данных (цена/себестоимость/расходы/продажи), затем сам вопрос и
      варианты ответа (games/business-observer.js, .znayu-question-text/
@@ -2505,7 +2509,8 @@
       <div class="field">
         <label>Выбери игру</label>
         <div class="game-select-list" id="learningGameSelectList">
-          <button type="button" class="btn btn-menu-item" id="gameLearningFlashBtn"><span class="menu-icon">🗂️</span> Флеш карты</button>
+          <button type="button" class="btn btn-menu-item" id="gameLearningFlashBtn"><span class="menu-icon">🇬🇧</span> Английский язык</button>
+          <button type="button" class="btn btn-menu-item" id="gameFlashTimeBtn"><span class="menu-icon">🕐</span> Время</button>
         </div>
       </div>
 
@@ -3137,9 +3142,69 @@
     </div>
   </section>
 
+  <!-- ===== ВРЕМЯ (ДЕТИ): НАСТРОЙКА ===== -->
+  <section id="flashTimeSetup" class="screen">
+    <h1 class="title">🕐 Время</h1>
+    <div class="subtitle">Учитесь определять время по циферблату</div>
+
+    <div class="field">
+      <label>Тип часов</label>
+      <div class="starter-group" id="flashTimeSubGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="digital">Цифровые</button>
+        <button type="button" class="starter-btn mode-btn" data-value="mech">Механические</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="flashTimeSetupStartBtn">Начать</button>
+
+    <button class="btn btn-secondary" id="flashTimeSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== ВРЕМЯ (ДЕТИ): ИГРА ===== -->
+  <section id="flashTimeGame" class="screen">
+    <h1 class="title" style="font-size:20px;">🕐 Время</h1>
+    <div class="krokodil-score-row" id="flashTimeScoreRow"></div>
+
+    <div class="flash-time-card-area" id="flashTimeCard"></div>
+
+    <div class="intro-text" id="flashTimeResultText" style="text-align:center; min-height:22px; margin-top:10px;"></div>
+    <button type="button" class="btn btn-primary" id="flashTimeNextBtn" style="margin-top:10px;">Следующая →</button>
+
+    <div class="bingo-actions-row bingo-actions-bottom">
+      <button type="button" class="btn btn-secondary" id="flashTimeGameRulesBtn" style="margin-right:auto;">📖 Правила</button>
+      <button type="button" class="btn btn-secondary" id="flashTimeExitBtn">Выход</button>
+    </div>
+  </section>
+
+  <!-- ===== ВРЕМЯ (ДЕТИ): ИТОГИ ===== -->
+  <div class="modal-overlay" id="flashTimeSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="flashTimeSummaryIntro"></div>
+      <button class="btn btn-primary" id="closeFlashTimeSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА «ВРЕМЯ» ===== -->
+  <div class="modal-overlay" id="flashTimeRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🕐 Правила игры «Время»</div>
+      <div class="intro-text">Учитесь определять время по циферблату — цифровые и механические часы.</div>
+      <ol class="modal-rules">
+        <li>Выберите тип часов: цифровые или механические.</li>
+        <li>На экране появится карточка со временем на циферблате и четыре варианта ответа.</li>
+        <li>Выберите, сколько сейчас времени — если верно, карточка подсветится зелёным.</li>
+        <li>Если ошибётесь — покажем правильный ответ.</li>
+        <li>Счёт правильных ответов и ошибок ведётся по всей партии.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeFlashTimeRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== ФЛЕШ КАРТЫ (ДЕТИ): НАСТРОЙКА ===== -->
   <section id="flashSetup" class="screen">
-    <h1 class="title">Флеш карты</h1>
+    <h1 class="title">🇬🇧 Английский язык</h1>
     <div class="subtitle">Учите слова карточками — слово, транскрипция, перевод</div>
 
     <div class="field">
@@ -3156,20 +3221,12 @@
         <button type="button" class="starter-btn mode-btn" data-value="english">Английский язык</button>
         <button type="button" class="starter-btn mode-btn" data-value="animals">Животные</button>
         <button type="button" class="starter-btn mode-btn" data-value="verbs">Глаголы</button>
-        <button type="button" class="starter-btn mode-btn" data-value="time">Время</button>
       </div>
       <div class="flash-theme-block" id="flashEnglishSizeBlock">
         <div class="flash-theme-name">Объём словаря</div>
         <div class="starter-group" id="flashThemeSizeGroup">
           <button type="button" class="starter-btn mode-btn" data-value="100">Топ 100</button>
           <button type="button" class="starter-btn mode-btn" data-value="250">Топ 250</button>
-        </div>
-      </div>
-      <div class="flash-theme-block" id="flashTimeSubBlock" style="display:none;">
-        <div class="flash-theme-name">Подраздел</div>
-        <div class="starter-group" id="flashTimeSubGroup">
-          <button type="button" class="starter-btn mode-btn" data-value="digital">Цифровые</button>
-          <button type="button" class="starter-btn mode-btn" data-value="mech">Механические</button>
         </div>
       </div>
     </div>
@@ -3191,7 +3248,7 @@
 
   <!-- ===== ФЛЕШ КАРТЫ (ДЕТИ): ИГРА ===== -->
   <section id="flashGame" class="screen">
-    <h1 class="title" style="font-size:20px;">Флеш карты</h1>
+    <h1 class="title" style="font-size:20px;">🇬🇧 Английский язык</h1>
     <div class="td-turn-label" id="flashProgressLabel">Карточка 1 из 25</div>
 
     <div class="card-area">
@@ -5406,11 +5463,11 @@
   <!-- ===== ПРАВИЛА "ФЛЕШ КАРТЫ" (ДЕТИ) ===== -->
   <div class="modal-overlay" id="flashRulesModal">
     <div class="modal-card">
-      <div class="modal-title">Правила игры «Флеш карты»</div>
+      <div class="modal-title">🇬🇧 Правила игры «Английский язык»</div>
       <div class="intro-text">Учите новые слова карточками — сами объясняете и сами проверяете друг друга, приложение просто показывает карточки.</div>
       <ol class="modal-rules">
         <li>Выберите режим: «Обучение» показывает слово, транскрипцию и перевод сразу; «Повторение» — только слово, чтобы вспомнить перевод самим.</li>
-        <li>Выберите тему (Английский язык, Животные, Глаголы, Время) и объём подборки слов (для английского — Топ 100 или Топ 250) и сколько карточек будет в партии.</li>
+        <li>Выберите тему (Английский язык, Животные, Глаголы) и объём подборки слов (для английского — Топ 100 или Топ 250) и сколько карточек будет в партии.</li>
         <li>Нажмите на карточку — телефон озвучит слово по-английски. Кнопка ▶️ включает автоозвучку каждой новой карточки.</li>
         <li>«Далее» показывает следующую карточку; после последней партия завершается сама.</li>
         <li>«Выход» в любой момент вернёт в меню.</li>
@@ -5784,6 +5841,7 @@
 <script src="games/kids-krokodil.js?v=20260830u"></script>
 <script src="games/kids-memes.js?v=20260830u"></script>
 <script src="games/kids-flash.js?v=20260830u"></script>
+<script src="games/kids-flash-time.js?v=20260902a"></script>
 <script src="games/kids-saper.js?v=20260830u"></script>
 <script src="games/kids-td.js?v=20260830u"></script>
 <script src="games/quiz.js?v=20260830u"></script>
