@@ -190,11 +190,11 @@ let state = {
   businessLemonadeGoal:1000, businessLemonadeGoalName:'кафе',
   businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[], businessLemonadeDayLog:[],
   businessLemonadeQuizIndex:0, businessLemonadeQuizCorrect:0, businessLemonadeQuizItems:[],
-  // Крестики-нолики (дети) — счёт партии переживает раунды, обнуляется только при выходе.
+  // Крестики нолики (дети) — счёт партии переживает раунды, обнуляется только при выходе.
   // kidsXoBoardSize: 3 (3×3, три в ряд) или 5 (5×5, четыре в ряд).
   kidsXoBoard:[], kidsXoBoardSize:3, kidsXoCurrentPlayer:'X', kidsXoRoundOver:false, kidsXoStartingPlayer:'X',
   kidsXoScoreX:0, kidsXoScoreO:0, kidsXoDraws:0,
-  // Крестики-нолики (для одного) — та же механика, но против бота: игрок
+  // Крестики нолики (для одного) — та же механика, но против бота: игрок
   // всегда крестики (X), бот всегда нолики (O).
   soloXoBoard:[], soloXoBoardSize:3, soloXoCurrentPlayer:'X', soloXoRoundOver:false, soloXoStartingPlayer:'X',
   soloXoScorePlayer:0, soloXoScoreBot:0, soloXoDraws:0,
@@ -613,7 +613,7 @@ document.getElementById('kidsBoardGamesExitBtn').addEventListener('click', ()=>{
   document.getElementById('kidsBoardGamesMenu').classList.remove('active');
   document.getElementById('setup').classList.add('active');
 });
-// "Крестики-нолики" (дети) — goToKidsXoSetup() определена в games/kids-xo.js.
+// "Крестики нолики" (дети) — goToKidsXoSetup() определена в games/kids-xo.js.
 document.getElementById('gameKidsXoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
@@ -1111,7 +1111,7 @@ document.getElementById('gameSoloMemoryBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToSoloMemorySetup();
 });
-// "Крестики-нолики" (игры для одного, против бота) — goToSoloXoSetup() определена в games/solo-xo.js.
+// "Крестики нолики" (игры для одного, против бота) — goToSoloXoSetup() определена в games/solo-xo.js.
 document.getElementById('gameSoloXoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
@@ -1400,10 +1400,10 @@ document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
   state.businessLemonadeDayLog = [];
   state.businessLemonadeGoal = 1000; state.businessLemonadeGoalName = 'кафе';
   state.businessLemonadeQuizIndex = 0; state.businessLemonadeQuizCorrect = 0; state.businessLemonadeQuizItems = [];
-  // Крестики-нолики (дети)
+  // Крестики нолики (дети)
   state.kidsXoBoard = []; state.kidsXoCurrentPlayer = 'X'; state.kidsXoRoundOver = false;
   state.kidsXoStartingPlayer = 'X'; state.kidsXoScoreX = 0; state.kidsXoScoreO = 0; state.kidsXoDraws = 0;
-  // Крестики-нолики (для одного)
+  // Крестики нолики (для одного)
   state.soloXoBoard = []; state.soloXoCurrentPlayer = 'X'; state.soloXoRoundOver = false;
   state.soloXoStartingPlayer = 'X'; state.soloXoScorePlayer = 0; state.soloXoScoreBot = 0; state.soloXoDraws = 0;
   // Морской бой (дети)
@@ -4401,7 +4401,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['💣','Сапёр','kidsSaperRulesModal'],
       ['🎲','Во что поиграть?','whatToPlayRulesModal'],
       { sub:'♟️ Настольные игры', games:[
-        ['⭕','Крестики-нолики','kidsXoRulesModal'],
+        ['⭕','Крестики нолики','kidsXoRulesModal'],
         ['🚢','Морской бой','kidsBattleshipRulesModal'],
         ['🔴','Четыре в ряд','kidsC4RulesModal'],
       ]},
@@ -4415,7 +4415,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🪢','Виселица','partyHangmanRulesModal'],
       ['🎯','Викторина','soloQuizRulesModal'],
       ['🧠','Мемори','soloMemoryRulesModal'],
-      ['⭕','Крестики-нолики','soloXoRulesModal'],
+      ['⭕','Крестики нолики','soloXoRulesModal'],
       ['🚢','Морской бой','soloBattleshipRulesModal'],
       ['🔴','Четыре в ряд','soloC4RulesModal'],
     ]},
