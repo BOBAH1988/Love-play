@@ -1671,6 +1671,19 @@ function updateResumeUI(){
 function updateTurnUI(){
   document.getElementById('score1').textContent = `${state.name1}: ${state.score1}`;
   document.getElementById('score2').textContent = `${state.name2}: ${state.score2}`;
+  // turn-label между FAB-кнопками (единая система для всех игр)
+  const turnLabel = document.getElementById('gameTurnLabel');
+  if(turnLabel){
+    const currentName = state.currentPlayer === 1 ? state.name1 : state.name2;
+    turnLabel.textContent = 'Тянет: ' + currentName;
+  }
+  // Подсветка активного игрока (если есть score-row с .krokodil-score-item)
+  const row = document.getElementById('gameScoreRow');
+  if(row){
+    row.querySelectorAll('.krokodil-score-item').forEach((el, i)=>{
+      el.classList.toggle('active', i === (state.currentPlayer - 1));
+    });
+  }
   updateLevelProgressUI();
 }
 

@@ -514,11 +514,8 @@
   .btn:active{transform:scale(.98);}
 
   /* ---- Game screen ---- */
-  .score-row{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    font-size:25px; color:#cba0bf; margin-bottom:4px;
-  }
-  .score-row #score1, .score-row #score2{white-space:nowrap;}
+  /* .score-row убран — вместо него .krokodil-score-row в единой системе */
+  .krokodil-score-row #score1, .krokodil-score-row #score2{white-space:nowrap;}
   .level-progress{
     text-align:center; font-size:11px; color:#cba0bf; min-height:14px; margin-bottom:6px;
   }
@@ -1374,6 +1371,13 @@
   .krokodil-score-row.multi-player .krokodil-score-item{
     flex: 1 1 auto; text-align:center;
   }
+  /* Для игр 1 на 1 (Фанты для двоих) — крупнее шрифт, без pill-стиля */
+  .krokodil-score-row.two-player .krokodil-score-item{
+    font-size:22px; padding:0; background:none; border-radius:0; color:#cba0bf;
+  }
+  .krokodil-score-row.two-player .krokodil-score-item.active{
+    font-size:22px; padding:0; background:none; border-radius:0; color:#fff;
+  }
   .card-empty .card-inner{align-items:center; justify-content:center;}
   .card-empty .card-icon{font-size:52px;}
   .card-empty .card-text{font-size:16px; color:#7a5a72; font-weight:600;}
@@ -1427,7 +1431,8 @@
   .rating-pill.rating-women{ background:rgba(255,110,168,.16); color:#c2185b; }
   .rating-pill.rating-men{ background:rgba(94,158,255,.16); color:#1a5fb4; }
 
-  #game.placeholder-mode .score-row, #game.video-mode .score-row, #game.davay-mode .score-row{display:none;}
+  #game.placeholder-mode .krokodil-score-row, #game.video-mode .krokodil-score-row, #game.davay-mode .krokodil-score-row,
+  #game.placeholder-mode .td-turn-label, #game.video-mode .td-turn-label, #game.davay-mode .td-turn-label{display:none;}
   #game.placeholder-mode #skipBtn, #game.video-mode #skipBtn, #game.davay-mode #skipBtn{display:none;}
   /* "Обновить задание" (Фанты) убрана; "Скрыть навсегда" (Фанты) заменена
      иконкой на кнопке "Отказ" — сама dislikeBtn в Фантах теперь скрыта,
@@ -2881,9 +2886,12 @@
 
   <!-- ===== GAME SCREEN ===== -->
   <section id="game" class="screen">
-    <div class="score-row">
-      <span id="score1">Men: 0</span>
-      <span id="score2">Sexy: 0</span>
+    <!-- Единая система: turn-label между FAB-кнопками (десктоп),
+         имена по краям (мобайл/десктоп), затем игровое поле -->
+    <div class="td-turn-label" id="gameTurnLabel">Тянет: Men</div>
+    <div class="krokodil-score-row two-player" id="gameScoreRow">
+      <span id="score1" class="krokodil-score-item">Men: 0</span>
+      <span id="score2" class="krokodil-score-item">Sexy: 0</span>
     </div>
     <div class="level-progress" id="levelProgress"></div>
 
