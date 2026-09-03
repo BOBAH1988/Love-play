@@ -498,7 +498,7 @@
     box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
     font-weight:700;
     /* Flexbox: иконка слева, текст в контейнере который центрируется */
-    display:flex; align-items:center; justify-content:flex-start; gap:0;
+    display:flex; align-items:center; justify-content:flex-start; gap:8px;
   }
   /* Иконка фиксированной ширины 32px — все иконки в одном столбике */
   .btn-menu-item .menu-icon{
@@ -506,8 +506,7 @@
     font-size:1.7em; line-height:1;
   }
   /* Текст занимает оставшееся место и центрируется */
-  .btn-menu-item > :not(.menu-icon){
-    flex:1; text-align:center; padding-right:8px;
+  .btn-menu-item > :not(.menu-icon){ flex:1; text-align:center;
   }
   .btn-menu-item:active{background:rgba(255,94,142,.32); border-color:rgba(255,255,255,.5);}
   .btn-ghost{
