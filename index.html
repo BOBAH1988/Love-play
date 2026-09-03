@@ -151,20 +151,6 @@
       border-right:1px solid rgba(255,255,255,.08);
       box-shadow:0 0 80px rgba(0,0,0,.55);
     }
-    /* Desktop: position FAB buttons near .card edges (340px centered)
-       top:70px accounts for #app padding(16px) + score-row + turn-label height */
-    .fab-menu-btn {
-      position:absolute;
-      top:70px;
-      right: calc((100% - 340px) / 2 + 12px);
-      left: auto;
-    }
-    .fab-back-btn {
-      position:absolute;
-      top:70px;
-      left: calc((100% - 340px) / 2 + 12px);
-      right: auto;
-    }
   }
   /* На телефоне, повёрнутом на бок, во время "Видеорулетки"/"Давай попробуем"
      снимаем это ограничение по ширине — приложение растягивается на весь
@@ -2226,6 +2212,25 @@
   .fab-menu-btn:active{background:rgba(255,255,255,.25);}
   /* Кнопка "Назад" слева */
   .fab-back-btn{right:auto; left:12px; font-size:18px; line-height:1; transition:opacity .2s ease;}
+  /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
+     чтобы media query не перекрывался ими с тем же приоритетом).
+     Кнопки привязываются к краям центрированной .card (340px) — на 12px
+     наружу, как в мобильной версии. top:70px — чтобы не перекрывать
+     score-row/turn-label сверху. */
+  @media (min-width:640px){
+    .fab-menu-btn {
+      position:absolute;
+      top:70px;
+      right: calc((100% - 340px) / 2 + 12px);
+      left: auto;
+    }
+    .fab-back-btn {
+      position:absolute;
+      top:70px;
+      left: calc((100% - 340px) / 2 + 12px);
+      right: auto;
+    }
+  }
   /* Скрываем все кнопки выхода — теперь навигация через глобальную кнопку "←" */
   [id$="ExitBtn"], [id$="exitBtn"]{display:none !important;}
   /* Скрываем экспорт/импорт — временно отключено */
