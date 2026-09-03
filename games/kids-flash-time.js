@@ -78,6 +78,9 @@ function renderFlashTimeCard(card){
   flashTimeCurrentCard = card;
   // Для механических часов выбираем случайный стиль циферблата
   const clockStyle = card.sub === 'mech' ? CLOCK_STYLES[Math.floor(Math.random() * CLOCK_STYLES.length)] : null;
+  // Shuffle
+  const sh=card.options.map((o,i)=>({o,c:i===card.answer}))
+  for(let i=sh.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sh[i],sh[j]]=[sh[j],sh[i]]}
   wrap.innerHTML = `
     <div class="flash-time-display">
       ${card.sub === 'digital'
@@ -85,8 +88,8 @@ function renderFlashTimeCard(card){
         : `<div class="flash-time-mechanical">${generateClockSVG(card.translation, clockStyle)}<div class="clock-style-hint">${clockStyle === 'full' ? 'Полные' : clockStyle === 'short' ? 'Сокращённые' : 'Римские'}</div></div>`}
     </div>
     <div class="flash-time-options">
-      ${card.options.map((opt, i)=>`
-        <button type="button" class="flash-time-option" data-time-index="${i}" data-time-correct="${i === card.answer}">${opt}</button>
+      ${sh.map((x, i)=>`
+        <button type="button" class="flash-time-option" data-time-index="${i}" data-time-correct="${x.c}">${x.o}</button>
       `).join('')}
     </div>
     <div class="flash-card-progress">${(state.flashTimeIndex || 0) + 1} / ${state.flashTimePool.length}</div>
