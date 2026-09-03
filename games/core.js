@@ -198,6 +198,10 @@ let state = {
   // всегда крестики (X), бот всегда нолики (O).
   soloXoBoard:[], soloXoBoardSize:3, soloXoCurrentPlayer:'X', soloXoRoundOver:false, soloXoStartingPlayer:'X',
   soloXoScorePlayer:0, soloXoScoreBot:0, soloXoDraws:0,
+  // «Четыре в ряд» (соло, против бота) — копия механики kidsC4, но игрок
+  // всегда красные (R), бот жёлтые (Y). Счёт партии переживает раунды.
+  soloC4Board:[], soloC4CurrentPlayer:'R', soloC4RoundOver:false, soloC4StartingPlayer:'R',
+  soloC4ScorePlayer:0, soloC4ScoreBot:0, soloC4Draws:0,
   // «Четыре в ряд» (дети) — поле 7 колонок × 6 рядов, шашки падают вниз.
   // kidsC4Board — 42 ячейки (индекс = row*7+col, row 0 — верхний ряд);
   // 'R' — красные (игрок 1), 'Y' — жёлтые (игрок 2). Счёт партии переживает
@@ -643,6 +647,12 @@ document.getElementById('gameSoloBattleshipBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToSoloBattleshipSetup();
+});
+// «Четыре в ряд» (соло, против бота) — goToSoloC4Setup() определена в games/solo-connect4.js.
+document.getElementById('gameSoloC4Btn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToSoloC4Setup();
 });
 // "Английский язык" (обучающие игры) — goToFlashSetup() определена в games/kids-flash.js.
 document.getElementById('gameLearningFlashBtn').addEventListener('click', ()=>{
@@ -4385,6 +4395,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🧠','Мемори','soloMemoryRulesModal'],
       ['⭕','Крестики-нолики','soloXoRulesModal'],
       ['🚢','Морской бой','soloBattleshipRulesModal'],
+      ['🔴','Четыре в ряд','soloC4RulesModal'],
     ]},
     { icon:'📚', name:'Обучающие игры', games:[
       ['🗂️','Английский язык','flashRulesModal'],

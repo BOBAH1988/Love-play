@@ -2495,6 +2495,7 @@
           <button type="button" class="btn btn-menu-item" id="gameSoloMemoryBtn"><span class="menu-icon">🧠</span> Мемори</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloXoBtn"><span class="menu-icon"><span class="xo-green-x">X</span><span class="xo-o">O</span></span> Крестики-нолики</button>
           <button type="button" class="btn btn-menu-item" id="gameSoloBattleshipBtn"><span class="menu-icon">🚢</span> Морской бой</button>
+          <button type="button" class="btn btn-menu-item" id="gameSoloC4Btn"><span class="menu-icon">🔴</span> Четыре в ряд</button>
         </div>
       </div>
 
@@ -4040,6 +4041,58 @@
         <li>«Выход» в любой момент вернёт в меню.</li>
       </ol>
       <button class="btn btn-primary" id="closeSoloBattleshipRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== ЧЕТЫРЕ В РЯД (ДЛЯ ОДНОГО): НАСТРОЙКА ===== -->
+  <section id="soloC4Setup" class="screen">
+    <h1 class="title">🔴🟡 Четыре в ряд</h1>
+    <div class="subtitle">Классика против бота — собери четыре шашки своего цвета в линию по горизонтали, вертикали или диагонали</div>
+
+    <button class="btn btn-primary" id="soloC4SetupStartBtn">Начать</button>
+
+    <button class="btn btn-secondary" id="soloC4SetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== ЧЕТЫРЕ В РЯД (ДЛЯ ОДНОГО): ИГРА ===== -->
+  <section id="soloC4Game" class="screen">
+    <h1 class="title" style="font-size:20px;">🔴🟡 Четыре в ряд</h1>
+    <div class="krokodil-score-row" id="soloC4ScoreRow"></div>
+    <div class="td-turn-label" id="soloC4TurnLabel">Ходит: Вы</div>
+
+    <div class="kids-c4-grid" id="soloC4Grid"></div>
+
+    <div class="intro-text" id="soloC4ResultText" style="text-align:center; min-height:22px; margin-top:10px;"></div>
+    <button type="button" class="btn btn-primary" id="soloC4NextRoundBtn" style="display:none;">Следующий раунд →</button>
+
+    <div class="bingo-actions-row bingo-actions-bottom">
+      <button type="button" class="btn btn-secondary" id="soloC4ExitBtn">Выход</button>
+    </div>
+  </section>
+
+  <!-- ===== ЧЕТЫРЕ В РЯД (ДЛЯ ОДНОГО): ИТОГИ ===== -->
+  <div class="modal-overlay" id="soloC4SummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="soloC4SummaryIntro"></div>
+      <button class="btn btn-primary" id="closeSoloC4SummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА «ЧЕТЫРЕ В РЯД» (ДЛЯ ОДНОГО) ===== -->
+  <div class="modal-overlay" id="soloC4RulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🔴🟡 Правила игры «Четыре в ряд»</div>
+      <div class="intro-text">Классика против бота — поле 7 колонок и 6 рядов.</div>
+      <ol class="modal-rules">
+        <li>Вы играете красными (🔴), бот — жёлтыми (🟡). По очереди бросаете шашки в колонки: нажмите на любую клетку колонки — шашка упадёт в самую нижнюю свободную позицию (клетка со стрелкой ⬇).</li>
+        <li>Кто ходит первым в самой первой партии — решает случай, дальше первым всегда ходит победитель предыдущего раунда (при ничьей право первого хода переходит другому).</li>
+        <li>Побеждает тот, кто первым соберёт четыре свои шашки подряд — по горизонтали, вертикали или диагонали.</li>
+        <li>Если все 42 клетки заполнены, а линии нет — ничья.</li>
+        <li>Счёт побед и ничьих ведётся по всей партии — итог покажем при выходе.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeSoloC4RulesBtn">Понятно</button>
     </div>
   </div>
 
@@ -5819,6 +5872,7 @@
 <script src="games/solo-quiz.js?v=20260830u"></script>
 <script src="games/solo-memory.js?v=20260830u"></script>
 <script src="games/solo-xo.js?v=20260830u"></script>
+  <script src="games/solo-connect4.js?v=20260902a"></script>
 <script src="games/shop.js?v=20260830u"></script>
 <script src="games/business-observer.js?v=20260830u"></script>
 <script src="games/party-roulette.js?v=20260830u"></script>
