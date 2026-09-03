@@ -1923,10 +1923,7 @@
   .btn:disabled{opacity:.5; cursor:default;}
 
   /* ---- Правда или действие ---- */
-  .td-score-row{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    font-size:22px; color:#cba0bf; margin-bottom:4px;
-  }
+  /* .td-score-row убран — теперь используется krokodil-score-row.two-player */
   .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd; margin-bottom:10px;}
   /* Mobile: фиксированные FAB-кнопки парят сверху — нужны отступы,
      чтобы имена/контент не налезали на кнопки. ~50px (высота кнопки 36 + safe area 12). */
@@ -3991,7 +3988,7 @@
   <!-- ===== МОРСКОЙ БОЙ (ДЕТИ): ИГРА ===== -->
   <section id="kidsBattleshipGame" class="screen">
     <h1 class="title" style="font-size:20px;">🚢 Морской бой</h1>
-    <div class="bs-turn-label" id="kidsBattleshipTurnLabel"></div>
+    <div class="td-turn-label" id="kidsBattleshipTurnLabel"></div>
     <div class="intro-text" id="kidsBattleshipStatusText" style="text-align:center; min-height:40px; margin-bottom:6px;"></div>
 
     <div class="battleship-grid" id="kidsBattleshipGrid"></div>
@@ -4274,9 +4271,11 @@
 
   <!-- ===== ТАЙМЕР-ИГРА: ИГРА ===== -->
   <section id="timerGame" class="screen">
-    <div class="td-score-row">
-      <span id="timerScore1">Men: 0</span>
-      <span id="timerScore2">Sexy: 0</span>
+    <!-- Единая система: turn-label между FAB, имена по краям (two-player) -->
+    <div class="td-turn-label" id="timerTurnLabel">Ход: Men</div>
+    <div class="krokodil-score-row two-player" id="timerScoreRow">
+      <span id="timerScore1" class="krokodil-score-item">Men: 0</span>
+      <span id="timerScore2" class="krokodil-score-item">Sexy: 0</span>
     </div>
 
     <div class="card-area">

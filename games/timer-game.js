@@ -106,6 +106,18 @@ function updateMtBar(){
 function mtUpdateScoreUI(){
   document.getElementById('timerScore1').textContent = (state.name1 || 'Игрок 1') + ': ' + state.timerScore1;
   document.getElementById('timerScore2').textContent = (state.name2 || 'Игрок 2') + ': ' + state.timerScore2;
+  // Единая система: обновляем turn-label и подсвечиваем активного игрока
+  const turnLabel = document.getElementById('timerTurnLabel');
+  if(turnLabel){
+    const currentName = state.timerCurrentPlayer === 1 ? (state.name1 || 'Men') : (state.name2 || 'Sexy');
+    turnLabel.textContent = 'Ход: ' + currentName;
+  }
+  const scoreRow = document.getElementById('timerScoreRow');
+  if(scoreRow){
+    scoreRow.querySelectorAll('.krokodil-score-item').forEach((el, i)=>{
+      el.classList.toggle('active', i === (state.timerCurrentPlayer - 1));
+    });
+  }
 }
 // Карточка оформлена в стиле "Фантов": полоса сверху по полу текущего
 // игрока и шапка с именем хода и уровнем.
