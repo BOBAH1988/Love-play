@@ -4581,6 +4581,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   }
 
   backBtn.addEventListener('click', ()=>{
+    // Останавливаем любую озвучку/звук при выходе — сразу, до любых проверок
+    if(typeof stopSpeech === 'function') stopSpeech();
+
     // Закрываем глобальное меню если открыто
     const menuModal = document.getElementById('globalMenuModal');
     if(menuModal) menuModal.classList.remove('show');
@@ -4708,6 +4711,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       if(mainId.includes('fanty') || mainId === 'game') state.pausedMode = 'fanty';
       else state.pausedMode = null;
       saveState();
+      // Останавливаем любые фоновые звуки и озвучку, чтобы не играли после выхода
+      if(typeof stopSpeech === 'function') stopSpeech();
       if(typeof updateResumeUI === 'function') updateResumeUI();
       window.scrollTo(0, 0);
     }
