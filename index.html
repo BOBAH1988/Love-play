@@ -151,6 +151,19 @@
       border-right:1px solid rgba(255,255,255,.08);
       box-shadow:0 0 80px rgba(0,0,0,.55);
     }
+    /* Desktop: position FAB buttons near .card edges (340px centered) */
+    .fab-menu-btn {
+      position:absolute;
+      top:12px;
+      right: calc((100% - 340px) / 2 + 12px);
+      left: auto;
+    }
+    .fab-back-btn {
+      position:absolute;
+      top:12px;
+      left: calc((100% - 340px) / 2 + 12px);
+      right: auto;
+    }
   }
   /* На телефоне, повёрнутом на бок, во время "Видеорулетки"/"Давай попробуем"
      снимаем это ограничение по ширине — приложение растягивается на весь
