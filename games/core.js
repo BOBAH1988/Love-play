@@ -1626,15 +1626,14 @@ function updateResumeUI(){
   }
   // В меню паузы (когда видны "Продолжить игру"/"Закончить игру") незачем
   // показывать выбор другой игры и резервную копию — только сама пауза.
-  const gameSelectField = document.getElementById('gameSelectField');
-  if(gameSelectField) gameSelectField.style.display = state.inProgress ? 'none' : '';
-  // "Игры для компании" — исключение: если на паузе игра именно из этого
-  // блока (Крокодил, Фанты-компания и т.д.), сам блок остаётся виден (там
-  // же список игроков), хотя сами кнопки паузы теперь всегда в модалке.
+  // Исключения: если на паузе игра именно из этого блока (company/kids/solo/
+  // twoPlayer), список игр остаётся виден (там же список игроков/кнопки).
   const isPartyPause = state.pausedMode === 'krokodil' || state.pausedMode === 'partyFants' || state.pausedMode === 'partyTd' || state.pausedMode === 'famZnayu' || state.pausedMode === 'lucky' || state.pausedMode === 'partyQuiz';
   const isKidsPause = state.pausedMode === 'kidsMemory' || state.pausedMode === 'kidsTd' || state.pausedMode === 'kidsQuiz' || state.pausedMode === 'kidsSaper';
   const isSoloPause = state.pausedMode === 'soloBs';
   const isTwoPlayerPause = !!state.pausedMode && !isPartyPause && !isKidsPause && !isSoloPause;
+  const gameSelectField = document.getElementById('gameSelectField');
+  if(gameSelectField) gameSelectField.style.display = (state.inProgress && !isTwoPlayerPause) ? 'none' : '';
   const partyGameSelectField = document.getElementById('partyGameSelectField');
   if(partyGameSelectField) partyGameSelectField.style.display = (state.inProgress && !isPartyPause) ? 'none' : '';
   const kidsGameSelectField = document.getElementById('kidsGameSelectField');
