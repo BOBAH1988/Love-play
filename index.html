@@ -2194,6 +2194,9 @@
   }
   .timer-label{text-align:center; font-size:28px; font-weight:800; margin-top:8px; color:#fff;}
   .timer-actions-row{display:flex; flex-direction:column; gap:10px; margin-top:14px;}
+  .flash-card-actions{display:flex; gap:10px; margin-top:14px; justify-content:flex-end;}
+  .flash-card-actions #flashNextBtn{flex:1;}
+  .flash-card-actions #flashAnswerBtn{flex:0 0 auto; padding:10px 18px;}
   .timer-actions-top{display:flex; gap:10px;}
   .timer-actions-top .btn{flex:1;}
   .timer-actions-top #timerSkipBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
@@ -3336,14 +3339,8 @@
       </div>
     </div>
 
-    <!-- Кнопка "Далее" — под игровым полем, отдельно от остальных -->
-    <button type="button" class="btn btn-primary" id="flashNextBtn" style="margin-top:14px;">Далее</button>
-
-     <div class="timer-actions-row">
-       <div class="timer-actions-top">
-         <button type="button" class="btn btn-secondary" id="flashAnswerBtn">Ответ</button>
-       </div>
-     </div>
+    <!-- Кнопка "Далее" — на одном ряду -->
+    <div class="flash-card-actions"><button type="button" class="btn btn-primary" id="flashNextBtn">Далее</button><button type="button" class="btn btn-secondary" id="flashAnswerBtn">Ответ</button></div>
   </section>
 
   <!-- ===== САПЁР (ДЕТИ): НАСТРОЙКА ===== -->
