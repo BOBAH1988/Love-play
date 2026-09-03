@@ -2214,21 +2214,22 @@
   .fab-back-btn{right:auto; left:12px; font-size:18px; line-height:1; transition:opacity .2s ease;}
   /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
      чтобы media query не перекрывался ими с тем же приоритетом).
-     Кнопки привязываются к краям центрированной .card (340px) — на 12px
-     наружу, как в мобильной версии. Чтобы имена игроков в .krokodil-score-row
-     не наезжали на кнопки сверху, добавляем padding-top всем экранам с
-     score-row (см. ниже). */
+     Кнопки привязываются к краям #app (контейнер приложения с другим
+     фоном, отличающимся от заднего фона body) — на 12px от верхнего
+     правого/левого края. position:absolute работает относительно #app
+     (position:relative). Чтобы контент с score-row не наезжал на
+     кнопки, добавлен padding-top экранам с score-row (см. ниже). */
   @media (min-width:640px){
     .fab-menu-btn {
       position:absolute;
       top:12px;
-      right: calc((100% - 340px) / 2 + 12px);
+      right:12px;
       left: auto;
     }
     .fab-back-btn {
       position:absolute;
       top:12px;
-      left: calc((100% - 340px) / 2 + 12px);
+      left:12px;
       right: auto;
     }
     /* Отступ сверху для экранов с score-row + turn-label (≈50px высота)
