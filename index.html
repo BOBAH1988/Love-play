@@ -1145,8 +1145,11 @@
   .flash-time-option.wrong{ background:rgba(244,67,54,.3); border-color:rgba(244,67,54,.6); color:#f44336; }
   .flash-time-option:disabled{ cursor:default; }
   .flash-time-display{ font-size:48px; font-weight:800; text-align:center; margin:20px 0; color:#fff; }
+  .flash-time-display .flash-time-mechanical{ font-size:16px; }
   .flash-time-digital{ font-family:'Courier New',monospace; letter-spacing:4px; }
-  .flash-time-mechanical{ font-family:Georgia,serif; font-style:italic; }
+  .flash-time-mechanical{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .flash-time-mechanical svg{ display:block; filter:drop-shadow(0 4px 12px rgba(0,0,0,.4)); }
+  .clock-style-hint{ font-size:13px; color:#e8c9dd; font-weight:600; opacity:.8; font-family:system-ui,sans-serif; font-style:normal; }
   .flash-card-progress{ text-align:center; font-size:13px; color:#e8c9dd; margin-top:10px; }
   /* "Оцени бизнес" — карточка сценария: заголовок бизнеса, таблица его
      данных (цена/себестоимость/расходы/продажи), затем сам вопрос и
@@ -3275,6 +3278,7 @@
         <li>Если ошибётесь — покажем правильный ответ.</li>
         <li>Счёт правильных ответов и ошибок ведётся по всей партии.</li>
         <li>«Выход» в любой момент вернёт в меню.</li>
+        <li>Механические часы встречаются в трёх видах: с полным набором цифр (1-12), сокращённые (12, 3, 6, 9) и римские (I-XII).</li>
       </ol>
       <button class="btn btn-primary" id="closeFlashTimeRulesBtn">Понятно</button>
     </div>
