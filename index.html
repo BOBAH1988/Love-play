@@ -491,6 +491,15 @@
   #homeMenuList .btn{
     padding:18px 13px; font-size:19px; font-weight:800;
   }
+  /* Главная страница (1 кнопка в ряд) — иконка+текст центрируются вместе.
+     В game-select-list (2 в ряд) — иконка слева, текст по центру (см. .btn-menu-item выше). */
+  #homeMenuList .btn-menu-item{
+    justify-content:center;
+  }
+  /* В game-select-list (2 в ряд) текст слева, иконка в столбике слева */
+  .game-select-list .btn-menu-item{
+    justify-content:flex-start;
+  }
   .btn-menu-item{
     background:linear-gradient(135deg, rgba(255,94,142,.22), rgba(255,255,255,.05));
     color:#fff;
@@ -505,8 +514,12 @@
     width:32px; min-width:32px; flex-shrink:0;
     font-size:1.7em; line-height:1;
   }
-  /* Текст занимает оставшееся место и центрируется */
-  .btn-menu-item > :not(.menu-icon){ flex:1; text-align:center;
+  /* Текст занимает оставшееся место и центрируется (для .game-select-list).
+     В #homeMenuList отменяем text-align:center чтобы не было двойного центрирования. */
+  .btn-menu-item > :not(.menu-icon){ flex:1;
+  }
+  #homeMenuList .btn-menu-item > :not(.menu-icon){
+    text-align:left; padding-left:32px; /* компенсация иконки, текст идёт сразу за ней */
   }
   .btn-menu-item:active{background:rgba(255,94,142,.32); border-color:rgba(255,255,255,.5);}
   .btn-ghost{
