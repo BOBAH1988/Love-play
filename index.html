@@ -470,8 +470,7 @@
     margin-top:6px;
   }
   .game-select-list .btn{
-    padding:9px 12px; font-size:16px; line-height:1.25;
-    justify-content:center; text-align:center; white-space:normal;
+    padding:9px 12px; font-size:16px; line-height:1.25; justify-content:flex-start; text-align:center; white-space:normal;
     /* 60px = высота двух строк (2×16px×1.25=40px) + паддинг (9+9) + граница
        (1+1, box-sizing:border-box). Ровно две строки — даже если все названия
        уместились в одну (широкий экран), кнопки остаются двухстрочной высоты
@@ -479,14 +478,6 @@
     min-height:60px;
   }
   /* Иконка в начале названия игры — крупнее самого текста, чтобы список игр
-     читался быстрее. min-width:32px + display:flex на глобальном .menu-icon
-     обеспечивают: все иконки в одном столбике, центр по вертикали,
-     одинаковый отступ 10px до текста (margin-right).
-     ВАЖНО: width:auto нужен для длинных эмодзи-иконок («XO» = 2 знака),
-     чтобы они не переносились в столбик X над O. min-width:32px удерживает
-     столбик ровным для остальных иконок. */
-  /* Шрифт иконки 1.7em — крупнее текста. Позиционирование делает
-     .btn-menu-item .menu-icon ниже, с !important. */
   .game-select-list .btn .menu-icon{
     font-size:1.7em; line-height:1; flex-shrink:0;
     width:auto; min-width:32px; white-space:nowrap;
@@ -506,14 +497,17 @@
     border:1px solid rgba(255,255,255,.32);
     box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
     font-weight:700;
-    /* Текст по центру, иконка абсолютно слева — все иконки в одном столбике */
-    position:relative;
-    text-align:center;
-    padding-left:42px; /* место под иконку 32px + 10px отступ */
+    /* Flexbox: иконка слева, текст в контейнере который центрируется */
+    display:flex; align-items:center; justify-content:flex-start; gap:0;
   }
+  /* Иконка фиксированной ширины 32px — все иконки в одном столбике */
   .btn-menu-item .menu-icon{
-    position:absolute !important; left:8px !important; top:50% !important; transform:translateY(-50%) !important;
+    width:32px; min-width:32px; flex-shrink:0;
     font-size:1.7em; line-height:1;
+  }
+  /* Текст занимает оставшееся место и центрируется */
+  .btn-menu-item > :not(.menu-icon){
+    flex:1; text-align:center; padding-right:8px;
   }
   .btn-menu-item:active{background:rgba(255,94,142,.32); border-color:rgba(255,255,255,.5);}
   .btn-ghost{
