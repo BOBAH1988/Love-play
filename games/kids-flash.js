@@ -230,16 +230,6 @@ function exitFlashGame(){
 }
 document.getElementById('flashSetupStartBtn').addEventListener('click', ()=>{ goToFlashGame(); });
 document.getElementById('flashSetupExitBtn').addEventListener('click', ()=>{ exitFlashSetup(); });
-document.getElementById('flashExitBtn').addEventListener('click', ()=>{ exitFlashGame(); });
-// "Дополнительно": раскрывает/сворачивает строку с автоозвучкой, правилами и выходом.
-document.getElementById('flashMoreBtn').addEventListener('click', ()=>{
-  const row = document.getElementById('flashExtraRow');
-  if(!row) return;
-  const expanded = row.style.display !== 'none';
-  row.style.display = expanded ? 'none' : '';
-  const btn = document.getElementById('flashMoreBtn');
-  if(btn){ btn.setAttribute('aria-expanded', String(!expanded)); }
-});
 (document.getElementById('flashSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('flashRulesModal'); });
 openRulesModal('flashGameRulesBtn', 'flashRulesModal');
 setupRulesModal('flashRulesModal', 'closeFlashRulesBtn');

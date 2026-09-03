@@ -460,18 +460,6 @@ document.getElementById('kidsSaperHideTasksBtn').addEventListener('click', ()=>{
   renderKidsSaperGrid();
   playSuccessSound();
 });
-document.getElementById('kidsSaperMoreBtn').addEventListener('click', ()=>{
-  const row = document.getElementById('kidsSaperExtraRow');
-  if(!row) return;
-  const expanded = row.style.display !== 'none';
-  row.style.display = expanded ? 'none' : '';
-  const btn = document.getElementById('kidsSaperMoreBtn');
-  if(btn){ btn.setAttribute('aria-expanded', String(!expanded)); }
-});
-document.getElementById('kidsSaperExitBtn').addEventListener('click', ()=>{
-  pauseKidsSaperGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 document.getElementById('kidsSaperBonusAcceptBtn').addEventListener('click', ()=>{
   playSuccessSound();
   hideModal('kidsSaperBonusModal');
