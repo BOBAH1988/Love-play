@@ -143,11 +143,11 @@ let state = {
   kidsKrokodilTurnsPlayed:0,
   // Мемасики (дети) — уровень берётся из kidsAge
   kidsMemesUsed:{}, kidsMemesHidden:[], kidsMemesAutoSpeak:false,
-  // Английский язык (дети) — flashTheme: тема подборки ('english'/'animals'/'verbs'),
-  // flashThemeSize: 100 или 250 (объём подборки слов английского языка).
+  // Флеш-карты (дети) — flashTheme: тема подборки ('english'/'animals'/'verbs'),
+  
   // flashQueue/flashIndex — карточки текущей партии
   // (фиксированное количество, не бесконечная колода).
-  flashMode:'learn', flashTheme:'english', flashThemeSize:100, flashTimeSub:'digital', flashCount:25,
+  flashMode:'learn', flashTheme:'english', flashTimeSub:'digital', flashCount:25,
   flashQueue:[], flashIndex:0, flashAutoSpeak:true,
   // «Время» (обучающая игра — часы) — вынесена в отдельную игру (games/kids-flash-time.js).
   flashTimePool:[], flashTimeIndex:0, flashTimeScore:0, flashTimeErrors:0,

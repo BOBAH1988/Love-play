@@ -8,7 +8,7 @@
 //   'animals') поле group не влияет на выборку — берутся все карточки темы.
 
 const FLASH_THEMES = [
-  { id: 'english', icon: '🇬🇧', name: 'Английский язык' },
+  { id: 'english', icon: '🇬🇧', name: 'Популярные слова' },
   { id: 'animals', icon: '🐾', name: 'Животные' },
   { id: 'verbs', icon: '🔤', name: 'Глаголы' },
 ];

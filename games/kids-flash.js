@@ -1,9 +1,9 @@
-// games/kids-flash.js — обучающая игра «Английский язык» (раздел
+// games/kids-flash.js — обучающая игра «Флеш-карты» (раздел
 // «Обучающие игры»). Загружается через <script src="games/kids-flash.js">
-// в index.html, данные — cards/cards_flash.js (FLASH_WORDS, theme==='english').
+// в index.html, данные — cards/cards_flash.js (FLASH_WORDS).
 //
-// Настройки: режим игры (обучение/повторение), объём подборки слов
-// (100 или 250 слов), количество карточек за партию (5/10/25/50).
+// Настройки: режим игры (обучение/повторение), тема и количество карточек
+// за партию (5/10/25/50).
 // Партия — фиксированный набор случайных карточек из подборки; после
 // последней карточки партия завершается и игрок возвращается в настройки.
 //
@@ -15,19 +15,14 @@
 
 let flashCurrentCard = null;
 
-function getFlashPool(size){
+function getFlashPool(theme){
   if(typeof FLASH_WORDS === 'undefined' || !Array.isArray(FLASH_WORDS)) return [];
-  // Английский язык: size задаёт объём подборки слов.
-  // "100 слов" — базовые (group<=100), "250 слов" — остальные (group>100):
-  // 150 промежуточных + 100 новых = ровно 250, без пересечения с базовыми 100.
-  if(size === 100) return FLASH_WORDS.filter(w => w.theme === 'english' && w.group <= 100);
-  return FLASH_WORDS.filter(w => w.theme === 'english' && w.group > 100);
+  return FLASH_WORDS.filter(w => w.theme === theme);
 }
 
 function goToFlashSetup(){
   goToGameSetup('flashSetup', null, ()=>{
     renderFlashModeGroup();
-    renderFlashThemeSizeGroup();
     renderFlashCountGroup();
   });
 }
@@ -52,20 +47,6 @@ document.querySelectorAll('#flashModeGroup .starter-btn').forEach(btn=>{
   });
 });
 
-function renderFlashThemeSizeGroup(){
-  if(state.flashThemeSize !== 100 && state.flashThemeSize !== 250){ state.flashThemeSize = 100; saveState(); }
-  document.querySelectorAll('#flashThemeSizeGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === state.flashThemeSize);
-  });
-}
-document.querySelectorAll('#flashThemeSizeGroup .starter-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    playSuccessSound();
-    state.flashThemeSize = parseInt(btn.dataset.value, 10);
-    saveState();
-    renderFlashThemeSizeGroup();
-  });
-});
 document.querySelectorAll('#flashThemeGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     playSuccessSound();
@@ -87,9 +68,7 @@ function renderFlashThemeGroup(){
       btn.classList.toggle('on', btn.dataset.value === state.flashTheme);
     });
   }
-  // Блок «объём словаря» (100/250) — только для «Английский язык».
-  const sizeBlock = document.getElementById('flashEnglishSizeBlock');
-  if(sizeBlock) sizeBlock.style.display = (state.flashTheme === 'english') ? '' : 'none';
+  // Блок «объём словаря» удалён — все 350 английских слов в одной подборке.
 }
 
 const FLASH_COUNT_VALUES = [5, 10, 25, 50];
@@ -125,7 +104,7 @@ function updateFlashProgress(){
 }
 
 function goToFlashGame(){
-  const pool = getFlashPool(state.flashThemeSize);
+  const pool = getFlashPool(state.flashTheme);
   const count = Math.min(state.flashCount, pool.length);
   state.flashQueue = shuffleFlashPool(pool).slice(0, count);
   state.flashIndex = 0;
