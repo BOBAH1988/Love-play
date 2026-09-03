@@ -479,15 +479,15 @@
     min-height:60px;
   }
   /* Иконка в начале названия игры — крупнее самого текста, чтобы список игр
-     читался быстрее (сама надпись остаётся прежнего размера).
-     ВАЖНО: width:auto и white-space:nowrap отменяют действие глобального
-     .menu-icon{font-size:15px; width:20px} (см. стили меню ☰): без этого
-     иконка «XO» у Крестиков-нолики (два знака по ~27px) не помещается в
-     жёсткие 20px и переносится в столбик — X над O, иконка становится
-     высокой. Эмодзи-иконки (один знак) от width:auto не меняются. */
+     читался быстрее. min-width:32px + display:flex на глобальном .menu-icon
+     обеспечивают: все иконки в одном столбике, центр по вертикали,
+     одинаковый отступ 10px до текста (margin-right).
+     ВАЖНО: width:auto нужен для длинных эмодзи-иконок («XO» = 2 знака),
+     чтобы они не переносились в столбик X над O. min-width:32px удерживает
+     столбик ровным для остальных иконок. */
   .game-select-list .btn .menu-icon{
-    font-size:1.7em; line-height:1; margin-right:12px; flex-shrink:0;
-    width:auto; white-space:nowrap;
+    font-size:1.7em; line-height:1; margin-right:10px; flex-shrink:0;
+    width:auto; min-width:32px; white-space:nowrap;
   }
   /* Главная страница (хаб) — 3 крупные кнопки формата игры, всегда в один
      столбец (не сетка), чтобы они читались как главный выбор, а не как
@@ -2297,7 +2297,11 @@
   }
   .menu-list .btn-secondary:hover{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.15);}
   .menu-list .btn-secondary:active{background:rgba(255,255,255,.12);}
-  .menu-icon{font-size:15px; width:20px; text-align:center; flex-shrink:0;}
+  /* Иконки меню — фиксированная ширина 32px, чтобы все иконки были в одном столбике */
+  .menu-icon{
+    font-size:15px; width:32px; min-width:32px; text-align:center; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
 </style>
 </head>
 <body>
