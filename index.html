@@ -485,8 +485,10 @@
      ВАЖНО: width:auto нужен для длинных эмодзи-иконок («XO» = 2 знака),
      чтобы они не переносились в столбик X над O. min-width:32px удерживает
      столбик ровным для остальных иконок. */
+  /* Шрифт иконки 1.7em — крупнее текста. Позиционирование делает
+     .btn-menu-item .menu-icon ниже, с !important. */
   .game-select-list .btn .menu-icon{
-    font-size:1.7em; line-height:1; margin-right:10px; flex-shrink:0;
+    font-size:1.7em; line-height:1; flex-shrink:0;
     width:auto; min-width:32px; white-space:nowrap;
   }
   /* Главная страница (хаб) — 3 крупные кнопки формата игры, всегда в один
@@ -504,7 +506,14 @@
     border:1px solid rgba(255,255,255,.32);
     box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
     font-weight:700;
-    display:flex; align-items:center; gap:6px;
+    /* Текст по центру, иконка абсолютно слева — все иконки в одном столбике */
+    position:relative;
+    text-align:center;
+    padding-left:42px; /* место под иконку 32px + 10px отступ */
+  }
+  .btn-menu-item .menu-icon{
+    position:absolute !important; left:8px !important; top:50% !important; transform:translateY(-50%) !important;
+    font-size:1.7em; line-height:1;
   }
   .btn-menu-item:active{background:rgba(255,94,142,.32); border-color:rgba(255,255,255,.5);}
   .btn-ghost{
@@ -2297,10 +2306,9 @@
   }
   .menu-list .btn-secondary:hover{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.15);}
   .menu-list .btn-secondary:active{background:rgba(255,255,255,.12);}
-  /* Иконки меню — фиксированная ширина 32px, чтобы все иконки были в одном столбике */
+  /* Иконки меню — фиксированная ширина 32px, все иконки в одном столбике */
   .menu-icon{
     font-size:15px; width:32px; min-width:32px; text-align:center; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
   }
 </style>
 </head>
