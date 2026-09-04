@@ -482,13 +482,13 @@ function renderBizLemonsPhase(){
   const stockParts = [];
   if(lemonStock > 0){
     const daysLeft = Math.max(0, BIZ_LEMON_SHELF_DAYS - (day - boughtDay));
-    stockParts.push(`🍋 лимоны: ${lemonStock} шт. — испортятся через ${daysLeft} дн., если не использовать`);
+    stockParts.push(`🍋 лимоны: ${lemonStock} шт. — испортятся через ${daysLeft} дн.`);
   }
   if(teaStock > 0){
     stockParts.push(`🍵 пакетики чая: ${teaStock} шт.`);
   }
   if(stockParts.length > 0){
-    if(stockCard) stockCard.textContent = `В запасе: ${stockParts.join(' · ')}`;
+    if(stockCard) stockCard.innerHTML = `В запасе: ${stockParts.join('<br>')}`;
   } else {
     if(stockCard) stockCard.textContent = 'Запасов нет — купи лимоны и/или пакетики чая, чтобы было из чего готовить напитки.';
   }

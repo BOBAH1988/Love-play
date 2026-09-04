@@ -29,85 +29,14 @@ function getLuckyTasksList(level){
   if(typeof LUCKY_TASKS === 'undefined' || !Array.isArray(LUCKY_TASKS)) return [];
   return LUCKY_TASKS.filter(i=>i.level===level);
 }
-function getLuckyBonusList(level){
-  if(typeof LUCKY_BONUS === 'undefined' || !Array.isArray(LUCKY_BONUS)) return [];
-  return LUCKY_BONUS.filter(i=>i.level===level);
-}
-// Тот же принцип, что и pickBingoBonus в "Секс-бинго": в рамках одной
-// партии бонус этого уровня не повторяется, пока не исчерпан весь пул.
-function pickLuckyBonus(level){
-  const list = getLuckyBonusList(level);
-  if(!state.luckyUsedBonus) state.luckyUsedBonus = [];
-  let available = list.filter(b=>!state.luckyUsedBonus.includes(b.text));
-  if(available.length === 0){
-    state.luckyUsedBonus = [];
-    available = list;
-  }
-  const bonus = available.length ? available[Math.floor(Math.random()*available.length)] : null;
-  if(bonus) state.luckyUsedBonus.push(bonus.text);
-  return bonus;
-}
-// Финальное задание для проигравшей команды (меньше отмеченных клеток) —
-// отдельный пул LUCKY_FINAL_TASKS, не привязан к уровню, выбирается один
-// раз случайно в конце партии (см. showLuckySummaryModal).
-function pickLuckyFinalTask(){
+function pickLuckyFinalTask() {
   if(typeof LUCKY_FINAL_TASKS === 'undefined' || !Array.isArray(LUCKY_FINAL_TASKS) || LUCKY_FINAL_TASKS.length === 0) return null;
   return LUCKY_FINAL_TASKS[Math.floor(Math.random()*LUCKY_FINAL_TASKS.length)];
 }
 function luckyLevelInfo(level){
   return (typeof LUCKY_LEVELS !== 'undefined' ? LUCKY_LEVELS.find(l=>l.id===level) : null) || {name:'Знакомство', icon:'🤝'};
 }
-// Чек-лист "Бонусные задания" — накопительный список, который переживает
-// смену партий Счастливого билета (сбрасывается только вручную, крестиком
-// на отдельном пункте, или через общий "Сбросить прогресс"). Та же логика,
-// что и addBingoBonusToChecklist/renderBingoBonusChecklist в "Секс-бинго".
-function addLuckyBonusToChecklist(text){
-  if(!text) return;
-  if(!state.luckyBonusChecklist) state.luckyBonusChecklist = [];
-  const alreadyPending = state.luckyBonusChecklist.some(it => it.text === text && !it.done);
-  if(alreadyPending) return;
-  state.luckyBonusChecklist.push({text, done:false});
-}
-function renderLuckyBonusChecklist(){
-  const block = document.getElementById('luckyBonusChecklistBlock');
-  const list = document.getElementById('luckyBonusChecklistList');
-  if(!block || !list) return;
-  const items = state.luckyBonusChecklist || [];
-  if(items.length === 0){
-    block.style.display = 'none';
-    list.innerHTML = '';
-    return;
-  }
-  block.style.display = '';
-  list.innerHTML = items.map((it,i)=>`
-    <li class="bingo-bonus-checklist-item${it.done ? ' done' : ''}">
-      <span class="bingo-bonus-checklist-text" data-idx="${i}">${it.text}</span>
-      <button type="button" class="bingo-bonus-checklist-delete" data-idx="${i}" aria-label="Удалить">✕</button>
-    </li>
-  `).join('');
-  list.querySelectorAll('.bingo-bonus-checklist-text').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const idx = parseInt(el.dataset.idx, 10);
-      const item = state.luckyBonusChecklist[idx];
-      if(!item) return;
-      item.done = !item.done;
-      saveState();
-      renderLuckyBonusChecklist();
-    });
-  });
-  list.querySelectorAll('.bingo-bonus-checklist-delete').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const idx = parseInt(btn.dataset.idx, 10);
-      state.luckyBonusChecklist.splice(idx, 1);
-      saveState();
-      renderLuckyBonusChecklist();
-    });
-  });
-}
-// Ровно 2 команды, в каждой мужчина и женщина — оформление такое же, как у
-// блоков семей в "Знаю тебя" (fam-znayu-family-block/-inputs), но без
-// переключателя пола: слот "м" и слот "ж" внутри команды фиксированы.
-function ensureLuckyTeams(){
+function luckyLevelInfo(level){
   if(!Array.isArray(state.luckyTeams) || state.luckyTeams.length !== 2){
     state.luckyTeams = [{name:'Команда 1', m:'Он', f:'Она'},{name:'Команда 2', m:'Он', f:'Она'}];
   }
@@ -426,16 +355,8 @@ function showLuckySummaryModal(){
   // задания» под картой.
   const bonusEl = document.getElementById('luckySummaryBonusText');
   if(bonusEl){
-    const bonusTask = winnerName ? pickLuckyBonus(3) : null;
-    if(bonusTask){
-      addLuckyBonusToChecklist(bonusTask.text);
-      renderLuckyBonusChecklist();
-      bonusEl.textContent = `🏆 Бонусное задание команде «${winnerName}»: ` + bonusTask.text;
-      bonusEl.style.display = 'block';
-    } else {
-      bonusEl.textContent = '';
-      bonusEl.style.display = 'none';
-    }
+    bonusEl.textContent = '';
+    bonusEl.style.display = 'none';
   }
   // Финальное задание проигравшей команде (меньше отмеченных клеток) —
   // весёлый форфейт перед компанией. При ничьей (оба счёта равны)
@@ -484,11 +405,6 @@ function goToLuckyGame(){
   state.luckyFinished = false;
   state.luckyCurrentTeamIndex = Math.floor(Math.random() * 2);
   state.luckyTeamTurnCount = [0,0];
-  state.luckyPendingBonusText = '';
-  // Пул "уже выпадавших в этой партии" бонусов сбрасывается на каждую новую
-  // игру (как bingoUsedBonus в "Секс-бинго") — сам чек-лист "Бонусные
-  // задания" (luckyBonusChecklist) при этом НЕ трогаем: он накопительный.
-  state.luckyUsedBonus = [];
   state.inProgress = true;
   saveState();
   document.getElementById('luckySetup').classList.remove('active');
