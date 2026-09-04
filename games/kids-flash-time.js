@@ -213,5 +213,7 @@ document.getElementById('closeFlashTimeSummaryBtn').addEventListener('click', ()
   hideModal('flashTimeSummaryModal');
   exitFlashTimeGame();
 });
-openRulesModal('flashTimeGameRulesBtn', 'flashTimeRulesModal');
+// «Время», как и все остальные игры: отдельных кнопок «Правила» в экранах
+// нет — правила открываются только через меню ☰ → «Правила игр» (хаб),
+// который ссылается на эту же модалку (flashTimeRulesModal).
 setupRulesModal('flashTimeRulesModal', 'closeFlashTimeRulesBtn');
