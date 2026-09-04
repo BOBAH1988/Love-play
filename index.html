@@ -2,17 +2,12 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<!-- viewport-fit=cover растягивал страницу ПОД системные безопасные зоны
-     (статус-бар сверху, home indicator снизу). В standalone-PWA на iOS это
-     давало известный дрейф: визуальный viewport смещался относительно
-     layout-viewport, из-за чего снизу оставалась белая зона (WebKit закрашивал
-     нижнюю safe-зону белым, а не нашим фоном), а fixed-элементы (кнопка меню)
-     рисовались не там, где их находит hit-test — тапы уходили мимо. Пробная
-     версия фикса (коммит ce251a3 + CSS-рефакторинг 45090c2) убрала все
-     height/dvh-пересчёты, но сам cover из меты удалить забыли — теперь он
-     удалён: страницу лейаутит система без залезания под home indicator, эту
-     зону целиком рисует сама ОС (в нашем тёмном фоне), и дрейфа нет. -->
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<!-- viewport-fit=cover обязателен на iPhone с home-indicator: без него система
+     рисует белую полосу внизу (theme-color на home-indicator в PWA не влияет).
+     Раньше удаляли из-за дрейфа fixed-элементов, но дрейф был вызван не cover,
+     а JS-расчётом height (убран в коммите 30af695). Cover + правильные safe-area
+     паддинги — стандартный подход для iOS PWA без белых полос. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <script>
   // Раньше здесь был JS-расчёт "настоящей" высоты/ширины экрана (--real-vh/
   // --real-vw) для html и для разворота #app при принудительном портрете —
@@ -117,18 +112,8 @@
     overscroll-behavior:none;
     -webkit-overflow-scrolling:auto;
   }
-  /* Подстраховка от белой полосы под home indicator / после поворота экрана:
-     фон растянут заметно за пределы экрана (не в притык, а с большим запасом
-     в vh/vw — не фиксированных px, чтобы запас масштабировался под размер
-     экрана конкретного устройства), чтобы перекрыть любые временные зазоры
-     от dvh/safe-area/поворота. */
-  body::before{
-    content:'';
-    position:fixed;
-    top:-25vh; left:-25vw; right:-25vw; bottom:-25vh;
-    background:var(--bg1) linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
-    z-index:-1;
-  }
+  /* При viewport-fit=cover фон html/body сам заполняет всё под home-indicator, */
+  /* подложка не нужна. */
   #app{
     /* #app не позиционирован fixed, а лежит в потоке внутри body — раз body
        теперь всегда точно равен экрану (см. комментарий выше), простого
@@ -861,6 +846,7 @@
     font-size:14px; font-weight:700; cursor:pointer;
   }
   .biz-lemon-tier-btn.biz-upgrade-owned{ opacity:.55; cursor:default; }
+  .biz-lemon-tier-btn.biz-tier-selected{ background:rgba(76,175,80,.35); border:2px solid #4caf50; box-shadow:0 0 12px rgba(76,175,80,.5); }
   /* Простой столбчатый график прибыли по дням в итогах партии — выше
      столбик, больше заработал; красный столбик — день в минусе. */
   .biz-chart{ display:flex; justify-content:space-between; gap:6px; margin:14px 0; }
@@ -2263,7 +2249,10 @@
 
   /* ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== */
   .fab-menu-btn{
-    position:fixed; top:12px; right:12px; z-index:150;
+    position:fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    right: calc(12px + env(safe-area-inset-right));
+    z-index:150;
     width:36px; height:36px; border-radius:50%;
     background:rgba(20,10,28,.85); border:1px solid rgba(255,255,255,.25);
     color:rgba(255,255,255,.85); font-size:16px; line-height:1; cursor:pointer;
@@ -4681,21 +4670,7 @@
         <button type="button" class="btn btn-secondary btn-pause" id="luckyExitBtn">Пауза</button>
       </div>
     </div>
-    <div class="bingo-bonus-checklist-block" id="luckyBonusChecklistBlock" style="display:none;">
-      <div class="bingo-bonus-checklist-title">🎁 Бонусные задания</div>
-      <ul class="bingo-bonus-checklist" id="luckyBonusChecklistList"></ul>
-    </div>
   </section>
-
-  <!-- ===== СЧАСТЛИВЫЙ БИЛЕТ: БОНУСНОЕ ЗАДАНИЕ (линия собрана) ===== -->
-  <div class="modal-overlay" id="luckyBonusModal">
-    <div class="modal-card">
-      <div class="modal-title">🎉 Линия собрана!</div>
-      <div class="intro-text" id="luckyBonusIntro"></div>
-      <div class="intro-text" id="luckyBonusText" style="margin-top:10px; font-weight:700;"></div>
-      <button class="btn btn-primary" id="luckyBonusAcceptBtn">Готово! Продолжаем</button>
-    </div>
-  </div>
 
   <!-- ===== СЧАСТЛИВЫЙ БИЛЕТ: ИТОГИ ИГРЫ ===== -->
   <div class="modal-overlay" id="luckySummaryModal">
