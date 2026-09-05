@@ -534,15 +534,18 @@ function renderBizLemonsPhase(){
       });
     });
   }
-  // Кнопка «Дальше» активна только при наличии запаса (лимоны или чай).
-  if(nextBtn) nextBtn.disabled = lemonStock <= 0 && teaStock <= 0;
+  // Кнопка «Дальше» активна только при наличии выбора для покупки
+  // (лимоны или чай), а переход на этап закупки происходит даже при пустом запасе.
+  if(nextBtn) nextBtn.disabled = !(canBuyLemon || canBuyTea);
 }
 // Кнопка «Дальше» — покупка выбранного + переход к приготовлению
 function bizOnToBuy(){
+  const nextBtn = document.getElementById('bizToBuyBtn');
+  if(nextBtn && nextBtn.disabled) return;
   const lemonSel = state.businessLemonadeSelectedLemonIdx;
   const teaSel = state.businessLemonadeSelectedTeaIdx;
   let bought = false;
-  if(lemonSel !== null){
+  if(lemonSel !== null && lemonSel !== undefined){
     const tier = BIZ_LEMON_TIERS[lemonSel];
     const total = tier.qty * tier.pricePerUnit;
     if((state.businessLemonadeCapital || 0) >= total){
@@ -555,7 +558,7 @@ function bizOnToBuy(){
       showToast(`Куплено ${tier.qty} лимонов за ${total} ₽`);
     }
   }
-  if(teaSel !== null){
+  if(teaSel !== null && teaSel !== undefined){
     const tier = BIZ_TEA_TIERS[teaSel];
     const total = tier.qty * tier.pricePerUnit;
     if((state.businessLemonadeCapital || 0) >= total){
@@ -578,6 +581,11 @@ function bizOnToBuy(){
   renderBizQuantityGroup();
   renderBizOptionsGrid();
   goToBizPhase('bizPhaseBuy');
+}
+// Регистрируем обработчик клика по кнопке «Дальше: закупка остального»
+const bizToBuyBtnEl = document.getElementById('bizToBuyBtn');
+if(bizToBuyBtnEl){
+  bizToBuyBtnEl.addEventListener('click', bizOnToBuy);
 }
 
 /* ============ ШАГ 4: ЗАКУПКА ОСТАЛЬНЫХ ПРОДУКТОВ ============ */
