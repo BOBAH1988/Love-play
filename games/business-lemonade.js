@@ -965,6 +965,8 @@ function bizSellDay(){
   highlightEl.textContent = (netProfit >= 0 ? '+' : '') + netProfit + ' ₽';
   highlightEl.classList.toggle('biz-loss', netProfit < 0);
   document.getElementById('bizResultsTitle').textContent = `Итоги дня ${state.businessLemonadeDay || 1} (${dow.short})`;
+  const drinkBadge = document.getElementById('bizResDrinkBadge');
+  if(drinkBadge) drinkBadge.textContent = isTea ? '☕ Чай' : '🍋 Лимонад';
   document.getElementById('bizResExpenses').textContent = `${expenses} ₽`;
   document.getElementById('bizResCost').textContent = `${Math.round(costPerCup * 10) / 10} ₽`;
   document.getElementById('bizResPrice').textContent = `${price} ₽`;
