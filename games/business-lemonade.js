@@ -441,34 +441,53 @@ document.getElementById('bizToLemonsBtn').addEventListener('click', ()=>{
   renderBizLemonsPhase();
   goToBizPhase('bizPhaseLemons');
 });
-// Обработчик выбора типа напитка
-function renderBizDrinkTypeGroup(){
-  document.querySelectorAll('#bizDrinkTypeGroup .starter-btn').forEach(b=>{
-    b.classList.toggle('on', b.dataset.value === (state.businessLemonadeDrinkType || 'lemonade'));
+// Обработчик выбора количества стаканов для каждого напитка
+function renderBizQuantityGroup(){
+  // Кнопки лимонада
+  document.querySelectorAll('#bizLemonQuantityGroup .starter-btn').forEach(btn=>{
+    const v = parseInt(btn.dataset.value, 10);
+    const stock = state.businessLemonadeLemonStock || 0;
+    btn.classList.toggle('on', v === (state.businessLemonadeCups || 10));
+    btn.disabled = v > stock;
   });
-  const sellBtn = document.getElementById('bizSellBtn');
-  if(sellBtn) sellBtn.textContent = state.businessLemonadeDrinkType === 'tea' ? '☕ Продавать!' : '🍋 Продавать!';
+  // Кнопки чая
+  document.querySelectorAll('#bizTeaQuantityGroup .starter-btn').forEach(btn=>{
+    const v = parseInt(btn.dataset.value, 10);
+    const stock = state.businessLemonadeTeaStock || 0;
+    btn.classList.toggle('on', v === (state.businessLemonadeTeaCups || 10));
+    btn.disabled = v > stock;
+  });
+  updateBizBuyBreakdownUI();
 }
-document.querySelectorAll('#bizDrinkTypeGroup .starter-btn').forEach(btn=>{
+document.querySelectorAll('#bizLemonQuantityGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    playSuccessSound();
-    state.businessLemonadeDrinkType = btn.dataset.value;
+    if(btn.disabled) return;
+    state.businessLemonadeCups = parseInt(btn.dataset.value, 10);
     saveState();
-    renderBizDrinkTypeGroup();
     renderBizQuantityGroup();
-    renderBizOptionsGrid();
-    updateBizBuyBreakdownUI();
   });
 });
+document.querySelectorAll('#bizTeaQuantityGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(btn.disabled) return;
+    state.businessLemonadeTeaCups = parseInt(btn.dataset.value, 10);
+    saveState();
+    renderBizQuantityGroup();
+  });
+});
+// Функция для подсветки выбранной цены чая
+function renderBizTeaPriceGroup(){
+  document.querySelectorAll('#bizTeaPriceGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.businessLemonadeTeaPrice || 15));
+  });
+}
 // Обработчик цены чая
 document.querySelectorAll('#bizTeaPriceGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     playSuccessSound();
     state.businessLemonadeTeaPrice = parseInt(btn.dataset.value, 10);
     saveState();
-    document.querySelectorAll('#bizTeaPriceGroup .starter-btn').forEach(b=>{
-      b.classList.toggle('on', parseInt(b.dataset.value, 10) === state.businessLemonadeTeaPrice);
-    });
+    renderBizTeaPriceGroup();
   });
 });
 
@@ -577,7 +596,6 @@ function bizOnToBuy(){
     renderBizLemonsPhase();
   }
   if((state.businessLemonadeLemonStock || 0) <= 0 && (state.businessLemonadeTeaStock || 0) <= 0) return;
-  renderBizDrinkTypeGroup();
   renderBizQuantityGroup();
   renderBizOptionsGrid();
   goToBizPhase('bizPhaseBuy');
@@ -591,8 +609,7 @@ if(bizToBuyBtnEl){
 /* ============ ШАГ 4: ЗАКУПКА ОСТАЛЬНЫХ ПРОДУКТОВ ============ */
 // Лимоны сюда не входят — они уже оплачены и просто расходуются из запаса
 // (см. "Шаг 3"), поэтому в бюджет дня их стоимость не добавляется повторно.
-function bizBuyBreakdown(cups, options, locationKey, hours){
-  const isTea = state.businessLemonadeDrinkType === 'tea';
+function bizBuyBreakdown(cups, options, locationKey, hours, isTea){
   const optionCosts = {};
   let optionsCost = 0;
   Object.keys(BIZ_OPTIONS).forEach(key=>{
@@ -602,47 +619,33 @@ function bizBuyBreakdown(cups, options, locationKey, hours){
     optionCosts[key] = cost;
     optionsCost += cost;
   });
-  let materials, sugarCost, cupCost, waterCost;
+  let sugarCost, cupCost, waterCost;
   if(isTea){
     // Чай: сахар + вода(0) + стаканчик. Пакетики уже куплены про запас (шаг 3),
     // поэтому в расходы дня они входят как 0 ₽ — так же, как лимоны у лимонада.
     sugarCost = cups * BIZ_TEA_COSTS.sugar;
     cupCost = cups * BIZ_TEA_COSTS.cup;
     waterCost = cups * BIZ_TEA_COSTS.water;
-    materials = sugarCost + cupCost + waterCost + optionsCost;
   } else {
     // Лимонад: лимоны(уже куплены) + сахар + вода(0) + стаканчик
     sugarCost = cups * BIZ_SUGAR_PER_CUP;
     cupCost = cups * BIZ_CUP_PER_CUP;
     waterCost = cups * BIZ_WATER_PER_CUP;
-    materials = sugarCost + cupCost + waterCost + optionsCost;
   }
+  const materials = sugarCost + cupCost + waterCost + optionsCost;
   const rentPerHour = (BIZ_LOCATIONS[locationKey] || { rentPerHour: 0 }).rentPerHour;
   const rent = rentPerHour * (hours || 1);
   return { sugarCost, cupCost, waterCost, optionCosts, optionsCost, rent, total: materials + rent, isTea };
-}
-function renderBizQuantityGroup(){
-  const isTea = state.businessLemonadeDrinkType === 'tea';
-  const stock = isTea ? (state.businessLemonadeTeaStock || 0) : (state.businessLemonadeLemonStock || 0);
-  const cups = isTea ? (state.businessLemonadeTeaCups || 10) : (state.businessLemonadeCups || 10);
-  document.querySelectorAll('#bizQuantityGroup .starter-btn').forEach(btn=>{
-    const v = parseInt(btn.dataset.value, 10);
-    btn.classList.toggle('on', v === cups);
-    btn.disabled = v > stock;
-  });
-  updateBizBuyBreakdownUI();
 }
 function renderBizOptionsGrid(){
   const wrap = document.getElementById('bizOptionsGrid');
   if(!state.businessLemonadeOptions) state.businessLemonadeOptions = {};
   const options = state.businessLemonadeOptions;
-  const isTea = state.businessLemonadeDrinkType === 'tea';
   wrap.innerHTML = Object.keys(BIZ_OPTIONS).map(key=>{
     const opt = BIZ_OPTIONS[key];
     const on = !!options[key];
-    // Для чая лёд меняет смысл: он превращает горячий чай в холодный напиток.
-    const name = (key === 'ice' && isTea) ? 'Лёд (холодный чай)' : opt.name;
-    const hint = (key === 'ice' && isTea) ? 'Холодный чай покупают охотнее — особенно в жару' : opt.hint;
+    const name = opt.name;
+    const hint = opt.hint;
     const priceLabel = opt.costType === 'perCup' ? `+${opt.cost} ₽/стакан` : `+${opt.cost} ₽/день`;
     const hintEl = hint ? `<span class="biz-option-hint">${hint}</span>` : '';
     return `<button type="button" class="biz-option-btn${on ? ' on' : ''}" data-key="${key}">${opt.icon} ${name}<span class="biz-option-cost">${priceLabel}</span>${hintEl}</button>`;
@@ -664,46 +667,58 @@ const BIZ_INGREDIENT_LABELS = {
   waterCost: '💧 Вода',
 };
 function updateBizBuyBreakdownUI(){
-  const isTea = state.businessLemonadeDrinkType === 'tea';
-  const cups = isTea ? (state.businessLemonadeTeaCups || 10) : (state.businessLemonadeCups || 10);
+  const lemonCups = Math.min(state.businessLemonadeCups || 10, state.businessLemonadeLemonStock || 0);
+  const teaCups = Math.min(state.businessLemonadeTeaCups || 10, state.businessLemonadeTeaStock || 0);
   const options = state.businessLemonadeOptions || {};
-  const stock = isTea ? (state.businessLemonadeTeaStock || 0) : (state.businessLemonadeLemonStock || 0);
-  const b = bizBuyBreakdown(cups, options, state.businessLemonadeLocation, state.businessLemonadeHours || 1);
+  const lemonExpenses = bizDrinkExpenses(lemonCups, 'lemonade');
+  const teaExpenses = bizDrinkExpenses(teaCups, 'tea');
+  const rentPerHour = (BIZ_LOCATIONS[state.businessLemonadeLocation] || { rentPerHour: 0 }).rentPerHour;
+  const rent = rentPerHour * (state.businessLemonadeHours || 1);
+  let optionsCost = 0;
+  Object.keys(BIZ_OPTIONS).forEach(key=>{
+    if(options[key]){
+      const opt = BIZ_OPTIONS[key];
+      optionsCost += opt.costType === 'perCup' ? (lemonCups + teaCups) * opt.cost : opt.cost;
+    }
+  });
+  const total = lemonExpenses + teaExpenses + rent + optionsCost;
+
   const rowsEl = document.getElementById('bizBuyBreakdownRows');
-  // Для лимонада лимоны уже оплачены в закупке (шаг 3), для чая — пакетики
-  // тоже куплены про запас, поэтому в расчёт дня сырьё входит как 0 ₽.
-  const stockLabel = isTea ? '🍵 Пакетики чая (из запаса)' : '🍋 Лимоны (из запаса)';
-  let rowsHtml = `<div class="biz-breakdown-row"><span>${stockLabel}</span><span>${Math.min(cups, stock)} шт. · 0 ₽</span></div>`;
-  if(isTea){
-    rowsHtml += `<div class="biz-breakdown-row"><span>🧾 Чай: сахар + стакан (пакетик из запаса)</span><span>${b.sugarCost + b.cupCost} ₽</span></div>`;
-  } else {
-    rowsHtml += Object.keys(BIZ_INGREDIENT_LABELS).map(key=>
-      `<div class="biz-breakdown-row"><span>${BIZ_INGREDIENT_LABELS[key]}</span><span>${b[key]} ₽</span></div>`
-    ).join('');
+  let rowsHtml = '';
+  if(lemonCups > 0){
+    rowsHtml += `<div class="biz-breakdown-row"><span>🍋 Лимоны (из запаса)</span><span>${lemonCups} шт. · 0 ₽</span></div>`;
+    rowsHtml += `<div class="biz-breakdown-row"><span>🧾 Лимонад: сахар + стаканчики</span><span>${lemonExpenses} ₽</span></div>`;
+  }
+  if(teaCups > 0){
+    rowsHtml += `<div class="biz-breakdown-row"><span>☕ Пакетики чая (из запаса)</span><span>${teaCups} шт. · 0 ₽</span></div>`;
+    rowsHtml += `<div class="biz-breakdown-row"><span>🧾 Чай: сахар + стаканчики</span><span>${teaExpenses} ₽</span></div>`;
   }
   Object.keys(BIZ_OPTIONS).forEach(key=>{
     if(!options[key]) return;
     const opt = BIZ_OPTIONS[key];
-    rowsHtml += `<div class="biz-breakdown-row"><span>${opt.icon} ${opt.name}</span><span>${b.optionCosts[key]} ₽</span></div>`;
+    const optCost = opt.costType === 'perCup' ? (lemonCups + teaCups) * opt.cost : opt.cost;
+    rowsHtml += `<div class="biz-breakdown-row"><span>${opt.icon} ${opt.name}</span><span>${optCost} ₽</span></div>`;
   });
-  rowsHtml += `<div class="biz-breakdown-row"><span>🏠 Аренда места</span><span>${b.rent} ₽</span></div>`;
+  rowsHtml += `<div class="biz-breakdown-row"><span>🏠 Аренда места</span><span>${rent} ₽</span></div>`;
   rowsEl.innerHTML = rowsHtml;
-  document.getElementById('bizBuyTotalRow').textContent = `${b.total} ₽`;
+  document.getElementById('bizBuyTotalRow').textContent = `${total} ₽`;
   const warnEl = document.getElementById('bizBuyWarning');
   const capital = state.businessLemonadeCapital || 0;
-  const overBudget = b.total > capital;
-  const lemonShort = cups > stock;
-  const stockName = isTea ? 'пакетиков чая' : 'лимонов';
-  const stockNameAcc = isTea ? 'пакетики чая' : 'лимоны';
+  const overBudget = total > capital;
+  const lemonStock = state.businessLemonadeLemonStock || 0;
+  const teaStock = state.businessLemonadeTeaStock || 0;
+  const lemonShort = (lemonCups > 0 && state.businessLemonadeCups > lemonStock);
+  const teaShort = (teaCups > 0 && state.businessLemonadeTeaCups > teaStock);
   if(warnEl){
     const problems = [];
-    if(lemonShort) problems.push(`не хватает ${stockName}: нужно ${cups} шт., в запасе ${stock} шт.`);
-    if(overBudget) problems.push(`не хватает денег: расходы ${b.total} ₽ больше, чем капитал ${capital} ₽`);
+    if(lemonShort) problems.push(`не хватает лимонов: нужно ${state.businessLemonadeCups} шт., в запасе ${lemonStock} шт.`);
+    if(teaShort) problems.push(`не хватает пакетиков чая: нужно ${state.businessLemonadeTeaCups} шт., в запасе ${teaStock} шт.`);
+    if(overBudget) problems.push(`не хватает денег: расходы ${total} ₽ больше, чем капитал ${capital} ₽`);
     warnEl.style.display = problems.length ? 'block' : 'none';
-    warnEl.textContent = problems.length ? `Пока нельзя продолжить: ${problems.join('; ')}. Уменьши количество стаканов, отключи опции или докупи ${stockNameAcc} кнопкой выше${overBudget ? ' (или попроси у друга в долг кнопкой ниже)' : ''}.` : '';
+    warnEl.textContent = problems.length ? `Пока нельзя продолжить: ${problems.join('; ')}. Уменьши количество стаканов, отключи опции или докупи кнопкой выше${overBudget ? ' (или попроси у друга в долг кнопкой ниже)' : ''}.` : '';
   }
   const nextBtn = document.getElementById('bizToPriceBtn');
-  if(nextBtn) nextBtn.disabled = overBudget || lemonShort;
+  if(nextBtn) nextBtn.disabled = overBudget || lemonShort || teaShort;
   // Кнопка займа: показываем только когда денег на день не хватает — так игрок
   // никогда не застревает на шаге «Приготовление напитков» из-за пустого капитала.
   const loanBtn = document.getElementById('bizLoanBtn');
@@ -803,15 +818,23 @@ function bizLoanAmountForNeed(need){
   return Math.ceil(Math.max(BIZ_MIN_CAPITAL_FOR_DAY, Math.max(0, need)) / 5) * 5;
 }
 document.getElementById('bizLoanBtn').addEventListener('click', ()=>{
-  const isTea = state.businessLemonadeDrinkType === 'tea';
-  const cups = isTea ? (state.businessLemonadeTeaCups || 10) : (state.businessLemonadeCups || 10);
-  const b = bizBuyBreakdown(cups, state.businessLemonadeOptions, state.businessLemonadeLocation, state.businessLemonadeHours || 1);
-  const capital = state.businessLemonadeCapital || 0;
-  const need = b.total - capital;
+  const lemonCups = state.businessLemonadeCups || 10;
+  const teaCups = state.businessLemonadeTeaCups || 10;
+  // Берём общую сумму: расходы обоих напитков + аренда + опции
+  const total = bizDrinkExpenses(lemonCups, 'lemonade') + bizDrinkExpenses(teaCups, 'tea')
+    + (BIZ_LOCATIONS[state.businessLemonadeLocation] || { rentPerHour: 0 }).rentPerHour * (state.businessLemonadeHours || 1);
+  let optionsCost = 0;
+  Object.keys(BIZ_OPTIONS).forEach(key=>{
+    if(state.businessLemonadeOptions[key]){
+      const opt = BIZ_OPTIONS[key];
+      optionsCost += opt.costType === 'perCup' ? (lemonCups + teaCups) * opt.cost : opt.cost;
+    }
+  });
+  const need = (total + optionsCost) - (state.businessLemonadeCapital || 0);
   if(need <= 0) return;
   const borrow = bizLoanAmountForNeed(need);
   const owed = Math.round(borrow * BIZ_LOAN_INTEREST);
-  state.businessLemonadeCapital = capital + borrow;
+  state.businessLemonadeCapital = (state.businessLemonadeCapital || 0) + borrow;
   // Долги суммируются: можно попросить у друга несколько раз, если денег
   // всё равно не хватает. Возвращать до ближайшего из сроков.
   state.businessLemonadeLoanOwed = (state.businessLemonadeLoanOwed || 0) + owed;
@@ -824,28 +847,11 @@ document.getElementById('bizLoanBtn').addEventListener('click', ()=>{
   renderBizQuantityGroup();
   updateBizBuyBreakdownUI();
 });
-document.querySelectorAll('#bizQuantityGroup .starter-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    if(btn.disabled) return;
-    // Количество стаканов хранится отдельно для лимонада и для чая,
-    // чтобы выбор напитка не сбивал настройку другой партии.
-    if(state.businessLemonadeDrinkType === 'tea'){
-      state.businessLemonadeTeaCups = parseInt(btn.dataset.value, 10);
-    } else {
-      state.businessLemonadeCups = parseInt(btn.dataset.value, 10);
-    }
-    saveState();
-    renderBizQuantityGroup();
-  });
-});
 document.getElementById('bizToPriceBtn').addEventListener('click', ()=>{
   if(document.getElementById('bizToPriceBtn').disabled) return;
   playSuccessSound();
-  const cups = state.businessLemonadeCups || 10;
-  const b = bizBuyBreakdown(cups, state.businessLemonadeOptions, state.businessLemonadeLocation, state.businessLemonadeHours || 1);
-  const costPerCup = Math.round((b.total / cups) * 10) / 10;
-  document.getElementById('bizPriceCostReminder').textContent = `Себестоимость одного стакана: ${costPerCup} ₽ (расходы ${b.total} ₽ ÷ ${cups} стаканов, сырьё из запаса уже оплачено)`;
   renderBizPriceGroup();
+  renderBizTeaPriceGroup();
   const competitorEl = document.getElementById('bizCompetitorNote');
   const cp = state.businessLemonadeCompetitorPrice;
   if(cp){
@@ -874,6 +880,51 @@ document.getElementById('bizSellBtn').addEventListener('click', ()=>{
   playSuccessSound();
   bizSellDay();
 });
+// Расчёт спроса на конкретный напиток с учётом всех факторов
+function bizDrinkDemand(price, drinkType, weatherKey, locationKey, options, dow, hours){
+  const isTea = drinkType === 'tea';
+  // Базовая таблица спроса от цены
+  let priceFrac;
+  if(isTea){
+    const teaPriceKey = Object.keys(BIZ_TEA_DEMAND).map(Number).sort((a,b)=>a-b).find(p => p >= price) || 30;
+    priceFrac = BIZ_TEA_DEMAND[teaPriceKey] || 0.3;
+  } else {
+    priceFrac = BIZ_LEMONADE_DEMAND[price] !== undefined ? BIZ_LEMONADE_DEMAND[price] : 1;
+  }
+  const loc = BIZ_LOCATIONS[locationKey] || BIZ_LOCATIONS.school;
+  const locWeatherMult = loc.demand[weatherKey] || 1;
+  const locDowMult = dow.weekend ? loc.weekendMult : loc.weekdayMult;
+  const ev = bizEventInfo();
+  const eventMult = ev ? ev.mult : 1;
+  const upgrades = state.businessLemonadeUpgrades || {};
+  let upgradeMult = 1;
+  Object.keys(BIZ_UPGRADES).forEach(k=>{ if(upgrades[k]) upgradeMult += BIZ_UPGRADES[k].mult; });
+  let optionsMult = 1;
+  if(options.ice){
+    if(isTea){
+      // Лёд для чая = холодный чай, особенно хорош в жару
+      optionsMult *= (weatherKey === 'hot' ? 1.3 : 1.1);
+    } else {
+      // Лёд для лимонада
+      optionsMult *= (weatherKey === 'hot' ? 1.15 : 0.9);
+    }
+  }
+  if(options.umbrella) optionsMult *= 1.06;
+  if(options.colorCup) optionsMult *= 1.08;
+  if(options.straw) optionsMult *= 1.05;
+  const hMult = bizHoursMult(hours);
+  return priceFrac * locWeatherMult * locDowMult * eventMult * upgradeMult * optionsMult * hMult;
+}
+
+// Расчёт расходов на конкретный напиток (без аренды и опций)
+function bizDrinkExpenses(cups, drinkType){
+  const isTea = drinkType === 'tea';
+  const sugarCost = cups * (isTea ? BIZ_TEA_COSTS.sugar : BIZ_SUGAR_PER_CUP);
+  const cupCost = cups * (isTea ? BIZ_TEA_COSTS.cup : BIZ_CUP_PER_CUP);
+  const waterCost = cups * (isTea ? BIZ_TEA_COSTS.water : BIZ_WATER_PER_CUP);
+  return sugarCost + cupCost + waterCost;
+}
+
 function bizOptionDemandMult(key, weatherKey, options){
   const opt = BIZ_OPTIONS[key];
   const on = !!(options && options[key]);
@@ -900,85 +951,123 @@ function bizDemandFraction(price, weatherKey, locationKey, options, dow, hours){
   return priceFrac * locWeatherMult * locDowMult * eventMult * competitorMult * upgradeMult * optionsMult * hMult;
 }
 function bizSellDay(){
-  const isTea = state.businessLemonadeDrinkType === 'tea';
-  const cups = isTea ? (state.businessLemonadeTeaCups || 10) : (state.businessLemonadeCups || 10);
-  const price = isTea ? (state.businessLemonadeTeaPrice || 15) : (state.businessLemonadePrice || 40);
-  const options = state.businessLemonadeOptions || {};
-  const b = bizBuyBreakdown(cups, options, state.businessLemonadeLocation, state.businessLemonadeHours || 1);
-  const expenses = b.total;
-  const costPerCup = expenses / cups;
-  const profitPerCup = price - costPerCup;
   const dow = bizDayOfWeek(state.businessLemonadeDay || 1);
-  let fraction;
-  if(isTea){
-    const teaPriceKey = Object.keys(BIZ_TEA_DEMAND).map(Number).sort((a,b)=>a-b).find(p => p >= price) || 30;
-    const teaDemand = BIZ_TEA_DEMAND[teaPriceKey] || 0.3;
-    const loc = BIZ_LOCATIONS[state.businessLemonadeLocation] || BIZ_LOCATIONS.school;
-    const locWeatherMult = loc.demand[state.businessLemonadeWeatherKey] || 1;
-    const locDowMult = dow.weekend ? loc.weekendMult : loc.weekdayMult;
-    const ev = bizEventInfo();
-    const eventMult = ev ? ev.mult : 1;
-    const upgrades = state.businessLemonadeUpgrades || {};
-    let upgradeMult = 1;
-    Object.keys(BIZ_UPGRADES).forEach(k=>{ if(upgrades[k]) upgradeMult += BIZ_UPGRADES[k].mult; });
-    let optionsMult = 1;
-    if(options.ice) optionsMult *= (state.businessLemonadeWeatherKey === 'hot' ? 1.3 : 1.1);
-    if(options.umbrella) optionsMult *= 1.06;
-    if(options.colorCup) optionsMult *= 1.08;
-    if(options.straw) optionsMult *= 1.05;
-    const hMult = bizHoursMult(state.businessLemonadeHours);
-    fraction = teaDemand * locWeatherMult * locDowMult * eventMult * upgradeMult * optionsMult * hMult;
+  const weatherKey = state.businessLemonadeWeatherKey || 'normal';
+  const locationKey = state.businessLemonadeLocation;
+  const hours = state.businessLemonadeHours || 1;
+  const options = state.businessLemonadeOptions || {};
+  const w = bizWeatherInfo();
+  const loc = bizLocationInfo();
+
+  // Количество стаканов и цены для каждого напитка
+  const lemonCups = Math.min(state.businessLemonadeCups || 10, state.businessLemonadeLemonStock || 0);
+  const teaCups = Math.min(state.businessLemonadeTeaCups || 10, state.businessLemonadeTeaStock || 0);
+  const lemonPrice = state.businessLemonadePrice || 40;
+  const teaPrice = state.businessLemonadeTeaPrice || 15;
+
+  // Расчёт спроса на каждый напиток
+  const lemonDemand = lemonCups > 0 ? bizDrinkDemand(lemonPrice, 'lemonade', weatherKey, locationKey, options, dow, hours) : 0;
+  const teaDemand = teaCups > 0 ? bizDrinkDemand(teaPrice, 'tea', weatherKey, locationKey, options, dow, hours) : 0;
+
+  // Погодное распределение покупателей: жара → лимонад, холод/дождь → чай
+  let lemonShare, teaShare;
+  if(weatherKey === 'hot'){
+    lemonShare = 0.8; teaShare = 0.2;
+  } else if(weatherKey === 'rain'){
+    lemonShare = 0.2; teaShare = 0.8;
   } else {
-    fraction = bizDemandFraction(price, state.businessLemonadeWeatherKey, state.businessLemonadeLocation, options, dow, state.businessLemonadeHours);
+    lemonShare = 0.6; teaShare = 0.4;
   }
-  const sold = Math.max(0, Math.min(cups, Math.round(cups * fraction)));
-  const revenue = price * sold;
-  const netProfit = Math.round(revenue - expenses);
-  state.businessLemonadeSold = sold;
-  state.businessLemonadeRevenue = revenue;
+
+  // Продажи каждого напитка с учётом спроса и распределения
+  const totalDemand = lemonDemand + teaDemand;
+  let lemonSold = 0, teaSold = 0;
+  if(totalDemand > 0 && lemonCups > 0){
+    const lemFrac = (lemonDemand / totalDemand) * lemonShare;
+    lemonSold = Math.max(0, Math.min(lemonCups, Math.round(lemonCups * Math.min(1, lemFrac * 2))));
+  }
+  if(totalDemand > 0 && teaCups > 0){
+    const teaFrac = (teaDemand / totalDemand) * teaShare;
+    teaSold = Math.max(0, Math.min(teaCups, Math.round(teaCups * Math.min(1, teaFrac * 2))));
+  }
+
+  // Расходы: общие (аренда, опции) + на каждый напиток отдельно
+  const rentPerHour = (BIZ_LOCATIONS[locationKey] || { rentPerHour: 0 }).rentPerHour;
+  const rent = rentPerHour * hours;
+  let optionsCost = 0;
+  Object.keys(BIZ_OPTIONS).forEach(key=>{
+    if(options[key]){
+      const opt = BIZ_OPTIONS[key];
+      optionsCost += opt.costType === 'perCup' ? (lemonCups + teaCups) * opt.cost : opt.cost;
+    }
+  });
+  const lemonExpenses = bizDrinkExpenses(lemonCups, 'lemonade');
+  const teaExpenses = bizDrinkExpenses(teaCups, 'tea');
+  const totalExpenses = rent + optionsCost + lemonExpenses + teaExpenses;
+
+  // Выручка
+  const lemonRevenue = lemonPrice * lemonSold;
+  const teaRevenue = teaPrice * teaSold;
+  const totalRevenue = lemonRevenue + teaRevenue;
+
+  // Прибыль
+  const netProfit = Math.round(totalRevenue - totalExpenses);
+  state.businessLemonadeSold = lemonSold + teaSold;
+  state.businessLemonadeRevenue = totalRevenue;
   state.businessLemonadeNetProfit = netProfit;
-  if(isTea){
-    state.businessLemonadeTeaStock = Math.max(0, (state.businessLemonadeTeaStock || 0) - cups);
-  } else {
-    state.businessLemonadeLemonStock = Math.max(0, (state.businessLemonadeLemonStock || 0) - cups);
-    if(state.businessLemonadeLemonStock === 0) state.businessLemonadeLemonBoughtDay = null;
-  }
-  // Капитал за развитие/лимоны уже потрачен в момент решения — здесь просто
-  // прибавляем итог дня и не даём уйти ниже 0 ни при каких условиях.
+  // Обновляем остатки обоих напитков
+  state.businessLemonadeLemonStock = Math.max(0, (state.businessLemonadeLemonStock || 0) - lemonSold);
+  if(state.businessLemonadeLemonStock === 0) state.businessLemonadeLemonBoughtDay = null;
+  state.businessLemonadeTeaStock = Math.max(0, (state.businessLemonadeTeaStock || 0) - teaSold);
+
+  // Капитал
   state.businessLemonadeCapital = Math.max(0, (state.businessLemonadeCapital || 0) + netProfit);
   if(!state.businessLemonadeDayProfits) state.businessLemonadeDayProfits = [];
   state.businessLemonadeDayProfits[(state.businessLemonadeDay || 1) - 1] = netProfit;
-  const w = bizWeatherInfo();
-  const loc = bizLocationInfo();
+
+  // Лог дня
   if(!state.businessLemonadeDayLog) state.businessLemonadeDayLog = [];
   state.businessLemonadeDayLog[(state.businessLemonadeDay || 1) - 1] = {
     day: state.businessLemonadeDay || 1,
     dowShort: dow.short, dowName: dow.name,
     locationName: loc ? loc.name : '—', locationIcon: loc ? loc.icon : '❔',
     weatherIcon: w.icon, weatherName: w.name,
-    drinkType: isTea ? 'Чай' : 'Лимонад',
-    cups, price, expenses, costPerCup: Math.round(costPerCup * 10) / 10,
-    sold, revenue, netProfit,
+    lemonCups, lemonPrice, lemonSold, lemonExpenses, lemonRevenue,
+    teaCups, teaPrice, teaSold, teaExpenses, teaRevenue,
+    rent, optionsCost, totalExpenses, totalRevenue, netProfit,
   };
+
   saveState();
+
+  // Обновляем UI результатов
   const highlightEl = document.getElementById('bizResultHighlight');
   highlightEl.textContent = (netProfit >= 0 ? '+' : '') + netProfit + ' ₽';
   highlightEl.classList.toggle('biz-loss', netProfit < 0);
   document.getElementById('bizResultsTitle').textContent = `Итоги дня ${state.businessLemonadeDay || 1} (${dow.short})`;
+
+  // Показываем оба напитка в результатах
   const drinkBadge = document.getElementById('bizResDrinkBadge');
-  if(drinkBadge) drinkBadge.textContent = isTea ? '☕ Чай' : '🍋 Лимонад';
-  document.getElementById('bizResExpenses').textContent = `${expenses} ₽`;
-  document.getElementById('bizResCost').textContent = `${Math.round(costPerCup * 10) / 10} ₽`;
-  document.getElementById('bizResPrice').textContent = `${price} ₽`;
-  document.getElementById('bizResProfitPerCup').textContent = `${Math.round(profitPerCup * 10) / 10} ₽`;
-  // Тип напитка в строке «Продано стаканов» — без скобок и с правильным падежом,
-  // чтобы «8 из 10» явно относились к лимонаду или чаю (а не к чему-то абстрактному).
-  const soldLabel = document.getElementById('bizResSoldLabel');
-  if(soldLabel) soldLabel.textContent = isTea ? 'Продано стаканов чая' : 'Продано стаканов лимонада';
-  const soldIcon = document.getElementById('bizResSoldDrinkIcon');
-  if(soldIcon) soldIcon.textContent = isTea ? '☕' : '🍋';
-  document.getElementById('bizResSold').textContent = `${sold} из ${cups}`;
-  document.getElementById('bizResRevenue').textContent = `${revenue} ₽`;
+  if(drinkBadge) drinkBadge.textContent = '🍋 Лимонад и ☕ Чай';
+
+  // Лимонад
+  document.getElementById('bizResLemonLabel').textContent = '🍋 Лимонад';
+  document.getElementById('bizResLemonSold').textContent = `${lemonSold} из ${lemonCups}`;
+  document.getElementById('bizResLemonPrice').textContent = `${lemonPrice} ₽`;
+  document.getElementById('bizResLemonRevenue').textContent = `${lemonRevenue} ₽`;
+  const lemonRow = document.getElementById('bizResLemonRow');
+  if(lemonRow) lemonRow.style.display = lemonCups > 0 ? '' : 'none';
+
+  // Чай
+  document.getElementById('bizResTeaLabel').textContent = '☕ Чай';
+  document.getElementById('bizResTeaSold').textContent = `${teaSold} из ${teaCups}`;
+  document.getElementById('bizResTeaPrice').textContent = `${teaPrice} ₽`;
+  document.getElementById('bizResTeaRevenue').textContent = `${teaRevenue} ₽`;
+  const teaRow = document.getElementById('bizResTeaRow');
+  if(teaRow) teaRow.style.display = teaCups > 0 ? '' : 'none';
+
+  // Общие расходы, выручка и прибыль
+  document.getElementById('bizResExpenses').textContent = `${totalExpenses} ₽`;
+  document.getElementById('bizResRevenue').textContent = `${totalRevenue} ₽`;
   document.getElementById('bizResNetProfit').textContent = `${netProfit} ₽`;
   document.getElementById('bizNextDayBtn').textContent = bizGoalReached() ? '🎯 Цель достигнута! Итоги →' : 'Следующий день →';
   updateBizHeaderUI();
@@ -1153,21 +1242,27 @@ function showBizSummaryModal(){
   document.getElementById('bizSummaryIntro').textContent = `За ${daysPlayed} ${dayWord} ты накопил ${totalProfit >= 0 ? '+' : ''}${totalProfit} ₽ чистыми и достиг цели «${name}» (${goal} ₽). Правильных ответов в проверке: ${correct} из ${total}.`;
   const log = (state.businessLemonadeDayLog || []).filter(Boolean);
   renderBizWeekChart(log);
-  // Разделение по напиткам: сколько стаканов продано, потрачено и заработано
-  // по лимонаду и чаю отдельно (собираем из дневного лога партии).
-  const drinkStats = {};
+  // Разделение по напиткам: собираем данные по лимонаду и чаю из дневного лога
+  const drinkStats = {
+    'Лимонад': { sold:0, cups:0, revenue:0 },
+    'Чай': { sold:0, cups:0, revenue:0 }
+  };
   log.forEach(rec=>{
-    const key = rec.drinkType === 'Чай' ? 'Чай' : 'Лимонад';
-    if(!drinkStats[key]) drinkStats[key] = { sold:0, cups:0, expenses:0, revenue:0, netProfit:0 };
-    const d = drinkStats[key];
-    d.sold += rec.sold; d.cups += rec.cups;
-    d.expenses += rec.expenses; d.revenue += rec.revenue; d.netProfit += rec.netProfit;
+    if(rec.lemonCups > 0){
+      drinkStats['Лимонад'].cups += rec.lemonCups || 0;
+      drinkStats['Лимонад'].sold += rec.lemonSold || 0;
+      drinkStats['Лимонад'].revenue += rec.lemonRevenue || 0;
+    }
+    if(rec.teaCups > 0){
+      drinkStats['Чай'].cups += rec.teaCups || 0;
+      drinkStats['Чай'].sold += rec.teaSold || 0;
+      drinkStats['Чай'].revenue += rec.teaRevenue || 0;
+    }
   });
   const drinkIcons = { 'Лимонад': '🍋', 'Чай': '☕' };
   const drinksBox = document.getElementById('bizSummaryDrinksBox');
   if(drinksBox){
-    // Отдельный расчёт по лимонаду, ниже — отдельный по чаю (если продавался).
-    const order = ['Лимонад', 'Чай'].filter(k => drinkStats[k]);
+    const order = ['Лимонад', 'Чай'].filter(k => drinkStats[k] && drinkStats[k].cups > 0);
     drinksBox.innerHTML = order.map(key=>{
       const d = drinkStats[key];
       return `
@@ -1175,9 +1270,7 @@ function showBizSummaryModal(){
           <div class="biz-drink-title">${drinkIcons[key]} ${key}</div>
           <div class="biz-breakdown-row"><span>Приготовлено стаканов</span><span>${d.cups}</span></div>
           <div class="biz-breakdown-row"><span>Продано стаканов</span><span>${d.sold} из ${d.cups}</span></div>
-          <div class="biz-breakdown-row"><span>· Потрачено (расходы)</span><span>${d.expenses} ₽</span></div>
-          <div class="biz-breakdown-row"><span>· Заработано (выручка)</span><span>${d.revenue} ₽</span></div>
-          <div class="biz-breakdown-row biz-total"><span>Чистая прибыль</span><span>${d.netProfit >= 0 ? '+' : ''}${d.netProfit} ₽</span></div>
+          <div class="biz-breakdown-row"><span>Заработано (выручка)</span><span>${d.revenue} ₽</span></div>
         </div>
       `;
     }).join('');

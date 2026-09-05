@@ -3698,15 +3698,17 @@
     <div class="biz-phase" id="bizPhaseBuy">
       <div class="biz-step-title">Приготовление напитков</div>
       <div class="field">
-        <label>Что готовим?</label>
-        <div class="starter-group" id="bizDrinkTypeGroup">
-          <button type="button" class="starter-btn mode-btn" data-value="lemonade">🍋 Лимонад</button>
-          <button type="button" class="starter-btn mode-btn" data-value="tea">☕ Чай</button>
+        <label>🍋 Сколько стаканов лимонада приготовить?</label>
+        <div class="starter-group timer-duration-group" id="bizLemonQuantityGroup">
+          <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+          <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
+          <button type="button" class="starter-btn mode-btn" data-value="15">15</button>
+          <button type="button" class="starter-btn mode-btn" data-value="20">20</button>
         </div>
       </div>
       <div class="field">
-        <label>Сколько стаканов приготовить?</label>
-        <div class="starter-group timer-duration-group" id="bizQuantityGroup">
+        <label>☕ Сколько стаканов чая приготовить?</label>
+        <div class="starter-group timer-duration-group" id="bizTeaQuantityGroup">
           <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
           <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
           <button type="button" class="starter-btn mode-btn" data-value="15">15</button>
@@ -3735,8 +3737,7 @@
 
     <!-- Шаг 5: цена -->
     <div class="biz-phase" id="bizPhasePrice">
-      <div class="biz-step-title">Назначь цену</div>
-      <div class="biz-formula-line" id="bizPriceCostReminder">Себестоимость одного стакана: — ₽</div>
+      <div class="biz-step-title">Назначь цены</div>
       <div class="biz-event-card" id="bizCompetitorNote" style="display:none; background:rgba(255,107,107,.14); border-color:rgba(255,107,107,.3); color:#ff9d9d;"></div>
       <div class="field" style="margin-top:10px;">
         <label>Цена за стакан лимонада</label>
@@ -3761,7 +3762,7 @@
           <button type="button" class="starter-btn mode-btn" data-value="30">30 ₽</button>
         </div>
       </div>
-      <button type="button" class="btn btn-primary" id="bizSellBtn" style="margin-top:14px;">🍋 Продавать!</button>
+      <button type="button" class="btn btn-primary" id="bizSellBtn" style="margin-top:14px;">🍋🍵 Продавать!</button>
     </div>
 
     <!-- Шаг 5: итоги дня -->
@@ -3770,14 +3771,21 @@
       <div id="bizResDrinkBadge" style="text-align:center; font-size:20px; margin-bottom:6px;"></div>
       <div class="biz-result-highlight" id="bizResultHighlight">— ₽</div>
       <div class="biz-breakdown-box">
-        <div class="biz-breakdown-row"><span>Расходы (продукты + аренда)</span><span id="bizResExpenses">— ₽</span></div>
-        <div class="biz-formula-line">Себестоимость 1 стакана = Расходы ÷ Количество</div>
-        <div class="biz-breakdown-row"><span>Себестоимость 1 стакана</span><span id="bizResCost">— ₽</span></div>
-        <div class="biz-breakdown-row"><span>Цена продажи</span><span id="bizResPrice">— ₽</span></div>
-        <div class="biz-formula-line">Прибыль с 1 стакана = Цена − Себестоимость</div>
-        <div class="biz-breakdown-row"><span>Прибыль с 1 стакана</span><span id="bizResProfitPerCup">— ₽</span></div>
-        <div class="biz-breakdown-row"><span><span id="bizResSoldDrinkIcon">🍋</span> <span id="bizResSoldLabel">Продано стаканов</span></span><span id="bizResSold">— из —</span></div>
-        <div class="biz-formula-line">Выручка = Цена × Продано</div>
+        <div class="biz-breakdown-row"><span>Расходы (продукты + аренда + опции)</span><span id="bizResExpenses">— ₽</span></div>
+        <div class="biz-formula-line">Продажи по напиткам:</div>
+        <div class="biz-breakdown-row" id="bizResLemonRow">
+          <span><span id="bizResLemonLabel">🍋 Лимонад</span></span>
+          <span id="bizResLemonSold">— из —</span>
+          <span style="margin-left:8px;">× <span id="bizResLemonPrice">— ₽</span></span>
+          <span style="margin-left:8px;">→ <span id="bizResLemonRevenue">— ₽</span></span>
+        </div>
+        <div class="biz-breakdown-row" id="bizResTeaRow">
+          <span><span id="bizResTeaLabel">☕ Чай</span></span>
+          <span id="bizResTeaSold">— из —</span>
+          <span style="margin-left:8px;">× <span id="bizResTeaPrice">— ₽</span></span>
+          <span style="margin-left:8px;">→ <span id="bizResTeaRevenue">— ₽</span></span>
+        </div>
+        <div class="biz-formula-line">Выручка = Цена лимонада × Продано + Цена чая × Продано</div>
         <div class="biz-breakdown-row"><span>Выручка</span><span id="bizResRevenue">— ₽</span></div>
         <div class="biz-formula-line">Чистая прибыль = Выручка − Расходы</div>
         <div class="biz-breakdown-row biz-total"><span>Чистая прибыль</span><span id="bizResNetProfit">— ₽</span></div>
