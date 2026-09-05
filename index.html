@@ -205,12 +205,12 @@
   }
   .screen.active{display:flex;}
 
-  /* Все экраны получают одинаковый горизонтальный отступ 16px от краёв —
+  /* Все экраны получают одинаковый горизонтальный отступ 8px от краёв —
      и setup-экраны (меню, настройки), и игровые экраны. Карточка в игровых
      экранах остаётся центрированной благодаря .card { max-width:340px;
      width:100% } + .card-area { align-items:center }, и тянулась на всю
      доступную ширину контента, не прилипая к краям. */
-  .screen{padding:0 16px;}
+  .screen{padding:0 8px;}
 
   h1.title{
     text-align:center;
@@ -464,7 +464,7 @@
     grid-auto-rows:1fr;
     gap:12px;
     margin-top:6px;
-    padding:0 16px;
+    padding:0 8px;
   }
   .game-select-list .btn{
     padding:9px 12px; font-size:16px; line-height:1.25; justify-content:flex-start; text-align:center; white-space:normal;
@@ -484,7 +484,7 @@
      рядовые пункты списка игр. */
   #homeMenuList{
     display:flex; flex-direction:column; gap:14px; margin-top:22px;
-    padding:0 16px;
+    padding:0 8px;
   }
   #homeMenuList .btn{
     padding:18px 13px; font-size:19px; font-weight:800;
