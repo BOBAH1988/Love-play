@@ -204,10 +204,19 @@
   }
   .screen.active{display:flex;}
 
-  /* Все НЕигровые экраны получают отступы 16px — меню, настройки, setup-экраны.
-     Игровые экраны (id заканчивается на Game, либо конкретные id без суффикса)
-     — без отступов, на всю ширину. */
-  .screen[id]:not([id$="Game"]):not(#game):not(#kidsBoardGamesMenu):not(#wishlistGame):not(#settingsScreen):not(#rulesScreen):not(#storeScreen):not(#favoritesScreen):not(#tdGame):not(#shopGame):not(#bizObsGame):not(#businessLemonadeGame):not(#partyRouletteGame):not(#partyHangmanGame):not(#bingoGame):not(#luckyGame):not(#partyTdGame):not(#sexQuestSummary):not(#sexQuestHistory):not(#kidsBattleshipGame):not(#kidsSaperGame){
+  /* Контент внутри неигровых экранов (меню, настройки, setup) получает
+     горизонтальный отступ 16px от краёв. Игровые экраны (по id) — без отступа,
+     карточка на всю ширину. */
+  #setup, #quizSetup, #soloQuizSetup, #partyQuizSetup, #kidsQuizSetup,
+  #davaySetup, #fantySetup, #photoSetup, #sexQuestSetup,
+  #kidsKrokodilSetup, #kidsMemesSetup, #flashTimeSetup, #flashSetup,
+  #kidsSaperSetup, #kidsXoSetup, #kidsC4Setup, #kidsMemorySetup, #kidsTdSetup, #kidsBattleshipSetup,
+  #shopSetup, #bizObsSetup, #businessLemonadeSetup,
+  #krokodilSetup, #memesSetup, #timerSetup, #twisterSetup,
+  #tdSetup, #partyNeverSetup, #partyFantsSetup, #partyHangmanSetup, #partyTdSetup, #partyRouletteSetup,
+  #famZnayuSetup, #znayuSetup, #soloXoSetup, #soloC4Setup, #soloMemorySetup, #soloBattleshipSetup,
+  #whatToPlaySetup, #ideasSetup, #wishlistSetup, #bingoSetup, #luckySetup,
+  #settingsScreen, #rulesScreen, #storeScreen, #favoritesScreen{
     padding:0 16px;
   }
 
