@@ -83,6 +83,7 @@
      оставлял внизу белую полосу. Без явной height отставать нечему. */
   html{
     width:100%;
+    height:100dvh;
     overflow:hidden;
     background-color:var(--bg1);
     background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
@@ -108,6 +109,7 @@
     background-color:var(--bg1);
     background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
     color:#fff;
+    height:100dvh;
     overflow:hidden;
     overscroll-behavior:none;
     -webkit-overflow-scrolling:auto;
@@ -122,7 +124,7 @@
     width:100%;
     display:flex;
     flex-direction:column;
-    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    padding: max(16px, env(safe-area-inset-top)) 0 max(16px, env(safe-area-inset-bottom));
     position:relative;
     overscroll-behavior:none;
   }
@@ -554,6 +556,7 @@
     width:100%;
     max-width:none;
     padding:0;
+    height:100dvh;
     overflow:hidden;
     /* Отступ сверху сокращён, чтобы был как отступ снизу до кнопки "Следующее" */
     margin-top:18px;
@@ -5213,8 +5216,6 @@
       </div>
     </div>
 
-    <button class="btn btn-primary" id="quizSetupStartBtn">Начать</button>
-
     <button class="btn btn-secondary" id="quizSetupExitBtn" style="margin-top:10px;">Выход</button>
   </section>
 
@@ -5246,6 +5247,7 @@
     <div class="quiz-pause-row">
       <button type="button" class="btn btn-secondary btn-pause" id="quizExitBtn">Пауза</button>
     </div>
+    <button class="btn btn-primary" id="quizSetupStartBtn">Начать</button>
   </section>
 
   <!-- ===== ВИКТОРИНА (ПАРЫ 18+): ИТОГИ ИГРЫ ===== -->
