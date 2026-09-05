@@ -971,8 +971,12 @@ function bizSellDay(){
   document.getElementById('bizResCost').textContent = `${Math.round(costPerCup * 10) / 10} ₽`;
   document.getElementById('bizResPrice').textContent = `${price} ₽`;
   document.getElementById('bizResProfitPerCup').textContent = `${Math.round(profitPerCup * 10) / 10} ₽`;
+  // Тип напитка в строке «Продано стаканов» — без скобок и с правильным падежом,
+  // чтобы «8 из 10» явно относились к лимонаду или чаю (а не к чему-то абстрактному).
   const soldLabel = document.getElementById('bizResSoldLabel');
-  if(soldLabel) soldLabel.textContent = `Продано стаканов (${isTea ? 'чай' : 'лимонад'})`;
+  if(soldLabel) soldLabel.textContent = isTea ? 'Продано стаканов чая' : 'Продано стаканов лимонада';
+  const soldIcon = document.getElementById('bizResSoldDrinkIcon');
+  if(soldIcon) soldIcon.textContent = isTea ? '☕' : '🍋';
   document.getElementById('bizResSold').textContent = `${sold} из ${cups}`;
   document.getElementById('bizResRevenue').textContent = `${revenue} ₽`;
   document.getElementById('bizResNetProfit').textContent = `${netProfit} ₽`;
