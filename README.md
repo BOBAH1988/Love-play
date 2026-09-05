@@ -181,6 +181,7 @@ photos_shop/            — изображения товаров секс-шо�
 | 2026-09-05 | `205f459` | Карточки 22 игр: добавлен недостающий `</div>` для `.card` — раньше после `card-inner` сразу закрывался `card-area` без закрытия `card`, из-за чего браузер «лечил» битую разметку и flex-дочерние элементы `card-area` (кнопки `Пауза`, `Далее`, `Готово`, корзина и т.п.) оказывались СПРАВА от карточки, а не под ней. Затронуты: `quizGame`, `kidsQuizGame`, `ideasGame`, `sexQuestGame`, `whatToPlayGame`, `kidsKrokodilGame`, `kidsMemesGame`, `flashGame`, `timerGame`, `krokodilGame`, `memesGame`, `partyNeverGame`, `partyFantsGame`, `famZnayuGame`, `partyQuizGame`, `twisterGame`, `soloQuizGame`, `wishlistGame`, `znayuGame` и др. |
 
 | 2026-09-05 | `ebf8473` | Главная причина: `.card-area { display:flex }` без `flex-direction:column` — по умолчанию flex направлен горизонтально, поэтому карточка + кнопки располагались в ряд (карточка слева, кнопки справа). Добавлено `flex-direction:column` в `.card-area`. Дополнительно исправлены незакрытые `</div>` в «Давай попробуем» и «Фанты (компания)». |
+| 2026-09-05 | `968b9ad` | `.card-area`: `align-items:stretch` → `align-items:center` — карточка и кнопки центрируются горизонтально. Добавлено `width:100%; max-width:340px` к `.timer-actions-row`, `.wishlist-actions-row`, `.quiz-pause-row`, `.td-actions-row`, `.flash-card-actions` — чтобы занимали всю ширину карточки, а не сужались до кнопок. |
 
 ## 🧪 Тестирование и отладка
 
