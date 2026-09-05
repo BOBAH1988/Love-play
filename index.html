@@ -526,7 +526,7 @@
     flex:1;
     display:flex;
     flex-direction:column;
-    align-items:stretch;
+    align-items:center;
     justify-content:center;
     perspective:1200px;
     min-height:0;
@@ -1963,7 +1963,8 @@
     }
   }
   #kidsXoTurnLabel, #soloXoTurnLabel, #kidsC4TurnLabel{ font-size:28px; font-weight:900; }
-  .td-actions-row{display:flex; gap:10px; margin-top:10px;}
+  .td-actions-row{display:flex; gap:10px; margin-top:10px; width:100%; max-width:340px;}
+  .quiz-pause-row{display:flex; justify-content:center; width:100%; max-width:340px; margin-top:10px;}
   .td-actions-row .btn{flex:1;}
   .td-actions-row #tdPauseBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
   .td-actions-row #tdSkipBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
@@ -2183,8 +2184,8 @@
     background:linear-gradient(135deg,#ff9a5e,#ff6b8b); transition:width 1s linear;
   }
   .timer-label{text-align:center; font-size:28px; font-weight:800; margin-top:8px; color:#fff;}
-  .timer-actions-row{display:flex; flex-direction:column; gap:10px; margin-top:14px;}
-  .flash-card-actions{display:flex; gap:10px; margin-top:14px; justify-content:flex-end;}
+  .timer-actions-row{display:flex; flex-direction:column; gap:10px; margin-top:14px; width:100%; max-width:340px;}
+  .flash-card-actions{display:flex; gap:10px; margin-top:14px; justify-content:flex-end; width:100%; max-width:340px;}
   .flash-card-actions #flashNextBtn{flex:1; width:auto;}
   .flash-card-actions #flashAnswerBtn{flex:0 0 auto; padding:10px 18px; width:auto;}
   .timer-actions-top{display:flex; gap:10px;}
@@ -2244,7 +2245,7 @@
      под ним, чтобы обе части гарантированно помещались в карточку на телефоне. */
   .wishlist-item-title{font-size:22px; font-weight:700; line-height:1.3;}
   .wishlist-item-desc{font-size:16px; font-weight:500; line-height:1.4; color:#7a5a72; margin-top:8px; padding:0 4px;}
-  .wishlist-actions-row{display:flex; gap:10px; margin-top:14px;}
+  .wishlist-actions-row{display:flex; gap:10px; margin-top:14px; width:100%; max-width:340px;}
   .wishlist-actions-row .btn{flex:1;}
   .wishlist-actions-row #wishlistNoBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
   .wishlist-setup-actions-row{display:flex; gap:10px; margin-top:10px;}
