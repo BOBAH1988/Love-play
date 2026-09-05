@@ -200,20 +200,15 @@
     overflow-y:auto;
     overscroll-behavior:contain;
     -webkit-overflow-scrolling:touch;
-    padding:0 16px;
     box-sizing:border-box;
   }
   .screen.active{display:flex;}
 
-  /* Все игровые экраны (без padding — игра на всю ширину) */
-  [id$="Game"], #game, #wishlistGame, #settingsScreen, #rulesScreen, #storeScreen, #favoritesScreen,
-  #kidsBoardGamesMenu, #partyRouletteGame, #partyTdGame,
-  #kidsBattleshipGame, #kidsSaperGame, #kidsXoGame, #kidsC4Game,
-  #kidsMemoryGame, #kidsTdGame, #kidsKrokodilGame, #kidsMemesGame,
-  #soloMemoryGame, #soloXoGame, #soloC4Game, #soloBattleshipGame,
-  #sexQuestSummary, #sexQuestHistory, #tdGame, #shopGame, #bizObsGame,
-  #businessLemonadeGame, #partyHangmanGame, #bingoGame, #luckyGame{
-    padding:0;
+  /* Все НЕигровые экраны получают отступы 16px — меню, настройки, setup-экраны.
+     Игровые экраны (id заканчивается на Game, либо конкретные id без суффикса)
+     — без отступов, на всю ширину. */
+  .screen[id]:not([id$="Game"]):not(#game):not(#kidsBoardGamesMenu):not(#wishlistGame):not(#settingsScreen):not(#rulesScreen):not(#storeScreen):not(#favoritesScreen):not(#tdGame):not(#shopGame):not(#bizObsGame):not(#businessLemonadeGame):not(#partyRouletteGame):not(#partyHangmanGame):not(#bingoGame):not(#luckyGame):not(#partyTdGame):not(#sexQuestSummary):not(#sexQuestHistory):not(#kidsBattleshipGame):not(#kidsSaperGame){
+    padding:0 16px;
   }
 
   h1.title{
