@@ -494,67 +494,91 @@ function renderBizLemonsPhase(){
   }
   const capital = state.businessLemonadeCapital || 0;
   const wrap = document.getElementById('bizLemonTiersGrid');
+  const teaWrap = document.getElementById('bizTeaTiersGrid');
+  const selLemonIdx = state.businessLemonadeSelectedLemonIdx ?? null;
+  const selTeaIdx = state.businessLemonadeSelectedTeaIdx ?? null;
+  const canBuyLemon = selLemonIdx !== null && capital >= (BIZ_LEMON_TIERS[selLemonIdx].qty * BIZ_LEMON_TIERS[selLemonIdx].pricePerUnit);
+  const canBuyTea = selTeaIdx !== null && capital >= (BIZ_TEA_TIERS[selTeaIdx].qty * BIZ_TEA_TIERS[selTeaIdx].pricePerUnit);
+  const nextBtn = document.getElementById('bizToBuyBtn');
+  if(nextBtn) nextBtn.disabled = !(canBuyLemon || canBuyTea);
   wrap.innerHTML = BIZ_LEMON_TIERS.map((tier, i)=>{
     const total = tier.qty * tier.pricePerUnit;
     const affordable = capital >= total;
-    return `<button type="button" class="biz-lemon-tier-btn${affordable ? '' : ' biz-upgrade-owned'}" data-idx="${i}" ${affordable ? '' : 'disabled'}>Купить ${tier.qty} лимонов — по ${tier.pricePerUnit} ₽/шт<span class="biz-option-cost">Итого: ${total} ₽</span></button>`;
+    const sel = (selLemonIdx === i) ? ' biz-tier-selected' : '';
+    return `<button type="button" class="biz-lemon-tier-btn${affordable ? '' : ' biz-upgrade-owned'}${sel}" data-idx="${i}" ${affordable ? '' : 'disabled'}>Купить ${tier.qty} лимонов — по ${tier.pricePerUnit} ₽/шт<span class="biz-option-cost">Итого: ${total} ₽</span></button>`;
   }).join('');
   wrap.querySelectorAll('.biz-lemon-tier-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const tier = BIZ_LEMON_TIERS[parseInt(btn.dataset.idx, 10)];
-      const total = tier.qty * tier.pricePerUnit;
-      if((state.businessLemonadeCapital || 0) < total) return;
-      state.businessLemonadeCapital -= total;
-      state.businessLemonadeLemonStock = (state.businessLemonadeLemonStock || 0) + tier.qty;
-      // Новая покупка "освежает" срок годности всего запаса — упрощение,
-      // чтобы не считать срок годности для каждой пачки отдельно.
-      state.businessLemonadeLemonBoughtDay = state.businessLemonadeDay || 1;
+      if(btn.disabled) return;
+      const newIdx = parseInt(btn.dataset.idx, 10);
+      state.businessLemonadeSelectedLemonIdx = (selLemonIdx === newIdx) ? null : newIdx;
       saveState();
-      playSuccessSound();
-      showToast(`Куплено ${tier.qty} лимонов за ${total} ₽`);
-      updateBizHeaderUI();
-      updateBizContextBar();
       renderBizLemonsPhase();
     });
   });
-  // Пакетики чая: покупаются про запас так же, как лимоны, но не портятся.
-  const teaWrap = document.getElementById('bizTeaTiersGrid');
+  // Пакетики чая: выбор подсвечивается, покупка — по кнопке «Дальше».
   if(teaWrap){
     teaWrap.innerHTML = BIZ_TEA_TIERS.map((tier, i)=>{
       const total = tier.qty * tier.pricePerUnit;
-      const affordable = (state.businessLemonadeCapital || 0) >= total;
-      return `<button type="button" class="biz-lemon-tier-btn${affordable ? '' : ' biz-upgrade-owned'}" data-idx="${i}" ${affordable ? '' : 'disabled'}>Купить ${tier.qty} пакетиков чая — по ${tier.pricePerUnit} ₽/шт<span class="biz-option-cost">Итого: ${total} ₽</span></button>`;
+      const affordable = capital >= total;
+      const sel = (selTeaIdx === i) ? ' biz-tier-selected' : '';
+      return `<button type="button" class="biz-lemon-tier-btn${affordable ? '' : ' biz-upgrade-owned'}${sel}" data-idx="${i}" ${affordable ? '' : 'disabled'}>Купить ${tier.qty} пакетиков чая — по ${tier.pricePerUnit} ₽/шт<span class="biz-option-cost">Итого: ${total} ₽</span></button>`;
     }).join('');
     teaWrap.querySelectorAll('.biz-lemon-tier-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        const tier = BIZ_TEA_TIERS[parseInt(btn.dataset.idx, 10)];
-        const total = tier.qty * tier.pricePerUnit;
-        if((state.businessLemonadeCapital || 0) < total) return;
-        state.businessLemonadeCapital -= total;
-        state.businessLemonadeTeaStock = (state.businessLemonadeTeaStock || 0) + tier.qty;
+        if(btn.disabled) return;
+        const newIdx = parseInt(btn.dataset.idx, 10);
+        state.businessLemonadeSelectedTeaIdx = (selTeaIdx === newIdx) ? null : newIdx;
         saveState();
-        playSuccessSound();
-        showToast(`Куплено ${tier.qty} пакетиков чая за ${total} ₽`);
-        updateBizHeaderUI();
-        updateBizContextBar();
         renderBizLemonsPhase();
       });
     });
   }
-  // Дальше можно идти, если есть хоть какой-то запас (лимоны или чай).
-  document.getElementById('bizToBuyBtn').disabled = lemonStock <= 0 && teaStock <= 0;
+  // Кнопка «Дальше» активна только при наличии запаса (лимоны или чай).
+  if(nextBtn) nextBtn.disabled = lemonStock <= 0 && teaStock <= 0;
 }
-document.getElementById('bizToBuyBtn').addEventListener('click', ()=>{
-  // Пускаем дальше, если есть хоть какой-то запас: лимоны ИЛИ пакетики чая.
-  // Раньше здесь требовались только лимоны — при остатке одного чая переход
-  // молча не срабатывал («ничего не происходит»).
+// Кнопка «Дальше» — покупка выбранного + переход к приготовлению
+function bizOnToBuy(){
+  const lemonSel = state.businessLemonadeSelectedLemonIdx;
+  const teaSel = state.businessLemonadeSelectedTeaIdx;
+  let bought = false;
+  if(lemonSel !== null){
+    const tier = BIZ_LEMON_TIERS[lemonSel];
+    const total = tier.qty * tier.pricePerUnit;
+    if((state.businessLemonadeCapital || 0) >= total){
+      state.businessLemonadeCapital -= total;
+      state.businessLemonadeLemonStock = (state.businessLemonadeLemonStock || 0) + tier.qty;
+      state.businessLemonadeLemonBoughtDay = state.businessLemonadeDay || 1;
+      state.businessLemonadeSelectedLemonIdx = null;
+      bought = true;
+      playSuccessSound();
+      showToast(`Куплено ${tier.qty} лимонов за ${total} ₽`);
+    }
+  }
+  if(teaSel !== null){
+    const tier = BIZ_TEA_TIERS[teaSel];
+    const total = tier.qty * tier.pricePerUnit;
+    if((state.businessLemonadeCapital || 0) >= total){
+      state.businessLemonadeCapital -= total;
+      state.businessLemonadeTeaStock = (state.businessLemonadeTeaStock || 0) + tier.qty;
+      state.businessLemonadeSelectedTeaIdx = null;
+      bought = true;
+      playSuccessSound();
+      showToast(`Куплено ${tier.qty} пакетиков чая за ${total} ₽`);
+    }
+  }
+  if(bought){
+    saveState();
+    updateBizHeaderUI();
+    updateBizContextBar();
+    renderBizLemonsPhase();
+  }
   if((state.businessLemonadeLemonStock || 0) <= 0 && (state.businessLemonadeTeaStock || 0) <= 0) return;
-  playSuccessSound();
   renderBizDrinkTypeGroup();
   renderBizQuantityGroup();
   renderBizOptionsGrid();
   goToBizPhase('bizPhaseBuy');
-});
+}
 
 /* ============ ШАГ 4: ЗАКУПКА ОСТАЛЬНЫХ ПРОДУКТОВ ============ */
 // Лимоны сюда не входят — они уже оплачены и просто расходуются из запаса
