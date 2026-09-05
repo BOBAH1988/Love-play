@@ -200,8 +200,21 @@
     overflow-y:auto;
     overscroll-behavior:contain;
     -webkit-overflow-scrolling:touch;
+    padding:0 16px;
+    box-sizing:border-box;
   }
   .screen.active{display:flex;}
+
+  /* Все игровые экраны (без padding — игра на всю ширину) */
+  [id$="Game"], #game, #wishlistGame, #settingsScreen, #rulesScreen, #storeScreen, #favoritesScreen,
+  #kidsBoardGamesMenu, #partyRouletteGame, #partyTdGame,
+  #kidsBattleshipGame, #kidsSaperGame, #kidsXoGame, #kidsC4Game,
+  #kidsMemoryGame, #kidsTdGame, #kidsKrokodilGame, #kidsMemesGame,
+  #soloMemoryGame, #soloXoGame, #soloC4Game, #soloBattleshipGame,
+  #sexQuestSummary, #sexQuestHistory, #tdGame, #shopGame, #bizObsGame,
+  #businessLemonadeGame, #partyHangmanGame, #bingoGame, #luckyGame{
+    padding:0;
+  }
 
   h1.title{
     text-align:center;
