@@ -250,6 +250,7 @@ function renderSexQuestIntroCard(){
 }
 
 function renderSexQuestStep(){
+  if(!sexQuestCurrentWish) return;
   updateSexQuestProgress();
   const step = sexQuestCurrentWish.quest[sexQuestCurrentStepIndex];
   fadeSwapEl('sexQuestCard', (el)=>{
@@ -323,6 +324,7 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
   // Подстраховка: «Да» активна только на вопросах квеста (на карточке
   // знакомства она скрыта, а stepIndex там = -1).
   if(sexQuestCurrentStepIndex < 0) return;
+  if(!sexQuestCurrentWish) return;
   // "Да" на вопросе квеста — облегчённая версия желания.
   const step = sexQuestCurrentWish.quest[sexQuestCurrentStepIndex];
   state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_LIGHT;
@@ -342,6 +344,7 @@ document.getElementById('sexQuestNoBtn').addEventListener('click', ()=>{
     return;
   }
   playNeutralSound();
+  if(!sexQuestCurrentWish) return;
   if(sexQuestCurrentStepIndex < sexQuestCurrentWish.quest.length - 1){
     sexQuestCurrentStepIndex++;
     renderSexQuestStep();

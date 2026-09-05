@@ -158,10 +158,10 @@ function updateKidsBattleshipStatus(text){
   const idx = state.battleshipCurrentPlayer || 0;
   const oppIdx = idx === 0 ? 1 : 0;
   const oppBoard = state.battleshipBoards[oppIdx];
-  const remaining = oppBoard.ships.filter(s => !s.sunk).length;
+  const remaining = oppBoard ? oppBoard.ships.filter(s => !s.sunk).length : 0;
   const el = document.getElementById('kidsBattleshipStatusText');
   if(!el) return;
-  el.textContent = text || `Стреляет: ${bsPlayerName(idx)} · Осталось кораблей у «${bsPlayerName(oppIdx)}»: ${remaining} из ${oppBoard.ships.length}`;
+  el.textContent = text || `Стреляет: ${bsPlayerName(idx)} · Осталось кораблей у «${bsPlayerName(oppIdx)}»: ${remaining} из ${(oppBoard && oppBoard.ships ? oppBoard.ships.length : 0)}`;
 }
 function updateKidsBattleshipStats(){
   const wins = state.battleshipWins || [0, 0];

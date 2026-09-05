@@ -36,15 +36,16 @@ function pickLuckyFinalTask() {
 function luckyLevelInfo(level){
   return (typeof LUCKY_LEVELS !== 'undefined' ? LUCKY_LEVELS.find(l=>l.id===level) : null) || {name:'Знакомство', icon:'🤝'};
 }
-function luckyLevelInfo(level){
-  if(!Array.isArray(state.luckyTeams) || state.luckyTeams.length !== 2){
-    state.luckyTeams = [{name:'Команда 1', m:'Он', f:'Она'},{name:'Команда 2', m:'Он', f:'Она'}];
+function ensureLuckyTeams(){
+  if(!Array.isArray(state.luckyTeams) || state.luckyTeams.length < 2){
+    state.luckyTeams = [
+      {name:'Команда 1', m:'Он', f:'Она'},
+      {name:'Команда 2', m:'Он', f:'Она'}
+    ];
   }
-  state.luckyTeams.forEach((t,i)=>{
-    if(!t.name) t.name = 'Команда ' + (i+1);
-    if(!t.m) t.m = 'Он';
-    if(!t.f) t.f = 'Она';
-  });
+  if(!Array.isArray(state.luckyTeamTurnCount)){
+    state.luckyTeamTurnCount = [0, 0];
+  }
 }
 function renderLuckyTeams(){
   ensureLuckyTeams();
@@ -269,6 +270,10 @@ function advanceLuckyStage(){
 // всё ещё включён, для нового уровня сразу подбирается своя свежая
 // счастливая клетка (luckyEnsureLuckyCell ниже): одна штука на каждом
 // уровне, а не одна на всю партию.
+function renderLuckyBonusChecklist(){
+  // Заглушка: в "Счастливом билете" нет чек-листа бонусов (есть только в "Секс-бинго").
+  // Функция вызывается для единообразия API с renderBingoBonusChecklist.
+}
 function escalateLuckyTo(nextLevel){
   const pool = shuffle(getLuckyTasksList(nextLevel));
   const usedTexts = new Set(state.luckyGrid);
