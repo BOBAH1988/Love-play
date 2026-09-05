@@ -207,9 +207,9 @@
 
   /* Все экраны получают одинаковый горизонтальный отступ 8px от краёв —
      и setup-экраны (меню, настройки), и игровые экраны. Карточка в игровых
-     экранах остаётся центрированной благодаря .card { max-width:340px;
-     width:100% } + .card-area { align-items:center }, и тянулась на всю
-     доступную ширину контента, не прилипая к краям. */
+     экранах занимает всю ширину контента (card-area + align-items:stretch
+     + card { width:100%; box-sizing:border-box }), благодаря чему визуально
+     совпадает по ширине с рядами кнопок внизу (тоже width:100%). */
   .screen{padding:0 8px;}
 
   h1.title{
@@ -544,7 +544,12 @@
   }
   .card{
     width:100%;
-    max-width:340px;
+    /* box-sizing:border-box гарантирует, что padding входит в width —
+       визуальная ширина карточки совпадает с шириной рядов кнопок
+       внизу (.quiz-pause-row, .wishlist-actions-row и т.д.).
+       max-width убран: карточка растягивается на всю ширину контента
+       (.screen с padding:0 8px), как и ряды кнопок под ней. */
+    box-sizing:border-box;
     /* Карточка растягивается на всю доступную высоту .card-area (она flex:1
        внутри .screen). Раньше margin:calc(var(--btn-height)/2) 0 оставлял
        большие отступы сверху/снизу и карточка выглядела короткой; теперь
@@ -1981,8 +1986,8 @@
     }
   }
   #kidsXoTurnLabel, #soloXoTurnLabel, #kidsC4TurnLabel{ font-size:28px; font-weight:900; }
-  .td-actions-row{display:flex; gap:10px; margin-top:10px; width:100%; max-width:340px;}
-  .quiz-pause-row{display:flex; justify-content:center; width:100%; max-width:340px; margin-top:10px;}
+  .td-actions-row{display:flex; gap:10px; margin-top:10px; width:100%;}
+  .quiz-pause-row{display:flex; justify-content:center; width:100%; margin-top:10px;}
   .td-actions-row .btn{flex:1;}
   .td-actions-row #tdPauseBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
   .td-actions-row #tdSkipBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
@@ -2204,15 +2209,15 @@
   .timer-label{text-align:center; font-size:28px; font-weight:800; margin-top:8px; color:#fff;}
   /* Ряды с кнопками внутри .screen (display:flex; flex-direction:column;
      align-items:stretch по умолчанию) центрируются по горизонтали
-     явно через align-self:center. Иначе max-width:340px обрезал бы
-     растянутую на 100% строку до 340px и она прижималась бы к
-     левому краю экрана вместо центра. */
+     явно через align-self:center. max-width:340px убран — ряды
+     растягиваются на width:100% и визуально совпадают с карточкой
+     (у неё box-sizing:border-box + width:100%, без max-width). */
   .timer-actions-row, .flash-card-actions, .wishlist-actions-row,
   .td-actions-row, .quiz-pause-row{
     align-self:center;
   }
-  .timer-actions-row{display:flex; flex-direction:column; gap:10px; margin-top:14px; width:100%; max-width:340px;}
-  .flash-card-actions{display:flex; gap:10px; margin-top:14px; justify-content:flex-end; width:100%; max-width:340px;}
+  .timer-actions-row{display:flex; flex-direction:column; gap:10px; margin-top:14px; width:100%;}
+  .flash-card-actions{display:flex; gap:10px; margin-top:14px; justify-content:flex-end; width:100%;}
   .flash-card-actions #flashNextBtn{flex:1; width:auto;}
   .flash-card-actions #flashAnswerBtn{flex:0 0 auto; padding:10px 18px; width:auto;}
   .timer-actions-top{display:flex; gap:10px;}
@@ -2272,7 +2277,7 @@
      под ним, чтобы обе части гарантированно помещались в карточку на телефоне. */
   .wishlist-item-title{font-size:22px; font-weight:700; line-height:1.3;}
   .wishlist-item-desc{font-size:16px; font-weight:500; line-height:1.4; color:#7a5a72; margin-top:8px; padding:0 4px;}
-  .wishlist-actions-row{display:flex; gap:10px; margin-top:14px; width:100%; max-width:340px;}
+  .wishlist-actions-row{display:flex; gap:10px; margin-top:14px; width:100%;}
   .wishlist-actions-row .btn{flex:1;}
   .wishlist-actions-row #wishlistNoBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
   .wishlist-setup-actions-row{display:flex; gap:10px; margin-top:10px;}
