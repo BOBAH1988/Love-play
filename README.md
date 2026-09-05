@@ -180,6 +180,8 @@ photos_shop/            — изображения товаров секс-шо�
 | 2026-09-05 | `f1ab6da` | Викторина: устранён merge-конфликт — кнопка «Начать» была случайно продублирована в секцию `#quizGame` вместо `#quizSetup`; кнопки управления игрой (Пауза, Начать для смены игрока) всегда располагаются под игровым полем, а не справа от него |
 | 2026-09-05 | `205f459` | Карточки 22 игр: добавлен недостающий `</div>` для `.card` — раньше после `card-inner` сразу закрывался `card-area` без закрытия `card`, из-за чего браузер «лечил» битую разметку и flex-дочерние элементы `card-area` (кнопки `Пауза`, `Далее`, `Готово`, корзина и т.п.) оказывались СПРАВА от карточки, а не под ней. Затронуты: `quizGame`, `kidsQuizGame`, `ideasGame`, `sexQuestGame`, `whatToPlayGame`, `kidsKrokodilGame`, `kidsMemesGame`, `flashGame`, `timerGame`, `krokodilGame`, `memesGame`, `partyNeverGame`, `partyFantsGame`, `famZnayuGame`, `partyQuizGame`, `twisterGame`, `soloQuizGame`, `wishlistGame`, `znayuGame` и др. |
 
+| 2026-09-05 | `ebf8473` | Главная причина: `.card-area { display:flex }` без `flex-direction:column` — по умолчанию flex направлен горизонтально, поэтому карточка + кнопки располагались в ряд (карточка слева, кнопки справа). Добавлено `flex-direction:column` в `.card-area`. Дополнительно исправлены незакрытые `</div>` в «Давай попробуем» и «Фанты (компания)». |
+
 ## 🧪 Тестирование и отладка
 
 - **Локальное тестирование**: `python3 -m http.server 8000` → `http://localhost:8000`
