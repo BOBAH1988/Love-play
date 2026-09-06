@@ -5950,11 +5950,16 @@
   <!-- ===== Подтверждение сброса прогресса (вместо confirm) ===== -->
   <div class="modal-overlay" id="resetConfirmModal">
     <div class="modal-card">
-      <div class="modal-title">⚠️ Сбросить прогресс?</div>
-      <div class="intro-text">Избранное и добавленные задания в «Фантах» сохранятся.</div>
+      <div class="modal-title">⚠️ Сбросить весь прогресс?</div>
+      <div style="text-align:left; font-size:14px; line-height:1.5; color:#5c3a52;">Сотрётся безвозвратно:</div>
+      <ul style="text-align:left; margin:4px 0 12px 20px; padding:0; font-size:14px; line-height:1.55; color:#2b0f2e;">
+        <li>счёт и избранное во всех играх</li>
+        <li>имена команд и история совпадений</li>
+      </ul>
+      <div style="text-align:left; font-size:13px; line-height:1.4; color:#5c3a52;">Свои добавленные задания в «Фантах» сохранятся.</div>
       <div style="display:flex; gap:10px; justify-content:center; margin-top:18px;">
         <button class="btn btn-secondary" id="resetConfirmCancel">Отмена</button>
-        <button class="btn btn-primary" id="resetConfirmOk">Окей</button>
+        <button class="btn btn-primary" id="resetConfirmOk">Сбросить</button>
       </div>
     </div>
   </div>
