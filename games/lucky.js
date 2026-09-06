@@ -405,8 +405,8 @@ function goToLuckyGame(){
   state.luckyUsed = {};
   state.luckyGrid = generateLuckyGrid(1);
   state.luckyChecked = new Array(25).fill(false);
-  state.luckyTasksHidden = false;
-  state.luckyRevealed = state.luckyGrid.map(()=>true);
+  state.luckyTasksHidden = true;
+  state.luckyRevealed = state.luckyGrid.map(()=>false);
   state.luckyCompleted = new Array(2).fill(0);
   state.luckyWonLines = [];
   state.luckyEscalatedTo2 = false;
@@ -449,7 +449,7 @@ function resumeLuckyGame(){
 function finishLuckyGame(){
   state.luckyGrid = [];
   state.luckyChecked = [];
-  state.luckyTasksHidden = false;
+  state.luckyTasksHidden = true;
   state.luckyRevealed = [];
   state.luckyCompleted = [];
   state.luckyWonLines = [];
