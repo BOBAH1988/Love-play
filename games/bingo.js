@@ -96,6 +96,17 @@ function renderBingoGrid(){
     if(!isHidden) fitBingoCellText(cell);
   });
   updateBingoLevelLabel();
+  updateBingoRandomBtn();
+}
+// После окончания игры кнопка «Случайно» превращается в «Заново» — начинает новую партию.
+function updateBingoRandomBtn(){
+  const btn = document.getElementById('bingoRandomBtn');
+  if(!btn) return;
+  if(state.bingoFinished){
+    btn.textContent = '🔄 Заново';
+  } else {
+    btn.textContent = '🎲 Случайно';
+  }
 }
 // Обычное нажатие только отмечает клетку выполненной — снять отметку
 // случайным повторным тапом больше нельзя. Снять отметку можно только
@@ -228,6 +239,7 @@ function showBingoSummary(){
     bonusEl.textContent = '';
     bonusEl.style.display = 'none';
   }
+  updateBingoRandomBtn();
   saveState();
   showModal('summaryModal');
 }
@@ -485,7 +497,12 @@ function suggestRandomBingoCell(){
   document.addEventListener('pointerdown', suggestionHandler, true);
 }
 document.getElementById('bingoRandomBtn').addEventListener('click', ()=>{
-  suggestRandomBingoCell();
+  if(state.bingoFinished){
+    playSuccessSound();
+    goToBingoGame();
+  } else {
+    suggestRandomBingoCell();
+  }
 });
 document.getElementById('bingoPauseBtn').addEventListener('click', ()=>{
   playSuccessSound();
