@@ -4358,6 +4358,12 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     closeMenu();
     if(window.__openRulesHub) window.__openRulesHub();
   });
+  // «О проекте» — открывает отдельную информационную модалку
+  document.getElementById('menuAboutBtn').addEventListener('click', ()=>{
+    closeMenu();
+    const aboutModal = document.getElementById('aboutProjectModal');
+    if(aboutModal) aboutModal.classList.add('show');
+  });
   document.getElementById('menuMuteBtn').addEventListener('click', ()=>{
     state.muted = !state.muted;
     saveState();
@@ -4394,6 +4400,13 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       performFullReset();
     }
   });
+  // Закрытие модалки «О проекте» кликом по фону
+  const aboutProjectModal = document.getElementById('aboutProjectModal');
+  if(aboutProjectModal){
+    aboutProjectModal.addEventListener('click', (e)=>{
+      if(e.target === aboutProjectModal) aboutProjectModal.classList.remove('show');
+    });
+  }
 })();
 
 // ===== СТРАНИЦА ПРАВИЛ ВСЕХ ИГР (меню → «Правила игр») =====

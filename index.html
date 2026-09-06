@@ -432,6 +432,25 @@
   .modal-card.rules-hub-card{ width:min(430px,94vw); max-width:min(430px,94vw);
     max-height:80vh; overflow-y:auto;
     background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20); color:#fff; }
+
+  /* ===== О проекте (карточка-описание) ===== */
+  .modal-card.about-card{ width:min(430px,94vw); max-width:min(430px,94vw);
+    max-height:80vh; overflow-y:auto;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20); color:#fff; }
+  .about-card .modal-title{ color:#fff; }
+  .about-card .modal-close-btn{ color:rgba(255,255,255,.6); }
+  .about-card .modal-close-btn:hover{ color:#fff; }
+  .about-logo{ font-size:52px; text-align:center; margin:2px 0 10px; line-height:1; }
+  .about-headline{ font-size:18px; font-weight:800; text-align:center; color:#fff; margin-bottom:10px; line-height:1.3; }
+  .about-text{ font-size:14px; line-height:1.55; color:rgba(255,255,255,.85); text-align:center; margin-bottom:14px; }
+  .about-ideas-title{ font-size:14px; font-weight:700; color:rgba(255,255,255,.7); margin:8px 0 8px; text-align:center; text-transform:uppercase; letter-spacing:.4px; }
+  .about-idea-block{ display:flex; align-items:flex-start; gap:12px; padding:11px 13px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:13px; margin-bottom:8px; }
+  .about-idea-icon{ font-size:22px; line-height:1.2; flex-shrink:0; }
+  .about-idea-name{ font-size:15px; font-weight:700; color:#fff; margin-bottom:2px; }
+  .about-idea-desc{ font-size:13px; line-height:1.45; color:rgba(255,255,255,.75); }
+  .about-footer{ margin-top:12px; padding-top:12px; border-top:1px dashed rgba(255,255,255,.15);
+    font-size:13.5px; line-height:1.5; text-align:center; color:#ffd9ec; }
   .rules-group{ margin-top:10px; }
   .rules-group-head{
     width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -2409,6 +2428,7 @@
          <button type="button" class="btn btn-secondary btn-menu-item" id="menuUpdateBtn"><span class="menu-icon">🔄</span>Обновить приложение</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuInstallBtn"><span class="menu-icon">📲</span>Установить приложение</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon">📖</span>Правила игр</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuAboutBtn"><span class="menu-icon">💡</span>О проекте</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑️</span>Сбросить весь прогресс</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon">📤</span>Экспортировать данные</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon">📥</span>Импортировать данные</button>
@@ -2425,6 +2445,48 @@
       <div class="modal-title">📖 Правила игр <button type="button" class="modal-close-btn" id="rulesHubCloseBtn" aria-label="Закрыть">✕</button></div>
       <div class="intro-text">Выберите группу, затем игру — откроются её правила.</div>
       <div id="rulesHubList"></div>
+    </div>
+  </div>
+
+  <!-- ===== О ПРОЕКТЕ (меню → «О проекте») ===== -->
+  <div class="modal-overlay" id="aboutProjectModal">
+    <div class="modal-card about-card">
+      <div class="modal-title">💡 О проекте <button type="button" class="modal-close-btn" id="aboutProjectCloseBtn" aria-label="Закрыть">✕</button></div>
+      <div class="about-logo">🎲</div>
+      <div class="about-headline">«Давай играй» — коллекция игр для любых компаний</div>
+      <div class="about-text">Проект начинался как маленькое приложение для своих: несколько игр, один телефон и вечера в кругу близких. Постепенно коллекция росла — и выросла в целую платформу с десятками игр для самых разных компаний.</div>
+
+      <div class="about-ideas-title">Ключевые идеи</div>
+      <div class="about-idea-block">
+        <div class="about-idea-icon">❤️</div>
+        <div>
+          <div class="about-idea-name">Для двоих</div>
+          <div class="about-idea-desc">Романтические вечера с половинкой: вопросы, фанты, желания и многое другое — 18+.</div>
+        </div>
+      </div>
+      <div class="about-idea-block">
+        <div class="about-idea-icon">🎉</div>
+        <div>
+          <div class="about-idea-name">Для компании</div>
+          <div class="about-idea-desc">Шумные вечеринки, крокодил, викторины и игры для больших дружных компаний.</div>
+        </div>
+      </div>
+      <div class="about-idea-block">
+        <div class="about-idea-icon">🧸</div>
+        <div>
+          <div class="about-idea-name">Для детей</div>
+          <div class="about-idea-desc">Развивающие и весёлые игры, с которыми время с ребёнком пролетит незаметно.</div>
+        </div>
+      </div>
+      <div class="about-idea-block">
+        <div class="about-idea-icon">🧠</div>
+        <div>
+          <div class="about-idea-name">Для развития</div>
+          <div class="about-idea-desc">Обучающие флеш-карты, время, английский — учиться в игре всегда интереснее.</div>
+        </div>
+      </div>
+
+      <div class="about-footer">🚀 Проект продолжает расти — скоро появятся новые игры. Следите за обновлениями!</div>
     </div>
   </div>
   <!-- ===== SETUP SCREEN (ГЛАВНАЯ СТРАНИЦА) =====
