@@ -145,7 +145,10 @@ function mtDrawCard(){
     fadeSwapEl('timerCard', (el)=>{
       el.className = 'card';
       el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
-      el.innerHTML = `<div class="card-inner">${mtCardHeaderHtml(levelInfo)}<div class="card-body"><div class="card-icon">🃏</div><div class="card-text">Нет заданий для этого уровня</div></div></div>`;
+      el.innerHTML = `<div class="card-inner">${mtCardHeaderHtml(levelInfo)}<div class="card-body"><div class="card-icon">🃏</div><div class="card-text">Нет заданий для этого уровня</div></div>
+        <div class="timer-bar-track"><div class="timer-bar-fill" id="timerBarFill"></div></div>
+        <div class="timer-label" id="timerLabel">00:00</div>
+      </div>`;
     });
     return;
   }
@@ -171,7 +174,10 @@ function mtDrawCard(){
   fadeSwapEl('timerCard', (el)=>{
     el.className = 'card';
     el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
-    el.innerHTML = `<div class="card-inner">${mtCardHeaderHtml(levelInfo)}<div class="card-body"><div class="card-text">${card.text}</div></div></div>`;
+    el.innerHTML = `<div class="card-inner">${mtCardHeaderHtml(levelInfo)}<div class="card-body"><div class="card-text">${card.text}</div></div>
+      <div class="timer-bar-track"><div class="timer-bar-fill" id="timerBarFill"></div></div>
+      <div class="timer-label" id="timerLabel">00:00</div>
+    </div>`;
   });
   updateMtBar();
   document.getElementById('timerStartTaskBtn').style.display = 'flex';
