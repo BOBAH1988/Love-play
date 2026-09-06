@@ -16,6 +16,16 @@
   // см. комментарии в стилях и в updateForcedPortraitLock). Расчёт стал не
   // нужен нигде и был убран целиком, чтобы не оставлять мёртвый код.
   (function(){
+    // Флаг установленной PWA (home-screen standalone): navigator.standalone
+    // работает на всех версиях iOS, matchMedia('(display-mode: standalone)')
+    // дублирует его в Safari 17+/Chrome/Android. Класс html.pwa-standalone
+    // включает CSS-фикс белой полосы (height:100lvh) — см. блок после body.
+    try{
+      if(window.navigator.standalone===true ||
+         (window.matchMedia && matchMedia('(display-mode: standalone)').matches)){
+        document.documentElement.classList.add('pwa-standalone');
+      }
+    }catch(e){}
     // "Любой ценой" подстраховка от белой полосы: даже если по какой-то
     // причине CSS-фон html/body не применится вовремя (порядок загрузки,
     // особенности конкретного браузера), выставляем тот же тёмный фон
@@ -80,10 +90,13 @@
      любых JS-измерений высоты. Раньше здесь пытались точно подогнать height
      под --real-vh, но JS-расчёт неизбежно на миг отстаёт от реального
      изменения видимой области — и именно этот один момент отставания
-     оставлял внизу белую полосу. Без явной height отставать нечему. */
+     оставлял внизу белую полосу. Без явной height отставать нечему.
+     Единственное исключение — установленная PWA (standalone): iOS на холодном
+     старте считает dvh от «маленького» viewport (как будто тулбар браузера ещё
+     есть), поэтому в standalone height задаётся отдельным блоком после body
+     (класс pwa-standalone → height:100lvh). */
   html{
     width:100%;
-    height:100dvh;
     overflow:hidden;
     background-color:var(--bg1);
     background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
@@ -109,10 +122,49 @@
     background-color:var(--bg1);
     background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
     color:#fff;
-    height:100dvh;
     overflow:hidden;
     overscroll-behavior:none;
     -webkit-overflow-scrolling:auto;
+  }
+  /* ===== ФИКС БЕЛОЙ ПОЛОСЫ ВНИЗУ В УСТАНОВЛЕННОЙ PWA (iOS standalone) =====
+     Симптом: в PWA, добавленной на экран «Домой», внизу экрана белая полоса
+     высотой ≈ тулбара браузера; в обычном Safari всё чисто.
+     Причина: на холодном старте standalone-PWA iOS считает viewport-единицы
+     (dvh/vh) и containing block fixed-элементов от МАЛЕНЬКОГО viewport — как
+     будто тулбар браузера всё ещё занимает низ экрана. В Safari полосы не
+     видно, потому что его тулбар физически занимает этот остаток, а в
+     standalone тулбара нет — под каркасом, не дотянувшим до физического низа
+     на высоту «виртуального» тулбара (~50-100px), просвечивает белая подложка
+     WKWebView. Фикс: только в standalone приколачиваем html/body к БОЛЬШОМУ
+     viewport (100lvh = полный экран без браузерного UI), с фолбэком
+     -webkit-fill-available для старых iOS без lvh. Класс pwa-standalone
+     ставится инлайн-скриптом в <head>. НЕ возвращайте height:100dvh в базовые
+     правила html/body: в браузере у fixed body с inset:0+height параметр
+     bottom игнорируется, и любая неточность dvh (клавиатура, анимация тулбара)
+     снова оставляет белую полосу — в этом проекте это уже дважды ломалось. */
+  html.pwa-standalone,
+  html.pwa-standalone body{
+    height:100lvh;
+    min-height:100lvh;
+  }
+  @media (display-mode: standalone){
+    html, body{
+      height:100lvh;
+      min-height:100lvh;
+    }
+  }
+  @supports not (height:100lvh){
+    html.pwa-standalone,
+    html.pwa-standalone body{
+      height:-webkit-fill-available;
+      min-height:-webkit-fill-available;
+    }
+  }
+  /* Карточка с видео («Видеорулетка»/«Давай попробуем») задана в dvh — в
+     standalone на холодном старте она тоже не дотянула бы до низа экрана. */
+  html.pwa-standalone #game.video-mode .card,
+  html.pwa-standalone #game.davay-mode .card{
+    height:100lvh;
   }
   /* При viewport-fit=cover фон html/body сам заполняет всё под home-indicator, */
   /* подложка не нужна. */
