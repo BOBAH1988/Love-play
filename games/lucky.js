@@ -36,11 +36,15 @@ function pickLuckyFinalTask() {
 function luckyLevelInfo(level){
   return (typeof LUCKY_LEVELS !== 'undefined' ? LUCKY_LEVELS.find(l=>l.id===level) : null) || {name:'Знакомство', icon:'🤝'};
 }
+// Дефолтные имена команд «Счастливого билета»: «Первая/Вторая команда»,
+// участники внутри команды — «Парень»/«Девушка». Старые дефолты
+// («Команда 1/2», «Он»/«Она») мигрируются в loadState (games/core.js).
+function luckyDefaultTeamName(idx){ return idx === 0 ? 'Первая команда' : 'Вторая команда'; }
 function ensureLuckyTeams(){
   if(!Array.isArray(state.luckyTeams) || state.luckyTeams.length < 2){
     state.luckyTeams = [
-      {name:'Команда 1', m:'Он', f:'Она'},
-      {name:'Команда 2', m:'Он', f:'Она'}
+      {name:luckyDefaultTeamName(0), m:'Парень', f:'Девушка'},
+      {name:luckyDefaultTeamName(1), m:'Парень', f:'Девушка'}
     ];
   }
   if(!Array.isArray(state.luckyTeamTurnCount)){
@@ -57,17 +61,17 @@ function renderLuckyTeams(){
     block.className = 'fam-znayu-family-block';
     const label = document.createElement('div');
     label.className = 'fam-znayu-family-label';
-    label.textContent = 'Команда ' + (idx + 1);
+    label.textContent = luckyDefaultTeamName(idx);
     block.appendChild(label);
     const nameRow = document.createElement('div');
     nameRow.className = 'fam-znayu-family-inputs';
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.maxLength = 14;
-    nameInput.placeholder = 'Команда ' + (idx + 1);
+    nameInput.placeholder = luckyDefaultTeamName(idx);
     nameInput.value = team.name;
     nameInput.addEventListener('input', ()=>{
-      state.luckyTeams[idx].name = nameInput.value.trim() || ('Команда ' + (idx + 1));
+      state.luckyTeams[idx].name = nameInput.value.trim() || luckyDefaultTeamName(idx);
       saveState();
     });
     nameRow.appendChild(nameInput);
@@ -78,20 +82,20 @@ function renderLuckyTeams(){
     const mInput = document.createElement('input');
     mInput.type = 'text';
     mInput.maxLength = 14;
-    mInput.placeholder = 'Он';
+    mInput.placeholder = 'Парень';
     mInput.value = team.m;
     mInput.addEventListener('input', ()=>{
-      state.luckyTeams[idx].m = mInput.value.trim() || 'Он';
+      state.luckyTeams[idx].m = mInput.value.trim() || 'Парень';
       saveState();
     });
     membersRow.appendChild(mInput);
     const fInput = document.createElement('input');
     fInput.type = 'text';
     fInput.maxLength = 14;
-    fInput.placeholder = 'Она';
+    fInput.placeholder = 'Девушка';
     fInput.value = team.f;
     fInput.addEventListener('input', ()=>{
-      state.luckyTeams[idx].f = fInput.value.trim() || 'Она';
+      state.luckyTeams[idx].f = fInput.value.trim() || 'Девушка';
       saveState();
     });
     membersRow.appendChild(fInput);
@@ -132,7 +136,7 @@ function generateLuckyGrid(level){
 // команды), не зависит от того, сколько ходов было у другой команды.
 function luckyCurrentActor(idx){
   ensureLuckyTeams();
-  const team = state.luckyTeams[idx] || {name:'Команда ' + (idx+1), m:'Он', f:'Она'};
+  const team = state.luckyTeams[idx] || {name:luckyDefaultTeamName(idx), m:'Парень', f:'Девушка'};
   const turnCount = (state.luckyTeamTurnCount || [0,0])[idx] || 0;
   const actorIsM = turnCount % 2 === 0;
   return {
@@ -164,7 +168,7 @@ function updateLuckyScoreUI(){
       wrap.appendChild(span);
     });
   }
-  const teamName = (teams[idx] && teams[idx].name) || 'Команда 1';
+  const teamName = (teams[idx] && teams[idx].name) || luckyDefaultTeamName(idx);
   const actor = luckyCurrentActor(idx);
   const turnLabel = document.getElementById('luckyTurnLabel');
   if(turnLabel) turnLabel.textContent = `Ходит: ${teamName} — ${actor.actorName} → ${actor.targetName}`;
@@ -304,7 +308,7 @@ function showLuckyBonus(level){
   // clickLuckyCell), поэтому luckyCurrentTeamIndex — это команда, которая
   // только что собрала линию.
   ensureLuckyTeams();
-  const teamName = (state.luckyTeams[state.luckyCurrentTeamIndex || 0] || {}).name || 'Команда 1';
+  const teamName = (state.luckyTeams[state.luckyCurrentTeamIndex || 0] || {}).name || luckyDefaultTeamName(state.luckyCurrentTeamIndex || 0);
   const introEl = document.getElementById('luckyBonusIntro');
   if(introEl) introEl.textContent = `🏆 Линия собрана командой «${teamName}»! Уровень повышен: ${info.icon} ${info.name}`;
   const textEl = document.getElementById('luckyBonusText');

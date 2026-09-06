@@ -106,7 +106,7 @@ let state = {
   // выполняются для своего партнёра по команде. luckyTeamTurnCount хранит,
   // сколько раз уже ходила каждая команда — по чётности переключает, кто
   // сейчас исполнитель (м или ж) внутри команды.
-  luckyTeams:[{name:'Команда 1', m:'Он', f:'Она'},{name:'Команда 2', m:'Он', f:'Она'}],
+  luckyTeams:[{name:'Первая команда', m:'Парень', f:'Девушка'},{name:'Вторая команда', m:'Парень', f:'Девушка'}],
   luckyTeamTurnCount:[0,0],
   luckyLevel:1, luckyGrid:[], luckyChecked:[], luckyCurrentTeamIndex:0,
   luckyCompleted:[], luckyWonLines:[], luckyEscalatedTo2:false, luckyEscalatedTo3:false,
@@ -295,6 +295,21 @@ function loadState(){
       const out = Object.assign({}, f);
       if(out.p1 === 'Игрок 1') out.p1 = partyDefaultName(fIdx*2);
       if(out.p2 === 'Игрок 2') out.p2 = partyDefaultName(fIdx*2+1);
+      return out;
+    });
+  }
+  // «Счастливый билет»: та же схема — старые дефолты команд («Команда 1/2»,
+  // «Он»/«Она») заменяются на «Первая/Вторая команда», «Парень»/«Девушка».
+  // Касается ТОЛЬКО имён, в точности совпадающих со старыми дефолтами —
+  // введённые вручную имена не трогаем.
+  if(Array.isArray(state.luckyTeams)){
+    state.luckyTeams = state.luckyTeams.map(t=>{
+      if(!t || typeof t !== 'object') return t;
+      const out = Object.assign({}, t);
+      if(out.name === 'Команда 1') out.name = 'Первая команда';
+      if(out.name === 'Команда 2') out.name = 'Вторая команда';
+      if(out.m === 'Он') out.m = 'Парень';
+      if(out.f === 'Она') out.f = 'Девушка';
       return out;
     });
   }
@@ -1504,7 +1519,7 @@ function performFullReset(){
   state.famZnayuPendingNext = 0;
   // Счастливый билет (общее поле 5x5 на 2 команды)
   state.luckyUsed = {};
-  state.luckyTeams = [{name:'Команда 1', m:'Он', f:'Она'},{name:'Команда 2', m:'Он', f:'Она'}];
+  state.luckyTeams = [{name:'Первая команда', m:'Парень', f:'Девушка'},{name:'Вторая команда', m:'Парень', f:'Девушка'}];
   state.luckyTeamTurnCount = [0,0];
   state.luckyGrid = []; state.luckyChecked = []; state.luckyCurrentTeamIndex = 0;
   state.luckyCompleted = []; state.luckyWonLines = []; state.luckyLevel = 1;
