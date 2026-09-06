@@ -138,6 +138,10 @@ let state = {
   // Желания, исключённые крестиком из чек-листа — не участвуют в случайной
   // выдаче (но по-прежнему доступны для ручного выбора, см. sexquest.js).
   sexQuestExcluded:[],
+  // Карта страсти — независимая игра (games/passionmap.js): та же структура
+  // состояния, что у секс-квеста, но свои ключи passionMap*.
+  passionMapQueue:[], passionMapIndex:0, passionMapScore:0, passionMapResults:[], passionMapChecklists:[],
+  passionMapCount:1, passionMapMode:'random', passionMapManualIds:[], passionMapExcluded:[],
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании"
@@ -599,8 +603,11 @@ document.getElementById('gameSexQuestBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToSexQuestSetup();
 });
+// «Карта страсти» — независимая игра (см. games/passionmap.js: goToPassionMapSetup).
 document.getElementById('gameSexMapBtn').addEventListener('click', ()=>{
-  showToast('Эта игра ещё в разработке 🚧 Загляните позже');
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToPassionMapSetup();
 });
 // Возраст ребёнка — общий переключатель для игр раздела "Игры с детьми",
 // которым важен возраст (сейчас — "Правда/Действие"): 1=5 лет, 2=7 лет,
@@ -1445,6 +1452,18 @@ function performFullReset(){
   state.sexQuestScore = 0;
   state.sexQuestResults = [];
   state.sexQuestChecklists = [];
+  // Карта страсти (независимая копия квеста)
+  state.passionMapQueue = [];
+  state.passionMapIndex = 0;
+  state.passionMapScore = 0;
+  state.passionMapResults = [];
+  state.passionMapChecklists = [];
+  // Карта страсти
+  state.passionMapQueue = [];
+  state.passionMapIndex = 0;
+  state.passionMapScore = 0;
+  state.passionMapResults = [];
+  state.passionMapChecklists = [];
   // Во что поиграть? (дети)
   state.whatToPlayUsed = [];
   state.whatToPlayFavorites = [];
@@ -4479,6 +4498,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['💃','Предложи партнеру','photoRulesModal'],
       ['🎬','Давай попробуем','davayRulesModal'],
       ['🧩','Пройди квест','sexQuestRulesModal'],
+      ['🎀','Карта страсти','passionMapRulesModal'],
     ]},
     { icon:'🎉', name:'Игры для компании', games:[
       ['🐊','Крокодил','krokodilRulesModal'],
@@ -4608,6 +4628,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     desireSetup:'twoPlayerView', desireGame:'twoPlayerView',
     znayuSetup:'twoPlayerView', znayuGame:'twoPlayerView',
     sexQuestSetup:'twoPlayerView', sexQuestGame:'twoPlayerView',
+    passionMapSetup:'twoPlayerView', passionMapGame:'twoPlayerView',
+    passionMapSummary:'twoPlayerView', passionMapHistory:'twoPlayerView',
     shopSetup:'twoPlayerView', videoGame:'twoPlayerView',
     partyFantsSetup:'companyView', partyFantsGame:'companyView',
     partyTdSetup:'companyView', partyTdGame:'companyView',
@@ -4646,6 +4668,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   const SETUP_ONLY_SCREENS = new Set([
     'fantySetup','photoSetup','bingoSetup','timerSetup','truthDareSetup','tdSetup',
     'quizSetup','wishlistSetup','desireSetup','znayuSetup','sexQuestSetup','shopSetup',
+    'passionMapSetup','passionMapSummary','passionMapHistory',
     'davaySetup','ideasGame',
     'partyFantsSetup','partyTdSetup','partyQuizSetup','krokodilSetup','twisterSetup',
     'partyHangmanSetup','partyRouletteSetup','partyNeverSetup','partyMemesSetup',

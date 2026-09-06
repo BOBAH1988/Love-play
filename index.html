@@ -1021,23 +1021,26 @@
      оформления, что и у карточек компании/детей, только в розовом тоне.
      Фон тёмный, поэтому текст (включая заголовок хода и плашку типа
      Правда/Действие) перекрашен в белый. */
-  #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard, #sexQuestCard{
+  #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard, #sexQuestCard, #passionMapCard{
     background:linear-gradient(160deg, #e0559a, #8a2f66 55%, var(--bg2));
     color:#fff;
   }
   #card .card-text, #tdCard .card-text, #timerCard .card-text,
-  #wishlistCard .card-text, #znayuCard .card-text, #ideasCard .card-text, #sexQuestCard .card-text{
+  #wishlistCard .card-text, #znayuCard .card-text, #ideasCard .card-text, #sexQuestCard .card-text,
+  #passionMapCard .card-text{
     color:#fff;
   }
   /* Заголовок "Ход игрока" и разделитель под ним рассчитаны на светлый фон
      карточки (тёмно-серый текст, тёмная линия) — на тёмном фоне этих карточек
      были почти невидимы. */
   #card .card-turn-label, #tdCard .card-turn-label, #timerCard .card-turn-label,
-  #wishlistCard .card-turn-label, #znayuCard .card-turn-label, #sexQuestCard .card-turn-label{
+  #wishlistCard .card-turn-label, #znayuCard .card-turn-label, #sexQuestCard .card-turn-label,
+  #passionMapCard .card-turn-label{
     color:rgba(255,255,255,.65);
   }
   #card .card-header, #tdCard .card-header, #timerCard .card-header,
-  #wishlistCard .card-header, #znayuCard .card-header, #sexQuestCard .card-header{
+  #wishlistCard .card-header, #znayuCard .card-header, #sexQuestCard .card-header,
+  #passionMapCard .card-header{
     border-bottom-color:rgba(255,255,255,.18);
   }
   #sexQuestCard .card-split-title{
@@ -1045,6 +1048,7 @@
     text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px;
   }
   #sexQuestCard .card-icon{ font-size:76px; }
+  #passionMapCard .card-icon{ font-size:76px; }
   /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт
      и "Старт") — тоже рассчитан на светлый фон, на тёмном был почти невидим. */
   #card .card-timer{ border-top-color:rgba(255,255,255,.18); }
@@ -1074,12 +1078,18 @@
      color:rgba(255,255,255,.9); font-size:16px; font-weight:400; line-height:1.5;
    }
   #card .card-turn-name, #tdCard .card-turn-name, #timerCard .card-turn-name,
-  #wishlistCard .card-turn-name, #znayuCard .card-turn-name, #sexQuestCard .card-turn-name{
+  #wishlistCard .card-turn-name, #znayuCard .card-turn-name, #sexQuestCard .card-turn-name,
+  #passionMapCard .card-turn-name{
     color:#fff;
   }
   /* Название желания в "Секс-квесте" крупнее базового (19px) на ~25% —
      это главный текст карточки знакомства и вопросов квеста. */
   #sexQuestCard .card-turn-name{
+    font-size:24px;
+    line-height:1.2;
+  }
+  /* Название желания в «Карте страсти» — крупнее базового, как в квесте. */
+  #passionMapCard .card-turn-name{
     font-size:24px;
     line-height:1.2;
   }
@@ -2005,6 +2015,76 @@
   .sexquest-pick-exclude.on{ background:#ff5e6c; border-color:#ff5e6c; color:#fff; }
   .sexquest-pick-item.excluded{ opacity:.55; }
   .sexquest-pick-item.excluded .sexquest-pick-title{ text-decoration:line-through; }
+
+  /* «Карта страсти» (games/passionmap.js) — счёт/прогресс над карточкой,
+     итог партии и история маршрутов. Копия стилей секс-квеста под своим
+     префиксом pmap-: игры независимы, стили тоже. */
+  .pmap-status-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 4px; margin-bottom:10px; font-size:14px; font-weight:800; color:#cba0bf;
+  }
+  .pmap-summary-list{ list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .pmap-summary-list li{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; padding:8px 12px;
+  }
+  .pmap-summary-title{ font-size:14px; font-weight:800; color:#fff; }
+  .pmap-summary-outcome{ font-size:13px; color:rgba(255,255,255,.7); margin-top:2px; }
+  .pmap-history-wrap{ display:flex; flex-direction:column; gap:14px; margin:14px 0; max-height:60vh; overflow-y:auto; }
+  .pmap-history-entry{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px 14px;
+  }
+  .pmap-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+  .pmap-history-items{ list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .pmap-history-items > li + li{ border-top:1px solid rgba(255,255,255,.14); padding-top:10px; }
+  .pmap-history-steps{ margin:6px 0 0; padding-left:18px; font-size:12px; color:rgba(255,255,255,.6); line-height:1.5; }
+  .pmap-history-steps li{ margin-bottom:2px; }
+  .pmap-item-row, .pmap-item-main{ }
+  .pmap-item-row{ display:flex; align-items:flex-start; gap:10px; }
+  .pmap-item-main{ flex:1; min-width:0; }
+  .pmap-item-del{
+    flex-shrink:0; width:28px; height:28px; border-radius:50%;
+    border:1px solid rgba(255,99,110,.4); background:transparent; color:#ff8b96;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .pmap-item-del:active{ background:rgba(255,99,110,.3); }
+  .pmap-step-agreed{ color:#4cd964; font-weight:700; }
+  #passionMapHistoryBtn:disabled{ opacity:.4; cursor:default; }
+  .pmap-pick-list{
+    display:flex; flex-direction:column; gap:8px; margin:14px 0;
+    text-align:left; max-height:50vh; overflow-y:auto;
+  }
+  .pmap-pick-item{
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    background:rgba(43,15,46,.06); border:1px solid rgba(43,15,46,.12);
+    border-radius:14px; padding:10px 12px;
+  }
+  .pmap-pick-item.on{ border-color:var(--accent); background:rgba(255,94,142,.14); }
+  .pmap-pick-item.disabled{ opacity:.4; cursor:default; }
+  .pmap-pick-check{
+    width:20px; height:20px; border-radius:50%; flex-shrink:0;
+    border:2px solid rgba(43,15,46,.25);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pmap-pick-item.on .pmap-pick-check{ background:var(--accent); border-color:var(--accent); }
+  .pmap-pick-item.on .pmap-pick-check::after{
+    content:'✓'; font-size:12px; font-weight:900; color:#2b0f2e; line-height:1;
+  }
+  .pmap-pick-title{ flex:1; font-size:14px; font-weight:700; color:#2b0f2e; }
+  /* Крестик справа — исключает желание из случайной выдачи (не из ручного
+     выбора), поэтому не участвует в клике по всей строке
+     (см. stopPropagation в passionmap.js). */
+  .pmap-pick-exclude{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%;
+    border:1px solid rgba(43,15,46,.2); background:transparent; color:#8a6a80;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .pmap-pick-exclude.on{ background:#ff5e6c; border-color:#ff5e6c; color:#fff; }
+  .pmap-pick-item.excluded{ opacity:.55; }
+  .pmap-pick-item.excluded .pmap-pick-title{ text-decoration:line-through; }
   /* "Почти совпало" в итогах "Тайных ответов" — крупнее, по центру и с
      хорошо заметным отступом сверху (заметно ниже интро-текста), но без
      абсолютного позиционирования — чтобы не наезжать на текст рядом,
@@ -2070,7 +2150,7 @@
      turn-label/score-row (ниже неё), где отдельный отступ не нужен. */
   #ideasGame, #whatToPlayGame, #kidsMemesGame, #memesGame,
   #partyNeverGame, #twisterGame, #sexQuestGame,
-  #wishlistGame, #znayuGame{
+  #wishlistGame, #znayuGame, #passionMapGame{
     padding-top: 50px;
   }
   /* Хаб #setup: каждый его вид (главный, «Игры для пар/компании/детей»…)
@@ -2101,7 +2181,7 @@
        на desktop FAB-кнопки absolute с top:12px (зона 12–48px) */
     #ideasGame, #whatToPlayGame, #kidsMemesGame, #memesGame,
     #partyNeverGame, #twisterGame, #sexQuestGame,
-    #wishlistGame, #znayuGame{
+    #wishlistGame, #znayuGame, #passionMapGame{
       padding-top: 48px;
     }
     /* Хаб #setup — как на мобильном: FAB-кнопки absolute с top:12px
@@ -2383,6 +2463,12 @@
   .timer-actions-bottom #sexQuestExitBtn{flex:1;}
   #sexQuestGame.sexquest-intro .timer-actions-bottom #sexQuestExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
   .timer-actions-bottom #sexQuestStartPlayBtn{flex:1;}
+  /* Карта страсти: «Выход» по умолчанию на всю ширину ряда. Только на карточке
+     знакомства (класс pmap-intro на секции), где рядом стоит «▶ Начать»,
+     она сжимается до минимума. */
+  .timer-actions-bottom #passionMapExitBtn{flex:1;}
+  #passionMapGame.pmap-intro .timer-actions-bottom #passionMapExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .timer-actions-bottom #passionMapStartPlayBtn{flex:1;}
 
   /* ---- Плейлист желаний ---- */
   .wishlist-player-row{display:flex; gap:10px; margin-bottom:10px;}
@@ -3289,6 +3375,86 @@
     <div class="subtitle">История прошлых партий — видно, на чём остановились в прошлый раз</div>
     <div class="sexquest-history-wrap" id="sexQuestHistoryList"></div>
     <button class="btn btn-secondary" id="sexQuestHistoryExitBtn" style="margin-top:10px;">Назад</button>
+  </section>
+
+  <!-- ===== КАРТА СТРАСТИ: НАСТРОЙКА ===== -->
+  <section id="passionMapSetup" class="screen">
+    <h1 class="title">🎀 Карта страсти</h1>
+    <div class="subtitle">Карта желаний для двоих — идём по маршруту шаг за шагом, без давления</div>
+
+    <div class="field">
+      <label>Количество вопросов</label>
+      <div class="starter-group timer-duration-group" id="passionMapCountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="1">1</button>
+        <button type="button" class="starter-btn mode-btn" data-value="3">3</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="all">Все</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="starter-group" id="passionMapModeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="manual" id="passionMapPickBtn">📋 Выбор вопросов</button>
+        <button type="button" class="starter-btn mode-btn" data-value="random">🔀 Случайно</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="passionMapStartBtn" style="margin-top:16px;">Начать</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="passionMapHistoryBtn">✅ Пройденные</button>
+      <button type="button" class="toggle-pill" id="passionMapSetupRulesBtn">📖 Правила</button>
+    </div>
+
+    <button class="btn btn-secondary" id="passionMapSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== КАРТА СТРАСТИ: ИГРА ===== -->
+  <section id="passionMapGame" class="screen">
+    <div class="pmap-status-row">
+      <span id="passionMapProgressLabel">1 / 12</span>
+      <span id="passionMapScoreLabel">0 🏆</span>
+    </div>
+    <div class="card-area">
+      <div class="card" id="passionMapCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="card-icon">🎀</div>
+            <div class="card-text">Загрузка…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="timer-actions-row">
+        <div class="timer-actions-top">
+          <button type="button" class="btn btn-primary" id="passionMapYesBtn">Да, выполняем</button>
+          <button type="button" class="btn btn-secondary" id="passionMapNoBtn">Нет, пока не готовы</button>
+        </div>
+        <div class="timer-actions-bottom">
+          <button type="button" class="btn btn-secondary" id="passionMapStartPlayBtn" hidden>▶ Начать</button>
+          <button type="button" class="btn btn-secondary btn-pause" id="passionMapExitBtn">Выход</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== КАРТА СТРАСТИ: ИТОГИ ===== -->
+  <section id="passionMapSummary" class="screen">
+    <h1 class="title">🎀 Карта страсти: итоги</h1>
+    <div class="subtitle" id="passionMapSummaryScore">Счёт: 0 🏆</div>
+    <div class="summary-stats" style="text-align:left;">
+      <ul class="pmap-summary-list" id="passionMapSummaryList"></ul>
+    </div>
+    <div class="intro-text">Маршрут этой партии сохранён — его можно открыть позже на странице настройки игры, кнопка «✅ Пройденные».</div>
+    <button class="btn btn-primary" id="passionMapSummaryExitBtn" style="margin-top:10px;">В меню</button>
+  </section>
+
+  <!-- ===== КАРТА СТРАСТИ: ИСТОРИЯ ===== -->
+  <section id="passionMapHistory" class="screen">
+    <h1 class="title">✅ Пройденные «Карты страсти»</h1>
+    <div class="subtitle">История прошлых партий — видно, где вы уже побывали на карте</div>
+    <div class="pmap-history-wrap" id="passionMapHistoryList"></div>
+    <button class="btn btn-secondary" id="passionMapHistoryExitBtn" style="margin-top:10px;">Назад</button>
   </section>
 
   <!-- ===== ВО ЧТО ПОИГРАТЬ? (ДЕТИ): ИГРА ===== -->
@@ -5671,6 +5837,33 @@
     </div>
   </div>
 
+  <!-- ===== КАРТА СТРАСТИ: ПРАВИЛА ===== -->
+  <div class="modal-overlay" id="passionMapRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🎀 Правила игры «Карта страсти»</div>
+      <div class="intro-text">Цель — мягко, без давления и дискомфорта, пройти карту желаний друг друга.</div>
+      <ol class="modal-rules">
+        <li>По очереди открываются точки карты с описанием желания — сколько именно и как выбраны, настраивается перед стартом.</li>
+        <li>Кнопкой «▶ Начать» запускается цепочка мягких шагов навстречу: первый шаг мягко намекает на саму цель желания, а с каждым отказом предложение становится всё проще и безопаснее, на каждом свой маленький вопрос «Да/Нет».</li>
+        <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
+        <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
+        <li>После партии итоги сохраняются в «✅ Пройденные» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
+        <li>«Выход» в любой момент вернёт в меню.</li>
+      </ol>
+      <button class="btn btn-primary" id="closePassionMapRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== КАРТА СТРАСТИ: ВЫБОР ЖЕЛАНИЙ ВРУЧНУЮ ===== -->
+  <div class="modal-overlay" id="passionMapPickModal">
+    <div class="modal-card">
+      <div class="modal-title">📋 Выбор вопросов</div>
+      <div class="intro-text" id="passionMapPickHint">Отметьте желания для партии</div>
+      <div class="pmap-pick-list" id="passionMapPickList"></div>
+      <button class="btn btn-primary" id="passionMapPickDoneBtn">Готово</button>
+    </div>
+  </div>
+
   <!-- ===== ПРАВИЛА "ВО ЧТО ПОИГРАТЬ?" ===== -->
   <div class="modal-overlay" id="whatToPlayRulesModal">
     <div class="modal-card">
@@ -6177,6 +6370,7 @@
 <script src="cards/cards_kids_quiz.js?v=20260829g"></script>
 <script src="cards/cards_ideas.js?v=20260829g"></script>
 <script src="cards/cards_sexquest.js?v=20260829g"></script>
+<script src="cards/cards_passionmap.js?v=20260913a"></script>
 <script src="cards/cards_whattoplay.js?v=20260829g"></script>
 <script src="cards/cards_kids_krokodil.js?v=20260911a"></script>
 <script src="cards/cards_kids_memes.js?v=20260911a"></script>
@@ -6223,6 +6417,7 @@
 <script src="games/znayu.js?v=20260830u"></script>
 <script src="games/ideas.js?v=20260830u"></script>
 <script src="games/sexquest.js?v=20260830u"></script>
+<script src="games/passionmap.js?v=20260913a"></script>
 <script src="games/whattoplay.js?v=20260830u"></script>
 <script src="games/init.js?v=20260829g"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
