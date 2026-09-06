@@ -1011,6 +1011,7 @@ const PAUSED_MODE_LABELS = {
   partyTd: '«Правда/Действие» (компания)',
   famZnayu: '«Знаю тебя» (компания)',
   lucky: '«Счастливый билет»',
+  partyRoulette: '«Рулетка» (компания)',
   kidsMemory: '«Мемори»',
   kidsTd: '«Правда/Действие» (дети)',
   quiz: '«Викторина»',
@@ -1062,6 +1063,8 @@ function abandonPausedPartyFantsSession(){ abandonPausedSession('partyFants'); }
 function abandonPausedPartyTdSession(){ abandonPausedSession('partyTd'); }
 function abandonPausedFamZnayuSession(){ abandonPausedSession('famZnayu'); }
 function abandonPausedLuckySession(){ abandonPausedSession('lucky'); }
+// Симметрично остальным — сбрасывает "чужую" паузу «Рулетки» (страховка).
+function abandonPausedPartyRouletteSession(){ abandonPausedSession('partyRoulette'); }
 // Симметрично остальным — сбрасывает "чужую" паузу «Мемори» (страховка).
 function abandonPausedKidsMemorySession(){ abandonPausedSession('kidsMemory'); }
 // Симметрично остальным — сбрасывает "чужую" паузу «Правда/Действие» (дети).
@@ -1259,6 +1262,10 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'lucky'){
     resumeLuckyGame();
+    return;
+  }
+  if(state.pausedMode === 'partyRoulette'){
+    resumePartyRouletteGame();
     return;
   }
   if(state.pausedMode === 'kidsMemory'){
@@ -1746,6 +1753,7 @@ const PAUSE_MENU_TITLES = {
   partyTd: '🗣️ Правда/Действие',
   famZnayu: '🧠 Знаю тебя',
   lucky: '🎫 Счастливый билет',
+  partyRoulette: '🎡 Рулетка',
   kidsMemory: '🧠 Мемори',
   kidsTd: '🗣️ Правда/Действие',
   quiz: '🎯 Викторина',
@@ -4339,6 +4347,11 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'lucky'){
     finishLuckyGame();
+    showToast('Игра завершена');
+    return;
+  }
+  if(state.pausedMode === 'partyRoulette'){
+    finishPartyRouletteGame();
     showToast('Игра завершена');
     return;
   }

@@ -3,9 +3,7 @@
 // Казино-рулетка: поле ставок (числа 0-36 + внешние ставки цвет/чёт-нечет/
 // половина), фишки, волчок, который крутится случайно, как в казино. Игроки
 // берутся из общего списка "Игры для компании" (state.partyPlayers), у
-// каждого свой баланс фишек, ходят по очереди. Прогресс партии (баланс,
-// чей ход) сохраняется в state, но без общего меню паузы — "Выход" просто
-// возвращает в меню, баланс сохранён на следующий заход.
+// каждого свой баланс фишек, ходят по очереди. Прогресс сохраняется в state.
 
 const ROULETTE_WHEEL_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 const ROULETTE_RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
@@ -18,7 +16,8 @@ const ROULETTE_CHIP_COLORS = {
 const ROULETTE_CHIPS = Object.keys(ROULETTE_CHIP_COLORS).map(Number);
 const ROULETTE_START_BALANCE = 1000;
 
-let rouletteBets = {};
+// Глобальное состояние ставок — массив объектов, по одному на каждого игрока
+let roulettePlayerBets = [];
 let rouletteSelectedChip = 10;
 let rouletteSpinning = false;
 let rouletteWheelTotalRotation = 0;
@@ -43,9 +42,20 @@ function ensureRouletteBalances(){
   if(state.rouletteCurrentPlayerIndex == null || state.rouletteCurrentPlayerIndex >= n){
     state.rouletteCurrentPlayerIndex = 0;
   }
+  // Инициализация массива ставок для каждого игрока
+  if(!state.roulettePlayerBets || state.roulettePlayerBets.length !== n){
+    state.roulettePlayerBets = Array.from({length:n}, ()=>({}));
+  }
 }
 function rouletteCurrentBalance(){
   return state.rouletteBalances[state.rouletteCurrentPlayerIndex] || 0;
+}
+function rouletteCurrentBets(){
+  return state.roulettePlayerBets[state.rouletteCurrentPlayerIndex] || {};
+}
+function setRouletteCurrentBets(bets){
+  if(!state.roulettePlayerBets) state.roulettePlayerBets = [];
+  state.roulettePlayerBets[state.rouletteCurrentPlayerIndex] = bets;
 }
 function updateRouletteTurnLabel(){
   const players = roulettePlayers();
@@ -61,7 +71,7 @@ function updateRouletteTurnLabel(){
     btn.addEventListener('click', ()=>{
       if(rouletteSpinning) return;
       state.rouletteCurrentPlayerIndex = i;
-      rouletteBets = {};
+      saveState();
       renderRouletteBadges();
       updateRouletteTurnLabel();
       updateRouletteBetTotal();
@@ -71,234 +81,290 @@ function updateRouletteTurnLabel(){
 }
 
 /* ============ ПОЛЕ СТАВОК ============ */
+// Сумма ставок текущего игрока
 function rouletteBetTotal(){
-  return Object.values(rouletteBets).reduce((a,b)=>a+b, 0);
+  return Object.values(rouletteCurrentBets()).reduce((a,b)=>a+b, 0);
+}
+// Сумма ВСЕХ ставок ВСЕХ игроков
+function rouletteAllBetsTotal(){
+  let total = 0;
+  (state.roulettePlayerBets || []).forEach(pb => {
+    total += Object.values(pb).reduce((a,b)=>a+b, 0);
+  });
+  return total;
 }
 function updateRouletteBetTotal(){
   const el = document.getElementById('rouletteBetTotal');
-  if(el) el.textContent = `Ставка: ${rouletteBetTotal()} · Осталось: ${rouletteCurrentBalance()}`;
+  if(el) el.textContent = `Ставка: ${rouletteBetTotal()} · Осталось: ${rouletteCurrentBalance()} · Всего на поле: ${rouletteAllBetsTotal()}`;
   const spinBtn = document.getElementById('rouletteSpinBtn');
-  if(spinBtn) spinBtn.disabled = rouletteSpinning || Object.keys(rouletteBets).length === 0;
+  if(spinBtn) spinBtn.disabled = rouletteSpinning || rouletteAllBetsTotal() === 0;
 }
 function renderRouletteBadges(){
-  document.querySelectorAll('[data-bet]').forEach(cell=>{
-    const key = cell.dataset.bet;
-    const amount = rouletteBets[key] || 0;
-    let badge = cell.querySelector('.roulette-bet-badge');
-    if(amount > 0){
+  // Удаляем все существующие бейджи
+  document.querySelectorAll('[data-bet]').forEach(el=>{
+    const badge = el.querySelector('.roulette-bet-badge');
+    if(badge) badge.remove();
+    el.classList.remove('has-bet');
+  });
+  
+  // Отображаем ВСЕ ставки ВСЕХ игроков
+  (state.roulettePlayerBets || []).forEach((playerBets, playerIdx) => {
+    Object.keys(playerBets).forEach(key=>{
+      const cell = document.querySelector(`[data-bet="${key}"]`);
+      if(!cell) return;
+      cell.classList.add('has-bet');
+      
+      let badge = cell.querySelector('.roulette-bet-badge');
       if(!badge){
-        badge = document.createElement('span');
+        badge = document.createElement('div');
         badge.className = 'roulette-bet-badge';
         cell.appendChild(badge);
       }
-      badge.textContent = amount;
-    } else if(badge){
-      badge.remove();
-    }
+      
+      const amount = playerBets[key];
+      const isCurrentPlayer = playerIdx === state.rouletteCurrentPlayerIndex;
+      const playerName = roulettePlayers()[playerIdx] || `Игрок ${playerIdx+1}`;
+      
+      badge.innerHTML = `<span class="badge-amount">${amount}</span><span class="badge-player">${playerName}</span>`;
+      badge.style.borderColor = isCurrentPlayer ? '#ffd23f' : 'rgba(255,255,255,.5)';
+      badge.style.background = isCurrentPlayer ? 'rgba(255,210,63,.15)' : 'rgba(0,0,0,.6)';
+    });
   });
 }
-function placeRouletteBet(key){
+function addRouletteBet(key){
   if(rouletteSpinning) return;
-  const chip = rouletteSelectedChip;
-  if(rouletteBetTotal() + chip > rouletteCurrentBalance()){
+  const cur = rouletteCurrentBets();
+  const currentTotal = Object.values(cur).reduce((a,b)=>a+b, 0);
+  if(currentTotal + rouletteSelectedChip > rouletteCurrentBalance()){
+    showToast('Недостаточно фишек');
     playErrorSound();
-    showToast('Недостаточно фишек 💸');
     return;
   }
-  rouletteBets[key] = (rouletteBets[key] || 0) + chip;
-  playNeutralSound();
+  cur[key] = (cur[key] || 0) + rouletteSelectedChip;
+  setRouletteCurrentBets(cur);
+  saveState();
   renderRouletteBadges();
   updateRouletteBetTotal();
-}
-function renderRouletteNumberGrid(){
-  const wrap = document.getElementById('rouletteNumberGrid');
-  if(!wrap) return;
-  wrap.innerHTML = '';
-  for(let n=1; n<=36; n++){
-    const cell = document.createElement('button');
-    cell.type = 'button';
-    cell.className = 'roulette-number-cell roulette-' + rouletteColorOf(n);
-    cell.dataset.bet = 'num-' + n;
-    cell.textContent = n;
-    cell.addEventListener('click', ()=>placeRouletteBet('num-' + n));
-    wrap.appendChild(cell);
-  }
-}
-function buildRouletteWheelBackground(){
-  const wedge = 360/ROULETTE_WHEEL_ORDER.length;
-  const stops = ROULETTE_WHEEL_ORDER.map((num, i)=>{
-    const color = rouletteColorHex(rouletteColorOf(num));
-    return `${color} ${(i*wedge).toFixed(3)}deg ${((i+1)*wedge).toFixed(3)}deg`;
-  });
-  return `conic-gradient(${stops.join(',')})`;
-}
-function rouletteBindOutsideBets(){
-  document.querySelectorAll('#rouletteOutsideGrid [data-bet]').forEach(btn=>{
-    btn.addEventListener('click', ()=>placeRouletteBet(btn.dataset.bet));
-  });
-  document.getElementById('rouletteZeroCell').addEventListener('click', ()=>placeRouletteBet('num-0'));
-}
-function renderRouletteChips(){
-  const wrap = document.getElementById('rouletteChipsRow');
-  if(!wrap) return;
-  wrap.innerHTML = '';
-  ROULETTE_CHIPS.forEach(v=>{
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'roulette-chip' + (v === rouletteSelectedChip ? ' roulette-chip-selected' : '');
-    btn.textContent = v;
-    btn.dataset.chip = v;
-    btn.addEventListener('click', ()=>{
-      rouletteSelectedChip = v;
-      renderRouletteChips();
-    });
-    wrap.appendChild(btn);
-  });
+  playSuccessSound();
 }
 function clearRouletteBets(){
   if(rouletteSpinning) return;
-  rouletteBets = {};
+  setRouletteCurrentBets({});
+  saveState();
   renderRouletteBadges();
   updateRouletteBetTotal();
 }
-
-/* ============ ВРАЩЕНИЕ И РЕЗУЛЬТАТ ============ */
-function rouletteBetWins(key, n){
-  if(key.startsWith('num-')) return parseInt(key.slice(4), 10) === n;
-  if(key === 'color-red') return rouletteColorOf(n) === 'red';
-  if(key === 'color-black') return rouletteColorOf(n) === 'black';
-  if(key === 'parity-even') return n !== 0 && n % 2 === 0;
-  if(key === 'parity-odd') return n % 2 === 1;
-  if(key === 'range-low') return n >= 1 && n <= 18;
-  if(key === 'range-high') return n >= 19 && n <= 36;
-  return false;
+function renderRouletteChips(){
+  const wrap = document.getElementById('rouletteChipRow');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  ROULETTE_CHIPS.forEach(val=>{
+    const c = document.createElement('button');
+    c.type = 'button';
+    c.className = 'roulette-chip' + (val === rouletteSelectedChip ? ' active' : '');
+    c.style.setProperty('--chip-bg', ROULETTE_CHIP_COLORS[val].bg);
+    c.style.setProperty('--chip-text', ROULETTE_CHIP_COLORS[val].text);
+    c.textContent = val;
+    c.addEventListener('click', ()=>{
+      rouletteSelectedChip = val;
+      renderRouletteChips();
+    });
+    wrap.appendChild(c);
+  });
 }
-function rouletteBetMultiplier(key){
-  return key.startsWith('num-') ? 35 : 1;
-}
-function spinRouletteWheelTo(winningNumber){
-  const wheelEl = document.getElementById('rouletteWheel');
-  const idx = ROULETTE_WHEEL_ORDER.indexOf(winningNumber);
-  const wedge = 360/ROULETTE_WHEEL_ORDER.length;
-  const desiredMod = (360 - idx*wedge) % 360;
-  const currentMod = rouletteWheelTotalRotation % 360;
-  const deltaToDesired = (desiredMod - currentMod + 360) % 360;
-  const extraSpins = (5 + Math.floor(Math.random()*3)) * 360;
-  const jitter = (Math.random()-0.5) * (wedge*0.6);
-  rouletteWheelTotalRotation += extraSpins + deltaToDesired + jitter;
-  if(wheelEl){
-    wheelEl.style.transition = 'transform 3.6s cubic-bezier(0.15,0.65,0.25,1)';
-    wheelEl.style.transform = `rotate(${rouletteWheelTotalRotation}deg)`;
+function renderRouletteNumberGrid(){
+  const grid = document.getElementById('rouletteNumberGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  for(let n=0;n<=36;n++){
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'roulette-number-cell ' + rouletteColorOf(n);
+    cell.setAttribute('data-bet', 'n'+n);
+    cell.textContent = n;
+    cell.addEventListener('click', ()=>{ addRouletteBet('n'+n); });
+    grid.appendChild(cell);
   }
 }
-document.getElementById('rouletteSpinBtn').addEventListener('click', ()=>{
-  if(rouletteSpinning || Object.keys(rouletteBets).length === 0) return;
-  rouletteSpinning = true;
-  updateRouletteBetTotal();
-  document.getElementById('rouletteClearBetsBtn').disabled = true;
-  document.getElementById('rouletteResult').textContent = '';
-  playSuccessSound();
-  const winningNumber = ROULETTE_WHEEL_ORDER[Math.floor(Math.random()*ROULETTE_WHEEL_ORDER.length)];
-  showRouletteSpinModal(winningNumber);
-});
+function rouletteBindOutsideBets(){
+  ['red','black','odd','even','low','high'].forEach(key=>{
+    const el = document.querySelector(`[data-bet="${key}"]`);
+    if(el) el.addEventListener('click', ()=>{ addRouletteBet(key); });
+  });
+}
 
-let rouletteSpinWheelRotation = 0;
-function showRouletteSpinModal(winningNumber){
+/* ============ МОДАЛЬНОЕ ОКНО КРУЧЕНИЯ ============ */
+function openRouletteSpinModal(){
   const modal = document.getElementById('rouletteSpinModal');
-  const spinWheel = document.getElementById('rouletteSpinWheel');
+  if(!modal) return;
+  modal.classList.add('show');
+}
+function closeRouletteSpinModal(){
+  const modal = document.getElementById('rouletteSpinModal');
+  if(modal) modal.classList.remove('show');
+}
+function spinRouletteWheel(){
+  if(rouletteSpinning) return;
+  const allBetsTotal = rouletteAllBetsTotal();
+  if(allBetsTotal === 0){
+    showToast('Сделайте ставку');
+    playErrorSound();
+    return;
+  }
+  
+  rouletteSpinning = true;
+  document.getElementById('rouletteClearBetsBtn').disabled = true;
+  document.getElementById('rouletteSpinBtn').disabled = true;
+  
+  // Списываем ставки с балансов игроков пропорционально
+  const players = roulettePlayers();
+  (state.roulettePlayerBets || []).forEach((playerBets, idx) => {
+    const playerTotal = Object.values(playerBets).reduce((a,b)=>a+b, 0);
+    state.rouletteBalances[idx] = (state.rouletteBalances[idx] || 0) - playerTotal;
+  });
+  
+  saveState();
+  updateRouletteBetTotal();
+  openRouletteSpinModal();
+  
+  const winningNumber = Math.floor(Math.random() * 37);
+  const wheelEl = document.getElementById('rouletteSpinWheel');
   const resultEl = document.getElementById('rouletteSpinResult');
   const doneBtn = document.getElementById('rouletteSpinDoneBtn');
-  if(!modal || !spinWheel) return;
-  spinWheel.style.background = buildRouletteWheelBackground();
-  spinWheel.style.transition = 'none';
-  spinWheel.style.transform = 'rotate(0deg)';
-  rouletteSpinWheelRotation = 0;
-  resultEl.textContent = 'Крутится...';
   doneBtn.style.display = 'none';
-  modal.classList.add('show');
-  requestAnimationFrame(()=>{
-    setTimeout(()=>{
-      const wedge = 360 / ROULETTE_WHEEL_ORDER.length;
-      const idx = ROULETTE_WHEEL_ORDER.indexOf(winningNumber);
-      const desiredMod = (360 - idx*wedge) % 360;
-      const extraSpins = (5 + Math.floor(Math.random()*3)) * 360;
-      const jitter = (Math.random()-0.5) * (wedge*0.6);
-      rouletteSpinWheelRotation = extraSpins + desiredMod + jitter;
-      spinWheel.style.transition = 'transform 3.6s cubic-bezier(0.15,0.65,0.25,1)';
-      spinWheel.style.transform = `rotate(${rouletteSpinWheelRotation}deg)`;
-    }, 50);
-  });
+  resultEl.textContent = 'Крутится...';
+  
+  // Анимация колеса
+  const baseTurns = 5 + Math.random() * 3;
+  const targetIdx = ROULETTE_WHEEL_ORDER.indexOf(winningNumber);
+  const segAngle = 360 / ROULETTE_WHEEL_ORDER.length;
+  const segOffset = segAngle / 2;
+  const targetAngle = 360 - (targetIdx * segAngle + segOffset);
+  rouletteWheelTotalRotation = baseTurns * 360 + targetAngle;
+  
+  if(wheelEl){
+    wheelEl.style.transition = 'transform 3.5s cubic-bezier(.17,.67,.29,1)';
+    wheelEl.style.transform = `rotate(${rouletteWheelTotalRotation}deg)`;
+  }
+  
   setTimeout(()=>{
     resolveRouletteSpin(winningNumber);
     const color = rouletteColorOf(winningNumber);
     const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
-    const totalBet = rouletteBetTotal();
+    const totalBet = allBetsTotal;
     let totalReturn = 0;
-    Object.keys(rouletteBets).forEach(key=>{
-      if(rouletteBetWins(key, winningNumber)){
-        totalReturn += rouletteBets[key] * (rouletteBetMultiplier(key) + 1);
-      }
+    // Вычисляем выигрыш для КАЖДОГО игрока отдельно
+    const playerReturns = [];
+    (state.roulettePlayerBets || []).forEach((playerBets, idx) => {
+      let pReturn = 0;
+      let pBet = 0;
+      Object.keys(playerBets).forEach(key=>{
+        pBet += playerBets[key];
+        if(rouletteBetWins(key, winningNumber)){
+          pReturn += playerBets[key] * (rouletteBetMultiplier(key) + 1);
+        }
+      });
+      playerReturns.push({bet: pBet, ret: pReturn, net: pReturn - pBet});
+      totalReturn += pReturn;
     });
     const net = totalReturn - totalBet;
     if(net >= 0) playSuccessSound(); else playErrorSound();
+    
+    // Распределяем выигрыш по игрокам
+    playerReturns.forEach((pr, idx) => {
+      state.rouletteBalances[idx] = (state.rouletteBalances[idx] || 0) + pr.ret;
+    });
+    
     resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})<br>${net >= 0 ? '🎉 Выигрыш' : '😔 Проигрыш'} <b>${net >= 0 ? '+' : ''}${net}</b>`;
     doneBtn.style.display = 'block';
   }, 3700);
 }
 
 document.getElementById('rouletteSpinDoneBtn').addEventListener('click', ()=>{
-  const modal = document.getElementById('rouletteSpinModal');
-  if(modal) modal.classList.remove('show');
-  rouletteBets = {};
+  closeRouletteSpinModal();
+  // Очищаем ставки всех игроков
+  if(state.roulettePlayerBets){
+    state.roulettePlayerBets = state.roulettePlayerBets.map(()=>({}));
+  }
   renderRouletteBadges();
   rouletteSpinning = false;
   document.getElementById('rouletteClearBetsBtn').disabled = false;
-  const players = roulettePlayers();
-  state.rouletteCurrentPlayerIndex = (state.rouletteCurrentPlayerIndex + 1) % players.length;
   saveState();
   updateRouletteTurnLabel();
   updateRouletteBetTotal();
 });
 function resolveRouletteSpin(n){
   const color = rouletteColorOf(n);
+  const totalBet = rouletteAllBetsTotal();
   let totalReturn = 0;
-  Object.keys(rouletteBets).forEach(key=>{
-    if(rouletteBetWins(key, n)){
-      totalReturn += rouletteBets[key] * (rouletteBetMultiplier(key) + 1);
-    }
+  const playerReturns = [];
+  (state.roulettePlayerBets || []).forEach((playerBets, idx) => {
+    let pReturn = 0;
+    Object.keys(playerBets).forEach(key=>{
+      if(rouletteBetWins(key, n)){
+        pReturn += playerBets[key] * (rouletteBetMultiplier(key) + 1);
+      }
+    });
+    playerReturns.push(pReturn);
+    totalReturn += pReturn;
   });
-  const totalBet = rouletteBetTotal();
-  const idx = state.rouletteCurrentPlayerIndex || 0;
   const net = totalReturn - totalBet;
-  state.rouletteBalances[idx] = (state.rouletteBalances[idx] || 0) + net;
   const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
   const resultEl = document.getElementById('rouletteResult');
   if(resultEl){
     resultEl.innerHTML = `Выпало: <b>${n}</b> (${colorName}) — ${net >= 0 ? '🎉 выигрыш' : '😔 проигрыш'} ${net >= 0 ? '+' : ''}${net}`;
   }
   if(net >= 0) playSuccessSound(); else playErrorSound();
-  rouletteBets = {};
-  renderRouletteBadges();
   rouletteSpinning = false;
   document.getElementById('rouletteClearBetsBtn').disabled = false;
-  const players = roulettePlayers();
-  state.rouletteCurrentPlayerIndex = (idx + 1) % players.length;
-  saveState();
-  updateRouletteTurnLabel();
   updateRouletteBetTotal();
 }
 
-/* ============ ВХОД/ВЫХОД ============ */
+/* ============ ПАУЗА / ВЫХОД ============ */
+function pauseGamePartyRoulette(){
+  state.pausedMode = 'partyRoulette';
+  saveState();
+  const pauseModal = document.getElementById('pauseMenuModal');
+  if(pauseModal) pauseModal.classList.add('show');
+}
+function resumePartyRouletteGame(){
+  const pauseModal = document.getElementById('pauseMenuModal');
+  if(pauseModal) pauseModal.classList.remove('show');
+  state.pausedMode = null;
+  goToGame('setup', 'partyRouletteGame');
+  ensureRouletteBalances();
+  renderRouletteBadges();
+  updateRouletteTurnLabel();
+  updateRouletteBetTotal();
+  renderRouletteChips();
+  updateMuteBtn();
+}
+function finishPartyRouletteGame(){
+  state.pausedMode = null;
+  state.rouletteBalances = [];
+  state.rouletteCurrentPlayerIndex = 0;
+  state.roulettePlayerBets = [];
+  saveState();
+  const pauseModal = document.getElementById('pauseMenuModal');
+  if(pauseModal) pauseModal.classList.remove('show');
+  exitGame('partyRouletteGame', 'setup');
+  showSetupView('companyView');
+}
+
+/* ============ ВХОД ============ */
 let rouletteInited = false;
 function goToPartyRouletteGame(){
   ensureRouletteBalances();
+  const n = roulettePlayers().length;
+  if(!state.roulettePlayerBets || state.roulettePlayerBets.length !== n){
+    state.roulettePlayerBets = Array.from({length:n}, ()=>({}));
+  }
   goToGame('setup', 'partyRouletteGame');
   if(!rouletteInited){
     renderRouletteNumberGrid();
     rouletteBindOutsideBets();
     rouletteInited = true;
   }
-  rouletteBets = {};
   renderRouletteBadges();
   renderRouletteChips();
   updateRouletteTurnLabel();
@@ -307,13 +373,11 @@ function goToPartyRouletteGame(){
   updateMuteBtn();
   requestWakeLock();
 }
-function exitPartyRouletteGame(){
-  saveState();
-  exitGame('partyRouletteGame', 'setup');
-  showSetupView('companyView');
-}
+
+/* ============ ИНИЦИАЛИЗАЦИЯ ============ */
+document.getElementById('rouletteSpinBtn').addEventListener('click', spinRouletteWheel);
 document.getElementById('rouletteClearBetsBtn').addEventListener('click', ()=>{ clearRouletteBets(); });
-document.getElementById('rouletteExitBtn').addEventListener('click', ()=>{ exitPartyRouletteGame(); });
+document.getElementById('rouletteExitBtn').textContent = 'Пауза';
+document.getElementById('rouletteExitBtn').addEventListener('click', ()=>{ pauseGamePartyRoulette(); });
 openRulesModal('rouletteGameRulesBtn', 'partyRouletteRulesModal');
 setupRulesModal('partyRouletteRulesModal', 'closePartyRouletteRulesBtn');
-
