@@ -24,6 +24,7 @@ let twisterRemaining = 0;
 let twisterTotal = 0;
 let twisterIntervalId = null;
 let twisterRunning = false;
+let twisterSpeechTimer = null;
 // Игра ждёт явной команды "▶ Начать" перед первым запуском отсчёта — см.
 // goToTwisterGame() и обработчик twisterPauseBtn.
 let twisterStarted = false;
@@ -63,7 +64,8 @@ function speakTwisterMove(text){
   // вызванный сразу вслед за cancel(), молча "проглатывается" (речь не
   // звучит, хотя ошибки нет) — небольшая задержка перед speak() надёжно
   // это обходит (тот же приём, что рекомендуют для Chrome/Android WebView).
-  setTimeout(()=>{
+  twisterSpeechTimer = setTimeout(()=>{
+    twisterSpeechTimer = null;
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'ru-RU';
     utter.rate = 0.95;
@@ -148,6 +150,7 @@ function goToTwisterGame(){
 }
 function exitTwisterGame(){
   stopTwisterInterval();
+  if(twisterSpeechTimer){ clearTimeout(twisterSpeechTimer); twisterSpeechTimer = null; }
   stopSpeech();
   exitGame('twisterGame', 'setup');
 }
