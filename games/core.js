@@ -1246,10 +1246,48 @@ document.getElementById('updateAppBtn').addEventListener('click', async ()=>{
   location.replace(url.toString());
 });
 
-document.getElementById('resetHiddenBtn').addEventListener('click', ()=>{
+/* ============ ПОДТВЕРЖДЕНИЕ СБРОСА ПРОГРЕССА ============
+   Кастомная модалка #resetConfirmModal вместо нативного confirm():
+   нативный диалог в PWA-обёртке не помещается на экран, а модалка
+   использует общие стили .modal-overlay/.modal-card (max-width 360px,
+   max-height 80vh, скролл при нехватке места). Показываем компактный
+   текст и две кнопки; возвращаем Promise<boolean>. */
+let __resetConfirmResolve = null;
+function showResetConfirm(){
+  return new Promise(resolve=>{
+    const modal = document.getElementById('resetConfirmModal');
+    if(!modal){ resolve(true); return; } // модалки нет — ведём себя как старый confirm(true)
+    __resetConfirmResolve = resolve;
+    modal.classList.add('show');
+  });
+}
+function __closeResetConfirm(result){
+  const modal = document.getElementById('resetConfirmModal');
+  if(modal) modal.classList.remove('show');
+  if(typeof __resetConfirmResolve === 'function'){
+    const r = __resetConfirmResolve;
+    __resetConfirmResolve = null;
+    r(result);
+  }
+}
+const __rcModal = document.getElementById('resetConfirmModal');
+if(__rcModal){
+  const __rcOk = document.getElementById('resetConfirmOk');
+  const __rcCancel = document.getElementById('resetConfirmCancel');
+  if(__rcOk) __rcOk.addEventListener('click', ()=>__closeResetConfirm(true));
+  if(__rcCancel) __rcCancel.addEventListener('click', ()=>__closeResetConfirm(false));
+  // Закрытие по фону или по крестику — считаем отказом
+  __rcModal.addEventListener('click', e=>{
+    if(e.target === __rcModal || (e.target.classList && e.target.classList.contains('modal-close-btn'))){
+      __closeResetConfirm(false);
+    }
+  });
+}
+
+document.getElementById('resetHiddenBtn').addEventListener('click', async ()=>{
   // Необратимое действие сразу по всем играм — подтверждение защищает от
   // случайного тапа (аналогично подтверждению при импорте бэкапа).
-  if(!confirm('Сбросить весь прогресс? Избранное и добавленные задания в «Фантах» сохранятся.')){
+  if(!(await showResetConfirm())){
     return;
   }
    // Обычная игра (карточки)
@@ -4336,9 +4374,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     // вызываем его, иначе показываем инструкцию #installModal.
     tryInstallApp();
   });
-  document.getElementById('menuResetBtn').addEventListener('click', ()=>{
+  document.getElementById('menuResetBtn').addEventListener('click', async ()=>{
     closeMenu();
-    if(confirm('Сбросить весь прогресс? Избранное и добавленные задания в «Фантах» сохранятся.')){
+    if(await showResetConfirm()){
       state.hiddenIndexes = [];
       state.usedIndexes = [];
       state.kidsPlayers = ['Игрок 1','Игрок 2'];

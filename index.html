@@ -5947,6 +5947,18 @@
     </div>
   </div>
 
+  <!-- ===== Подтверждение сброса прогресса (вместо confirm) ===== -->
+  <div class="modal-overlay" id="resetConfirmModal">
+    <div class="modal-card">
+      <div class="modal-title">⚠️ Сбросить прогресс?</div>
+      <div class="intro-text">Избранное и добавленные задания в «Фантах» сохранятся.</div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:18px;">
+        <button class="btn btn-secondary" id="resetConfirmCancel">Отмена</button>
+        <button class="btn btn-primary" id="resetConfirmOk">Окей</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== ПРОСМОТР ФОТО НА ВЕСЬ ЭКРАН ===== -->
   <div class="modal-overlay" id="imageZoomModal">
     <img src="" alt="" id="zoomedImage">
