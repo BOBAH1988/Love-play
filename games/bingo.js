@@ -269,7 +269,7 @@ function escalateBingoTo(nextLevel){
   state.bingoCurrentLevel = nextLevel;
   renderBingoGrid();
   const lvl = (typeof BINGO_LEVELS !== 'undefined' ? BINGO_LEVELS.find(l=>l.id===nextLevel) : null);
-  showToast(`Уровень повышен: ${lvl ? lvl.icon + ' ' + lvl.name : nextLevel} 🔥`);
+  showToast(`Уровень повышен:\n${lvl ? lvl.icon + ' ' + lvl.name : nextLevel}`);
 }
 // Выбор бонусного задания без повторов в рамках одной партии — единственный
 // вызов теперь для финального приза (level=4) в конце партии.
