@@ -4465,10 +4465,25 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     closeMenu();
     document.getElementById('importDataInput').click();
   });
-  document.getElementById('menuUpdateBtn').addEventListener('click', ()=>{
+  document.getElementById('menuUpdateBtn').addEventListener('click', async ()=>{
     closeMenu();
-    try{ sessionStorage.setItem('appJustUpdated', '1'); }catch(e){}
-    location.reload(true);
+    // Жёсткое обновление: сбрасываем Service Worker, очищаем ВСЕ кэши и
+    // перезагружаем страницу. Это гарантирует, что браузер подтянет свежие
+    // версии ВСЕХ файлов (JS, CSS, HTML), а не закэшированные.
+    try{
+      if('serviceWorker' in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r=>r.unregister()));
+      }
+      if('caches' in window){
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k=>caches.delete(k)));
+      }
+      sessionStorage.setItem('appJustUpdated', '1');
+    }catch(e){}
+    const url = new URL(location.href);
+    url.searchParams.set('_r', Date.now());
+    location.replace(url.toString());
   });
   document.getElementById('menuInstallBtn').addEventListener('click', ()=>{
     closeMenu();
