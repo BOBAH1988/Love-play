@@ -38,15 +38,16 @@ function renderTimerModeGroup(){
   });
   // "Быстрая"/"Продолжительная" сами повышают уровень и всегда стартуют
   // с 1-го, а время задания берётся из уровня — эти настройки нужны только
-  // в "Пользовательской" и в остальных режимах полностью скрыты (не просто
-  // заблокированы), чтобы не перегружать экран настройки.
+  // в "Пользовательской" и в остальных режимах показываются, но неактивными
+  // (серыми) через класс timer-levels-locked — так видно, что они есть, но
+  // недоступны до переключения в "Пользовательскую".
   const locked = (state.timerGameMode || 'fast') !== 'single';
   const levelsField = document.getElementById('timerLevelsField');
-  if(levelsField) levelsField.style.display = locked ? 'none' : '';
+  if(levelsField) levelsField.classList.toggle('timer-levels-locked', locked);
   const durationField = document.getElementById('timerDurationField');
-  if(durationField) durationField.style.display = locked ? 'none' : '';
+  if(durationField) durationField.classList.toggle('timer-levels-locked', locked);
   const levelUpField = document.getElementById('timerLevelUpField');
-  if(levelUpField) levelUpField.style.display = locked ? 'none' : '';
+  if(levelUpField) levelUpField.classList.toggle('timer-levels-locked', locked);
 }
 document.querySelectorAll('#timerModeGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
