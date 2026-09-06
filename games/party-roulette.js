@@ -189,8 +189,8 @@ function resolveRouletteSpin(n){
   });
   const totalBet = rouletteBetTotal();
   const idx = state.rouletteCurrentPlayerIndex || 0;
-  state.rouletteBalances[idx] = (state.rouletteBalances[idx] || 0) + totalReturn;
   const net = totalReturn - totalBet;
+  state.rouletteBalances[idx] = (state.rouletteBalances[idx] || 0) + net;
   const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
   const resultEl = document.getElementById('rouletteResult');
   if(resultEl){
