@@ -1290,6 +1290,13 @@ document.getElementById('resetHiddenBtn').addEventListener('click', async ()=>{
   if(!(await showResetConfirm())){
     return;
   }
+  performFullReset();
+});
+
+// Единая логика полного сброса прогресса во всех играх: используется и из
+// страницы настроек (#resetHiddenBtn), и из плавающего меню (#menuResetBtn),
+// чтобы текст модалки подтверждения всегда соответствовал реальности.
+function performFullReset(){
    // Обычная игра (карточки)
    state.hiddenIndexes = [];
    state.usedIndexes = [];
@@ -1477,6 +1484,13 @@ document.getElementById('resetHiddenBtn').addEventListener('click', async ()=>{
   state.partyQuizCorrect = []; state.partyQuizTimeMs = [];
   state.kidsQuizUsed = {}; state.kidsQuizQueue = []; state.kidsQuizIndex = 0; state.kidsQuizCurrentPlayerIndex = 0;
   state.kidsQuizCorrect = []; state.kidsQuizTimeMs = [];
+  // Сбрасываем и возможную «зависшую» паузу — если пользователь попал
+  // в состояние, когда pausedMode выставлен, а выйти из него невозможно
+  // (например, пропала модалка паузы), сброс прогресса вернёт управление.
+  if(state.pausedMode){
+    state.pausedMode = null;
+    state.inProgress = false;
+  }
   saveState();
   renderModeGroup();
   renderLevelToggles();
@@ -1491,7 +1505,7 @@ document.getElementById('resetHiddenBtn').addEventListener('click', async ()=>{
     importedDavayVideosLoaded = true;
   });
   showToast('Прогресс всех игр сброшен, добавленные видео удалены');
-});
+}
 
 /* ============ ПОДБОР КАРТ ============ */
 function getAllCards(){
@@ -4377,21 +4391,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   document.getElementById('menuResetBtn').addEventListener('click', async ()=>{
     closeMenu();
     if(await showResetConfirm()){
-      state.hiddenIndexes = [];
-      state.usedIndexes = [];
-      state.kidsPlayers = ['Игрок 1','Игрок 2'];
-      state.businessPlayers = ['Игрок 1','Игрок 2'];
-      state.partyPlayers = ['Игрок 1','Игрок 2'];
-      // Сбрасываем и возможную «зависшую» паузу — если пользователь попал
-      // в состояние, когда pausedMode выставлен, а выйти из него невозможно
-      // (например, пропала модалка паузы), сброс прогресса вернёт управление.
-      if(state.pausedMode){
-        state.pausedMode = null;
-        state.inProgress = false;
-      }
-      saveState();
-      updateResumeUI();
-      showToast('Прогресс сброшен 🗑');
+      performFullReset();
     }
   });
 })();
