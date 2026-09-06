@@ -52,18 +52,24 @@ function updatePartyTdScoreUI(){
   const turnName = players[idx] || partyDefaultName(idx);
   const turnLabel = document.getElementById('partyTdTurnLabel');
   if(turnLabel) turnLabel.textContent = 'Выбирает: ' + turnName;
-  // Пока игрок не выбрал Правду или Действие — видны только кнопки выбора,
-  // карточка и "Выполнено"/"Отказ" скрыты (и наоборот, когда карточка уже
-  // показана — кнопки выбора скрываются, чтобы не путать с новым ходом).
+  // Единая система с парной П/Д (#tdGame): карточка видна всегда. Пока игрок
+  // не выбрал Правду или Действие — под карточкой кнопки выбора и текст-
+  // подсказка; после выбора карточка показывает задание, а вместо выбора —
+  // кнопки "Выполнено"/"Отказ".
   const choiceRow = document.getElementById('partyTdChoiceRow');
-  const choicePauseRow = document.getElementById('partyTdChoicePauseRow');
-  const cardArea = document.getElementById('partyTdCardArea');
   const actionsRow = document.getElementById('partyTdActionsRow');
   const hasChoice = !!state.partyTdCurrentType;
   if(choiceRow) choiceRow.style.display = hasChoice ? 'none' : '';
-  if(choicePauseRow) choicePauseRow.style.display = hasChoice ? 'none' : '';
-  if(cardArea) cardArea.style.display = hasChoice ? '' : 'none';
   if(actionsRow) actionsRow.style.display = hasChoice ? '' : 'none';
+  if(!hasChoice) resetPartyTdCardPrompt();
+}
+// Карточка-приглашение (как в парной П/Д между ходами): подсказка вместо
+// задания, бейдж "🎲 Ход". Вызывается при смене хода/старте/возобновлении.
+function resetPartyTdCardPrompt(){
+  fadeSwapEl('partyTdCard', (el)=>{
+    el.className = 'card';
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="partytd-type-badge">🎲 Ход</div><div class="card-text partytd-text">Выберите «Правда» или «Действие»</div></div></div>`;
+  });
 }
 // Карточка тянется без повторов внутри уровня+типа (Правда/Действие
 // считаются отдельными пулами), пока пул не закончится — тот же принцип,
@@ -224,10 +230,6 @@ document.getElementById('partyTdSkipBtn').addEventListener('click', ()=>{
   partyTdNextTurn();
 });
 document.getElementById('partyTdExitBtn').addEventListener('click', ()=>{
-  pausePartyTdGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
-document.getElementById('partyTdChoiceExitBtn').addEventListener('click', ()=>{
   pausePartyTdGame();
   showToast('Игра на паузе — прогресс сохранён');
 });

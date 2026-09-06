@@ -1347,6 +1347,9 @@
     background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
   }
   #partyQuizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
+  /* Крупные кнопки выбора «Правда/Действие» НАД полем — используется только
+     детской П/Д (kidsTdChoiceRow). В компании выбор переехал под карточку на
+     .td-actions-row (единая система с парной П/Д). */
   .party-td-choice-row{
     display:flex;
     gap:12px;
@@ -4771,36 +4774,32 @@
     <div class="td-turn-label" id="partyTdTurnLabel">Выбирает: Первый</div>
     <div class="krokodil-score-row multi-player" id="partyTdScoreRow"></div>
 
-    <div class="party-td-choice-row" id="partyTdChoiceRow">
-      <button type="button" class="btn btn-primary" id="partyTdTruthBtn">🗣️ Правда</button>
-      <button type="button" class="btn btn-primary" id="partyTdDareBtn">🎭 Действие</button>
-    </div>
-    <div class="timer-actions-bottom" id="partyTdChoicePauseRow">
-      <button type="button" class="btn btn-secondary btn-pause" id="partyTdChoiceExitBtn">Пауза</button>
-    </div>
-
-    <div class="card-area" id="partyTdCardArea" style="display:none;">
+    <!-- Единая система с парной П/Д (#tdGame): карточка видна всегда, выбор
+         «Правда/Действие» — двумя кнопками под игровым полем. -->
+    <div class="card-area" id="partyTdCardArea">
       <div class="card" id="partyTdCard">
         <div class="card-inner">
           <div class="card-body">
-            <div class="partytd-type-badge" id="partyTdCardBadge">Правда</div>
-            <div class="card-text partytd-text" id="partyTdCardText">Загрузка…</div>
+            <div class="partytd-type-badge" id="partyTdCardBadge">🎲 Ход</div>
+            <div class="card-text partytd-text" id="partyTdCardText">Выберите «Правда» или «Действие»</div>
           </div>
         </div>
       </div>
 
+      <div class="td-actions-row" id="partyTdChoiceRow">
+        <button type="button" class="btn btn-primary" id="partyTdTruthBtn">🤔 Правда</button>
+        <button type="button" class="btn btn-secondary" id="partyTdDareBtn">🎯 Действие</button>
+      </div>
 
-    <div class="timer-actions-row" id="partyTdActionsRow" style="display:none;">
-      <div class="timer-actions-top">
+      <div class="td-actions-row" id="partyTdActionsRow" style="display:none;">
         <button type="button" class="btn btn-primary" id="partyTdDoneBtn">✅ Выполнено</button>
         <button type="button" class="btn btn-secondary" id="partyTdSkipBtn">🚫 Отказ</button>
       </div>
-      <div class="timer-actions-bottom">
+
+      <div class="timer-actions-bottom" style="margin-top:10px;">
         <button type="button" class="btn btn-secondary btn-pause" id="partyTdExitBtn">Пауза</button>
       </div>
     </div>
-  
-        </div>
 </section>
 
   <!-- ===== ПРАВДА/ДЕЙСТВИЕ (КОМПАНИЯ): ИТОГИ ИГРЫ ===== -->
@@ -5858,8 +5857,8 @@
       <div class="intro-text">Компания по очереди выбирает Правду или Действие — отвечает или выполняет задание на глазах у всех.</div>
       <ol class="modal-rules">
         <li>На главном экране, в блоке «Игры для компании», впишите имена игроков (от 2 до 10) — этот список общий для всех игр компании. На экране настройки выберите уровень: 🧒 «До 12 лет», 🎈 «До 18 лет», 🔥 «18+» или 😈 «Дерзкое».</li>
-        <li>Игроки ходят по очереди — имя того, чья очередь, показано над карточками выбора.</li>
-        <li>Игрок выбирает «🗣️ Правда» (ответить на вопрос вслух) или «🎭 Действие» (выполнить задание).</li>
+        <li>Игроки ходят по очереди — имя того, чья очередь, показано над карточкой.</li>
+        <li>Под карточкой игрок нажимает «🤔 Правда» (ответить на вопрос вслух) или «🎯 Действие» (выполнить задание) — карточка покажет вопрос или задание.</li>
         <li>Ответили или выполнили — нажмите «✅ Выполнено», очко засчитано, и очередь переходит следующему игроку. Не хотите — «🚫 Отказ», очко не засчитывается, но игра продолжается.</li>
         <li>Счёт по каждому игроку виден вверху экрана всё время — отдельного окна с итогами нет, игра продолжается, пока вы сами не решите закончить.</li>
         <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
@@ -6195,7 +6194,7 @@
 <script src="games/memes.js?v=20260913b"></script>
 <script src="games/party-never.js?v=20260830u"></script>
 <script src="games/party-fants.js?v=20260913a"></script>
-<script src="games/party-td.js?v=20260913a"></script>
+<script src="games/party-td.js?v=20260913b"></script>
 <script src="games/fam-znayu.js?v=20260913a"></script>
 <script src="games/lucky.js?v=20260830u"></script>
 <script src="games/kids-memory.js?v=20260830u"></script>
