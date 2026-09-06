@@ -299,6 +299,15 @@ function loadState(){
         ? partyDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
         : (n || partyDefaultName(i)));
   }
+  // Миграция имён «Игр с детьми»: прежние «Игрок 1/2/...» заменяются на
+  // «Родитель/Ребёнок/...». Касается ТОЛЬКО имён, в точности совпадающих со
+  // старыми дефолтами — введённые вручную имена не трогаем.
+  if(Array.isArray(state.kidsPlayers)){
+    state.kidsPlayers = state.kidsPlayers.map((n,i)=>
+      (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
+        ? kidsDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
+        : (n || kidsDefaultName(i)));
+  }
   // «Знаю тебя»: та же замена для семей — старый дефолт каждой семьи был
   // «Игрок 1/Игрок 2», новый — продолжение общего ряда (Семья 2 →
   // «Третий/Четвёртый», Семья 3 → «Пятый/Шестой»).
