@@ -50,8 +50,24 @@ function rouletteCurrentBalance(){
 function updateRouletteTurnLabel(){
   const players = roulettePlayers();
   const idx = state.rouletteCurrentPlayerIndex || 0;
-  const el = document.getElementById('rouletteTurnLabel');
-  if(el) el.textContent = `Ходит: ${players[idx]} · Баланс: ${rouletteCurrentBalance()} фишек`;
+  const row = document.getElementById('roulettePlayersRow');
+  if(!row) return;
+  row.innerHTML = '';
+  players.forEach((name, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'roulette-player-btn' + (i === idx ? ' active' : '');
+    btn.innerHTML = `${name}<br><small style="font-weight:400;opacity:.8;">${state.rouletteBalances[i] || 0} фишек</small>`;
+    btn.addEventListener('click', ()=>{
+      if(rouletteSpinning) return;
+      state.rouletteCurrentPlayerIndex = i;
+      rouletteBets = {};
+      renderRouletteBadges();
+      updateRouletteTurnLabel();
+      updateRouletteBetTotal();
+    });
+    row.appendChild(btn);
+  });
 }
 
 /* ============ ПОЛЕ СТАВОК ============ */

@@ -999,7 +999,7 @@
   .roulette-outside-btn.roulette-red{ background:rgba(230,57,70,.7); }
   .roulette-outside-btn.roulette-black{ background:rgba(34,34,34,.85); }
   .roulette-bet-badge{
-    position:absolute; bottom:-8px; right:-8px; background:#ffd23f; color:#3d2b00;
+    position:absolute; top:-8px; left:-8px; background:#3b82f6; color:#fff;
     border-radius:14px; font-size:14px; font-weight:800; padding:2px 6px; line-height:1;
     box-shadow:0 2px 3px rgba(0,0,0,.4);
   }
@@ -1016,7 +1016,16 @@
   .roulette-chip.roulette-chip-selected{
     border-style:solid; border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35);
   }
-  .roulette-bet-total{ text-align:center; font-weight:700; margin-bottom:8px; color:#e8c9dd; }
+  /* Ряд игроков в рулетке */
+  .roulette-players-row{ display:flex; gap:8px; justify-content:center; margin:6px 0 8px; }
+  .roulette-player-btn{
+    padding:8px 16px; border-radius:10px; border:2px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.1); color:#fff; font-weight:700; font-size:13px;
+    cursor:pointer; flex:1; max-width:180px;
+  }
+  .roulette-player-btn.active{
+    border-color:#ffd23f; background:rgba(255,210,63,.2); color:#ffd23f;
+  }
 
   /* Полноэкранное модальное окно рулетки */
   #rouletteSpinModal{
@@ -5508,13 +5517,7 @@
        колесо на CSS conic-gradient, крутится случайно на нужный угол. -->
   <section id="partyRouletteGame" class="screen">
     <h1 class="title" style="font-size:20px;">🎡 Рулетка</h1>
-    <div class="subtitle" id="rouletteTurnLabel" style="margin-bottom:2px;">Ходит: Первый · Баланс: 1000 фишек</div>
-
-    <div class="roulette-wheel-wrap">
-      <div class="roulette-wheel" id="rouletteWheel"></div>
-      <div class="roulette-pointer">▼</div>
-    </div>
-    <div class="roulette-result" id="rouletteResult"></div>
+    <div class="roulette-players-row" id="roulettePlayersRow"></div>
 
     <button type="button" class="roulette-zero-cell" id="rouletteZeroCell" data-bet="num-0">0</button>
     <div class="roulette-number-grid" id="rouletteNumberGrid"></div>
@@ -6436,7 +6439,7 @@
   <script src="games/solo-connect4.js?v=20260902a"></script>
 <script src="games/shop.js?v=20260830u"></script>
 <script src="games/business-observer.js?v=20260830u"></script>
-<script src="games/party-roulette.js?v=20260913d"></script>
+<script src="games/party-roulette.js?v=20260913e"></script>
 <script src="games/business-lemonade.js?v=20260830u"></script>
 <script src="games/kids-xo.js?v=20260913a"></script>
 <script src="games/kids-battleship.js?v=20260913a"></script>
