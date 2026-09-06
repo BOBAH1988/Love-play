@@ -66,6 +66,9 @@ function speakTwisterMove(text){
   // это обходит (тот же приём, что рекомендуют для Chrome/Android WebView).
   twisterSpeechTimer = setTimeout(()=>{
     twisterSpeechTimer = null;
+    // Не озвучивать если игра уже закрыта (проверяем видимость экрана)
+    const gameEl = document.getElementById('twisterGame');
+    if(!gameEl || !gameEl.classList.contains('active')) return;
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'ru-RU';
     utter.rate = 0.95;
@@ -149,9 +152,13 @@ function goToTwisterGame(){
   requestWakeLock();
 }
 function exitTwisterGame(){
+  twisterStarted = false;
   stopTwisterInterval();
   if(twisterSpeechTimer){ clearTimeout(twisterSpeechTimer); twisterSpeechTimer = null; }
-  if('speechSynthesis' in window) speechSynthesis.cancel();
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    setTimeout(()=>speechSynthesis.cancel(), 50);
+  }
   stopAllSounds();
   exitGame('twisterGame', 'setup');
 }
