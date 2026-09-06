@@ -1983,6 +1983,17 @@
   .screen:has(> .td-turn-label):not(:has(> .krokodil-score-row)){
     padding-top: 50px;
   }
+  /* Экраны игр без верхней строки (turn-label/score-row): первым элементом
+     у них идёт широкое поле на всю ширину (карточка, ряд кнопок игроков,
+     строка статуса) — оно начинается вплотную к верху экрана и заезжает
+     под плавающие FAB-кнопки «←»/«☰». Даём им такой же отступ сверху.
+     Явные ID вместо :has(> .card-area): card-area есть и на экранах С
+     turn-label/score-row (ниже неё), где отдельный отступ не нужен. */
+  #ideasGame, #whatToPlayGame, #kidsMemesGame, #memesGame,
+  #partyNeverGame, #twisterGame, #sexQuestGame,
+  #wishlistGame, #znayuGame{
+    padding-top: 50px;
+  }
   /* Desktop: turn-label между FAB-кнопками, krokodil-score-row с именами по краям */
   @media (min-width:640px){
     .td-turn-label{
@@ -2002,6 +2013,13 @@
        поэтому дополнительный padding-top нужен меньше */
     .screen:has(> .krokodil-score-row){
       padding-top: 56px;
+    }
+    /* Экраны без верхней строки (см. мобильное правило выше):
+       на desktop FAB-кнопки absolute с top:12px (зона 12–48px) */
+    #ideasGame, #whatToPlayGame, #kidsMemesGame, #memesGame,
+    #partyNeverGame, #twisterGame, #sexQuestGame,
+    #wishlistGame, #znayuGame{
+      padding-top: 48px;
     }
   }
   #kidsXoTurnLabel, #soloXoTurnLabel, #kidsC4TurnLabel{ font-size:28px; font-weight:900; }
