@@ -82,7 +82,7 @@ function updateKkrBar(){
   updateProgressBar('kidsKrokodilBarFill', 'kidsKrokodilLabel', kkrRemaining, kkrTotal, true);
 }
 function updateKkrScoreUI(){
-  const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.kidsPlayers || ['Родитель','Ребёнок'];
   const scores = state.kidsKrokodilScores || [];
   const idx = state.kidsKrokodilCurrentPlayerIndex || 0;
   const wrap = document.getElementById('kidsKrokodilScoreRow');
@@ -160,7 +160,7 @@ function kkrTick(){
 function kkrRoundEnd(){
   stopKkrInterval();
   playSuccessSound();
-  const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.kidsPlayers || ['Родитель','Ребёнок'];
   const idx = state.kidsKrokodilCurrentPlayerIndex || 0;
   const turnName = players[idx] || 'Игрок 1';
   if(!state.kidsKrokodilScores) state.kidsKrokodilScores = [];
@@ -197,7 +197,7 @@ function kkrRoundEnd(){
   if(gameOver) showKidsKrokodilSummaryModal();
 }
 function showKidsKrokodilSummaryModal(){
-  const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.kidsPlayers || ['Родитель','Ребёнок'];
   const scores = state.kidsKrokodilScores || [];
   const skips = state.kidsKrokodilSkipCounts || [];
   const ranking = players.map((n,i)=>({n, score: scores[i] || 0, skipped: skips[i] || 0}))
@@ -234,7 +234,7 @@ function kkrNextPlayerRound(){
 function goToKidsKrokodilGame(){
   goToGame('kidsKrokodilSetup', 'kidsKrokodilGame');
   if(!state.kidsPlayers || state.kidsPlayers.length < 2){
-    state.kidsPlayers = ['Игрок 1','Игрок 2'];
+    state.kidsPlayers = ['Родитель','Ребёнок'];
   }
   const n = state.kidsPlayers.length;
   state.kidsKrokodilScores = new Array(n).fill(0);

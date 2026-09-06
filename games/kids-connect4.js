@@ -14,8 +14,8 @@ const KIDS_C4_ROWS = 6;
 
 function kidsC4PlayerName(mark){
   const players = state.kidsPlayers || [];
-  if(mark === 'R') return players[0] || 'Игрок 1';
-  return players[1] || 'Игрок 2';
+  if(mark === 'R') return players[0] || 'Родитель';
+  return players[1] || 'Ребёнок';
 }
 function kidsC4MarkIcon(mark){
   return mark === 'R' ? '🔴' : '🟡';

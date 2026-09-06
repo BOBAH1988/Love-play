@@ -74,7 +74,7 @@ function exitKidsQuizSetup(){
   showSetupView('kidsView');
 }
 function kidsQuizPlayersList(){
-  if(!state.kidsPlayers || state.kidsPlayers.length < 2) state.kidsPlayers = ['Игрок 1','Игрок 2'];
+  if(!state.kidsPlayers || state.kidsPlayers.length < 2) state.kidsPlayers = ['Родитель','Ребёнок'];
   return state.kidsPlayers;
 }
 function stopKidsQuizInterval(){

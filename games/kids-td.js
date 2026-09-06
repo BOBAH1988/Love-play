@@ -36,7 +36,7 @@ function exitKidsTdSetup(){
   showSetupView('kidsView');
 }
 function updateKidsTdScoreUI(){
-  const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.kidsPlayers || ['Родитель','Ребёнок'];
   const completed = state.kidsTdCompleted || [];
   const idx = state.kidsTdCurrentPlayerIndex || 0;
   const wrap = document.getElementById('kidsTdScoreRow');
@@ -126,7 +126,7 @@ function goToKidsTdGame(){
   abandonPausedSession('soloBs');
   state.pausedMode = null;
   if(!state.kidsPlayers || state.kidsPlayers.length < 2){
-    state.kidsPlayers = ['Игрок 1','Игрок 2'];
+    state.kidsPlayers = ['Родитель','Ребёнок'];
   }
   const n = state.kidsPlayers.length;
   state.kidsTdCompleted = new Array(n).fill(0);
@@ -161,7 +161,7 @@ function resumeKidsTdGame(){
 // с учётом ничьих (как в showKidsMemorySummaryModal): игроки с одинаковым
 // числом выполненных заданий делят одно место (1-2-2-4, а не 1-2-2-3).
 function showKidsTdSummaryModal(){
-  const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.kidsPlayers || ['Родитель','Ребёнок'];
   const completed = state.kidsTdCompleted || [];
   const skipped = state.kidsTdSkipped || [];
   const ranking = players.map((n,i)=>({n, score: completed[i] || 0, skipped: skipped[i] || 0}))

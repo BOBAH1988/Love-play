@@ -96,7 +96,7 @@ function bsMarkSunkPerimeter(board, ship){
 
 function bsPlayerName(idx){
   const players = state.kidsPlayers || [];
-  return players[idx] || ('Игрок ' + (idx + 1));
+  return players[idx] || kidsDefaultName(idx);
 }
 
 function goToKidsBattleshipSetup(){

@@ -67,7 +67,7 @@ function renderKidsMemoryGrid(){
   });
 }
 function updateKidsMemoryScoreUI(){
-  const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.kidsPlayers || ['Родитель','Ребёнок'];
   const scores = state.kidsMemoryScores || [];
   const idx = state.kidsMemoryCurrentPlayerIndex || 0;
   const wrap = document.getElementById('kidsMemoryScoreRow');
@@ -145,7 +145,7 @@ function checkKidsMemoryFinished(){
 // пропускает столько позиций, сколько игроков было в "связке". Если 1-е
 // место разделили двое и больше — в шапке отдельно отмечается ничья.
 function showKidsMemorySummaryModal(){
-  const players = state.kidsPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.kidsPlayers || ['Родитель','Ребёнок'];
   const scores = state.kidsMemoryScores || [];
   const ranking = players.map((n,i)=>({n, score: scores[i] || 0})).sort((a,b)=>b.score-a.score);
   const medals = ['🥇','🥈','🥉'];
@@ -190,7 +190,7 @@ function goToKidsMemoryGame(){
   document.getElementById('kidsMemorySetup').classList.remove('active');
   goToGame(null, 'kidsMemoryGame');
   if(!state.kidsPlayers || state.kidsPlayers.length < 2){
-    state.kidsPlayers = ['Игрок 1','Игрок 2'];
+    state.kidsPlayers = ['Родитель','Ребёнок'];
   }
   const n = state.kidsPlayers.length;
   const level = state.kidsMemoryLevel || 1;

@@ -52,8 +52,8 @@ function kidsXoBuildLines(size, winLen){
 
 function kidsXoPlayerName(mark){
   const players = state.kidsPlayers || [];
-  if(mark === 'X') return players[0] || 'Игрок 1';
-  return players[1] || 'Игрок 2';
+  if(mark === 'X') return players[0] || 'Родитель';
+  return players[1] || 'Ребёнок';
 }
 function goToKidsXoSetup(){
   goToGameSetup('kidsXoSetup', null, ()=>{

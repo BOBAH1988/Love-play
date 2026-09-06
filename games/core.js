@@ -24,6 +24,15 @@ function partyDefaultName(idx){
   if(isNaN(idx) || idx < 0) idx = 0;
   return PARTY_PLAYER_DEFAULTS[idx] || ('Игрок ' + (idx + 1));
 }
+function kidsDefaultName(idx){
+  idx = parseInt(idx, 10);
+  if(isNaN(idx) || idx < 0) idx = 0;
+  if(idx === 0) return 'Родитель';
+  if(idx === 1) return 'Ребёнок';
+  if(idx === 2) return 'Второй родитель';
+  if(idx === 3) return 'Второй ребёнок';
+  return (idx + 1) + '-й ребёнок';
+}
 let state = {
   name1:'', name2:'', activeLevels:[3,4,5,6],
   starter:'random',
@@ -76,7 +85,7 @@ let state = {
   // Игры с детьми (список игроков отдельный от "Игры для компании")
   // kidsAge по умолчанию = 2 (7 лет) — см. просьбу сделать 7 лет базовым
   // возрастом раздела вместо прежних 5 лет.
-  kidsPlayers:['Игрок 1','Игрок 2'], kidsAge:2,
+  kidsPlayers:['Родитель','Ребёнок'], kidsAge:2,
   // Мемори
   kidsMemoryLevel:1, kidsMemoryDeck:[], kidsMemoryScores:[], kidsMemoryCurrentPlayerIndex:0,
   // Правда/Действие (дети)
@@ -490,7 +499,7 @@ function goToGameSetup(gameSetupId, targetView, beforeSwitch){
 // кнопками, имена по умолчанию "Игрок N".
 function renderKidsPlayers(){
   if(!state.kidsPlayers || state.kidsPlayers.length < 2){
-    state.kidsPlayers = ['Игрок 1','Игрок 2'];
+    state.kidsPlayers = ['Родитель','Ребёнок'];
   }
   const wrap = document.getElementById('kidsPlayersList');
   if(!wrap) return;
@@ -501,10 +510,10 @@ function renderKidsPlayers(){
     const input = document.createElement('input');
     input.type = 'text';
     input.maxLength = 14;
-    input.placeholder = 'Игрок ' + (idx + 1);
+    input.placeholder = kidsDefaultName(idx);
     input.value = name;
     input.addEventListener('input', ()=>{
-      state.kidsPlayers[idx] = input.value.trim() || ('Игрок ' + (idx + 1));
+      state.kidsPlayers[idx] = input.value.trim() || kidsDefaultName(idx);
       saveState();
     });
     row.appendChild(input);
@@ -528,9 +537,9 @@ function renderKidsPlayers(){
   if(addBtn) addBtn.style.display = state.kidsPlayers.length >= 10 ? 'none' : '';
 }
 document.getElementById('kidsAddPlayerBtn').addEventListener('click', ()=>{
-  if(!state.kidsPlayers) state.kidsPlayers = ['Игрок 1','Игрок 2'];
+  if(!state.kidsPlayers) state.kidsPlayers = ['Родитель','Ребёнок'];
   if(state.kidsPlayers.length >= 10) return;
-  state.kidsPlayers.push('Игрок ' + (state.kidsPlayers.length + 1));
+  state.kidsPlayers.push(kidsDefaultName(state.kidsPlayers.length));
   saveState();
   renderKidsPlayers();
 });
@@ -1361,7 +1370,7 @@ function performFullReset(){
    // Имена игроков (команд) — сбрасываются на дефолтные, как обещано в диалоге
    // подтверждения ("имена команд… будут сброшены"). Возраст ребёнка (kidsAge)
    // остается — это настройка, а не прогресс.
-   state.kidsPlayers = ['Игрок 1','Игрок 2'];
+   state.kidsPlayers = ['Родитель','Ребёнок'];
    state.businessPlayers = ['Игрок 1','Игрок 2'];
    state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   state.gameMode = 'hot';
