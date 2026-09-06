@@ -72,8 +72,8 @@ function drawMemesCard(){
 }
 // ===== Озвучка карточки "Мемасики" (по тапу на карточку) =====
 // Необязательная фича: если браузер не поддерживает Web Speech API —
-// ничего не делаем, тап просто ничего не озвучивает (кнопки "Далее"/
-// "Скрыть" продолжают работать как обычно, это не мешает игре).
+// ничего не делаем, тап просто ничего не озвучивает (кнопка "Далее"
+// продолжает работать как обычно, это не мешает игре).
 function pickMemesFemaleVoice(){
   if(!('speechSynthesis' in window)) return null;
   const voices = window.speechSynthesis.getVoices() || [];
@@ -140,15 +140,6 @@ document.getElementById('memesSetupStartBtn').addEventListener('click', ()=>{ go
 document.getElementById('memesSetupExitBtn').addEventListener('click', ()=>{ exitMemesSetup(); });
 document.getElementById('memesNextBtn').addEventListener('click', ()=>{
   playSuccessSound();
-  drawMemesCard();
-});
-document.getElementById('memesHideBtn').addEventListener('click', ()=>{
-  if(!memesCurrentCard) return;
-  if(!state.memesHidden) state.memesHidden = [];
-  if(!state.memesHidden.includes(memesCurrentCard.text)) state.memesHidden.push(memesCurrentCard.text);
-  saveState();
-  playErrorSound();
-  showToast('Ситуация скрыта навсегда 🚫');
   drawMemesCard();
 });
 document.getElementById('memesExitBtn').addEventListener('click', ()=>{ exitMemesGame(); });

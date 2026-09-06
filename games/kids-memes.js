@@ -1,7 +1,7 @@
 // games/kids-memes.js — детская версия игры "Мемасики" (дети).
 // Загружается через <script src="games/kids-memes.js"></script> в index.html.
 // Дублирует games/memes.js (та же механика: текстовая карточка-ситуация,
-// без таймера и счёта, "Далее"/"Скрыть"), только уровень берётся из общего
+// без таймера и счёта, кнопка "Далее"), только уровень берётся из общего
 // переключателя возраста #kidsAgeGroup (state.kidsAge), а не из своего
 // селектора, и используются задания из cards_kids_memes.js.
 
@@ -113,15 +113,6 @@ document.getElementById('kidsMemesSetupStartBtn').addEventListener('click', ()=>
 document.getElementById('kidsMemesSetupExitBtn').addEventListener('click', ()=>{ exitKidsMemesSetup(); });
 document.getElementById('kidsMemesNextBtn').addEventListener('click', ()=>{
   playSuccessSound();
-  drawKidsMemesCard();
-});
-document.getElementById('kidsMemesHideBtn').addEventListener('click', ()=>{
-  if(!kidsMemesCurrentCard) return;
-  if(!state.kidsMemesHidden) state.kidsMemesHidden = [];
-  if(!state.kidsMemesHidden.includes(kidsMemesCurrentCard.text)) state.kidsMemesHidden.push(kidsMemesCurrentCard.text);
-  saveState();
-  playErrorSound();
-  showToast('Ситуация скрыта навсегда 🚫');
   drawKidsMemesCard();
 });
 document.getElementById('kidsMemesExitBtn').addEventListener('click', ()=>{ exitKidsMemesGame(); });
