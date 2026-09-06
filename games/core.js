@@ -1698,7 +1698,7 @@ const PAUSE_MENU_TITLES = {
   znayu: '💑 Тайные ответы',
   krokodil: '🐊 Крокодил',
   partyFants: '🎉 Фанты',
-  partyTd: '🗣️ Правда/Действие (компания)',
+  partyTd: '🗣️ Правда/Действие',
   famZnayu: '🧠 Знаю тебя',
   lucky: '🎫 Счастливый билет',
   kidsMemory: '🧠 Мемори',

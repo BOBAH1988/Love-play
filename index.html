@@ -2073,6 +2073,13 @@
   #wishlistGame, #znayuGame{
     padding-top: 50px;
   }
+  /* Хаб #setup: каждый его вид (главный, «Игры для пар/компании/детей»…)
+     начинается с центрированного h1.title вплотную к верху, а паузные
+     заголовки игр («Правда/Действие», «Счастливый билет»…) бывают длинными —
+     без отступа заголовок заходит под плавающие FAB-кнопки «←»/«☰». */
+  #setup{
+    padding-top: 50px;
+  }
   /* Desktop: krokodil-score-row с именами по краям. Turn-label парит в верхней
      полосе на всех ширинах (базовое правило .td-turn-label:first-child выше). */
   @media (min-width:640px){
@@ -2095,6 +2102,11 @@
     #ideasGame, #whatToPlayGame, #kidsMemesGame, #memesGame,
     #partyNeverGame, #twisterGame, #sexQuestGame,
     #wishlistGame, #znayuGame{
+      padding-top: 48px;
+    }
+    /* Хаб #setup — как на мобильном: FAB-кнопки absolute с top:12px
+       (зона 12–48px), а #app даёт только 16px сверху. */
+    #setup{
       padding-top: 48px;
     }
   }
@@ -6172,7 +6184,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260913a"></script>
+<script src="games/core.js?v=20260913b"></script>
 <script src="games/twister.js?v=20260913a"></script>
 <script src="games/party-hangman.js?v=20260830u"></script>
 <script src="games/solo-quiz.js?v=20260830u"></script>
