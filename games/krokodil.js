@@ -26,10 +26,10 @@ function getKrCardsList(level, mode){
 // Общий список игроков для всех "Игр для компании" (сейчас использует
 // только Крокодил, но хранится на уровне группы, чтобы будущие игры тоже
 // могли на него опираться): от 2 до 10, поля добавляются/удаляются
-// кнопками, имена по умолчанию "Игрок N".
+// кнопками, имена по умолчанию — порядковые: «Первый», «Второй», … (partyDefaultName из games/core.js).
 function renderPartyPlayers(){
   if(!state.partyPlayers || state.partyPlayers.length < 2){
-    state.partyPlayers = ['Игрок 1','Игрок 2'];
+    state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   }
   const wrap = document.getElementById('partyPlayersList');
   if(!wrap) return;
@@ -40,10 +40,10 @@ function renderPartyPlayers(){
     const input = document.createElement('input');
     input.type = 'text';
     input.maxLength = 14;
-    input.placeholder = 'Игрок ' + (idx + 1);
+    input.placeholder = partyDefaultName(idx);
     input.value = name;
     input.addEventListener('input', ()=>{
-      state.partyPlayers[idx] = input.value.trim() || ('Игрок ' + (idx + 1));
+      state.partyPlayers[idx] = input.value.trim() || partyDefaultName(idx);
       saveState();
     });
     row.appendChild(input);
@@ -67,9 +67,9 @@ function renderPartyPlayers(){
   if(addBtn) addBtn.style.display = state.partyPlayers.length >= 10 ? 'none' : '';
 }
 document.getElementById('partyAddPlayerBtn').addEventListener('click', ()=>{
-  if(!state.partyPlayers) state.partyPlayers = ['Игрок 1','Игрок 2'];
+  if(!state.partyPlayers) state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   if(state.partyPlayers.length >= 10) return;
-  state.partyPlayers.push('Игрок ' + (state.partyPlayers.length + 1));
+  state.partyPlayers.push(partyDefaultName(state.partyPlayers.length));
   saveState();
   renderPartyPlayers();
 });
@@ -157,7 +157,7 @@ function updateKrBar(){
   updateProgressBar('krokodilBarFill', 'krokodilLabel', krRemaining, krTotal, true);
 }
 function updateKrScoreUI(){
-  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.partyPlayers || [partyDefaultName(0), partyDefaultName(1)];
   const scores = state.krokodilScores || [];
   const idx = state.krokodilCurrentPlayerIndex || 0;
   const wrap = document.getElementById('krokodilScoreRow');
@@ -170,7 +170,7 @@ function updateKrScoreUI(){
       wrap.appendChild(span);
     });
   }
-  const turnName = players[idx] || 'Игрок 1';
+  const turnName = players[idx] || partyDefaultName(idx);
   const turnLabel = document.getElementById('krokodilTurnLabel');
   const verb = (state.krokodilMode || 'word') === 'explain' ? 'Объясняет' : 'Показывает';
   if(turnLabel) turnLabel.textContent = verb + ': ' + turnName;
@@ -242,9 +242,9 @@ function krTick(){
 function krRoundEnd(){
   stopKrInterval();
   playSuccessSound();
-  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.partyPlayers || [partyDefaultName(0), partyDefaultName(1)];
   const idx = state.krokodilCurrentPlayerIndex || 0;
-  const turnName = players[idx] || 'Игрок 1';
+  const turnName = players[idx] || partyDefaultName(idx);
   if(!state.krokodilScores) state.krokodilScores = [];
   if(!state.krokodilSkipCounts) state.krokodilSkipCounts = [];
   state.krokodilScores[idx] = (state.krokodilScores[idx] || 0) + krRoundGuessed;
@@ -292,7 +292,7 @@ function krRoundEnd(){
 // showKrokodilExitSummary — там экран уже #setup, никуда переключать не надо).
 let krokodilSummaryIsExit = false;
 function renderKrokodilSummaryList(){
-  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.partyPlayers || [partyDefaultName(0), partyDefaultName(1)];
   const scores = state.krokodilScores || [];
   const skips = state.krokodilSkipCounts || [];
   const ranking = players.map((n,i)=>({n, score: scores[i] || 0, skipped: skips[i] || 0}))
@@ -312,7 +312,7 @@ function renderKrokodilSummaryList(){
 }
 function showKrokodilSummaryModal(){
   krokodilSummaryIsExit = false;
-  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.partyPlayers || [partyDefaultName(0), partyDefaultName(1)];
   document.getElementById('krokodilSummaryTitle').textContent = '🏆 Игра окончена';
   document.getElementById('krokodilSummaryIntro').textContent = `Сыграно раундов: ${players.length * (state.krokodilRoundsPerPlayer || 5)} — вот кто справился лучше всех:`;
   document.getElementById('krokodilSummaryList').innerHTML = renderKrokodilSummaryList();
@@ -357,7 +357,7 @@ function goToKrokodilGame(){
   state.pausedMode = null;
   goToGame('krokodilSetup', 'krokodilGame');
   if(!state.partyPlayers || state.partyPlayers.length < 2){
-    state.partyPlayers = ['Игрок 1','Игрок 2'];
+    state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   }
   const n = state.partyPlayers.length;
   state.krokodilScores = new Array(n).fill(0);

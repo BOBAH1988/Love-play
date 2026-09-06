@@ -23,7 +23,10 @@ function syncFamZnayuFamiliesArray(){
   state.famZnayuFamilyCount = count;
   if(!Array.isArray(state.famZnayuFamilies)) state.famZnayuFamilies = [];
   while(state.famZnayuFamilies.length < count){
-    state.famZnayuFamilies.push({p1:'Игрок 1', p2:'Игрок 2', p1Gender:'m', p2Gender:'f'});
+    // Дефолтные имена новой семьи — продолжение общего ряда компании:
+    // Семья 1 → «Первый/Второй», Семья 2 → «Третий/Четвёртый», Семья 3 → «Пятый/Шестой».
+    const fIdx = state.famZnayuFamilies.length;
+    state.famZnayuFamilies.push({p1: partyDefaultName(fIdx*2), p2: partyDefaultName(fIdx*2+1), p1Gender:'m', p2Gender:'f'});
   }
   if(state.famZnayuFamilies.length > count){
     state.famZnayuFamilies = state.famZnayuFamilies.slice(0, count);
@@ -79,10 +82,10 @@ function renderFamZnayuFamiliesFields(){
     const input1 = document.createElement('input');
     input1.type = 'text';
     input1.maxLength = 14;
-    input1.placeholder = 'Игрок 1';
+    input1.placeholder = partyDefaultName(idx*2);
     input1.value = fam.p1 || '';
     input1.addEventListener('input', ()=>{
-      state.famZnayuFamilies[idx].p1 = input1.value.trim() || 'Игрок 1';
+      state.famZnayuFamilies[idx].p1 = input1.value.trim() || partyDefaultName(idx*2);
       saveState();
     });
     row1.appendChild(input1);
@@ -94,10 +97,10 @@ function renderFamZnayuFamiliesFields(){
     const input2 = document.createElement('input');
     input2.type = 'text';
     input2.maxLength = 14;
-    input2.placeholder = 'Игрок 2';
+    input2.placeholder = partyDefaultName(idx*2+1);
     input2.value = fam.p2 || '';
     input2.addEventListener('input', ()=>{
-      state.famZnayuFamilies[idx].p2 = input2.value.trim() || 'Игрок 2';
+      state.famZnayuFamilies[idx].p2 = input2.value.trim() || partyDefaultName(idx*2+1);
       saveState();
     });
     row2.appendChild(input2);
@@ -191,18 +194,18 @@ function updateFamZnayuProgressBar(){
 function updateFamZnayuHeaderUI(){
   const total = (state.famZnayuFamilies || []).length || 2;
   const idx = state.famZnayuCurrentFamilyIndex || 0;
-  const fam = state.famZnayuFamilies[idx] || {p1:'Игрок 1', p2:'Игрок 2'};
+  const fam = state.famZnayuFamilies[idx] || {p1: partyDefaultName(idx*2), p2: partyDefaultName(idx*2+1)};
   const familyLabel = document.getElementById('famZnayuFamilyLabel');
   if(familyLabel) familyLabel.textContent = `Семья ${idx + 1} из ${total}`;
   const p1Btn = document.getElementById('famZnayuPlayer1Btn');
   const p2Btn = document.getElementById('famZnayuPlayer2Btn');
   if(p1Btn){
-    p1Btn.textContent = fam.p1 || 'Игрок 1';
+    p1Btn.textContent = fam.p1 || partyDefaultName(idx*2);
     p1Btn.classList.toggle('active', state.famZnayuActivePlayer === 1);
     p1Btn.classList.toggle('done', !!state.famZnayuP1Done);
   }
   if(p2Btn){
-    p2Btn.textContent = fam.p2 || 'Игрок 2';
+    p2Btn.textContent = fam.p2 || partyDefaultName(idx*2+1);
     p2Btn.classList.toggle('active', state.famZnayuActivePlayer === 2);
     p2Btn.classList.toggle('done', !!state.famZnayuP2Done);
   }
@@ -210,8 +213,8 @@ function updateFamZnayuHeaderUI(){
 }
 function showFamZnayuHandoffCard(nextPlayerNum){
   const idx = state.famZnayuCurrentFamilyIndex || 0;
-  const fam = state.famZnayuFamilies[idx] || {p1:'Игрок 1', p2:'Игрок 2'};
-  const nextName = nextPlayerNum === 2 ? (fam.p2 || 'Игрок 2') : (fam.p1 || 'Игрок 1');
+  const fam = state.famZnayuFamilies[idx] || {p1: partyDefaultName(idx*2), p2: partyDefaultName(idx*2+1)};
+  const nextName = nextPlayerNum === 2 ? (fam.p2 || partyDefaultName(idx*2+1)) : (fam.p1 || partyDefaultName(idx*2));
   state.famZnayuPendingNext = nextPlayerNum;
   saveState();
   document.getElementById('famZnayuHandoffRow').style.display = 'flex';
@@ -231,9 +234,9 @@ function showFamZnayuCurrentItem(){
     return;
   }
   const famIdx = state.famZnayuCurrentFamilyIndex || 0;
-  const fam = state.famZnayuFamilies[famIdx] || {p1:'Игрок 1', p2:'Игрок 2', p1Gender:'m', p2Gender:'f'};
+  const fam = state.famZnayuFamilies[famIdx] || {p1: partyDefaultName(famIdx*2), p2: partyDefaultName(famIdx*2+1), p1Gender:'m', p2Gender:'f'};
   const heroSide = (state.famZnayuHeroSide || [])[state.famZnayuIndex] || 1;
-  const heroName = heroSide === 1 ? (fam.p1 || 'Игрок 1') : (fam.p2 || 'Игрок 2');
+  const heroName = heroSide === 1 ? (fam.p1 || partyDefaultName(famIdx*2)) : (fam.p2 || partyDefaultName(famIdx*2+1));
   const heroGender = (heroSide === 1 ? fam.p1Gender : fam.p2Gender) || (heroSide === 1 ? 'm' : 'f');
   const isHeroTurn = state.famZnayuActivePlayer === heroSide;
   const roleHtml = isHeroTurn
@@ -304,7 +307,7 @@ function advanceFamZnayuQueue(){
 // только итоговое число совпадений — как договорились в правилах игры.
 function finishFamZnayuFamilyRound(){
   const idx = state.famZnayuCurrentFamilyIndex || 0;
-  const fam = state.famZnayuFamilies[idx] || {p1:'Игрок 1', p2:'Игрок 2', p1Gender:'m', p2Gender:'f'};
+  const fam = state.famZnayuFamilies[idx] || {p1: partyDefaultName(idx*2), p2: partyDefaultName(idx*2+1), p1Gender:'m', p2Gender:'f'};
   let matches = 0;
   const total = state.famZnayuQueue.length;
   for(let i=0;i<total;i++){
@@ -312,7 +315,7 @@ function finishFamZnayuFamilyRound(){
     if(a && a.p1 !== undefined && a.p2 !== undefined && a.p1 === a.p2) matches++;
   }
   if(!state.famZnayuResults) state.famZnayuResults = [];
-  state.famZnayuResults.push({p1: fam.p1 || 'Игрок 1', p2: fam.p2 || 'Игрок 2', matches, total});
+  state.famZnayuResults.push({p1: fam.p1 || partyDefaultName(idx*2), p2: fam.p2 || partyDefaultName(idx*2+1), matches, total});
   const familiesTotal = (state.famZnayuFamilies || []).length || 2;
   if(idx + 1 < familiesTotal){
     state.famZnayuCurrentFamilyIndex = idx + 1;

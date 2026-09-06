@@ -36,7 +36,7 @@ function exitPartyFantsSetup(){
     showSetupView('companyView');
 }
 function updatePartyFantsScoreUI(){
-  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.partyPlayers || [partyDefaultName(0), partyDefaultName(1)];
   const completed = state.partyFantsCompleted || [];
   const idx = state.partyFantsCurrentPlayerIndex || 0;
   const wrap = document.getElementById('partyFantsScoreRow');
@@ -49,7 +49,7 @@ function updatePartyFantsScoreUI(){
       wrap.appendChild(span);
     });
   }
-  const turnName = players[idx] || 'Игрок 1';
+  const turnName = players[idx] || partyDefaultName(idx);
   const turnLabel = document.getElementById('partyFantsTurnLabel');
   if(turnLabel) turnLabel.textContent = 'Ходит: ' + turnName;
 }
@@ -104,7 +104,7 @@ function goToPartyFantsGame(){
   abandonPausedSession('soloBs');
   state.pausedMode = null;
   if(!state.partyPlayers || state.partyPlayers.length < 2){
-    state.partyPlayers = ['Игрок 1','Игрок 2'];
+    state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   }
   const n = state.partyPlayers.length;
   state.partyFantsCompleted = new Array(n).fill(0);
@@ -138,7 +138,7 @@ function resumePartyFantsGame(){
 // Итоговое окно результатов — место, имя, выполнено/отказов по каждому
 // игроку, отсортировано по убыванию счёта (как в Крокодиле и Знаю тебя).
 function showPartyFantsSummaryModal(){
-  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.partyPlayers || [partyDefaultName(0), partyDefaultName(1)];
   const completed = state.partyFantsCompleted || [];
   const skipped = state.partyFantsSkipped || [];
   const ranking = players.map((n,i)=>({n, score: completed[i] || 0, skipped: skipped[i] || 0}))

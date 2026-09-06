@@ -14,6 +14,16 @@ const LEVELS = [
 
 /* ============ СОСТОЯНИЕ ============ */
 const STORAGE_KEY = 'couple-game-state-v1';
+// Дефолтные имена игроков «Игр для компании» — порядковые: «Первый», «Второй», …
+// до «Десятый» (список ограничен 10). Используется renderPartyPlayers() в
+// games/krokodil.js и всеми играми компании как фолбэк вместо прежних «Игрок N».
+// Списки «Игр с детьми» (kidsPlayers) и бизнес-игр (businessPlayers) остаются «Игрок N».
+const PARTY_PLAYER_DEFAULTS = ['Первый','Второй','Третий','Четвёртый','Пятый','Шестой','Седьмой','Восьмой','Девятый','Десятый'];
+function partyDefaultName(idx){
+  idx = parseInt(idx, 10);
+  if(isNaN(idx) || idx < 0) idx = 0;
+  return PARTY_PLAYER_DEFAULTS[idx] || ('Игрок ' + (idx + 1));
+}
 let state = {
   name1:'', name2:'', activeLevels:[3,4,5,6],
   starter:'random',
@@ -61,7 +71,7 @@ let state = {
   // Крокодил
   krokodilSelectedLevel:2, krokodilRoundSeconds:180, krokodilUsed:{},
   krokodilMode:'word', krokodilWordsPerRound:5,
-  partyPlayers:['Игрок 1','Игрок 2'], krokodilScores:[], krokodilSkipCounts:[], krokodilCurrentPlayerIndex:0,
+  partyPlayers:['Первый','Второй'], krokodilScores:[], krokodilSkipCounts:[], krokodilCurrentPlayerIndex:0,
   krokodilTurnsPlayed:0, krokodilRoundsPerPlayer:5,
   // Игры с детьми (список игроков отдельный от "Игры для компании")
   // kidsAge по умолчанию = 2 (7 лет) — см. просьбу сделать 7 лет базовым
@@ -81,7 +91,7 @@ let state = {
   partyTdCurrentPlayerIndex:0, partyTdCurrentType:null,
   // Знаю тебя (компания, семьями)
   famZnayuFamilyCount:1,
-  famZnayuFamilies:[{p1:'Игрок 1', p2:'Игрок 2', p1Gender:'m', p2Gender:'f'}],
+  famZnayuFamilies:[{p1:'Первый', p2:'Второй', p1Gender:'m', p2Gender:'f'}],
   famZnayuSelectedLevel:1, famZnayuUsed:{}, famZnayuCurrentFamilyIndex:0,
   // famZnayuHeroSide[i] = 1 или 2 — кто из пары семьи является "героем"
   // вопроса №i в текущей очереди (герой отвечает как есть, второй угадывает
@@ -266,6 +276,28 @@ function loadState(){
   if(state.luckyCurrentTeamIndex === undefined) state.luckyCurrentTeamIndex = 0;
   if(!state.luckyTeamTurnCount) state.luckyTeamTurnCount = [0,0];
   if(state.lastSectionOnPause === undefined) state.lastSectionOnPause = null;
+  // Миграция дефолтных имён «Игр для компании»: прежние «Игрок 1/2/...»
+  // заменяются на порядковые «Первый/Второй/...». Касается ТОЛЬКО имён, в
+  // точности совпадающих со старыми дефолтами — введённые вручную имена не
+  // трогаем. Списки детей и бизнес-игр («Игрок N») не мигрируют.
+  if(Array.isArray(state.partyPlayers)){
+    state.partyPlayers = state.partyPlayers.map((n,i)=>
+      (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
+        ? partyDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
+        : (n || partyDefaultName(i)));
+  }
+  // «Знаю тебя»: та же замена для семей — старый дефолт каждой семьи был
+  // «Игрок 1/Игрок 2», новый — продолжение общего ряда (Семья 2 →
+  // «Третий/Четвёртый», Семья 3 → «Пятый/Шестой»).
+  if(Array.isArray(state.famZnayuFamilies)){
+    state.famZnayuFamilies = state.famZnayuFamilies.map((f,fIdx)=>{
+      if(!f || typeof f !== 'object') return f;
+      const out = Object.assign({}, f);
+      if(out.p1 === 'Игрок 1') out.p1 = partyDefaultName(fIdx*2);
+      if(out.p2 === 'Игрок 2') out.p2 = partyDefaultName(fIdx*2+1);
+      return out;
+    });
+  }
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){
@@ -1307,7 +1339,7 @@ function performFullReset(){
    // остается — это настройка, а не прогресс.
    state.kidsPlayers = ['Игрок 1','Игрок 2'];
    state.businessPlayers = ['Игрок 1','Игрок 2'];
-   state.partyPlayers = ['Игрок 1','Игрок 2'];
+   state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   state.gameMode = 'hot';
   state.activeLevels = [3,4,5,6];
   state.levelCap = 3;

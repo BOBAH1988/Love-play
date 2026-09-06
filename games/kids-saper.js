@@ -76,7 +76,7 @@ function renderKidsSaperBonusChecklist(){
 }
 function ensureKidsSaperTeams(){
   if(!Array.isArray(state.partyPlayers) || state.partyPlayers.length < 2){
-    state.partyPlayers = ['Игрок 1','Игрок 2'];
+    state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   }
 }
 function kidsSaperTeamName(i){

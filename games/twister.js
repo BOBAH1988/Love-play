@@ -74,7 +74,7 @@ function speakTwisterMove(text){
 }
 
 function drawTwisterMove(){
-  const players = (state.partyPlayers && state.partyPlayers.length >= 2) ? state.partyPlayers : ['Игрок 1', 'Игрок 2'];
+  const players = (state.partyPlayers && state.partyPlayers.length >= 2) ? state.partyPlayers : [partyDefaultName(0), partyDefaultName(1)];
   if(twisterPlayerIdx >= players.length) twisterPlayerIdx = 0;
   const player = players[twisterPlayerIdx];
   const limb = TWISTER_LIMBS[Math.floor(Math.random() * TWISTER_LIMBS.length)];
@@ -104,7 +104,7 @@ function renderTwisterIdleCard(){
 }
 
 function twisterAdvancePlayer(){
-  const players = (state.partyPlayers && state.partyPlayers.length >= 2) ? state.partyPlayers : ['Игрок 1', 'Игрок 2'];
+  const players = (state.partyPlayers && state.partyPlayers.length >= 2) ? state.partyPlayers : [partyDefaultName(0), partyDefaultName(1)];
   twisterPlayerIdx = (twisterPlayerIdx + 1) % players.length;
 }
 
@@ -130,7 +130,7 @@ function startTwisterTimer(){
 }
 
 function goToTwisterGame(){
-  const players = (state.partyPlayers && state.partyPlayers.length >= 2) ? state.partyPlayers : ['Игрок 1', 'Игрок 2'];
+  const players = (state.partyPlayers && state.partyPlayers.length >= 2) ? state.partyPlayers : [partyDefaultName(0), partyDefaultName(1)];
   twisterPlayerIdx = Math.floor(Math.random() * players.length);
   goToGame(null, 'twisterGame');
   renderTwisterDurationGroup();

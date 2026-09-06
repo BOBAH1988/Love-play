@@ -75,7 +75,7 @@ function exitPartyQuizSetup(){
     showSetupView('companyView');
 }
 function partyQuizPlayersList(){
-  if(!state.partyPlayers || state.partyPlayers.length < 2) state.partyPlayers = ['Игрок 1','Игрок 2'];
+  if(!state.partyPlayers || state.partyPlayers.length < 2) state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   return state.partyPlayers;
 }
 function stopPartyQuizInterval(){
@@ -96,7 +96,7 @@ function updatePartyQuizScoreUI(){
     });
   }
   const turnLabel = document.getElementById('partyQuizTurnLabel');
-  if(turnLabel) turnLabel.textContent = 'Отвечает: ' + (players[idx] || 'Игрок 1');
+  if(turnLabel) turnLabel.textContent = 'Отвечает: ' + (players[idx] || partyDefaultName(idx));
 }
 // Прогресс-бар показывает продвижение ТЕКУЩЕГО игрока по его собственным
 // вопросам (0..partyQuizQuestionCount), а не по всей партии.
@@ -160,7 +160,7 @@ function showPartyQuizHandoffCard(){
   partyQuizShowingQuestion = false;
   const players = partyQuizPlayersList();
   const idx = state.partyQuizCurrentPlayerIndex || 0;
-  const name = players[idx] || 'Игрок 1';
+  const name = players[idx] || partyDefaultName(idx);
   const row = document.getElementById('partyQuizHandoffRow');
   if(row) row.style.display = 'flex';
   const barTrack = document.getElementById('partyQuizBarTrack');

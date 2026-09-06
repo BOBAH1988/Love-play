@@ -36,7 +36,7 @@ function exitPartyTdSetup(){
     showSetupView('companyView');
 }
 function updatePartyTdScoreUI(){
-  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.partyPlayers || [partyDefaultName(0), partyDefaultName(1)];
   const completed = state.partyTdCompleted || [];
   const idx = state.partyTdCurrentPlayerIndex || 0;
   const wrap = document.getElementById('partyTdScoreRow');
@@ -49,7 +49,7 @@ function updatePartyTdScoreUI(){
       wrap.appendChild(span);
     });
   }
-  const turnName = players[idx] || 'Игрок 1';
+  const turnName = players[idx] || partyDefaultName(idx);
   const turnLabel = document.getElementById('partyTdTurnLabel');
   if(turnLabel) turnLabel.textContent = 'Выбирает: ' + turnName;
   // Пока игрок не выбрал Правду или Действие — видны только кнопки выбора,
@@ -124,7 +124,7 @@ function goToPartyTdGame(){
   abandonPausedSession('soloBs');
   state.pausedMode = null;
   if(!state.partyPlayers || state.partyPlayers.length < 2){
-    state.partyPlayers = ['Игрок 1','Игрок 2'];
+    state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   }
   const n = state.partyPlayers.length;
   state.partyTdCompleted = new Array(n).fill(0);
@@ -157,7 +157,7 @@ function resumePartyTdGame(){
 }
 // Итоговое окно результатов — то же оформление, что у Фантов/Крокодила.
 function showPartyTdSummaryModal(){
-  const players = state.partyPlayers || ['Игрок 1','Игрок 2'];
+  const players = state.partyPlayers || [partyDefaultName(0), partyDefaultName(1)];
   const completed = state.partyTdCompleted || [];
   const skipped = state.partyTdSkipped || [];
   const ranking = players.map((n,i)=>({n, score: completed[i] || 0, skipped: skipped[i] || 0}))
