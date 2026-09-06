@@ -109,7 +109,7 @@ function mtUpdateScoreUI(){
   // Единая система: обновляем turn-label и подсвечиваем активного игрока
   const turnLabel = document.getElementById('timerTurnLabel');
   if(turnLabel){
-    const currentName = state.timerCurrentPlayer === 1 ? (state.name1 || 'Men') : (state.name2 || 'Sexy');
+    const currentName = state.timerCurrentPlayer === 1 ? (state.name1 || 'Парень') : (state.name2 || 'Девушка');
     turnLabel.textContent = 'Ход: ' + currentName;
   }
   const scoreRow = document.getElementById('timerScoreRow');
@@ -307,8 +307,8 @@ function goToTimerGame(){
   state.pausedMode = null;
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
-  state.name1 = n1raw || 'Men';
-  state.name2 = n2raw || 'Sexy';
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
   mtLevel = (state.timerGameMode || 'fast') === 'single' ? (state.timerSelectedLevel || 1) : 1;
   state.timerCurrentPlayer = pickStartingPlayerValue('random');
   state.timerScore1 = 0; state.timerScore2 = 0;

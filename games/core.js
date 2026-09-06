@@ -910,8 +910,8 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
     }
   }
   playSuccessSound();
-  state.name1 = n1raw || 'Men';
-  state.name2 = n2raw || 'Sexy';
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
   state.currentPlayer = pickStartingPlayer();
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
@@ -2734,8 +2734,8 @@ async function goToVideoGame(){
   abandonPausedSession('kidsSaper');
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
-  state.name1 = n1raw || 'Men';
-  state.name2 = n2raw || 'Sexy';
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
   state.currentPlayer = pickStartingPlayer();
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
@@ -2816,8 +2816,8 @@ async function goToVideoFavoritesView(){
   abandonPausedSession('kidsSaper');
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
-  state.name1 = n1raw || 'Men';
-  state.name2 = n2raw || 'Sexy';
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
   state.currentPlayer = pickStartingPlayer();
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
@@ -3498,8 +3498,8 @@ async function goToDavayGame(){
   state.pausedMode = null;
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
-  state.name1 = n1raw || 'Men';
-  state.name2 = n2raw || 'Sexy';
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
   state.currentPlayer = pickStartingPlayerValue(state.davayStarter);
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;
@@ -3652,8 +3652,8 @@ function goToPlaceholderGame(){
   abandonPausedSession('kidsSaper');
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
-  state.name1 = n1raw || 'Men';
-  state.name2 = n2raw || 'Sexy';
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
   state.currentPlayer = pickStartingPlayer();
   state.score1 = 0; state.score2 = 0;
   state.autoMilestone = 0;

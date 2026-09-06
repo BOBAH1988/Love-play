@@ -403,8 +403,8 @@ function goToQuizGame(){
   state.pausedMode = null;
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
-  state.name1 = n1raw || 'Men';
-  state.name2 = n2raw || 'Sexy';
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
   const players = quizPlayersList();
   state.quizCorrect = new Array(players.length).fill(0);
   state.quizTimeMs = new Array(players.length).fill(0);

@@ -43,7 +43,7 @@ function tdUpdateScoreUI(){
   // Единая система: обновляем turn-label и подсвечиваем активного игрока
   const turnLabel = document.getElementById('tdTurnLabel');
   if(turnLabel){
-    const currentName = state.tdCurrentPlayer === 1 ? (state.name1 || 'Men') : (state.name2 || 'Sexy');
+    const currentName = state.tdCurrentPlayer === 1 ? (state.name1 || 'Парень') : (state.name2 || 'Девушка');
     turnLabel.textContent = 'Выбирает: ' + currentName;
   }
   const scoreRow = document.getElementById('tdScoreRow');
@@ -194,8 +194,8 @@ function goToTdGame(){
   state.pausedMode = null;
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
-  state.name1 = n1raw || 'Men';
-  state.name2 = n2raw || 'Sexy';
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
   tdLevel = state.tdSelectedLevel || 1;
   state.tdCurrentPlayer = pickStartingPlayerValue('random');
   state.tdScore1 = 0; state.tdScore2 = 0;
