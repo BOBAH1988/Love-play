@@ -2429,15 +2429,6 @@
   .timer-actions-top .btn{flex:1;}
   .timer-actions-top #timerSkipBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
   .timer-actions-top #timerExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
-  /* "Таймер страсти": кнопки и таймер внутри карточки — ряд кнопок становится
-     колонкой, каждая кнопка на всю ширину. .timer-actions-row тянется на
-     всю ширину карточки (align-self:stretch, не center). */
-  #timerGame .timer-actions-row{align-self:stretch;}
-  #timerGame .timer-actions-top{flex-direction:column;}
-  #timerGame .timer-actions-top #timerSkipBtn,
-  #timerGame .timer-actions-top #timerExitBtn{
-    flex:1; width:100%; padding:0 16px; white-space:nowrap;
-  }
   /* Твистер: кнопки и таймер внутри карточки, кнопки на всю ширину */
   #twisterGame .timer-actions-row{align-self:stretch;}
   #twisterGame .timer-actions-top{flex-direction:column;}
@@ -4693,24 +4684,26 @@
         <div class="card-inner">
           <div class="card-icon">⏱️</div>
           <div class="card-text" id="timerCardText">Нажмите «▶ Начать»</div>
-          <div class="timer-bar-track">
-            <div class="timer-bar-fill" id="timerBarFill"></div>
-          </div>
-          <div class="timer-label" id="timerLabel">00:00</div>
-          <div class="timer-actions-row">
-            <div class="timer-actions-top">
-              <button type="button" class="btn btn-primary" id="timerStartTaskBtn">▶ Начать</button>
-              <button type="button" class="btn btn-secondary btn-pause" id="timerPauseBtn" style="display:none;">⏸ Пауза</button>
-              <button type="button" class="btn btn-primary" id="timerNextBtn" style="display:none;">Следующее задание</button>
-              <button type="button" class="btn btn-secondary" id="timerSkipBtn">❄️ Отказ</button>
-              <button type="button" class="btn btn-secondary btn-pause" id="timerExitBtn">Пауза</button>
-            </div>
-            <div class="timer-actions-bottom">
-              <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;">🔥 Горячее</button>
-            </div>
-          </div>
         </div>
       </div>
+
+    <div class="timer-bar-track">
+      <div class="timer-bar-fill" id="timerBarFill"></div>
+    </div>
+    <div class="timer-label" id="timerLabel">00:00</div>
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="timerStartTaskBtn">▶ Начать</button>
+        <button type="button" class="btn btn-secondary btn-pause" id="timerPauseBtn" style="display:none;">⏸ Пауза</button>
+        <button type="button" class="btn btn-primary" id="timerNextBtn" style="display:none;">Следующее задание</button>
+        <button type="button" class="btn btn-secondary" id="timerSkipBtn">❄️ Отказ</button>
+        <button type="button" class="btn btn-secondary btn-pause" id="timerExitBtn">Пауза</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;">🔥 Горячее</button>
+      </div>
+    </div>
+
 </section>
 
   <!-- ===== КРОКОДИЛ: НАСТРОЙКА ===== -->
