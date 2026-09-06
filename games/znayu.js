@@ -415,6 +415,7 @@ function resumeZnayuGame(){
   renderZnayuResumeState();
 }
 function finishZnayuGame(){
+  stopAllSounds();
   resetZnayuQuiz();
   state.inProgress = false;
   state.pausedMode = null;

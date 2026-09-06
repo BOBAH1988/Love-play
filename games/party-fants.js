@@ -165,6 +165,7 @@ function finishPartyFantsGame(){
 // Полный выход из партии (по кнопке "Завершить игру" на итоговом экране) —
 // сбрасывает счёт и очередь, закрывает модалку итогов.
 function exitPartyFantsGame(){
+  stopAllSounds();
   hideModal('partyFantsSummaryModal');
   state.partyFantsCompleted = [];
   state.partyFantsSkipped = [];

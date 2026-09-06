@@ -307,6 +307,7 @@ function resumeWishlistGame(){
   renderWishlistResumeState();
 }
 function finishWishlistGame(){
+  stopAllSounds();
   resetWishlistQuiz();
   state.inProgress = false;
   state.pausedMode = null;

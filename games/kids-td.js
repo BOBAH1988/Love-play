@@ -192,6 +192,7 @@ function finishKidsTdGame(){
 // Полный выход из партии (по кнопке "Завершить игру" на итоговом экране) —
 // сбрасывает счёт и очередь, закрывает модалку итогов.
 function exitKidsTdGame(){
+  stopAllSounds();
   hideModal('kidsTdSummaryModal');
   state.kidsTdCompleted = [];
   state.kidsTdSkipped = [];

@@ -392,6 +392,7 @@ function renderPassionMapSummary(checklist){
 }
 
 function exitPassionMapSummary(){
+  stopAllSounds();
   document.getElementById('passionMapSummary').classList.remove('active');
   document.getElementById('setup').classList.add('active');
   showSetupView('twoPlayerView');
@@ -409,6 +410,7 @@ document.getElementById('passionMapStartBtn').addEventListener('click', ()=>{
   startPassionMapGame();
 });
 document.getElementById('passionMapExitBtn').addEventListener('click', ()=>{
+  stopAllSounds();
   document.getElementById('passionMapGame').classList.remove('active');
   document.getElementById('passionMapSetup').classList.add('active');
 });

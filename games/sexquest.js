@@ -395,6 +395,7 @@ function renderSexQuestSummary(checklist){
 }
 
 function exitSexQuestSummary(){
+  stopAllSounds();
   document.getElementById('sexQuestSummary').classList.remove('active');
   document.getElementById('setup').classList.add('active');
   showSetupView('soloView');
@@ -412,6 +413,7 @@ document.getElementById('sexQuestStartBtn').addEventListener('click', ()=>{
   startSexQuestGame();
 });
 document.getElementById('sexQuestExitBtn').addEventListener('click', ()=>{
+  stopAllSounds();
   document.getElementById('sexQuestGame').classList.remove('active');
   document.getElementById('sexQuestSetup').classList.add('active');
 });

@@ -190,6 +190,7 @@ function finishPartyTdGame(){
 // Полный выход из партии (по кнопке "Завершить игру" на итоговом экране) —
 // сбрасывает счёт и очередь, закрывает модалку итогов.
 function exitPartyTdGame(){
+  stopAllSounds();
   hideModal('partyTdSummaryModal');
   state.partyTdCompleted = [];
   state.partyTdSkipped = [];

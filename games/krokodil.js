@@ -386,6 +386,7 @@ function goToKrokodilGame(){
 // сбрасывает счёт и возвращает на экран настройки Крокодила.
 function exitKrokodilGame(){
   stopKrInterval();
+  stopAllSounds();
   hideModal('krokodilSummaryModal');
   state.krokodilScores = [];
   state.krokodilSkipCounts = [];

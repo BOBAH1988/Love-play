@@ -470,6 +470,7 @@ function finishLuckyGame(){
 // и уровень, возвращает на экран настройки Счастливого билета (как
 // exitKrokodilGame в "Крокодиле").
 function exitLuckyGame(){
+  stopAllSounds();
   hideModal('luckySummaryModal');
   state.luckyGrid = [];
   state.luckyChecked = [];

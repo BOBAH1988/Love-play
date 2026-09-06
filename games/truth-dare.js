@@ -227,6 +227,7 @@ function resumeTdGame(){
   tdShowChoice();
 }
 function finishTdGame(){
+  stopAllSounds();
   state.tdScore1 = 0; state.tdScore2 = 0;
   state.tdCompletedCount = 0; state.tdSkippedCount = 0;
   state.tdLevelTurnCounts = {1:0, 2:0}; state.tdPendingLevelUp = false;
