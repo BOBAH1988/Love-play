@@ -749,7 +749,7 @@ function shuffle(arr){
 }
 function showToast(msg, duration){
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  t.innerHTML = msg.replace(/\n/g, '<br>');
   t.classList.add('show');
   clearTimeout(showToast._tm);
   showToast._tm = setTimeout(()=>t.classList.remove('show'), duration || 1800);
