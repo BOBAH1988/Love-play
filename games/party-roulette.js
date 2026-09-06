@@ -9,7 +9,13 @@
 
 const ROULETTE_WHEEL_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 const ROULETTE_RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
-const ROULETTE_CHIPS = [10, 50, 100, 500];
+const ROULETTE_CHIP_COLORS = {
+  10: { bg: '#3b82f6', text: '#fff' },
+  50: { bg: '#22c55e', text: '#fff' },
+  100: { bg: '#ef4444', text: '#fff' },
+  500: { bg: '#7c3aed', text: '#fff' }
+};
+const ROULETTE_CHIPS = Object.keys(ROULETTE_CHIP_COLORS).map(Number);
 const ROULETTE_START_BALANCE = 1000;
 
 let rouletteBets = {};
@@ -125,6 +131,7 @@ function renderRouletteChips(){
     btn.type = 'button';
     btn.className = 'roulette-chip' + (v === rouletteSelectedChip ? ' roulette-chip-selected' : '');
     btn.textContent = v;
+    btn.dataset.chip = v;
     btn.addEventListener('click', ()=>{
       rouletteSelectedChip = v;
       renderRouletteChips();
