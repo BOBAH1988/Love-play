@@ -296,7 +296,6 @@ function goToPartyRouletteGame(){
   if(!rouletteInited){
     renderRouletteNumberGrid();
     rouletteBindOutsideBets();
-    document.getElementById('rouletteWheel').style.background = buildRouletteWheelBackground();
     rouletteInited = true;
   }
   rouletteBets = {};
