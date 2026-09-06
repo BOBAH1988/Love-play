@@ -2438,6 +2438,16 @@
   #timerGame .timer-actions-top #timerExitBtn{
     flex:1; width:100%; padding:0 16px; white-space:nowrap;
   }
+  /* Твистер: кнопки и таймер внутри карточки, кнопки на всю ширину */
+  #twisterGame .timer-actions-row{align-self:stretch;}
+  #twisterGame .timer-actions-top{flex-direction:column;}
+  #twisterGame .timer-actions-bottom{align-self:stretch;}
+  #twisterGame .timer-actions-top .btn,
+  #twisterGame .timer-actions-bottom .btn{
+    flex:1; width:100%; white-space:nowrap;
+  }
+  #twisterGame .starter-group.timer-duration-group{width:100%;}
+  #twisterGame .timer-bar-track{width:100%;}
   /* "Нет"/"Отказ" — минимальная ширина рядом с основной кнопкой действия
      (тот же принцип, что и у #timerSkipBtn выше). */
   .timer-actions-top #partyFantsSkipBtn,
@@ -5208,29 +5218,29 @@
             <div class="card-split-title" id="twisterPlayerName"></div>
             <div class="card-text" id="twisterMoveText">Нажми начать игру</div>
           </div>
+
+          <div class="timer-bar-track">
+            <div class="timer-bar-fill" id="twisterBarFill"></div>
+          </div>
+          <div class="timer-label" id="twisterTimeLabel">00:10</div>
+
+          <div class="starter-group timer-duration-group" id="twisterDurationGroup">
+            <button type="button" class="starter-btn mode-btn" data-value="5">5 сек</button>
+            <button type="button" class="starter-btn mode-btn" data-value="10">10 сек</button>
+            <button type="button" class="starter-btn mode-btn" data-value="15">15 сек</button>
+          </div>
+
+          <div class="timer-actions-row">
+            <div class="timer-actions-top">
+              <button type="button" class="btn btn-primary" id="twisterPauseBtn">▶ Начать игру</button>
+              <button type="button" class="btn btn-secondary" id="twisterNextBtn">Следующий ход</button>
+            </div>
+            <div class="timer-actions-bottom">
+              <button type="button" class="btn btn-secondary btn-pause" id="twisterExitBtn">Выход</button>
+            </div>
+          </div>
         </div>
       </div>
-
-    <div class="timer-bar-track">
-      <div class="timer-bar-fill" id="twisterBarFill"></div>
-    </div>
-    <div class="timer-label" id="twisterTimeLabel">00:10</div>
-
-    <div class="starter-group timer-duration-group" id="twisterDurationGroup">
-      <button type="button" class="starter-btn mode-btn" data-value="5">5 сек</button>
-      <button type="button" class="starter-btn mode-btn" data-value="10">10 сек</button>
-      <button type="button" class="starter-btn mode-btn" data-value="15">15 сек</button>
-    </div>
-
-    <div class="timer-actions-row">
-      <div class="timer-actions-top">
-        <button type="button" class="btn btn-primary" id="twisterPauseBtn">▶ Начать игру</button>
-        <button type="button" class="btn btn-secondary" id="twisterNextBtn">Следующий ход</button>
-      </div>
-      <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-pause" id="twisterExitBtn">Выход</button>
-      </div>
-    </div>
   
         </div>
 </section>
