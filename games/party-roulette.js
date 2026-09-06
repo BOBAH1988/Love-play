@@ -176,8 +176,65 @@ document.getElementById('rouletteSpinBtn').addEventListener('click', ()=>{
   document.getElementById('rouletteResult').textContent = '';
   playSuccessSound();
   const winningNumber = ROULETTE_WHEEL_ORDER[Math.floor(Math.random()*ROULETTE_WHEEL_ORDER.length)];
-  spinRouletteWheelTo(winningNumber);
-  setTimeout(()=>{ resolveRouletteSpin(winningNumber); }, 3700);
+  showRouletteSpinModal(winningNumber);
+});
+
+let rouletteSpinWheelRotation = 0;
+function showRouletteSpinModal(winningNumber){
+  const modal = document.getElementById('rouletteSpinModal');
+  const spinWheel = document.getElementById('rouletteSpinWheel');
+  const resultEl = document.getElementById('rouletteSpinResult');
+  const doneBtn = document.getElementById('rouletteSpinDoneBtn');
+  if(!modal || !spinWheel) return;
+  spinWheel.style.background = buildRouletteWheelBackground();
+  spinWheel.style.transition = 'none';
+  spinWheel.style.transform = 'rotate(0deg)';
+  rouletteSpinWheelRotation = 0;
+  resultEl.textContent = 'Крутится...';
+  doneBtn.style.display = 'none';
+  modal.classList.add('show');
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      const wedge = 360 / ROULETTE_WHEEL_ORDER.length;
+      const idx = ROULETTE_WHEEL_ORDER.indexOf(winningNumber);
+      const desiredMod = (360 - idx*wedge) % 360;
+      const extraSpins = (5 + Math.floor(Math.random()*3)) * 360;
+      const jitter = (Math.random()-0.5) * (wedge*0.6);
+      rouletteSpinWheelRotation = extraSpins + desiredMod + jitter;
+      spinWheel.style.transition = 'transform 3.6s cubic-bezier(0.15,0.65,0.25,1)';
+      spinWheel.style.transform = `rotate(${rouletteSpinWheelRotation}deg)`;
+    }, 50);
+  });
+  setTimeout(()=>{
+    resolveRouletteSpin(winningNumber);
+    const color = rouletteColorOf(winningNumber);
+    const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
+    const totalBet = rouletteBetTotal();
+    let totalReturn = 0;
+    Object.keys(rouletteBets).forEach(key=>{
+      if(rouletteBetWins(key, winningNumber)){
+        totalReturn += rouletteBets[key] * (rouletteBetMultiplier(key) + 1);
+      }
+    });
+    const net = totalReturn - totalBet;
+    if(net >= 0) playSuccessSound(); else playErrorSound();
+    resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})<br>${net >= 0 ? '🎉 Выигрыш' : '😔 Проигрыш'} <b>${net >= 0 ? '+' : ''}${net}</b>`;
+    doneBtn.style.display = 'block';
+  }, 3700);
+}
+
+document.getElementById('rouletteSpinDoneBtn').addEventListener('click', ()=>{
+  const modal = document.getElementById('rouletteSpinModal');
+  if(modal) modal.classList.remove('show');
+  rouletteBets = {};
+  renderRouletteBadges();
+  rouletteSpinning = false;
+  document.getElementById('rouletteClearBetsBtn').disabled = false;
+  const players = roulettePlayers();
+  state.rouletteCurrentPlayerIndex = (state.rouletteCurrentPlayerIndex + 1) % players.length;
+  saveState();
+  updateRouletteTurnLabel();
+  updateRouletteBetTotal();
 });
 function resolveRouletteSpin(n){
   const color = rouletteColorOf(n);
