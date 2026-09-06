@@ -1974,7 +1974,20 @@
 
   /* ---- Правда или действие ---- */
   /* .td-score-row убран — теперь используется krokodil-score-row.two-player */
-  .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd; margin-bottom:10px;}
+  .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd;}
+  /* Turn-label — ПЕРВЫЙ элемент экрана (Фанты, Правда/Действие, Крокодил, Таймер,
+     «Знаю тебя», kids-игры и т.д.) — парит в самой верхней полосе: по центру между
+     FAB-кнопками «←»/«☰» (тот же top:12px + safe-area, что и у кнопок) на всех
+     ширинах экрана, как единая верхняя панель [☰] [Тянет: …] [←]. Контент экрана
+     начинается ниже — отступ дают правила .screen:has(...) ниже. Метки НЕ-первые
+     (flash «Карточка 1 из 25», сапёр, счастливый билет, морской бой — идут под
+     h1.title) остаются в потоке на своём месте. */
+  .td-turn-label:first-child{
+    position:absolute; top:calc(12px + env(safe-area-inset-top));
+    left:50%; transform:translateX(-50%);
+    z-index:10; margin:0; white-space:nowrap;
+    max-width:calc(100% - 112px);
+  }
   /* Mobile: фиксированные FAB-кнопки парят сверху — нужны отступы,
      чтобы имена/контент не налезали на кнопки. ~50px (высота кнопки 36 + safe area 12). */
   .screen:has(> .krokodil-score-row){
@@ -1994,12 +2007,9 @@
   #wishlistGame, #znayuGame{
     padding-top: 50px;
   }
-  /* Desktop: turn-label между FAB-кнопками, krokodil-score-row с именами по краям */
+  /* Desktop: krokodil-score-row с именами по краям. Turn-label парит в верхней
+     полосе на всех ширинах (базовое правило .td-turn-label:first-child выше). */
   @media (min-width:640px){
-    .td-turn-label{
-      position:absolute; top:12px; left:50%; transform:translateX(-50%);
-      z-index:10; margin-bottom:0;
-    }
     .krokodil-score-row{
       justify-content:space-between;
     }
