@@ -1737,7 +1737,7 @@ function updateTurnUI(){
   const turnLabel = document.getElementById('gameTurnLabel');
   if(turnLabel){
     const currentName = state.currentPlayer === 1 ? state.name1 : state.name2;
-    turnLabel.textContent = 'Тянет: ' + currentName;
+    turnLabel.textContent = 'Ходит: ' + currentName;
   }
   // Подсветка активного игрока (если есть score-row с .krokodil-score-item)
   const row = document.getElementById('gameScoreRow');

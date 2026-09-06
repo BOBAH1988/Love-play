@@ -1978,12 +1978,23 @@
   /* Turn-label — ПЕРВЫЙ элемент экрана (Фанты, Правда/Действие, Крокодил, Таймер,
      «Знаю тебя», kids-игры и т.д.) — парит в самой верхней полосе: по центру между
      FAB-кнопками «←»/«☰» (тот же top:12px + safe-area, что и у кнопок) на всех
-     ширинах экрана, как единая верхняя панель [☰] [Тянет: …] [←]. Контент экрана
+     ширинах экрана, как единая верхняя панель [☰] [Ходит: …] [←]. Контент экрана
      начинается ниже — отступ дают правила .screen:has(...) ниже. Метки НЕ-первые
      (flash «Карточка 1 из 25», сапёр, счастливый билет, морской бой — идут под
      h1.title) остаются в потоке на своём месте. */
   .td-turn-label:first-child{
     position:absolute; top:calc(12px + env(safe-area-inset-top));
+    left:50%; transform:translateX(-50%);
+    z-index:10; margin:0; white-space:nowrap;
+    max-width:calc(100% - 112px);
+  }
+  /* Фанты (парная игра): строка «До след. уровня» — второй строкой верхней панели,
+     прямо под плавающей меткой хода «Ходит: …» (top метки 12px + строка ~17px + зазор).
+     Только экран #game: на других экранах .level-progress нет. Скрытия в video/davay/
+     placeholder-режимах (#game.… #levelProgress{display:none}) специфичнее и работают. */
+  #game #levelProgress{
+    position:absolute;
+    top:calc(12px + env(safe-area-inset-top) + 22px);
     left:50%; transform:translateX(-50%);
     z-index:10; margin:0; white-space:nowrap;
     max-width:calc(100% - 112px);
@@ -3044,16 +3055,16 @@
   <section id="game" class="screen">
     <!-- Единая система: turn-label между FAB-кнопками (десктоп),
          имена по краям (мобайл/десктоп), затем игровое поле -->
-    <div class="td-turn-label" id="gameTurnLabel">Тянет: Men</div>
+    <div class="td-turn-label" id="gameTurnLabel">Ходит: Парень</div>
     <div class="krokodil-score-row two-player" id="gameScoreRow">
-      <span id="score1" class="krokodil-score-item">Men: 0</span>
-      <span id="score2" class="krokodil-score-item">Sexy: 0</span>
+      <span id="score1" class="krokodil-score-item">Парень: 0</span>
+      <span id="score2" class="krokodil-score-item">Девушка: 0</span>
     </div>
     <div class="level-progress" id="levelProgress"></div>
 
     <div class="davay-player-row" id="davayPlayerRow">
-      <button type="button" class="btn btn-secondary" id="davayPlayer1Btn">Men</button>
-      <button type="button" class="btn btn-secondary" id="davayPlayer2Btn">Sexy</button>
+      <button type="button" class="btn btn-secondary" id="davayPlayer1Btn">Парень</button>
+      <button type="button" class="btn btn-secondary" id="davayPlayer2Btn">Девушка</button>
     </div>
     <div class="davay-progress-row" id="davayProgressRow">
       <div class="davay-progress-track"><div class="davay-progress-fill" id="davayProgressFill"></div></div>
@@ -4323,8 +4334,8 @@
     <!-- Единая система: turn-label между FAB, имена по краям (two-player) -->
     <div class="td-turn-label" id="tdTurnLabel">Выбирает: Men</div>
     <div class="krokodil-score-row two-player" id="tdScoreRow">
-      <span id="tdScore1" class="krokodil-score-item">Men: 0</span>
-      <span id="tdScore2" class="krokodil-score-item">Sexy: 0</span>
+      <span id="tdScore1" class="krokodil-score-item">Парень: 0</span>
+      <span id="tdScore2" class="krokodil-score-item">Девушка: 0</span>
     </div>
 
     <div class="card-area">
@@ -4426,8 +4437,8 @@
     <!-- Единая система: turn-label между FAB, имена по краям (two-player) -->
     <div class="td-turn-label" id="timerTurnLabel">Ход: Men</div>
     <div class="krokodil-score-row two-player" id="timerScoreRow">
-      <span id="timerScore1" class="krokodil-score-item">Men: 0</span>
-      <span id="timerScore2" class="krokodil-score-item">Sexy: 0</span>
+      <span id="timerScore1" class="krokodil-score-item">Парень: 0</span>
+      <span id="timerScore2" class="krokodil-score-item">Девушка: 0</span>
     </div>
 
     <div class="card-area">
@@ -4658,7 +4669,7 @@
 
   <!-- ===== ФАНТЫ (КОМПАНИЯ): ИГРА ===== -->
   <section id="partyFantsGame" class="screen">
-    <div class="td-turn-label" id="partyFantsTurnLabel">Тянет: Игрок 1</div>
+    <div class="td-turn-label" id="partyFantsTurnLabel">Ходит: Игрок 1</div>
     <div class="krokodil-score-row multi-player" id="partyFantsScoreRow"></div>
 
     <div class="card-area">

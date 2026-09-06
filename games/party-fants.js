@@ -51,7 +51,7 @@ function updatePartyFantsScoreUI(){
   }
   const turnName = players[idx] || 'Игрок 1';
   const turnLabel = document.getElementById('partyFantsTurnLabel');
-  if(turnLabel) turnLabel.textContent = 'Тянет: ' + turnName;
+  if(turnLabel) turnLabel.textContent = 'Ходит: ' + turnName;
 }
 // Задание тянется без повторов внутри уровня, пока пул не закончится — тот
 // же принцип, что и во всех остальных играх приложения.
