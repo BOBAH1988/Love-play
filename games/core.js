@@ -847,6 +847,8 @@ function exitGame(gameId, setupId){
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   const setup = document.getElementById(setupId || 'setup');
   if(setup) setup.classList.add('active');
+  // Останавливаем все звуки (Web Audio API + SpeechSynthesis)
+  stopAllSounds();
 }
 // Правило для «Только избранное»: либо 10+ карточек на двоих, либо минимум по 5 карточек,
 // доступных каждому партнёру отдельно (общая карточка засчитывается обоим).
@@ -3863,6 +3865,7 @@ function resetTimer(){
 // iOS Safari ограничивает число одновременно живых AudioContext, и при частых
 // звуках (например, быстрые свайпы подряд) более старый подход мог "тихо" не срабатывать.
 let sharedAudioCtx = null;
+const activeOscillators = [];
 function getAudioCtx(){
   try{
     if(!sharedAudioCtx){
@@ -3875,6 +3878,15 @@ function getAudioCtx(){
     }
     return sharedAudioCtx;
   }catch(e){ return null; }
+}
+function stopAllSounds(){
+  // Останавливаем все активные осцилляторы (Web Audio API)
+  while(activeOscillators.length){
+    const osc = activeOscillators.pop();
+    try{ osc.stop(); }catch(e){}
+  }
+  // Останавливаем речь (SpeechSynthesis)
+  if('speechSynthesis' in window) speechSynthesis.cancel();
 }
 
 function playTimerAlarm(){
@@ -3919,6 +3931,8 @@ function playSuccessSound(){
       gain.connect(ctx.destination);
       osc.start(ctx.currentTime + t);
       osc.stop(ctx.currentTime + t + 0.4);
+      activeOscillators.push(osc);
+      osc.onended = ()=>{ const idx = activeOscillators.indexOf(osc); if(idx!==-1) activeOscillators.splice(idx,1); };
     });
   }catch(e){}
 }
