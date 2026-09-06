@@ -40,7 +40,9 @@ let state = {
   // Секс-бинго
   bingoSelectedLevel:1, bingoGridLevel:0, bingoGrid:[], bingoChecked:[], bingoWonLines:[], bingoUsedBonus:[], bingoCurrentLevel:1,
   bingoEscalatedTo2:false, bingoEscalatedTo3:false, bingoVictoryMilestones:[], bingoFinished:false,
-  bingoTasksHidden:false, bingoRevealed:[],
+  // Задания бинго по умолчанию скрыты (карта стартует клетками 🎁) —
+  // точное значение всё равно выставляет generateBingoGrid при старте.
+  bingoTasksHidden:true, bingoRevealed:[],
   // Накопительный чек-лист бонусных заданий — в отличие от остального
   // состояния карты НЕ сбрасывается между партиями, только вручную.
   bingoBonusChecklist:[],
@@ -1366,7 +1368,7 @@ function performFullReset(){
   state.bingoGrid = []; state.bingoChecked = []; state.bingoWonLines = []; state.bingoUsedBonus = [];
   state.bingoCurrentLevel = 1; state.bingoEscalatedTo2 = false; state.bingoEscalatedTo3 = false;
   state.bingoVictoryMilestones = []; state.bingoFinished = false; state.bingoBonusChecklist = [];
-  state.bingoTasksHidden = false; state.bingoRevealed = [];
+  state.bingoTasksHidden = true; state.bingoRevealed = [];
   // Таймер страсти
   state.timerUsed = {};
   state.timerScore1 = 0; state.timerScore2 = 0;
