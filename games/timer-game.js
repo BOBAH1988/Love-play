@@ -329,6 +329,7 @@ function goToTimerGame(){
 }
 function exitTimerGame(){
   stopMtInterval();
+  stopAllSounds();
   state.timerScore1 = 0; state.timerScore2 = 0;
   state.timerCompletedCount = 0; state.timerSkippedCount = 0;
   state.timerLevelUpCounts = {1:0, 2:0};
@@ -345,6 +346,7 @@ function exitTimerGame(){
 // возврате показывается новое задание того же уровня, счёт сохранён.
 function pauseTimerGame(){
   stopMtInterval();
+  stopAllSounds();
   state.pausedMode = 'timer';
   saveState();
   document.getElementById('timerGame').classList.remove('active');
