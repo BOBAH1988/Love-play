@@ -151,7 +151,8 @@ function goToTwisterGame(){
 function exitTwisterGame(){
   stopTwisterInterval();
   if(twisterSpeechTimer){ clearTimeout(twisterSpeechTimer); twisterSpeechTimer = null; }
-  if(typeof stopAllSounds === 'function') stopAllSounds();
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  stopAllSounds();
   exitGame('twisterGame', 'setup');
 }
 

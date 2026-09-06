@@ -3894,8 +3894,11 @@ function stopAllSounds(){
     const osc = activeOscillators.pop();
     try{ osc.stop(); }catch(e){}
   }
-  // Останавливаем речь (SpeechSynthesis)
-  if('speechSynthesis' in window) speechSynthesis.cancel();
+  // Останавливаем речь (SpeechSynthesis) — дважды для надёжности в Chrome
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    setTimeout(()=>speechSynthesis.cancel(), 50);
+  }
 }
 
 function playTimerAlarm(){
