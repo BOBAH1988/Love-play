@@ -4396,7 +4396,8 @@ document.getElementById('closeSummaryBtn').addEventListener('click', ()=>{
     return;
   }
   if(summaryModalMode === 'bingo'){
-    exitBingoGameToSetup();
+    // Оставляем на экране игры — выход только вручную
+    closeModal('summaryModal');
     return;
   }
   if(summaryModalMode === 'bingoExit'){
