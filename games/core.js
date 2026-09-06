@@ -4719,7 +4719,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 
   backBtn.addEventListener('click', ()=>{
     // Останавливаем любую озвучку/звук при выходе — сразу, до любых проверок
-    if(typeof stopSpeech === 'function') stopSpeech();
+    if(typeof stopAllSounds === 'function') stopAllSounds();
 
     // Закрываем глобальное меню если открыто
     const menuModal = document.getElementById('globalMenuModal');
@@ -4849,7 +4849,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       else state.pausedMode = null;
       saveState();
       // Останавливаем любые фоновые звуки и озвучку, чтобы не играли после выхода
-      if(typeof stopSpeech === 'function') stopSpeech();
+      if(typeof stopAllSounds === 'function') stopAllSounds();
       if(typeof updateResumeUI === 'function') updateResumeUI();
       window.scrollTo(0, 0);
     }
