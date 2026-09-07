@@ -4874,6 +4874,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       davaySetup: 'pauseDavayGame', davayGame: 'pauseDavayGame', davayQuiz: 'pauseDavayGame',
       soloBsSetup: 'pauseSoloBattleshipGame', soloBsGame: 'pauseSoloBattleshipGame',
       soloBattleshipSetup: 'pauseSoloBattleshipGame', soloBattleshipGame: 'pauseSoloBattleshipGame',
+      partyRouletteSetup: 'pauseGamePartyRoulette', partyRouletteGame: 'pauseGamePartyRoulette',
     };
     // Ищем pause-функцию по ЛЮБОМУ из активных экранов
     let fnName = null;

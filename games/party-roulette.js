@@ -335,7 +335,8 @@ function resumePartyRouletteGame(){
   if(pauseModal) pauseModal.classList.remove('show');
   state.pausedMode = null;
   goToGame('setup', 'partyRouletteGame');
-  ensureRouletteBalances(true);
+  // Продолжение паузы: НЕ сбрасываем балансы/ставки, только гарантируем структуру
+  ensureRouletteBalances(false);
   renderRouletteBadges();
   updateRouletteTurnLabel();
   updateRouletteBetTotal();
@@ -357,7 +358,11 @@ function finishPartyRouletteGame(){
 /* ============ ВХОД ============ */
 let rouletteInited = false;
 function goToPartyRouletteGame(){
+  // Новый заход в игру = новая партия: сбрасываем балансы и ставки
   ensureRouletteBalances(true);
+  // Сразу фиксируем сброс в localStorage, чтобы после перезагрузки страницы
+  // (жёсткой в т.ч.) не вернулись ставки/баланс прошлой партии.
+  saveState();
   goToGame('setup', 'partyRouletteGame');
   if(!rouletteInited){
     renderRouletteNumberGrid();
