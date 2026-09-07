@@ -325,6 +325,7 @@ function checkLuckyGameFinished(){
     state.luckyFinished = true;
     state.inProgress = false;
     saveState();
+    updateLuckyRandomBtn();
     showLuckySummaryModal();
   }
 }
@@ -420,6 +421,7 @@ function goToLuckyGame(){
   goToGame(null, 'luckyGame');
   renderLuckyGrid();
   updateLuckyHideTasksBtn();
+  updateLuckyRandomBtn();
   renderLuckyBonusChecklist();
 }
 // Пауза: вернуться в главное меню, не сбрасывая поле и очередь — можно
@@ -517,7 +519,11 @@ function suggestRandomLuckyCell(){
   }, {capture:true, once:true});
 }
 document.getElementById('luckyRandomBtn').addEventListener('click', ()=>{
-  suggestRandomLuckyCell();
+  if(state.luckyFinished){
+    goToLuckyGame();
+  } else {
+    suggestRandomLuckyCell();
+  }
 });
 document.getElementById('luckySetupStartBtn').addEventListener('click', ()=>{
   playSuccessSound();
@@ -528,6 +534,16 @@ function updateLuckyHideTasksBtn(){
   const btn = document.getElementById('luckyHideTasksBtn');
   if(!btn) return;
   btn.textContent = state.luckyTasksHidden ? '👀 Показать задания' : '🙈 Скрыть задания';
+}
+// После окончания игры кнопка «Случайно» превращается в «Заново» — начинает новую партию.
+function updateLuckyRandomBtn(){
+  const btn = document.getElementById('luckyRandomBtn');
+  if(!btn) return;
+  if(state.luckyFinished){
+    btn.textContent = '🔄 Заново';
+  } else {
+    btn.textContent = '🎲 Случайно';
+  }
 }
 // Случайно выбирает одну ещё не отмеченную клетку и превращает её в
 // счастливую (если такой на поле ещё нет) — вызывается при включении
