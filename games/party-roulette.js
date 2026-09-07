@@ -297,39 +297,11 @@ function closeRouletteSpinModal(){
   if(modal) modal.classList.remove('show');
 }
 
-/* Гарантирует наличие кнопки «Выход» в окне кручения. Если HTML из старого
- * кэша не содержит кнопку (рассинхрон кэша HTML и JS) — создаём её динамически.
- * Видимость управляется ТОЛЬКО inline-стилем (style.display) — работает при
- * любом сочетании версий HTML/CSS/JS в кэше устройства. */
-function ensureRouletteCustomExitBtn(){
-  let exitBtn = document.getElementById('rouletteCustomExitBtn');
-  if(!exitBtn){
-    const card = document.querySelector('#rouletteSpinModal .roulette-spin-card');
-    if(!card) return null;
-    exitBtn = document.createElement('button');
-    exitBtn.type = 'button';
-    exitBtn.className = 'btn btn-secondary';
-    exitBtn.id = 'rouletteCustomExitBtn';
-    exitBtn.textContent = 'Выход';
-    const actions = card.querySelector('.roulette-spin-actions');
-    (actions || card).appendChild(exitBtn);
-  }
-  if(!exitBtn.dataset.bound){
-    exitBtn.dataset.bound = '1';
-    exitBtn.style.display = 'none';
-    exitBtn.style.flex = '0 0 auto';
-    exitBtn.style.width = 'auto';
-    exitBtn.style.padding = '10px 18px';
-    exitBtn.style.whiteSpace = 'nowrap';
-    exitBtn.addEventListener('click', exitRouletteCustomMode);
-  }
-  return exitBtn;
-}
-
 /* Красный крестик в правом верхнем углу окна кручения — экстренный выход
  * из режима «Свое поле». Прибит к углу экрана (модалка position:fixed),
  * поэтому виден всегда, даже если контент карточки не влез по высоте.
- * Создается динамически, если его нет в кэше HTML устройства. */
+ * Создается динамически, если его нет в кэше HTML устройства. Все стили
+ * задаются инлайново — старый кэш CSS не может исказить вид крестика. */
 function ensureRouletteCustomCloseX(){
   let x = document.getElementById('rouletteCustomCloseX');
   if(!x){
@@ -340,9 +312,22 @@ function ensureRouletteCustomCloseX(){
     x.id = 'rouletteCustomCloseX';
     x.textContent = '✕';
     x.setAttribute('aria-label', 'Выход');
-    x.style.display = 'none'; // скрыт вне режима «Свое поле» (CSS-умолчания нет)
     modal.appendChild(x);
   }
+  // Стили инлайном при КАЖДОМ вызове: тёмно-красный круг, белый крестик
+  // по центру — вид не зависит от версии CSS в кэше устройства
+  x.style.cssText = [
+    'position:absolute', 'top:calc(14px + env(safe-area-inset-top))', 'right:14px',
+    'width:56px', 'height:56px', 'padding:0', 'margin:0', 'flex:none',
+    'border:2px solid rgba(255,255,255,.45)', 'border-radius:50%',
+    'background:#8b0000', 'color:#fff', 'font-size:30px', 'font-weight:700',
+    'line-height:1', 'display:flex', 'align-items:center', 'justify-content:center',
+    'box-shadow:0 4px 14px rgba(0,0,0,.55)', 'cursor:pointer', 'z-index:310',
+    '-webkit-tap-highlight-color:transparent', 'touch-action:manipulation'
+  ].join(';');
+  // Вне режима «Свое поле» — скрыт; показом/скрытием управляет JS (flex/none)
+  // после каждого вызова ensureRouletteCustomCloseX()
+  x.style.display = 'none';
   if(!x.dataset.bound){
     x.dataset.bound = '1';
     x.addEventListener('click', exitRouletteCustomMode);
@@ -350,11 +335,19 @@ function ensureRouletteCustomCloseX(){
   return x;
 }
 
+/* Удаляем устаревшую кнопку «Выход» из окна кручения: она не отображалась
+ * (заменена крестиком), а в старом кэше HTML могла остаться видимой. */
+(function removeLegacyRouletteExitBtn(){
+  const legacy = document.getElementById('rouletteCustomExitBtn');
+  if(legacy) legacy.remove();
+  const actions = document.querySelector('#rouletteSpinModal .roulette-spin-actions');
+  // Пустой контейнер без кнопок тоже убираем, чтобы не занимал место
+  if(actions && !actions.querySelector('button')) actions.remove();
+})();
+
 /* Выход из режима «Свое поле» на предыдущий экран (экран рулетки) */
 function exitRouletteCustomMode(){
   rouletteCustomMode = false;
-  const exitBtn = document.getElementById('rouletteCustomExitBtn');
-  if(exitBtn) exitBtn.style.display = 'none';
   const closeX = document.getElementById('rouletteCustomCloseX');
   if(closeX) closeX.style.display = 'none';
   const modalEl = document.getElementById('rouletteSpinModal');
@@ -400,8 +393,6 @@ function spinRouletteWheel(){
   // показывается независимо от состояния кэша и CSS-специфичности.
   const modalEl = document.getElementById('rouletteSpinModal');
   if(modalEl) modalEl.classList.toggle('custom-mode', rouletteCustomMode);
-  const customExitBtn = ensureRouletteCustomExitBtn();
-  if(customExitBtn) customExitBtn.style.display = rouletteCustomMode ? 'block' : 'none';
   const closeX = ensureRouletteCustomCloseX();
   if(closeX) closeX.style.display = rouletteCustomMode ? 'flex' : 'none';
   
@@ -575,8 +566,6 @@ function goToPartyRouletteGame(){
   // Режим «Свое поле» всегда начинается заново с экрана рулетки
   rouletteCustomMode = false;
   rouletteSpinSession++; // отменяем отложенную анимацию прошлого кручения
-  const customExitBtn = document.getElementById('rouletteCustomExitBtn');
-  if(customExitBtn) customExitBtn.style.display = 'none';
   const closeX = document.getElementById('rouletteCustomCloseX');
   if(closeX) closeX.style.display = 'none';
   const modalEl = document.getElementById('rouletteSpinModal');
@@ -613,10 +602,9 @@ if(customBoardBtnEl) customBoardBtnEl.addEventListener('click', ()=>{
   rouletteCustomMode = true;
   spinRouletteWheel();
 });
-// Выход из режима «Свое поле» на предыдущий экран (экран рулетки).
-// ensureRouletteCustomExitBtn()/ensureRouletteCustomCloseX() найдут кнопки в
-// HTML или создадут их, если устройство держит в кэше старую версию без них.
-ensureRouletteCustomExitBtn();
+// Выход из режима «Свое поле» — по красному крестику в углу окна кручения.
+// ensureRouletteCustomCloseX() найдёт крестик в HTML или создаст его,
+// если устройство держит в кэше старую версию без него.
 ensureRouletteCustomCloseX();
 const rouletteClearBtnEl = document.getElementById('rouletteClearBetsBtn');
 if(rouletteClearBtnEl) rouletteClearBtnEl.addEventListener('click', ()=>{ clearRouletteBets(); });

@@ -1135,14 +1135,15 @@
     width:100%; height:100%; padding:20px; overflow-y:auto;
   }
   /* Красный крестик — экстренный выход из режима «Свое поле». Прибит к углу
-     экрана (модалка position:fixed; inset:0), поэтому виден всегда, даже если
-     содержимое карточки не влезло по высоте. Видимостью управляет JS через
-     inline-стиль (flex/none) — устойчив к любому рассинхрону кэша. */
+     экрана (модалка position:fixed; inset:0). Все рабочие стили задаются
+     инлайново из JS (ensureRouletteCustomCloseX) — этот блок лишь дублирует
+     их для читаемости; видимость управляет JS (flex/none). */
   #rouletteCustomCloseX{
-    position:absolute; top:calc(12px + env(safe-area-inset-top)); right:12px;
-    width:46px; height:46px; padding:0; margin:0; flex:none;
-    border-radius:50%; border:2px solid rgba(255,255,255,.4);
-    background:#8b0000; color:#fff; font-size:22px; font-weight:700; line-height:1;
+    position:absolute; top:calc(14px + env(safe-area-inset-top)); right:14px;
+    width:56px; height:56px; padding:0; margin:0; flex:none;
+    border-radius:50%; border:2px solid rgba(255,255,255,.45);
+    background:#8b0000; color:#fff; font-size:30px; font-weight:700; line-height:1;
+    display:flex; align-items:center; justify-content:center;
     box-shadow:0 4px 14px rgba(0,0,0,.55); cursor:pointer; z-index:310;
   }
   #rouletteCustomCloseX:active{ transform:scale(.92); }
@@ -1167,19 +1168,7 @@
     text-align:center; font-size:20px; font-weight:700; min-height:32px;
     margin-bottom:20px; color:#fff; padding:0 20px;
   }
-  /* Кнопки в окне кручения: «Продолжить» растянутая, «Выход» (режим «Свое
-     поле») — минимальной ширины рядом с ней */
-  .roulette-spin-actions{
-    display:flex; gap:10px; align-items:stretch; width:100%; max-width:340px;
-  }
-  .roulette-spin-actions #rouletteSpinDoneBtn{ flex:1; }
-  /* «Выход» (режим «Свое поле») скрыта/показана ТОЛЬКО через inline-стиль из
-     JS (style.display='block'/'none') — единственный механизм, который работает
-     при любом рассинхроне кэша HTML и JS. CSS-умолчаний display здесь нет
-     специально: старый JS ставит display:'' и не должен прятать кнопку. */
-  .roulette-spin-actions #rouletteCustomExitBtn{
-    flex:0 0 auto; width:auto; padding:10px 18px; white-space:nowrap;
-  }
+  /* Кнопка «Продолжить» в окне кручения */
   /* Карточки "Игры для двоих" — у раздела нет одной общей карточки: у каждой
      мини-игры (Викторина, Идеи для вас, Правда/Действие, Тайные ответы,
      Твои желания, Таймер страсти) — свой элемент с собственным id, плюс
@@ -5911,10 +5900,7 @@
         <div class="roulette-spin-pointer">▼</div>
       </div>
       <div class="roulette-spin-result" id="rouletteSpinResult">Крутится...</div>
-      <div class="roulette-spin-actions">
-        <button type="button" class="btn btn-primary" id="rouletteSpinDoneBtn" style="display:none;">Продолжить</button>
-        <button type="button" class="btn btn-secondary" id="rouletteCustomExitBtn" style="display:none;">Выход</button>
-      </div>
+      <button type="button" class="btn btn-primary" id="rouletteSpinDoneBtn" style="display:none;">Продолжить</button>
     </div>
   </div>
 
@@ -6573,7 +6559,7 @@
   <script src="games/solo-connect4.js?v=20260902a"></script>
 <script src="games/shop.js?v=20260830u"></script>
 <script src="games/business-observer.js?v=20260830u"></script>
-<script src="games/party-roulette.js?v=20260914o"></script>
+<script src="games/party-roulette.js?v=20260914p"></script>
 <script src="games/business-lemonade.js?v=20260830u"></script>
 <script src="games/kids-xo.js?v=20260913a"></script>
 <script src="games/kids-battleship.js?v=20260913a"></script>
