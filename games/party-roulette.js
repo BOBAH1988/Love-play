@@ -318,9 +318,9 @@ function ensureRouletteCustomCloseX(){
   // по центру — вид не зависит от версии CSS в кэше устройства
   x.style.cssText = [
     'position:absolute', 'top:calc(14px + env(safe-area-inset-top))', 'right:14px',
-    'width:56px', 'height:56px', 'padding:0', 'margin:0', 'flex:none',
+    'width:34px', 'height:34px', 'padding:0', 'margin:0', 'flex:none',
     'border:2px solid rgba(255,255,255,.45)', 'border-radius:50%',
-    'background:#8b0000', 'color:#fff', 'font-size:30px', 'font-weight:700',
+    'background:#8b0000', 'color:#fff', 'font-size:18px', 'font-weight:700',
     'line-height:1', 'display:flex', 'align-items:center', 'justify-content:center',
     'box-shadow:0 4px 14px rgba(0,0,0,.55)', 'cursor:pointer', 'z-index:310',
     '-webkit-tap-highlight-color:transparent', 'touch-action:manipulation'
@@ -388,6 +388,9 @@ function spinRouletteWheel(){
   }
   updateRouletteBetTotal();
   openRouletteSpinModal();
+  // Звук старта вращения — в обеих версиях (обычной и «Свое поле»).
+  // typeof-защита: при старом кэше core.js функции может не быть — спин не должен упасть.
+  if(typeof playSpinStartSound === 'function') playSpinStartSound();
   // В режиме «Свое поле» кнопка выхода видна сразу — можно прервать в любой
   // момент. Управляем и классом на модалке (CSS), и inline-стилем: кнопка
   // показывается независимо от состояния кэша и CSS-специфичности.
@@ -452,7 +455,9 @@ function spinRouletteWheel(){
   rouletteSpinTimer = setTimeout(()=>{
     rouletteSpinTimer = null;
     if(rouletteCustomMode){
-      // «Свое поле»: показываем только результат, ставки/балансы не трогаем
+      // «Свое поле»: показываем только результат, ставки/балансы не трогаем.
+      // Звук окончания кручения — нейтральный (нет выигрыша/проигрыша).
+      if(typeof playNeutralSound === 'function') playNeutralSound();
       rouletteSpinning = false;
       const color = rouletteColorOf(winningNumber);
       const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
@@ -480,7 +485,7 @@ function spinRouletteWheel(){
       totalReturn += pReturn;
     });
     const net = totalReturn - totalBet;
-    if(net >= 0) playSuccessSound(); else playErrorSound();
+    // Звук результата уже играет resolveRouletteSpin() — здесь не дублируем
     
     // Распределяем выигрыш по игрокам
     playerReturns.forEach((pr, idx) => {

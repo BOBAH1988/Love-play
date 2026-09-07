@@ -1140,15 +1140,15 @@
      их для читаемости; видимость управляет JS (flex/none). */
   #rouletteCustomCloseX{
     position:absolute; top:calc(14px + env(safe-area-inset-top)); right:14px;
-    width:56px; height:56px; padding:0; margin:0; flex:none;
+    width:34px; height:34px; padding:0; margin:0; flex:none;
     border-radius:50%; border:2px solid rgba(255,255,255,.45);
-    background:#8b0000; color:#fff; font-size:30px; font-weight:700; line-height:1;
+    background:#8b0000; color:#fff; font-size:18px; font-weight:700; line-height:1;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 4px 14px rgba(0,0,0,.55); cursor:pointer; z-index:310;
   }
   #rouletteCustomCloseX:active{ transform:scale(.92); }
   .roulette-spin-wheel-wrap{
-    position:relative; width:min(80vw, 320px); height:min(80vw, 320px); margin-bottom:20px;
+    position:relative; width:min(calc(100vw - 48px), 368px, 62vh); height:min(calc(100vw - 48px), 368px, 62vh); margin-bottom:20px;
   }
   .roulette-spin-wheel{
     width:100%; height:100%; border-radius:50%;
@@ -6550,7 +6550,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260914a"></script>
+<script src="games/core.js?v=20260914b"></script>
 <script src="games/twister.js?v=20260913e"></script>
 <script src="games/party-hangman.js?v=20260830u"></script>
 <script src="games/solo-quiz.js?v=20260830u"></script>
@@ -6559,7 +6559,7 @@
   <script src="games/solo-connect4.js?v=20260902a"></script>
 <script src="games/shop.js?v=20260830u"></script>
 <script src="games/business-observer.js?v=20260830u"></script>
-<script src="games/party-roulette.js?v=20260914q"></script>
+<script src="games/party-roulette.js?v=20260914s"></script>
 <script src="games/business-lemonade.js?v=20260830u"></script>
 <script src="games/kids-xo.js?v=20260913a"></script>
 <script src="games/kids-battleship.js?v=20260913a"></script>

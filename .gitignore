@@ -8,3 +8,4 @@ node_modules/
 # Системное
 .DS_Store
 Thumbs.db.verify_kroko.png
+.tmp-*.js
