@@ -375,8 +375,9 @@
      пространство заполняет поле с цифрами (flex-растяжение сетки), чтобы
      между «Ставка: …» и кнопками не было пустоты. */
   #partyRouletteGame .timer-actions-row{
-    padding-top:6px;
-    gap:6px;
+    padding-top:3px;
+    gap:3px;
+    margin-top:7px;
   }
   #partyRouletteGame .timer-actions-top{
     flex-direction:row;
@@ -388,8 +389,8 @@
   #partyRouletteGame #rouletteClearBetsBtn{flex:0 0 auto; width:auto; padding:10px 18px; white-space:nowrap;}
   #partyRouletteGame #rouletteExitBtn{flex:0 0 auto; width:auto; padding:7px 20px; align-self:center;}
   /* «Свое поле» — рулетка без ставок под кнопками действий */
-  #partyRouletteGame #rouletteCustomBoardBtn{display:block; width:100%; margin-top:6px; padding:10px; font-size:15px;}
-  #partyRouletteGame .roulette-bet-total{text-align:center; margin:1px 0 1px;}
+  #partyRouletteGame #rouletteCustomBoardBtn{display:block; width:100%; margin-top:3px; padding:10px; font-size:15px;}
+  #partyRouletteGame .roulette-bet-total{text-align:center; margin:0 0 1px; padding:0;}
   /* Компактное поле ставок рулетки: сетка чисел сжимается по высоте экрана,
      а при свободном месте растягивается (ряды 1fr), заполняя пространство,
      чтобы между ставкой и кнопками не было пустоты. */
@@ -422,7 +423,7 @@
     #partyRouletteGame .roulette-players-row .roulette-player-btn .roulette-player-bet-info{font-size:9px; padding:1px 5px; margin-top:1px;}
     #partyRouletteGame .timer-actions-row .btn{padding:8px; font-size:14px;}
     #partyRouletteGame #rouletteClearBetsBtn{padding:8px 14px;}
-    #partyRouletteGame #rouletteCustomBoardBtn{padding:8px; font-size:14px;}
+    #partyRouletteGame #rouletteCustomBoardBtn{padding:8px; font-size:14px; margin-top:3px;}
     #partyRouletteGame .roulette-result{margin-bottom:2px;}
   }
   /* Кнопки блока "Резервная копия" — ниже обычных toggle-pill и заметно
