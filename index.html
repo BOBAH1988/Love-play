@@ -1161,9 +1161,12 @@
     display:flex; gap:10px; align-items:stretch; width:100%; max-width:340px;
   }
   .roulette-spin-actions #rouletteSpinDoneBtn{ flex:1; }
+  /* «Выход» виден только в режиме «Свое поле» (класс custom-mode на модалке) */
   .roulette-spin-actions #rouletteCustomExitBtn{
     flex:0 0 auto; width:auto; padding:10px 18px; white-space:nowrap;
+    display:none;
   }
+  #rouletteSpinModal.custom-mode .roulette-spin-actions #rouletteCustomExitBtn{display:block;}
   /* Карточки "Игры для двоих" — у раздела нет одной общей карточки: у каждой
      мини-игры (Викторина, Идеи для вас, Правда/Действие, Тайные ответы,
      Твои желания, Таймер страсти) — свой элемент с собственным id, плюс
@@ -5896,7 +5899,7 @@
       <div class="roulette-spin-result" id="rouletteSpinResult">Крутится...</div>
       <div class="roulette-spin-actions">
         <button type="button" class="btn btn-primary" id="rouletteSpinDoneBtn" style="display:none;">Продолжить</button>
-        <button type="button" class="btn btn-secondary" id="rouletteCustomExitBtn" style="display:none;">Выход</button>
+        <button type="button" class="btn btn-secondary" id="rouletteCustomExitBtn">Выход</button>
       </div>
     </div>
   </div>

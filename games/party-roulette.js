@@ -28,6 +28,9 @@ let rouletteWheelTotalRotation = 0;
 let rouletteCustomMode = false;
 // id отложенного обработчика кручения — чтобы можно было отменить его при выходе
 let rouletteSpinTimer = null;
+// Счётчик сессий кручения: позволяет отменить отложенный запуск анимации
+// (requestAnimationFrame) при выходе из режима или новом заходе в игру
+let rouletteSpinSession = 0;
 
 function rouletteColorOf(n){
   if(n === 0) return 'green';
@@ -318,9 +321,13 @@ function spinRouletteWheel(){
   }
   updateRouletteBetTotal();
   openRouletteSpinModal();
-  // В режиме «Свое поле» кнопка выхода видна сразу — можно прервать в любой момент
+  // В режиме «Свое поле» кнопка выхода видна сразу — можно прервать в любой
+  // момент. Управляем и классом на модалке (CSS), и inline-стилем: кнопка
+  // показывается независимо от состояния кэша и CSS-специфичности.
+  const modalEl = document.getElementById('rouletteSpinModal');
+  if(modalEl) modalEl.classList.toggle('custom-mode', rouletteCustomMode);
   const customExitBtn = document.getElementById('rouletteCustomExitBtn');
-  if(customExitBtn) customExitBtn.style.display = rouletteCustomMode ? '' : 'none';
+  if(customExitBtn) customExitBtn.style.display = rouletteCustomMode ? 'block' : 'none';
   
   const winningNumber = Math.floor(Math.random() * 37);
   const wheelEl = document.getElementById('rouletteSpinWheel');
@@ -337,9 +344,24 @@ function spinRouletteWheel(){
   const targetAngle = 360 - (targetIdx * segAngle + segOffset);
   rouletteWheelTotalRotation = baseTurns * 360 + targetAngle;
   
+  // Анимация колеса. ВАЖНО: модалка только что стала видимой (display:none →
+  // flex). CSS-transition не запускается, если элемент был скрыт в момент
+  // смены стиля — у него нет «предыдущего» вычисленного состояния, и колесо
+  // прыгало в конечный угол без вращения (первый ход в «Своем поле» и ВСЕ ходы
+  // в обычном режиме, где модалка открывается заново перед каждым спином).
+  // Поэтому фиксируем текущий угол при уже видимой модалке и запускаем
+  // transition только через два кадра.
+  const spinSession = ++rouletteSpinSession;
   if(wheelEl){
-    wheelEl.style.transition = 'transform 3.5s cubic-bezier(.17,.67,.29,1)';
-    wheelEl.style.transform = `rotate(${rouletteWheelTotalRotation}deg)`;
+    wheelEl.style.transition = 'none';
+    void wheelEl.offsetWidth; // фиксируем «предыдущее» состояние
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        if(spinSession !== rouletteSpinSession) return; // кручение отменено
+        wheelEl.style.transition = 'transform 3.5s cubic-bezier(.17,.67,.29,1)';
+        wheelEl.style.transform = `rotate(${rouletteWheelTotalRotation}deg)`;
+      });
+    });
   }
   
   rouletteSpinTimer = setTimeout(()=>{
@@ -470,8 +492,11 @@ function goToPartyRouletteGame(){
   ensureRouletteBalances(true);
   // Режим «Свое поле» всегда начинается заново с экрана рулетки
   rouletteCustomMode = false;
+  rouletteSpinSession++; // отменяем отложенную анимацию прошлого кручения
   const customExitBtn = document.getElementById('rouletteCustomExitBtn');
   if(customExitBtn) customExitBtn.style.display = 'none';
+  const modalEl = document.getElementById('rouletteSpinModal');
+  if(modalEl) modalEl.classList.remove('custom-mode');
   // Сразу фиксируем сброс в localStorage, чтобы после перезагрузки страницы
   // (жёсткой в т.ч.) не вернулись ставки/баланс прошлой партии.
   saveState();
@@ -497,18 +522,22 @@ function goToPartyRouletteGame(){
 /* ============ ИНИЦИАЛИЗАЦИЯ ============ */
 document.getElementById('rouletteSpinBtn').addEventListener('click', spinRouletteWheel);
 // «Свое поле»: рулетка без ставок для игры с офлайн-полем
-document.getElementById('rouletteCustomBoardBtn').addEventListener('click', ()=>{
+const customBoardBtnEl = document.getElementById('rouletteCustomBoardBtn');
+if(customBoardBtnEl) customBoardBtnEl.addEventListener('click', ()=>{
   if(rouletteSpinning) return;
   rouletteCustomMode = true;
   spinRouletteWheel();
 });
 // Выход из режима «Свое поле» на предыдущий экран (экран рулетки)
-document.getElementById('rouletteCustomExitBtn').addEventListener('click', ()=>{
+const customExitBtnEl = document.getElementById('rouletteCustomExitBtn');
+if(customExitBtnEl) customExitBtnEl.addEventListener('click', ()=>{
   rouletteCustomMode = false;
-  const exitBtn = document.getElementById('rouletteCustomExitBtn');
-  if(exitBtn) exitBtn.style.display = 'none';
-  // Отменяем отложенное завершение кручения — иначе после выхода
-  // сработает обычная логика начисления выигрыша по ставкам
+  customExitBtnEl.style.display = 'none';
+  const modalEl = document.getElementById('rouletteSpinModal');
+  if(modalEl) modalEl.classList.remove('custom-mode');
+  // Отменяем отложенное завершение кручения и запуск анимации — иначе после
+  // выхода сработает обычная логика начисления выигрыша по ставкам
+  rouletteSpinSession++;
   if(rouletteSpinTimer){ clearTimeout(rouletteSpinTimer); rouletteSpinTimer = null; }
   closeRouletteSpinModal();
   rouletteSpinning = false;
