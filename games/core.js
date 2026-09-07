@@ -1763,7 +1763,7 @@ const PAUSE_MENU_TITLES = {
   partyTd: '🗣️ Правда/Действие',
   famZnayu: '🧠 Знаю тебя',
   lucky: '🎫 Счастливый билет',
-  partyRoulette: '🎡 Рулетка',
+  partyRoulette: '🎰 Рулетка',
   kidsMemory: '🧠 Мемори',
   kidsTd: '🗣️ Правда/Действие',
   quiz: '🎯 Викторина',
@@ -4595,7 +4595,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🎫','Счастливый билет','luckyRulesModal'],
       ['🎯','Викторина','partyQuizRulesModal'],
       ['🙊','Я никогда не','partyNeverRulesModal'],
-      ['🎡','Рулетка','partyRouletteRulesModal'],
+      ['🎰','Рулетка','partyRouletteRulesModal'],
       ['🌀','Твистер','twisterRulesModal'],
     ]},
     { icon:'🧸', name:'Игры с детьми', games:[

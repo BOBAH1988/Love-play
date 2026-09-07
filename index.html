@@ -2961,7 +2961,7 @@
           <button type="button" class="btn btn-menu-item" id="gameLuckyBtn"><span class="menu-icon">🎫</span> Счастливый билет</button>
           <button type="button" class="btn btn-menu-item" id="gamePartyQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gamePartyNeverBtn"><span class="menu-icon">🙊</span> Я никогда не</button>
-          <button type="button" class="btn btn-menu-item" id="gamePartyRouletteBtn"><span class="menu-icon">🎡</span> Рулетка</button>
+          <button type="button" class="btn btn-menu-item" id="gamePartyRouletteBtn"><span class="menu-icon">🎰</span> Рулетка</button>
           <button type="button" class="btn btn-menu-item" id="gameTwisterBtn"><span class="menu-icon">🤸</span> Твистер</button>
         </div>
       </div>
@@ -5649,7 +5649,7 @@
        (окрашены как в настоящей рулетке), снизу Чёт/Нечет/1-18/19-36.
        Волчок — SVG-колесо, крутится случайно на нужный угол. -->
   <section id="partyRouletteGame" class="screen">
-    <h1 class="title" style="font-size:20px;margin:2px 0 10px;">🎡 Рулетка</h1>
+    <h1 class="title" style="font-size:20px;margin:2px 0 10px;">🎰 Рулетка</h1>
     <div class="roulette-players-row" id="roulettePlayersRow"></div>
 
     <div class="roulette-top-row">
@@ -5671,7 +5671,7 @@
 
     <div class="timer-actions-row">
       <div class="timer-actions-top">
-        <button type="button" class="btn btn-primary" id="rouletteSpinBtn">🎡 Крутить</button>
+        <button type="button" class="btn btn-primary" id="rouletteSpinBtn">🎰 Крутить</button>
         <button type="button" class="btn btn-secondary" id="rouletteClearBetsBtn">Сброс ставок</button>
       </div>
       <div class="timer-actions-bottom">
@@ -5684,13 +5684,13 @@
   <!-- ===== ПРАВИЛА "РУЛЕТКА" ===== -->
   <div class="modal-overlay" id="partyRouletteRulesModal">
     <div class="modal-card">
-      <div class="modal-title">🎡 Правила игры «Рулетка»</div>
+      <div class="modal-title">🎰 Правила игры «Рулетка»</div>
       <div class="intro-text">Казино-рулетка на фишки для компании: делайте ставки на поле и крутите волчок — совсем как в казино, только понарошку. Есть режим «🎲 Свое поле» — чистая рулетка без ставок для игры на настоящем поле.</div>
       <ol class="modal-rules">
         <li>Игроки — общий список компании, ход переходит по очереди. У каждого свой баланс фишек (старт — 1000), он сохраняется между заходами в игру.</li>
         <li>Выберите номинал фишки внизу и нажмите на поле: число (0–36), Красное/Чёрное, Чёт/Нечет, 1–18/19–36 — можно ставить сразу на несколько полей. Ставки всех игроков на клетке суммируются в круглом жетоне на этой клетке; кто сколько поставил — видно в карточке под именем игрока.</li>
         <li>Число выигрывает 35 фишек за одну (плюс сама ставка), внешние ставки — 1 к 1 (удваивают ставку). Выигрыш начисляется автоматически.</li>
-        <li>«🎡 Крутить» запускает волчок: крутится только по часовой стрелке, делает минимум 3 оборота, сначала быстро, затем плавно тормозит и останавливается строго по центру выпавшего сектора.</li>
+        <li>«🎰 Крутить» запускает волчок: крутится только по часовой стрелке, делает минимум 3 оборота, сначала быстро, затем плавно тормозит и останавливается строго по центру выпавшего сектора.</li>
         <li>«Сброс ставок» уберёт все ещё не сыгранные ставки текущего хода.</li>
         <li>🎲 «Свое поле» — режим для игры с настоящим рулеточным полем: приложение только крутит колесо и показывает результат, ставки не принимаются и не запоминаются. «Продолжить» запускает следующий спин, красный крестик ✕ в углу — выход из режима.</li>
         <li>Если у всех игроков закончились фишки — предложит начать новую партию (балансы снова по 1000). При выходе после сыгранных раундов покажет итоги: баланс каждого игрока и его выигрыш/проигрыш за партию.</li>
