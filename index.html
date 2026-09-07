@@ -1098,7 +1098,10 @@
   .roulette-chip.roulette-chip-selected,
   .roulette-chip.active{
     border-color:#8b0000;
-    box-shadow: inset 0 0 0 3px #8b0000;
+    box-shadow:
+      inset 0 0 0 3px #8b0000,        /* красное кольцо по контуру внутри */
+      0 0 0 2px #ffd23f,              /* тонкая жёлтая полоска снаружи */
+      0 0 10px rgba(255,210,63,.55);  /* мягкое жёлтое свечение вокруг */
   }
   /* Ряд игроков в рулетке */
   .roulette-players-row{ display:flex; gap:8px; justify-content:center; margin:2px 0 6px; }
