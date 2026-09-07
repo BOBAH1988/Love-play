@@ -403,13 +403,25 @@ function spinRouletteWheel(){
     doneBtn && (doneBtn.style.display = 'none');
   resultEl.textContent = 'Крутится...';
   
-  // Анимация колеса
-  const baseTurns = 5 + Math.random() * 3;
+  // Анимация колеса. ПРИНЦИПЫ:
+  // 1) ВСЕГДА по часовой стрелке: угол НАКАПЛИВАЕТСЯ — к текущему положению
+  //    добавляем доворот до целевого сектора + полные обороты. Раньше угол
+  //    пересчитывался с нуля (baseTurns*360 + target), из-за чего на следующих
+  //    спинах целевой угол мог оказаться МЕНЬШЕ текущего — колесо крутилось
+  //    назад и делало меньше оборотов.
+  // 2) Минимум 3 полных оборота за спин.
+  // 3) Быстрый разгон и долгое плавное торможение (easeOutExpo-кривая).
+  // 4) Остановка строго по центру сектора-результата под стрелкой: финальный
+  //    угол всегда ≡ targetMod (mod 360) без накопительной погрешности.
   const targetIdx = ROULETTE_WHEEL_ORDER.indexOf(winningNumber);
   const segAngle = 360 / ROULETTE_WHEEL_ORDER.length;
-  const segOffset = segAngle / 2;
-  const targetAngle = 360 - (targetIdx * segAngle + segOffset);
-  rouletteWheelTotalRotation = baseTurns * 360 + targetAngle;
+  // Угол (mod 360), при котором центр сектора-результата стоит ровно под стрелкой
+  const targetMod = ((360 - (targetIdx * segAngle + segAngle / 2)) % 360 + 360) % 360;
+  const currentMod = ((rouletteWheelTotalRotation % 360) + 360) % 360;
+  let delta = targetMod - currentMod;
+  if (delta <= 0) delta += 360;                    // только вперёд, по часовой
+  const turns = 3 + Math.floor(Math.random() * 3); // минимум 3 полных оборота (3–5)
+  rouletteWheelTotalRotation += delta + turns * 360;
   
   // Анимация колеса. ВАЖНО: модалка только что стала видимой (display:none →
   // flex). CSS-transition не запускается, если элемент был скрыт в момент
@@ -430,7 +442,8 @@ function spinRouletteWheel(){
     raf(()=>{
       raf(()=>{
         if(spinSession !== rouletteSpinSession) return; // кручение отменено
-        wheelEl.style.transition = 'transform 3.5s cubic-bezier(.17,.67,.29,1)';
+        // Быстрый разгон и длинное плавное торможение (easeOutExpo-подобная кривая)
+        wheelEl.style.transition = 'transform 3.2s cubic-bezier(.16,1,.3,1)';
         wheelEl.style.transform = `rotate(${rouletteWheelTotalRotation}deg)`;
       });
     });
