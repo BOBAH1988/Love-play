@@ -326,11 +326,37 @@ function ensureRouletteCustomExitBtn(){
   return exitBtn;
 }
 
+/* Красный крестик в правом верхнем углу окна кручения — экстренный выход
+ * из режима «Свое поле». Прибит к углу экрана (модалка position:fixed),
+ * поэтому виден всегда, даже если контент карточки не влез по высоте.
+ * Создается динамически, если его нет в кэше HTML устройства. */
+function ensureRouletteCustomCloseX(){
+  let x = document.getElementById('rouletteCustomCloseX');
+  if(!x){
+    const modal = document.getElementById('rouletteSpinModal');
+    if(!modal) return null;
+    x = document.createElement('button');
+    x.type = 'button';
+    x.id = 'rouletteCustomCloseX';
+    x.textContent = '✕';
+    x.setAttribute('aria-label', 'Выход');
+    x.style.display = 'none'; // скрыт вне режима «Свое поле» (CSS-умолчания нет)
+    modal.appendChild(x);
+  }
+  if(!x.dataset.bound){
+    x.dataset.bound = '1';
+    x.addEventListener('click', exitRouletteCustomMode);
+  }
+  return x;
+}
+
 /* Выход из режима «Свое поле» на предыдущий экран (экран рулетки) */
 function exitRouletteCustomMode(){
   rouletteCustomMode = false;
   const exitBtn = document.getElementById('rouletteCustomExitBtn');
   if(exitBtn) exitBtn.style.display = 'none';
+  const closeX = document.getElementById('rouletteCustomCloseX');
+  if(closeX) closeX.style.display = 'none';
   const modalEl = document.getElementById('rouletteSpinModal');
   if(modalEl) modalEl.classList.remove('custom-mode');
   // Отменяем отложенное завершение кручения и запуск анимации — иначе после
@@ -376,6 +402,8 @@ function spinRouletteWheel(){
   if(modalEl) modalEl.classList.toggle('custom-mode', rouletteCustomMode);
   const customExitBtn = ensureRouletteCustomExitBtn();
   if(customExitBtn) customExitBtn.style.display = rouletteCustomMode ? 'block' : 'none';
+  const closeX = ensureRouletteCustomCloseX();
+  if(closeX) closeX.style.display = rouletteCustomMode ? 'flex' : 'none';
   
   const winningNumber = Math.floor(Math.random() * 37);
   const wheelEl = document.getElementById('rouletteSpinWheel');
@@ -549,6 +577,8 @@ function goToPartyRouletteGame(){
   rouletteSpinSession++; // отменяем отложенную анимацию прошлого кручения
   const customExitBtn = document.getElementById('rouletteCustomExitBtn');
   if(customExitBtn) customExitBtn.style.display = 'none';
+  const closeX = document.getElementById('rouletteCustomCloseX');
+  if(closeX) closeX.style.display = 'none';
   const modalEl = document.getElementById('rouletteSpinModal');
   if(modalEl) modalEl.classList.remove('custom-mode');
   // Сразу фиксируем сброс в localStorage, чтобы после перезагрузки страницы
@@ -584,9 +614,10 @@ if(customBoardBtnEl) customBoardBtnEl.addEventListener('click', ()=>{
   spinRouletteWheel();
 });
 // Выход из режима «Свое поле» на предыдущий экран (экран рулетки).
-// ensureRouletteCustomExitBtn() найдёт кнопку в HTML или создаст её,
-// если устройство держит в кэше старую версию без этой кнопки.
+// ensureRouletteCustomExitBtn()/ensureRouletteCustomCloseX() найдут кнопки в
+// HTML или создадут их, если устройство держит в кэше старую версию без них.
 ensureRouletteCustomExitBtn();
+ensureRouletteCustomCloseX();
 const rouletteClearBtnEl = document.getElementById('rouletteClearBetsBtn');
 if(rouletteClearBtnEl) rouletteClearBtnEl.addEventListener('click', ()=>{ clearRouletteBets(); });
 const roulettePauseBtnEl = document.getElementById('rouletteExitBtn');
