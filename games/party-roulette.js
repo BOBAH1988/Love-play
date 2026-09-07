@@ -93,7 +93,7 @@ function updateRouletteTurnLabel(){
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'roulette-player-btn' + (i === idx ? ' active' : '');
-    btn.innerHTML = `${name}<br><small style="font-weight:400;opacity:.8;">${state.rouletteBalances[i] || 0} фишек</small>`;
+    btn.innerHTML = `${name}<br><small style="font-weight:400;opacity:.8;">${state.rouletteBalances[i] || 0} фишек</small><span class="roulette-player-bet-info" data-player-bet-info="${i}" style="display:none;"></span>`;
     btn.addEventListener('click', ()=>{
       if(rouletteSpinning) return;
       state.rouletteCurrentPlayerIndex = i;
@@ -104,9 +104,35 @@ function updateRouletteTurnLabel(){
     });
     row.appendChild(btn);
   });
+  updateRoulettePlayerBetInfo();
 }
 
 /* ============ ПОЛЕ СТАВОК ============ */
+// Подпись ставки: ключ → «куда поставил»
+function rouletteBetLabel(key){
+  const labels = {
+    'num-0':'Зеро', 'color-red':'Красное', 'color-black':'Чёрное',
+    'parity-even':'Чёт', 'parity-odd':'Нечет', 'range-low':'1–18', 'range-high':'19–36'
+  };
+  if(labels[key]) return labels[key];
+  const m = /^n(\d+)$/.exec(key);
+  return m ? 'Число ' + m[1] : key;
+}
+// Информационное поле под именем игрока: куда поставил и сумма
+function updateRoulettePlayerBetInfo(){
+  (state.roulettePlayerBets || []).forEach((playerBets, i) => {
+    const el = document.querySelector('[data-player-bet-info="' + i + '"]');
+    if(!el) return;
+    const parts = Object.keys(playerBets || {}).map(key => rouletteBetLabel(key) + ': ' + playerBets[key]);
+    if(parts.length){
+      el.textContent = parts.join(' · ');
+      el.style.display = '';
+    } else {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+  });
+}
 // Сумма ставок текущего игрока
 function rouletteBetTotal(){
   return Object.values(rouletteCurrentBets()).reduce((a,b)=>a+b, 0);
@@ -157,6 +183,7 @@ function renderRouletteBadges(){
       badge.style.background = isCurrentPlayer ? 'rgba(255,210,63,.15)' : 'rgba(0,0,0,.6)';
     });
   });
+  updateRoulettePlayerBetInfo();
 }
 function addRouletteBet(key){
   if(rouletteSpinning) return;

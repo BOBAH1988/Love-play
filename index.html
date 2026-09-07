@@ -407,6 +407,7 @@
   #partyRouletteGame .roulette-chips-row{gap:14px; margin:3px 0 10px;}
   #partyRouletteGame .roulette-players-row{margin:1px 0 4px;}
   #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:6px 12px; font-size:12px;}
+  #partyRouletteGame .roulette-players-row .roulette-player-btn .roulette-player-bet-info{font-size:9px; padding:1px 6px; margin-top:2px;}
   @media (max-height:700px){
     #partyRouletteGame .roulette-number-grid{max-height:min(58vh, 420px);}
     #partyRouletteGame .roulette-number-cell{min-height:24px;}
@@ -416,6 +417,7 @@
     #partyRouletteGame .roulette-chip{width:40px; height:40px; font-size:12px;}
     #partyRouletteGame .roulette-chips-row{gap:12px;}
     #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:5px 10px; font-size:11px;}
+    #partyRouletteGame .roulette-players-row .roulette-player-btn .roulette-player-bet-info{font-size:9px; padding:1px 5px; margin-top:1px;}
     #partyRouletteGame .timer-actions-row .btn{padding:8px; font-size:14px;}
     #partyRouletteGame #rouletteClearBetsBtn{padding:8px 14px;}
     #partyRouletteGame .roulette-result{margin-bottom:2px;}
@@ -1113,6 +1115,13 @@
   .roulette-player-btn.active{
     border-color:#ffd23f; background:rgba(255,210,63,.2); color:#ffd23f;
   }
+  /* Информационное поле под именем игрока: куда поставил и сумма */
+  .roulette-player-btn .roulette-player-bet-info{
+    display:block; margin-top:3px; padding:2px 8px; border-radius:8px;
+    background:rgba(0,0,0,.35); font-size:10px; font-weight:700; line-height:1.3;
+    color:#fff; text-align:center; max-width:100%;
+  }
+  .roulette-player-btn.active .roulette-player-bet-info{ color:#ffd23f; }
 
   /* Полноэкранное модальное окно рулетки */
   #rouletteSpinModal{
