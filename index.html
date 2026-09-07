@@ -377,8 +377,14 @@
     margin-top:auto; padding-top:6px;
     gap:6px;
   }
-  #partyRouletteGame .timer-actions-top{flex-direction:column;}
+  #partyRouletteGame .timer-actions-top{
+    flex-direction:row;
+    flex-wrap:wrap;
+  }
   #partyRouletteGame .timer-actions-row .btn{padding:10px; font-size:15px;}
+  /* «Сброс ставок» — минимальной ширины, «Крутить» занимает остаток. */
+  #partyRouletteGame #rouletteSpinBtn{flex:1;}
+  #partyRouletteGame #rouletteClearBetsBtn{flex:0 0 auto; width:auto; padding:10px 18px; white-space:nowrap;}
   #partyRouletteGame #rouletteExitBtn{flex:0 0 auto; width:auto; padding:7px 20px; align-self:center;}
   #partyRouletteGame .roulette-bet-total{text-align:center; margin:1px 0 1px;}
   /* Компактное поле ставок рулетки: сетка чисел сжимается по высоте экрана,
@@ -408,6 +414,7 @@
     #partyRouletteGame .roulette-chips-row{gap:12px;}
     #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:5px 10px; font-size:11px;}
     #partyRouletteGame .timer-actions-row .btn{padding:8px; font-size:14px;}
+    #partyRouletteGame #rouletteClearBetsBtn{padding:8px 14px;}
     #partyRouletteGame .roulette-result{margin-bottom:2px;}
   }
   /* Кнопки блока "Резервная копия" — ниже обычных toggle-pill и заметно
@@ -1087,11 +1094,10 @@
   .roulette-chip[data-chip="500"]{ background:linear-gradient(135deg,#f87171,#b91c1c); color:#fff; }
   .roulette-chip.roulette-chip-selected,
   .roulette-chip.active{
-    border-color:#ffd23f;
+    border-color:#8b0000;
     box-shadow:
-      inset 0 0 0 3px #fff,
-      inset 0 0 0 6px #ffd23f,
-      inset 0 0 14px rgba(255,210,63,.55);
+      inset 0 0 0 2px #fff,
+      inset 0 0 0 4px #8b0000;
   }
   /* Ряд игроков в рулетке */
   .roulette-players-row{ display:flex; gap:8px; justify-content:center; margin:2px 0 6px; }
