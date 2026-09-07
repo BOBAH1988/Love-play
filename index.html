@@ -371,6 +371,45 @@
     border-color:rgba(255,99,110,.5)!important;
     color:#ffc2c8!important;
   }
+  /* Рулетка: блок кнопок действий прижат к низу экрана (flex-колонка .screen),
+     а не плывёт из-под поля. Кнопки чуть компактнее, чтобы всё влезало. */
+  #partyRouletteGame .timer-actions-row{
+    margin-top:auto; padding-top:6px;
+    gap:6px;
+  }
+  #partyRouletteGame .timer-actions-top{flex-direction:column;}
+  #partyRouletteGame .timer-actions-row .btn{padding:10px; font-size:15px;}
+  #partyRouletteGame #rouletteExitBtn{flex:0 0 auto; width:auto; padding:7px 20px; align-self:center;}
+  #partyRouletteGame .roulette-bet-total{text-align:center; margin:1px 0 1px;}
+  /* Компактное поле ставок рулетки: сетка чисел сжимается по высоте экрана,
+     фишки и строки ставок ужимаются, чтобы не листать до кнопок внизу. */
+  #partyRouletteGame .roulette-number-grid{
+    flex:0 1 auto;
+    max-height:min(42vh, 300px);
+    align-content:start;
+  }
+  #partyRouletteGame .roulette-number-cell{
+    aspect-ratio:auto; height:min(6.8vh, 48px); max-height:48px;
+  }
+  #partyRouletteGame .roulette-top-btn,
+  #partyRouletteGame .roulette-zero-cell,
+  #partyRouletteGame .roulette-outside-btn{padding:6px 2px;}
+  #partyRouletteGame .roulette-chip{width:44px; height:44px; font-size:12px;}
+  #partyRouletteGame .roulette-chips-row{gap:14px; margin:3px 0;}
+  #partyRouletteGame .roulette-players-row{margin:1px 0 4px;}
+  #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:6px 12px; font-size:12px;}
+  @media (max-height:700px){
+    #partyRouletteGame .roulette-number-grid{max-height:min(38vh, 260px);}
+    #partyRouletteGame .roulette-number-cell{height:min(6.2vh, 42px); max-height:42px;}
+    #partyRouletteGame .roulette-top-btn,
+    #partyRouletteGame .roulette-zero-cell,
+    #partyRouletteGame .roulette-outside-btn{padding:5px 2px; font-size:11px;}
+    #partyRouletteGame .roulette-chip{width:40px; height:40px; font-size:11px;}
+    #partyRouletteGame .roulette-chips-row{gap:12px;}
+    #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:5px 10px; font-size:11px;}
+    #partyRouletteGame .timer-actions-row .btn{padding:8px; font-size:14px;}
+    #partyRouletteGame .roulette-result{margin-bottom:2px;}
+  }
   /* Кнопки блока "Резервная копия" — ниже обычных toggle-pill и заметно
      прозрачнее, чтобы визуально не путались с кнопками игр в меню. */
   #exportDataBtn, #importDataBtn{
@@ -980,35 +1019,46 @@
   }
   /* Верхняя строка поля ставок: Красное | 0 | Чёрное */
   .roulette-top-row{
-    display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:6px;
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:4px;
   }
   .roulette-top-btn{
-    padding:8px 2px; border-radius:6px; border:1px solid rgba(255,255,255,.25);
+    padding:7px 2px; border-radius:6px; border:1px solid rgba(255,255,255,.25);
     color:#fff; font-weight:800; font-size:12px; cursor:pointer; position:relative;
   }
   .roulette-top-btn.roulette-red{ background:rgba(230,57,70,.85); }
   .roulette-top-btn.roulette-black{ background:rgba(34,34,34,.9); }
   .roulette-zero-cell{
-    display:block; width:100%; padding:8px; border-radius:6px;
+    display:block; width:100%; padding:7px; border-radius:6px;
     background:#2ecc71; color:#fff; font-weight:800; font-size:14px; border:1px solid rgba(255,255,255,.25);
     cursor:pointer; position:relative;
   }
   .roulette-number-grid{
-    width:80%; margin:0 auto;
+    width:min(80%, 360px); margin:0 auto;
     display:grid; grid-template-columns:repeat(6, 1fr); gap:2px; margin-bottom:6px;
   }
   .roulette-number-cell{
     aspect-ratio:1/1; border-radius:3px; border:1px solid rgba(255,255,255,.25);
     font-weight:800; font-size:11px; cursor:pointer; color:#fff; position:relative;
   }
+  /* Чтобы поле ставок целиком помещалось в высоту экрана без прокрутки:
+     сетка чисел сжимается по высоте (min() от 100% контейнера и фиксированного
+     максимума), остальные блоки компактнее. */
+  #partyRouletteGame .roulette-number-grid{
+    flex:0 1 auto;
+    max-height:min(46vh, 330px);
+    align-content:start;
+  }
+  #partyRouletteGame .roulette-number-cell{
+    aspect-ratio:auto; height:min(7.4vh, 52px); max-height:52px;
+  }
   .roulette-number-cell.roulette-red{ background:#e63946; }
   .roulette-number-cell.roulette-black{ background:#222; }
   /* Нижняя строка поля ставок: Чёт | Нечет | 1-18 | 19-36 */
   .roulette-outside-grid{
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; margin-bottom:4px;
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; margin-bottom:3px;
   }
   .roulette-outside-btn{
-    padding:8px 2px; border-radius:4px; border:1px solid rgba(255,255,255,.25);
+    padding:7px 2px; border-radius:4px; border:1px solid rgba(255,255,255,.25);
     background:rgba(255,255,255,.1); color:#fff; font-weight:800; font-size:12px;
     cursor:pointer; position:relative;
   }
@@ -1022,11 +1072,11 @@
   }
   .roulette-bet-badge .badge-amount{ font-size:14px; font-weight:800; }
   .roulette-bet-badge .badge-player{ font-size:9px; font-weight:400; opacity:.9; }
-  .roulette-chips-row{ display:flex; gap:16px; justify-content:center; margin:8px 0; }
+  .roulette-chips-row{ display:flex; gap:16px; justify-content:center; margin:4px 0; }
   .roulette-chip{
-    width:52px; height:52px; border-radius:50%; border:3px dashed rgba(255,255,255,.5);
+    width:48px; height:48px; border-radius:50%; border:3px dashed rgba(255,255,255,.5);
     background:var(--chip-bg, linear-gradient(135deg,#ffd27a,#ff8a5e));
-    color:var(--chip-text, #2b0f2e); font-weight:800; font-size:14px;
+    color:var(--chip-text, #2b0f2e); font-weight:800; font-size:13px;
     cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   }
   /* Цвета фишек по номиналам — 10 голубая (светлая), 50 синяя, 100 зелёная, 500 красная.
@@ -1047,7 +1097,7 @@
     z-index:2;
   }
   /* Ряд игроков в рулетке */
-  .roulette-players-row{ display:flex; gap:8px; justify-content:center; margin:6px 0 8px; }
+  .roulette-players-row{ display:flex; gap:8px; justify-content:center; margin:2px 0 6px; }
   .roulette-player-btn{
     padding:8px 16px; border-radius:10px; border:2px solid rgba(255,255,255,.3);
     background:rgba(255,255,255,.1); color:#fff; font-weight:700; font-size:13px;
@@ -5550,7 +5600,7 @@
        (окрашены как в настоящей рулетке), снизу Чёт/Нечет/1-18/19-36.
        Волчок — SVG-колесо, крутится случайно на нужный угол. -->
   <section id="partyRouletteGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🎡 Рулетка</h1>
+    <h1 class="title" style="font-size:20px;margin:2px 0 2px;">🎡 Рулетка</h1>
     <div class="roulette-players-row" id="roulettePlayersRow"></div>
 
     <div class="roulette-top-row">
