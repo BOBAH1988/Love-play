@@ -167,29 +167,26 @@ function renderRouletteBadges(){
     if(badge) badge.remove();
     el.classList.remove('has-bet');
   });
-  
-  // Отображаем ВСЕ ставки ВСЕХ игроков
-  (state.roulettePlayerBets || []).forEach((playerBets, playerIdx) => {
-    Object.keys(playerBets).forEach(key=>{
-      const cell = document.querySelector(`[data-bet="${key}"]`);
-      if(!cell) return;
-      cell.classList.add('has-bet');
-      
-      let badge = cell.querySelector('.roulette-bet-badge');
-      if(!badge){
-        badge = document.createElement('div');
-        badge.className = 'roulette-bet-badge';
-        cell.appendChild(badge);
-      }
-      
-      const amount = playerBets[key];
-      const isCurrentPlayer = playerIdx === state.rouletteCurrentPlayerIndex;
-      const playerName = roulettePlayers()[playerIdx] || `Игрок ${playerIdx+1}`;
-      
-      badge.innerHTML = `<span class="badge-amount">${amount}</span><span class="badge-player">${playerName}</span>`;
-      badge.style.borderColor = isCurrentPlayer ? '#ffd23f' : 'rgba(255,255,255,.5)';
-      badge.style.background = isCurrentPlayer ? 'rgba(255,210,63,.15)' : 'rgba(0,0,0,.6)';
+
+  // Суммируем ставки ВСЕХ игроков по каждому полю: на клетке — круглый жетон
+  // только с общей суммой; кто сколько поставил — видно в инфо-полях под именами
+  const totals = {};
+  (state.roulettePlayerBets || []).forEach(pb => {
+    Object.keys(pb || {}).forEach(key=>{
+      totals[key] = (totals[key] || 0) + pb[key];
     });
+  });
+  Object.keys(totals).forEach(key=>{
+    const cell = document.querySelector(`[data-bet="${key}"]`);
+    if(!cell) return;
+    cell.classList.add('has-bet');
+    let badge = cell.querySelector('.roulette-bet-badge');
+    if(!badge){
+      badge = document.createElement('div');
+      badge.className = 'roulette-bet-badge';
+      cell.appendChild(badge);
+    }
+    badge.textContent = totals[key];
   });
   updateRoulettePlayerBetInfo();
 }
@@ -491,6 +488,8 @@ function spinRouletteWheel(){
     playerReturns.forEach((pr, idx) => {
       state.rouletteBalances[idx] = (state.rouletteBalances[idx] || 0) + pr.ret;
     });
+    // Раунд сыгран — учитываем для итогов при выходе
+    state.rouletteRoundsPlayed = (state.rouletteRoundsPlayed || 0) + 1;
     
     resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})<br>${net >= 0 ? '🎉 Выигрыш' : '😔 Проигрыш'} <b>${net >= 0 ? '+' : ''}${net}</b>`;
     if(doneBtn) doneBtn.style.display = 'block';
@@ -515,6 +514,11 @@ if(rouletteDoneBtnEl) rouletteDoneBtnEl.addEventListener('click', ()=>{
   saveState();
   updateRouletteTurnLabel();
   updateRouletteBetTotal();
+  // Если у всех игроков закончились фишки — предлагаем начать новую партию
+  if(rouletteAllBalancesZero()){
+    const brokeModal = document.getElementById('rouletteBrokeModal');
+    if(brokeModal) brokeModal.classList.add('show');
+  }
 });
 function resolveRouletteSpin(n){
   const color = rouletteColorOf(n);
@@ -545,11 +549,36 @@ function resolveRouletteSpin(n){
 }
 
 /* ============ ПАУЗА / ВЫХОД ============ */
+// Итоги игры: баланс каждого игрока относительно стартового
+function showRouletteResults(){
+  const modal = document.getElementById('rouletteResultsModal');
+  const body = document.getElementById('rouletteResultsBody');
+  if(!modal || !body) return;
+  const start = ROULETTE_START_BALANCE;
+  body.innerHTML = roulettePlayers().map((name, i)=>{
+    const bal = state.rouletteBalances[i] || 0;
+    const net = bal - start;
+    const sign = net > 0 ? '+' : '';
+    const color = net > 0 ? '#4ade80' : net < 0 ? '#f87171' : '#fff';
+    return `<div style="display:flex; justify-content:space-between; gap:10px; padding:5px 0; font-size:15px; border-bottom:1px solid rgba(255,255,255,.12);">`+
+      `<span>${name}</span>`+
+      `<b>${bal} фишек <span style="color:${color}">(${sign}${net})</span></b>`+
+    `</div>`;
+  }).join('');
+  modal.classList.add('show');
+}
 function pauseGamePartyRoulette(){
   state.pausedMode = 'partyRoulette';
   saveState();
   const pauseModal = document.getElementById('pauseMenuModal');
   if(pauseModal) pauseModal.classList.add('show');
+  // Если сыгран хотя бы 1 раунд — поверх меню паузы показываем итоги
+  if((state.rouletteRoundsPlayed || 0) >= 1) showRouletteResults();
+}
+/* Фишки закончились у всех игроков */
+function rouletteAllBalancesZero(){
+  const bal = state.rouletteBalances || [];
+  return bal.length > 0 && bal.every(b => !b);
 }
 function resumePartyRouletteGame(){
   const pauseModal = document.getElementById('pauseMenuModal');
@@ -583,6 +612,8 @@ function goToPartyRouletteGame(){
   ensureRouletteBalances(true);
   // Режим «Свое поле» всегда начинается заново с экрана рулетки
   rouletteCustomMode = false;
+  // Новая партия — счётчик сыгранных раундов обнуляется
+  state.rouletteRoundsPlayed = 0;
   rouletteSpinSession++; // отменяем отложенную анимацию прошлого кручения
   const closeX = document.getElementById('rouletteCustomCloseX');
   if(closeX) closeX.style.display = 'none';
@@ -631,5 +662,23 @@ if(roulettePauseBtnEl){
   roulettePauseBtnEl.textContent = 'Пауза';
   roulettePauseBtnEl.addEventListener('click', ()=>{ pauseGamePartyRoulette(); });
 }
+// Итоги игры: «Ок» закрывает окно итогов (под ним остаётся меню паузы)
+const rouletteResultsOkEl = document.getElementById('rouletteResultsOkBtn');
+if(rouletteResultsOkEl) rouletteResultsOkEl.addEventListener('click', ()=>{
+  const m = document.getElementById('rouletteResultsModal');
+  if(m) m.classList.remove('show');
+});
+// «Начать сначала» при нулевых балансах: новая партия
+const rouletteBrokeRestartEl = document.getElementById('rouletteBrokeRestartBtn');
+if(rouletteBrokeRestartEl) rouletteBrokeRestartEl.addEventListener('click', ()=>{
+  ensureRouletteBalances(true);
+  state.rouletteRoundsPlayed = 0;
+  saveState();
+  const m = document.getElementById('rouletteBrokeModal');
+  if(m) m.classList.remove('show');
+  renderRouletteBadges();
+  updateRouletteTurnLabel();
+  updateRouletteBetTotal();
+});
 openRulesModal('rouletteGameRulesBtn', 'partyRouletteRulesModal');
 setupRulesModal('partyRouletteRulesModal', 'closePartyRouletteRulesBtn');

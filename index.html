@@ -407,7 +407,7 @@
   #partyRouletteGame .roulette-outside-btn{padding:6px 2px;}
   #partyRouletteGame .roulette-chip{width:44px; height:44px; font-size:13px;}
   #partyRouletteGame .roulette-chips-row{gap:14px; margin:3px 0 10px;}
-  #partyRouletteGame .roulette-players-row{margin:1px 0 4px;}
+  #partyRouletteGame .roulette-players-row{margin:6px 0 6px;}
   #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:6px 12px; font-size:12px;}
   #partyRouletteGame .roulette-players-row .roulette-player-btn .roulette-player-bet-info{font-size:9px; padding:1px 6px; margin-top:2px;}
   @media (max-height:700px){
@@ -1032,9 +1032,11 @@
   .roulette-result{
     text-align:center; font-size:13px; font-weight:700; min-height:18px; margin-bottom:4px; color:#fff;
   }
-  /* Верхняя строка поля ставок: Красное | 0 | Чёрное */
+  /* Верхняя строка поля ставок: Красное | 0 | Чёрное — той же ширины, что и
+     сетка чисел ниже (min(80%, 360px)) */
   .roulette-top-row{
-    display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:4px;
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px;
+    width:min(80%, 360px); margin:0 auto 4px;
   }
   .roulette-top-btn{
     padding:7px 2px; border-radius:6px; border:1px solid rgba(255,255,255,.25);
@@ -1054,6 +1056,9 @@
   .roulette-number-cell{
     aspect-ratio:1/1; border-radius:3px; border:1px solid rgba(255,255,255,.25);
     font-weight:800; font-size:12px; cursor:pointer; color:#fff; position:relative;
+    /* Цифра прижата к верху клетки, чтобы не слипалась с круглым жетоном
+       ставки в центре: сверху отступ больше, к низу клетки воздуха больше */
+    display:flex; align-items:flex-start; justify-content:center; padding-top:3px;
   }
   /* Чтобы поле ставок целиком помещалось в высоту экрана без прокрутки:
      сетка чисел сжимается по высоте (min() от 100% контейнера и фиксированного
@@ -1068,9 +1073,11 @@
   }
   .roulette-number-cell.roulette-red{ background:#e63946; }
   .roulette-number-cell.roulette-black{ background:#222; }
-  /* Нижняя строка поля ставок: Чёт | Нечет | 1-18 | 19-36 */
+  /* Нижняя строка поля ставок: Чёт | Нечет | 1-18 | 19-36 — той же ширины,
+     что и сетка чисел */
   .roulette-outside-grid{
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; margin-bottom:3px;
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:4px;
+    width:min(80%, 360px); margin:0 auto 3px;
   }
   .roulette-outside-btn{
     padding:7px 2px; border-radius:4px; border:1px solid rgba(255,255,255,.25);
@@ -1079,14 +1086,17 @@
   }
   .roulette-outside-btn.roulette-red{ background:rgba(230,57,70,.7); }
   .roulette-outside-btn.roulette-black{ background:rgba(34,34,34,.85); }
+  /* Ставка на поле: круглый жетон по центру клетки только с СУММОЙ ставок
+     всех игроков (кто сколько поставил — видно в инфо-полях под именами). */
   .roulette-bet-badge{
-    position:absolute; top:-10px; left:-10px; background:#3b82f6; color:#fff;
-    border-radius:10px; font-size:12px; font-weight:700; padding:3px 6px; line-height:1.2;
-    box-shadow:0 2px 4px rgba(0,0,0,.5); display:flex; flex-direction:column; align-items:center;
-    min-width:28px; z-index:5; border:2px solid rgba(255,255,255,.5);
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(72%, 34px); aspect-ratio:1/1; border-radius:50%; padding:0;
+    background:rgba(59,130,246,.92); color:#fff;
+    border:2px solid rgba(255,255,255,.75);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800; line-height:1; z-index:5;
+    box-shadow:0 2px 6px rgba(0,0,0,.5); pointer-events:none;
   }
-  .roulette-bet-badge .badge-amount{ font-size:14px; font-weight:800; }
-  .roulette-bet-badge .badge-player{ font-size:9px; font-weight:400; opacity:.9; }
   .roulette-chips-row{ display:flex; gap:16px; justify-content:center; margin:4px 0 10px; }
   .roulette-chip{
     width:48px; height:48px; border-radius:50%; border:3px dashed rgba(255,255,255,.5);
@@ -1109,7 +1119,12 @@
       0 0 10px rgba(255,210,63,.55);  /* мягкое жёлтое свечение вокруг */
   }
   /* Ряд игроков в рулетке */
-  .roulette-players-row{ display:flex; gap:8px; justify-content:center; margin:2px 0 6px; }
+  .roulette-players-row{ display:flex; gap:14px; justify-content:center; margin:6px 0 8px; }
+  /* Окна «Итоги игры» и «Фишки закончились» — ПОВЕРХ меню паузы: у .modal-overlay
+     z-index:200 у всех, а pauseMenuModal стоит ниже по DOM и при равном z-index
+     перекрыл бы итоги. Поднимаем оба окна выше паузы (ниже тостов 600 и
+     окна кручения 300). */
+  #rouletteResultsModal, #rouletteBrokeModal{ z-index:250; }
   .roulette-player-btn{
     padding:8px 16px; border-radius:10px; border:2px solid rgba(255,255,255,.3);
     background:rgba(255,255,255,.1); color:#fff; font-weight:700; font-size:13px;
@@ -5633,7 +5648,7 @@
        (окрашены как в настоящей рулетке), снизу Чёт/Нечет/1-18/19-36.
        Волчок — SVG-колесо, крутится случайно на нужный угол. -->
   <section id="partyRouletteGame" class="screen">
-    <h1 class="title" style="font-size:20px;margin:2px 0 2px;">🎡 Рулетка</h1>
+    <h1 class="title" style="font-size:20px;margin:2px 0 10px;">🎡 Рулетка</h1>
     <div class="roulette-players-row" id="roulettePlayersRow"></div>
 
     <div class="roulette-top-row">
@@ -5679,6 +5694,24 @@
         <li>«Выход» в любой момент вернёт в меню, баланс сохранится.</li>
       </ol>
       <button class="btn btn-primary" id="closePartyRouletteRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== РУЛЕТКА: ФИШКИ ЗАКОНЧИЛИСЬ ===== -->
+  <div class="modal-overlay" id="rouletteBrokeModal">
+    <div class="modal-card">
+      <div class="modal-title">💸 Фишки закончились!</div>
+      <div class="intro-text">У всех игроков закончились фишки. Начать новую партию?</div>
+      <button class="btn btn-primary" id="rouletteBrokeRestartBtn">Начать сначала</button>
+    </div>
+  </div>
+
+  <!-- ===== РУЛЕТКА: ИТОГИ ИГРЫ (показывается при выходе, если был хоть 1 раунд) ===== -->
+  <div class="modal-overlay" id="rouletteResultsModal">
+    <div class="modal-card">
+      <div class="modal-title">📊 Итоги игры</div>
+      <div id="rouletteResultsBody" style="margin:10px 0;"></div>
+      <button class="btn btn-primary" id="rouletteResultsOkBtn">Ок</button>
     </div>
   </div>
 
@@ -6559,7 +6592,7 @@
   <script src="games/solo-connect4.js?v=20260902a"></script>
 <script src="games/shop.js?v=20260830u"></script>
 <script src="games/business-observer.js?v=20260830u"></script>
-<script src="games/party-roulette.js?v=20260914s"></script>
+<script src="games/party-roulette.js?v=20260914t"></script>
 <script src="games/business-lemonade.js?v=20260830u"></script>
 <script src="games/kids-xo.js?v=20260913a"></script>
 <script src="games/kids-battleship.js?v=20260913a"></script>
