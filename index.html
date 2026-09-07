@@ -978,9 +978,19 @@
   .roulette-result{
     text-align:center; font-size:13px; font-weight:700; min-height:18px; margin-bottom:4px; color:#fff;
   }
+  /* Верхняя строка поля ставок: Красное | 0 | Чёрное */
+  .roulette-top-row{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:6px;
+  }
+  .roulette-top-btn{
+    padding:8px 2px; border-radius:6px; border:1px solid rgba(255,255,255,.25);
+    color:#fff; font-weight:800; font-size:12px; cursor:pointer; position:relative;
+  }
+  .roulette-top-btn.roulette-red{ background:rgba(230,57,70,.85); }
+  .roulette-top-btn.roulette-black{ background:rgba(34,34,34,.9); }
   .roulette-zero-cell{
-    display:block; width:100%; padding:7px; margin-bottom:4px; border-radius:6px;
-    background:#2ecc71; color:#fff; font-weight:800; font-size:12px; border:1px solid rgba(255,255,255,.25);
+    display:block; width:100%; padding:8px; border-radius:6px;
+    background:#2ecc71; color:#fff; font-weight:800; font-size:14px; border:1px solid rgba(255,255,255,.25);
     cursor:pointer; position:relative;
   }
   .roulette-number-grid{
@@ -988,27 +998,28 @@
   }
   .roulette-number-cell{
     aspect-ratio:1/1; border-radius:3px; border:1px solid rgba(255,255,255,.25);
-    font-weight:800; font-size:7px; cursor:pointer; color:#fff; position:relative;
+    font-weight:800; font-size:11px; cursor:pointer; color:#fff; position:relative;
   }
   .roulette-number-cell.roulette-red{ background:#e63946; }
   .roulette-number-cell.roulette-black{ background:#222; }
+  /* Нижняя строка поля ставок: Чёт | Нечет | 1-18 | 19-36 */
   .roulette-outside-grid{
-    display:grid; grid-template-columns:repeat(2, 1fr); gap:4px; margin-bottom:4px;
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; margin-bottom:4px;
   }
   .roulette-outside-btn{
-    padding:5px 2px; border-radius:4px; border:1px solid rgba(255,255,255,.25);
-    background:rgba(255,255,255,.1); color:#fff; font-weight:700; font-size:8px;
+    padding:8px 2px; border-radius:4px; border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.1); color:#fff; font-weight:800; font-size:12px;
     cursor:pointer; position:relative;
   }
   .roulette-outside-btn.roulette-red{ background:rgba(230,57,70,.7); }
   .roulette-outside-btn.roulette-black{ background:rgba(34,34,34,.85); }
   .roulette-bet-badge{
     position:absolute; top:-10px; left:-10px; background:#3b82f6; color:#fff;
-    border-radius:10px; font-size:11px; font-weight:700; padding:3px 6px; line-height:1.2;
+    border-radius:10px; font-size:12px; font-weight:700; padding:3px 6px; line-height:1.2;
     box-shadow:0 2px 4px rgba(0,0,0,.5); display:flex; flex-direction:column; align-items:center;
     min-width:28px; z-index:5; border:2px solid rgba(255,255,255,.5);
   }
-  .roulette-bet-badge .badge-amount{ font-size:13px; font-weight:800; }
+  .roulette-bet-badge .badge-amount{ font-size:14px; font-weight:800; }
   .roulette-bet-badge .badge-player{ font-size:9px; font-weight:400; opacity:.9; }
   .roulette-chips-row{ display:flex; gap:8px; justify-content:center; margin:8px 0; }
   .roulette-chip{
@@ -5528,19 +5539,21 @@
 
   <!-- ===== РУЛЕТКА: ИГРА =====
        Игроки по очереди из общего списка "Игры для компании", у каждого свой
-       баланс фишек. Поле ставок: числа 0-36 (окрашены как в настоящей
-       рулетке) + внешние ставки (цвет/чёт-нечет/половина). Волчок — цветное
-       колесо на CSS conic-gradient, крутится случайно на нужный угол. -->
+       баланс фишек. Поле ставок: сверху Красное/0/Чёрное, числа 1-36
+       (окрашены как в настоящей рулетке), снизу Чёт/Нечет/1-18/19-36.
+       Волчок — SVG-колесо, крутится случайно на нужный угол. -->
   <section id="partyRouletteGame" class="screen">
     <h1 class="title" style="font-size:20px;">🎡 Рулетка</h1>
     <div class="roulette-players-row" id="roulettePlayersRow"></div>
 
-    <button type="button" class="roulette-zero-cell" id="rouletteZeroCell" data-bet="num-0">0</button>
+    <div class="roulette-top-row">
+      <button type="button" class="roulette-top-btn roulette-red" data-bet="color-red">Красное</button>
+      <button type="button" class="roulette-zero-cell" id="rouletteZeroCell" data-bet="num-0">0</button>
+      <button type="button" class="roulette-top-btn roulette-black" data-bet="color-black">Чёрное</button>
+    </div>
     <div class="roulette-number-grid" id="rouletteNumberGrid"></div>
 
     <div class="roulette-outside-grid" id="rouletteOutsideGrid">
-      <button type="button" class="roulette-outside-btn roulette-red" data-bet="color-red">Красное</button>
-      <button type="button" class="roulette-outside-btn roulette-black" data-bet="color-black">Чёрное</button>
       <button type="button" class="roulette-outside-btn" data-bet="parity-even">Чёт</button>
       <button type="button" class="roulette-outside-btn" data-bet="parity-odd">Нечет</button>
       <button type="button" class="roulette-outside-btn" data-bet="range-low">1–18</button>
