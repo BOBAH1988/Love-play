@@ -355,8 +355,13 @@ function spinRouletteWheel(){
   if(wheelEl){
     wheelEl.style.transition = 'none';
     void wheelEl.offsetWidth; // фиксируем «предыдущее» состояние
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
+    // Фолбэк для старых WebView без requestAnimationFrame — иначе бросок
+    // здесь оставил бы rouletteSpinning=true и сломал бы игру после списания ставок
+    const raf = window.requestAnimationFrame
+      ? window.requestAnimationFrame.bind(window)
+      : (fn)=>setTimeout(fn, 16);
+    raf(()=>{
+      raf(()=>{
         if(spinSession !== rouletteSpinSession) return; // кручение отменено
         wheelEl.style.transition = 'transform 3.5s cubic-bezier(.17,.67,.29,1)';
         wheelEl.style.transform = `rotate(${rouletteWheelTotalRotation}deg)`;
