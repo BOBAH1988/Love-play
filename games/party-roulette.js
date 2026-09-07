@@ -416,10 +416,12 @@ function goToPartyRouletteGame(){
   // (жёсткой в т.ч.) не вернулись ставки/баланс прошлой партии.
   saveState();
   goToGame('setup', 'partyRouletteGame');
+  // Колесо перестраиваем при каждом входе — схopyет и случай, когда PWA
+  // отдал старый JS без SVG (функция сама не дублирует сектора).
+  buildRouletteWheel();
   if(!rouletteInited){
     renderRouletteNumberGrid();
     rouletteBindOutsideBets();
-    buildRouletteWheel();
     rouletteInited = true;
   }
   renderRouletteBadges();
