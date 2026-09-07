@@ -11,6 +11,11 @@ function getFamZnayuCardsList(level){
   if(typeof FAM_ZNAYU_ITEMS === 'undefined' || !Array.isArray(FAM_ZNAYU_ITEMS)) return [];
   return FAM_ZNAYU_ITEMS.filter(it=>it.level===level);
 }
+// Порядковое название семьи по индексу (0 → «Первая семья», 1 → «Вторая семья», 2 → «Третья семья»).
+const FAM_ZNAYU_FAMILY_ORDINALS = ['Первая', 'Вторая', 'Третья'];
+function famZnayuFamilyOrdinal(idx){
+  return FAM_ZNAYU_FAMILY_ORDINALS[idx] || `Семья ${idx + 1}`;
+}
 // Число семей (2-5) хранится отдельно от самого массива семей — при смене
 // числа массив state.famZnayuFamilies достраивается/обрезается, сохраняя
 // уже введённые имена там, где это возможно.
@@ -75,7 +80,7 @@ function renderFamZnayuFamiliesFields(){
     block.className = 'fam-znayu-family-block';
     const label = document.createElement('div');
     label.className = 'fam-znayu-family-label';
-    label.textContent = 'Семья ' + (idx + 1);
+    label.textContent = famZnayuFamilyOrdinal(idx) + ' семья';
     block.appendChild(label);
     const row1 = document.createElement('div');
     row1.className = 'fam-znayu-family-inputs';
@@ -196,7 +201,7 @@ function updateFamZnayuHeaderUI(){
   const idx = state.famZnayuCurrentFamilyIndex || 0;
   const fam = state.famZnayuFamilies[idx] || {p1: partyDefaultName(idx*2), p2: partyDefaultName(idx*2+1)};
   const familyLabel = document.getElementById('famZnayuFamilyLabel');
-  if(familyLabel) familyLabel.textContent = `Семья ${idx + 1} из ${total}`;
+  if(familyLabel) familyLabel.textContent = `${famZnayuFamilyOrdinal(idx)} семья из ${total}`;
   const p1Btn = document.getElementById('famZnayuPlayer1Btn');
   const p2Btn = document.getElementById('famZnayuPlayer2Btn');
   if(p1Btn){

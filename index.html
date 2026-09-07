@@ -3000,8 +3000,8 @@
            <button type="button" class="btn btn-menu-item" id="gameKidsTdBtn"><span class="menu-icon">🗣️</span> Правда/Действие</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsMinesweeperBtn"><span class="menu-icon">💣</span> Сапёр</button>
-          <button type="button" class="btn btn-menu-item" id="gameKidsWhatToPlayBtn"><span class="menu-icon">🎲</span> Во что поиграть?</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsBoardGamesBtn"><span class="menu-icon">♟️</span> Настольные игры</button>
+          <button type="button" class="btn btn-menu-item" id="gameKidsWhatToPlayBtn"><span class="menu-icon">🎲</span> Во что поиграть?</button>
         </div>
       </div>
 
@@ -3140,36 +3140,32 @@
     <div class="td-turn-label" id="kidsTdTurnLabel">Выбирает: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsTdScoreRow"></div>
 
-    <div class="party-td-choice-row" id="kidsTdChoiceRow">
-      <button type="button" class="btn btn-primary" id="kidsTdTruthBtn">🗣️ Правда</button>
-      <button type="button" class="btn btn-primary" id="kidsTdDareBtn">🎭 Действие</button>
-    </div>
-    <div class="timer-actions-bottom" id="kidsTdChoicePauseRow">
-      <button type="button" class="btn btn-secondary btn-pause" id="kidsTdChoiceExitBtn">Пауза</button>
-    </div>
-
-    <div class="card-area" id="kidsTdCardArea" style="display:none;">
+    <!-- Единая система с компанией: карточка видна всегда, выбор
+         «Правда/Действие» — двумя кнопками под карточкой. -->
+    <div class="card-area" id="kidsTdCardArea">
       <div class="card" id="kidsTdCard">
         <div class="card-inner">
           <div class="card-body">
-            <div class="partytd-type-badge" id="kidsTdCardBadge">Правда</div>
-            <div class="card-text partytd-text" id="kidsTdCardText">Загрузка…</div>
+            <div class="partytd-type-badge" id="kidsTdCardBadge">🎲 Ход</div>
+            <div class="card-text partytd-text" id="kidsTdCardText">Выберите «Правда» или «Действие»</div>
           </div>
         </div>
       </div>
 
+      <div class="td-actions-row" id="kidsTdChoiceRow">
+        <button type="button" class="btn btn-primary" id="kidsTdTruthBtn">🤔 Правда</button>
+        <button type="button" class="btn btn-secondary" id="kidsTdDareBtn">🎯 Действие</button>
+      </div>
 
-    <div class="timer-actions-row" id="kidsTdActionsRow" style="display:none;">
-      <div class="timer-actions-top">
+      <div class="td-actions-row" id="kidsTdActionsRow" style="display:none;">
         <button type="button" class="btn btn-primary" id="kidsTdDoneBtn">✅ Выполнено</button>
         <button type="button" class="btn btn-secondary" id="kidsTdSkipBtn">🚫 Отказ</button>
       </div>
-      <div class="timer-actions-bottom">
+
+      <div class="timer-actions-bottom" style="margin-top:10px;">
         <button type="button" class="btn btn-secondary btn-pause" id="kidsTdExitBtn">Пауза</button>
       </div>
     </div>
-  
-        </div>
 </section>
 
   <!-- ===== ПРАВДА/ДЕЙСТВИЕ (ДЕТИ): ИТОГИ ИГРЫ ===== -->
@@ -5200,7 +5196,7 @@
 
   <!-- ===== ЗНАЮ ТЕБЯ (КОМПАНИЯ, СЕМЬЯМИ): ИГРА ===== -->
   <section id="famZnayuGame" class="screen">
-    <div class="td-turn-label" id="famZnayuFamilyLabel">Семья 1 из 2</div>
+    <div class="td-turn-label" id="famZnayuFamilyLabel">Первая семья из 2</div>
     <div class="wishlist-player-row" id="famZnayuPlayerRow">
       <button type="button" class="btn btn-secondary" id="famZnayuPlayer1Btn">Первый</button>
       <button type="button" class="btn btn-secondary" id="famZnayuPlayer2Btn">Второй</button>

@@ -4605,12 +4605,12 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🗣️','Правда/Действие','kidsTdRulesModal'],
       ['🎯','Викторина','kidsQuizRulesModal'],
       ['💣','Сапёр','kidsSaperRulesModal'],
-      ['🎲','Во что поиграть?','whatToPlayRulesModal'],
       { sub:'♟️ Настольные игры', games:[
         ['⭕','Крестики нолики','kidsXoRulesModal'],
         ['🚢','Морской бой','kidsBattleshipRulesModal'],
         ['🔴','Четыре в ряд','kidsC4RulesModal'],
       ]},
+      ['🎲','Во что поиграть?','whatToPlayRulesModal'],
     ]},
     { icon:'💼', name:'Бизнес игры', games:[
       ['🍋','Лимонадный ларёк','businessLemonadeRulesModal'],

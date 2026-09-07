@@ -56,14 +56,19 @@ function updateKidsTdScoreUI(){
   // карточка и "Выполнено"/"Отказ" скрыты (и наоборот) — та же логика, что в
   // party-td.js.
   const choiceRow = document.getElementById('kidsTdChoiceRow');
-  const choicePauseRow = document.getElementById('kidsTdChoicePauseRow');
-  const cardArea = document.getElementById('kidsTdCardArea');
   const actionsRow = document.getElementById('kidsTdActionsRow');
   const hasChoice = !!state.kidsTdCurrentType;
   if(choiceRow) choiceRow.style.display = hasChoice ? 'none' : '';
-  if(choicePauseRow) choicePauseRow.style.display = hasChoice ? 'none' : '';
-  if(cardArea) cardArea.style.display = hasChoice ? '' : 'none';
   if(actionsRow) actionsRow.style.display = hasChoice ? '' : 'none';
+  if(!hasChoice) resetKidsTdCardPrompt();
+}
+// Карточка-приглашение (как в компании между ходами): подсказка вместо
+// задания, бейдж "🎲 Ход". Вызывается при смене хода/старте/возобновлении.
+function resetKidsTdCardPrompt(){
+  fadeSwapEl('kidsTdCard', (el)=>{
+    el.className = 'card';
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="partytd-type-badge">🎲 Ход</div><div class="card-text partytd-text">Выберите «Правда» или «Действие»</div></div></div>`;
+  });
 }
 // Карточка тянется без повторов внутри уровня+типа (Правда/Действие —
 // отдельные пулы), пока пул не закончится — тот же принцип, что и во всех
@@ -233,10 +238,6 @@ document.getElementById('kidsTdSkipBtn').addEventListener('click', ()=>{
   kidsTdNextTurn();
 });
 document.getElementById('kidsTdExitBtn').addEventListener('click', ()=>{
-  pauseKidsTdGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
-document.getElementById('kidsTdChoiceExitBtn').addEventListener('click', ()=>{
   pauseKidsTdGame();
   showToast('Игра на паузе — прогресс сохранён');
 });

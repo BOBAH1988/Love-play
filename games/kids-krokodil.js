@@ -9,7 +9,11 @@
 //  - "Выход" сразу завершает партию (без общего меню паузы/резюме, которое
 //    используют игры для компании) — тот же простой паттерн, что у детских
 //    Мемасиков и компанийских Мемасиков.
-let kkrRemaining = 0;
+// kidsKrokodilSummaryIsExit различает два случая закрытия модалки:
+// естественное завершение партии (все раунды сыграны — после закрытия нужно
+// вернуться на экран настройки) и досрочный выход через кнопку "Пауза"
+// (экран уже #setup, никуда переключать не надо).
+let kidsKrokodilSummaryIsExit = false;
 let kkrTotal = 0;
 let kkrIntervalId = null;
 let kkrRoundGuessed = 0;
@@ -197,6 +201,7 @@ function kkrRoundEnd(){
   if(gameOver) showKidsKrokodilSummaryModal();
 }
 function showKidsKrokodilSummaryModal(){
+  kidsKrokodilSummaryIsExit = false;
   const players = state.kidsPlayers || ['Родитель','Ребёнок'];
   const scores = state.kidsKrokodilScores || [];
   const skips = state.kidsKrokodilSkipCounts || [];
@@ -215,6 +220,32 @@ function showKidsKrokodilSummaryModal(){
     `;
   }).join('');
   document.getElementById('kidsKrokodilSummaryIntro').textContent = `Сыграно раундов: ${players.length * (state.kidsKrokodilRoundsPerPlayer || 5)} — вот кто справился лучше всех:`;
+  document.getElementById('kidsKrokodilSummaryList').innerHTML = listHtml;
+  showModal('kidsKrokodilSummaryModal');
+}
+// Досрочный выход через кнопку "Пауза" — показываем те же итоги, что и при
+// обычном завершении, только с пометкой "партия прервана" и текущим
+// (неполным) счётом.
+function showKidsKrokodilExitSummary(){
+  kidsKrokodilSummaryIsExit = true;
+  const players = state.kidsPlayers || ['Родитель','Ребёнок'];
+  const scores = state.kidsKrokodilScores || [];
+  const skips = state.kidsKrokodilSkipCounts || [];
+  const ranking = players.map((n,i)=>({n, score: scores[i] || 0, skipped: skips[i] || 0}))
+    .sort((a,b)=>b.score-a.score);
+  const medals = ['🥇','🥈','🥉'];
+  const listHtml = ranking.map((r,i)=>{
+    const place = medals[i] || `${i+1}.`;
+    const isFirst = i === 0;
+    return `
+      <div class="krokodil-summary-row${isFirst ? ' krokodil-summary-first' : ''}">
+        <span class="krokodil-summary-place">${place}</span>
+        <span class="krokodil-summary-name">${r.n}</span>
+        <span class="krokodil-summary-score">Угадано: ${r.score} · Пропущено: ${r.skipped}</span>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('kidsKrokodilSummaryIntro').textContent = `Сыграно раундов: ${state.kidsKrokodilTurnsPlayed || 0}. Текущий счёт:`;
   document.getElementById('kidsKrokodilSummaryList').innerHTML = listHtml;
   showModal('kidsKrokodilSummaryModal');
 }
@@ -268,6 +299,15 @@ function exitKidsKrokodilGame(){
   saveState();
   exitGame('kidsKrokodilGame', 'kidsKrokodilSetup');
 }
+function finishKidsKrokodilGame(){
+  stopKkrInterval();
+  hideModal('kidsKrokodilSummaryModal');
+  state.kidsKrokodilScores = [];
+  state.kidsKrokodilSkipCounts = [];
+  state.kidsKrokodilTurnsPlayed = 0;
+  state.kidsKrokodilCurrentPlayerIndex = 0;
+  saveState();
+}
 document.getElementById('kidsKrokodilSetupStartBtn').addEventListener('click', ()=>{ goToKidsKrokodilGame(); });
 document.getElementById('kidsKrokodilSetupExitBtn').addEventListener('click', ()=>{ exitKidsKrokodilSetup(); });
 document.getElementById('kidsKrokodilStartRoundBtn').addEventListener('click', ()=>{ kkrStartRound(); });
@@ -284,8 +324,14 @@ document.getElementById('kidsKrokodilSkipBtn').addEventListener('click', ()=>{
 });
 document.getElementById('kidsKrokodilNextPlayerBtn').addEventListener('click', ()=>{ kkrNextPlayerRound(); });
 document.getElementById('kidsKrokodilFinishBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
-document.getElementById('closeKidsKrokodilSummaryBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
-document.getElementById('kidsKrokodilExitBtn').addEventListener('click', ()=>{ exitKidsKrokodilGame(); });
+document.getElementById('closeKidsKrokodilSummaryBtn').addEventListener('click', ()=>{
+  if(kidsKrokodilSummaryIsExit){
+    finishKidsKrokodilGame();
+  } else {
+    exitKidsKrokodilGame();
+  }
+});
+document.getElementById('kidsKrokodilExitBtn').addEventListener('click', ()=>{ showKidsKrokodilExitSummary(); });
 (document.getElementById('kidsKrokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsKrokodilRulesModal'); });
 setupRulesModal('kidsKrokodilRulesModal', 'closeKidsKrokodilRulesBtn');
 
