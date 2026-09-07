@@ -1013,14 +1013,18 @@
   .roulette-chips-row{ display:flex; gap:8px; justify-content:center; margin:8px 0; }
   .roulette-chip{
     width:52px; height:52px; border-radius:50%; border:3px dashed rgba(255,255,255,.5);
-    background:linear-gradient(135deg,#ffd27a,#ff8a5e); color:#2b0f2e; font-weight:800; font-size:14px;
+    background:var(--chip-bg, linear-gradient(135deg,#ffd27a,#ff8a5e));
+    color:var(--chip-text, #2b0f2e); font-weight:800; font-size:14px;
     cursor:pointer;
   }
-  .roulette-chip[data-chip="10"]{ background:linear-gradient(135deg,#60a5fa,#2563eb); color:#fff; }
-  .roulette-chip[data-chip="50"]{ background:linear-gradient(135deg,#4ade80,#16a34a); color:#fff; }
-  .roulette-chip[data-chip="100"]{ background:linear-gradient(135deg,#f87171,#dc2626); color:#fff; }
-  .roulette-chip[data-chip="500"]{ background:linear-gradient(135deg,#a78bfa,#6d28d9); color:#fff; }
-  .roulette-chip.roulette-chip-selected{
+  /* Цвета фишек по номиналам — 10 голубая, 50 синяя, 100 зелёная, 500 красная.
+     Фолбэк через data-chip: применяется, если JS ещё не выставил переменные. */
+  .roulette-chip[data-chip="10"]{ background:linear-gradient(135deg,#7dd3fc,#0284c7); color:#fff; }
+  .roulette-chip[data-chip="50"]{ background:linear-gradient(135deg,#60a5fa,#1d4ed8); color:#fff; }
+  .roulette-chip[data-chip="100"]{ background:linear-gradient(135deg,#4ade80,#15803d); color:#fff; }
+  .roulette-chip[data-chip="500"]{ background:linear-gradient(135deg,#f87171,#b91c1c); color:#fff; }
+  .roulette-chip.roulette-chip-selected,
+  .roulette-chip.active{
     border-style:solid; border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35);
   }
   /* Ряд игроков в рулетке */
@@ -6450,7 +6454,7 @@
   <script src="games/solo-connect4.js?v=20260902a"></script>
 <script src="games/shop.js?v=20260830u"></script>
 <script src="games/business-observer.js?v=20260830u"></script>
-<script src="games/party-roulette.js?v=20260914j"></script>
+<script src="games/party-roulette.js?v=20260914k"></script>
 <script src="games/business-lemonade.js?v=20260830u"></script>
 <script src="games/kids-xo.js?v=20260913a"></script>
 <script src="games/kids-battleship.js?v=20260913a"></script>
