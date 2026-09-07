@@ -296,6 +296,54 @@ function closeRouletteSpinModal(){
   const modal = document.getElementById('rouletteSpinModal');
   if(modal) modal.classList.remove('show');
 }
+
+/* Гарантирует наличие кнопки «Выход» в окне кручения. Если HTML из старого
+ * кэша не содержит кнопку (рассинхрон кэша HTML и JS) — создаём её динамически.
+ * Видимость управляется ТОЛЬКО inline-стилем (style.display) — работает при
+ * любом сочетании версий HTML/CSS/JS в кэше устройства. */
+function ensureRouletteCustomExitBtn(){
+  let exitBtn = document.getElementById('rouletteCustomExitBtn');
+  if(!exitBtn){
+    const card = document.querySelector('#rouletteSpinModal .roulette-spin-card');
+    if(!card) return null;
+    exitBtn = document.createElement('button');
+    exitBtn.type = 'button';
+    exitBtn.className = 'btn btn-secondary';
+    exitBtn.id = 'rouletteCustomExitBtn';
+    exitBtn.textContent = 'Выход';
+    const actions = card.querySelector('.roulette-spin-actions');
+    (actions || card).appendChild(exitBtn);
+  }
+  if(!exitBtn.dataset.bound){
+    exitBtn.dataset.bound = '1';
+    exitBtn.style.display = 'none';
+    exitBtn.style.flex = '0 0 auto';
+    exitBtn.style.width = 'auto';
+    exitBtn.style.padding = '10px 18px';
+    exitBtn.style.whiteSpace = 'nowrap';
+    exitBtn.addEventListener('click', exitRouletteCustomMode);
+  }
+  return exitBtn;
+}
+
+/* Выход из режима «Свое поле» на предыдущий экран (экран рулетки) */
+function exitRouletteCustomMode(){
+  rouletteCustomMode = false;
+  const exitBtn = document.getElementById('rouletteCustomExitBtn');
+  if(exitBtn) exitBtn.style.display = 'none';
+  const modalEl = document.getElementById('rouletteSpinModal');
+  if(modalEl) modalEl.classList.remove('custom-mode');
+  // Отменяем отложенное завершение кручения и запуск анимации — иначе после
+  // выхода сработает обычная логика начисления выигрыша по ставкам
+  rouletteSpinSession++;
+  if(rouletteSpinTimer){ clearTimeout(rouletteSpinTimer); rouletteSpinTimer = null; }
+  closeRouletteSpinModal();
+  rouletteSpinning = false;
+  document.getElementById('rouletteSpinBtn').disabled = false;
+  document.getElementById('rouletteClearBetsBtn').disabled = false;
+  updateRouletteBetTotal();
+}
+
 function spinRouletteWheel(){
   if(rouletteSpinning) return;
   const allBetsTotal = rouletteAllBetsTotal();
@@ -326,7 +374,7 @@ function spinRouletteWheel(){
   // показывается независимо от состояния кэша и CSS-специфичности.
   const modalEl = document.getElementById('rouletteSpinModal');
   if(modalEl) modalEl.classList.toggle('custom-mode', rouletteCustomMode);
-  const customExitBtn = document.getElementById('rouletteCustomExitBtn');
+  const customExitBtn = ensureRouletteCustomExitBtn();
   if(customExitBtn) customExitBtn.style.display = rouletteCustomMode ? 'block' : 'none';
   
   const winningNumber = Math.floor(Math.random() * 37);
@@ -377,7 +425,7 @@ function spinRouletteWheel(){
       const color = rouletteColorOf(winningNumber);
       const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
       resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})`;
-      doneBtn.style.display = 'block';
+      if(doneBtn) doneBtn.style.display = 'block';
       return;
     }
     resolveRouletteSpin(winningNumber);
@@ -408,11 +456,12 @@ function spinRouletteWheel(){
     });
     
     resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})<br>${net >= 0 ? '🎉 Выигрыш' : '😔 Проигрыш'} <b>${net >= 0 ? '+' : ''}${net}</b>`;
-    doneBtn.style.display = 'block';
+    if(doneBtn) doneBtn.style.display = 'block';
   }, 3700);
 }
 
-document.getElementById('rouletteSpinDoneBtn').addEventListener('click', ()=>{
+const rouletteDoneBtnEl = document.getElementById('rouletteSpinDoneBtn');
+if(rouletteDoneBtnEl) rouletteDoneBtnEl.addEventListener('click', ()=>{
   if(rouletteCustomMode){
     // «Свое поле»: следующий ход сразу, не выходя с экрана
     spinRouletteWheel();
@@ -525,7 +574,8 @@ function goToPartyRouletteGame(){
 }
 
 /* ============ ИНИЦИАЛИЗАЦИЯ ============ */
-document.getElementById('rouletteSpinBtn').addEventListener('click', spinRouletteWheel);
+const rouletteSpinBtnEl = document.getElementById('rouletteSpinBtn');
+if(rouletteSpinBtnEl) rouletteSpinBtnEl.addEventListener('click', spinRouletteWheel);
 // «Свое поле»: рулетка без ставок для игры с офлайн-полем
 const customBoardBtnEl = document.getElementById('rouletteCustomBoardBtn');
 if(customBoardBtnEl) customBoardBtnEl.addEventListener('click', ()=>{
@@ -533,25 +583,16 @@ if(customBoardBtnEl) customBoardBtnEl.addEventListener('click', ()=>{
   rouletteCustomMode = true;
   spinRouletteWheel();
 });
-// Выход из режима «Свое поле» на предыдущий экран (экран рулетки)
-const customExitBtnEl = document.getElementById('rouletteCustomExitBtn');
-if(customExitBtnEl) customExitBtnEl.addEventListener('click', ()=>{
-  rouletteCustomMode = false;
-  customExitBtnEl.style.display = 'none';
-  const modalEl = document.getElementById('rouletteSpinModal');
-  if(modalEl) modalEl.classList.remove('custom-mode');
-  // Отменяем отложенное завершение кручения и запуск анимации — иначе после
-  // выхода сработает обычная логика начисления выигрыша по ставкам
-  rouletteSpinSession++;
-  if(rouletteSpinTimer){ clearTimeout(rouletteSpinTimer); rouletteSpinTimer = null; }
-  closeRouletteSpinModal();
-  rouletteSpinning = false;
-  document.getElementById('rouletteSpinBtn').disabled = false;
-  document.getElementById('rouletteClearBetsBtn').disabled = false;
-  updateRouletteBetTotal();
-});
-document.getElementById('rouletteClearBetsBtn').addEventListener('click', ()=>{ clearRouletteBets(); });
-document.getElementById('rouletteExitBtn').textContent = 'Пауза';
-document.getElementById('rouletteExitBtn').addEventListener('click', ()=>{ pauseGamePartyRoulette(); });
+// Выход из режима «Свое поле» на предыдущий экран (экран рулетки).
+// ensureRouletteCustomExitBtn() найдёт кнопку в HTML или создаст её,
+// если устройство держит в кэше старую версию без этой кнопки.
+ensureRouletteCustomExitBtn();
+const rouletteClearBtnEl = document.getElementById('rouletteClearBetsBtn');
+if(rouletteClearBtnEl) rouletteClearBtnEl.addEventListener('click', ()=>{ clearRouletteBets(); });
+const roulettePauseBtnEl = document.getElementById('rouletteExitBtn');
+if(roulettePauseBtnEl){
+  roulettePauseBtnEl.textContent = 'Пауза';
+  roulettePauseBtnEl.addEventListener('click', ()=>{ pauseGamePartyRoulette(); });
+}
 openRulesModal('rouletteGameRulesBtn', 'partyRouletteRulesModal');
 setupRulesModal('partyRouletteRulesModal', 'closePartyRouletteRulesBtn');
