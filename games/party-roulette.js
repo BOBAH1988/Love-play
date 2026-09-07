@@ -233,7 +233,7 @@ function spinRouletteWheel(){
   const wheelEl = document.getElementById('rouletteSpinWheel');
   const resultEl = document.getElementById('rouletteSpinResult');
   const doneBtn = document.getElementById('rouletteSpinDoneBtn');
-  doneBtn.style.display = 'none';
+    doneBtn && (doneBtn.style.display = 'none');
   resultEl.textContent = 'Крутится...';
   
   // Анимация колеса
