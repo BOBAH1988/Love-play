@@ -4594,9 +4594,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🧠','Знаю тебя','famZnayuRulesModal'],
       ['🎫','Счастливый билет','luckyRulesModal'],
       ['🎯','Викторина','partyQuizRulesModal'],
-      ['🤸','Твистер','twisterRulesModal'],
-      ['🎡','Рулетка','partyRouletteRulesModal'],
       ['🙊','Я никогда не','partyNeverRulesModal'],
+      ['🎡','Рулетка','partyRouletteRulesModal'],
+      ['🌀','Твистер','twisterRulesModal'],
     ]},
     { icon:'🧸', name:'Игры с детьми', games:[
       ['🐊','Крокодил','kidsKrokodilRulesModal'],
