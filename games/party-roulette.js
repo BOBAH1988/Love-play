@@ -212,7 +212,9 @@ function renderRouletteNumberGrid(){
   }
 }
 function rouletteBindOutsideBets(){
-  ['red','black','odd','even','low','high'].forEach(key=>{
+  // Ключи должны совпадать с data-bet в HTML и с ключами в
+  // rouletteBetWins()/rouletteBetMultiplier().
+  ['num-0','color-red','color-black','parity-even','parity-odd','range-low','range-high'].forEach(key=>{
     const el = document.querySelector(`[data-bet="${key}"]`);
     if(el) el.addEventListener('click', ()=>{ addRouletteBet(key); });
   });
