@@ -1518,8 +1518,9 @@ function performFullReset(){
   // Виселица (компания)
   state.partyHangmanWord = ''; state.partyHangmanGuessed = []; state.partyHangmanWrong = 0;
   state.partyHangmanUsedWords = []; state.partyHangmanWins = 0; state.partyHangmanLosses = 0;
-  // Рулетка (компания) — сброс баланса всех игроков к стартовому
+    // Рулетка (компания) — сброс баланса всех игроков к стартовому
   state.rouletteBalances = []; state.rouletteCurrentPlayerIndex = 0;
+  state.roulettePlayerBets = [];
   // Викторина (один)
   state.soloQuizUsed = {}; state.soloQuizQueue = []; state.soloQuizIndex = 0;
   state.soloQuizCorrect = 0; state.soloQuizTimeMs = 0;

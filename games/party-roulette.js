@@ -313,7 +313,7 @@ function resolveRouletteSpin(n){
   });
   const net = totalReturn - totalBet;
   const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
-  const resultEl = document.getElementById('rouletteResult');
+    const resultEl = document.getElementById('rouletteSpinResult');
   if(resultEl){
     resultEl.innerHTML = `Выпало: <b>${n}</b> (${colorName}) — ${net >= 0 ? '🎉 выигрыш' : '😔 проигрыш'} ${net >= 0 ? '+' : ''}${net}`;
   }
@@ -372,8 +372,9 @@ function goToPartyRouletteGame(){
   renderRouletteChips();
   updateRouletteTurnLabel();
   updateRouletteBetTotal();
-  document.getElementById('rouletteResult').textContent = '';
+  document.getElementById('rouletteSpinResult').textContent = '';
   updateMuteBtn();
+  rouletteSpinning = false;
   requestWakeLock();
 }
 
