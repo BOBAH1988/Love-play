@@ -88,7 +88,8 @@ function rouletteBetTotal(){
 // Сумма ВСЕХ ставок ВСЕХ игроков
 function rouletteAllBetsTotal(){
   let total = 0;
-  (state.roulettePlayerBets || []).forEach(pb => {
+    (state.roulettePlayerBets || []).forEach(pb => {
+    if(!pb) return;
     total += Object.values(pb).reduce((a,b)=>a+b, 0);
   });
   return total;
@@ -179,7 +180,7 @@ function renderRouletteNumberGrid(){
   for(let n=0;n<=36;n++){
     const cell = document.createElement('button');
     cell.type = 'button';
-    cell.className = 'roulette-number-cell ' + rouletteColorOf(n);
+    cell.className = 'roulette-number-cell roulette-' + rouletteColorOf(n);
     cell.setAttribute('data-bet', 'n'+n);
     cell.textContent = n;
     cell.addEventListener('click', ()=>{ addRouletteBet('n'+n); });
@@ -218,7 +219,8 @@ function spinRouletteWheel(){
   
   // Списываем ставки с балансов игроков пропорционально
   const players = roulettePlayers();
-  (state.roulettePlayerBets || []).forEach((playerBets, idx) => {
+    (state.roulettePlayerBets || []).forEach((playerBets, idx) => {
+    if(!playerBets) return;
     const playerTotal = Object.values(playerBets).reduce((a,b)=>a+b, 0);
     state.rouletteBalances[idx] = (state.rouletteBalances[idx] || 0) - playerTotal;
   });
@@ -298,7 +300,8 @@ function resolveRouletteSpin(n){
   const totalBet = rouletteAllBetsTotal();
   let totalReturn = 0;
   const playerReturns = [];
-  (state.roulettePlayerBets || []).forEach((playerBets, idx) => {
+    (state.roulettePlayerBets || []).forEach((playerBets, idx) => {
+    if(!playerBets){ playerReturns.push(0); return; }
     let pReturn = 0;
     Object.keys(playerBets).forEach(key=>{
       if(rouletteBetWins(key, n)){
