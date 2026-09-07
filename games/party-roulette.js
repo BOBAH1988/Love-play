@@ -218,6 +218,34 @@ function rouletteBindOutsideBets(){
   });
 }
 
+/* Рисует колесо рулетки как SVG: 37 секторов в порядке ROULETTE_WHEEL_ORDER,
+ * с чередованием красный/чёрный (ноль — зелёный) и числами по радиусу.
+ * Фон на CSS-градиенте (conic-gradient) не используется — его нет в Firefox. */
+function buildRouletteWheel(){
+  const wheelEl = document.getElementById('rouletteSpinWheel');
+  if(!wheelEl || wheelEl.querySelector('svg')) return;
+  const n = ROULETTE_WHEEL_ORDER.length; // 37
+  const S = 1000, cx = 500, cy = 500, r = 480;
+  const seg = 360 / n;
+  let svg = `<svg viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg">`;
+  ROULETTE_WHEEL_ORDER.forEach((num, i) => {
+    const a1 = (i * seg - 90) * Math.PI / 180;
+    const a2 = ((i + 1) * seg - 90) * Math.PI / 180;
+    const color = rouletteColorHex(rouletteColorOf(num));
+    // Сектор
+    svg += `<path d="M ${cx},${cy} L ${cx + r*Math.cos(a1)},${cy + r*Math.sin(a1)} L ${cx + r*Math.cos(a2)},${cy + r*Math.sin(a2)} Z" fill="${color}" stroke="rgba(255,255,255,.35)" stroke-width="2"/>`;
+    // Число по центру сектора, ориентировано по радиусу
+    const mid = (i * seg + seg/2 - 90) * Math.PI / 180;
+    const tr = r * 0.72;
+    const tx = cx + tr * Math.cos(mid);
+    const ty = cy + tr * Math.sin(mid);
+    const deg = (i * seg + seg/2) - 90 + 90; // угол от вертикали, чтобы числа стояли «к центру»
+    svg += `<text x="${tx}" y="${ty}" fill="#fff" font-size="46" font-weight="700" text-anchor="middle" dominant-baseline="central" style="transform-origin:${tx}px ${ty}px; transform:rotate(${deg}deg)">${num}</text>`;
+  });
+  svg += `</svg>`;
+  wheelEl.innerHTML = svg;
+}
+
 /* ============ МОДАЛЬНОЕ ОКНО КРУЧЕНИЯ ============ */
 function openRouletteSpinModal(){
   const modal = document.getElementById('rouletteSpinModal');
@@ -391,6 +419,7 @@ function goToPartyRouletteGame(){
   if(!rouletteInited){
     renderRouletteNumberGrid();
     rouletteBindOutsideBets();
+    buildRouletteWheel();
     rouletteInited = true;
   }
   renderRouletteBadges();
