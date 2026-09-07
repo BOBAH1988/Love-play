@@ -387,6 +387,8 @@
   #partyRouletteGame #rouletteSpinBtn{flex:1;}
   #partyRouletteGame #rouletteClearBetsBtn{flex:0 0 auto; width:auto; padding:10px 18px; white-space:nowrap;}
   #partyRouletteGame #rouletteExitBtn{flex:0 0 auto; width:auto; padding:7px 20px; align-self:center;}
+  /* «Свое поле» — рулетка без ставок под кнопками действий */
+  #partyRouletteGame #rouletteCustomBoardBtn{display:block; width:100%; margin-top:6px; padding:10px; font-size:15px;}
   #partyRouletteGame .roulette-bet-total{text-align:center; margin:1px 0 1px;}
   /* Компактное поле ставок рулетки: сетка чисел сжимается по высоте экрана,
      а при свободном месте растягивается (ряды 1fr), заполняя пространство,
@@ -420,6 +422,7 @@
     #partyRouletteGame .roulette-players-row .roulette-player-btn .roulette-player-bet-info{font-size:9px; padding:1px 5px; margin-top:1px;}
     #partyRouletteGame .timer-actions-row .btn{padding:8px; font-size:14px;}
     #partyRouletteGame #rouletteClearBetsBtn{padding:8px 14px;}
+    #partyRouletteGame #rouletteCustomBoardBtn{padding:8px; font-size:14px;}
     #partyRouletteGame .roulette-result{margin-bottom:2px;}
   }
   /* Кнопки блока "Резервная копия" — ниже обычных toggle-pill и заметно
@@ -1151,6 +1154,15 @@
   .roulette-spin-result{
     text-align:center; font-size:20px; font-weight:700; min-height:32px;
     margin-bottom:20px; color:#fff; padding:0 20px;
+  }
+  /* Кнопки в окне кручения: «Продолжить» растянутая, «Выход» (режим «Свое
+     поле») — минимальной ширины рядом с ней */
+  .roulette-spin-actions{
+    display:flex; gap:10px; align-items:stretch; width:100%; max-width:340px;
+  }
+  .roulette-spin-actions #rouletteSpinDoneBtn{ flex:1; }
+  .roulette-spin-actions #rouletteCustomExitBtn{
+    flex:0 0 auto; width:auto; padding:10px 18px; white-space:nowrap;
   }
   /* Карточки "Игры для двоих" — у раздела нет одной общей карточки: у каждой
      мини-игры (Викторина, Идеи для вас, Правда/Действие, Тайные ответы,
@@ -5645,6 +5657,7 @@
         <button type="button" class="btn btn-secondary btn-pause" id="rouletteExitBtn">Выход</button>
       </div>
     </div>
+    <button type="button" class="btn btn-secondary" id="rouletteCustomBoardBtn">🎲 Свое поле</button>
   </section>
 
   <!-- ===== ПРАВИЛА "РУЛЕТКА" ===== -->
@@ -5881,7 +5894,10 @@
         <div class="roulette-spin-pointer">▼</div>
       </div>
       <div class="roulette-spin-result" id="rouletteSpinResult">Крутится...</div>
-      <button type="button" class="btn btn-primary" id="rouletteSpinDoneBtn" style="display:none;">Продолжить</button>
+      <div class="roulette-spin-actions">
+        <button type="button" class="btn btn-primary" id="rouletteSpinDoneBtn" style="display:none;">Продолжить</button>
+        <button type="button" class="btn btn-secondary" id="rouletteCustomExitBtn" style="display:none;">Выход</button>
+      </div>
     </div>
   </div>
 

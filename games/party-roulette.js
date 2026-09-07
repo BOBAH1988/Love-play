@@ -23,6 +23,11 @@ let roulettePlayerBets = [];
 let rouletteSelectedChip = 10;
 let rouletteSpinning = false;
 let rouletteWheelTotalRotation = 0;
+// Режим «Свое поле»: игра с офлайн-полем, приложение используется только
+// как рулетка — ставки не принимаются и не запоминаются, балансы не меняются.
+let rouletteCustomMode = false;
+// id отложенного обработчика кручения — чтобы можно было отменить его при выходе
+let rouletteSpinTimer = null;
 
 function rouletteColorOf(n){
   if(n === 0) return 'green';
@@ -291,27 +296,31 @@ function closeRouletteSpinModal(){
 function spinRouletteWheel(){
   if(rouletteSpinning) return;
   const allBetsTotal = rouletteAllBetsTotal();
-  if(allBetsTotal === 0){
+  if(!rouletteCustomMode && allBetsTotal === 0){
     showToast('Сделайте ставку');
     playErrorSound();
     return;
   }
   
   rouletteSpinning = true;
-  document.getElementById('rouletteClearBetsBtn').disabled = true;
+  document.getElementById('rouletteClearBetsBtn').disabled = !rouletteCustomMode;
   document.getElementById('rouletteSpinBtn').disabled = true;
   
-  // Списываем ставки с балансов игроков пропорционально
-  const players = roulettePlayers();
-    (state.roulettePlayerBets || []).forEach((playerBets, idx) => {
-    if(!playerBets) return;
-    const playerTotal = Object.values(playerBets).reduce((a,b)=>a+b, 0);
-    state.rouletteBalances[idx] = (state.rouletteBalances[idx] || 0) - playerTotal;
-  });
-  
-  saveState();
+  if(!rouletteCustomMode){
+    // Списываем ставки с балансов игроков пропорционально
+    const players = roulettePlayers();
+      (state.roulettePlayerBets || []).forEach((playerBets, idx) => {
+      if(!playerBets) return;
+      const playerTotal = Object.values(playerBets).reduce((a,b)=>a+b, 0);
+      state.rouletteBalances[idx] = (state.rouletteBalances[idx] || 0) - playerTotal;
+    });
+    saveState();
+  }
   updateRouletteBetTotal();
   openRouletteSpinModal();
+  // В режиме «Свое поле» кнопка выхода видна сразу — можно прервать в любой момент
+  const customExitBtn = document.getElementById('rouletteCustomExitBtn');
+  if(customExitBtn) customExitBtn.style.display = rouletteCustomMode ? '' : 'none';
   
   const winningNumber = Math.floor(Math.random() * 37);
   const wheelEl = document.getElementById('rouletteSpinWheel');
@@ -333,7 +342,17 @@ function spinRouletteWheel(){
     wheelEl.style.transform = `rotate(${rouletteWheelTotalRotation}deg)`;
   }
   
-  setTimeout(()=>{
+  rouletteSpinTimer = setTimeout(()=>{
+    rouletteSpinTimer = null;
+    if(rouletteCustomMode){
+      // «Свое поле»: показываем только результат, ставки/балансы не трогаем
+      rouletteSpinning = false;
+      const color = rouletteColorOf(winningNumber);
+      const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
+      resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})`;
+      doneBtn.style.display = 'block';
+      return;
+    }
     resolveRouletteSpin(winningNumber);
     const color = rouletteColorOf(winningNumber);
     const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
@@ -367,6 +386,11 @@ function spinRouletteWheel(){
 }
 
 document.getElementById('rouletteSpinDoneBtn').addEventListener('click', ()=>{
+  if(rouletteCustomMode){
+    // «Свое поле»: следующий ход сразу, не выходя с экрана
+    spinRouletteWheel();
+    return;
+  }
   closeRouletteSpinModal();
   // Очищаем ставки всех игроков
   if(state.roulettePlayerBets){
@@ -444,6 +468,10 @@ let rouletteInited = false;
 function goToPartyRouletteGame(){
   // Новый заход в игру = новая партия: сбрасываем балансы и ставки
   ensureRouletteBalances(true);
+  // Режим «Свое поле» всегда начинается заново с экрана рулетки
+  rouletteCustomMode = false;
+  const customExitBtn = document.getElementById('rouletteCustomExitBtn');
+  if(customExitBtn) customExitBtn.style.display = 'none';
   // Сразу фиксируем сброс в localStorage, чтобы после перезагрузки страницы
   // (жёсткой в т.ч.) не вернулись ставки/баланс прошлой партии.
   saveState();
@@ -468,6 +496,26 @@ function goToPartyRouletteGame(){
 
 /* ============ ИНИЦИАЛИЗАЦИЯ ============ */
 document.getElementById('rouletteSpinBtn').addEventListener('click', spinRouletteWheel);
+// «Свое поле»: рулетка без ставок для игры с офлайн-полем
+document.getElementById('rouletteCustomBoardBtn').addEventListener('click', ()=>{
+  if(rouletteSpinning) return;
+  rouletteCustomMode = true;
+  spinRouletteWheel();
+});
+// Выход из режима «Свое поле» на предыдущий экран (экран рулетки)
+document.getElementById('rouletteCustomExitBtn').addEventListener('click', ()=>{
+  rouletteCustomMode = false;
+  const exitBtn = document.getElementById('rouletteCustomExitBtn');
+  if(exitBtn) exitBtn.style.display = 'none';
+  // Отменяем отложенное завершение кручения — иначе после выхода
+  // сработает обычная логика начисления выигрыша по ставкам
+  if(rouletteSpinTimer){ clearTimeout(rouletteSpinTimer); rouletteSpinTimer = null; }
+  closeRouletteSpinModal();
+  rouletteSpinning = false;
+  document.getElementById('rouletteSpinBtn').disabled = false;
+  document.getElementById('rouletteClearBetsBtn').disabled = false;
+  updateRouletteBetTotal();
+});
 document.getElementById('rouletteClearBetsBtn').addEventListener('click', ()=>{ clearRouletteBets(); });
 document.getElementById('rouletteExitBtn').textContent = 'Пауза';
 document.getElementById('rouletteExitBtn').addEventListener('click', ()=>{ pauseGamePartyRoulette(); });
