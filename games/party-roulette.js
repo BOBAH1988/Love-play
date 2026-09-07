@@ -34,16 +34,16 @@ function rouletteColorHex(color){
 function roulettePlayers(){
   return (state.partyPlayers && state.partyPlayers.length >= 2) ? state.partyPlayers : [partyDefaultName(0), partyDefaultName(1)];
 }
-function ensureRouletteBalances(){
+function ensureRouletteBalances(reset=false){
   const n = roulettePlayers().length;
-  if(!state.rouletteBalances || state.rouletteBalances.length !== n){
+  if(reset || !state.rouletteBalances || state.rouletteBalances.length !== n){
     state.rouletteBalances = new Array(n).fill(ROULETTE_START_BALANCE);
   }
-  if(state.rouletteCurrentPlayerIndex == null || state.rouletteCurrentPlayerIndex >= n){
+  if(reset || state.rouletteCurrentPlayerIndex == null || state.rouletteCurrentPlayerIndex >= n){
     state.rouletteCurrentPlayerIndex = 0;
   }
   // Инициализация массива ставок для каждого игрока
-  if(!state.roulettePlayerBets || state.roulettePlayerBets.length !== n){
+  if(reset || !state.roulettePlayerBets || state.roulettePlayerBets.length !== n){
     state.roulettePlayerBets = Array.from({length:n}, ()=>({}));
   }
 }
@@ -335,7 +335,7 @@ function resumePartyRouletteGame(){
   if(pauseModal) pauseModal.classList.remove('show');
   state.pausedMode = null;
   goToGame('setup', 'partyRouletteGame');
-  ensureRouletteBalances();
+  ensureRouletteBalances(true);
   renderRouletteBadges();
   updateRouletteTurnLabel();
   updateRouletteBetTotal();
@@ -357,11 +357,7 @@ function finishPartyRouletteGame(){
 /* ============ ВХОД ============ */
 let rouletteInited = false;
 function goToPartyRouletteGame(){
-  ensureRouletteBalances();
-  const n = roulettePlayers().length;
-  if(!state.roulettePlayerBets || state.roulettePlayerBets.length !== n){
-    state.roulettePlayerBets = Array.from({length:n}, ()=>({}));
-  }
+  ensureRouletteBalances(true);
   goToGame('setup', 'partyRouletteGame');
   if(!rouletteInited){
     renderRouletteNumberGrid();
