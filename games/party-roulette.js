@@ -30,6 +30,30 @@ function rouletteColorHex(color){
   return color === 'red' ? '#e63946' : color === 'black' ? '#222' : '#2ecc71';
 }
 
+/* Определения выигрыша и множителя ставок. Ключи ставок:
+ *  - числа: 'num-0' (ноль), 'n1'..'n36'
+ *  - внешние: 'color-red', 'color-black', 'parity-even', 'parity-odd',
+ *    'range-low' (1-18), 'range-high' (19-36)
+ * Число платит 35:1 (плюс возвращается сама ставка), внешние — 1:1. */
+function rouletteBetMultiplier(key){
+  return (key.startsWith('n') || key.startsWith('num')) ? 35 : 1;
+}
+function rouletteBetWins(key, n){
+  if(key.startsWith('n') || key.startsWith('num')){
+    const num = parseInt(key.replace(/^num-|^n/, ''), 10);
+    return num === n;
+  }
+  switch(key){
+    case 'color-red':   return n !== 0 && ROULETTE_RED.has(n);
+    case 'color-black': return n !== 0 && !ROULETTE_RED.has(n);
+    case 'parity-even': return n !== 0 && n % 2 === 0;
+    case 'parity-odd':  return n !== 0 && n % 2 === 1;
+    case 'range-low':   return n >= 1 && n <= 18;
+    case 'range-high':  return n >= 19 && n <= 36;
+  }
+  return false;
+}
+
 /* ============ ИГРОКИ И БАЛАНС ============ */
 function roulettePlayers(){
   return (state.partyPlayers && state.partyPlayers.length >= 2) ? state.partyPlayers : [partyDefaultName(0), partyDefaultName(1)];
@@ -156,7 +180,7 @@ function clearRouletteBets(){
   updateRouletteBetTotal();
 }
 function renderRouletteChips(){
-  const wrap = document.getElementById('rouletteChipRow');
+  const wrap = document.getElementById('rouletteChipsRow');
   if(!wrap) return;
   wrap.innerHTML = '';
   ROULETTE_CHIPS.forEach(val=>{
