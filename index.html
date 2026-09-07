@@ -3733,9 +3733,10 @@
         <button type="button" class="btn btn-primary" id="kidsKrokodilNextPlayerBtn" style="display:none;">Следующий игрок</button>
         <button type="button" class="btn btn-primary" id="kidsKrokodilFinishBtn" style="display:none;">Завершить игру</button>
       </div>
-      <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-pause" id="kidsKrokodilExitBtn">Выход</button>
-      </div>
+    </div>
+    <div class="timer-actions-row timer-actions-bottom">
+      <button type="button" class="btn btn-secondary btn-pause" id="kidsKrokodilPauseBtn">Пауза</button>
+      <button type="button" class="btn btn-secondary btn-pause" id="kidsKrokodilExitBtn">Выход</button>
     </div>
   </section>
 
@@ -3911,16 +3912,8 @@
 
   <!-- ===== САПЁР (ДЕТИ): ИГРА ===== -->
   <section id="kidsSaperGame" class="screen">
-    <div class="card-area">
-      <div class="card">
-        <div class="card-inner">
-          <div class="card-body">
-            <div class="card-icon">💣</div>
-            <div class="card-text">Сапёр</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <h1 class="title" style="font-size:20px;">💣 Сапёр</h1>
+    <div class="subtitle" style="margin-bottom:2px;">Две команды по очереди открывают клетки — собирайте линии и повышайте уровень!</div>
     <div class="bingo-level-label" id="kidsSaperLevelLabel">Уровень: 🔍 Разведка</div>
     <div class="td-turn-label" id="kidsSaperTurnLabel">Ходит: Команда 1</div>
     <div class="krokodil-score-row two-player" id="kidsSaperScoreRow"></div>
@@ -3928,6 +3921,9 @@
     <div class="bingo-actions-row">
       <button type="button" class="btn btn-secondary" id="kidsSaperRandomBtn">🎲 Случайно</button>
       <button type="button" class="btn btn-secondary" id="kidsSaperHideTasksBtn">🙈 Скрыть задания</button>
+    </div>
+    <div class="bingo-actions-row bingo-actions-bottom">
+      <button type="button" class="btn btn-secondary btn-pause" id="kidsSaperPauseBtn">Пауза</button>
     </div>
     <div class="bingo-bonus-checklist-block" id="kidsSaperBonusChecklistBlock" style="display:none;">
       <div class="bingo-bonus-checklist-title">🎁 Бонусные задания</div>

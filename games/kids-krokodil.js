@@ -79,6 +79,25 @@ function exitKidsKrokodilSetup(){
   document.getElementById('setup').classList.add('active');
   showSetupView('kidsView');
 }
+function pauseKidsKrokodilGame(){
+  stopKkrInterval();
+  state.pausedMode = 'kidsKrokodil';
+  saveState();
+  document.getElementById('kidsKrokodilGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  updateResumeUI();
+}
+function resumeKidsKrokodilGame(){
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('kidsKrokodilGame').classList.add('active');
+  renderKkrScoreUI();
+  renderKidsKrokodilCard();
+  updateMuteBtn();
+  requestWakeLock();
+}
 function stopKkrInterval(){
   kkrIntervalId = stopInterval(kkrIntervalId);
 }
@@ -332,6 +351,7 @@ document.getElementById('closeKidsKrokodilSummaryBtn').addEventListener('click',
   }
 });
 document.getElementById('kidsKrokodilExitBtn').addEventListener('click', ()=>{ showKidsKrokodilExitSummary(); });
+document.getElementById('kidsKrokodilPauseBtn').addEventListener('click', ()=>{ pauseKidsKrokodilGame(); });
 (document.getElementById('kidsKrokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsKrokodilRulesModal'); });
 setupRulesModal('kidsKrokodilRulesModal', 'closeKidsKrokodilRulesBtn');
 
