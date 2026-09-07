@@ -177,7 +177,7 @@ function renderRouletteNumberGrid(){
   const grid = document.getElementById('rouletteNumberGrid');
   if(!grid) return;
   grid.innerHTML = '';
-  for(let n=0;n<=36;n++){
+    for(let n=1;n<=36;n++){
     const cell = document.createElement('button');
     cell.type = 'button';
     cell.className = 'roulette-number-cell roulette-' + rouletteColorOf(n);
