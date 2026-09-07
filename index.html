@@ -394,7 +394,7 @@
   #partyRouletteGame .roulette-top-btn,
   #partyRouletteGame .roulette-zero-cell,
   #partyRouletteGame .roulette-outside-btn{padding:6px 2px;}
-  #partyRouletteGame .roulette-chip{width:44px; height:44px; font-size:12px;}
+  #partyRouletteGame .roulette-chip{width:44px; height:44px; font-size:13px;}
   #partyRouletteGame .roulette-chips-row{gap:14px; margin:3px 0 10px;}
   #partyRouletteGame .roulette-players-row{margin:1px 0 4px;}
   #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:6px 12px; font-size:12px;}
@@ -403,8 +403,8 @@
     #partyRouletteGame .roulette-number-cell{height:min(6.2vh, 42px); max-height:42px;}
     #partyRouletteGame .roulette-top-btn,
     #partyRouletteGame .roulette-zero-cell,
-    #partyRouletteGame .roulette-outside-btn{padding:5px 2px; font-size:11px;}
-    #partyRouletteGame .roulette-chip{width:40px; height:40px; font-size:11px;}
+    #partyRouletteGame .roulette-outside-btn{padding:5px 2px; font-size:12px;}
+    #partyRouletteGame .roulette-chip{width:40px; height:40px; font-size:12px;}
     #partyRouletteGame .roulette-chips-row{gap:12px;}
     #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:5px 10px; font-size:11px;}
     #partyRouletteGame .timer-actions-row .btn{padding:8px; font-size:14px;}
@@ -1023,13 +1023,13 @@
   }
   .roulette-top-btn{
     padding:7px 2px; border-radius:6px; border:1px solid rgba(255,255,255,.25);
-    color:#fff; font-weight:800; font-size:12px; cursor:pointer; position:relative;
+    color:#fff; font-weight:800; font-size:13px; cursor:pointer; position:relative;
   }
   .roulette-top-btn.roulette-red{ background:rgba(230,57,70,.85); }
   .roulette-top-btn.roulette-black{ background:rgba(34,34,34,.9); }
   .roulette-zero-cell{
     display:block; width:100%; padding:7px; border-radius:6px;
-    background:#2ecc71; color:#fff; font-weight:800; font-size:14px; border:1px solid rgba(255,255,255,.25);
+    background:#2ecc71; color:#fff; font-weight:800; font-size:15px; border:1px solid rgba(255,255,255,.25);
     cursor:pointer; position:relative;
   }
   .roulette-number-grid{
@@ -1038,7 +1038,7 @@
   }
   .roulette-number-cell{
     aspect-ratio:1/1; border-radius:3px; border:1px solid rgba(255,255,255,.25);
-    font-weight:800; font-size:11px; cursor:pointer; color:#fff; position:relative;
+    font-weight:800; font-size:12px; cursor:pointer; color:#fff; position:relative;
   }
   /* Чтобы поле ставок целиком помещалось в высоту экрана без прокрутки:
      сетка чисел сжимается по высоте (min() от 100% контейнера и фиксированного
@@ -1059,7 +1059,7 @@
   }
   .roulette-outside-btn{
     padding:7px 2px; border-radius:4px; border:1px solid rgba(255,255,255,.25);
-    background:rgba(255,255,255,.1); color:#fff; font-weight:800; font-size:12px;
+    background:rgba(255,255,255,.1); color:#fff; font-weight:800; font-size:13px;
     cursor:pointer; position:relative;
   }
   .roulette-outside-btn.roulette-red{ background:rgba(230,57,70,.7); }
@@ -1076,7 +1076,7 @@
   .roulette-chip{
     width:48px; height:48px; border-radius:50%; border:3px dashed rgba(255,255,255,.5);
     background:var(--chip-bg, linear-gradient(135deg,#ffd27a,#ff8a5e));
-    color:var(--chip-text, #2b0f2e); font-weight:800; font-size:13px;
+    color:var(--chip-text, #2b0f2e); font-weight:800; font-size:14px;
     cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   }
   /* Цвета фишек по номиналам — 10 голубая (светлая), 50 синяя, 100 зелёная, 500 красная.
