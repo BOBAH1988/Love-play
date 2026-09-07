@@ -371,10 +371,11 @@
     border-color:rgba(255,99,110,.5)!important;
     color:#ffc2c8!important;
   }
-  /* Рулетка: блок кнопок действий прижат к низу экрана (flex-колонка .screen),
-     а не плывёт из-под поля. Кнопки чуть компактнее, чтобы всё влезало. */
+  /* Рулетка: кнопки действий идут сразу после строки ставок, а свободное
+     пространство заполняет поле с цифрами (flex-растяжение сетки), чтобы
+     между «Ставка: …» и кнопками не было пустоты. */
   #partyRouletteGame .timer-actions-row{
-    margin-top:auto; padding-top:6px;
+    padding-top:6px;
     gap:6px;
   }
   #partyRouletteGame .timer-actions-top{
@@ -388,14 +389,16 @@
   #partyRouletteGame #rouletteExitBtn{flex:0 0 auto; width:auto; padding:7px 20px; align-self:center;}
   #partyRouletteGame .roulette-bet-total{text-align:center; margin:1px 0 1px;}
   /* Компактное поле ставок рулетки: сетка чисел сжимается по высоте экрана,
-     фишки и строки ставок ужимаются, чтобы не листать до кнопок внизу. */
+     а при свободном месте растягивается (ряды 1fr), заполняя пространство,
+     чтобы между ставкой и кнопками не было пустоты. */
   #partyRouletteGame .roulette-number-grid{
-    flex:0 1 auto;
-    max-height:min(42vh, 300px);
-    align-content:start;
+    flex:1 1 auto;
+    max-height:min(64vh, 500px);
+    grid-template-rows:repeat(6, 1fr);
+    align-content:stretch;
   }
   #partyRouletteGame .roulette-number-cell{
-    aspect-ratio:auto; height:min(6.8vh, 48px); max-height:48px;
+    aspect-ratio:auto; height:auto; min-height:28px;
   }
   #partyRouletteGame .roulette-top-btn,
   #partyRouletteGame .roulette-zero-cell,
@@ -405,8 +408,8 @@
   #partyRouletteGame .roulette-players-row{margin:1px 0 4px;}
   #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:6px 12px; font-size:12px;}
   @media (max-height:700px){
-    #partyRouletteGame .roulette-number-grid{max-height:min(38vh, 260px);}
-    #partyRouletteGame .roulette-number-cell{height:min(6.2vh, 42px); max-height:42px;}
+    #partyRouletteGame .roulette-number-grid{max-height:min(58vh, 420px);}
+    #partyRouletteGame .roulette-number-cell{min-height:24px;}
     #partyRouletteGame .roulette-top-btn,
     #partyRouletteGame .roulette-zero-cell,
     #partyRouletteGame .roulette-outside-btn{padding:5px 2px; font-size:12px;}
