@@ -1027,7 +1027,7 @@
     width:52px; height:52px; border-radius:50%; border:3px dashed rgba(255,255,255,.5);
     background:var(--chip-bg, linear-gradient(135deg,#ffd27a,#ff8a5e));
     color:var(--chip-text, #2b0f2e); font-weight:800; font-size:14px;
-    cursor:pointer;
+    cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   }
   /* Цвета фишек по номиналам — 10 голубая (светлая), 50 синяя, 100 зелёная, 500 красная.
      Фолбэк через data-chip: применяется, если JS ещё не выставил переменные. */
@@ -1037,8 +1037,14 @@
   .roulette-chip[data-chip="500"]{ background:linear-gradient(135deg,#f87171,#b91c1c); color:#fff; }
   .roulette-chip.roulette-chip-selected,
   .roulette-chip.active{
-    border-color:#fff;
-    box-shadow:0 0 0 3px rgba(255,255,255,.35);
+    border-color:#ffd23f;
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 4px #ffd23f,
+      0 0 14px 5px rgba(255,210,63,.85),
+      0 6px 18px rgba(0,0,0,.5);
+    transform:scale(1.18);
+    z-index:2;
   }
   /* Ряд игроков в рулетке */
   .roulette-players-row{ display:flex; gap:8px; justify-content:center; margin:6px 0 8px; }
