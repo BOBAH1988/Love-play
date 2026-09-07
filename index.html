@@ -1017,15 +1017,16 @@
     color:var(--chip-text, #2b0f2e); font-weight:800; font-size:14px;
     cursor:pointer;
   }
-  /* Цвета фишек по номиналам — 10 голубая, 50 синяя, 100 зелёная, 500 красная.
+  /* Цвета фишек по номиналам — 10 голубая (светлая), 50 синяя, 100 зелёная, 500 красная.
      Фолбэк через data-chip: применяется, если JS ещё не выставил переменные. */
-  .roulette-chip[data-chip="10"]{ background:linear-gradient(135deg,#7dd3fc,#0284c7); color:#fff; }
+  .roulette-chip[data-chip="10"]{ background:linear-gradient(135deg,#bae6fd,#38bdf8); color:#fff; }
   .roulette-chip[data-chip="50"]{ background:linear-gradient(135deg,#60a5fa,#1d4ed8); color:#fff; }
   .roulette-chip[data-chip="100"]{ background:linear-gradient(135deg,#4ade80,#15803d); color:#fff; }
   .roulette-chip[data-chip="500"]{ background:linear-gradient(135deg,#f87171,#b91c1c); color:#fff; }
   .roulette-chip.roulette-chip-selected,
   .roulette-chip.active{
-    border-style:solid; border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35);
+    border-color:#fff;
+    box-shadow:0 0 0 3px rgba(255,255,255,.35);
   }
   /* Ряд игроков в рулетке */
   .roulette-players-row{ display:flex; gap:8px; justify-content:center; margin:6px 0 8px; }
@@ -6454,7 +6455,7 @@
   <script src="games/solo-connect4.js?v=20260902a"></script>
 <script src="games/shop.js?v=20260830u"></script>
 <script src="games/business-observer.js?v=20260830u"></script>
-<script src="games/party-roulette.js?v=20260914k"></script>
+<script src="games/party-roulette.js?v=20260914l"></script>
 <script src="games/business-lemonade.js?v=20260830u"></script>
 <script src="games/kids-xo.js?v=20260913a"></script>
 <script src="games/kids-battleship.js?v=20260913a"></script>

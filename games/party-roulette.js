@@ -8,9 +8,9 @@
 const ROULETTE_WHEEL_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 const ROULETTE_RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 // Цвета фишек по номиналам — как на картинке пользователя:
-// 10 = голубая, 50 = синяя, 100 = зелёная, 500 = красная.
+// 10 = голубая (светлая), 50 = синяя, 100 = зелёная, 500 = красная.
 const ROULETTE_CHIP_COLORS = {
-  10:  { bg: 'linear-gradient(135deg,#7dd3fc,#0284c7)', text: '#fff' },
+  10:  { bg: 'linear-gradient(135deg,#bae6fd,#38bdf8)', text: '#fff' },
   50:  { bg: 'linear-gradient(135deg,#60a5fa,#1d4ed8)', text: '#fff' },
   100: { bg: 'linear-gradient(135deg,#4ade80,#15803d)', text: '#fff' },
   500: { bg: 'linear-gradient(135deg,#f87171,#b91c1c)', text: '#fff' }
