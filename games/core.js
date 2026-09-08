@@ -2038,22 +2038,26 @@ function updateLevelProgressUI(){
   if(!el) return;
   const levels = getSortedActiveLevels();
   const isMax = levels.indexOf(state.levelCap) === levels.length-1;
-  if(isMax){ el.textContent = ''; return; }
-  if(state.gameMode === 'romantic'){
+  let text = '';
+  if(isMax){ text = ''; }
+  else if(state.gameMode === 'romantic'){
     const target = ((state.autoMilestone||0)+1)*10;
     const cur = Math.min(state.score1, state.score2);
-    el.textContent = `До след. уровня: ${Math.max(0, target-cur)} очк. (у обоих партнёров)`;
+    text = `До след. уровня: ${Math.max(0, target-cur)} очк. (у обоих партнёров)`;
   } else if(state.gameMode === 'hot'){
     if(!state.autoMilestone){
       const cur = Math.max(state.score1, state.score2);
-      el.textContent = `До след. уровня: ${Math.max(0, 5-cur)} очк.`;
+      text = `До след. уровня: ${Math.max(0, 5-cur)} очк.`;
     } else {
       const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
-      el.textContent = `До след. уровня: ${Math.max(0, 10-since)} карт`;
+      text = `До след. уровня: ${Math.max(0, 10-since)} карт`;
     }
-  } else {
-    el.textContent = '';
   }
+  el.textContent = text;
+  // «До след. уровня» дублируется внутрь карточки «Фантов» — над пилюлей
+  // «Правда/Действие»: пользователь просил держать эту надпись на карте.
+  const inCard = document.getElementById('cardLevelProgress');
+  if(inCard) inCard.textContent = text;
 }
 
 function advanceLevel(){
@@ -4358,6 +4362,7 @@ function renderCard(card){
             <span class="level-pill" style="background:${lvl.color}">${lvl.icon} ${lvl.name}</span>
           </div>
         </div>
+        <div class="card-level-progress" id="cardLevelProgress"></div>
         <div class="card-type-row">
           <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
         </div>
@@ -4378,6 +4383,7 @@ function renderCard(card){
       </div>
     `;
     resetTimer();
+    updateLevelProgressUI();
     document.getElementById('timerBtn').addEventListener('click', toggleTimer);
     document.querySelectorAll('.timer-dur-btn').forEach(b=>{
       b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
