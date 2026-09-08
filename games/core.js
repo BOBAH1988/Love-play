@@ -1942,11 +1942,23 @@ function updateResumeUI(){
 function updateTurnUI(){
   document.getElementById('score1').textContent = `${state.name1}: ${state.score1}`;
   document.getElementById('score2').textContent = `${state.name2}: ${state.score2}`;
-  // turn-label между FAB-кнопками (единая система для всех игр)
+  // turn-label между FAB-кнопками (единая система для всех игр).
+  // В «Фантах» (общий #game без видео/davay/placeholder режимов) вместо
+  // «Ходит: …» показываем иконку и название игры — чей ход, видно на самой
+  // карточке задания.
+  const gameScreenEl = document.getElementById('game');
+  const isFantyGame = !!(gameScreenEl
+    && !gameScreenEl.classList.contains('video-mode')
+    && !gameScreenEl.classList.contains('davay-mode')
+    && !gameScreenEl.classList.contains('placeholder-mode'));
   const turnLabel = document.getElementById('gameTurnLabel');
   if(turnLabel){
-    const currentName = state.currentPlayer === 1 ? state.name1 : state.name2;
-    turnLabel.textContent = 'Ходит: ' + currentName;
+    if(isFantyGame){
+      turnLabel.textContent = '💘 Фанты';
+    } else {
+      const currentName = state.currentPlayer === 1 ? state.name1 : state.name2;
+      turnLabel.textContent = 'Ходит: ' + currentName;
+    }
   }
   // Подсветка активного игрока (если есть score-row с .krokodil-score-item)
   const row = document.getElementById('gameScoreRow');
