@@ -2030,6 +2030,8 @@ function updateLevelUI(){
   const isMax = levels.indexOf(state.levelCap) === levels.length-1;
   btn.disabled = isMax;
   btn.textContent = isMax ? 'Максимальный уровень' : '🔥 Горячее';
+  const hotCard = document.getElementById('cardLevelUpBtn');
+  if(hotCard) hotCard.disabled = isMax;
   updateLevelProgressUI();
 }
 
@@ -4379,6 +4381,7 @@ function renderCard(card){
             <div class="timer-display" id="timerDisplay">${formatTime(timerDuration)}</div>
             <button type="button" class="timer-btn" id="timerBtn">▶ Старт</button>
             <button type="button" class="timer-btn card-fav-btn" id="cardFavoriteBtn" aria-label="В избранное">☆</button>
+            <button type="button" class="card-hot-btn" id="cardLevelUpBtn" aria-label="Горячее">🔥</button>
           </div>
         </div>
       </div>
@@ -4387,6 +4390,14 @@ function renderCard(card){
     updateLevelProgressUI();
     document.getElementById('timerBtn').addEventListener('click', toggleTimer);
     document.getElementById('cardFavoriteBtn').addEventListener('click', toggleFavorite);
+    document.getElementById('cardLevelUpBtn').addEventListener('click', ()=>{
+      if(isPlaceholderMode()){
+        playLevelUpSound();
+        drawPhotoCard(photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1);
+        return;
+      }
+      levelUp();
+    });
     document.querySelectorAll('.timer-dur-btn').forEach(b=>{
       b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
     });

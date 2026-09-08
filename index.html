@@ -2320,6 +2320,14 @@
   /* В «Фантах» избранное — кнопка ⭐ внутри карточки (справа от таймера),
      плавающая кнопка снизу скрыта. */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #favoriteBtn{display:none;}
+  /* В «Фантах» кнопка «Горячее» — 🔥 внутри карточки у ЛЕВОГО края (зеркально
+     ⭐ избранного справа), плавающая кнопка в row2 скрыта. */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelUpBtn{display:none;}
+  .card-hot-btn{position:absolute; left:18px; bottom:22px; width:44px; height:44px;
+    padding:0; border-radius:50%; font-size:22px; line-height:1; margin:0;
+    background:rgba(0,0,0,.06); border:none; cursor:pointer;}
+  .card-hot-btn:disabled{opacity:.4; cursor:default;}
+  .card-hot-btn:active{transform:scale(.96);}
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card{position:relative;}
   .card-fav-btn{position:absolute; right:18px; bottom:22px; width:44px; height:44px;
     padding:0; border-radius:50%; font-size:22px; line-height:1; margin:0;}
@@ -6659,7 +6667,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260914h"></script>
+<script src="games/core.js?v=20260914i"></script>
 <script src="games/twister.js?v=20260913e"></script>
 <script src="games/party-hangman.js?v=20260830u"></script>
 <script src="games/solo-quiz.js?v=20260830u"></script>
