@@ -320,6 +320,10 @@
     background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
   }
   .modal-card .field input[type=text]::placeholder{color:rgba(43,15,46,.4);}
+  /* Заголовки полей внутри светлых модалок: бледно-розовый #e8c9dd (для
+     тёмного фона) на белой карточке почти не виден — используем яркий
+     малиновый, читаемый на светлом фоне. */
+  .modal-card .field > label{ color:#d81b60; }
   .select-input, .textarea-input{
     width:100%; padding:12px 14px; border-radius:12px;
     background:rgba(255,255,255,.12); color:#fff; font-size:15px;
