@@ -1023,10 +1023,12 @@ const PAUSED_MODE_LABELS = {
   partyRoulette: '«Рулетка» (компания)',
   kidsMemory: '«Мемори»',
   kidsTd: '«Правда/Действие» (дети)',
+  kidsC4: '«Четыре в ряд» (дети)',
   quiz: '«Викторина»',
   partyQuiz: '«Викторина» (компания)',
    kidsQuiz: '«Викторина» (дети)',
    soloBs: '«Морской бой» (бот)',
+   soloC4: '«Четыре в ряд» (бот)',
    kidsSaper: '«Сапёр»',
 };
 function blockedByDavayPause(){
@@ -1285,6 +1287,10 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
     resumeKidsTdGame();
     return;
   }
+  if(state.pausedMode === 'kidsC4'){
+    resumeKidsC4Game();
+    return;
+  }
   if(state.pausedMode === 'quiz'){
     resumeQuizGame();
     return;
@@ -1299,6 +1305,10 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'soloBs'){
     resumeSoloBsGame();
+    return;
+  }
+  if(state.pausedMode === 'soloC4'){
+    resumeSoloC4Game();
     return;
   }
   if(state.pausedMode === 'kidsSaper'){
@@ -1660,11 +1670,13 @@ function resumeFantyGame(){
   abandonPausedSession('lucky');
   abandonPausedSession('kidsMemory');
   abandonPausedSession('kidsTd');
+  abandonPausedSession('kidsC4');
   abandonPausedSession('fanty');
   abandonPausedSession('quiz');
   abandonPausedSession('partyQuiz');
   abandonPausedSession('kidsQuiz');
   abandonPausedSession('soloBs');
+  abandonPausedSession('soloC4');
   abandonPausedSession('kidsSaper');
   // Своя пауза Фантов сбрасывается явно (не через abandonPausedFantySession
   // — это возврат в СВОЮ же игру после паузы, а не "чужая" сессия), и здесь
@@ -1766,10 +1778,12 @@ const PAUSE_MENU_TITLES = {
   partyRoulette: '🎰 Рулетка',
   kidsMemory: '🧠 Мемори',
   kidsTd: '🗣️ Правда/Действие',
+  kidsC4: '🔴🟡 Четыре в ряд',
   quiz: '🎯 Викторина',
   partyQuiz: '🎯 Викторина',
    kidsQuiz: '🎯 Викторина',
    soloBs: '🚢 Морской бой (бот)',
+   soloC4: '🔴🟡 Четыре в ряд',
 };
 function updateResumeUI(){
   const pauseModal = document.getElementById('pauseMenuModal');
@@ -1788,8 +1802,8 @@ function updateResumeUI(){
   // Исключения: если на паузе игра именно из этого блока (company/kids/solo/
   // twoPlayer), список игр остаётся виден (там же список игроков/кнопки).
   const isPartyPause = state.pausedMode === 'krokodil' || state.pausedMode === 'partyFants' || state.pausedMode === 'partyTd' || state.pausedMode === 'famZnayu' || state.pausedMode === 'lucky' || state.pausedMode === 'partyQuiz';
-  const isKidsPause = state.pausedMode === 'kidsMemory' || state.pausedMode === 'kidsTd' || state.pausedMode === 'kidsQuiz' || state.pausedMode === 'kidsSaper';
-  const isSoloPause = state.pausedMode === 'soloBs';
+  const isKidsPause = state.pausedMode === 'kidsMemory' || state.pausedMode === 'kidsTd' || state.pausedMode === 'kidsC4' || state.pausedMode === 'kidsQuiz' || state.pausedMode === 'kidsSaper';
+  const isSoloPause = state.pausedMode === 'soloBs' || state.pausedMode === 'soloC4';
   const isTwoPlayerPause = !!state.pausedMode && !isPartyPause && !isKidsPause && !isSoloPause;
   const gameSelectField = document.getElementById('gameSelectField');
   if(gameSelectField) gameSelectField.style.display = (state.inProgress && !isTwoPlayerPause) ? 'none' : '';
@@ -2823,11 +2837,13 @@ async function goToVideoGame(){
   abandonPausedSession('lucky');
   abandonPausedSession('kidsMemory');
   abandonPausedSession('kidsTd');
+  abandonPausedSession('kidsC4');
   abandonPausedSession('fanty');
   abandonPausedSession('quiz');
   abandonPausedSession('partyQuiz');
   abandonPausedSession('kidsQuiz');
   abandonPausedSession('soloBs');
+  abandonPausedSession('soloC4');
   abandonPausedSession('kidsSaper');
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -2905,11 +2921,13 @@ async function goToVideoFavoritesView(){
   abandonPausedSession('lucky');
   abandonPausedSession('kidsMemory');
   abandonPausedSession('kidsTd');
+  abandonPausedSession('kidsC4');
   abandonPausedSession('fanty');
   abandonPausedSession('quiz');
   abandonPausedSession('partyQuiz');
   abandonPausedSession('kidsQuiz');
   abandonPausedSession('soloBs');
+  abandonPausedSession('soloC4');
   abandonPausedSession('kidsSaper');
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -3558,11 +3576,13 @@ function goToDavayFavoritesView(){
   abandonPausedSession('lucky');
   abandonPausedSession('kidsMemory');
   abandonPausedSession('kidsTd');
+  abandonPausedSession('kidsC4');
   abandonPausedSession('fanty');
   abandonPausedSession('quiz');
   abandonPausedSession('partyQuiz');
   abandonPausedSession('kidsQuiz');
   abandonPausedSession('soloBs');
+  abandonPausedSession('soloC4');
   state.pausedMode = null;
   state.inProgress = true;
   davayLevel = (state.davaySelectedLevel || 3) - 2;
@@ -3741,11 +3761,13 @@ function goToPlaceholderGame(){
   abandonPausedSession('lucky');
   abandonPausedSession('kidsMemory');
   abandonPausedSession('kidsTd');
+  abandonPausedSession('kidsC4');
   abandonPausedSession('fanty');
   abandonPausedSession('quiz');
   abandonPausedSession('partyQuiz');
   abandonPausedSession('kidsQuiz');
   abandonPausedSession('soloBs');
+  abandonPausedSession('soloC4');
   abandonPausedSession('kidsSaper');
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
@@ -3826,11 +3848,13 @@ function goToPhotoFavoritesView(){
   abandonPausedSession('lucky');
   abandonPausedSession('kidsMemory');
   abandonPausedSession('kidsTd');
+  abandonPausedSession('kidsC4');
   abandonPausedSession('fanty');
   abandonPausedSession('quiz');
   abandonPausedSession('partyQuiz');
   abandonPausedSession('kidsQuiz');
   abandonPausedSession('soloBs');
+  abandonPausedSession('soloC4');
   state.pausedMode = null;
   state.inProgress = true;
   state.photoFavView = true;
@@ -4396,6 +4420,11 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
     showToast('Игра завершена');
     return;
   }
+  if(state.pausedMode === 'kidsC4'){
+    finishKidsC4Game();
+    showToast('Игра завершена');
+    return;
+  }
   if(state.pausedMode === 'quiz'){
     finishQuizGame();
     showToast('Игра завершена');
@@ -4413,6 +4442,11 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
    }
    if(state.pausedMode === 'soloBs'){
      finishSoloBsGame();
+     return;
+   }
+   if(state.pausedMode === 'soloC4'){
+     finishSoloC4Game();
+     showToast('Игра завершена');
      return;
    }
    if(state.pausedMode === 'kidsSaper'){
@@ -4743,6 +4777,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     soloXoSetup:'soloView', soloXoGame:'soloView',
     soloBsSetup:'soloView', soloBsGame:'soloView',
     soloBattleshipSetup:'soloView', soloBattleshipGame:'soloView',
+    soloC4Setup:'soloView', soloC4Game:'soloView',
     whatToPlayGame:'soloView',
     businessLemonadeSetup:'businessView', businessLemonadeGame:'businessView',
     bizObsSetup:'businessView', bizObsGame:'businessView',
@@ -4761,7 +4796,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'famZnayuSetup','luckySetup',
     'kidsMemorySetup','kidsQuizSetup','kidsTdSetup','kidsSaperSetup','kidsXoSetup',
     'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','kidsFlashSetup','flashTimeSetup',
-    'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBsSetup','soloBattleshipSetup',
+    'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBsSetup','soloBattleshipSetup','soloC4Setup',
     'businessLemonadeSetup','bizObsSetup','flashSetup',
   ]);
   function sectionForScreenId(sid){
@@ -4889,12 +4924,14 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       kidsMemorySetup: 'pauseKidsMemoryGame', kidsMemoryGame: 'pauseKidsMemoryGame',
       kidsTdSetup: 'pauseKidsTdGame', kidsTdGame: 'pauseKidsTdGame',
       kidsTdChoice: 'pauseKidsTdGame',
+      kidsC4Setup: 'pauseKidsC4Game', kidsC4Game: 'pauseKidsC4Game',
       kidsQuizSetup: 'pauseKidsQuizGame', kidsQuizGame: 'pauseKidsQuizGame',
       kidsSaperSetup: 'pauseKidsSaperGame', kidsSaperGame: 'pauseKidsSaperGame',
       famZnayuSetup: 'pauseFamZnayuGame', famZnayuGame: 'pauseFamZnayuGame',
       davaySetup: 'pauseDavayGame', davayGame: 'pauseDavayGame', davayQuiz: 'pauseDavayGame',
       soloBsSetup: 'pauseSoloBattleshipGame', soloBsGame: 'pauseSoloBattleshipGame',
       soloBattleshipSetup: 'pauseSoloBattleshipGame', soloBattleshipGame: 'pauseSoloBattleshipGame',
+      soloC4Setup: 'pauseSoloC4Game', soloC4Game: 'pauseSoloC4Game',
       partyRouletteSetup: 'pauseGamePartyRoulette', partyRouletteGame: 'pauseGamePartyRoulette',
     };
     // Ищем pause-функцию по ЛЮБОМУ из активных экранов

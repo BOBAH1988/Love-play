@@ -11,6 +11,10 @@
 const SOLO_C4_COLS = 7;
 const SOLO_C4_ROWS = 6;
 
+// id отложенного хода бота — при паузе таймер отменяется, при возврате
+// запускается заново (паттерн как в games/solo-battleship.js).
+let soloC4TimerId = null;
+
 function soloC4CheckWin(board){
   const idx = (r, c) => r * SOLO_C4_COLS + c;
   const dirs = [[0,1],[1,0],[1,1],[1,-1]];
@@ -118,7 +122,7 @@ function startSoloC4Round(startingMark){
   document.getElementById('soloC4NextRoundBtn').style.display = 'none';
   updateSoloC4TurnLabel();
   renderSoloC4Grid(null);
-  if(startingMark === 'Y') setTimeout(()=>soloC4BotMove(), 350);
+  if(startingMark === 'Y') soloC4TimerId = setTimeout(()=>soloC4BotMove(), 350);
 }
 function soloC4BotMove(){
   if(state.soloC4RoundOver) return;
@@ -167,7 +171,7 @@ function soloC4PlaceMark(col, mark){
   if(mark === 'R') playNeutralSound();
   updateSoloC4TurnLabel();
   renderSoloC4Grid(null);
-  if(state.soloC4CurrentPlayer === 'Y') setTimeout(()=>soloC4BotMove(), 350);
+  if(state.soloC4CurrentPlayer === 'Y') soloC4TimerId = setTimeout(()=>soloC4BotMove(), 350);
   return true;
 }
 function clickSoloC4Column(col){
@@ -184,6 +188,7 @@ function goToSoloC4Game(){
   state.soloC4ScorePlayer = 0;
   state.soloC4ScoreBot = 0;
   state.soloC4Draws = 0;
+  state.inProgress = true;
   saveState();
   updateSoloC4ScoreUI();
   const firstMark = Math.random() < 0.5 ? 'R' : 'Y';
@@ -207,17 +212,63 @@ function showSoloC4SummaryModal(){
   showModal('soloC4SummaryModal');
 }
 function exitSoloC4Game(){
-  exitGame('soloC4Game', 'soloC4Setup');
+  if(soloC4TimerId){ clearTimeout(soloC4TimerId); soloC4TimerId = null; }
+  hideModal('soloC4SummaryModal');
   state.soloC4Board = new Array(SOLO_C4_COLS * SOLO_C4_ROWS).fill('');
   state.soloC4ScorePlayer = 0;
   state.soloC4ScoreBot = 0;
   state.soloC4Draws = 0;
   state.soloC4RoundOver = false;
+  state.inProgress = false;
+  state.pausedMode = null;
   saveState();
+  updateResumeUI();
+}
+
+// Пауза: вернуться в меню, не сбрасывая поле и счёт — можно продолжить позже
+// через общий блок «Продолжить игру» / «Закончить игру» (паттерн как в
+// games/solo-battleship.js).
+function pauseSoloC4Game(){
+  if(state.pausedMode === 'soloC4') return;
+  if(soloC4TimerId){ clearTimeout(soloC4TimerId); soloC4TimerId = null; }
+  state.pausedMode = 'soloC4';
+  saveState();
+  document.getElementById('soloC4Game').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
+  updateResumeUI();
+}
+
+// Возвращаемся из паузы — снова рисуем поле и, если ход бота, продолжаем
+// цепочку с задержкой (как при обычном ходе бота).
+function resumeSoloC4Game(){
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('soloC4Game').classList.add('active');
+  renderSoloC4Grid(null);
+  updateSoloC4ScoreUI();
+  updateSoloC4TurnLabel();
+  // Если раунд был доигран до паузы — снова показываем кнопку следующего раунда
+  document.getElementById('soloC4NextRoundBtn').style.display = state.soloC4RoundOver ? 'flex' : 'none';
+  updateMuteBtn();
+  requestWakeLock();
+  if(state.soloC4CurrentPlayer === 'Y' && !state.soloC4RoundOver){
+    soloC4TimerId = setTimeout(()=>soloC4BotMove(), 350);
+  }
+}
+
+// Вызывается из общего меню паузы ("Закончить игру") — показываем итоги партии,
+// а сброс состояния делает exitSoloC4Game при закрытии окна итогов.
+function finishSoloC4Game(){
+  if(soloC4TimerId){ clearTimeout(soloC4TimerId); soloC4TimerId = null; }
+  hideModal('pauseMenuModal');
+  showSoloC4SummaryModal();
 }
 document.getElementById('soloC4SetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToSoloC4Game(); });
 document.getElementById('soloC4SetupExitBtn').addEventListener('click', ()=>{ exitSoloC4Setup(); });
-document.getElementById('soloC4ExitBtn').addEventListener('click', ()=>{ showSoloC4SummaryModal(); });
+document.getElementById('soloC4ExitBtn').addEventListener('click', ()=>{ pauseSoloC4Game(); });
 document.getElementById('closeSoloC4SummaryBtn').addEventListener('click', ()=>{
   hideModal('soloC4SummaryModal');
   exitSoloC4Game();

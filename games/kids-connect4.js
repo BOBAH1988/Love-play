@@ -159,6 +159,7 @@ function goToKidsC4Game(){
   state.kidsC4ScoreR = 0;
   state.kidsC4ScoreY = 0;
   state.kidsC4Draws = 0;
+  state.inProgress = true;
   saveState();
   updateKidsC4ScoreUI();
   const firstMark = Math.random() < 0.5 ? 'R' : 'Y';
@@ -182,17 +183,51 @@ function showKidsC4SummaryModal(){
   showModal('kidsC4SummaryModal');
 }
 function exitKidsC4Game(){
-  exitGame('kidsC4Game', 'kidsC4Setup');
+  hideModal('kidsC4SummaryModal');
   state.kidsC4Board = new Array(KIDS_C4_COLS * KIDS_C4_ROWS).fill('');
   state.kidsC4ScoreR = 0;
   state.kidsC4ScoreY = 0;
   state.kidsC4Draws = 0;
   state.kidsC4RoundOver = false;
+  state.inProgress = false;
+  state.pausedMode = null;
   saveState();
+  updateResumeUI();
+}
+
+function pauseKidsC4Game(){
+  state.pausedMode = 'kidsC4';
+  saveState();
+  document.getElementById('kidsC4Game').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('kidsView');
+  updateResumeUI();
+}
+
+function resumeKidsC4Game(){
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('kidsC4Game').classList.add('active');
+  renderKidsC4Grid(null);
+  updateKidsC4ScoreUI();
+  updateKidsC4TurnLabel();
+  // Если раунд был доигран до паузы — снова показываем кнопку следующего раунда
+  document.getElementById('kidsC4NextRoundBtn').style.display = state.kidsC4RoundOver ? 'flex' : 'none';
+  updateMuteBtn();
+  requestWakeLock();
+}
+
+// Вызывается из общего меню паузы ("Закончить игру") — показываем итоги партии,
+// а сброс состояния делает exitKidsC4Game при закрытии окна итогов.
+function finishKidsC4Game(){
+  hideModal('pauseMenuModal');
+  showKidsC4SummaryModal();
 }
 document.getElementById('kidsC4SetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToKidsC4Game(); });
 document.getElementById('kidsC4SetupExitBtn').addEventListener('click', ()=>{ exitKidsC4Setup(); });
-document.getElementById('kidsC4ExitBtn').addEventListener('click', ()=>{ showKidsC4SummaryModal(); });
+document.getElementById('kidsC4ExitBtn').addEventListener('click', ()=>{ pauseKidsC4Game(); });
 document.getElementById('closeKidsC4SummaryBtn').addEventListener('click', ()=>{
   hideModal('kidsC4SummaryModal');
   exitKidsC4Game();
