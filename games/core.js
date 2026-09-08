@@ -4373,18 +4373,14 @@ function renderTdChoiceCard(){
             <div class="card-turn-name">${turnName}</div>
           </div>
         </div>
-        <div class="td-choice-row" id="tdChoiceRow">
-          <button type="button" class="td-choice-btn" data-type="truth">Правда</button>
-          <button type="button" class="td-choice-btn" data-type="dare">Действие</button>
-        </div>
-        <div class="card-type-row" style="display:none;">
+        <div class="card-type-row">
           <span class="card-level-progress" id="cardLevelProgress"></span>
-          <span class="type-pill"></span>
+          <span class="type-pill">Выберите тип задания</span>
         </div>
-        <div class="card-body" id="cardBody" style="display:none;">
-          <div class="card-text" id="cardText"></div>
+        <div class="card-body" id="cardBody">
+          <div class="card-text" id="cardText">⬇️ Нажмите кнопку ниже</div>
         </div>
-        <div class="card-timer" style="display:none;">
+        <div class="card-timer">
           <div class="timer-durations">
             <button type="button" class="timer-dur-btn ${timerDuration===30 ? 'on' : ''}" data-sec="30">30 сек</button>
             <button type="button" class="timer-dur-btn ${timerDuration===60 ? 'on' : ''}" data-sec="60">1 мин</button>
@@ -4405,12 +4401,11 @@ function renderTdChoiceCard(){
   document.querySelectorAll('.timer-dur-btn').forEach(b=>{
     b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
   });
-  document.getElementById('tdChoiceRow').querySelectorAll('.td-choice-btn').forEach(b=>{
+  const tdRow = document.getElementById('tdChoiceRow');
+  tdRow.style.display = 'flex';
+  tdRow.querySelectorAll('.td-choice-btn').forEach(b=>{
     b.addEventListener('click', ()=>{
-      document.getElementById('tdChoiceRow').style.display = 'none';
-      document.querySelector('.card-type-row').style.display = '';
-      document.getElementById('cardBody').style.display = '';
-      document.querySelector('.card-timer').style.display = '';
+      tdRow.style.display = 'none';
       drawCardWithType(b.dataset.type);
     });
   });
@@ -4487,10 +4482,6 @@ function renderCard(card){
         <div class="card-type-row">
           <span class="card-level-progress" id="cardLevelProgress"></span>
           <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
-        </div>
-        <div class="td-choice-row" id="tdChoiceRow" style="display:none;">
-          <button type="button" class="td-choice-btn" data-type="truth">Правда</button>
-          <button type="button" class="td-choice-btn" data-type="dare">Действие</button>
         </div>
         <div class="card-body" id="cardBody">
           <div class="card-text" id="cardText"></div>
