@@ -131,6 +131,7 @@ function pickRandomWishCard(){
 function goToWrGame(){
   if(state.pausedMode==='wishRoulette') return resumeWrGame();
   state.pausedMode = 'wishRoulette';
+  state.inProgress = true;
   state.wishRouletteInProgress = true;
   state.wishCurrentCard = null;
   saveState();
@@ -146,6 +147,7 @@ function goToWrGame(){
   if(sum) sum.classList.remove('show');
   const pauseBtn = document.getElementById('wrPauseBtn');
   if(pauseBtn) pauseBtn.style.display = 'block';
+  spinWishWheel();
 }
 
 function pauseWrGame(){
@@ -194,7 +196,7 @@ function exitWrGame(){
 }
 
 const wrSpinBtn = document.getElementById('wrSpinBtn');
-if(wrSpinBtn) wrSpinBtn.addEventListener('click',spinWishWheel);
+if(wrSpinBtn) wrSpinBtn.addEventListener('click',()=>{ goToWrGame(); spinWishWheel(); });
 const wrSpinDoneBtn = document.getElementById('wrSpinDoneBtn');
 if(wrSpinDoneBtn) wrSpinDoneBtn.addEventListener('click',()=>{ wrSpinDoneBtn.style.display='none'; });
 const wrNextBtn = document.getElementById('wrNextBtn');
