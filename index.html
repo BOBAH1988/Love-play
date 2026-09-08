@@ -1172,6 +1172,9 @@
   #rouletteSpinModal{
     background:rgba(10,3,10,.92); padding:0; z-index:300;
   }
+  #wrSpinModal{
+    background:rgba(10,3,10,.92); padding:0; z-index:300;
+  }
   .roulette-spin-card{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     width:100%; height:100%; padding:20px; overflow-y:auto;
@@ -1209,6 +1212,9 @@
   .roulette-spin-result{
     text-align:center; font-size:20px; font-weight:700; min-height:32px;
     margin-bottom:20px; color:#fff; padding:0 20px;
+  }
+  #wrNextBtn, #wrSpinDoneBtn{
+    display:inline-block; margin:0 5px;
   }
   /* Кнопка «Продолжить» в окне кручения */
   /* Карточки "Игры для двоих" — у раздела нет одной общей карточки: у каждой
@@ -2343,11 +2349,24 @@
   .wr-cell.active{border-color:#ffd23f; background:rgba(255,210,63,.2);}
   .wr-cell-type{font-size:14px;}
   .wr-cell-text{font-size:9px; color:#ddd; line-height:1.1; word-break:break-word;}
-  .wr-result{text-align:center; font-size:15px; font-weight:600; min-height:40px; padding:6px; margin:4px 0;
+  .wr-result{text-align:center; font-size:15px; font-weight:600; min-height:50px; padding:8px; margin:6px 0;
     background:rgba(0,0,0,.2); border-radius:12px;}
-  .wr-result.truth{color:#9fb3ff;}
-  .wr-result.dare{color:#ff9fb0;}
+  .wr-landed{font-size:14px; color:#ccc; margin-bottom:6px;}
+  .wr-task{font-size:16px; font-weight:700; line-height:1.4;}
+  .wr-task.truth{color:#9fb3ff;}
+  .wr-task.dare{color:#ff9fb0;}
   .wr-result.show{animation:fadeIn .3s;}
+  .wr-summary-congrats{font-size:22px; font-weight:700; text-align:center; margin:8px 0;}
+  .wr-summary-count{font-size:18px; text-align:center; margin:6px 0;}
+  .wr-summary-text{font-size:15px; text-align:center; color:#ccc; margin-bottom:12px;}
+  /* Рулетка желаний — колесо */
+  .wr-title{text-align:center; font-size:22px; font-weight:700; color:#fff; margin-bottom:8px;}
+  .wr-wheel-wrap{position:relative; width:min(calc(100vw - 48px), 340px, 58vh); height:min(calc(100vw - 48px), 340px, 58vh); margin:0 auto 12px;}
+  .wr-wheel{width:100%; height:100%; border-radius:50%; border:4px solid rgba(255,255,255,.5);
+    box-shadow:0 8px 32px rgba(0,0,0,.6); will-change:transform; overflow:hidden; background:#1a1a2e;}
+  .wr-wheel svg{display:block; width:100%; height:100%;}
+  .wr-pointer{position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+    font-size:28px; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.6);}
   .wr-actions{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px;}
   .wr-actions .btn{flex:1; min-width:80px; max-width:140px;}
   .wr-summary-winner{font-size:18px; font-weight:700; text-align:center; margin:10px 0;}
@@ -4904,7 +4923,7 @@
   <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: НАСТРОЙКА ===== -->
   <section id="wrSetup" class="screen">
     <h1 class="title">🎡 Рулетка желаний</h1>
-    <div class="subtitle">Крутите рулетку и выполняйте выпавшие задания</div>
+    <div class="subtitle">Крутите колесо и выполняйте задания вместе</div>
 
     <div class="field">
       <label>Уровень</label>
@@ -4912,34 +4931,40 @@
     </div>
 
     <button class="btn btn-primary" id="wrSetupStartBtn">Начать</button>
-
     <button class="btn btn-secondary" id="wrSetupExitBtn" style="margin-top:10px;">Выход</button>
   </section>
 
   <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: ИГРА ===== -->
   <section id="wrGame" class="screen">
-    <div class="td-turn-label" id="wrTurnLabel">Крутит: Игрок 1</div>
-    <div class="krokodil-score-row two-player" id="wrScoreRow">
-      <span id="wrScore1" class="krokodil-score-item">Игрок 1: 0</span>
-      <span id="wrScore2" class="krokodil-score-item">Игрок 2: 0</span>
+    <div class="wr-title">🎡 Рулетка желаний</div>
+    <div class="wr-wheel-wrap">
+      <div class="wr-wheel" id="wrWheel"></div>
+      <div class="wr-pointer">▼</div>
     </div>
-    <div class="wr-level-label" id="wrLevelLabel">💕 Сближение</div>
-    <div class="wr-wheel" id="wrWheel"></div>
-    <div class="wr-result" id="wrResult"></div>
+    <div class="wr-result" id="wrSpinResult"></div>
     <div class="wr-actions">
       <button type="button" class="btn btn-primary" id="wrSpinBtn">🎰 Крутить</button>
-      <button type="button" class="btn btn-secondary" id="wrDoneBtn">✅ Выполнено</button>
-      <button type="button" class="btn btn-secondary" id="wrSkipBtn">🚫 Отказ</button>
+      <button type="button" class="btn btn-secondary" id="wrNextBtn" style="display:none;">▶ Продолжить</button>
+      <button type="button" class="btn btn-secondary" id="wrSpinDoneBtn" style="display:none;">✅ Выполнено</button>
       <button type="button" class="btn btn-secondary btn-pause" id="wrPauseBtn">Пауза</button>
     </div>
   </section>
+
+  <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: ИТОГИ ===== -->
+  <div class="modal-overlay" id="wrResultsModal">
+    <div class="modal-card">
+      <div class="modal-header">🎉 Итоги игры</div>
+      <div class="modal-body" id="wrResultsBody"></div>
+      <button type="button" class="btn btn-primary" id="wrResultsCloseBtn">Закрыть</button>
+    </div>
+  </div>
 
   <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: ИТОГИ ===== -->
   <div class="modal-overlay" id="wrSummaryModal">
     <div class="modal-card">
       <div class="modal-title">🏆 Игра окончена</div>
       <div id="wrSummaryList"></div>
-      <button class="btn btn-primary" id="closeWrSummaryBtn">Завершить игру</button>
+      <button class="btn btn-primary" id="closeWrSummaryBtn">Отлично!</button>
     </div>
   </div>
 
@@ -6095,16 +6120,16 @@
     </div>
   </div>
 
-  <!-- ===== РУЛЕТКА — ПОЛНОЭКРАННОЕ ОКНО КРУЧЕНИЯ ===== -->
-  <div class="modal-overlay" id="rouletteSpinModal">
-    <button type="button" id="rouletteCustomCloseX" style="display:none;" aria-label="Выход">✕</button>
+  <!-- ===== РУЛЕТКА ЖЕЛАНИЙ — ПОЛНОЭКРАННОЕ ОКНО КРУЧЕНИЯ ===== -->
+  <div class="modal-overlay" id="wrSpinModal">
     <div class="roulette-spin-card">
       <div class="roulette-spin-wheel-wrap">
-        <div class="roulette-spin-wheel" id="rouletteSpinWheel"></div>
+        <div class="roulette-spin-wheel" id="wrWheel"></div>
         <div class="roulette-spin-pointer">▼</div>
       </div>
-      <div class="roulette-spin-result" id="rouletteSpinResult">Крутится...</div>
-      <button type="button" class="btn btn-primary" id="rouletteSpinDoneBtn" style="display:none;">Продолжить</button>
+      <div class="roulette-spin-result" id="wrSpinResult">Крутится...</div>
+      <button type="button" class="btn btn-primary" id="wrSpinDoneBtn" style="display:none;">✅ Выполнено</button>
+      <button type="button" class="btn btn-secondary" id="wrNextBtn" style="display:none;">▶ Продолжить</button>
     </div>
   </div>
 

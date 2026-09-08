@@ -1193,7 +1193,7 @@ document.getElementById('gameIdeasBtn').addEventListener('click', ()=>{
 document.getElementById('gameWrBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToWrSetup();
+  goToWrGame();
 });
 document.getElementById('gameBingoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -1907,6 +1907,7 @@ function getPausedGroup(){
   if(['kidsMemory','kidsTd','kidsC4','kidsQuiz','kidsSaper','kidsKrokodil'].includes(pm)) return 'kids';
   if(['soloBs','soloC4','soloQuiz'].includes(pm)) return 'solo';
   if(['shop','businessLemonade'].includes(pm)) return 'business';
+  if(['wishRoulette'].includes(pm)) return 'two';
   return 'two';
 }
 function updateResumeUI(){
@@ -5227,6 +5228,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       soloBattleshipSetup: 'pauseSoloBattleshipGame', soloBattleshipGame: 'pauseSoloBattleshipGame',
       soloC4Setup: 'pauseSoloC4Game', soloC4Game: 'pauseSoloC4Game',
       partyRouletteSetup: 'pauseGamePartyRoulette', partyRouletteGame: 'pauseGamePartyRoulette',
+      wishRouletteGame: 'pauseWishRouletteGame',
       shopGame: 'pauseShopGame',
     };
     // Ищем pause-функцию по ЛЮБОМУ из активных экранов
