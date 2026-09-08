@@ -4380,6 +4380,10 @@ function renderTdChoiceCard(){
         <div class="card-body" id="cardBody">
           <div class="card-text" id="cardText">Выберите<br>правда или действие</div>
         </div>
+        <div class="td-choice-row" id="tdChoiceRow" style="display:none; margin-top:8px;">
+          <button type="button" class="td-choice-btn" data-type="truth">Правда</button>
+          <button type="button" class="td-choice-btn" data-type="dare">Действие</button>
+        </div>
         <div class="card-timer">
           <div class="timer-durations">
             <button type="button" class="timer-dur-btn ${timerDuration===30 ? 'on' : ''}" data-sec="30">30 сек</button>
