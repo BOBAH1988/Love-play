@@ -2315,6 +2315,8 @@
   /* В «Фантах» «До след. уровня» показывается внутри карточки (над пилюлей
      «Правда/Действие»), поэтому плавающая строка сверху скрыта. */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
+  /* В «Фантах» кнопка «Пауза» скрыта — выход/пауза работает по стрелке «назад». */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #pauseBtn{display:none;}
   /* В «Фантах» строка типа карточки: слева пилюля «Правда/Действие», справа —
      «До след. уровня» (только фанты — в П/Д и таймере строка остаётся по центру). */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row{
