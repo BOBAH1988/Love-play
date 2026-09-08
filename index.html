@@ -1172,6 +1172,9 @@
   #rouletteSpinModal{
     background:rgba(10,3,10,.92); padding:0; z-index:300;
   }
+  #wrSpinModal{
+    background:rgba(10,3,10,.92); padding:0; z-index:300;
+  }
   .roulette-spin-card{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     width:100%; height:100%; padding:20px; overflow-y:auto;
@@ -1209,6 +1212,9 @@
   .roulette-spin-result{
     text-align:center; font-size:20px; font-weight:700; min-height:32px;
     margin-bottom:20px; color:#fff; padding:0 20px;
+  }
+  #wrNextBtn, #wrSpinDoneBtn{
+    display:inline-block; margin:0 5px;
   }
   /* Кнопка «Продолжить» в окне кручения */
   /* Карточки "Игры для двоих" — у раздела нет одной общей карточки: у каждой
@@ -4921,13 +4927,23 @@
       <div class="wr-wheel" id="wrWheel"></div>
       <div class="wr-pointer">▼</div>
     </div>
-    <div class="wr-result" id="wrResult"></div>
+    <div class="wr-result" id="wrSpinResult"></div>
     <div class="wr-actions">
       <button type="button" class="btn btn-primary" id="wrSpinBtn">🎰 Крутить</button>
-      <button type="button" class="btn btn-secondary" id="wrContinueBtn" style="display:none;">▶ Продолжить</button>
+      <button type="button" class="btn btn-secondary" id="wrNextBtn" style="display:none;">▶ Продолжить</button>
+      <button type="button" class="btn btn-secondary" id="wrSpinDoneBtn" style="display:none;">✅ Выполнено</button>
       <button type="button" class="btn btn-secondary btn-pause" id="wrPauseBtn">Пауза</button>
     </div>
   </section>
+
+  <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: ИТОГИ ===== -->
+  <div class="modal-overlay" id="wrResultsModal">
+    <div class="modal-card">
+      <div class="modal-header">🎉 Итоги игры</div>
+      <div class="modal-body" id="wrResultsBody"></div>
+      <button type="button" class="btn btn-primary" id="wrResultsCloseBtn">Закрыть</button>
+    </div>
+  </div>
 
   <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: ИТОГИ ===== -->
   <div class="modal-overlay" id="wrSummaryModal">
@@ -6090,16 +6106,16 @@
     </div>
   </div>
 
-  <!-- ===== РУЛЕТКА — ПОЛНОЭКРАННОЕ ОКНО КРУЧЕНИЯ ===== -->
-  <div class="modal-overlay" id="rouletteSpinModal">
-    <button type="button" id="rouletteCustomCloseX" style="display:none;" aria-label="Выход">✕</button>
+  <!-- ===== РУЛЕТКА ЖЕЛАНИЙ — ПОЛНОЭКРАННОЕ ОКНО КРУЧЕНИЯ ===== -->
+  <div class="modal-overlay" id="wrSpinModal">
     <div class="roulette-spin-card">
       <div class="roulette-spin-wheel-wrap">
-        <div class="roulette-spin-wheel" id="rouletteSpinWheel"></div>
+        <div class="roulette-spin-wheel" id="wrWheel"></div>
         <div class="roulette-spin-pointer">▼</div>
       </div>
-      <div class="roulette-spin-result" id="rouletteSpinResult">Крутится...</div>
-      <button type="button" class="btn btn-primary" id="rouletteSpinDoneBtn" style="display:none;">Продолжить</button>
+      <div class="roulette-spin-result" id="wrSpinResult">Крутится...</div>
+      <button type="button" class="btn btn-primary" id="wrSpinDoneBtn" style="display:none;">✅ Выполнено</button>
+      <button type="button" class="btn btn-secondary" id="wrNextBtn" style="display:none;">▶ Продолжить</button>
     </div>
   </div>
 
