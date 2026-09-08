@@ -1988,7 +1988,7 @@ function updateTurnUI(){
   const turnLabel = document.getElementById('gameTurnLabel');
   if(turnLabel){
     if(isFantyGame){
-      turnLabel.textContent = '💘 Фанты';
+      turnLabel.textContent = state.gameType === 'td' ? '🎯 Правда/Действие' : '💘 Фанты';
     } else {
       const currentName = state.currentPlayer === 1 ? state.name1 : state.name2;
       turnLabel.textContent = 'Ходит: ' + currentName;
@@ -4516,19 +4516,19 @@ function renderCard(card){
     document.querySelectorAll('.timer-dur-btn').forEach(b=>{
       b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
     });
-    /* Режим «Правда/Действие» — показываем кнопки выбора и прячем текст до выбора */
+    /* Режим «Правда/Действие» — кнопки выбора показываем ТОЛКО когда карта
+       не вытянута (currentCard===null). После выбора типа drawCardWithType()
+       рисует карту → renderCard вызывается с currentCard!==null → показываем текст. */
     const tdRow = document.getElementById('tdChoiceRow');
     const typeRow = el.querySelector('.card-type-row');
     const cardBody = document.getElementById('cardBody');
-    if(state.gameType === 'td'){
+    if(state.gameType === 'td' && !currentCard){
       tdRow.style.display = 'flex';
       typeRow.style.display = 'none';
       cardBody.style.display = 'none';
       tdRow.querySelectorAll('.td-choice-btn').forEach(b=>{
         b.addEventListener('click', ()=>{
           tdRow.style.display = 'none';
-          typeRow.style.display = '';
-          cardBody.style.display = '';
           drawCardWithType(b.dataset.type);
         });
       });
