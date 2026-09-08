@@ -1988,7 +1988,7 @@ function updateTurnUI(){
   const turnLabel = document.getElementById('gameTurnLabel');
   if(turnLabel){
     if(isFantyGame){
-      turnLabel.textContent = state.gameType === 'td' ? '🎯 Правда/Действие' : '💘 Фанты';
+      turnLabel.textContent = state.gameType === 'td' ? 'Правда/Действие' : '💘 Фанты';
     } else {
       const currentName = state.currentPlayer === 1 ? state.name1 : state.name2;
       turnLabel.textContent = 'Ходит: ' + currentName;
