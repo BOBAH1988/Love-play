@@ -324,6 +324,28 @@
      тёмного фона) на белой карточке почти не виден — используем яркий
      малиновый, читаемый на светлом фоне. */
   .modal-card .field > label{ color:#d81b60; }
+
+  /* «Своё задание» (#addCardModal): карточка по умолчанию 80vh с прокруткой —
+     на телефонах не помещалась. Ужимаем отступы и поля, список заданий
+     ограничиваем по высоте — всё окно умещается на экране без прокрутки
+     (прокрутка остаётся только внутри списка своих заданий). */
+  #addCardModal .modal-card{
+    max-height:94vh; padding:18px 16px;
+    display:flex; flex-direction:column;
+  }
+  #addCardModal .modal-close-btn{ top:6px; right:8px; }
+  #addCardModal .modal-title{ margin-bottom:10px; font-size:18px; }
+  #addCardModal .field{ margin-bottom:8px; }
+  #addCardModal .field label{ margin-bottom:3px; font-size:12px; }
+  #addCardModal .select-input,
+  #addCardModal .textarea-input,
+  #addCardModal .field input[type=text]{ padding:8px 12px; font-size:14px; }
+  #addCardModal .starter-btn{ padding:8px 10px; font-size:13px; }
+  #addCardModal .btn{ padding:9px 14px; }
+  #addCardModal .custom-cards-list{
+    margin-top:8px; gap:6px;
+    max-height:14vh; overflow-y:auto; overscroll-behavior:contain;
+  }
   .select-input, .textarea-input{
     width:100%; padding:12px 14px; border-radius:12px;
     background:rgba(255,255,255,.12); color:#fff; font-size:15px;
