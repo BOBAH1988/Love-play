@@ -1974,7 +1974,7 @@
      игры никогда не перекрывало тост. z-index тоже выше любого модального
      окна в приложении на случай, если модалка растянется до самого верха. */
   .toast{
-    position:fixed; left:50%; top:16px;
+    position:fixed; left:50%; top:calc(16px + env(safe-area-inset-top, 0px));
     transform:translate(-50%,-10px) scale(.92);
     max-width:80vw;
     background:rgba(0,0,0,.85); color:#fff; padding:14px 22px; border-radius:16px;
