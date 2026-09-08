@@ -1,11 +1,12 @@
 // games/wish-roulette.js — «Рулетка желаний» (для двоих).
 (function(){
-  const CELL_COUNT = 37;
-  let wrUsedCards = [];
-  let wrSpinning = false;
-  let wrCompleted = 0;
-  let wrTimerId = null;
-  const WR_COLORS = ['green','red','black','red','black','red','black','red','black','red','black','red','black','black','red','black','red','black','red','red','black','red','black','red','black','red','black','red','black','red','black','black','red','black','red','black','red'];
+  var NUMBERS = 37;
+  var SEG = 360 / NUMBERS;
+  var wrUsedCards = [];
+  var wrSpinning = false;
+  var wrCompleted = 0;
+  var wrWheelRotation = 0;
+  var wrSpinSession = 0;
 
   function wrGetAllCards(){ return (window.WISH_ROULETTE_CARDS || []); }
 
@@ -13,50 +14,86 @@
     document.getElementById('setup').classList.remove('active');
     document.getElementById('wrGame').classList.add('active');
     state.inProgress = true; state.pausedMode = null;
-    wrUsedCards = []; wrCompleted = 0;
-    var t = document.getElementById('wrTitle'); if(t) t.textContent = '🎡 Рулетка желаний';
-    wrRenderWheel();
+    wrUsedCards = []; wrCompleted = 0; wrWheelRotation = 0;
+    wrBuildWheel();
     var r = document.getElementById('wrResult'); if(r){ r.textContent=''; r.className='wr-result'; }
+    var contBtn = document.getElementById('wrContinueBtn'); if(contBtn) contBtn.style.display = 'none';
+    var spinBtn = document.getElementById('wrSpinBtn'); if(spinBtn) spinBtn.style.display = '';
   }
 
-  function wrRenderWheel(){
+  function wrGetColor(n){
+    if(n === 0) return 'green';
+    var reds = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+    return reds.indexOf(n) >= 0 ? 'red' : 'black';
+  }
+
+  function wrBuildWheel(){
     var wheel = document.getElementById('wrWheel'); if(!wheel) return;
     var cards = wrGetAllCards();
-    var avail = cards.filter(function(c){ return !wrUsedCards.includes(c.text); });
-    var disp = [];
-    for(var i=0;i<CELL_COUNT;i++) disp.push(avail.length>0?avail[i%avail.length]:{type:'text',text:'🎴'});
-    wheel.innerHTML = '';
-    disp.forEach(function(card,idx){
-      var cell = document.createElement('div'); cell.className='wr-cell'; cell.dataset.idx=idx;
-      var c=WR_COLORS[idx]||'red'; var em=c==='green'?'🟢':c==='red'?'🔴':'⚫';
-      cell.innerHTML='<span class="wr-cell-num">'+em+' '+idx+'</span><span class="wr-cell-type">'+(card.type==='truth'?'💬':'🎯')+'</span>';
-      wheel.appendChild(cell);
-    });
-    wheel._cells = disp;
+    var avail = cards.filter(function(c){ return wrUsedCards.indexOf(c.text) < 0; });
+    var size = 500, cx = size/2, cy = size/2, r = size/2 - 10;
+    var svg = '<svg viewBox="0 0 '+size+' '+size+'" xmlns="http://www.w3.org/2000/svg">';
+    for(var i = 0; i < NUMBERS; i++){
+      var a1 = (i * SEG - 90) * Math.PI / 180;
+      var a2 = ((i + 1) * SEG - 90) * Math.PI / 180;
+      var x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+      var x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+      var col = wrGetColor(i);
+      var fill = col === 'green' ? '#16a34a' : col === 'red' ? '#dc2626' : '#1f2937';
+      var d = 'M'+cx+' '+cy+' L'+x1+' '+y1+' A'+r+' '+r+' 0 0 1 '+x2+' '+y2+' Z';
+      svg += "<path d='"+d+"' fill='"+fill+"' stroke='rgba(255,255,255,.3)' stroke-width='1'/>";
+      var ta = ((i * SEG + SEG/2) - 90) * Math.PI / 180;
+      var tr = r * 0.72;
+      var tx = cx + tr * Math.cos(ta), ty = cy + tr * Math.sin(ta);
+      var rot = i * SEG + SEG/2;
+      svg += "<text x='"+tx+"' y='"+ty+"' fill='#fff' font-size='18' font-weight='700' text-anchor='middle' dominant-baseline='central' transform='rotate("+rot+' '+tx+' '+ty+")'>"+i+"</text>";
+    }
+    svg += "<circle cx='"+cx+"' cy='"+cy+"' r='30' fill='#0f0f23' stroke='rgba(255,255,255,.4)' stroke-width='2'/>";
+    svg += '</svg>';
+    wheel.innerHTML = svg;
+    wheel._cards = avail;
+    wheel.style.transition = 'none';
+    wheel.style.transform = 'rotate(0deg)';
   }
 
   function wrSpin(){
     if(wrSpinning) return;
     wrSpinning = true;
-    var wheel = document.getElementById('wrWheel'); if(!wheel || !wheel._cells) return;
-    var cells = wheel._cells;
-    var idx = Math.floor(Math.random() * cells.length);
-    var card = cells[idx];
-    var color = WR_COLORS[idx] || 'red';
-    var colorName = color==='green'?'зеро':color==='red'?'красное':'чёрное';
-    var el = document.getElementById('wrResult');
-    if(el){
-      el.innerHTML = '<div class="wr-landed">Выпало: <strong>'+idx+'</strong> ('+colorName+')</div>'+
-        '<div class="wr-task '+(card.type==='truth'?'truth':'dare')+'">'+card.text+'</div>';
-      el.className = 'wr-result show';
-    }
-    var cellEls = wheel.querySelectorAll('.wr-cell');
-    cellEls.forEach(function(c){ c.classList.remove('active'); });
-    if(cellEls[idx]) cellEls[idx].classList.add('active');
-    wrUsedCards.push(card.text);
-    wrSpinning = false;
-    var contBtn = document.getElementById('wrContinueBtn');
-    if(contBtn) contBtn.style.display = '';
+    var spinSession = ++wrSpinSession;
+    var spinBtn = document.getElementById('wrSpinBtn'); if(spinBtn) spinBtn.style.display = 'none';
+    var contBtn = document.getElementById('wrContinueBtn'); if(contBtn) contBtn.style.display = 'none';
+    var resultEl = document.getElementById('wrResult'); if(resultEl) resultEl.textContent = '';
+
+    var wheel = document.getElementById('wrWheel');
+    if(!wheel) return;
+    var cards = wheel._cards || [];
+    if(cards.length === 0){ wrSpinning = false; return; }
+
+    var resultIdx = Math.floor(Math.random() * NUMBERS);
+    var resultNum = resultIdx;
+    var resultCard = cards[resultIdx % cards.length];
+    var colorName = wrGetColor(resultNum) === 'green' ? 'зеро' : wrGetColor(resultNum) === 'red' ? 'красное' : 'чёрное';
+
+    var targetAngle = 360 * (3 + Math.random() * 2) + (360 - resultNum * SEG - SEG/2);
+    wrWheelRotation += targetAngle;
+
+    wheel.style.transition = 'none';
+    void wheel.offsetWidth;
+    wheel.style.transition = 'transform 3.2s cubic-bezier(.16,1,.3,1)';
+    wheel.style.transform = 'rotate(' + wrWheelRotation + 'deg)';
+
+    if(wrTimerId){ clearTimeout(wrTimerId); wrTimerId = null; }
+    wrTimerId = setTimeout(function(){
+      if(spinSession !== wrSpinSession) return;
+      if(resultEl){
+        resultEl.innerHTML = '<div class="wr-landed">Выпало: <strong>' + resultNum + '</strong> (' + colorName + ')</div>' +
+          '<div class="wr-task ' + (resultCard.type === 'truth' ? 'truth' : 'dare') + '">' + resultCard.text + '</div>';
+        resultEl.className = 'wr-result show';
+      }
+      wrUsedCards.push(resultCard.text);
+      wrSpinning = false;
+      if(contBtn) contBtn.style.display = '';
+    }, 3300);
   }
 
   function wrNext(){
@@ -64,7 +101,8 @@
     wrCompleted++;
     var el = document.getElementById('wrResult'); if(el){ el.textContent=''; el.className='wr-result'; }
     var contBtn = document.getElementById('wrContinueBtn'); if(contBtn) contBtn.style.display = 'none';
-    wrRenderWheel();
+    var spinBtn = document.getElementById('wrSpinBtn'); if(spinBtn) spinBtn.style.display = '';
+    wrBuildWheel();
   }
 
   function pauseWrGame(){
@@ -83,7 +121,7 @@
     state.pausedMode = null; state.inProgress = true;
     document.getElementById('setup').classList.remove('active');
     document.getElementById('wrGame').classList.add('active');
-    wrRenderWheel();
+    wrBuildWheel();
     if(typeof hidePauseMenu === 'function') hidePauseMenu();
   }
 
@@ -129,4 +167,3 @@
   window.resumeWrGame = resumeWrGame;
   window.finishWrGame = finishWrGame;
 })();
-
