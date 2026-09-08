@@ -2343,11 +2343,16 @@
   .wr-cell.active{border-color:#ffd23f; background:rgba(255,210,63,.2);}
   .wr-cell-type{font-size:14px;}
   .wr-cell-text{font-size:9px; color:#ddd; line-height:1.1; word-break:break-word;}
-  .wr-result{text-align:center; font-size:15px; font-weight:600; min-height:40px; padding:6px; margin:4px 0;
+  .wr-result{text-align:center; font-size:15px; font-weight:600; min-height:50px; padding:8px; margin:6px 0;
     background:rgba(0,0,0,.2); border-radius:12px;}
-  .wr-result.truth{color:#9fb3ff;}
-  .wr-result.dare{color:#ff9fb0;}
+  .wr-landed{font-size:14px; color:#ccc; margin-bottom:6px;}
+  .wr-task{font-size:16px; font-weight:700; line-height:1.4;}
+  .wr-task.truth{color:#9fb3ff;}
+  .wr-task.dare{color:#ff9fb0;}
   .wr-result.show{animation:fadeIn .3s;}
+  .wr-summary-congrats{font-size:22px; font-weight:700; text-align:center; margin:8px 0;}
+  .wr-summary-count{font-size:18px; text-align:center; margin:6px 0;}
+  .wr-summary-text{font-size:15px; text-align:center; color:#ccc; margin-bottom:12px;}
   .wr-actions{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px;}
   .wr-actions .btn{flex:1; min-width:80px; max-width:140px;}
   .wr-summary-winner{font-size:18px; font-weight:700; text-align:center; margin:10px 0;}
@@ -4901,35 +4906,14 @@
         </div>
 </section>
 
-  <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: НАСТРОЙКА ===== -->
-  <section id="wrSetup" class="screen">
-    <h1 class="title">🎡 Рулетка желаний</h1>
-    <div class="subtitle">Крутите рулетку и выполняйте выпавшие задания</div>
-
-    <div class="field">
-      <label>Уровень</label>
-      <div class="levels" id="wrSetupLevels"></div>
-    </div>
-
-    <button class="btn btn-primary" id="wrSetupStartBtn">Начать</button>
-
-    <button class="btn btn-secondary" id="wrSetupExitBtn" style="margin-top:10px;">Выход</button>
-  </section>
-
   <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: ИГРА ===== -->
   <section id="wrGame" class="screen">
-    <div class="td-turn-label" id="wrTurnLabel">Крутит: Игрок 1</div>
-    <div class="krokodil-score-row two-player" id="wrScoreRow">
-      <span id="wrScore1" class="krokodil-score-item">Игрок 1: 0</span>
-      <span id="wrScore2" class="krokodil-score-item">Игрок 2: 0</span>
-    </div>
-    <div class="wr-level-label" id="wrLevelLabel">💕 Сближение</div>
+    <div class="td-turn-label" id="wrTitle">🎡 Рулетка желаний</div>
     <div class="wr-wheel" id="wrWheel"></div>
     <div class="wr-result" id="wrResult"></div>
     <div class="wr-actions">
       <button type="button" class="btn btn-primary" id="wrSpinBtn">🎰 Крутить</button>
-      <button type="button" class="btn btn-secondary" id="wrDoneBtn">✅ Выполнено</button>
-      <button type="button" class="btn btn-secondary" id="wrSkipBtn">🚫 Отказ</button>
+      <button type="button" class="btn btn-secondary" id="wrContinueBtn" style="display:none;">▶ Продолжить</button>
       <button type="button" class="btn btn-secondary btn-pause" id="wrPauseBtn">Пауза</button>
     </div>
   </section>
@@ -4939,7 +4923,7 @@
     <div class="modal-card">
       <div class="modal-title">🏆 Игра окончена</div>
       <div id="wrSummaryList"></div>
-      <button class="btn btn-primary" id="closeWrSummaryBtn">Завершить игру</button>
+      <button class="btn btn-primary" id="closeWrSummaryBtn">Отлично!</button>
     </div>
   </div>
 

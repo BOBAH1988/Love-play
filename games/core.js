@@ -1193,7 +1193,7 @@ document.getElementById('gameIdeasBtn').addEventListener('click', ()=>{
 document.getElementById('gameWrBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToWrSetup();
+  goToWrGame();
 });
 document.getElementById('gameBingoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
