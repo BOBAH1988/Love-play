@@ -2315,9 +2315,12 @@
   /* В «Фантах» «До след. уровня» показывается внутри карточки (над пилюлей
      «Правда/Действие»), поэтому плавающая строка сверху скрыта. */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
+  /* В «Фантах» строка типа карточки: слева пилюля «Правда/Действие», справа —
+     «До след. уровня» (только фанты — в П/Д и таймере строка остаётся по центру). */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row{justify-content:space-between; align-items:center;}
   #cardLevelProgress{
-    text-align:center; font-size:12px; font-weight:700;
-    color:#fff; margin-bottom:6px; white-space:nowrap;
+    font-size:12px; font-weight:700;
+    color:#fff; margin-left:auto; white-space:nowrap;
   }
   /* Turn-label — ПЕРВЫЙ элемент экрана (Фанты, Правда/Действие, Крокодил, Таймер,
      «Знаю тебя», kids-игры и т.д.) — парит в самой верхней полосе: по центру между

@@ -4362,9 +4362,9 @@ function renderCard(card){
             <span class="level-pill" style="background:${lvl.color}">${lvl.icon} ${lvl.name}</span>
           </div>
         </div>
-        <div class="card-level-progress" id="cardLevelProgress"></div>
         <div class="card-type-row">
           <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
+          <span class="card-level-progress" id="cardLevelProgress"></span>
         </div>
         <div class="card-body" id="cardBody">
           <div class="card-text" id="cardText"></div>
