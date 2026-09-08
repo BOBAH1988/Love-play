@@ -797,6 +797,26 @@ function showToast(msg, duration){
   clearTimeout(showToast._tm);
   showToast._tm = setTimeout(()=>t.classList.remove('show'), duration || 1800);
 }
+/* Коррекция позиции подсказки [data-tt], чтобы не вылезала за края экрана. */
+function fixTooltipPosition(el){
+  if(!el) return;
+  const r = el.getBoundingClientRect();
+  const tipW = 160;
+  const leftEdge = r.left + r.width/2 - tipW/2;
+  const rightEdge = r.left + r.width/2 + tipW/2;
+  let shift = 0;
+  if(leftEdge < 8) shift = 8 - leftEdge;
+  else if(rightEdge > window.innerWidth - 8) shift = window.innerWidth - 8 - rightEdge;
+  el.style.setProperty('--tt-shift', shift + 'px');
+}
+document.addEventListener('mouseover', e=>{
+  const el = e.target.closest('[data-tt]');
+  if(el) fixTooltipPosition(el);
+});
+document.addEventListener('touchstart', e=>{
+  const el = e.target.closest('[data-tt]');
+  if(el) fixTooltipPosition(el);
+}, {passive:true});
 
 /* ============ УНИВЕРСАЛЬНАЯ ОСТАНОВКА РЕЧИ (TTS) ============ */
 // Все stopXxxSpeech() были идентичными обёртками над speechSynthesis.cancel()

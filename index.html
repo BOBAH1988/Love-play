@@ -2331,13 +2331,13 @@
   /* Кастомные подсказки для ⭐ и 🔥 — работают и на touch (:active), и на hover */
   [data-tt]::after{
     content:attr(data-tt);
-    position:absolute; bottom:110%; left:50%; transform:translateX(-50%) scale(.9);
+    position:absolute; bottom:110%; left:50%; transform:translateX(calc(-50% + var(--tt-shift, 0px))) scale(.9);
     background:rgba(0,0,0,.85); color:#fff; font-size:12px; font-weight:600;
     padding:5px 10px; border-radius:8px; white-space:nowrap;
     opacity:0; pointer-events:none; transition:opacity .15s, transform .15s;
-    z-index:100;
+    z-index:100; max-width:160px; text-align:center; line-height:1.3;
   }
-  [data-tt]:hover::after, [data-tt]:active::after{opacity:1; transform:translateX(-50%) scale(1);}
+  [data-tt]:hover::after, [data-tt]:active::after{opacity:1; transform:translateX(calc(-50% + var(--tt-shift, 0px))) scale(1);}
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card{position:relative;}
   .card-fav-btn{position:absolute; right:18px; bottom:10px; width:44px; height:44px;
     padding:0; border-radius:50%; font-size:22px; line-height:1; margin:0; z-index:5;}
