@@ -211,7 +211,7 @@ function bizObsShowHandoffCard(){
   if(row) row.style.display = 'flex';
   fadeSwapEl('bizObsCard', (el)=>{
     el.className = 'card';
-    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon znayu-handoff-icon">🔍</div><div class="card-text">Передайте телефон игроку «${name}»</div></div></div>`;
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon znayu-handoff-icon">🔍</div><div class="card-text">Передайте телефон участнику «${name}»</div></div></div>`;
   });
   bizObsUpdateScoreUI();
   bizObsUpdateProgressBar();
