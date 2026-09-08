@@ -2320,8 +2320,9 @@
   /* В «Фантах» избранное — кнопка ⭐ внутри карточки (справа от таймера),
      плавающая кнопка снизу скрыта. */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #favoriteBtn{display:none;}
-  .card-fav-btn{flex:0 0 auto; margin-left:auto; width:44px; height:44px; padding:0;
-    border-radius:50%; font-size:22px; line-height:1;}
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card{position:relative;}
+  .card-fav-btn{position:absolute; right:18px; bottom:22px; width:44px; height:44px;
+    padding:0; border-radius:50%; font-size:22px; line-height:1; margin:0;}
   .card-fav-btn.active{background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00;}
   /* В «Фантах» строка типа карточки: слева пилюля «Правда/Действие», справа —
      «До след. уровня» (только фанты — в П/Д и таймере строка остаётся по центру). */
