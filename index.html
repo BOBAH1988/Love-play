@@ -2333,12 +2333,14 @@
     padding-top: 8px;
   }
   /* «Сапёр», «Четыре в ряд» (дети и один), «Крестики-нолики» (дети и один),
-     «Морской бой» (дети) и «Мемори» (один): krokodil-score-row идёт после
-     h1.title, поэтому общий padding-top экрана не нужен — иначе между шапкой
-     «←»/«☰» и заголовком появляется лишний зазор 50px.
-     Сдвигаем только сам score-row. */
+     «Морской бой» (дети), «Мемори» (один) и «Английский язык»: у первых
+     шести krokodil-score-row идёт после h1.title, поэтому общий padding-top
+     экрана не нужен — иначе между шапкой «←»/«☰» и заголовком появляется
+     лишний зазор 50px. Сдвигаем только сам score-row. «Английский язык» —
+     без score-row, но с td-turn-label, который парит из-за :has-правила. */
   #kidsSaperGame, #kidsC4Game, #kidsXoGame, #kidsBattleshipGame,
-  #soloMemoryGame, #soloXoGame, #soloC4Game{ padding-top: 0; }
+  #soloMemoryGame, #soloXoGame, #soloC4Game,
+  #flashGame{ padding-top: 0; }
   #kidsSaperGame > .krokodil-score-row,
   #kidsC4Game > .krokodil-score-row,
   #kidsXoGame > .krokodil-score-row,
