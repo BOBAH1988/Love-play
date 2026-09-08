@@ -1309,6 +1309,8 @@ function exitBusinessLemonadeSetup(){
 }
 function goToBusinessLemonadeGame(){
   goToGame('businessLemonadeSetup', 'businessLemonadeGame');
+  state.businessLemonadePausedPhase = null;
+  state.inProgress = true;
   state.businessLemonadeDay = 1;
   state.businessLemonadeCapital = BIZ_START_CAPITAL;
   state.businessLemonadeUpgrades = { sign: false, music: false, recipe: false, seller: false, secondStand: false };
@@ -1337,7 +1339,47 @@ function goToBusinessLemonadeGame(){
   startBizDay();
 }
 function exitBusinessLemonadeGame(){
+  state.inProgress = false;
+  state.pausedMode = null;
+  state.businessLemonadePausedPhase = null;
   exitGame('businessLemonadeGame', 'businessLemonadeSetup');
+  saveState();
+  updateResumeUI();
+}
+/* ===== Пауза: вернуться в меню — продолжить позже через общий блок ===== */
+// Вся партия (капитал, день, закупки, цена и итоги дня) уже живёт в state,
+// поэтому при паузе достаточно запомнить текущую фазу дня — DOM-классы
+// .biz-phase-active восстанавливаются функцией goToBizPhase при возврате.
+function pauseBusinessLemonadeGame(){
+  if(state.pausedMode === 'businessLemonade') return;
+  const active = document.querySelector('#businessLemonadeGame .biz-phase.biz-phase-active');
+  state.businessLemonadePausedPhase = active ? active.id : null;
+  state.pausedMode = 'businessLemonade';
+  saveState();
+  document.getElementById('businessLemonadeGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('businessView');
+  updateResumeUI();
+}
+function resumeBusinessLemonadeGame(){
+  state.pausedMode = null;
+  const phase = state.businessLemonadePausedPhase || 'bizPhaseDayIntro';
+  state.businessLemonadePausedPhase = null;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('businessLemonadeGame').classList.add('active');
+  goToBizPhase(phase);
+  updateMuteBtn();
+  requestWakeLock();
+}
+// Вызывается из общего меню паузы («Закончить игру») — просто выходим
+// (партия без сохранения, итоговой сводки за прерванную партию не будет).
+function finishBusinessLemonadeGame(){
+  hideModal('pauseMenuModal');
+  exitBusinessLemonadeGame();
+  updateResumeUI();
+  showToast('Игра завершена');
 }
 // Выбор цели накопления на стартовом экране: запоминается в state и
 // определяет условие завершения партии (накопить сумму чистыми).
@@ -1357,7 +1399,10 @@ document.querySelectorAll('#bizGoalGroup .starter-btn').forEach(btn=>{
 });
 document.getElementById('businessLemonadeSetupStartBtn').addEventListener('click', ()=>{ goToBusinessLemonadeGame(); });
 document.getElementById('businessLemonadeSetupExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeSetup(); });
-document.getElementById('businessLemonadeExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeGame(); });
+document.getElementById('businessLemonadeExitBtn').addEventListener('click', ()=>{
+  pauseBusinessLemonadeGame();
+  showToast('Игра на паузе — прогресс сохранён');
+});
 (document.getElementById('businessLemonadeSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('businessLemonadeRulesModal'); });
 setupRulesModal('businessLemonadeRulesModal', 'closeBusinessLemonadeRulesBtn');
 

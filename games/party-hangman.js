@@ -145,21 +145,76 @@ function partyHangmanDrawWord(){
 
 function goToPartyHangmanGame(){
   goToGame('setup', 'partyHangmanGame');
+  state.inProgress = true;
+  saveState();
   updatePartyHangmanScoreUI();
   partyHangmanDrawWord();
   updateMuteBtn();
   requestWakeLock();
 }
 function exitPartyHangmanGame(){
+  state.inProgress = false;
+  state.pausedMode = null;
   exitGame('partyHangmanGame', 'setup');
-  showSetupView('companyView');
+  showSetupView('soloView');
+  saveState();
+  updateResumeUI();
+}
+/* ===== Пауза: вернуться в меню — продолжить позже через общий блок ===== */
+function pausePartyHangmanGame(){
+  if(state.pausedMode === 'partyHangman') return;
+  state.pausedMode = 'partyHangman';
+  saveState();
+  document.getElementById('partyHangmanGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
+  updateResumeUI();
+}
+function resumePartyHangmanGame(){
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('partyHangmanGame').classList.add('active');
+  updatePartyHangmanScoreUI();
+  renderPartyHangmanWord();
+  renderPartyHangmanFigure();
+  renderPartyHangmanKeyboard();
+  updatePartyHangmanStatus();
+  // Если раунд был завершён до паузы (победа/поражение) — восстанавливаем
+  // блокировку клавиатуры и кнопку «Следующее слово» (не засчитывая счёт
+  // второй раз, поэтому partyHangmanCheckEnd() здесь не вызывается).
+  const word = state.partyHangmanWord || '';
+  const guessed = state.partyHangmanGuessed || [];
+  const solved = word.split('').every(ch=>guessed.includes(ch));
+  const lost = (state.partyHangmanWrong || 0) >= PARTY_HANGMAN_MAX_WRONG;
+  if(solved || lost){
+    document.getElementById('partyHangmanNextBtn').style.display = 'flex';
+    document.getElementById('partyHangmanKeyboard').classList.add('hangman-keyboard-disabled');
+  } else {
+    document.getElementById('partyHangmanNextBtn').style.display = 'none';
+    document.getElementById('partyHangmanKeyboard').classList.remove('hangman-keyboard-disabled');
+  }
+  updateMuteBtn();
+  requestWakeLock();
+}
+// Вызывается из общего меню паузы («Закончить игру») — просто выходим
+// (общий счёт побед/поражений уже сохранён в state).
+function finishPartyHangmanGame(){
+  hideModal('pauseMenuModal');
+  exitPartyHangmanGame();
+  updateResumeUI();
+  showToast('Игра завершена');
 }
 
 document.getElementById('partyHangmanNextBtn').addEventListener('click', ()=>{
   playSuccessSound();
   partyHangmanDrawWord();
 });
-document.getElementById('partyHangmanExitBtn').addEventListener('click', ()=>{ exitPartyHangmanGame(); });
+document.getElementById('partyHangmanExitBtn').addEventListener('click', ()=>{
+  pausePartyHangmanGame();
+  showToast('Игра на паузе — прогресс сохранён');
+});
 openRulesModal('partyHangmanGameRulesBtn', 'partyHangmanRulesModal');
 setupRulesModal('partyHangmanRulesModal', 'closePartyHangmanRulesBtn');
 

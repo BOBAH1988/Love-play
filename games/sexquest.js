@@ -29,6 +29,10 @@ const SEXQUEST_MAX_SCORE_PER_LIGHT = 1;
 
 let sexQuestCurrentWish = null;
 let sexQuestCurrentStepIndex = -1; // -1 = показываем главный вопрос "Выполнить сейчас?", 0+ = шаг квеста
+// Последний показанный итог шага (для восстановления после паузы, когда
+// кнопка «Да» превращается в «Дальше»).
+let sexQuestLastOutcomeText = '';
+let sexQuestLastOutcomeIcon = '💞';
 
 function getSexQuestWishes(){
   return (typeof SEXQUEST_WISHES !== 'undefined' && Array.isArray(SEXQUEST_WISHES)) ? SEXQUEST_WISHES : [];
@@ -189,6 +193,8 @@ function startSexQuestGame(){
   state.sexQuestIndex = 0;
   state.sexQuestScore = 0;
   state.sexQuestResults = []; // {wishId, title, outcome:'direct'|'light'|'deferred', steps:[question,...], agreedStep:number|null}
+  state.sexQuestPaused = null;
+  state.inProgress = true;
   saveState();
   document.getElementById('sexQuestSetup').classList.remove('active');
   goToGame(null, 'sexQuestGame');
@@ -280,6 +286,8 @@ function renderSexQuestStep(){
 }
 
 function renderSexQuestOutcome(text, icon){
+  sexQuestLastOutcomeText = text;
+  sexQuestLastOutcomeIcon = icon;
   updateSexQuestProgress();
   fadeSwapEl('sexQuestCard', (el)=>{
     el.className = 'card';
@@ -371,6 +379,7 @@ function finishSexQuestGame(){
   };
   if(!state.sexQuestChecklists) state.sexQuestChecklists = [];
   state.sexQuestChecklists.unshift(checklist);
+  state.inProgress = false;
   saveState();
   document.getElementById('sexQuestGame').classList.remove('active');
   document.getElementById('sexQuestSummary').classList.add('active');
@@ -402,6 +411,66 @@ function exitSexQuestSummary(){
 }
 document.getElementById('sexQuestSummaryExitBtn').addEventListener('click', ()=>{ exitSexQuestSummary(); });
 
+/* ===== Пауза: вернуться в меню — продолжить позже через общий блок ===== */
+function pauseSexQuestGame(){
+  if(state.pausedMode === 'sexQuest') return;
+  stopAllSounds();
+  state.sexQuestPaused = {
+    index: state.sexQuestIndex || 0,
+    stepIndex: sexQuestCurrentStepIndex,
+    awaitingNext: sexQuestAwaitingNext,
+    waitText: sexQuestLastOutcomeText,
+    waitIcon: sexQuestLastOutcomeIcon,
+  };
+  state.pausedMode = 'sexQuest';
+  saveState();
+  document.getElementById('sexQuestGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
+  updateResumeUI();
+}
+function resumeSexQuestGame(){
+  state.pausedMode = null;
+  const d = state.sexQuestPaused || {};
+  state.sexQuestPaused = null;
+  state.sexQuestIndex = d.index || 0;
+  sexQuestCurrentWish = currentSexQuestWishObj();
+  sexQuestCurrentStepIndex = (typeof d.stepIndex === 'number') ? d.stepIndex : -1;
+  sexQuestAwaitingNext = !!d.awaitingNext;
+  if(d.waitText) sexQuestLastOutcomeText = d.waitText;
+  if(d.waitIcon) sexQuestLastOutcomeIcon = d.waitIcon;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('sexQuestGame').classList.add('active');
+  updateSexQuestProgress();
+  updateMuteBtn();
+  requestWakeLock();
+  if(sexQuestAwaitingNext && sexQuestLastOutcomeText){
+    renderSexQuestOutcome(sexQuestLastOutcomeText, sexQuestLastOutcomeIcon);
+  } else if(sexQuestCurrentWish && sexQuestCurrentStepIndex >= 0){
+    renderSexQuestStep();
+  } else if(sexQuestCurrentWish){
+    renderSexQuestIntroCard();
+  } else {
+    finishSexQuestGame();
+  }
+}
+// Вызывается из общего меню паузы («Закончить игру») — прерываем партию без
+// сохранения чек-листа (это не честное завершение, а отказ от партии).
+function finishPausedSexQuestGame(){
+  hideModal('pauseMenuModal');
+  stopAllSounds();
+  state.sexQuestPaused = null;
+  state.inProgress = false;
+  state.pausedMode = null;
+  document.getElementById('sexQuestGame').classList.remove('active');
+  document.getElementById('sexQuestSetup').classList.add('active');
+  saveState();
+  updateResumeUI();
+  showToast('Игра завершена');
+}
+
 document.getElementById('sexQuestStartBtn').addEventListener('click', ()=>{
   if(state.sexQuestMode === 'manual' && (!state.sexQuestManualIds || !state.sexQuestManualIds.length)){
     showToast('Выберите хотя бы одно желание');
@@ -413,9 +482,8 @@ document.getElementById('sexQuestStartBtn').addEventListener('click', ()=>{
   startSexQuestGame();
 });
 document.getElementById('sexQuestExitBtn').addEventListener('click', ()=>{
-  stopAllSounds();
-  document.getElementById('sexQuestGame').classList.remove('active');
-  document.getElementById('sexQuestSetup').classList.add('active');
+  pauseSexQuestGame();
+  showToast('Игра на паузе — прогресс сохранён');
 });
 // Кнопка «▶ Начать» на карточке знакомства: открываем ПЕРВЫЙ вопрос квеста
 // этого желания (quest[0]) — появляются кнопки «Да»/«Нет».

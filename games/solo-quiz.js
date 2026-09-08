@@ -5,7 +5,13 @@
 // и без передачи хода — один человек отвечает на все вопросы подряд.
 // Простой выход без общего меню паузы (тот же принцип, что у детских игр).
 
+// Простой выход без общего меню паузы (тот же принцип, что у детских игр).
+// ---
+// Пауза через общий блок «Продолжить игру» / «Закончить игру» (см. функции
+// pauseSoloQuizGame/resumeSoloQuizGame/finishSoloQuizGame ниже).
+
 let soloQuizIntervalId = null;
+let soloQuizAdvanceTimerId = null; // отложенный переход к следующему вопросу (отменяется при паузе)
 let soloQuizDeadline = 0;
 let soloQuizDurationMs = 3000;
 let soloQuizAnswered = false;
@@ -206,7 +212,7 @@ function answerSoloQuizQuestion(choiceIdx){
   });
   saveState();
   updateSoloQuizScoreUI();
-  setTimeout(advanceSoloQuizQueue, 900);
+  soloQuizAdvanceTimerId = setTimeout(advanceSoloQuizQueue, 900);
 }
 function advanceSoloQuizQueue(){
   state.soloQuizIndex = (state.soloQuizIndex || 0) + 1;
@@ -234,6 +240,8 @@ function goToSoloQuizGame(){
   drawSoloQuizQueue();
   document.getElementById('soloQuizSetup').classList.remove('active');
   goToGame(null, 'soloQuizGame');
+  state.inProgress = true;
+  saveState();
   updateMuteBtn();
   requestWakeLock();
   showSoloQuizQuestion();
@@ -241,8 +249,49 @@ function goToSoloQuizGame(){
 function exitSoloQuizGame(){
   stopSoloQuizInterval();
   stopSoloQuizSpeech();
+  if(soloQuizAdvanceTimerId){ clearTimeout(soloQuizAdvanceTimerId); soloQuizAdvanceTimerId = null; }
+  state.inProgress = false;
+  state.pausedMode = null;
   hideModal('soloQuizSummaryModal');
   exitGame('soloQuizGame', 'soloQuizSetup');
+  updateResumeUI();
+}
+/* ===== Пауза: вернуться в меню — продолжить позже через общий блок ===== */
+function pauseSoloQuizGame(){
+  if(state.pausedMode === 'soloQuiz') return;
+  stopSoloQuizInterval();
+  stopSoloQuizSpeech();
+  if(soloQuizAdvanceTimerId){ clearTimeout(soloQuizAdvanceTimerId); soloQuizAdvanceTimerId = null; }
+  state.pausedMode = 'soloQuiz';
+  saveState();
+  document.getElementById('soloQuizGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
+  updateResumeUI();
+}
+function resumeSoloQuizGame(){
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('soloQuizGame').classList.add('active');
+  updateMuteBtn();
+  requestWakeLock();
+  // Если пауза пришлась на момент после ответа (ждём перехода к следующему
+  // вопросу) — сразу переходим дальше; иначе показываем текущий вопрос заново.
+  if(soloQuizAnswered){
+    soloQuizAdvanceTimerId = null;
+    advanceSoloQuizQueue();
+  } else {
+    showSoloQuizQuestion();
+  }
+}
+// Вызывается из общего меню паузы («Закончить игру») — просто выходим.
+function finishSoloQuizGame(){
+  hideModal('pauseMenuModal');
+  exitSoloQuizGame();
+  updateResumeUI();
+  showToast('Игра завершена');
 }
 /* ===== Озвучка вопроса по тапу — тот же приём, что в party-quiz.js ===== */
 function pickSoloQuizVoice(){
@@ -298,7 +347,10 @@ document.getElementById('soloQuizSetupStartBtn').addEventListener('click', ()=>{
   goToSoloQuizGame();
 });
 document.getElementById('soloQuizSetupExitBtn').addEventListener('click', ()=>{ exitSoloQuizSetup(); });
-document.getElementById('soloQuizExitBtn').addEventListener('click', ()=>{ exitSoloQuizGame(); });
+document.getElementById('soloQuizExitBtn').addEventListener('click', ()=>{
+  pauseSoloQuizGame();
+  showToast('Игра на паузе — прогресс сохранён');
+});
 document.getElementById('closeSoloQuizSummaryBtn').addEventListener('click', ()=>{ exitSoloQuizGame(); });
 (document.getElementById('soloQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloQuizRulesModal'); });
 setupRulesModal('soloQuizRulesModal', 'closeSoloQuizRulesBtn');

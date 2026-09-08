@@ -3547,7 +3547,7 @@
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary" id="sexQuestStartPlayBtn" hidden>▶ Начать</button>
-        <button type="button" class="btn btn-secondary btn-pause" id="sexQuestExitBtn">Выход</button>
+        <button type="button" class="btn btn-secondary btn-pause" id="sexQuestExitBtn">Пауза</button>
       </div>
     </div>
   
@@ -3628,7 +3628,7 @@
         </div>
         <div class="timer-actions-bottom">
           <button type="button" class="btn btn-secondary" id="passionMapStartPlayBtn" hidden>▶ Начать</button>
-          <button type="button" class="btn btn-secondary btn-pause" id="passionMapExitBtn">Выход</button>
+          <button type="button" class="btn btn-secondary btn-pause" id="passionMapExitBtn">Пауза</button>
         </div>
       </div>
     </div>
@@ -4046,7 +4046,7 @@
         <button type="button" class="btn btn-secondary" id="shopNextSaleBtn" style="display:none;">Следующий покупатель</button>
       </div>
       <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-pause" id="shopExitBtn">Выход</button>
+        <button type="button" class="btn btn-secondary btn-pause" id="shopExitBtn">Пауза</button>
       </div>
     </div>
 </section>
@@ -4062,7 +4062,7 @@
         <li>Сумма совпала — покупка засчитана, начнётся новая корзина. Не совпала — приложение подскажет, не хватает денег или слишком много.</li>
         <li><b>💰 Продавец</b>: на кассе — случайный список покупок, итоговая сумма и сумма наличных от покупателя. Нужно отсчитать и отдать точную сдачу.</li>
         <li>«Следующий покупатель» — новая случайная покупка.</li>
-        <li>«Выход» в любой момент вернёт в меню.</li>
+        <li>«Пауза» сохранит корзину (или кассу) и деньги — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeShopRulesBtn">Понятно</button>
     </div>
@@ -4333,7 +4333,7 @@
       <div class="znayu-answers" id="bizQuizAnswers"></div>
     </div>
 
-    <button type="button" class="btn btn-secondary" id="businessLemonadeExitBtn" style="margin-top:14px;">Выход</button>
+    <button type="button" class="btn btn-secondary btn-pause" id="businessLemonadeExitBtn" style="margin-top:14px;">Пауза</button>
   </section>
 
   <!-- ===== ЛИМОНАДНЫЙ ЛАРЁК (БИЗНЕС): ИТОГИ ===== -->
@@ -4364,7 +4364,7 @@
         <li><b>Цена.</b> Себестоимость — сколько денег ушло на один стакан. Слишком высокая цена — купят меньше. Цена ниже себестоимости — убыток, даже если продашь всё. Если рядом конкурент — твоя цена относительно его цены тоже влияет на продажи.</li>
         <li>Итоги дня: выручка (все деньги от покупателей) и чистая прибыль (что осталось после расходов) — капитал переходит на следующий день, но никогда не опускается ниже 0. Если денег совсем не осталось даже на самую скромную закупку — одолжит друг, но вернуть придётся на 20% больше и в течение 2 дней.</li>
         <li>Когда накопленная чистая прибыль достигнет выбранной цели — итоговый график прибыли по дням, пять вопросов на проверку (числа в них берутся из твоей же партии, поэтому каждый раз разные) и оценка бизнеса.</li>
-        <li>«Выход» в любой момент вернёт в меню.</li>
+        <li>«Пауза» сохранит весь прогресс дня — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeBusinessLemonadeRulesBtn">Понятно</button>
     </div>
@@ -5501,7 +5501,7 @@
 
 
     <div class="quiz-pause-row">
-      <button type="button" class="btn btn-secondary btn-pause" id="soloQuizExitBtn">Выход</button>
+      <button type="button" class="btn btn-secondary btn-pause" id="soloQuizExitBtn">Пауза</button>
     </div>
   
         </div>
@@ -5526,7 +5526,7 @@
         <li>На каждый вопрос — 4 варианта ответа. Не успели выбрать за отведённое время — вопрос засчитывается как неверный.</li>
         <li>Тап по карточке озвучивает вопрос вслух, если это поддерживает браузер.</li>
         <li>В конце — итог: сколько вопросов угадано и сколько заняло времени.</li>
-        <li>«Выход» в любой момент вернёт в меню.</li>
+        <li>«Пауза» сохранит прогресс — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeSoloQuizRulesBtn">Понятно</button>
     </div>
@@ -5640,7 +5640,7 @@
         <button type="button" class="btn btn-primary" id="partyHangmanNextBtn" style="display:none;">Следующее слово</button>
       </div>
       <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-pause" id="partyHangmanExitBtn">Выход</button>
+        <button type="button" class="btn btn-secondary btn-pause" id="partyHangmanExitBtn">Пауза</button>
       </div>
     </div>
   </section>
@@ -5656,7 +5656,7 @@
         <li>Если буква есть в слове — она откроется во всех клетках. Если нет — засчитывается ошибка, и на рисунке появляется новая часть виселицы.</li>
         <li>6 ошибок — поражение, слово будет показано полностью. Собрали все буквы раньше — победа!</li>
         <li>«Следующее слово» начнёт новый раунд. Общий счёт побед и поражений сохраняется.</li>
-        <li>«Выход» в любой момент вернёт в меню.</li>
+        <li>«Пауза» в любой момент сохранит игру — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closePartyHangmanRulesBtn">Понятно</button>
     </div>
@@ -6048,7 +6048,7 @@
         <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
         <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
         <li>После партии итоги сохраняются в «✅ Пройденные» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
-        <li>«Выход» в любой момент вернёт в меню.</li>
+        <li>«Пауза» сохранит партию — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeSexQuestRulesBtn">Понятно</button>
     </div>
@@ -6075,7 +6075,7 @@
         <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
         <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
         <li>После партии итоги сохраняются в «✅ Пройденные» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
-        <li>«Выход» в любой момент вернёт в меню.</li>
+        <li>«Пауза» сохранит текущую точку маршрута — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closePassionMapRulesBtn">Понятно</button>
     </div>

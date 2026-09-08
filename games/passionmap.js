@@ -29,6 +29,10 @@ const PASSIONMAP_MAX_SCORE_PER_LIGHT = 1;
 
 let passionMapCurrentWish = null;
 let passionMapCurrentStepIndex = -1; // -1 = карточка знакомства, 0+ = шаг квеста
+// Последний показанный итог шага (для восстановления после паузы, когда
+// кнопка «Да» превращается в «Дальше»).
+let passionMapLastOutcomeText = '';
+let passionMapLastOutcomeIcon = '💞';
 
 function getPassionMapWishes(){
   return (typeof PASSIONMAP_WISHES !== 'undefined' && Array.isArray(PASSIONMAP_WISHES)) ? PASSIONMAP_WISHES : [];
@@ -189,6 +193,8 @@ function startPassionMapGame(){
   state.passionMapIndex = 0;
   state.passionMapScore = 0;
   state.passionMapResults = []; // {wishId, title, outcome:'light'|'deferred', steps:[question,...], agreedStep:number|null}
+  state.passionMapPaused = null;
+  state.inProgress = true;
   saveState();
   document.getElementById('passionMapSetup').classList.remove('active');
   goToGame(null, 'passionMapGame');
@@ -279,6 +285,8 @@ function renderPassionMapStep(){
 }
 
 function renderPassionMapOutcome(text, icon){
+  passionMapLastOutcomeText = text;
+  passionMapLastOutcomeIcon = icon;
   updatePassionMapProgress();
   fadeSwapEl('passionMapCard', (el)=>{
     el.className = 'card';
@@ -369,6 +377,7 @@ function finishPassionMapGame(){
   };
   if(!state.passionMapChecklists) state.passionMapChecklists = [];
   state.passionMapChecklists.unshift(checklist);
+  state.inProgress = false;
   saveState();
   document.getElementById('passionMapGame').classList.remove('active');
   document.getElementById('passionMapSummary').classList.add('active');
@@ -399,6 +408,66 @@ function exitPassionMapSummary(){
 }
 document.getElementById('passionMapSummaryExitBtn').addEventListener('click', ()=>{ exitPassionMapSummary(); });
 
+/* ===== Пауза: вернуться в меню — продолжить позже через общий блок ===== */
+function pausePassionMapGame(){
+  if(state.pausedMode === 'passionMap') return;
+  stopAllSounds();
+  state.passionMapPaused = {
+    index: state.passionMapIndex || 0,
+    stepIndex: passionMapCurrentStepIndex,
+    awaitingNext: passionMapAwaitingNext,
+    waitText: passionMapLastOutcomeText,
+    waitIcon: passionMapLastOutcomeIcon,
+  };
+  state.pausedMode = 'passionMap';
+  saveState();
+  document.getElementById('passionMapGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
+  updateResumeUI();
+}
+function resumePassionMapGame(){
+  state.pausedMode = null;
+  const d = state.passionMapPaused || {};
+  state.passionMapPaused = null;
+  state.passionMapIndex = d.index || 0;
+  passionMapCurrentWish = currentPassionMapWishObj();
+  passionMapCurrentStepIndex = (typeof d.stepIndex === 'number') ? d.stepIndex : -1;
+  passionMapAwaitingNext = !!d.awaitingNext;
+  if(d.waitText) passionMapLastOutcomeText = d.waitText;
+  if(d.waitIcon) passionMapLastOutcomeIcon = d.waitIcon;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('passionMapGame').classList.add('active');
+  updatePassionMapProgress();
+  updateMuteBtn();
+  requestWakeLock();
+  if(passionMapAwaitingNext && passionMapLastOutcomeText){
+    renderPassionMapOutcome(passionMapLastOutcomeText, passionMapLastOutcomeIcon);
+  } else if(passionMapCurrentWish && passionMapCurrentStepIndex >= 0){
+    renderPassionMapStep();
+  } else if(passionMapCurrentWish){
+    renderPassionMapIntroCard();
+  } else {
+    finishPassionMapGame();
+  }
+}
+// Вызывается из общего меню паузы («Закончить игру») — прерываем партию без
+// сохранения чек-листа (это не честное завершение, а отказ от партии).
+function finishPausedPassionMapGame(){
+  hideModal('pauseMenuModal');
+  stopAllSounds();
+  state.passionMapPaused = null;
+  state.inProgress = false;
+  state.pausedMode = null;
+  document.getElementById('passionMapGame').classList.remove('active');
+  document.getElementById('passionMapSetup').classList.add('active');
+  saveState();
+  updateResumeUI();
+  showToast('Игра завершена');
+}
+
 document.getElementById('passionMapStartBtn').addEventListener('click', ()=>{
   if(state.passionMapMode === 'manual' && (!state.passionMapManualIds || !state.passionMapManualIds.length)){
     showToast('Выберите хотя бы одно желание');
@@ -410,9 +479,8 @@ document.getElementById('passionMapStartBtn').addEventListener('click', ()=>{
   startPassionMapGame();
 });
 document.getElementById('passionMapExitBtn').addEventListener('click', ()=>{
-  stopAllSounds();
-  document.getElementById('passionMapGame').classList.remove('active');
-  document.getElementById('passionMapSetup').classList.add('active');
+  pausePassionMapGame();
+  showToast('Игра на паузе — прогресс сохранён');
 });
 // Кнопка «▶ Начать» на карточке знакомства: открываем ПЕРВЫЙ вопрос квеста
 // этого желания (quest[0]) — появляются кнопки «Да»/«Нет».

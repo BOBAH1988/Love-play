@@ -7,8 +7,9 @@
 //  - "Продавец": на карточке кассы — случайный список купленных товаров,
 //    итоговая сумма и сумма наличных от покупателя; нужно отсчитать и
 //    выдать правильную сдачу.
-// Прогресс партии не сохраняется между сессиями (простая игра для тренировки
-// счёта, без общего меню паузы) — тот же принцип, что у детских Мемасиков.
+// Прогресс текущей сессии (корзина, касса, незавершённая оплата/сдача)
+// сохраняется при паузе через общий блок «Продолжить игру» / «Закончить
+// игру» — см. функции pauseShopGame/resumeShopGame/finishShopGame ниже.
 
 let shopCurrentProduct = null;
 let shopUsedProducts = [];
@@ -245,6 +246,8 @@ document.getElementById('shopNextSaleBtn').addEventListener('click', ()=>{
 /* ============ ВХОД/ВЫХОД ИЗ ИГРЫ ============ */
 function goToShopGame(){
   goToGame('shopSetup', 'shopGame');
+  state.inProgress = true;
+  state.shopPaused = null;
   const mode = state.shopMode || 'buyer';
   document.getElementById('shopBuyerShopping').style.display = mode === 'buyer' ? '' : 'none';
   document.getElementById('shopSellerPanel').style.display = mode === 'seller' ? '' : 'none';
@@ -265,11 +268,115 @@ function goToShopGame(){
   requestWakeLock();
 }
 function exitShopGame(){
+  state.shopPaused = null;
+  state.inProgress = false;
+  state.pausedMode = null;
   exitGame('shopGame', 'shopSetup');
+  saveState();
+  updateResumeUI();
+}
+
+/* ============ ПАУЗА ============ */
+// Пауза: вернуться в меню, не сбрасывая корзину/кассу и незавершённую
+// оплату/сдачу — продолжить позже через общий блок «Продолжить игру» /
+// «Закончить игру» (см. core.js). Вся сессия Магазина живёт в локальных
+// переменных, поэтому при паузе запоминаем их в state.shopPaused.
+function pauseShopGame(){
+  if(state.pausedMode === 'shop') return;
+  const panel = document.getElementById('shopMoneyPanel');
+  state.shopPaused = {
+    mode: state.shopMode || 'buyer',
+    currentProduct: shopCurrentProduct,
+    usedProducts: shopUsedProducts.slice(),
+    cart: shopCart.slice(),
+    stage: shopStage,
+    moneySelected: shopMoneySelected.slice(),
+    moneyTarget: shopMoneyTarget,
+    moneyMode: shopMoneyMode,
+    moneyPanelOpen: !!(panel && panel.style.display !== 'none'),
+    saleItems: shopSaleItems.slice(),
+    saleTotal: shopSaleTotal,
+    cashGiven: shopCashGiven
+  };
+  state.pausedMode = 'shop';
+  saveState();
+  document.getElementById('shopGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('businessView');
+  updateResumeUI();
+}
+// Возвращаемся из паузы — восстанавливаем сессию и перерисовываем экран
+// ровно в том месте, где её прервали (корзина/касса и открытый лоток денег).
+function resumeShopGame(){
+  state.pausedMode = null;
+  const d = state.shopPaused || {};
+  shopCurrentProduct = d.currentProduct || null;
+  shopUsedProducts = Array.isArray(d.usedProducts) ? d.usedProducts : [];
+  shopCart = Array.isArray(d.cart) ? d.cart : [];
+  shopStage = d.stage || 'shopping';
+  shopMoneySelected = Array.isArray(d.moneySelected) ? d.moneySelected : [];
+  shopMoneyTarget = d.moneyTarget || 0;
+  shopMoneyMode = d.moneyMode || 'pay';
+  shopSaleItems = Array.isArray(d.saleItems) ? d.saleItems : [];
+  shopSaleTotal = d.saleTotal || 0;
+  shopCashGiven = d.cashGiven || 0;
+  saveState();
+  updateResumeUI();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('shopGame').classList.add('active');
+
+  const mode = d.mode || state.shopMode || 'buyer';
+  document.getElementById('shopBuyerShopping').style.display = mode === 'buyer' ? '' : 'none';
+  document.getElementById('shopSellerPanel').style.display = mode === 'seller' ? '' : 'none';
+  document.getElementById('shopBackToShoppingBtn').style.display = mode === 'buyer' ? '' : 'none';
+  document.getElementById('shopNextSaleBtn').style.display = mode === 'seller' ? '' : 'none';
+
+  if(mode === 'buyer'){
+    if(shopStage === 'paying') document.getElementById('shopBuyerShopping').style.display = 'none';
+    renderShopCart();
+    if(shopCurrentProduct){
+      fadeSwapEl('shopProductCard', (el)=>{
+        el.innerHTML = `
+          <div class="card-inner">
+            <div class="card-body">
+              <div class="card-icon" style="font-size:64px;">${shopCurrentProduct.icon}</div>
+              <div class="card-split-title">${shopCurrentProduct.name}</div>
+              <div class="card-text">${formatRub(shopCurrentProduct.price)}</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+  } else {
+    const list = document.getElementById('shopSaleList');
+    if(list) list.innerHTML = shopSaleItems.map(c=>`<li>${c.icon} ${c.name} — ${formatRub(c.price)}</li>`).join('');
+    const totalEl = document.getElementById('shopSaleTotal');
+    if(totalEl) totalEl.textContent = `Итого: ${formatRub(shopSaleTotal)}`;
+    const cashEl = document.getElementById('shopCashGivenText');
+    if(cashEl) cashEl.textContent = `Покупатель даёт: ${formatRub(shopCashGiven)}`;
+  }
+  if(d.moneyPanelOpen){
+    openShopMoneyPanel(shopMoneyTarget, shopMoneyMode);
+    shopMoneySelected = Array.isArray(d.moneySelected) ? d.moneySelected : [];
+    renderShopMoneySelected();
+  }
+  updateMuteBtn();
+  requestWakeLock();
+}
+// Вызывается из общего меню паузы («Закончить игру») — просто выходим:
+// у Магазина нет общего счёта партии, окно итогов не показываем.
+function finishShopGame(){
+  hideModal('pauseMenuModal');
+  exitShopGame();
+  updateResumeUI();
+  showToast('Игра завершена');
 }
 document.getElementById('shopSetupStartBtn').addEventListener('click', ()=>{ goToShopGame(); });
 document.getElementById('shopSetupExitBtn').addEventListener('click', ()=>{ exitShopSetup(); });
-document.getElementById('shopExitBtn').addEventListener('click', ()=>{ exitShopGame(); });
+document.getElementById('shopExitBtn').addEventListener('click', ()=>{
+  pauseShopGame();
+  showToast('Игра на паузе — прогресс сохранён');
+});
 openRulesModal('shopGameRulesBtn', 'shopRulesModal');
 setupRulesModal('shopRulesModal', 'closeShopRulesBtn');
 
