@@ -2314,7 +2314,13 @@
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .td-turn-label{font-size:28px;}
   /* В «Фантах» «До след. уровня» показывается внутри карточки (над пилюлей
      «Правда/Действие»), поэтому плавающая строка сверху скрыта. */
-  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
+  .game-type-btn{flex:1; min-width:0; font-size:13px; padding:9px 6px;}
+  .game-type-btn.active{background:var(--accent); color:#2b0f2e;}
+  /* В режиме Правда/Действие — пилюли выбора перед ходом внутри карточки */
+  .td-choice-row{display:flex; gap:10px; margin:6px 0 2px; justify-content:center;}
+  .td-choice-btn{flex:1; padding:10px 8px; border-radius:14px; font-size:13px; font-weight:700;
+    border:2px solid rgba(255,255,255,.3); background:rgba(255,255,255,.12); color:#fff; cursor:pointer;}
+  .td-choice-btn:active{transform:scale(.96);}
   /* В «Фантах» кнопка «Пауза» скрыта — выход/пауза работает по стрелке «назад». */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #pauseBtn{display:none;}
   /* В «Фантах» избранное — кнопка ⭐ внутри карточки (справа от таймера),
@@ -3382,6 +3388,14 @@
   <section id="fantySetup" class="screen">
     <h1 class="title">💘 Фанты</h1>
     <div class="subtitle">Тяните карточки и раскрывайтесь друг другу</div>
+
+    <div class="field">
+      <label>Выбор игры</label>
+      <div class="starter-group" id="gameTypeGroup">
+        <button type="button" class="starter-btn game-type-btn active" data-value="fanty">🎴 Фанты</button>
+        <button type="button" class="starter-btn game-type-btn" data-value="td">🎯 Правда/Действие</button>
+      </div>
+    </div>
 
     <div class="field">
       <label>Режим игры</label>
@@ -6677,7 +6691,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260914j"></script>
+<script src="games/core.js?v=20260914k"></script>
 <script src="games/twister.js?v=20260913e"></script>
 <script src="games/party-hangman.js?v=20260830u"></script>
 <script src="games/solo-quiz.js?v=20260830u"></script>

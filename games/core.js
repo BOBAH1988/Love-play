@@ -50,6 +50,7 @@ let state = {
   levelCap:3, usedIndexes:[], hiddenIndexes:[],
   muted:false, autoSpeak:true, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
+  gameType:'fanty', /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правда/Действие перед ходом */
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
   photoOrderMode:false, photoSeqIndex:{},
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false, videoSoundOn:false,
@@ -1011,6 +1012,14 @@ document.querySelectorAll('#modeGroup .mode-btn').forEach(btn=>{
     renderLevelToggles();
   });
 });
+document.querySelectorAll('#gameTypeGroup .game-type-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.gameType = btn.dataset.value;
+    document.querySelectorAll('#gameTypeGroup .game-type-btn').forEach(b=>{
+      b.classList.toggle('active', b === btn);
+    });
+  });
+});
 
 function updateStarterLabels(){
   const n1 = document.getElementById('name1');
@@ -1783,7 +1792,12 @@ function resumeFantyGame(){
   updateLevelUI();
   updateMuteBtn();
   requestWakeLock();
-  drawCard();
+  if(state.gameType === 'td'){
+    /* В режиме Правда/Действие — пустая карточка с кнопками выбора, без вытягивания */
+    renderTdChoiceCard();
+  } else {
+    drawCard();
+  }
 }
 function isPlaceholderMode(){
   const el = document.getElementById('game');
@@ -4344,6 +4358,92 @@ function drawCard(forceLevel){
   renderCard(card);
 }
 
+function renderTdChoiceCard(){
+  const turnName = state.currentPlayer===1 ? state.name1 : state.name2;
+  const genderColor = GENDER_COLORS[currentGender()];
+  currentCard = null;
+  const el = document.getElementById('card');
+  el.className = 'card';
+  el.style.borderTop = '10px solid ' + genderColor;
+  el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-turn">
+            <div class="card-turn-label">Ход игрока</div>
+            <div class="card-turn-name">${turnName}</div>
+          </div>
+        </div>
+        <div class="td-choice-row" id="tdChoiceRow">
+          <button type="button" class="td-choice-btn" data-type="truth">Правда</button>
+          <button type="button" class="td-choice-btn" data-type="dare">Действие</button>
+        </div>
+        <div class="card-type-row" style="display:none;">
+          <span class="card-level-progress" id="cardLevelProgress"></span>
+          <span class="type-pill"></span>
+        </div>
+        <div class="card-body" id="cardBody" style="display:none;">
+          <div class="card-text" id="cardText"></div>
+        </div>
+        <div class="card-timer" style="display:none;">
+          <div class="timer-durations">
+            <button type="button" class="timer-dur-btn ${timerDuration===30 ? 'on' : ''}" data-sec="30">30 сек</button>
+            <button type="button" class="timer-dur-btn ${timerDuration===60 ? 'on' : ''}" data-sec="60">1 мин</button>
+            <button type="button" class="timer-dur-btn ${timerDuration===120 ? 'on' : ''}" data-sec="120">2 мин</button>
+          </div>
+          <div class="timer-controls">
+            <div class="timer-display" id="timerDisplay">${formatTime(timerDuration)}</div>
+            <button type="button" class="timer-btn" id="timerBtn">▶ Старт</button>
+            <button type="button" class="timer-btn card-fav-btn" id="cardFavoriteBtn" data-tt="Добавить в избранное" aria-label="Добавить в избранное">☆</button>
+            <button type="button" class="card-hot-btn" id="cardLevelUpBtn" data-tt="Сделать задание горячее" aria-label="Сделать задание горячее">🔥</button>
+          </div>
+        </div>
+      </div>
+    `;
+  document.getElementById('timerBtn').addEventListener('click', toggleTimer);
+  document.getElementById('cardFavoriteBtn').addEventListener('click', toggleFavorite);
+  document.getElementById('cardLevelUpBtn').addEventListener('click', ()=> levelUp());
+  document.querySelectorAll('.timer-dur-btn').forEach(b=>{
+    b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
+  });
+  document.getElementById('tdChoiceRow').querySelectorAll('.td-choice-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.getElementById('tdChoiceRow').style.display = 'none';
+      document.querySelector('.card-type-row').style.display = '';
+      document.getElementById('cardBody').style.display = '';
+      document.querySelector('.card-timer').style.display = '';
+      drawCardWithType(b.dataset.type);
+    });
+  });
+}
+
+function drawCardWithType(type){
+  const all = getAllCards();
+  const gender = currentGender();
+  const scope = scopeIndexes().filter(i=>!state.hiddenIndexes.includes(i));
+  let pool = scope
+    .map(i=>({...all[i], idx:i}))
+    .filter(c => !c.for || c.for===gender)
+    .filter(c => !state.usedIndexes.includes(c.idx))
+    .filter(c => c.type === type);
+  if(pool.length===0){
+    const scopeSet = new Set(scope);
+    state.usedIndexes = state.usedIndexes.filter(i=>!scopeSet.has(i));
+    pool = scope
+      .map(i=>({...all[i], idx:i}))
+      .filter(c => !c.for || c.for===gender)
+      .filter(c => c.type === type);
+    if(pool.length>0) showToast('Колода перемешана заново 🔀');
+  }
+  if(pool.length===0){
+    showToast('Нет карточек этого типа — выберите другой');
+    return;
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  state.usedIndexes.push(card.idx);
+  saveState();
+  renderCard(card);
+}
+
 function refreshCard(){
   if(!currentCard) return;
   showToast('Новое задание 🔄');
@@ -4388,6 +4488,10 @@ function renderCard(card){
           <span class="card-level-progress" id="cardLevelProgress"></span>
           <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
         </div>
+        <div class="td-choice-row" id="tdChoiceRow" style="display:none;">
+          <button type="button" class="td-choice-btn" data-type="truth">Правда</button>
+          <button type="button" class="td-choice-btn" data-type="dare">Действие</button>
+        </div>
         <div class="card-body" id="cardBody">
           <div class="card-text" id="cardText"></div>
         </div>
@@ -4421,6 +4525,27 @@ function renderCard(card){
     document.querySelectorAll('.timer-dur-btn').forEach(b=>{
       b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
     });
+    /* Режим «Правда/Действие» — показываем кнопки выбора и прячем текст до выбора */
+    const tdRow = document.getElementById('tdChoiceRow');
+    const typeRow = el.querySelector('.card-type-row');
+    const cardBody = document.getElementById('cardBody');
+    if(state.gameType === 'td'){
+      tdRow.style.display = 'flex';
+      typeRow.style.display = 'none';
+      cardBody.style.display = 'none';
+      tdRow.querySelectorAll('.td-choice-btn').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          tdRow.style.display = 'none';
+          typeRow.style.display = '';
+          cardBody.style.display = '';
+          drawCardWithType(b.dataset.type);
+        });
+      });
+    } else {
+      tdRow.style.display = 'none';
+      typeRow.style.display = '';
+      cardBody.style.display = '';
+    }
     fitTextToContainer(
       document.getElementById('cardBody'),
       document.getElementById('cardText'),
@@ -4449,7 +4574,11 @@ function nextTurn(completed){
   }
   saveState();
   updateTurnUI();
-  drawCard();
+  if(state.gameType === 'td'){
+    renderTdChoiceCard();
+  } else {
+    drawCard();
+  }
 }
 
 document.getElementById('doneBtn').addEventListener('click', ()=>{
