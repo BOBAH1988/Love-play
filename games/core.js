@@ -4380,8 +4380,8 @@ function renderCard(card){
           <div class="timer-controls">
             <div class="timer-display" id="timerDisplay">${formatTime(timerDuration)}</div>
             <button type="button" class="timer-btn" id="timerBtn">▶ Старт</button>
-            <button type="button" class="timer-btn card-fav-btn" id="cardFavoriteBtn" aria-label="В избранное">☆</button>
-            <button type="button" class="card-hot-btn" id="cardLevelUpBtn" aria-label="Горячее">🔥</button>
+            <button type="button" class="timer-btn card-fav-btn" id="cardFavoriteBtn" title="Добавить в избранное" aria-label="Добавить в избранное">☆</button>
+            <button type="button" class="card-hot-btn" id="cardLevelUpBtn" title="Сделать задание горячее" aria-label="Сделать задание горячее">🔥</button>
           </div>
         </div>
       </div>
