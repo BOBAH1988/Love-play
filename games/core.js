@@ -5799,7 +5799,8 @@ function buildUserCardsExportText(){
   });
   return `// cards_fants_users.js — задания, добавленные через приложение.\n// Замените этот файл в репозитории (GitHub), чтобы сохранить их навсегда.\nconst USER_CARDS = [\n${lines.join('\n')}\n];`;
 }
-document.getElementById('exportCardsBtn').addEventListener('click', ()=>{
+const exportCardsBtnEl = document.getElementById('exportCardsBtn');
+if(exportCardsBtnEl) exportCardsBtnEl.addEventListener('click', ()=>{
   const items = (state.customCards||[]).filter(c=>!c.deleted);
   if(items.length===0){
     showToast('Нет своих заданий для скачивания');
@@ -5833,10 +5834,14 @@ function parseCardsFromText(text){
   });
   return cards;
 }
-document.getElementById('importCardsBtn').addEventListener('click', ()=>{
-  document.getElementById('importCardsInput').click();
-});
-document.getElementById('importCardsInput').addEventListener('change', (e)=>{
+const importCardsBtnEl = document.getElementById('importCardsBtn');
+if(importCardsBtnEl){
+  importCardsBtnEl.addEventListener('click', ()=>{
+    document.getElementById('importCardsInput').click();
+  });
+}
+const importCardsInputEl = document.getElementById('importCardsInput');
+if(importCardsInputEl) importCardsInputEl.addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
