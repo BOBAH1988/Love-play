@@ -2325,12 +2325,22 @@
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelUpBtn{display:none;}
   .card-hot-btn{position:absolute; left:18px; bottom:10px; width:44px; height:44px;
     padding:0; border-radius:50%; font-size:26px; line-height:1; margin:0;
-    background:rgba(255,255,255,.14); border:none; cursor:pointer; color:#fff;}
+    background:rgba(255,255,255,.14); border:none; cursor:pointer; color:#fff; z-index:5;}
   .card-hot-btn:disabled{opacity:.4; cursor:default;}
   .card-hot-btn:active{transform:scale(.96);}
+  /* Кастомные подсказки для ⭐ и 🔥 — работают и на touch (:active), и на hover */
+  [data-tt]::after{
+    content:attr(data-tt);
+    position:absolute; bottom:110%; left:50%; transform:translateX(-50%) scale(.9);
+    background:rgba(0,0,0,.85); color:#fff; font-size:12px; font-weight:600;
+    padding:5px 10px; border-radius:8px; white-space:nowrap;
+    opacity:0; pointer-events:none; transition:opacity .15s, transform .15s;
+    z-index:100;
+  }
+  [data-tt]:hover::after, [data-tt]:active::after{opacity:1; transform:translateX(-50%) scale(1);}
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card{position:relative;}
   .card-fav-btn{position:absolute; right:18px; bottom:10px; width:44px; height:44px;
-    padding:0; border-radius:50%; font-size:22px; line-height:1; margin:0;}
+    padding:0; border-radius:50%; font-size:22px; line-height:1; margin:0; z-index:5;}
   .card-fav-btn.active{background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00;}
   /* В «Фантах» строка типа карточки: слева пилюля «Правда/Действие», справа —
      «До след. уровня» (только фанты — в П/Д и таймере строка остаётся по центру). */
