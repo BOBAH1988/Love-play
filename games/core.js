@@ -4363,8 +4363,8 @@ function renderCard(card){
           </div>
         </div>
         <div class="card-type-row">
-          <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
           <span class="card-level-progress" id="cardLevelProgress"></span>
+          <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
         </div>
         <div class="card-body" id="cardBody">
           <div class="card-text" id="cardText"></div>
