@@ -448,6 +448,22 @@ document.getElementById('importDataInput').addEventListener('change', (e)=>{
 // только переключение, какой из 4 блоков внутри него показан.
 const SETUP_VIEW_IDS = ['homeView','twoPlayerView','companyView','kidsView','businessView','soloView','learningView'];
 function showSetupView(name){
+  // ФИКС критического бага «исчезли все игры в группе»: флаг inProgress мог
+  // застревать после выхода из игры (не все exit-функции его сбрасывали) и
+  // навсегда прятал список игр группы. Переход пользователя по меню — верный
+  // признак, что активной игры больше нет: сбрасываем устаревший флаг.
+  if(state.inProgress && !state.pausedMode){
+    state.inProgress = false;
+    saveState();
+  }
+  // Также принудительно возвращаем видимость всем спискам игр групп — их мог
+  // спрятать inline display:none из updateResumeUI при прежней (багованной)
+  // логике; повторный показ здесь гарантирует, что в любую группу всегда
+  // можно зайти и увидеть её игры.
+  ['gameSelectField','partyGameSelectField','kidsGameSelectField','soloGameSelectList','businessGameSelectField'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = '';
+  });
   SETUP_VIEW_IDS.forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.classList.toggle('section-open', id === name);
@@ -1840,6 +1856,18 @@ const PAUSE_MENU_TITLES = {
    passionPass: '🎀 Карта страсти',
    shop: '🛍️ Магазин',
 };
+// Группа, к которой относится игра на паузе (для видимости списков игр и
+// выбора блока при возобновлении). Единый источник истины: сюда включены ВСЕ
+// pausedMode. Возвращает 'party' | 'kids' | 'solo' | 'business' | 'two' | null.
+function getPausedGroup(){
+  const pm = state.pausedMode;
+  if(!pm) return null;
+  if(['krokodil','partyFants','partyTd','famZnayu','lucky','partyQuiz','partyHangman','partyRoulette'].includes(pm)) return 'party';
+  if(['kidsMemory','kidsTd','kidsC4','kidsQuiz','kidsSaper','kidsKrokodil'].includes(pm)) return 'kids';
+  if(['soloBs','soloC4','soloQuiz'].includes(pm)) return 'solo';
+  if(['shop','businessLemonade'].includes(pm)) return 'business';
+  return 'two';
+}
 function updateResumeUI(){
   const pauseModal = document.getElementById('pauseMenuModal');
   // Базовая парная игра "Фанты" (через общую pauseGame()/#pauseBtn) теперь
@@ -1856,23 +1884,32 @@ function updateResumeUI(){
   // показывать выбор другой игры и резервную копию — только сама пауза.
   // Исключения: если на паузе игра именно из этого блока (company/kids/solo/
   // twoPlayer), список игр остаётся виден (там же список игроков/кнопки).
-  const isPartyPause = state.pausedMode === 'krokodil' || state.pausedMode === 'partyFants' || state.pausedMode === 'partyTd' || state.pausedMode === 'famZnayu' || state.pausedMode === 'lucky' || state.pausedMode === 'partyQuiz';
-  const isKidsPause = state.pausedMode === 'kidsMemory' || state.pausedMode === 'kidsTd' || state.pausedMode === 'kidsC4' || state.pausedMode === 'kidsQuiz' || state.pausedMode === 'kidsSaper';
-  const isSoloPause = state.pausedMode === 'soloBs' || state.pausedMode === 'soloC4';
-  const isBusinessPause = state.pausedMode === 'shop';
-  const isTwoPlayerPause = !!state.pausedMode && !isPartyPause && !isKidsPause && !isSoloPause && !isBusinessPause;
+  // ВАЖНО (критический баг «исчезли все игры в группе»): группа паузы теперь
+  // определяется ЕДИНЫМ helper getPausedGroup(), куда включены ВСЕ игры с
+  // паузой. Раньше списки is*Pause не знали о businessLemonade, kidsKrokodil,
+  // soloQuiz, partyHangman — пауза такой игры считалась «двухместной»,
+  // прятала список бизнес/детских игр и открывала не тот блок. Кроме того,
+  // условие «inProgress && …» прятало списки ВО ВСЕХ группах, пока флаг
+  // inProgress застревал после выхода из игры.
+  const pausedGroup = (typeof getPausedGroup === 'function') ? getPausedGroup() : null;
+  const isPartyPause = pausedGroup === 'party';
+  const isKidsPause = pausedGroup === 'kids';
+  const isSoloPause = pausedGroup === 'solo';
+  const isBusinessPause = pausedGroup === 'business';
+  const isTwoPlayerPause = pausedGroup === 'two';
   const gameSelectField = document.getElementById('gameSelectField');
-  if(gameSelectField) gameSelectField.style.display = (state.inProgress && !isTwoPlayerPause) ? 'none' : '';
+  if(gameSelectField) gameSelectField.style.display = isTwoPlayerPause ? 'none' : '';
   const partyGameSelectField = document.getElementById('partyGameSelectField');
-  if(partyGameSelectField) partyGameSelectField.style.display = (state.inProgress && !isPartyPause) ? 'none' : '';
+  if(partyGameSelectField) partyGameSelectField.style.display = '';
   const kidsGameSelectField = document.getElementById('kidsGameSelectField');
-  if(kidsGameSelectField) kidsGameSelectField.style.display = (state.inProgress && !isKidsPause) ? 'none' : '';
+  if(kidsGameSelectField) kidsGameSelectField.style.display = '';
   const soloGameSelectList = document.getElementById('soloGameSelectList');
-  if(soloGameSelectList) soloGameSelectList.style.display = (state.inProgress && !isSoloPause) ? 'none' : '';
-  // Магазин — единственная бизнес-игра с паузой: пока он на паузе, список
-  // бизнес-игр остаётся виден (там же кнопки «Продолжить»/«Закончить»).
+  if(soloGameSelectList) soloGameSelectList.style.display = '';
+  // Список бизнес-игр (в нём же — список игроков) виден всегда, когда блок
+  // открыт: пауза Магазина/Лимонадного ларька не должна прятать его, а
+  // застрявший inProgress больше не влияет на списки групп.
   const businessGameSelectField = document.getElementById('businessGameSelectField');
-  if(businessGameSelectField) businessGameSelectField.style.display = (state.inProgress && !isBusinessPause) ? 'none' : '';
+  if(businessGameSelectField) businessGameSelectField.style.display = '';
   const backupField = document.getElementById('backupField');
   if(backupField) backupField.style.display = state.inProgress ? 'none' : '';
   // Пока игра компании на паузе — заголовок и описание блока меняются на
