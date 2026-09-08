@@ -27,7 +27,7 @@ const BIZ_OBS_TYPES = [
 let bizObsAnswered = false;
 
 function bizObsPlayersList(){
-  return (state.businessPlayers && state.businessPlayers.length >= 2) ? state.businessPlayers : ['Игрок 1','Игрок 2'];
+  return (state.businessPlayers && state.businessPlayers.length >= 2) ? state.businessPlayers : [businessDefaultName(0), businessDefaultName(1)];
 }
 function bizObsFmtMoney(n){
   const rounded = Math.round(n);
@@ -184,7 +184,7 @@ function bizObsUpdateScoreUI(){
     });
   }
   const turnLabel = document.getElementById('bizObsTurnLabel');
-  if(turnLabel) turnLabel.textContent = 'Отвечает: ' + (players[idx] || 'Игрок 1');
+  if(turnLabel) turnLabel.textContent = 'Отвечает: ' + (players[idx] || businessDefaultName(idx));
 }
 function bizObsUpdateProgressBar(){
   const fill = document.getElementById('bizObsProgressFill');
@@ -206,7 +206,7 @@ function bizObsDrawQueue(){
 function bizObsShowHandoffCard(){
   const players = bizObsPlayersList();
   const idx = state.bizObsCurrentPlayerIndex || 0;
-  const name = players[idx] || 'Игрок 1';
+  const name = players[idx] || businessDefaultName(idx);
   const row = document.getElementById('bizObsHandoffRow');
   if(row) row.style.display = 'flex';
   fadeSwapEl('bizObsCard', (el)=>{

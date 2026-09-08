@@ -17,7 +17,8 @@ const STORAGE_KEY = 'couple-game-state-v1';
 // Дефолтные имена игроков «Игр для компании» — порядковые: «Первый», «Второй», …
 // до «Десятый» (список ограничен 10). Используется renderPartyPlayers() в
 // games/krokodil.js и всеми играми компании как фолбэк вместо прежних «Игрок N».
-// Списки «Игр с детьми» (kidsPlayers) и бизнес-игр (businessPlayers) остаются «Игрок N».
+// Списки «Игр с детьми» (kidsPlayers) и бизнес-игр (businessPlayers) имеют
+// собственные тематические дефолты (Родитель/Ребёнок и Предприниматель/…).
 const PARTY_PLAYER_DEFAULTS = ['Первый','Второй','Третий','Четвёртый','Пятый','Шестой','Седьмой','Восьмой','Девятый','Десятый'];
 function partyDefaultName(idx){
   idx = parseInt(idx, 10);
@@ -32,6 +33,13 @@ function kidsDefaultName(idx){
   if(idx === 2) return 'Второй родитель';
   if(idx === 3) return 'Второй ребёнок';
   return (idx + 1) + '-й ребёнок';
+}
+// Дефолты бизнес-игр: тематические должности вместо «Игрок N».
+const BUSINESS_PLAYER_DEFAULTS = ['Предприниматель','Управляющий','Коммерсант','Директор','Финансист','Инвестор','Маркетолог','Логист','Аудитор','Банкир'];
+function businessDefaultName(idx){
+  idx = parseInt(idx, 10);
+  if(isNaN(idx) || idx < 0) idx = 0;
+  return BUSINESS_PLAYER_DEFAULTS[idx] || ('Игрок ' + (idx + 1));
 }
 let state = {
   name1:'', name2:'', activeLevels:[3,4,5,6],
@@ -154,7 +162,7 @@ let state = {
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании"
-  businessPlayers:['Игрок 1','Игрок 2'],
+  businessPlayers:[businessDefaultName(0), businessDefaultName(1)],
   // Оцени бизнес (тренажёр маржи/наценки/точки безубыточности, Уровень 2
   // "Наблюдатель") — вопросы генерируются на лету, игроки из businessPlayers
   // отвечают по очереди bizObsQuestionCount вопросов подряд, см. games/business-observer.js.
@@ -307,6 +315,16 @@ function loadState(){
       (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
         ? kidsDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
         : (n || kidsDefaultName(i)));
+  }
+  // Миграция имён «Бизнес игр»: прежние «Игрок 1/2/...» заменяются на
+  // тематические должности (Предприниматель/Управляющий/...). Касается
+  // ТОЛЬКО имён, в точности совпадающих со старыми дефолтами — введённые
+  // вручную имена не трогаем.
+  if(Array.isArray(state.businessPlayers)){
+    state.businessPlayers = state.businessPlayers.map((n,i)=>
+      (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
+        ? businessDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
+        : (n || businessDefaultName(i)));
   }
   // «Знаю тебя»: та же замена для семей — старый дефолт каждой семьи был
   // «Игрок 1/Игрок 2», новый — продолжение общего ряда (Семья 2 →
@@ -557,7 +575,7 @@ renderKidsPlayers();
 // renderKidsPlayers, но отдельное состояние (businessPlayers).
 function renderBusinessPlayers(){
   if(!state.businessPlayers || state.businessPlayers.length < 2){
-    state.businessPlayers = ['Игрок 1','Игрок 2'];
+    state.businessPlayers = [businessDefaultName(0), businessDefaultName(1)];
   }
   const wrap = document.getElementById('businessPlayersList');
   if(!wrap) return;
@@ -567,11 +585,11 @@ function renderBusinessPlayers(){
     row.className = 'krokodil-player-row';
     const input = document.createElement('input');
     input.type = 'text';
-    input.maxLength = 14;
-    input.placeholder = 'Игрок ' + (idx + 1);
+    input.maxLength = 16;
+    input.placeholder = businessDefaultName(idx);
     input.value = name;
     input.addEventListener('input', ()=>{
-      state.businessPlayers[idx] = input.value.trim() || ('Игрок ' + (idx + 1));
+      state.businessPlayers[idx] = input.value.trim() || businessDefaultName(idx);
       saveState();
     });
     row.appendChild(input);
@@ -595,9 +613,9 @@ function renderBusinessPlayers(){
   if(addBtn) addBtn.style.display = state.businessPlayers.length >= 10 ? 'none' : '';
 }
 document.getElementById('businessAddPlayerBtn').addEventListener('click', ()=>{
-  if(!state.businessPlayers) state.businessPlayers = ['Игрок 1','Игрок 2'];
+  if(!state.businessPlayers) state.businessPlayers = [businessDefaultName(0), businessDefaultName(1)];
   if(state.businessPlayers.length >= 10) return;
-  state.businessPlayers.push('Игрок ' + (state.businessPlayers.length + 1));
+  state.businessPlayers.push(businessDefaultName(state.businessPlayers.length));
   saveState();
   renderBusinessPlayers();
 });
@@ -1427,7 +1445,7 @@ function performFullReset(){
    // подтверждения ("имена команд… будут сброшены"). Возраст ребёнка (kidsAge)
    // остается — это настройка, а не прогресс.
    state.kidsPlayers = ['Родитель','Ребёнок'];
-   state.businessPlayers = ['Игрок 1','Игрок 2'];
+   state.businessPlayers = [businessDefaultName(0), businessDefaultName(1)];
    state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
   state.gameMode = 'hot';
   state.activeLevels = [3,4,5,6];
