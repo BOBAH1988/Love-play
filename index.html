@@ -2317,6 +2317,11 @@
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
   /* В «Фантах» кнопка «Пауза» скрыта — выход/пауза работает по стрелке «назад». */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #pauseBtn{display:none;}
+  /* В «Фантах» избранное — кнопка ⭐ внутри карточки (справа от таймера),
+     плавающая кнопка снизу скрыта. */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #favoriteBtn{display:none;}
+  .card-fav-btn{flex:0 0 auto; min-width:52px; padding:0 12px;}
+  .card-fav-btn.active{background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00;}
   /* В «Фантах» строка типа карточки: слева пилюля «Правда/Действие», справа —
      «До след. уровня» (только фанты — в П/Д и таймере строка остаётся по центру). */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row{
@@ -6652,7 +6657,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260914g"></script>
+<script src="games/core.js?v=20260914h"></script>
 <script src="games/twister.js?v=20260913e"></script>
 <script src="games/party-hangman.js?v=20260830u"></script>
 <script src="games/solo-quiz.js?v=20260830u"></script>

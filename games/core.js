@@ -4378,6 +4378,7 @@ function renderCard(card){
           <div class="timer-controls">
             <div class="timer-display" id="timerDisplay">${formatTime(timerDuration)}</div>
             <button type="button" class="timer-btn" id="timerBtn">▶ Старт</button>
+            <button type="button" class="timer-btn card-fav-btn" id="cardFavoriteBtn" aria-label="В избранное">☆</button>
           </div>
         </div>
       </div>
@@ -4385,6 +4386,7 @@ function renderCard(card){
     resetTimer();
     updateLevelProgressUI();
     document.getElementById('timerBtn').addEventListener('click', toggleTimer);
+    document.getElementById('cardFavoriteBtn').addEventListener('click', toggleFavorite);
     document.querySelectorAll('.timer-dur-btn').forEach(b=>{
       b.addEventListener('click', ()=>selectTimerDuration(parseInt(b.dataset.sec,10), b));
     });
@@ -5653,6 +5655,8 @@ function updateFavoriteBtn(){
   const isFav = state.favoriteIndexes.includes(currentCard.idx);
   btn.textContent = isFav ? '⭐' : '☆';
   btn.classList.toggle('active', isFav);
+  const cardBtn = document.getElementById('cardFavoriteBtn');
+  if(cardBtn){ cardBtn.textContent = isFav ? '⭐' : '☆'; cardBtn.classList.toggle('active', isFav); }
 }
 function toggleFavorite(){
   if(isPlaceholderMode()){
