@@ -1,56 +1,82 @@
 // games/wish-roulette-cards.js — Карточки заданий для «Рулетки желаний»
-// 4 уровня: Сближение, Разогрев, Откровенно 18+, Фантазии
+// 4 уровня, по 37 заданий в каждом (всего 148 заданий):
+// - Уровень 1 (Сближение) ↔ Фанты уровень 3
+// - Уровень 2 (Разогрев) ↔ Фанты уровень 4  
+// - Уровень 3 (Откровенно 18+) ↔ Фанты уровень 5
+// - Уровень 4 (Фантазии) ↔ Фанты уровень 6
+// Каждое задание соответствует номеру от 0 до 36 в рулетке
 
 (function(){
+  const fantsCards = (typeof CARDS !== 'undefined' && Array.isArray(CARDS)) ? CARDS : [];
+  
+  // Берем только нужные уровни из Fantы
+  const fantsLevel3 = fantsCards.filter(c => c.level === 3); // Сближение (Уровень 1)
+  const fantsLevel4 = fantsCards.filter(c => c.level === 4); // Разогрев (Уровень 2)
+  const fantsLevel5 = fantsCards.filter(c => c.level === 5); // Откровенно 18+ (Уровень 3)
+  const fantsLevel6 = fantsCards.filter(c => c.level === 6); // Фантазии (Уровень 4)
+
+  if(fantsLevel3.length === 0 || fantsLevel4.length === 0 || fantsLevel5.length === 0 || fantsLevel6.length === 0) {
+    window.WISH_ROULETTE_CARDS = [];
+    return;
+  }
+
+  // Функция для создания 37 карт из исходного массива
+  function createLevelCards(sourceCards, targetLevel, levelName) {
+    const result = [];
+    const sourceCount = sourceCards.length;
+
+    for(let i = 0; i < 37; i++) {
+      const sourceIndex = i % sourceCount;
+      const sourceCard = sourceCards[sourceIndex];
+
+      let mappedText = sourceCard.text;
+      let mappedType = sourceCard.type;
+
+      if(sourceCard.for) {
+        mappedText = sourceCard.text;
+        mappedType = sourceCard.type;
+      }
+
+      result.push({
+        level: targetLevel,      // 1, 2, 3 или 4 (номер в рулетке)
+        type: mappedType,
+        text: mappedText,
+        number: i,              // Номер в рулетке (0-36)
+        originalName: sourceCard.text.split(' ')[0], // Первое слово в тексте
+        originalLevel: sourceCard.level // Уровень в Fantы
+      });
+    }
+
+    return result;
+  }
+
+  // Создаем 4 уровня по 37 карточек в каждом
+  const levelCards = {
+    level1: createLevelCards(fantsLevel3, 1, 'Сближение'),      // 37 карт уровня 1
+    level2: createLevelCards(fantsLevel4, 2, 'Разогрев'),      // 37 карт уровня 2
+    level3: createLevelCards(fantsLevel5, 3, 'Откровенно 18+'), // 37 карт уровня 3
+    level4: createLevelCards(fantsLevel6, 4, 'Фантазии'),       // 37 карт уровня 4
+  };
+
+  // Объединяем все уровни в единый массив для игры
   const WISH_ROULETTE_CARDS = [
-    /* === Уровень 1: Сближение === */
-    {level:1, type:'truth', text:'Какое твоё самое яркое воспоминание о нашем первом свидании?'},
-    {level:1, type:'truth', text:'Что тебе нравится во мне больше всего?'},
-    {level:1, type:'dare', text:'Посмотри мне в глаза 30 секунд без слов'},
-    {level:1, type:'dare', text:'Обними меня крепко на 20 секунд'},
-    {level:1, type:'truth', text:'Когда ты впервые понял(а), что я особенный(ая)?'},
-    {level:1, type:'dare', text:'Шепни мне на ухо что-нибудь нежное'},
-    {level:1, type:'truth', text:'Какая наша общая традиция тебе дороже всего?'},
-    {level:1, type:'dare', text:'Станцуй со мной медленный танец без музыки 30 секунд'},
-    {level:1, type:'truth', text:'О чём ты мечтаешь вместе со мной?'},
-    {level:1, type:'dare', text:'Поцелуй меня так, как хочешь прямо сейчас'},
-
-    /* === Уровень 2: Разогрев === */
-    {level:2, type:'truth', text:'Какая моя привычка тебя больше всего заводит?'},
-    {level:2, type:'truth', text:'Вспомни самый горячий момент между нами'},
-    {level:2, type:'dare', text:'Сними с себя одну вещь — на выбор партнёра'},
-    {level:2, type:'dare', text:'Погладь меня по спине 20 секунд'},
-    {level:2, type:'truth', text:'Где на моём теле твоё любимое место?'},
-    {level:2, type:'dare', text:'Поцелуй меня в шею'},
-    {level:2, type:'truth', text:'Расскажи, что бы ты хотел(а) попробовать в постели?'},
-    {level:2, type:'dare', text:'Положи руку на моё бедро и не убирай 30 секунд'},
-    {level:2, type:'truth', text:'Что тебя заводит больше — слова или прикосновения?'},
-    {level:2, type:'dare', text:'Сделай мне массаж плеч 1 минуту'},
-
-    /* === Уровень 3: Откровенно 18+ === */
-    {level:3, type:'truth', text:'Назови свою самую горячую фантазию'},
-    {level:3, type:'truth', text:'В каком месте тебе больше всего нравится целоваться?'},
-    {level:3, type:'dare', text:'Прошепчи мне пошлость на ухо'},
-    {level:3, type:'dare', text:'Проведи рукой по моему телу так, чтобы я застонал(а)'},
-    {level:3, type:'truth', text:'Какая эротическая сцена из фильма тебе запомнилась?'},
-    {level:3, type:'dare', text:'Сними с меня одну вещь зубами'},
-    {level:3, type:'truth', text:'Расскажи о самом смелом сексуальном опыте'},
-    {level:3, type:'dare', text:'Положи мою руку туда, где хочешь'},
-    {level:3, type:'truth', text:'Что бы ты хотел(а), чтобы я сегодня сделал(а)?'},
-    {level:3, type:'dare', text:'Станцуй стриптиз 30 секунд — медленно'},
-
-    /* === Уровень 4: Фантазии === */
-    {level:4, type:'truth', text:'Опиши свой идеальный вечер вдвоём'},
-    {level:4, type:'truth', text:'Если бы мы могли заняться любовью где угодно — где?'},
-    {level:4, type:'dare', text:'Разрешь мне привязать тебя — или привяжи меня'},
-    {level:4, type:'dare', text:'Исполни моё желание — загадай или загадаю я'},
-    {level:4, type:'truth', text:'Какая твоя самая дикая сексуальная фантазия?'},
-    {level:4, type:'dare', text:'Сделай фото наших поцелуев — или селфи вдвоём'},
-    {level:4, type:'truth', text:'Расскажи, что бы ты хотел(а) попробовать из порно?'},
-    {level:4, type:'dare', text:'Поменяемся ролями — ты главный(ая) до конца раунда'},
-    {level:4, type:'truth', text:'Назови 3 слова, которые описывают наш секс'},
-    {level:4, type:'dare', text:'Придумай нам сексуальную игру и сыграй прямо сейчас'}
+    ...levelCards.level1,
+    ...levelCards.level2,
+    ...levelCards.level3,
+    ...levelCards.level4
   ];
 
-  window.WISH_ROULETTE_CARDS = WISH_ROULETTE_CARDS;
+  // Дополнительная структура для быстрого доступа по уровням
+  const WISH_ROULETTE_CARDS_BY_LEVEL = {
+    1: levelCards.level1,
+    2: levelCards.level2,
+    3: levelCards.level3,
+    4: levelCards.level4,
+  };
+
+  // Сортируем по номеру в рулетке
+  const sortedCards = WISH_ROULETTE_CARDS.sort((a, b) => a.number - b.number);
+
+  window.WISH_ROULETTE_CARDS = sortedCards;
+  window.WISH_ROULETTE_CARDS_BY_LEVEL = WISH_ROULETTE_CARDS_BY_LEVEL;
 })();
