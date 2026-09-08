@@ -2308,6 +2308,11 @@
   /* ---- Правда или действие ---- */
   /* .td-score-row убран — теперь используется krokodil-score-row.two-player */
   .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd;}
+  /* Фанты (парные): метка показывает «💘 Фанты» вместо «Ходит: …» — крупнее
+     вдвое, как заголовок. Строку «До след. уровня» (#levelProgress) опускаем
+     ниже, чтобы не залезала под увеличенную метку. */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .td-turn-label{font-size:28px;}
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{top:calc(12px + env(safe-area-inset-top) + 36px);}
   /* Turn-label — ПЕРВЫЙ элемент экрана (Фанты, Правда/Действие, Крокодил, Таймер,
      «Знаю тебя», kids-игры и т.д.) — парит в самой верхней полосе: по центру между
      FAB-кнопками «←»/«☰» (тот же top:12px + safe-area, что и у кнопок) на всех
