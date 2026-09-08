@@ -2335,6 +2335,23 @@
     background:rgba(255,255,255,.14); border:none; cursor:pointer; color:#fff; z-index:5;}
   .card-hot-btn:disabled{opacity:.4; cursor:default;}
   .card-hot-btn:active{transform:scale(.96);}
+  /* Рулетка желаний */
+  .wr-level-label{text-align:center; font-size:14px; font-weight:700; color:#ffd23f; margin:6px 0;}
+  .wr-wheel{display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-width:360px; margin:0 auto 8px;}
+  .wr-cell{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); border-radius:8px;
+    padding:6px 2px; text-align:center; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .wr-cell.active{border-color:#ffd23f; background:rgba(255,210,63,.2);}
+  .wr-cell-type{font-size:14px;}
+  .wr-cell-text{font-size:9px; color:#ddd; line-height:1.1; word-break:break-word;}
+  .wr-result{text-align:center; font-size:15px; font-weight:600; min-height:40px; padding:6px; margin:4px 0;
+    background:rgba(0,0,0,.2); border-radius:12px;}
+  .wr-result.truth{color:#9fb3ff;}
+  .wr-result.dare{color:#ff9fb0;}
+  .wr-result.show{animation:fadeIn .3s;}
+  .wr-actions{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px;}
+  .wr-actions .btn{flex:1; min-width:80px; max-width:140px;}
+  .wr-summary-winner{font-size:18px; font-weight:700; text-align:center; margin:10px 0;}
+  .wr-summary-scores{display:flex; justify-content:space-around; font-size:15px; margin-bottom:12px;}
   /* Кастомные подсказки для ⭐ и 🔥 — работают и на touch (:active), и на hover */
   [data-tt]::after{
     content:attr(data-tt);
@@ -3023,7 +3040,7 @@
           <button type="button" class="btn btn-menu-item" id="gameQuizBtn"><span class="menu-icon">🎯</span> Викторина</button>
           <button type="button" class="btn btn-menu-item" id="gameIdeasBtn"><span class="menu-icon">💬</span> Ответы на вопросы</button>
           <button type="button" class="btn btn-menu-item" id="gameFantyBtn"><span class="menu-icon">💘</span> Фанты</button>
-          <button type="button" class="btn btn-menu-item" id="gameTdBtn"><span class="menu-icon">❓</span> Правда/Действие</button>
+          <button type="button" class="btn btn-menu-item" id="gameWrBtn"><span class="menu-icon">🎡</span> Рулетка желаний</button>
           <button type="button" class="btn btn-menu-item" id="gameZnayuBtn"><span class="menu-icon">💑</span> Тайные ответы</button>
           <button type="button" class="btn btn-menu-item" id="gameWishlistBtn"><span class="menu-icon">💌</span> Твои желания</button>
            <button type="button" class="btn btn-menu-item" id="gameBingoBtn"><span class="menu-icon">🎱</span> Ваше бинго</button>
@@ -4884,6 +4901,48 @@
         </div>
 </section>
 
+  <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: НАСТРОЙКА ===== -->
+  <section id="wrSetup" class="screen">
+    <h1 class="title">🎡 Рулетка желаний</h1>
+    <div class="subtitle">Крутите рулетку и выполняйте выпавшие задания</div>
+
+    <div class="field">
+      <label>Уровень</label>
+      <div class="levels" id="wrSetupLevels"></div>
+    </div>
+
+    <button class="btn btn-primary" id="wrSetupStartBtn">Начать</button>
+
+    <button class="btn btn-secondary" id="wrSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: ИГРА ===== -->
+  <section id="wrGame" class="screen">
+    <div class="td-turn-label" id="wrTurnLabel">Крутит: Игрок 1</div>
+    <div class="krokodil-score-row two-player" id="wrScoreRow">
+      <span id="wrScore1" class="krokodil-score-item">Игрок 1: 0</span>
+      <span id="wrScore2" class="krokodil-score-item">Игрок 2: 0</span>
+    </div>
+    <div class="wr-level-label" id="wrLevelLabel">💕 Сближение</div>
+    <div class="wr-wheel" id="wrWheel"></div>
+    <div class="wr-result" id="wrResult"></div>
+    <div class="wr-actions">
+      <button type="button" class="btn btn-primary" id="wrSpinBtn">🎰 Крутить</button>
+      <button type="button" class="btn btn-secondary" id="wrDoneBtn">✅ Выполнено</button>
+      <button type="button" class="btn btn-secondary" id="wrSkipBtn">🚫 Отказ</button>
+      <button type="button" class="btn btn-secondary btn-pause" id="wrPauseBtn">Пауза</button>
+    </div>
+  </section>
+
+  <!-- ===== РУЛЕТКА ЖЕЛАНИЙ: ИТОГИ ===== -->
+  <div class="modal-overlay" id="wrSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div id="wrSummaryList"></div>
+      <button class="btn btn-primary" id="closeWrSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
   <!-- ===== СЕКС-БИНГО: ИГРА ===== -->
   <section id="bingoGame" class="screen">
     <h1 class="title" style="font-size:20px;">🎱 Ваше бинго</h1>
@@ -6707,6 +6766,8 @@
 <script src="games/kids-battleship.js?v=20260913a"></script>
 <script src="games/kids-connect4.js?v=20260913a"></script>
 <script src="games/solo-battleship.js?v=20260830u"></script>
+<script src="games/wish-roulette-cards.js?v=20260914a"></script>
+<script src="games/wish-roulette.js?v=20260914a"></script>
 <script src="games/truth-dare.js?v=20260913a"></script>
 <script src="games/bingo.js?v=20260913b"></script>
 <script src="games/timer-game.js?v=20260913b"></script>

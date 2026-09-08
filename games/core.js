@@ -50,7 +50,9 @@ let state = {
   levelCap:3, usedIndexes:[], hiddenIndexes:[],
   muted:false, autoSpeak:true, inProgress:false, completedCount:0, skippedCount:0,
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
-  gameType:'fanty', /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правда/Действие перед ходом */
+  gameType:'fanty',
+  /* Рулетка желаний */
+  wrSelectedLevel:1, wrScore1:0, wrScore2:0, /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правда/Действие перед ходом */
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
   photoOrderMode:false, photoSeqIndex:{},
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false, videoSoundOn:false,
@@ -1188,10 +1190,10 @@ document.getElementById('gameIdeasBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToIdeasGame();
 });
-document.getElementById('gameTdBtn').addEventListener('click', ()=>{
+document.getElementById('gameWrBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToTdSetup();
+  goToWrSetup();
 });
 document.getElementById('gameBingoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
@@ -1346,6 +1348,10 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'partyRoulette'){
     resumePartyRouletteGame();
+    return;
+  }
+  if(state.pausedMode === 'wishRoulette'){
+    resumeWrGame();
     return;
   }
   if(state.pausedMode === 'kidsMemory'){
@@ -1875,6 +1881,7 @@ const PAUSE_MENU_TITLES = {
   famZnayu: '🧠 Знаю тебя',
   lucky: '🎫 Счастливый билет',
   partyRoulette: '🎰 Рулетка',
+  wishRoulette: '🎡 Рулетка желаний',
   kidsMemory: '🧠 Мемори',
   kidsTd: '🗣️ Правда/Действие',
   kidsC4: '🔴🟡 Четыре в ряд',
@@ -4685,6 +4692,11 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
   }
   if(state.pausedMode === 'partyRoulette'){
     finishPartyRouletteGame();
+    showToast('Игра завершена');
+    return;
+  }
+  if(state.pausedMode === 'wishRoulette'){
+    finishWrGame();
     showToast('Игра завершена');
     return;
   }
