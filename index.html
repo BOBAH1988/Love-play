@@ -2317,7 +2317,12 @@
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
   /* В «Фантах» строка типа карточки: слева пилюля «Правда/Действие», справа —
      «До след. уровня» (только фанты — в П/Д и таймере строка остаётся по центру). */
-  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row{justify-content:space-between; align-items:center;}
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row{
+    justify-content:space-between; align-items:center;
+    /* растягиваем строку на всю ширину карточки, компенсируя её padding
+       (20px/22px), чтобы «До след. уровня» была у самого левого края */
+    margin-left:-22px; margin-right:-22px; padding:0 10px;
+  }
   /* Пилюля «Правда/Действие» всегда прижата вправо, даже когда «До след.
      уровня» пуста (максимальный уровень) — иначе пилюля уезжает влево. */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row .type-pill{margin-left:auto;}
