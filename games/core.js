@@ -4375,10 +4375,10 @@ function renderTdChoiceCard(){
         </div>
         <div class="card-type-row">
           <span class="card-level-progress" id="cardLevelProgress"></span>
-          <span class="type-pill">Выберите правда или действие</span>
+          <span class="type-pill" style="visibility:hidden;">&nbsp;</span>
         </div>
         <div class="card-body" id="cardBody">
-          <div class="card-text" id="cardText">⬇️</div>
+          <div class="card-text" id="cardText">Выберите<br>правда или действие</div>
         </div>
         <div class="card-timer">
           <div class="timer-durations">
