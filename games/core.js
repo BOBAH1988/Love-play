@@ -1191,9 +1191,11 @@ document.getElementById('gameIdeasBtn').addEventListener('click', ()=>{
   goToIdeasGame();
 });
 document.getElementById('gameWrBtn').addEventListener('click', ()=>{
+  state.pausedMode = null;
+  state.inProgress = false;
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToWrGame();
+  goToWrSetup();
 });
 document.getElementById('gameBingoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;

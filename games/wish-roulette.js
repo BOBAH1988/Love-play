@@ -6,9 +6,39 @@
 const WISH_ROULETTE_WHEEL_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 const WISH_ROULETTE_RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 
+const WR_LEVELS = [
+  {id:1, name:'Сближение', icon:'💕', desc:'Нежные вопросы и лёгкие действия'},
+  {id:2, name:'Разогрев', icon:'🔥', desc:'Чуть смелее — прикосновения и намёки'},
+  {id:3, name:'Откровенно 18+', icon:'🔞', desc:'Откровенные вопросы и пошлые действия'},
+  {id:4, name:'Фантазии', icon:'✨', desc:'Исполнение желаний и ролевые игры'}
+];
+
 function wishColorOf(n){ if(n===0) return 'green'; return WISH_ROULETTE_RED.has(n)?'red':'black'; }
 function wishColorName(n){ const c=wishColorOf(n); return c==='red'?'красное':c==='black'?'чёрное':'зелёное(ноль)'; }
 function wishColorHex(n){ const c=wishColorOf(n); return c==='red'?'#e74c3c':c==='black'?'#fff':'#2ecc71'; }
+
+function wrLevelById(id){ return WR_LEVELS.find(l => l.id === id) || WR_LEVELS[0]; }
+
+function getCardsForLevel(level){
+  return (window.WISH_ROULETTE_CARDS || []).filter(c => c.level === level);
+}
+
+function wrRenderSetupLevels(){
+  const wrap = document.getElementById('wrSetupLevels');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  WR_LEVELS.forEach(l => {
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (state.wrSelectedLevel === l.id ? ' on' : '');
+    div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
+    div.addEventListener('click', () => { state.wrSelectedLevel = l.id; saveState(); wrRenderSetupLevels(); });
+    wrap.appendChild(div);
+  });
+}
+
+function goToWrSetup(){
+  if(typeof goToGameSetup === 'function') goToGameSetup('wrSetup', null, () => { wrRenderSetupLevels(); });
+}
 
 // ---- Анимация колеса (накапливающийся угол, всегда по часовой, min 3 оборота, плавное торможение) ----
 let wishWheelTotalRotation = 0;
@@ -20,6 +50,8 @@ let wishCurrentCard = null;
 function drawWishWheel(){
   const wheel = document.getElementById('wrWheel');
   if(!wheel) return;
+  const level = state.wrSelectedLevel || 1;
+  const cards = getCardsForLevel(level);
   const size = 480;
   const radius = size/2;
   const hole = 26;
@@ -32,6 +64,7 @@ function drawWishWheel(){
   const r = radius - 4;
   const segAngle = 360 / WISH_ROULETTE_WHEEL_ORDER.length;
   WISH_ROULETTE_WHEEL_ORDER.forEach((num,idx)=>{
+    const card = cards.find(c => c.number === num);
     const sa = idx*segAngle - 90;
     const ea = sa + segAngle;
     const x1 = cx+r*Math.cos(sa*Math.PI/180), y1 = cy+r*Math.sin(sa*Math.PI/180);
@@ -49,7 +82,7 @@ function drawWishWheel(){
     t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
     t.setAttribute('fill','#fff'); t.setAttribute('font-size','14'); t.setAttribute('font-weight','bold');
     t.setAttribute('transform',`rotate(${(ma+90)} ${tx} ${ty})`);
-    t.textContent = num;
+    t.textContent = card ? (card.type==='dare'?'🎯':'🤔') : num;
     svg.appendChild(t);
   });
   const center = document.createElementNS(svgNS,'circle');
@@ -123,7 +156,8 @@ function spinWishWheel(){
 }
 
 function pickRandomWishCard(){
-  const cards = window.WISH_ROULETTE_CARDS || [];
+  const level = state.wrSelectedLevel || 1;
+  const cards = getCardsForLevel(level);
   if(cards.length===0) return {text:'Задание не найдено',type:'truth'};
   return cards[Math.floor(Math.random()*cards.length)];
 }
@@ -135,7 +169,12 @@ function goToWrGame(){
   state.wishRouletteInProgress = true;
   state.wishCurrentCard = null;
   saveState();
-  showSection('wrGame');
+  document.getElementById('wrGame').classList.add('active');
+  const levelLabel = document.getElementById('wrLevelLabel');
+  if(levelLabel){
+    const lvl = wrLevelById(state.wrSelectedLevel || 1);
+    levelLabel.textContent = lvl.icon + ' ' + lvl.name;
+  }
   drawWishWheel();
   const resultEl = document.getElementById('wrSpinResult');
   if(resultEl) resultEl.textContent = '';
@@ -153,7 +192,7 @@ function goToWrGame(){
 function pauseWrGame(){
   saveState();
   (function m(){ const x=document.getElementById('wrSpinModal'); if(x) x.classList.remove('show'); })();
-  showSection('setup');
+  document.getElementById('setup').classList.add('active');
   if(typeof showPauseMenu === 'function') showPauseMenu('wishRoulette');
 }
 
@@ -161,7 +200,7 @@ function resumeWrGame(){
   state.pausedMode = 'wishRoulette';
   state.inProgress = true;
   saveState();
-  showSection('wrGame');
+  document.getElementById('wrGame').classList.add('active');
   const wheel = document.getElementById('wrWheel');
   if(!wheel || !wheel.querySelector('svg')){ drawWishWheel(); }
   else {
@@ -192,15 +231,21 @@ function exitWrGame(){
   delete state.wishRouletteInProgress;
   delete state.wishCurrentCard;
   saveState();
-  showSection('setup');
+  document.getElementById('setup').classList.add('active');
 }
 
 const wrSpinBtn = document.getElementById('wrSpinBtn');
-if(wrSpinBtn) wrSpinBtn.addEventListener('click',()=>{ goToWrGame(); spinWishWheel(); });
+if(wrSpinBtn) wrSpinBtn.addEventListener('click', spinWishWheel);
 const wrSpinDoneBtn = document.getElementById('wrSpinDoneBtn');
 if(wrSpinDoneBtn) wrSpinDoneBtn.addEventListener('click',()=>{ wrSpinDoneBtn.style.display='none'; });
 const wrNextBtn = document.getElementById('wrNextBtn');
 if(wrNextBtn) wrNextBtn.addEventListener('click',()=>{ wrNextBtn.style.display='none'; spinWishWheel(); });
 const wrPauseBtn = document.getElementById('wrPauseBtn');
 if(wrPauseBtn) wrPauseBtn.addEventListener('click',()=>{ if(!wishSpinning) pauseWrGame(); });
+const wrSetupStartBtn = document.getElementById('wrSetupStartBtn');
+if(wrSetupStartBtn) wrSetupStartBtn.addEventListener('click', goToWrGame);
+const wrSetupExitBtn = document.getElementById('wrSetupExitBtn');
+if(wrSetupExitBtn) wrSetupExitBtn.addEventListener('click', ()=>{
+  document.getElementById('setup').classList.add('active');
+});
 if(typeof bindPauseMenuResume === 'function') bindPauseMenuResume('wishRoulette',resumeWrGame,finishWrGame);
