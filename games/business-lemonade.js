@@ -514,10 +514,10 @@ function renderBizLemonsPhase(){
   const capital = state.businessLemonadeCapital || 0;
   const wrap = document.getElementById('bizLemonTiersGrid');
   const teaWrap = document.getElementById('bizTeaTiersGrid');
-const selLemonIdx = state.businessLemonadeSelectedLemonIdx ?? 0;
-   const selTeaIdx = state.businessLemonadeSelectedTeaIdx ?? 0;
-   const canBuyLemon = state.businessLemonadeSelectedLemonIdx !== null && capital >= (BIZ_LEMON_TIERS[state.businessLemonadeSelectedLemonIdx].qty * BIZ_LEMON_TIERS[state.businessLemonadeSelectedLemonIdx].pricePerUnit);
-   const canBuyTea = state.businessLemonadeSelectedTeaIdx !== null && capital >= (BIZ_TEA_TIERS[state.businessLemonadeSelectedTeaIdx].qty * BIZ_TEA_TIERS[state.businessLemonadeSelectedTeaIdx].pricePerUnit);
+const selLemonIdx = state.businessLemonadeSelectedLemonIdx;
+   const selTeaIdx = state.businessLemonadeSelectedTeaIdx;
+   const canBuyLemon = selLemonIdx !== null && capital >= (BIZ_LEMON_TIERS[selLemonIdx].qty * BIZ_LEMON_TIERS[selLemonIdx].pricePerUnit);
+   const canBuyTea = selTeaIdx !== null && capital >= (BIZ_TEA_TIERS[selTeaIdx].qty * BIZ_TEA_TIERS[selTeaIdx].pricePerUnit);
    const nextBtn = document.getElementById('bizToBuyBtn');
    if(nextBtn) nextBtn.disabled = !(canBuyLemon || canBuyTea);
    wrap.innerHTML = BIZ_LEMON_TIERS.map((tier, i)=>{
@@ -594,8 +594,6 @@ if(bought){
      updateBizHeaderUI();
      updateBizContextBar();
      renderBizLemonsPhase();
-     const nb = document.getElementById('bizToBuyBtn');
-     if(nb) nb.disabled = false;
    }
   if((state.businessLemonadeLemonStock || 0) <= 0 && (state.businessLemonadeTeaStock || 0) <= 0) return;
   renderBizQuantityGroup();
@@ -1319,15 +1317,16 @@ function goToBusinessLemonadeGame(){
   state.businessLemonadeLocation = null;
   state.businessLemonadeHours = null;
   state.businessLemonadeOptions = {};
-  state.businessLemonadeLemonStock = 0;
-  state.businessLemonadeLemonBoughtDay = null;
-  state.businessLemonadeCompetitorPrice = null;
+state.businessLemonadeLemonStock = 0;
+   state.businessLemonadeLemonBoughtDay = null;
+   state.businessLemonadeTeaStock = 0;
+   state.businessLemonadeCompetitorPrice = null;
 state.businessLemonadeLoanOwed = 0;
    state.businessLemonadeLoanDueDay = null;
    state.businessLemonadeCups = 10;
    state.businessLemonadeTeaCups = 0;
-   state.businessLemonadeSelectedLemonIdx = 0;
-   state.businessLemonadeSelectedTeaIdx = 0;
+   state.businessLemonadeSelectedLemonIdx = null;
+   state.businessLemonadeSelectedTeaIdx = null;
    state.businessLemonadePrice = 40;
    state.businessLemonadeSold = 0;
   state.businessLemonadeRevenue = 0;
