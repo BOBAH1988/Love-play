@@ -505,11 +505,18 @@ document.getElementById('bingoRandomBtn').addEventListener('click', ()=>{
   }
 });
 document.getElementById('bingoPauseBtn').addEventListener('click', ()=>{
-  playSuccessSound();
-  pauseBingoGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
-openRulesModal('bingoGameRulesBtn', 'bingoRulesModal');
+   playSuccessSound();
+   pauseBingoGame();
+   showToast('Игра на паузе — прогресс сохранён');
+ });
+ document.addEventListener('keydown', (e)=>{
+   if(e.key === 'Escape' && state.inProgress && !state.bingoFinished){
+     playSuccessSound();
+     pauseBingoGame();
+     showToast('Игра на паузе — прогресс сохранён');
+   }
+ });
+ openRulesModal('bingoGameRulesBtn', 'bingoRulesModal');
 setupRulesModal('bingoRulesModal', 'closeBingoRulesBtn');
 
 
