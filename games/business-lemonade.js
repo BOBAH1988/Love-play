@@ -476,11 +476,18 @@ document.querySelectorAll('#bizTeaQuantityGroup .starter-btn').forEach(btn=>{
   });
 });
 // Функция для подсветки выбранной цены чая
-function renderBizTeaPriceGroup(){
-  document.querySelectorAll('#bizTeaPriceGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.businessLemonadeTeaPrice || 15));
-  });
-}
+   function renderBizTeaPriceGroup(){
+     const teaStock = state.businessLemonadeTeaStock || 0;
+     const field = document.getElementById('bizTeaPriceField');
+     if(field){
+       field.style.opacity = teaStock > 0 ? '1' : '0.4';
+       field.style.pointerEvents = teaStock > 0 ? 'auto' : 'none';
+     }
+     document.querySelectorAll('#bizTeaPriceGroup .starter-btn').forEach(btn=>{
+       btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.businessLemonadeTeaPrice || 10));
+       btn.disabled = teaStock <= 0;
+     });
+   }
 // Обработчик цены чая
 document.querySelectorAll('#bizTeaPriceGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -866,7 +873,7 @@ document.getElementById('bizToPriceBtn').addEventListener('click', ()=>{
 /* ============ ШАГ 5: ЦЕНА ============ */
 function renderBizPriceGroup(){
   document.querySelectorAll('#bizPriceGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.businessLemonadePrice || 40));
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.businessLemonadePrice || 30));
   });
 }
 document.querySelectorAll('#bizPriceGroup .starter-btn').forEach(btn=>{
@@ -962,8 +969,8 @@ function bizSellDay(){
 // Количество стаканов и цены для каждого напитка
    const lemonCups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
    const teaCups = Math.min(state.businessLemonadeTeaCups || 0, state.businessLemonadeTeaStock || 0);
-  const lemonPrice = state.businessLemonadePrice || 40;
-  const teaPrice = state.businessLemonadeTeaPrice || 15;
+const lemonPrice = state.businessLemonadePrice || 30;
+   const teaPrice = state.businessLemonadeTeaPrice || 10;
 
   // Расчёт спроса на каждый напиток
   const lemonDemand = lemonCups > 0 ? bizDrinkDemand(lemonPrice, 'lemonade', weatherKey, locationKey, options, dow, hours) : 0;
@@ -1327,7 +1334,8 @@ state.businessLemonadeLoanOwed = 0;
    state.businessLemonadeTeaCups = 0;
    state.businessLemonadeSelectedLemonIdx = 1;
    state.businessLemonadeSelectedTeaIdx = 0;
-   state.businessLemonadePrice = 40;
+   state.businessLemonadePrice = 30;
+    state.businessLemonadeTeaPrice = 10;
    state.businessLemonadeSold = 0;
   state.businessLemonadeRevenue = 0;
   state.businessLemonadeNetProfit = 0;
