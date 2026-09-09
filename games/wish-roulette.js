@@ -18,6 +18,8 @@ function wishColorName(n){ const c=wishColorOf(n); return c==='red'?'красн�
 function wishColorHex(n){ const c=wishColorOf(n); return c==='red'?'#e74c3c':c==='black'?'#fff':'#2ecc71'; }
 
 function wrLevelById(id){ return WR_LEVELS.find(l => l.id === id) || WR_LEVELS[0]; }
+// Экранирование пользовательских строк (имена игроков) перед вставкой в innerHTML
+function wrEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function getCardsForLevel(level){
   return (window.WISH_ROULETTE_CARDS || []).filter(c => c.level === level);
@@ -173,22 +175,34 @@ function spinWishWheel(){
     wishSpinning = false;
     // Нейтральный звук результата — как в режиме «Свое поле» рулетки
     if(typeof playNeutralSound === 'function') playNeutralSound();
-    // Задание строго соответствует сектору, на который встала стрелка
+    // Задание строго соответствует сектору, на который встала стрелка.
+    // Цвет сектора определяет исполнителя: ⚫ чёрный — мужчина, 🔴 красный —
+    // женщина, 🟢 зеро — общее задание для пары.
     const level = state.wrSelectedLevel || 1;
     const cards = getCardsForLevel(level);
     const landed = cards.find(c => c.number === winningNumber);
     wishCurrentCard = landed || pickRandomWishCard();
     const isDare = wishCurrentCard.type === 'dare';
     if(resultEl){
+      const who = wishCurrentCard.who || 'both';
+      let whoLine;
+      if(who === 'M'){
+        whoLine = (isDare ? 'Выполняет' : 'Отвечает') + ': <b style="color:#ffd23f;">' + wrEsc(state.name1 || 'Мужчина') + '</b>';
+      } else if(who === 'F'){
+        whoLine = (isDare ? 'Выполняет' : 'Отвечает') + ': <b style="color:#ffd23f;">' + wrEsc(state.name2 || 'Женщина') + '</b>';
+      } else {
+        whoLine = '🤝 Общее задание — выполняйте вместе';
+      }
       resultEl.innerHTML = `
         <div style="font-size:18px;margin:0 0 6px;">
           <span style="font-weight:500;">Выпало:</span>
           <b style="font-size:24px;color:${wishColorHex(winningNumber)}">${winningNumber}</b>
           <span style="font-size:15px;opacity:.8;"> (${wishColorName(winningNumber)})</span>
         </div>
+        <div style="font-size:14px;font-weight:700;margin:0 0 6px;color:${who==='both'?'#7cfc9b':'#ffd23f'};">${whoLine}</div>
         <div style="font-size:14px;line-height:1.4;padding:12px;background:rgba(255,255,255,.06);border-radius:12px;">
           <span style="font-weight:500;">${isDare?'🎯 Действие':'🤔 Правда'}:</span>
-          <div style="margin-top:6px;">${wishCurrentCard.text}</div>
+          <div style="margin-top:6px;">${wrEsc(wishCurrentCard.text)}</div>
         </div>`;
     }
     if(doneBtn) doneBtn.style.display = 'block';
@@ -210,13 +224,16 @@ function goToWrGame(){
   if(wishSpinTimer){ clearTimeout(wishSpinTimer); wishSpinTimer = null; }
   wishSpinning = false;
   state.wishCurrentCard = null;
+  // Имена из полей «Имя мужчины»/«Имя женщины» — для строки «Выполняет: …»
+  const n1raw = (document.getElementById('name1') || {}).value || '';
+  const n2raw = (document.getElementById('name2') || {}).value || '';
+  state.name1 = n1raw.trim() || 'Парень';
+  state.name2 = n2raw.trim() || 'Девушка';
   // Сброс «повисшего» pausedMode от старых сохранений (паузы больше нет)
-  if(state.pausedMode === 'wishRoulette'){
-    state.pausedMode = null;
-    state.inProgress = false;
-    saveState();
-    if(typeof updateResumeUI === 'function') updateResumeUI();
-  }
+  const stalePause = state.pausedMode === 'wishRoulette';
+  if(stalePause){ state.pausedMode = null; state.inProgress = false; }
+  saveState();
+  if(stalePause && typeof updateResumeUI === 'function') updateResumeUI();
   drawWishWheel();
   const resultEl = document.getElementById('wrSpinResult');
   if(resultEl) resultEl.textContent = '';
@@ -247,10 +264,8 @@ function finishWrGame(){
   if(modal) modal.classList.remove('show');
   const closeX = document.getElementById('wrCloseX');
   if(closeX) closeX.style.display = 'none';
-  state.wishRouletteInProgress = false;
   state.pausedMode = null;
   state.inProgress = false;
-  delete state.wishRouletteInProgress;
   delete state.wishCurrentCard;
   saveState();
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
@@ -281,8 +296,6 @@ if(wrSetupExitBtn) wrSetupExitBtn.addEventListener('click', ()=>{
   if(typeof stopAllSounds === 'function') stopAllSounds();
   state.pausedMode = null;
   state.inProgress = false;
-  state.wishRouletteInProgress = false;
-  delete state.wishRouletteInProgress;
   delete state.wishCurrentCard;
   saveState();
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
