@@ -2,6 +2,9 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <!-- viewport-fit=cover обязателен на iPhone с home-indicator: без него система
      рисует белую полосу внизу (theme-color на home-indicator в PWA не влияет).
      Раньше удаляли из-за дрейфа fixed-элементов, но дрейф был вызван не cover,
@@ -6810,14 +6813,23 @@
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует. -->
 <script>
+  // Авто-отмена сервис-воркера для принудительной загрузки свежих файлов
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      registrations.forEach(function(reg) { reg.unregister(); });
+    });
+    navigator.serviceWorker.getControllers().then(function(controllers) {
+      controllers.forEach(function(ctrl) { ctrl.unregister(); });
+    });
+  }
+</script>
+<script>
   if ('serviceWorker' in navigator) {
     var isLocalhost = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('./sw.js?v=20260909b').catch(function (e) {
-          // Не роняем приложение, если регистрация не удалась (например, при
-          // открытии через file:// в браузере без поддержки).
           console.warn('Service Worker registration failed:', e);
         });
       });

@@ -88,29 +88,27 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil((async () => {
-    const expected = await collectAssetUrls();
-    const expectedNorms = new Set([...expected].map(normUrl));
-    const cacheNames = await caches.keys();
-    for (const name of cacheNames) {
-      if (name !== CACHE_NAME) { await caches.delete(name); continue; }
-      // Внутри нашего кэша вычищаем устаревшие записи games/*, cards/*,
-      // которых нет в текущем index.html (старые ?v=… версии). Картинки и
-      // прочее, подтянутое рантаймом, сохраняем — их удаление при каждом
-      // обновлении заставило бы браузер повторно качать фото.
-      const cache = await caches.open(name);
-      const reqs = await cache.keys();
-      await Promise.all(reqs.map((req) => {
-        const p = normUrl(req.url);
-        if (/^\/(?:games|cards)\//.test(p) && !expectedNorms.has(p)) {
-          return cache.delete(req);
-        }
-        return null;
-      }));
-    }
-    await ctx.clients.claim();
-  })().catch(() => {}));
-});
+   event.waitUntil((async () => {
+     // Удаляем ВСЕ кэши без исключений
+     const cacheNames = await caches.keys();
+     for (const name of cacheNames) {
+       await caches.delete(name);
+     }
+     // Очищаем устаревшие записи games/*, cards/*
+     const expected = await collectAssetUrls();
+     const expectedNorms = new Set([...expected].map(normUrl));
+     const cache = await caches.open(CACHE_NAME);
+     const reqs = await cache.keys();
+     await Promise.all(reqs.map((req) => {
+       const p = normUrl(req.url);
+       if (/^\/(?:games|cards)\//.test(p) && !expectedNorms.has(p)) {
+         return cache.delete(req);
+       }
+       return null;
+     }));
+     await ctx.clients.claim();
+   })().catch(() => {}));
+ });
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
