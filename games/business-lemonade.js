@@ -1322,7 +1322,7 @@ function goToBusinessLemonadeGame(){
   state.businessLemonadeCompetitorPrice = null;
 state.businessLemonadeLoanOwed = 0;
    state.businessLemonadeLoanDueDay = null;
-   state.businessLemonadeCups = 0;
+   state.businessLemonadeCups = 10;
    state.businessLemonadeTeaCups = 0;
    state.businessLemonadeSelectedLemonIdx = 0;
    state.businessLemonadeSelectedTeaIdx = 0;
