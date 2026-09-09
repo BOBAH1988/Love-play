@@ -500,8 +500,10 @@ document.querySelectorAll('#bizTeaPriceGroup .starter-btn').forEach(btn=>{
 
 /* ============ ШАГ 3: ЗАКУПКА ЛИМОНОВ И ПАКЕТИКОВ ЧАЯ ПРО ЗАПАС ============ */
 function renderBizLemonsPhase(){
-  const lemonStock = state.businessLemonadeLemonStock || 0;
-  const teaStock = state.businessLemonadeTeaStock || 0;
+   if(state.businessLemonadeSelectedLemonIdx === null) state.businessLemonadeSelectedLemonIdx = 1;
+   if(state.businessLemonadeSelectedTeaIdx === null) state.businessLemonadeSelectedTeaIdx = 0;
+   const lemonStock = state.businessLemonadeLemonStock || 0;
+   const teaStock = state.businessLemonadeTeaStock || 0;
   const boughtDay = state.businessLemonadeLemonBoughtDay;
   const day = state.businessLemonadeDay || 1;
   const stockCard = document.getElementById('bizLemonStockCard');
