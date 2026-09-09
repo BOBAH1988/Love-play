@@ -447,14 +447,14 @@ function renderBizQuantityGroup(){
   document.querySelectorAll('#bizLemonQuantityGroup .starter-btn').forEach(btn=>{
     const v = parseInt(btn.dataset.value, 10);
     const stock = state.businessLemonadeLemonStock || 0;
-    btn.classList.toggle('on', v === (state.businessLemonadeCups || 10));
+    btn.classList.toggle('on', v === (state.businessLemonadeCups || 0));
     btn.disabled = v > stock;
   });
   // Кнопки чая
   document.querySelectorAll('#bizTeaQuantityGroup .starter-btn').forEach(btn=>{
     const v = parseInt(btn.dataset.value, 10);
     const stock = state.businessLemonadeTeaStock || 0;
-    btn.classList.toggle('on', v === (state.businessLemonadeTeaCups || 10));
+    btn.classList.toggle('on', v === (state.businessLemonadeTeaCups || 0));
     btn.disabled = v > stock;
   });
   updateBizBuyBreakdownUI();
@@ -667,8 +667,8 @@ const BIZ_INGREDIENT_LABELS = {
   waterCost: '💧 Вода',
 };
 function updateBizBuyBreakdownUI(){
-  const lemonCups = Math.min(state.businessLemonadeCups || 10, state.businessLemonadeLemonStock || 0);
-  const teaCups = Math.min(state.businessLemonadeTeaCups || 10, state.businessLemonadeTeaStock || 0);
+   const lemonCups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
+   const teaCups = Math.min(state.businessLemonadeTeaCups || 0, state.businessLemonadeTeaStock || 0);
   const options = state.businessLemonadeOptions || {};
   const lemonExpenses = bizDrinkExpenses(lemonCups, 'lemonade');
   const teaExpenses = bizDrinkExpenses(teaCups, 'tea');
@@ -752,8 +752,8 @@ function renderBizQuickBuy(){
   const tbtn = document.getElementById('bizQuickBuyTeaBtn');
   if(!lbtn || !tbtn) return;
   const cap = state.businessLemonadeCapital || 0;
-  const lemonNeed = Math.max(0, (state.businessLemonadeCups || 10) - (state.businessLemonadeLemonStock || 0));
-  const teaNeed = Math.max(0, (state.businessLemonadeTeaCups || 10) - (state.businessLemonadeTeaStock || 0));
+const lemonNeed = Math.max(0, (state.businessLemonadeCups || 0) - (state.businessLemonadeLemonStock || 0));
+   const teaNeed = Math.max(0, (state.businessLemonadeTeaCups || 0) - (state.businessLemonadeTeaStock || 0));
   const lt = bizPickTierForNeed(BIZ_LEMON_TIERS, lemonNeed);
   const tt = bizPickTierForNeed(BIZ_TEA_TIERS, teaNeed);
   if(lemonNeed > 0 && lt){
@@ -775,7 +775,7 @@ function renderBizQuickBuy(){
 }
 document.getElementById('bizQuickBuyLemonBtn').addEventListener('click', function(){
   if(this.disabled) return;
-  const need = Math.max(0, (state.businessLemonadeCups || 10) - (state.businessLemonadeLemonStock || 0));
+  const need = Math.max(0, (state.businessLemonadeCups || 0) - (state.businessLemonadeLemonStock || 0));
   const tier = bizPickTierForNeed(BIZ_LEMON_TIERS, need);
   if(!tier) return;
   const total = tier.qty * tier.pricePerUnit;
@@ -794,7 +794,7 @@ document.getElementById('bizQuickBuyLemonBtn').addEventListener('click', functio
 });
 document.getElementById('bizQuickBuyTeaBtn').addEventListener('click', function(){
   if(this.disabled) return;
-  const need = Math.max(0, (state.businessLemonadeTeaCups || 10) - (state.businessLemonadeTeaStock || 0));
+  const need = Math.max(0, (state.businessLemonadeTeaCups || 0) - (state.businessLemonadeTeaStock || 0));
   const tier = bizPickTierForNeed(BIZ_TEA_TIERS, need);
   if(!tier) return;
   const total = tier.qty * tier.pricePerUnit;
@@ -818,8 +818,8 @@ function bizLoanAmountForNeed(need){
   return Math.ceil(Math.max(BIZ_MIN_CAPITAL_FOR_DAY, Math.max(0, need)) / 5) * 5;
 }
 document.getElementById('bizLoanBtn').addEventListener('click', ()=>{
-  const lemonCups = state.businessLemonadeCups || 10;
-  const teaCups = state.businessLemonadeTeaCups || 10;
+const lemonCups = state.businessLemonadeCups || 0;
+   const teaCups = state.businessLemonadeTeaCups || 0;
   // Берём общую сумму: расходы обоих напитков + аренда + опции
   const total = bizDrinkExpenses(lemonCups, 'lemonade') + bizDrinkExpenses(teaCups, 'tea')
     + (BIZ_LOCATIONS[state.businessLemonadeLocation] || { rentPerHour: 0 }).rentPerHour * (state.businessLemonadeHours || 1);
@@ -959,9 +959,9 @@ function bizSellDay(){
   const w = bizWeatherInfo();
   const loc = bizLocationInfo();
 
-  // Количество стаканов и цены для каждого напитка
-  const lemonCups = Math.min(state.businessLemonadeCups || 10, state.businessLemonadeLemonStock || 0);
-  const teaCups = Math.min(state.businessLemonadeTeaCups || 10, state.businessLemonadeTeaStock || 0);
+// Количество стаканов и цены для каждого напитка
+   const lemonCups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
+   const teaCups = Math.min(state.businessLemonadeTeaCups || 0, state.businessLemonadeTeaStock || 0);
   const lemonPrice = state.businessLemonadePrice || 40;
   const teaPrice = state.businessLemonadeTeaPrice || 15;
 
@@ -1322,7 +1322,8 @@ function goToBusinessLemonadeGame(){
   state.businessLemonadeCompetitorPrice = null;
   state.businessLemonadeLoanOwed = 0;
   state.businessLemonadeLoanDueDay = null;
-  state.businessLemonadeCups = 10;
+  state.businessLemonadeCups = 0;
+   state.businessLemonadeTeaCups = 0;
   state.businessLemonadePrice = 40;
   state.businessLemonadeSold = 0;
   state.businessLemonadeRevenue = 0;
