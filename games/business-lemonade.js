@@ -739,85 +739,9 @@ function updateBizBuyBreakdownUI(){
     } else {
       loanBtn.style.display = 'none';
     }
-  }
-  renderBizQuickBuy();
 }
 
-/* --- Докупка ингредиентов прямо на шаге 4 --- */
-// Минимальный набор (tier), покрывающий потребность need; если такого нет — самый большой.
-function bizPickTierForNeed(tiers, need){
-  if(!need || need <= 0) return null;
-  let best = null;
-  for(const t of tiers){
-    if(t.qty >= need && (!best || t.qty < best.qty)) best = t;
-  }
-  if(!best) best = tiers.reduce((a,b)=> b.qty > a.qty ? b : a, tiers[0]);
-  return best;
-}
-function renderBizQuickBuy(){
-  const lbtn = document.getElementById('bizQuickBuyLemonBtn');
-  const tbtn = document.getElementById('bizQuickBuyTeaBtn');
-  if(!lbtn || !tbtn) return;
-  const cap = state.businessLemonadeCapital || 0;
-const lemonNeed = Math.max(0, (state.businessLemonadeCups || 0) - (state.businessLemonadeLemonStock || 0));
-   const teaNeed = Math.max(0, (state.businessLemonadeTeaCups || 0) - (state.businessLemonadeTeaStock || 0));
-  const lt = bizPickTierForNeed(BIZ_LEMON_TIERS, lemonNeed);
-  const tt = bizPickTierForNeed(BIZ_TEA_TIERS, teaNeed);
-  if(lemonNeed > 0 && lt){
-    const total = lt.qty * lt.pricePerUnit;
-    lbtn.textContent = `🍋 Докупить ${lt.qty} лимонов — ${total} ₽`;
-    lbtn.disabled = cap < total;
-  } else {
-    lbtn.textContent = '🍋 Лимонов хватает ✓';
-    lbtn.disabled = true;
-  }
-  if(teaNeed > 0 && tt){
-    const total = tt.qty * tt.pricePerUnit;
-    tbtn.textContent = `🍵 Докупить ${tt.qty} пакетиков чая — ${total} ₽`;
-    tbtn.disabled = cap < total;
-  } else {
-    tbtn.textContent = '🍵 Пакетиков чая хватает ✓';
-    tbtn.disabled = true;
-  }
-}
-document.getElementById('bizQuickBuyLemonBtn').addEventListener('click', function(){
-  if(this.disabled) return;
-  const need = Math.max(0, (state.businessLemonadeCups || 0) - (state.businessLemonadeLemonStock || 0));
-  const tier = bizPickTierForNeed(BIZ_LEMON_TIERS, need);
-  if(!tier) return;
-  const total = tier.qty * tier.pricePerUnit;
-  if((state.businessLemonadeCapital || 0) < total) return;
-  state.businessLemonadeCapital -= total;
-  state.businessLemonadeLemonStock = (state.businessLemonadeLemonStock || 0) + tier.qty;
-  state.businessLemonadeLemonBoughtDay = state.businessLemonadeDay || 1;
-  saveState();
-  playSuccessSound();
-  showToast(`Докуплено ${tier.qty} лимонов за ${total} ₽`);
-  updateBizHeaderUI();
-  updateBizContextBar();
-  renderBizLemonsPhase();
-  renderBizQuantityGroup();
-  updateBizBuyBreakdownUI();
-});
-document.getElementById('bizQuickBuyTeaBtn').addEventListener('click', function(){
-  if(this.disabled) return;
-  const need = Math.max(0, (state.businessLemonadeTeaCups || 0) - (state.businessLemonadeTeaStock || 0));
-  const tier = bizPickTierForNeed(BIZ_TEA_TIERS, need);
-  if(!tier) return;
-  const total = tier.qty * tier.pricePerUnit;
-  if((state.businessLemonadeCapital || 0) < total) return;
-  state.businessLemonadeCapital -= total;
-  state.businessLemonadeTeaStock = (state.businessLemonadeTeaStock || 0) + tier.qty;
-  saveState();
-  playSuccessSound();
-  showToast(`Докуплено ${tier.qty} пакетиков чая за ${total} ₽`);
-  updateBizHeaderUI();
-  updateBizContextBar();
-  renderBizLemonsPhase();
-  renderBizQuantityGroup();
-  updateBizBuyBreakdownUI();
-});
-/* --- Займ у друга прямо на шаге 4: страховка от застревания без денег --- */
+/* --- Займ у друга: единый расчёт суммы --- */
 /* --- Займ у друга: единый расчёт суммы --- */
 // Одалживает максимум из минимальной суммы на день и точной нехватки,
 // округляя вверх до кратности 5 ₽, чтобы у ребёнка были круглые числа.
