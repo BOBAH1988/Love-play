@@ -799,7 +799,7 @@ document.getElementById('bizToPriceBtn').addEventListener('click', ()=>{
 /* ============ ШАГ 5: ЦЕНА ============ */
 function renderBizPriceGroup(){
   document.querySelectorAll('#bizPriceGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.businessLemonadePrice || 10));
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.businessLemonadePrice || 30));
   });
 }
 document.querySelectorAll('#bizPriceGroup .starter-btn').forEach(btn=>{
@@ -895,7 +895,7 @@ function bizSellDay(){
 // Количество стаканов и цены для каждого напитка
    const lemonCups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
    const teaCups = Math.min(state.businessLemonadeTeaCups || 0, state.businessLemonadeTeaStock || 0);
-const lemonPrice = state.businessLemonadePrice || 10;
+const lemonPrice = state.businessLemonadePrice || 30;
    const teaPrice = state.businessLemonadeTeaPrice || 5;
 
   // Расчёт спроса на каждый напиток
@@ -1264,7 +1264,7 @@ state.businessLemonadeLoanOwed = 0;
    state.businessLemonadeTeaCups = 0;
    state.businessLemonadeSelectedLemonIdx = 1;
    state.businessLemonadeSelectedTeaIdx = 0;
-   state.businessLemonadePrice = 10;
+   state.businessLemonadePrice = 30;
     state.businessLemonadeTeaPrice = 5;
    state.businessLemonadeSold = 0;
   state.businessLemonadeRevenue = 0;
