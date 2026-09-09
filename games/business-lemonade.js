@@ -124,16 +124,18 @@ const BIZ_TEA_DEMAND = { 5: 1, 10: 1, 15: 0.9, 20: 0.7, 25: 0.5, 30: 0.3 };
 // свежим каждый день) и портится, если пролежит больше 3 дней. Покупка
 // оптом дешевле за штуку, но больше риск не успеть всё использовать.
 const BIZ_LEMON_TIERS = [
-  { qty: 10, pricePerUnit: 4 },
-  { qty: 20, pricePerUnit: 3 },
-  { qty: 40, pricePerUnit: 2 },
-  { qty: 100, pricePerUnit: 1 },
-];
+   { qty: 0, pricePerUnit: 0 },
+   { qty: 10, pricePerUnit: 4 },
+   { qty: 20, pricePerUnit: 3 },
+   { qty: 40, pricePerUnit: 2 },
+   { qty: 100, pricePerUnit: 1 },
+ ];
 const BIZ_TEA_TIERS = [
-  { qty: 10, pricePerUnit: 3 },
-  { qty: 20, pricePerUnit: 3 },
-  { qty: 50, pricePerUnit: 2 },
-];
+   { qty: 0, pricePerUnit: 0 },
+   { qty: 10, pricePerUnit: 3 },
+   { qty: 20, pricePerUnit: 3 },
+   { qty: 50, pricePerUnit: 2 },
+ ];
 const BIZ_LEMON_SHELF_DAYS = 3;
 
 // Если капитал падает ниже стоимости самой дешёвой возможной закупки
@@ -514,8 +516,8 @@ function renderBizLemonsPhase(){
   const capital = state.businessLemonadeCapital || 0;
   const wrap = document.getElementById('bizLemonTiersGrid');
   const teaWrap = document.getElementById('bizTeaTiersGrid');
-  const selLemonIdx = state.businessLemonadeSelectedLemonIdx ?? null;
-  const selTeaIdx = state.businessLemonadeSelectedTeaIdx ?? null;
+const selLemonIdx = state.businessLemonadeSelectedLemonIdx ?? 0;
+   const selTeaIdx = state.businessLemonadeSelectedTeaIdx ?? 0;
   const canBuyLemon = selLemonIdx !== null && capital >= (BIZ_LEMON_TIERS[selLemonIdx].qty * BIZ_LEMON_TIERS[selLemonIdx].pricePerUnit);
   const canBuyTea = selTeaIdx !== null && capital >= (BIZ_TEA_TIERS[selTeaIdx].qty * BIZ_TEA_TIERS[selTeaIdx].pricePerUnit);
   const nextBtn = document.getElementById('bizToBuyBtn');
@@ -1320,12 +1322,14 @@ function goToBusinessLemonadeGame(){
   state.businessLemonadeLemonStock = 0;
   state.businessLemonadeLemonBoughtDay = null;
   state.businessLemonadeCompetitorPrice = null;
-  state.businessLemonadeLoanOwed = 0;
-  state.businessLemonadeLoanDueDay = null;
-  state.businessLemonadeCups = 0;
+state.businessLemonadeLoanOwed = 0;
+   state.businessLemonadeLoanDueDay = null;
+   state.businessLemonadeCups = 0;
    state.businessLemonadeTeaCups = 0;
-  state.businessLemonadePrice = 40;
-  state.businessLemonadeSold = 0;
+   state.businessLemonadeSelectedLemonIdx = 0;
+   state.businessLemonadeSelectedTeaIdx = 0;
+   state.businessLemonadePrice = 40;
+   state.businessLemonadeSold = 0;
   state.businessLemonadeRevenue = 0;
   state.businessLemonadeNetProfit = 0;
   state.businessLemonadeDayProfits = [];
