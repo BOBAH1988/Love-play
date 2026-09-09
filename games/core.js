@@ -5049,7 +5049,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     passionMapSetup:'twoPlayerView', passionMapGame:'twoPlayerView',
     passionMapSummary:'twoPlayerView', passionMapHistory:'twoPlayerView',
     shopSetup:'businessView', shopGame:'businessView', videoGame:'twoPlayerView',
-    wrSetup:'twoPlayerView', wrGame:'twoPlayerView',
+    wrSetup:'twoPlayerView',
     partyFantsSetup:'companyView', partyFantsGame:'companyView',
     partyTdSetup:'companyView', partyTdGame:'companyView',
     partyQuizSetup:'companyView', partyQuizGame:'companyView',
@@ -5232,7 +5232,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       soloBattleshipSetup: 'pauseSoloBattleshipGame', soloBattleshipGame: 'pauseSoloBattleshipGame',
       soloC4Setup: 'pauseSoloC4Game', soloC4Game: 'pauseSoloC4Game',
       partyRouletteSetup: 'pauseGamePartyRoulette', partyRouletteGame: 'pauseGamePartyRoulette',
-      wrGame: 'pauseWrGame',
       shopGame: 'pauseShopGame',
     };
     // Ищем pause-функцию по ЛЮБОМУ из активных экранов
