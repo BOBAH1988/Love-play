@@ -6815,7 +6815,7 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js').catch(function (e) {
+        navigator.serviceWorker.register('./sw.js?v=20260909b').catch(function (e) {
           // Не роняем приложение, если регистрация не удалась (например, при
           // открытии через file:// в браузере без поддержки).
           console.warn('Service Worker registration failed:', e);

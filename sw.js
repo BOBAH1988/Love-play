@@ -119,25 +119,31 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Навигация (открытие страницы) — network-first.
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          return response;
-        })
-        .catch(() =>
-          caches.match(request).then((cached) =>
-            cached || caches.match('./index.html')
+// Навигация (открытие страницы) — network-first.
+    if (request.mode === 'navigate') {
+      event.respondWith(
+        fetch(request)
+          .then((response) => {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            return response;
+          })
+          .catch(() =>
+            caches.match(request).then((cached) =>
+              cached || caches.match('./index.html')
+            )
           )
-        )
-    );
-    return;
-  }
+      );
+      return;
+    }
 
-// Игровые скрипты — всегда network-first.
+    // sw.js — всегда из сети, чтобы обновления применялись мгновенно.
+    if (url.pathname.endsWith('sw.js')) {
+      event.respondWith(fetch(request));
+      return;
+    }
+
+    // Игровые скрипты — всегда network-first.
     if (url.pathname.startsWith('/games/')) {
       event.respondWith(
         fetch(request)
