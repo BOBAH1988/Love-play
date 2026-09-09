@@ -932,9 +932,53 @@
      выбранная на старте цель чистыми. Шаги — обычные div внутри одного
      экрана #businessLemonadeGame, переключаются через .biz-phase-active
      (без отдельных экранов-секций, чтобы не плодить лишнюю навигацию). */
-  .biz-phase{ display:none; }
-  .biz-phase.biz-phase-active{ display:block; }
-  .biz-step-title{ font-size:18px; font-weight:800; margin:4px 0 10px; text-align:center; }
+.biz-phase{ display:none; }
+   .biz-phase.biz-phase-active{ display:block; }
+   /* Лимонадный ларёк — без скролла, помещается по высоте экрана */
+   #businessLemonadeGame{ overflow:hidden; }
+#businessLemonadeGame .biz-phase{
+      flex:1;
+      overflow:hidden;
+      display:none;
+      flex-direction:column;
+      align-items:center;
+      padding:4px 8px;
+      gap:4px;
+    }
+    #businessLemonadeGame .biz-phase.biz-phase-active{ display:flex; }
+   #businessLemonadeGame .biz-step-title{ font-size:15px; font-weight:800; margin:2px 0 4px; }
+   #businessLemonadeGame .biz-day-bar{ margin:3px 0 2px; }
+   #businessLemonadeGame .biz-capital-row{ font-size:13px; margin-bottom:3px; }
+   #businessLemonadeGame .biz-context-bar{ margin-bottom:8px; }
+   #businessLemonadeGame .biz-weather-card{ font-size:14px; padding:8px; margin-bottom:6px; border-radius:10px; }
+   #businessLemonadeGame .biz-event-card{ font-size:12px; padding:6px; margin-bottom:6px; border-radius:8px; }
+   #businessLemonadeGame .biz-upgrade-btn{ padding:5px 10px; font-size:12px; margin-top:5px; border-radius:10px; }
+   #businessLemonadeGame .biz-upgrade-btn .biz-upgrade-price{ font-size:10px; margin-top:1px; }
+   #businessLemonadeGame .biz-location-item{ padding:6px 10px; margin-top:6px; border-radius:10px; font-size:14px; }
+   #businessLemonadeGame .biz-location-name{ font-size:14px; }
+   #businessLemonadeGame .biz-location-hint{ font-size:11px; margin-top:2px; }
+   #businessLemonadeGame .biz-location-rent{ font-size:12px; margin-top:4px; }
+   #businessLemonadeGame .biz-options-grid{ gap:5px; }
+   #businessLemonadeGame .biz-option-btn{ padding:6px 5px; font-size:12px; border-radius:10px; }
+   #businessLemonadeGame .biz-option-btn .biz-option-cost{ font-size:10px; margin-top:1px; }
+   #businessLemonadeGame .biz-option-btn .biz-option-hint{ font-size:9px; }
+   #businessLemonadeGame .biz-breakdown-box{ padding:8px; margin:6px 0; border-radius:10px; }
+   #businessLemonadeGame .biz-breakdown-row{ font-size:12px; padding:2px 0; }
+   #businessLemonadeGame .biz-breakdown-row.biz-total{ font-size:14px; padding-top:5px; margin-top:4px; }
+   #businessLemonadeGame .biz-formula-line{ font-size:11px; margin:3px 0 1px; }
+   #businessLemonadeGame .biz-result-highlight{ font-size:24px; margin:3px 0 2px; }
+   #businessLemonadeGame .biz-warning{ font-size:12px; }
+   #businessLemonadeGame .biz-day-track{ height:4px; }
+   #businessLemonadeGame .biz-day-label{ font-size:11px; margin-top:2px; }
+   #businessLemonadeGame .biz-context-chip{ padding:2px 7px; font-size:11px; }
+   #businessLemonadeGame .biz-summary-drinks{ margin:6px 0; }
+   #businessLemonadeGame .biz-drink-title{ font-size:13px; margin-bottom:4px; }
+   #businessLemonadeGame .biz-quiz-progress{ font-size:12px; margin-bottom:6px; }
+/* Кнопки внутри бизнес-экрана — компактнее */
+   #businessLemonadeGame .btn{ padding:8px 16px; font-size:14px; min-height:40px; }
+   #businessLemonadeGame .btn-primary{ min-height:40px; }
+   #businessLemonadeGame .starter-btn{ padding:6px 10px; font-size:13px; min-height:38px; }
+   .biz-step-title{ font-size:18px; font-weight:800; margin:4px 0 10px; text-align:center; }
   .biz-breakdown-box{
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
     border-radius:16px; padding:14px; margin:12px 0;
