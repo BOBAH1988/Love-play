@@ -1735,10 +1735,22 @@ function performFullReset(){
     importedDavayCards = [];
     importedDavayVideosLoaded = true;
   });
+  // Закрываем все модальные окна (рулетка и другие)
+  document.querySelectorAll('.modal.show, [class*="modal"].show, .show').forEach(el=>{
+    if(el.classList.contains('modal') || el.querySelector('.modal-content')){
+      el.classList.remove('show');
+    }
+  });
+  // Закрываем модальные окна рулетки желаний явно
+  const wrModal = document.getElementById('wrSpinModal');
+  const wrSum = document.getElementById('wrSummaryModal');
+  if(wrModal) wrModal.classList.remove('show');
+  if(wrSum) wrSum.classList.remove('show');
   // Выход на главную страницу
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
-  document.getElementById('setup').classList.add('active');
-  showSetupView('homeView');
+  const setupEl = document.getElementById('setup');
+  if(setupEl) setupEl.classList.add('active');
+  if(typeof showSetupView === 'function') showSetupView('homeView');
   showToast('Прогресс всех игр сброшен, добавленные видео удалены');
 }
 
