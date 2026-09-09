@@ -189,7 +189,16 @@ function spinWishWheel(){
       const who = wishCurrentCard.who || 'both';
       let whoLine = '';
       // Для уровня 5 (Камасутра) не показываем "Выполняет" и "Общее задание"
-      if(level !== 5){
+      // Для уровня 6 (Желания) меняем надписи на "Желание девушки/парня"
+      if(level === 6){
+        if(who === 'M'){
+          whoLine = 'Желание парня';
+        } else if(who === 'F'){
+          whoLine = 'Желание девушки';
+        } else {
+          whoLine = 'Общее желание';
+        }
+      } else if(level !== 5){
         if(who === 'M'){
           whoLine = (isDare ? 'Выполняет' : 'Отвечает') + ': <b style="color:#ffd23f;">' + wrEsc(state.name1 || 'Мужчина') + '</b>';
         } else if(who === 'F'){
