@@ -1010,6 +1010,7 @@ document.querySelectorAll('#modeGroup .mode-btn').forEach(btn=>{
     state.gameMode = btn.dataset.value;
     if(state.gameMode === 'romantic') state.activeLevels = [1,2,3,4];
     else if(state.gameMode === 'hot') state.activeLevels = [3,4,5,6];
+    else if(state.gameMode === 'custom') state.activeLevels = [];
     renderModeGroup();
     renderLevelToggles();
   });
@@ -1035,6 +1036,11 @@ document.getElementById('name1').addEventListener('input', updateStarterLabels);
 document.getElementById('name2').addEventListener('input', updateStarterLabels);
 
 document.getElementById('startBtn').addEventListener('click', ()=>{
+  if(state.gameMode === 'custom' && state.activeLevels.length === 0){
+    playErrorSound();
+    showToast('Выберите хотя бы один уровень');
+    return;
+  }
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   if((n1raw && n1raw.length<2) || (n2raw && n2raw.length<2)){
