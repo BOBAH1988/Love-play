@@ -1038,28 +1038,32 @@ function bizNumericQuizFromLog(){
   const log = (state.businessLemonadeDayLog || []).filter(Boolean);
   if(log.length === 0) return null;
   const rec = log[bizRandInt(0, log.length - 1)];
-  const templates = [
-    ()=>{
-      const correct = Math.round(rec.expenses / rec.cups);
-      const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-      return { q: `В день ${rec.day} (${rec.dowShort}, ${rec.locationName}) ты потратил ${rec.expenses} ₽ и сделал ${rec.cups} стаканов ${(rec.drinkType || "Лимонад").toLowerCase()}. Сколько стоил один стакан (себестоимость)?`, options, correct: idx };
-    },
-    ()=>{
-      const correct = Math.round(rec.price - rec.costPerCup);
-      const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-      return { q: `В день ${rec.day} ты продавал стакан за ${rec.price} ₽, а себестоимость была ${rec.costPerCup} ₽. Сколько ты зарабатывал с одного стакана?`, options, correct: idx };
-    },
-    ()=>{
-      const correct = rec.sold * rec.price;
-      const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-      return { q: `В день ${rec.day} (${rec.locationName}) ты продал ${rec.sold} стаканов ${(rec.drinkType || "Лимонад").toLowerCase()} по ${rec.price} ₽ за стакан. Какая была выручка (сколько всего заплатили покупатели)?`, options, correct: idx };
-    },
-    ()=>{
-      const correct = rec.netProfit;
-      const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-      return { q: `В день ${rec.day} расходы составили ${rec.expenses} ₽, а выручка — ${rec.revenue} ₽. Какая получилась чистая прибыль?`, options, correct: idx };
-    },
-  ];
+const templates = [
+     ()=>{
+       const cups = rec.lemonCups || rec.teaCups || 1;
+       const correct = Math.round(rec.totalExpenses / cups);
+       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
+       return { q: `В день ${rec.day} (${rec.dowShort}, ${rec.locationName}) ты потратил ${rec.totalExpenses} ₽ и сделал ${cups} стаканов ${(rec.drinkType || "Лимонад").toLowerCase()}. Сколько стоил один стакан (себестоимость)?`, options, correct: idx };
+     },
+     ()=>{
+       const costPerCup = BIZ_SUGAR_PER_CUP + BIZ_CUP_PER_CUP;
+       const correct = Math.round((rec.lemonPrice || rec.teaPrice || 40) - costPerCup);
+       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
+       return { q: `В день ${rec.day} ты продавал стакан за ${rec.lemonPrice || rec.teaPrice || 40} ₽, а себестоимость была ${costPerCup} ₽. Сколько ты зарабатывал с одного стакана?`, options, correct: idx };
+     },
+     ()=>{
+       const sold = rec.lemonSold || rec.teaSold || 0;
+       const price = rec.lemonPrice || rec.teaPrice || 40;
+       const correct = sold * price;
+       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
+       return { q: `В день ${rec.day} (${rec.locationName}) ты продал ${sold} стаканов ${(rec.drinkType || "Лимонад").toLowerCase()} по ${price} ₽ за стакан. Какая была выручка (сколько всего заплатили покупатели)?`, options, correct: idx };
+     },
+     ()=>{
+       const correct = rec.netProfit;
+       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
+       return { q: `В день ${rec.day} расходы составили ${rec.totalExpenses} ₽, а выручка — ${rec.totalRevenue} ₽. Какая получилась чистая прибыль?`, options, correct: idx };
+     },
+   ];
   return bizPickRandom(templates)();
 }
 function generateBizQuiz(){
