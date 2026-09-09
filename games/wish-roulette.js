@@ -50,8 +50,6 @@ let wishCurrentCard = null;
 function drawWishWheel(){
   const wheel = document.getElementById('wrWheel');
   if(!wheel) return;
-  const level = state.wrSelectedLevel || 1;
-  const cards = getCardsForLevel(level);
   const S = 1000, cx = 500, cy = 500, r = 480;
   const n = WISH_ROULETTE_WHEEL_ORDER.length;
   const seg = 360 / n;
@@ -61,20 +59,71 @@ function drawWishWheel(){
     const a2 = ((i + 1) * seg - 90) * Math.PI / 180;
     const isRed = WISH_ROULETTE_RED.has(num);
     const color = num===0?'#2ecc71':(isRed?'#e63946':'#222');
-    const card = cards.find(c => c.number === num);
-    const icon = card ? (card.type==='dare'?'🎯':'🤔') : '';
     svg += `<path d="M ${cx},${cy} L ${cx + r*Math.cos(a1)},${cy + r*Math.sin(a1)} L ${cx + r*Math.cos(a2)},${cy + r*Math.sin(a2)} Z" fill="${color}" stroke="rgba(255,255,255,.35)" stroke-width="2"/>`;
     const mid = (i * seg + seg/2 - 90) * Math.PI / 180;
     const tr = r * 0.72;
     const tx = cx + tr * Math.cos(mid);
     const ty = cy + tr * Math.sin(mid);
     const deg = (i * seg + seg/2) - 90 + 90;
-    svg += `<text x="${tx}" y="${ty}" fill="#fff" font-size="46" font-weight="700" text-anchor="middle" dominant-baseline="central" style="transform-origin:${tx}px ${ty}px; transform:rotate(${deg}deg)">${icon || num}</text>`;
+    svg += `<text x="${tx}" y="${ty}" fill="#fff" font-size="46" font-weight="700" text-anchor="middle" dominant-baseline="central" style="transform-origin:${tx}px ${ty}px; transform:rotate(${deg}deg)">${num}</text>`;
   });
   svg += `<circle cx="${cx}" cy="${cy}" r="26" fill="#111"/>`;
   svg += `</svg>`;
   wheel.innerHTML = svg;
   wishWheelTotalRotation = 0;
+  wheel.style.transition = 'none';
+  wheel.style.transform = 'rotate(0deg)';
+}
+
+/* Красный крестик в правом верхнем углу полноэкранного окна кручения — выход
+ * обратно на экран игры (как в режиме «Свое поле» рулетки). Создаётся
+ * динамически, если его нет в кэше HTML устройства; стили задаются инлайново,
+ * чтобы вид не зависел от версии CSS в кэше. */
+function ensureWrCloseX(){
+  let x = document.getElementById('wrCloseX');
+  if(!x){
+    const modal = document.getElementById('wrSpinModal');
+    if(!modal) return null;
+    x = document.createElement('button');
+    x.type = 'button';
+    x.id = 'wrCloseX';
+    x.textContent = '✕';
+    x.setAttribute('aria-label', 'Выход из окна рулетки');
+    modal.appendChild(x);
+  }
+  x.style.cssText = [
+    'position:absolute', 'top:calc(14px + env(safe-area-inset-top))', 'right:14px',
+    'width:34px', 'height:34px', 'padding:0', 'margin:0', 'flex:none',
+    'border:2px solid rgba(255,255,255,.45)', 'border-radius:50%',
+    'background:#8b0000', 'color:#fff', 'font-size:18px', 'font-weight:700',
+    'line-height:1', 'display:flex', 'align-items:center', 'justify-content:center',
+    'box-shadow:0 4px 14px rgba(0,0,0,.55)', 'cursor:pointer', 'z-index:310',
+    '-webkit-tap-highlight-color:transparent', 'touch-action:manipulation'
+  ].join(';');
+  // Видимостью управляет JS (flex/none) — при каждом показе окна кручения
+  x.style.display = 'none';
+  if(!x.dataset.bound){
+    x.dataset.bound = '1';
+    x.addEventListener('click', closeWrSpinModal);
+  }
+  return x;
+}
+
+/* Закрывает полноэкранное окно кручения и возвращает на экран игры.
+ * Отменяет отложенное завершение спина и запуск анимации, чтобы после
+ * закрытия не сработала логика показа результата. */
+function closeWrSpinModal(){
+  wishSpinSession++;
+  if(wishSpinTimer){ clearTimeout(wishSpinTimer); wishSpinTimer = null; }
+  wishSpinning = false;
+  const modal = document.getElementById('wrSpinModal');
+  if(modal) modal.classList.remove('show');
+  const x = document.getElementById('wrCloseX');
+  if(x) x.style.display = 'none';
+  const spinBtn = document.getElementById('wrSpinBtn');
+  if(spinBtn) spinBtn.disabled = false;
+  const doneBtn = document.getElementById('wrSpinDoneBtn');
+  if(doneBtn) doneBtn.style.display = 'none';
 }
 
 function spinWishWheel(){
@@ -82,15 +131,19 @@ function spinWishWheel(){
   wishSpinning = true;
   const spinBtn = document.getElementById('wrSpinBtn');
   const doneBtn = document.getElementById('wrSpinDoneBtn');
-  const nextBtn = document.getElementById('wrNextBtn');
   const resultEl = document.getElementById('wrSpinResult');
   if(spinBtn) spinBtn.disabled = true;
   if(doneBtn) doneBtn.style.display = 'none';
-  if(nextBtn) nextBtn.style.display = 'none';
   const modal = document.getElementById('wrSpinModal');
   if(modal) modal.classList.add('show');
   if(resultEl) resultEl.innerHTML = '💫 Крутится...';
+  const closeX = ensureWrCloseX();
+  if(closeX) closeX.style.display = 'flex';
   if(typeof playSpinStartSound === 'function') playSpinStartSound();
+
+  // Колесо живёт только в полноэкранном окне — рисуем SVG, если его ещё нет
+  const wheelEl = document.getElementById('wrWheel');
+  if(wheelEl && !wheelEl.querySelector('svg')) drawWishWheel();
 
   const winningNumber = Math.floor(Math.random()*37);
   const segAngle = 360 / WISH_ROULETTE_WHEEL_ORDER.length;
@@ -103,7 +156,6 @@ function spinWishWheel(){
   wishWheelTotalRotation += delta + turns*360;
 
   const session = ++wishSpinSession;
-  const wheelEl = document.getElementById('wrWheel');
   if(wheelEl){
     wheelEl.style.transition = 'none';
     void wheelEl.offsetWidth;
@@ -118,15 +170,20 @@ function spinWishWheel(){
   wishSpinTimer = setTimeout(()=>{
     wishSpinTimer = null;
     wishSpinning = false;
-    if(typeof playSpinEndSound === 'function') playSpinEndSound();
-    wishCurrentCard = pickRandomWishCard();
+    // Нейтральный звук результата — как в режиме «Свое поле» рулетки
+    if(typeof playNeutralSound === 'function') playNeutralSound();
+    // Задание строго соответствует сектору, на который встала стрелка
+    const level = state.wrSelectedLevel || 1;
+    const cards = getCardsForLevel(level);
+    const landed = cards.find(c => c.number === winningNumber);
+    wishCurrentCard = landed || pickRandomWishCard();
     const isDare = wishCurrentCard.type === 'dare';
     if(resultEl){
       resultEl.innerHTML = `
-        <div style="font-size:20px;margin-bottom:10px;">
+        <div style="font-size:18px;margin:0 0 6px;">
           <span style="font-weight:500;">Выпало:</span>
           <b style="font-size:24px;color:${wishColorHex(winningNumber)}">${winningNumber}</b>
-          <span style="font-size:16px;opacity:.8;"> (${wishColorName(winningNumber)})</span>
+          <span style="font-size:15px;opacity:.8;"> (${wishColorName(winningNumber)})</span>
         </div>
         <div style="font-size:14px;line-height:1.4;padding:12px;background:rgba(255,255,255,.06);border-radius:12px;">
           <span style="font-weight:500;">${isDare?'🎯 Действие':'🤔 Правда'}:</span>
@@ -152,6 +209,7 @@ function goToWrGame(){
   state.wishRouletteInProgress = true;
   state.wishCurrentCard = null;
   saveState();
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   document.getElementById('wrGame').classList.add('active');
   const levelLabel = document.getElementById('wrLevelLabel');
   if(levelLabel){
@@ -163,8 +221,8 @@ function goToWrGame(){
   if(resultEl) resultEl.textContent = '';
   const doneBtn = document.getElementById('wrSpinDoneBtn');
   if(doneBtn) doneBtn.style.display = 'none';
-  const nextBtn = document.getElementById('wrNextBtn');
-  if(nextBtn) nextBtn.style.display = 'none';
+  const closeX = document.getElementById('wrCloseX');
+  if(closeX) closeX.style.display = 'none';
   const sum = document.getElementById('wrSummaryModal');
   if(sum) sum.classList.remove('show');
   const pauseBtn = document.getElementById('wrPauseBtn');
@@ -173,16 +231,32 @@ function goToWrGame(){
 }
 
 function pauseWrGame(){
-  saveState();
-  (function m(){ const x=document.getElementById('wrSpinModal'); if(x) x.classList.remove('show'); })();
-  document.getElementById('setup').classList.add('active');
-  if(typeof showPauseMenu === 'function') showPauseMenu('wishRoulette');
-}
-
-function resumeWrGame(){
+  // Единая пауза как у остальных игр: сохраняем pausedMode, гасим ВСЕ экраны
+  // (иначе #wrGame останется активным и экран поделится на 2 части) и
+  // показываем общее меню паузы (#pauseMenuModal) через updateResumeUI().
+  const spinModal = document.getElementById('wrSpinModal');
+  if(spinModal) spinModal.classList.remove('show');
+  const closeX = document.getElementById('wrCloseX');
+  if(closeX) closeX.style.display = 'none';
   state.pausedMode = 'wishRoulette';
   state.inProgress = true;
   saveState();
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
+  document.getElementById('setup').classList.add('active');
+  if(typeof updateResumeUI === 'function') updateResumeUI();
+  if(typeof stopAllSounds === 'function') stopAllSounds();
+  window.scrollTo(0, 0);
+}
+
+function resumeWrGame(){
+  // Закрываем меню паузы (updateResumeUI до переключения экранов), затем
+  // возвращаемся на игровой экран. Гасим ВСЕ активные экраны, чтобы не
+  // осталось ни одного наложенного слоя.
+  state.pausedMode = null;
+  state.inProgress = true;
+  saveState();
+  if(typeof updateResumeUI === 'function') updateResumeUI();
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   document.getElementById('wrGame').classList.add('active');
   const wheel = document.getElementById('wrWheel');
   if(!wheel || !wheel.querySelector('svg')){ drawWishWheel(); }
@@ -194,41 +268,65 @@ function resumeWrGame(){
   if(wishSpinTimer){ clearTimeout(wishSpinTimer); wishSpinTimer = null; }
   wishSpinning = false;
   if(typeof playPauseSound === 'function') playPauseSound();
+  if(typeof requestWakeLock === 'function') requestWakeLock();
 }
 
 function finishWrGame(){
-  (function m(){ const x=document.getElementById('wrSpinModal'); if(x) x.classList.remove('show'); })();
-}
-
-function exitWrGame(){
+  // «Закончить игру» из единого меню паузы: полный сброс партии, гасим все
+  // экраны и возвращаемся на главную в блок «Игры для пар 18+».
   wishSpinSession++;
   if(wishSpinTimer){ clearTimeout(wishSpinTimer); wishSpinTimer = null; }
   wishSpinning = false;
   wishCurrentCard = null;
   wishWheelTotalRotation = 0;
-  if(typeof stopAllSounds === 'function') stopAllSounds();
-  if(typeof stopSpeech === 'function') stopSpeech();
-  finishWrGame();
+  const modal = document.getElementById('wrSpinModal');
+  if(modal) modal.classList.remove('show');
+  const closeX = document.getElementById('wrCloseX');
+  if(closeX) closeX.style.display = 'none';
   state.wishRouletteInProgress = false;
   state.pausedMode = null;
+  state.inProgress = false;
   delete state.wishRouletteInProgress;
   delete state.wishCurrentCard;
   saveState();
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   document.getElementById('setup').classList.add('active');
+  if(typeof showSetupView === 'function') showSetupView('twoPlayerView');
+  if(typeof updateResumeUI === 'function') updateResumeUI();
+  if(typeof stopAllSounds === 'function') stopAllSounds();
+  window.scrollTo(0, 0);
+}
+
+function exitWrGame(){
+  finishWrGame();
 }
 
 const wrSpinBtn = document.getElementById('wrSpinBtn');
 if(wrSpinBtn) wrSpinBtn.addEventListener('click', spinWishWheel);
+// «✅ Выполнено» — задание принято, сразу крутим следующий сектор
 const wrSpinDoneBtn = document.getElementById('wrSpinDoneBtn');
-if(wrSpinDoneBtn) wrSpinDoneBtn.addEventListener('click',()=>{ wrSpinDoneBtn.style.display='none'; });
-const wrNextBtn = document.getElementById('wrNextBtn');
-if(wrNextBtn) wrNextBtn.addEventListener('click',()=>{ wrNextBtn.style.display='none'; spinWishWheel(); });
+if(wrSpinDoneBtn) wrSpinDoneBtn.addEventListener('click', ()=>{
+  if(wishSpinning) return;
+  wrSpinDoneBtn.style.display = 'none';
+  spinWishWheel();
+});
 const wrPauseBtn = document.getElementById('wrPauseBtn');
 if(wrPauseBtn) wrPauseBtn.addEventListener('click',()=>{ if(!wishSpinning) pauseWrGame(); });
 const wrSetupStartBtn = document.getElementById('wrSetupStartBtn');
 if(wrSetupStartBtn) wrSetupStartBtn.addEventListener('click', goToWrGame);
 const wrSetupExitBtn = document.getElementById('wrSetupExitBtn');
 if(wrSetupExitBtn) wrSetupExitBtn.addEventListener('click', ()=>{
+  // Выход из настроек до начала партии: не оставляем «повисший» pausedMode
+  // (иначе меню паузы откроется само по себе) и гарантируем один активный экран.
+  if(typeof stopAllSounds === 'function') stopAllSounds();
+  state.pausedMode = null;
+  state.inProgress = false;
+  state.wishRouletteInProgress = false;
+  delete state.wishRouletteInProgress;
+  delete state.wishCurrentCard;
+  saveState();
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   document.getElementById('setup').classList.add('active');
+  if(typeof updateResumeUI === 'function') updateResumeUI();
 });
 if(typeof bindPauseMenuResume === 'function') bindPauseMenuResume('wishRoulette',resumeWrGame,finishWrGame);

@@ -1213,10 +1213,14 @@
     text-align:center; font-size:20px; font-weight:700; min-height:32px;
     margin-bottom:20px; color:#fff; padding:0 20px;
   }
-  #wrNextBtn, #wrSpinDoneBtn{
+  #wrSpinDoneBtn{
     display:inline-block; margin:0 5px;
   }
-  /* Кнопка «Продолжить» в окне кручения */
+  /* Колесо «Рулетки желаний» в полноэкранном окне: тёмный фон под секторами
+     SVG (секторы не доходят до самого края viewBox), чтобы не просвечивала
+     подложка окна. Только для #wrSpinModal — обычную рулетку не затрагиваем. */
+  #wrSpinModal .roulette-spin-wheel{background:#1a1a2e;}
+  /* Кнопка «✅ Выполнено» в окне кручения — сразу запускает следующий спин */
   /* Карточки "Игры для двоих" — у раздела нет одной общей карточки: у каждой
      мини-игры (Викторина, Идеи для вас, Правда/Действие, Тайные ответы,
      Твои желания, Таймер страсти) — свой элемент с собственным id, плюс
@@ -2369,6 +2373,7 @@
     font-size:28px; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.6);}
   .wr-actions{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px;}
   .wr-actions .btn{flex:1; min-width:80px; max-width:140px;}
+  .wr-sub-hint{text-align:center; font-size:13px; line-height:1.5; color:rgba(255,255,255,.78); margin:10px 0 16px;}
   .wr-summary-winner{font-size:18px; font-weight:700; text-align:center; margin:10px 0;}
   .wr-summary-scores{display:flex; justify-content:space-around; font-size:15px; margin-bottom:12px;}
   /* Кастомные подсказки для ⭐ и 🔥 — работают и на touch (:active), и на hover */
@@ -4938,15 +4943,9 @@
   <section id="wrGame" class="screen">
     <div class="wr-title">🎡 Рулетка желаний</div>
     <div class="wr-level-label" id="wrLevelLabel">💕 Сближение</div>
-    <div class="wr-wheel-wrap">
-      <div class="wr-wheel" id="wrWheel"></div>
-      <div class="wr-pointer">▼</div>
-    </div>
-    <div class="wr-result" id="wrSpinResult"></div>
+    <div class="wr-sub-hint">Колесо открывается на весь экран — как режим «Свое поле» рулетки. Крутите, выполняйте задание, затем «✅ Выполнено» — сразу следующий ход.</div>
     <div class="wr-actions">
       <button type="button" class="btn btn-primary" id="wrSpinBtn">🎰 Крутить</button>
-      <button type="button" class="btn btn-secondary" id="wrNextBtn" style="display:none;">▶ Продолжить</button>
-      <button type="button" class="btn btn-secondary" id="wrSpinDoneBtn" style="display:none;">✅ Выполнено</button>
       <button type="button" class="btn btn-secondary btn-pause" id="wrPauseBtn">Пауза</button>
     </div>
   </section>
@@ -6130,7 +6129,6 @@
       </div>
       <div class="roulette-spin-result" id="wrSpinResult">Крутится...</div>
       <button type="button" class="btn btn-primary" id="wrSpinDoneBtn" style="display:none;">✅ Выполнено</button>
-      <button type="button" class="btn btn-secondary" id="wrNextBtn" style="display:none;">▶ Продолжить</button>
     </div>
   </div>
 
@@ -6777,7 +6775,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260914k"></script>
+<script src="games/core.js?v=20260914l"></script>
 <script src="games/twister.js?v=20260913e"></script>
 <script src="games/party-hangman.js?v=20260830u"></script>
 <script src="games/solo-quiz.js?v=20260830u"></script>
@@ -6793,7 +6791,7 @@
 <script src="games/kids-connect4.js?v=20260913a"></script>
 <script src="games/solo-battleship.js?v=20260830u"></script>
 <script src="games/wish-roulette-cards.js?v=20260914a"></script>
-<script src="games/wish-roulette.js?v=20260914a"></script>
+<script src="games/wish-roulette.js?v=20260915a"></script>
 <script src="games/truth-dare.js?v=20260913a"></script>
 <script src="games/bingo.js?v=20260913b"></script>
 <script src="games/timer-game.js?v=20260913b"></script>

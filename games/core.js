@@ -1086,6 +1086,7 @@ const PAUSED_MODE_LABELS = {
   famZnayu: '«Знаю тебя» (компания)',
   lucky: '«Счастливый билет»',
   partyRoulette: '«Рулетка» (компания)',
+   wishRoulette: '«Рулетка желаний»',
   kidsMemory: '«Мемори»',
   kidsTd: '«Правда/Действие» (дети)',
   kidsC4: '«Четыре в ряд» (дети)',
@@ -5048,6 +5049,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     passionMapSetup:'twoPlayerView', passionMapGame:'twoPlayerView',
     passionMapSummary:'twoPlayerView', passionMapHistory:'twoPlayerView',
     shopSetup:'businessView', shopGame:'businessView', videoGame:'twoPlayerView',
+    wrSetup:'twoPlayerView', wrGame:'twoPlayerView',
     partyFantsSetup:'companyView', partyFantsGame:'companyView',
     partyTdSetup:'companyView', partyTdGame:'companyView',
     partyQuizSetup:'companyView', partyQuizGame:'companyView',
@@ -5087,7 +5089,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'fantySetup','photoSetup','bingoSetup','timerSetup','truthDareSetup','tdSetup',
     'quizSetup','wishlistSetup','desireSetup','znayuSetup','sexQuestSetup','shopSetup',
     'passionMapSetup','passionMapSummary','passionMapHistory',
-    'davaySetup','ideasGame',
+    'davaySetup','ideasGame','wrSetup',
     'partyFantsSetup','partyTdSetup','partyQuizSetup','krokodilSetup','twisterSetup',
     'partyHangmanSetup','partyRouletteSetup','partyNeverSetup','partyMemesSetup',
     'famZnayuSetup','luckySetup',
@@ -5230,7 +5232,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       soloBattleshipSetup: 'pauseSoloBattleshipGame', soloBattleshipGame: 'pauseSoloBattleshipGame',
       soloC4Setup: 'pauseSoloC4Game', soloC4Game: 'pauseSoloC4Game',
       partyRouletteSetup: 'pauseGamePartyRoulette', partyRouletteGame: 'pauseGamePartyRoulette',
-      wishRouletteGame: 'pauseWishRouletteGame',
+      wrGame: 'pauseWrGame',
       shopGame: 'pauseShopGame',
     };
     // Ищем pause-функцию по ЛЮБОМУ из активных экранов
