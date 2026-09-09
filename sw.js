@@ -23,7 +23,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v160';
+const CACHE_NAME = 'veselye-igry-cache-v161';
 
 // Ссылка на контекст воркера. Из-за lib.dom глобальный `self` в JS-файле
 // типизируется как Window, где нет skipWaiting()/clients. Кэстим через any,
@@ -53,17 +53,17 @@ async function collectAssetUrls() {
     // Иконки уже лежат в PRECACHE_URLS, отдельно тянуть их из разметки не нужно.
     // Обычный RegExp.exec в цикле вместо String.matchAll — сборка/линтер без
     // es2020 не ругается, а поведение одинаковое.
-    const re = /(?:src|href)="([^"]+)"/g;
-    let m;
-    while ((m = re.exec(html)) !== null) {
-      const raw = m[1];
-      try {
-        const u = new URL(raw, self.location.href);
-        if (/^\/(?:games|cards)\//.test(u.pathname)) {
-          urls.add('./' + raw);
-        }
-      } catch (e) { /* пропускаем некорректные/внешние ссылки */ }
-    }
+const re = /(?:src|href)="([^"]+)"/g;
+     let m;
+     while ((m = re.exec(html)) !== null) {
+       const raw = m[1];
+       try {
+         const u = new URL(raw, self.location.href);
+         if (/^\/(?:cards)\//.test(u.pathname)) {
+           urls.add('./' + raw);
+         }
+       } catch (e) { /* пропускаем некорректные/внешние ссылки */ }
+     }
   } catch (e) { /* ок — используем базовый набор */ }
   return urls;
 }
@@ -138,19 +138,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Остальные ресурсы — stale-while-revalidate.
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const network = fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
-  );
+// Игровые скрипты — всегда network-first.
+    if (url.pathname.startsWith('/games/')) {
+      event.respondWith(
+        fetch(request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const copy = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            }
+            return response;
+          })
+          .catch(() => caches.match(request))
+      );
+      return;
+    }
+    // Остальные ресурсы — stale-while-revalidate.
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        const network = fetch(request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const copy = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            }
+            return response;
+          })
+          .catch(() => cached);
+        return cached || network;
+      })
+    );
 });
