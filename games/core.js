@@ -1698,6 +1698,19 @@ function performFullReset(){
   state.partyQuizCorrect = []; state.partyQuizTimeMs = [];
   state.kidsQuizUsed = {}; state.kidsQuizQueue = []; state.kidsQuizIndex = 0; state.kidsQuizCurrentPlayerIndex = 0;
   state.kidsQuizCorrect = []; state.kidsQuizTimeMs = [];
+  // Рулетка желаний — сброс уровня на дефолтный (1 — Сближение)
+  state.wrSelectedLevel = 1;
+  state.wrScore1 = 0;
+  state.wrScore2 = 0;
+  state.wishCurrentCard = null;
+  if(state.pausedMode === 'wishRoulette'){
+    state.pausedMode = null;
+    state.inProgress = false;
+    wishWheelTotalRotation = 0;
+    if(wishSpinTimer){ clearTimeout(wishSpinTimer); wishSpinTimer = null; }
+    wishSpinning = false;
+    wishCurrentCard = null;
+  }
   // Сбрасываем и возможную «зависшую» паузу — если пользователь попал
   // в состояние, когда pausedMode выставлен, а выйти из него невозможно
   // (например, пропала модалка паузы), сброс прогресса вернёт управление.
@@ -1711,6 +1724,8 @@ function performFullReset(){
   renderStarterGroup();
   renderDavaySetupStarterGroup();
   renderDavaySetupLevels();
+  if(typeof wrRenderSetupLevels === 'function') wrRenderSetupLevels();
+  if(typeof drawWishWheel === 'function') drawWishWheel();
   updateFavoritesOnlyBtn();
   updateResumeUI();
   clearAllVideoBlobs(); // архивное хранилище "Видеорулетки" — на всякий случай, обычно уже пусто после миграции
