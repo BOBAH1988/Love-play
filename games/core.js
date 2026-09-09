@@ -1703,6 +1703,8 @@ function performFullReset(){
   state.wrScore1 = 0;
   state.wrScore2 = 0;
   state.wishCurrentCard = null;
+  state.name1 = 'Парень';
+  state.name2 = 'Девушка';
   if(state.pausedMode === 'wishRoulette'){
     state.pausedMode = null;
     state.inProgress = false;
@@ -1733,6 +1735,10 @@ function performFullReset(){
     importedDavayCards = [];
     importedDavayVideosLoaded = true;
   });
+  // Выход на главную страницу
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
+  document.getElementById('setup').classList.add('active');
+  showSetupView('homeView');
   showToast('Прогресс всех игр сброшен, добавленные видео удалены');
 }
 
