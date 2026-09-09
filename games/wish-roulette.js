@@ -216,7 +216,7 @@ function spinWishWheel(){
           <b style="font-size:24px;color:${wishColorHex(winningNumber)}">${winningNumber}</b>
           <span style="font-size:15px;opacity:.8;"> (${wishColorName(winningNumber)})</span>
         </div>
-        ${whoLine ? `<div style="font-size:14px;font-weight:700;margin:0 0 6px;color:${who==='both'?'#7cfc9b':'#ffd23f'};">${whoLine}</div>` : ''}
+        ${whoLine ? `<div style="font-size:14px;font-weight:700;margin:0 0 6px;color:${who==='both'?'#7cfc9b':(level===6?'#fff':'#ffd23f')};">${whoLine}</div>` : ''}
         <div style="font-size:14px;line-height:1.4;padding:12px;background:rgba(255,255,255,.06);border-radius:12px;">
           ${titleLine}
           <div style="margin-top:${titleLine ? '4px' : '6px'};">${wrEsc(wishCurrentCard.text)}</div>
