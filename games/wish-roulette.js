@@ -10,7 +10,9 @@ const WR_LEVELS = [
   {id:1, name:'Сближение', icon:'💕', desc:'Нежные вопросы и лёгкие действия'},
   {id:2, name:'Разогрев', icon:'🔥', desc:'Чуть смелее — прикосновения и намёки'},
   {id:3, name:'Откровенно 18+', icon:'🔞', desc:'Откровенные вопросы и пошлые действия'},
-  {id:4, name:'Фантазии', icon:'✨', desc:'Исполнение желаний и ролевые игры'}
+  {id:4, name:'Фантазии', icon:'✨', desc:'Исполнение желаний и ролевые игры'},
+  {id:5, name:'Камасутра', icon:'🪷', desc:'Позы из игры Предложи партнёру'},
+  {id:6, name:'Желания', icon:'💫', desc:'Желания из игры Предложи партнёру'}
 ];
 
 function wishColorOf(n){ if(n===0) return 'green'; return WISH_ROULETTE_RED.has(n)?'red':'black'; }
@@ -185,23 +187,30 @@ function spinWishWheel(){
     const isDare = wishCurrentCard.type === 'dare';
     if(resultEl){
       const who = wishCurrentCard.who || 'both';
-      let whoLine;
-      if(who === 'M'){
-        whoLine = (isDare ? 'Выполняет' : 'Отвечает') + ': <b style="color:#ffd23f;">' + wrEsc(state.name1 || 'Мужчина') + '</b>';
-      } else if(who === 'F'){
-        whoLine = (isDare ? 'Выполняет' : 'Отвечает') + ': <b style="color:#ffd23f;">' + wrEsc(state.name2 || 'Женщина') + '</b>';
-      } else {
-        whoLine = '🤝 Общее задание — выполняйте вместе';
+      let whoLine = '';
+      // Для уровня 5 (Камасутра) не показываем "Выполняет" и "Общее задание"
+      if(level !== 5){
+        if(who === 'M'){
+          whoLine = (isDare ? 'Выполняет' : 'Отвечает') + ': <b style="color:#ffd23f;">' + wrEsc(state.name1 || 'Мужчина') + '</b>';
+        } else if(who === 'F'){
+          whoLine = (isDare ? 'Выполняет' : 'Отвечает') + ': <b style="color:#ffd23f;">' + wrEsc(state.name2 || 'Женщина') + '</b>';
+        } else {
+          whoLine = '🤝 Общее задание — выполняйте вместе';
+        }
       }
+      const titleLine = wishCurrentCard.title
+        ? `<div style="font-size:13px;font-weight:700;margin:0 0 4px;color:#ffd23f;">${wrEsc(wishCurrentCard.title)}</div>`
+        : '';
       resultEl.innerHTML = `
         <div style="font-size:18px;margin:0 0 6px;">
           <span style="font-weight:500;">Выпало:</span>
           <b style="font-size:24px;color:${wishColorHex(winningNumber)}">${winningNumber}</b>
           <span style="font-size:15px;opacity:.8;"> (${wishColorName(winningNumber)})</span>
         </div>
-        <div style="font-size:14px;font-weight:700;margin:0 0 6px;color:${who==='both'?'#7cfc9b':'#ffd23f'};">${whoLine}</div>
+        ${whoLine ? `<div style="font-size:14px;font-weight:700;margin:0 0 6px;color:${who==='both'?'#7cfc9b':'#ffd23f'};">${whoLine}</div>` : ''}
         <div style="font-size:14px;line-height:1.4;padding:12px;background:rgba(255,255,255,.06);border-radius:12px;">
-          <div style="margin-top:6px;">${wrEsc(wishCurrentCard.text)}</div>
+          ${titleLine}
+          <div style="margin-top:${titleLine ? '4px' : '6px'};">${wrEsc(wishCurrentCard.text)}</div>
         </div>`;
     }
     if(doneBtn) doneBtn.style.display = 'block';
