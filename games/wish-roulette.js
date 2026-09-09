@@ -201,7 +201,6 @@ function spinWishWheel(){
         </div>
         <div style="font-size:14px;font-weight:700;margin:0 0 6px;color:${who==='both'?'#7cfc9b':'#ffd23f'};">${whoLine}</div>
         <div style="font-size:14px;line-height:1.4;padding:12px;background:rgba(255,255,255,.06);border-radius:12px;">
-          <span style="font-weight:500;">${isDare?'🎯 Действие':'🤔 Правда'}:</span>
           <div style="margin-top:6px;">${wrEsc(wishCurrentCard.text)}</div>
         </div>`;
     }

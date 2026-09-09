@@ -5,12 +5,12 @@
 //   🔴 красный (18 секторов) — выполняет ЖЕНЩИНА → карточки с for:'F';
 //   🟢 зеро (сектор 0) — ОБЩЕЕ задание для пары  → нейтральная карточка (без for),
 //      а если в уровне нейтральных нет — действие из пула уровня.
-// Приоритет — действия (dare); если действий с нужным исполнителем меньше 18,
-// пул добирается вопросами (truth) того же уровня и того же исполнителя.
+// Используются ТОЛЬКО действия (type:'dare'). Карточки с вопросом (type:'truth')
+//   не участвуют в формировании банка.
 // Результат:
 //   window.WISH_ROULETTE_CARDS          — плоский массив всех карточек;
 //   window.WISH_ROULETTE_CARDS_BY_LEVEL — разложение по уровням 1..4.
-// Карточка: { level, type:'dare'|'truth', text, number:0..36, who:'M'|'F'|'both' }
+// Карточка: { level, type:'dare', text, number:0..36, who:'M'|'F'|'both' }
 
 (function(){
   const fants = (typeof CARDS !== 'undefined' && Array.isArray(CARDS)) ? CARDS : [];
@@ -21,19 +21,21 @@
   // Красные номера колеса — как в games/wish-roulette.js (18 шт.)
   const RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 
-  // Пулы уровня: M/F — по полу (действия + добор вопросами), нейтральные — для зеро
+  // Пулы уровня: только действия (dare). Мужские, женские и нейтральные.
   function buildPools(fantsLevel){
-    const lv = fants.filter(function(c){ return c.level === fantsLevel && c.text; });
-    const by = function(type, forWho){
+    const lv = fants.filter(function(c){
+      return c.level === fantsLevel && c.text && c.type === 'dare';
+    });
+    const by = function(forWho){
       return lv.filter(function(c){
-        return c.type === type && (forWho === null ? !c.for : c.for === forWho);
+        return forWho === null ? !c.for : c.for === forWho;
       });
     };
     return {
-      queueM:    by('dare','M').concat(by('truth','M')),
-      queueF:    by('dare','F').concat(by('truth','F')),
-      neutral:   by('dare',null).concat(by('truth',null)),
-      spareDare: by('dare','M').concat(by('dare','F')) // источник зеро, если нейтральных нет
+      queueM:  by('M'),
+      queueF:  by('F'),
+      neutral: by(null),
+      spareDare: by('M').concat(by('F')) // источник зеро, если нейтральных действий нет
     };
   }
 
@@ -59,7 +61,7 @@
     const pools = buildPools(FANTS_LEVEL[wrLevel]);
     const used = new Set();
 
-    // 🟢 зеро — общее задание: нейтральная карточка, иначе действие из уровня
+    // 🟢 зеро — общее задание: нейтральное действие, иначе действие из уровня
     const zeroCard = pools.neutral[0] || pools.spareDare[pools.spareDare.length - 1] || null;
     if (zeroCard) used.add(zeroCard);
 
