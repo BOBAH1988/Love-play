@@ -170,10 +170,21 @@ function bizWeatherInfo(){ return BIZ_WEATHERS.find(w => w.key === state.busines
 function bizEventInfo(){ return state.businessLemonadeEventIdx >= 0 ? BIZ_EVENTS[state.businessLemonadeEventIdx] : null; }
 function bizLocationInfo(){ return BIZ_LOCATIONS[state.businessLemonadeLocation] || null; }
 
-// Суммарная чистая прибыль за все сыгранные дни — «накоплено чистыми».
+// Суммарная чистая прибыль за все сыгранные дни + резерв на цель.
 function bizTotalNet(){
-  const dayProfits = state.businessLemonadeDayProfits || [];
-  return dayProfits.reduce((a,b)=>a+(b||0), 0);
+   const dayProfits = state.businessLemonadeDayProfits || [];
+   return dayProfits.reduce((a,b)=>a+(b||0), 0) + (state.businessLemonadeGoalReserve || 0);
+}
+// Расход: сначала тратим резерв на цель, потом капитал (200₽).
+// Возвращает { fromReserve, fromCapital }.
+function bizSpend(amount){
+   const reserve = state.businessLemonadeGoalReserve || 0;
+   const fromReserve = Math.min(amount, reserve);
+   state.businessLemonadeGoalReserve = reserve - fromReserve;
+   const remaining = amount - fromReserve;
+   const fromCapital = Math.min(remaining, state.businessLemonadeCapital || 0);
+   state.businessLemonadeCapital = (state.businessLemonadeCapital || 0) - fromCapital;
+   return { fromReserve, fromCapital };
 }
 function bizGoalInfo(){
   const goal = state.businessLemonadeGoal || 1000;
@@ -193,6 +204,15 @@ function updateBizHeaderUI(){
   document.getElementById('bizDayFill').style.width = pct + '%';
   document.getElementById('bizDayLabel').textContent = `День ${day} · ${icon} ${totalNet} из ${goal} ₽ (${name})`;
   document.getElementById('bizCapitalRow').textContent = `Капитал: ${state.businessLemonadeCapital} ₽`;
+   const reserve = state.businessLemonadeGoalReserve || 0;
+   if(reserve > 0){
+     document.getElementById('bizReserveRow').textContent = `Резерв на цель: ${reserve} ₽`;
+     const reserveRow = document.getElementById('bizReserveRow');
+     if(reserveRow) reserveRow.style.display = '';
+   } else {
+     const reserveRow = document.getElementById('bizReserveRow');
+     if(reserveRow) reserveRow.style.display = 'none';
+   }
 }
 function goToBizPhase(phaseId){
   document.querySelectorAll('#businessLemonadeGame .biz-phase').forEach(el=>{
@@ -244,15 +264,21 @@ function bizCheckLemonSpoilage(){
 // вызывать несколько раз за один день — повторный вызов ничего не меняет.
 function bizHandleDailyFinance(){
   const day = state.businessLemonadeDay || 1;
+  const MAX_CAPITAL = 200;
   let repaidInfo = null;
-  if((state.businessLemonadeLoanOwed || 0) > 0 && day >= (state.businessLemonadeLoanDueDay || 0)){
-    const owed = state.businessLemonadeLoanOwed;
-    const capital = state.businessLemonadeCapital || 0;
-    const paid = Math.min(capital, owed);
-    state.businessLemonadeCapital = capital - paid;
-    repaidInfo = { paid, owed, shortfall: owed - paid };
-    state.businessLemonadeLoanOwed = 0;
-    state.businessLemonadeLoanDueDay = null;
+if((state.businessLemonadeLoanOwed || 0) > 0 && day >= (state.businessLemonadeLoanDueDay || 0)){
+     const owed = state.businessLemonadeLoanOwed;
+     const { fromReserve, fromCapital } = bizSpend(owed);
+     repaidInfo = { paid: fromReserve + fromCapital, owed, shortfall: owed - (fromReserve + fromCapital) };
+     state.businessLemonadeLoanOwed = 0;
+     state.businessLemonadeLoanDueDay = null;
+   }
+  // Пополняем капитал из резерва до 200₽, если нужно
+  if((state.businessLemonadeCapital || 0) < MAX_CAPITAL){
+    const need = MAX_CAPITAL - (state.businessLemonadeCapital || 0);
+    const fromReserve = Math.min(need, state.businessLemonadeGoalReserve || 0);
+    state.businessLemonadeCapital = (state.businessLemonadeCapital || 0) + fromReserve;
+    state.businessLemonadeGoalReserve = (state.businessLemonadeGoalReserve || 0) - fromReserve;
   }
   let loanInfo = null;
   if((state.businessLemonadeCapital || 0) < BIZ_MIN_CAPITAL_FOR_DAY && !(state.businessLemonadeLoanOwed > 0)){
@@ -268,14 +294,17 @@ function bizHandleDailyFinance(){
 
 /* ============ ШАГ 0: НАЧАЛО ДНЯ (погода/апгрейды) ============ */
 function startBizDay(){
-  state.businessLemonadeWeatherKey = bizPickRandom(BIZ_WEATHERS).key;
-  // Событие зависит от места — выбирается позже, при выборе локации.
-  state.businessLemonadeEventIdx = -1;
-  state.businessLemonadeCompetitorPrice = null;
-  state.businessLemonadeLocation = null;
-  state.businessLemonadeHours = null;
-  state.businessLemonadeOptions = {};
-  const spoiled = bizCheckLemonSpoilage();
+   state.businessLemonadeWeatherKey = bizPickRandom(BIZ_WEATHERS).key;
+   state.businessLemonadeEventIdx = -1;
+   state.businessLemonadeCompetitorPrice = null;
+   state.businessLemonadeLocation = null;
+   state.businessLemonadeHours = null;
+   state.businessLemonadeOptions = {};
+   state.businessLemonadeCups = 10;
+   state.businessLemonadeTeaCups = 0;
+   state.businessLemonadeSelectedLemonIdx = 1;
+   state.businessLemonadeSelectedTeaIdx = 0;
+   const spoiled = bizCheckLemonSpoilage();
   const finance = bizHandleDailyFinance();
   saveState();
   renderBizDayIntro(finance, spoiled);
@@ -327,21 +356,22 @@ function renderBizUpgradeOffers(){
     const affordable = (state.businessLemonadeCapital || 0) >= price;
     return `<button type="button" class="biz-upgrade-btn${affordable ? '' : ' biz-upgrade-owned'}" data-key="${k}" ${affordable ? '' : 'disabled'}>${u.name} — ${u.desc}<span class="biz-upgrade-price">${price} ₽</span></button>`;
   }).join('');
-  btnsWrap.querySelectorAll('.biz-upgrade-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const k = btn.dataset.key;
-      const u = BIZ_UPGRADES[k];
-      const price = bizUpgradePrice(u.basePrice);
-      if((state.businessLemonadeCapital || 0) < price) return;
-      state.businessLemonadeCapital -= price;
-      state.businessLemonadeUpgrades[k] = true;
-      saveState();
-      playSuccessSound();
-      showToast(`${u.name} куплена!`);
-      updateBizHeaderUI();
-      renderBizUpgradeOffers();
-    });
-  });
+btnsWrap.querySelectorAll('.biz-upgrade-btn').forEach(btn=>{
+     btn.addEventListener('click', ()=>{
+       const k = btn.dataset.key;
+       const u = BIZ_UPGRADES[k];
+       const price = bizUpgradePrice(u.basePrice);
+       const totalCapital = (state.businessLemonadeCapital || 0) + (state.businessLemonadeGoalReserve || 0);
+       if(totalCapital < price) return;
+       bizSpend(price);
+       state.businessLemonadeUpgrades[k] = true;
+       saveState();
+       playSuccessSound();
+       showToast(`${u.name} куплена!`);
+       updateBizHeaderUI();
+       renderBizUpgradeOffers();
+     });
+   });
 }
 document.getElementById('bizStartDayBtn').addEventListener('click', ()=>{
   playSuccessSound();
@@ -500,33 +530,34 @@ document.querySelectorAll('#bizTeaPriceGroup .starter-btn').forEach(btn=>{
 
 /* ============ ШАГ 3: ЗАКУПКА ЛИМОНОВ И ПАКЕТИКОВ ЧАЯ ПРО ЗАПАС ============ */
 function renderBizLemonsPhase(){
-   if(state.businessLemonadeSelectedLemonIdx === null) state.businessLemonadeSelectedLemonIdx = 1;
-   if(state.businessLemonadeSelectedTeaIdx === null) state.businessLemonadeSelectedTeaIdx = 0;
+   if(state.businessLemonadeSelectedLemonIdx == null) state.businessLemonadeSelectedLemonIdx = 1;
+   if(state.businessLemonadeSelectedTeaIdx == null) state.businessLemonadeSelectedTeaIdx = 0;
    const lemonStock = state.businessLemonadeLemonStock || 0;
    const teaStock = state.businessLemonadeTeaStock || 0;
-  const boughtDay = state.businessLemonadeLemonBoughtDay;
-  const day = state.businessLemonadeDay || 1;
-  const stockCard = document.getElementById('bizLemonStockCard');
-  const stockParts = [];
-  if(lemonStock > 0){
-    const daysLeft = Math.max(0, BIZ_LEMON_SHELF_DAYS - (day - boughtDay));
-    stockParts.push(`🍋 лимоны: ${lemonStock} шт. — испортятся через ${daysLeft} дн.`);
-  }
-  if(teaStock > 0){
-    stockParts.push(`🍵 пакетики чая: ${teaStock} шт.`);
-  }
-  if(stockParts.length > 0){
-    if(stockCard) stockCard.innerHTML = `В запасе: ${stockParts.join('<br>')}`;
-  } else {
-    if(stockCard) stockCard.textContent = 'Запасов нет — купи лимоны и/или пакетики чая, чтобы было из чего готовить напитки.';
-  }
-  const capital = state.businessLemonadeCapital || 0;
-  const wrap = document.getElementById('bizLemonTiersGrid');
-  const teaWrap = document.getElementById('bizTeaTiersGrid');
-const selLemonIdx = state.businessLemonadeSelectedLemonIdx;
+   const boughtDay = state.businessLemonadeLemonBoughtDay;
+   const day = state.businessLemonadeDay || 1;
+   const stockCard = document.getElementById('bizLemonStockCard');
+   const stockParts = [];
+   if(lemonStock > 0){
+     const daysLeft = Math.max(0, BIZ_LEMON_SHELF_DAYS - (day - boughtDay));
+     stockParts.push(`🍋 лимоны: ${lemonStock} шт. — испортятся через ${daysLeft} дн.`);
+   }
+   if(teaStock > 0){
+     stockParts.push(`🍵 пакетики чая: ${teaStock} шт.`);
+   }
+   if(stockParts.length > 0){
+     if(stockCard) stockCard.innerHTML = `В запасе: ${stockParts.join('<br>')}`;
+   } else {
+     if(stockCard) stockCard.textContent = 'Запасов нет — купи лимоны и/или пакетики чая, чтобы было из чего готовить напитки.';
+   }
+   const capital = state.businessLemonadeCapital || 0;
+   const wrap = document.getElementById('bizLemonTiersGrid');
+   const teaWrap = document.getElementById('bizTeaTiersGrid');
+   const selLemonIdx = state.businessLemonadeSelectedLemonIdx;
    const selTeaIdx = state.businessLemonadeSelectedTeaIdx;
-   const canBuyLemon = selLemonIdx !== null && capital >= (BIZ_LEMON_TIERS[selLemonIdx].qty * BIZ_LEMON_TIERS[selLemonIdx].pricePerUnit);
-   const canBuyTea = selTeaIdx !== null && capital >= (BIZ_TEA_TIERS[selTeaIdx].qty * BIZ_TEA_TIERS[selTeaIdx].pricePerUnit);
+const totalAvailable = capital + (state.businessLemonadeGoalReserve || 0);
+    const canBuyLemon = selLemonIdx != null && totalAvailable >= (BIZ_LEMON_TIERS[selLemonIdx].qty * BIZ_LEMON_TIERS[selLemonIdx].pricePerUnit);
+    const canBuyTea = selTeaIdx != null && totalAvailable >= (BIZ_TEA_TIERS[selTeaIdx].qty * BIZ_TEA_TIERS[selTeaIdx].pricePerUnit);
    const nextBtn = document.getElementById('bizToBuyBtn');
    if(nextBtn) nextBtn.disabled = !(canBuyLemon || canBuyTea);
    wrap.innerHTML = BIZ_LEMON_TIERS.map((tier, i)=>{
@@ -544,70 +575,71 @@ const selLemonIdx = state.businessLemonadeSelectedLemonIdx;
        renderBizLemonsPhase();
      });
    });
-  // Пакетики чая: выбор подсвечивается, покупка — по кнопке «Дальше».
-  if(teaWrap){
-    teaWrap.innerHTML = BIZ_TEA_TIERS.map((tier, i)=>{
-      const total = tier.qty * tier.pricePerUnit;
-      const affordable = capital >= total;
-      const sel = (selTeaIdx === i) ? ' biz-tier-selected' : '';
-      return `<button type="button" class="biz-lemon-tier-btn${affordable ? '' : ' biz-upgrade-owned'}${sel}" data-idx="${i}" ${affordable ? '' : 'disabled'}>Купить ${tier.qty} пакетиков чая — по ${tier.pricePerUnit} ₽/шт<span class="biz-option-cost">Итого: ${total} ₽</span></button>`;
-    }).join('');
-teaWrap.querySelectorAll('.biz-lemon-tier-btn').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          if(btn.disabled) return;
-          const newIdx = parseInt(btn.dataset.idx, 10);
-          state.businessLemonadeSelectedTeaIdx = newIdx;
-          saveState();
-          renderBizLemonsPhase();
-        });
-      });
-  }
-  // Кнопка «Дальше» активна только при наличии выбора для покупки
-  // (лимоны или чай), а переход на этап закупки происходит даже при пустом запасе.
-  if(nextBtn) nextBtn.disabled = !(canBuyLemon || canBuyTea);
+   // Пакетики чая: выбор подсвечивается, покупка — по кнопке «Дальше».
+   if(teaWrap){
+     teaWrap.innerHTML = BIZ_TEA_TIERS.map((tier, i)=>{
+       const total = tier.qty * tier.pricePerUnit;
+       const affordable = capital >= total;
+       const sel = (selTeaIdx === i) ? ' biz-tier-selected' : '';
+       return `<button type="button" class="biz-lemon-tier-btn${affordable ? '' : ' biz-upgrade-owned'}${sel}" data-idx="${i}" ${affordable ? '' : 'disabled'}>Купить ${tier.qty} пакетиков чая — по ${tier.pricePerUnit} ₽/шт<span class="biz-option-cost">Итого: ${total} ₽</span></button>`;
+     }).join('');
+     teaWrap.querySelectorAll('.biz-lemon-tier-btn').forEach(btn=>{
+       btn.addEventListener('click', ()=>{
+         if(btn.disabled) return;
+         const newIdx = parseInt(btn.dataset.idx, 10);
+         state.businessLemonadeSelectedTeaIdx = newIdx;
+         saveState();
+         renderBizLemonsPhase();
+       });
+     });
+   }
+   // Кнопка «Дальше» активна только при наличии выбора для покупки
+   // (лимоны или чай), а переход на этап закупки происходит даже при пустом запасе.
+   if(nextBtn) nextBtn.disabled = !(canBuyLemon || canBuyTea);
 }
 // Кнопка «Дальше» — покупка выбранного + переход к приготовлению
 function bizOnToBuy(){
-  const nextBtn = document.getElementById('bizToBuyBtn');
-  if(nextBtn && nextBtn.disabled) return;
-  const lemonSel = state.businessLemonadeSelectedLemonIdx;
-  const teaSel = state.businessLemonadeSelectedTeaIdx;
-  let bought = false;
-  if(lemonSel !== null && lemonSel !== undefined){
-    const tier = BIZ_LEMON_TIERS[lemonSel];
-    const total = tier.qty * tier.pricePerUnit;
-    if((state.businessLemonadeCapital || 0) >= total){
-      state.businessLemonadeCapital -= total;
-      state.businessLemonadeLemonStock = (state.businessLemonadeLemonStock || 0) + tier.qty;
-      state.businessLemonadeLemonBoughtDay = state.businessLemonadeDay || 1;
-      state.businessLemonadeSelectedLemonIdx = null;
-      bought = true;
-      playSuccessSound();
-      showToast(`Куплено ${tier.qty} лимонов за ${total} ₽`);
-    }
-  }
-  if(teaSel !== null && teaSel !== undefined){
-    const tier = BIZ_TEA_TIERS[teaSel];
-    const total = tier.qty * tier.pricePerUnit;
-    if((state.businessLemonadeCapital || 0) >= total){
-      state.businessLemonadeCapital -= total;
-      state.businessLemonadeTeaStock = (state.businessLemonadeTeaStock || 0) + tier.qty;
-      state.businessLemonadeSelectedTeaIdx = null;
-      bought = true;
-      playSuccessSound();
-      showToast(`Куплено ${tier.qty} пакетиков чая за ${total} ₽`);
-    }
-  }
-if(bought){
+   const nextBtn = document.getElementById('bizToBuyBtn');
+   if(nextBtn && nextBtn.disabled) return;
+   const lemonSel = state.businessLemonadeSelectedLemonIdx;
+   const teaSel = state.businessLemonadeSelectedTeaIdx;
+   let bought = false;
+   const totalCapital = (state.businessLemonadeCapital || 0) + (state.businessLemonadeGoalReserve || 0);
+   if(lemonSel != null){
+     const tier = BIZ_LEMON_TIERS[lemonSel];
+     const total = tier.qty * tier.pricePerUnit;
+     if(totalCapital >= total){
+       bizSpend(total);
+       state.businessLemonadeLemonStock = (state.businessLemonadeLemonStock || 0) + tier.qty;
+       state.businessLemonadeLemonBoughtDay = state.businessLemonadeDay || 1;
+       state.businessLemonadeSelectedLemonIdx = null;
+       bought = true;
+       playSuccessSound();
+       showToast(`Куплено ${tier.qty} лимонов за ${total} ₽`);
+     }
+   }
+   if(teaSel != null){
+     const tier = BIZ_TEA_TIERS[teaSel];
+     const total = tier.qty * tier.pricePerUnit;
+     if(totalCapital >= total){
+       bizSpend(total);
+       state.businessLemonadeTeaStock = (state.businessLemonadeTeaStock || 0) + tier.qty;
+       state.businessLemonadeSelectedTeaIdx = null;
+       bought = true;
+       playSuccessSound();
+       showToast(`Куплено ${tier.qty} пакетиков чая за ${total} ₽`);
+     }
+   }
+   if(bought){
      saveState();
      updateBizHeaderUI();
      updateBizContextBar();
      renderBizLemonsPhase();
    }
-  if((state.businessLemonadeLemonStock || 0) <= 0 && (state.businessLemonadeTeaStock || 0) <= 0) return;
-  renderBizQuantityGroup();
-  renderBizOptionsGrid();
-  goToBizPhase('bizPhaseBuy');
+   if((state.businessLemonadeLemonStock || 0) <= 0 && (state.businessLemonadeTeaStock || 0) <= 0) return;
+   renderBizQuantityGroup();
+   renderBizOptionsGrid();
+   goToBizPhase('bizPhaseBuy');
 }
 // Регистрируем обработчик клика по кнопке «Дальше: закупка остального»
 const bizToBuyBtnEl = document.getElementById('bizToBuyBtn');
@@ -690,9 +722,11 @@ function updateBizBuyBreakdownUI(){
       optionsCost += opt.costType === 'perCup' ? (lemonCups + teaCups) * opt.cost : opt.cost;
     }
   });
-  const total = lemonExpenses + teaExpenses + rent + optionsCost;
+const total = lemonExpenses + teaExpenses + rent + optionsCost;
+   const capital = state.businessLemonadeCapital || 0;
+   const totalAvailable = capital + (state.businessLemonadeGoalReserve || 0);
 
-  const rowsEl = document.getElementById('bizBuyBreakdownRows');
+   const rowsEl = document.getElementById('bizBuyBreakdownRows');
   let rowsHtml = '';
   if(lemonCups > 0){
     rowsHtml += `<div class="biz-breakdown-row"><span>🍋 Лимоны (из запаса)</span><span>${lemonCups} шт. · 0 ₽</span></div>`;
@@ -712,8 +746,7 @@ function updateBizBuyBreakdownUI(){
   rowsEl.innerHTML = rowsHtml;
   document.getElementById('bizBuyTotalRow').textContent = `${total} ₽`;
   const warnEl = document.getElementById('bizBuyWarning');
-  const capital = state.businessLemonadeCapital || 0;
-  const overBudget = total > capital;
+   const overBudget = total > totalAvailable;
   const lemonStock = state.businessLemonadeLemonStock || 0;
   const teaStock = state.businessLemonadeTeaStock || 0;
   const lemonShort = (lemonCups > 0 && state.businessLemonadeCups > lemonStock);
@@ -722,26 +755,31 @@ function updateBizBuyBreakdownUI(){
     const problems = [];
     if(lemonShort) problems.push(`не хватает лимонов: нужно ${state.businessLemonadeCups} шт., в запасе ${lemonStock} шт.`);
     if(teaShort) problems.push(`не хватает пакетиков чая: нужно ${state.businessLemonadeTeaCups} шт., в запасе ${teaStock} шт.`);
-    if(overBudget) problems.push(`не хватает денег: расходы ${total} ₽ больше, чем капитал ${capital} ₽`);
-    warnEl.style.display = problems.length ? 'block' : 'none';
-    warnEl.textContent = problems.length ? `Пока нельзя продолжить: ${problems.join('; ')}. Уменьши количество стаканов, отключи опции или докупи кнопкой выше${overBudget ? ' (или попроси у друга в долг кнопкой ниже)' : ''}.` : '';
+    if(overBudget) problems.push(`не хватает денег: расходы ${total} ₽ больше, чем доступно ${totalAvailable} ₽`);
+     warnEl.style.display = problems.length ? 'block' : 'none';
+     warnEl.textContent = problems.length ? `Пока нельзя продолжить: ${problems.join('; ')}. Уменьши количество стаканов, отключи опции или докупи кнопкой выше${overBudget ? ' (сначала тратится резерв на цель, потом капитал; если не хватает — занять у друга кнопкой ниже)' : ''}.` : '';
   }
   const nextBtn = document.getElementById('bizToPriceBtn');
   if(nextBtn) nextBtn.disabled = overBudget || lemonShort || teaShort;
   // Кнопка займа: показываем только когда денег на день не хватает — так игрок
   // никогда не застревает на шаге «Приготовление напитков» из-за пустого капитала.
-  const loanBtn = document.getElementById('bizLoanBtn');
+  const loanBtn = document.getElementById("bizLoanBtn");
   if(loanBtn){
     if(overBudget){
-      const need = b.total - capital;
-      const borrow = bizLoanAmountForNeed(need);
-      const owed = Math.round(borrow * BIZ_LOAN_INTEREST);
-      loanBtn.style.display = 'block';
-      loanBtn.textContent = (state.businessLemonadeLoanOwed > 0 ? '🤝 Занять у друга ещё ' : '🤝 Занять у друга ') + `${borrow} ₽ (вернуть ${owed} ₽)`;
+      const reserve = state.businessLemonadeGoalReserve || 0;
+      const needAfterReserve = Math.max(0, total - capital - reserve);
+      if(needAfterReserve <= 0){
+        loanBtn.style.display = 'none';
+      } else {
+        const borrow = bizLoanAmountForNeed(needAfterReserve);
+        const owed = Math.round(borrow * BIZ_LOAN_INTEREST);
+        loanBtn.style.display = 'block';
+        loanBtn.textContent = (state.businessLemonadeLoanOwed > 0 ? '🤝 Занять у друга ещё ' : '🤝 Занять у друга ') + `${borrow} ₽ (вернуть ${owed} ₽)`;
+      }
     } else {
       loanBtn.style.display = 'none';
     }
-}
+  }
 }
 
 /* --- Займ у друга: единый расчёт суммы --- */
@@ -751,35 +789,47 @@ function bizLoanAmountForNeed(need){
   return Math.ceil(Math.max(BIZ_MIN_CAPITAL_FOR_DAY, Math.max(0, need)) / 5) * 5;
 }
 document.getElementById('bizLoanBtn').addEventListener('click', ()=>{
-const lemonCups = state.businessLemonadeCups || 0;
+   const lemonCups = state.businessLemonadeCups || 0;
    const teaCups = state.businessLemonadeTeaCups || 0;
-  // Берём общую сумму: расходы обоих напитков + аренда + опции
-  const total = bizDrinkExpenses(lemonCups, 'lemonade') + bizDrinkExpenses(teaCups, 'tea')
-    + (BIZ_LOCATIONS[state.businessLemonadeLocation] || { rentPerHour: 0 }).rentPerHour * (state.businessLemonadeHours || 1);
-  let optionsCost = 0;
-  Object.keys(BIZ_OPTIONS).forEach(key=>{
-    if(state.businessLemonadeOptions[key]){
-      const opt = BIZ_OPTIONS[key];
-      optionsCost += opt.costType === 'perCup' ? (lemonCups + teaCups) * opt.cost : opt.cost;
+   // Берём общую сумму: расходы обоих напитков + аренда + опции
+   const total = bizDrinkExpenses(lemonCups, 'lemonade') + bizDrinkExpenses(teaCups, 'tea')
+     + (BIZ_LOCATIONS[state.businessLemonadeLocation] || { rentPerHour: 0 }).rentPerHour * (state.businessLemonadeHours || 1);
+   let optionsCost = 0;
+   Object.keys(BIZ_OPTIONS).forEach(key=>{
+     if(state.businessLemonadeOptions[key]){
+       const opt = BIZ_OPTIONS[key];
+       optionsCost += opt.costType === 'perCup' ? (lemonCups + teaCups) * opt.cost : opt.cost;
+     }
+   });
+// Сначала используем резерв на цель, потом — займ у друга
+    const reserve = state.businessLemonadeGoalReserve || 0;
+    const needAfterReserve = Math.max(0, (total + optionsCost) - (state.businessLemonadeCapital || 0) - reserve);
+    if(needAfterReserve <= 0 && (total + optionsCost) > (state.businessLemonadeCapital || 0)){
+      // Резерв покрывает нехватку — переводим из резерва
+      const shortfall = (total + optionsCost) - (state.businessLemonadeCapital || 0);
+      bizSpend(shortfall);
+      saveState();
+      playSuccessSound();
+      showToast(`🤝 Использован резерв на цель: ${shortfall} ₽`);
+    } else if(needAfterReserve <= 0){
+      return;
+    } else {
+      const borrow = bizLoanAmountForNeed(needAfterReserve);
+      const owed = Math.round(borrow * BIZ_LOAN_INTEREST);
+      state.businessLemonadeCapital = (state.businessLemonadeCapital || 0) + borrow;
+      // Долги суммируются: можно попросить у друга несколько раз, если денег
+      // всё равно не хватает. Возвращать до ближайшего из сроков.
+      state.businessLemonadeLoanOwed = (state.businessLemonadeLoanOwed || 0) + owed;
+      state.businessLemonadeLoanDueDay = Math.max(state.businessLemonadeLoanDueDay || 0, (state.businessLemonadeDay || 1) + BIZ_LOAN_DUE_DAYS);
+      saveState();
+      playSuccessSound();
+      showToast(`🤝 Друг одолжил ${borrow} ₽. Верни ${state.businessLemonadeLoanOwed} ₽ до дня ${state.businessLemonadeLoanDueDay}`);
     }
-  });
-  const need = (total + optionsCost) - (state.businessLemonadeCapital || 0);
-  if(need <= 0) return;
-  const borrow = bizLoanAmountForNeed(need);
-  const owed = Math.round(borrow * BIZ_LOAN_INTEREST);
-  state.businessLemonadeCapital = (state.businessLemonadeCapital || 0) + borrow;
-  // Долги суммируются: можно попросить у друга несколько раз, если денег
-  // всё равно не хватает. Возвращать до ближайшего из сроков.
-  state.businessLemonadeLoanOwed = (state.businessLemonadeLoanOwed || 0) + owed;
-  state.businessLemonadeLoanDueDay = Math.max(state.businessLemonadeLoanDueDay || 0, (state.businessLemonadeDay || 1) + BIZ_LOAN_DUE_DAYS);
-  saveState();
-  playSuccessSound();
-  showToast(`🤝 Друг одолжил ${borrow} ₽. Верни ${state.businessLemonadeLoanOwed} ₽ до дня ${state.businessLemonadeLoanDueDay}`);
-  updateBizHeaderUI();
-  updateBizContextBar();
-  renderBizQuantityGroup();
-  updateBizBuyBreakdownUI();
-});
+    updateBizHeaderUI();
+    updateBizContextBar();
+    renderBizQuantityGroup();
+    updateBizBuyBreakdownUI();
+   });
 document.getElementById('bizToPriceBtn').addEventListener('click', ()=>{
   if(document.getElementById('bizToPriceBtn').disabled) return;
   playSuccessSound();
@@ -948,15 +998,22 @@ const lemonPrice = state.businessLemonadePrice || 30;
   state.businessLemonadeSold = lemonSold + teaSold;
   state.businessLemonadeRevenue = totalRevenue;
   state.businessLemonadeNetProfit = netProfit;
-  // Обновляем остатки обоих напитков
-  state.businessLemonadeLemonStock = Math.max(0, (state.businessLemonadeLemonStock || 0) - lemonSold);
-  if(state.businessLemonadeLemonStock === 0) state.businessLemonadeLemonBoughtDay = null;
-  state.businessLemonadeTeaStock = Math.max(0, (state.businessLemonadeTeaStock || 0) - teaSold);
+// Все запасы расходуются — непроданные стаканы сгорают
+   state.businessLemonadeLemonStock = 0;
+   state.businessLemonadeLemonBoughtDay = null;
+   state.businessLemonadeTeaStock = 0;
 
-  // Капитал
-  state.businessLemonadeCapital = Math.max(0, (state.businessLemonadeCapital || 0) + netProfit);
-  if(!state.businessLemonadeDayProfits) state.businessLemonadeDayProfits = [];
-  state.businessLemonadeDayProfits[(state.businessLemonadeDay || 1) - 1] = netProfit;
+// Капитал: макс. 200₽, всё сверху — в резерв на цель
+   const capitalBeforeReserve = (state.businessLemonadeCapital || 0) + netProfit;
+   const MAX_CAPITAL = 200;
+   if(capitalBeforeReserve > MAX_CAPITAL){
+     state.businessLemonadeGoalReserve = (state.businessLemonadeGoalReserve || 0) + (capitalBeforeReserve - MAX_CAPITAL);
+     state.businessLemonadeCapital = MAX_CAPITAL;
+   } else {
+     state.businessLemonadeCapital = Math.max(0, capitalBeforeReserve);
+   }
+   if(!state.businessLemonadeDayProfits) state.businessLemonadeDayProfits = [];
+   state.businessLemonadeDayProfits[(state.businessLemonadeDay || 1) - 1] = netProfit;
 
   // Лог дня
   if(!state.businessLemonadeDayLog) state.businessLemonadeDayLog = [];
@@ -1259,8 +1316,9 @@ state.businessLemonadeLemonStock = 0;
    state.businessLemonadeTeaStock = 0;
    state.businessLemonadeCompetitorPrice = null;
 state.businessLemonadeLoanOwed = 0;
-   state.businessLemonadeLoanDueDay = null;
-   state.businessLemonadeCups = 10;
+    state.businessLemonadeLoanDueDay = null;
+    state.businessLemonadeGoalReserve = 0;
+    state.businessLemonadeCups = 10;
    state.businessLemonadeTeaCups = 0;
    state.businessLemonadeSelectedLemonIdx = 1;
    state.businessLemonadeSelectedTeaIdx = 0;
