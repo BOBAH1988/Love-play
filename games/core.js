@@ -1427,10 +1427,27 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
 });
 
 
-document.getElementById('updateAppBtn').addEventListener('click', async ()=>{
-  // Жёсткое обновление: сбрасываем Service Worker, очищаем ВСЕ кэши и
-  // перезагружаем страницу. Это гарантирует, что браузер подтянет свежие
-  // версии ВСЕХ файлов (JS, CSS, HTML), а не закэшированные.
+/* ============ ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ ============
+   В установленной PWA (иконка на домашнем экране) нет адресной строки и
+   кнопки «Обновить», поэтому обновление запускается только отсюда.
+   Кнопок две и они дублируют друг друга: #menuUpdateBtn в меню «☰» и
+   служебная #updateAppBtn в скрытом блоке — раньше у каждой был свой
+   обработчик с копией одного и того же кода. Теперь логика одна.
+
+   Почему офлайн — особый случай. Обычный сценарий: снимаем Service Worker,
+   стираем кэши, перезагружаем страницу по уникальному адресу — браузер
+   обязан сходить в сеть и получить свежие файлы. Но если в этот момент нет
+   интернета, перезагрузка уходит «в пустоту»: кэш уже удалён, и приложение
+   не откроется вовсе. Поэтому без сети НИЧЕГО не трогаем и честно говорим
+   об этом — старый кэш лучше, чем неработающее приложение. */
+async function hardUpdateApp(){
+  // navigator.onLine === false — достоверный признак отсутствия сети.
+  // Значение true ничего не гарантирует, но в этом случае обычный сценарий
+  // безопасен: если сеть на самом деле отвалилась, сработает .catch ниже.
+  if(navigator.onLine === false){
+    showToast('Нет интернета — обновление возможно только онлайн');
+    return;
+  }
   try{
     if('serviceWorker' in navigator){
       const regs = await navigator.serviceWorker.getRegistrations();
@@ -1440,12 +1457,22 @@ document.getElementById('updateAppBtn').addEventListener('click', async ()=>{
       const keys = await caches.keys();
       await Promise.all(keys.map(k=>caches.delete(k)));
     }
+    // Флаг читает games/init.js и показывает тост «Обновлено до последней версии».
     sessionStorage.setItem('appJustUpdated', '1');
   }catch(e){}
+  // Параметр _r=… делает адрес уникальным: так браузер гарантированно
+  // обходит кэш навигации. Служебный параметр убирает init.js после загрузки.
   const url = new URL(location.href);
   url.searchParams.set('_r', Date.now());
   location.replace(url.toString());
-});
+}
+// Служебная кнопка в скрытом блоке (исторически использовалась для ручного
+// обновления при отладке). Обработчик висит с проверкой на существование:
+// элемент есть в разметке, но приложение не должно падать, если его уберут.
+const __updateAppBtnEl = document.getElementById('updateAppBtn');
+if(__updateAppBtnEl){
+  __updateAppBtnEl.addEventListener('click', ()=>hardUpdateApp());
+}
 
 /* ============ ПОДТВЕРЖДЕНИЕ СБРОСА ПРОГРЕССА ============
    Кастомная модалка #resetConfirmModal вместо нативного confirm():
@@ -4893,25 +4920,11 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     closeMenu();
     document.getElementById('importDataInput').click();
   });
-  document.getElementById('menuUpdateBtn').addEventListener('click', async ()=>{
+  document.getElementById('menuUpdateBtn').addEventListener('click', ()=>{
     closeMenu();
-    // Жёсткое обновление: сбрасываем Service Worker, очищаем ВСЕ кэши и
-    // перезагружаем страницу. Это гарантирует, что браузер подтянет свежие
-    // версии ВСЕХ файлов (JS, CSS, HTML), а не закэшированные.
-    try{
-      if('serviceWorker' in navigator){
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r=>r.unregister()));
-      }
-      if('caches' in window){
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k=>caches.delete(k)));
-      }
-      sessionStorage.setItem('appJustUpdated', '1');
-    }catch(e){}
-    const url = new URL(location.href);
-    url.searchParams.set('_r', Date.now());
-    location.replace(url.toString());
+    // Общая логика жёсткого обновления (см. hardUpdateApp выше) — та же,
+    // что у служебной кнопки #updateAppBtn.
+    hardUpdateApp();
   });
   document.getElementById('menuInstallBtn').addEventListener('click', ()=>{
     closeMenu();

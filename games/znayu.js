@@ -468,9 +468,3 @@ renderPartyPlayers();
 updateResumeUI();
 updateFavoritesOnlyBtn();
 populateNewCardLevelSelect();
-try{
-  if(sessionStorage.getItem('appJustUpdated')){
-    sessionStorage.removeItem('appJustUpdated');
-    setTimeout(()=>showToast('Обновлено до последней версии'), 400);
-  }
-}catch(e){}
