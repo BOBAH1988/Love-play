@@ -222,7 +222,7 @@ let state = {
   businessLemonadeHours:null, businessLemonadeOptions:{},
   businessLemonadeLemonStock:0, businessLemonadeLemonBoughtDay:null, businessLemonadeTeaStock:0, businessLemonadeCompetitorPrice:null,
   businessLemonadeLoanOwed:0, businessLemonadeLoanDueDay:null,
-  businessLemonadeCups:10, businessLemonadePrice:40, businessLemonadeTeaCups:10, businessLemonadeTeaPrice:15, businessLemonadeDrinkType:'lemonade', businessLemonadeSold:0,
+  businessLemonadeCups:10, businessLemonadePrice:40, businessLemonadeTeaCups:10, businessLemonadeTeaPrice:10, businessLemonadeDrinkType:'lemonade', businessLemonadeSold:0,
   businessLemonadeGoal:1000, businessLemonadeGoalName:'кафе',
   businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[], businessLemonadeDayLog:[],
   businessLemonadeQuizIndex:0, businessLemonadeQuizCorrect:0, businessLemonadeQuizItems:[],
@@ -1654,7 +1654,7 @@ function performFullReset(){
   state.businessLemonadeCompetitorPrice = null;
   state.businessLemonadeLoanOwed = 0; state.businessLemonadeLoanDueDay = null;
   state.businessLemonadeCups = 10; state.businessLemonadePrice = 40; state.businessLemonadeSold = 0;
-  state.businessLemonadeTeaCups = 10; state.businessLemonadeTeaPrice = 15; state.businessLemonadeTeaStock = 0; state.businessLemonadeDrinkType = 'lemonade';
+  state.businessLemonadeTeaCups = 10; state.businessLemonadeTeaPrice = 10; state.businessLemonadeTeaStock = 0; state.businessLemonadeDrinkType = 'lemonade';
   state.businessLemonadeRevenue = 0; state.businessLemonadeNetProfit = 0; state.businessLemonadeDayProfits = [];
   state.businessLemonadeDayLog = [];
   state.businessLemonadeGoal = 1000; state.businessLemonadeGoalName = 'кафе';

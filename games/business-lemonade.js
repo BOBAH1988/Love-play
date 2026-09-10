@@ -946,7 +946,7 @@ function bizSellDay(){
    const lemonCups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
    const teaCups = Math.min(state.businessLemonadeTeaCups || 0, state.businessLemonadeTeaStock || 0);
 const lemonPrice = state.businessLemonadePrice || 30;
-   const teaPrice = state.businessLemonadeTeaPrice || 5;
+   const teaPrice = state.businessLemonadeTeaPrice || 10;
 
   // Расчёт спроса на каждый напиток
   const lemonDemand = lemonCups > 0 ? bizDrinkDemand(lemonPrice, 'lemonade', weatherKey, locationKey, options, dow, hours) : 0;
@@ -1323,7 +1323,7 @@ state.businessLemonadeLoanOwed = 0;
    state.businessLemonadeSelectedLemonIdx = 1;
    state.businessLemonadeSelectedTeaIdx = 0;
    state.businessLemonadePrice = 30;
-    state.businessLemonadeTeaPrice = 5;
+   state.businessLemonadeTeaPrice = 10;
    state.businessLemonadeSold = 0;
   state.businessLemonadeRevenue = 0;
   state.businessLemonadeNetProfit = 0;
