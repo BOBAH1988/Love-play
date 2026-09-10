@@ -635,7 +635,10 @@ function goToPartyRouletteGame(){
   renderRouletteChips();
   updateRouletteTurnLabel();
   updateRouletteBetTotal();
-  document.getElementById('rouletteSpinResult').textContent = '';
+  // Элемент результата живёт в модалке кручения и создаётся динамически,
+  // поэтому проверяем его наличие — как в остальных местах этого файла.
+  const spinResultEl = document.getElementById('rouletteSpinResult');
+  if(spinResultEl) spinResultEl.textContent = '';
   updateMuteBtn();
   rouletteSpinning = false;
   requestWakeLock();

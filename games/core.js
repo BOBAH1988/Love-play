@@ -6170,7 +6170,11 @@ function parseCardsFromText(text){
 const importCardsBtnEl = document.getElementById('importCardsBtn');
 if(importCardsBtnEl){
   importCardsBtnEl.addEventListener('click', ()=>{
-    document.getElementById('importCardsInput').click();
+    // Скрытый input для выбора файла. Раньше здесь было обращение без проверки:
+    // работало только потому, что кнопка #importCardsBtn отсутствует в разметке
+    // (обработчик не вешается) — то есть код был живой только «по случайности».
+    const input = document.getElementById('importCardsInput');
+    if(input) input.click();
   });
 }
 const importCardsInputEl = document.getElementById('importCardsInput');

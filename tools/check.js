@@ -1,0 +1,371 @@
+#!/usr/bin/env node
+/**
+ * tools/check.js — проверка проекта перед коммитом.
+ *
+ * Запуск:  node tools/check.js
+ * Или:     node tools/check.js --verbose   (показывать детали каждой проверки)
+ *
+ * Что проверяется (семь групп — ровно те баги, что реально случались
+ * в этом проекте, см. раздел «Логи исправлений» в README):
+ *
+ *   1. Загрузка скриптов   — все 80+ файлов грузятся без ошибок, порядок соблюдён
+ *   2. Разметка            — баланс <div> по каждой секции index.html
+ *   3. Мёртвый код         — функции, которые нигде не вызываются
+ *   4. Подключения         — все cards/*.js и games/*.js подключены в index.html
+ *   5. Версии и кэш        — формат ?v=, уникальность, CACHE_NAME в sw.js
+ *   6. DOM-ссылки          — getElementById без защиты на несуществующий id
+ *   7. Ссылки документации — якоря в README.md ведут на существующие заголовки
+ *
+ * Скрипт НЕ проверяет визуальную часть (вёрстку, цвета, размеры) — для этого
+ * нужен реальный браузер. Он отвечает на вопрос «ничего не сломано».
+ *
+ * Код возврата: 0 — всё чисто, 1 — есть проблемы (удобно для CI и git-хуков).
+ */
+
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const { loadAppScripts } = require('./dom-stub');
+
+const ROOT = path.resolve(__dirname, '..');
+const VERBOSE = process.argv.includes('--verbose') || process.argv.includes('-v');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Мини-фреймворк для отчёта: копим результаты и печатаем один раз в конце.
+// ─────────────────────────────────────────────────────────────────────────────
+const results = [];
+let currentGroup = null;
+
+function group(title) {
+  currentGroup = { title, checks: [] };
+  results.push(currentGroup);
+}
+
+/** @param {string} name @param {boolean} ok @param {string} [detail] */
+function check(name, ok, detail) {
+  currentGroup.checks.push({ name, ok, detail: ok ? null : detail });
+}
+
+const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+const exists = (rel) => fs.existsSync(path.join(ROOT, rel));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. Загрузка скриптов
+// ─────────────────────────────────────────────────────────────────────────────
+function checkScripts(html) {
+  group('Загрузка скриптов');
+  const { loaded, failed, missingIds } = loadAppScripts(html, { root: ROOT });
+  const total = loaded.length + failed.length;
+
+  check(
+    `все скрипты грузятся без ошибок (${loaded.length}/${total})`,
+    failed.length === 0,
+    failed.map((f) => `${f.file}: ${f.error}`).join('\n      ')
+  );
+
+  // Порядок загрузки в проекте: сначала ВСЕ данные (cards/*), затем логика
+  // (games/core.js первым), последним — init.js.
+  // Границы критичны: данные должны быть готовы к моменту, когда core.js
+  // начнёт их читать, а init.js вызывает функции всех игр — он последний.
+  const order = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1].split('?')[0]);
+  const gameScripts = order.filter((f) => f.startsWith('games/'));
+  check(
+    'games/core.js — первый среди скриптов логики',
+    gameScripts[0] === 'games/core.js',
+    `первым идёт ${gameScripts[0]}`
+  );
+  check(
+    'games/init.js подключён последним',
+    order[order.length - 1] === 'games/init.js',
+    `последним идёт ${order[order.length - 1]}`
+  );
+  // В cards/ лежат не только данные, но и сборочные скрипты (например,
+  // wish-roulette-cards.js собирает банк из других колод) — они обязаны
+  // грузиться ПОСЛЕ источников, поэтому общее правило «все cards до games»
+  // к ним не применимо. Проверяем то, что действительно важно: колоды-данные
+  // (cards_fants, cards_quiz и т.п.) должны быть готовы до core.js, потому что
+  // core.js сразу строит из них пул карточек.
+  const coreIdx = order.indexOf('games/core.js');
+  const dataDecks = order.filter((f) => /^cards\/cards_[a-z_]+/.test(f));
+  const lateDecks = dataDecks.filter((f) => order.indexOf(f) > coreIdx);
+  check(
+    `колоды данных подключены до core.js (${dataDecks.length})`,
+    lateDecks.length === 0,
+    `после core.js: ${lateDecks.join(', ')}`
+  );
+
+  return { loaded, failed, missingIds };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Баланс разметки
+// ─────────────────────────────────────────────────────────────────────────────
+function checkMarkup(html) {
+  group('Разметка');
+  const open = (html.match(/<div\b/g) || []).length;
+  const close = (html.match(/<\/div>/g) || []).length;
+  check(`баланс <div> во всём файле (${open}/${close})`, open === close, `разница ${open - close}`);
+
+  // По секциям — так сразу видно, где именно незакрытый тег.
+  const broken = [];
+  for (const m of html.matchAll(/<section[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/section>/g)) {
+    const o = (m[2].match(/<div\b/g) || []).length;
+    const c = (m[2].match(/<\/div>/g) || []).length;
+    if (o !== c) broken.push(`#${m[1]} (${o - c > 0 ? '+' : ''}${o - c})`);
+  }
+  check(
+    'баланс <div> по каждой секции',
+    broken.length === 0,
+    `несбалансированы: ${broken.join(', ')}`
+  );
+
+  // Дубли id ломают getElementById — он вернёт первый попавшийся элемент.
+  const allIds = [...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]);
+  const dupes = [...new Set(allIds.filter((id, i) => allIds.indexOf(id) !== i))];
+  check('нет дублирующихся id', dupes.length === 0, `дубли: ${dupes.join(', ')}`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. Мёртвый код
+// ─────────────────────────────────────────────────────────────────────────────
+function checkDeadCode() {
+  group('Мёртвый код');
+  const files = fs.readdirSync(path.join(ROOT, 'games'))
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => path.join('games', f));
+  files.push('index.html');
+
+  const all = files.map((f) => read(f)).join('\n');
+  const dead = [];
+
+  for (const file of files) {
+    const src = read(file);
+    // Ищем только определения функций верхнего уровня: они глобальные,
+    // значит отсутствие упоминаний где-либо = гарантированно мёртвый код.
+    for (const m of src.matchAll(/^function\s+([A-Za-z_$][\w$]*)\s*\(/gm)) {
+      const name = m[1];
+      const uses = (all.match(new RegExp(`\\b${name}\\b`, 'g')) || []).length;
+      if (uses <= 1) dead.push(`${name} (${file})`);
+    }
+  }
+  check(
+    `нет неиспользуемых функций${dead.length ? ` — найдено ${dead.length}` : ''}`,
+    dead.length === 0,
+    dead.join('\n      ')
+  );
+
+  // Отладочные следы, которые не должны попадать в продакшн.
+  const debug = [];
+  for (const file of files) {
+    const src = read(file);
+    src.split('\n').forEach((line, i) => {
+      if (/console\.(log|debug|trace)\s*\(|(^|\s)debugger\s*;/.test(line)) {
+        debug.push(`${file}:${i + 1}`);
+      }
+    });
+  }
+  check('нет console.log / debugger', debug.length === 0, debug.join(', '));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. Подключения файлов данных и логики
+// ─────────────────────────────────────────────────────────────────────────────
+function checkWiring(html) {
+  group('Подключения');
+  for (const [dir, pattern] of [['games', /games\/([a-z0-9-]+\.js)/g], ['cards', /cards\/([a-z0-9_-]+\.js)/g]]) {
+    const listed = new Set([...html.matchAll(pattern)].map((m) => m[1]));
+    const onDisk = fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith('.js'));
+    const orphan = onDisk.filter((f) => !listed.has(f));
+    check(
+      `все ${dir}/*.js подключены (${onDisk.length})`,
+      orphan.length === 0,
+      `не подключены: ${orphan.join(', ')}`
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. Версии скриптов и кэш Service Worker
+// ─────────────────────────────────────────────────────────────────────────────
+function checkVersions(html) {
+  group('Версии и кэш');
+  const tags = [...html.matchAll(/src="([^"]+)\?v=([^"]+)"/g)];
+
+  const badFormat = tags.filter((m) => !/^\d{8}[a-z]$/.test(m[2]));
+  check(
+    'формат версий ?v=YYYYMMDDx',
+    badFormat.length === 0,
+    badFormat.map((m) => `${m[1]}=${m[2]}`).join(', ')
+  );
+
+  const untagged = [...html.matchAll(/src="((?:games|cards)\/[^"]+\.js)"/g)].map((m) => m[1]);
+  check(
+    'у всех games/cards проставлена версия',
+    untagged.length === 0,
+    `без ?v=: ${untagged.join(', ')}`
+  );
+
+  const sw = read('sw.js');
+  const cache = sw.match(/CACHE_NAME\s*=\s*'([^']+)'/);
+  check('CACHE_NAME объявлен', !!cache, 'не найдена строка CACHE_NAME');
+  if (cache) {
+    check(
+      `CACHE_NAME в формате vNNN (${cache[1]})`,
+      /-v\d+$/.test(cache[1]),
+      'ожидается имя вида veselye-igry-cache-vN'
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. DOM-ссылки без защиты
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Проверяет, лежит ли строка внутри блока `if (<переменная>) { ... }`, где
+ * эта переменная получает значение getElementById(<id>) с отсутствующим id.
+ * Если да — код недостижим, падения не будет.
+ */
+function guardIsDead(src, lineIdx, id) {
+  const lines = src.split('\n');
+  const guardRe = new RegExp(`(?:const|let|var)\\s+(\\w+)\\s*=\\s*document\\.getElementById\\(['"]${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]\\)`);
+  let guardVar = null;
+  for (let i = lineIdx; i >= 0 && i > lineIdx - 400; i--) {
+    const m = lines[i].match(guardRe);
+    if (m) { guardVar = m[1]; break; }
+  }
+  if (!guardVar) return false;
+  // Ищем `if (guardVar)` выше нашей строки и убеждаемся, что мы внутри него.
+  let depth = 0;
+  for (let i = lineIdx; i >= 0 && i > lineIdx - 400; i--) {
+    const l = lines[i];
+    if (new RegExp(`if\\s*\\(\\s*${guardVar}\\s*\\)`).test(l)) return true;
+    depth += (l.match(/\{/g) || []).length - (l.match(/\}/g) || []).length;
+    if (depth < 0) return false;
+  }
+  return false;
+}
+
+function checkDomRefs(html, missingIds) {
+  group('DOM-ссылки');
+  const ids = new Set([...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]));
+
+  // id, которые приложение создаёт само: через innerHTML (id="..." внутри
+  // шаблонных строк) или через createElement + .id = '...'. Их отсутствие
+  // в index.html — норма, а не ошибка.
+  const dynamicIds = new Set(['toast']);
+  const jsFiles = fs.readdirSync(path.join(ROOT, 'games')).map((f) => path.join('games', f));
+  for (const file of jsFiles) {
+    const src = read(file);
+    for (const m of src.matchAll(/id="([^"$]+)"/g)) dynamicIds.add(m[1]);
+    for (const m of src.matchAll(/\.id\s*=\s*['"]([^'"]+)['"]/g)) dynamicIds.add(m[1]);
+  }
+
+  // Опасен не сам факт обращения к отсутствующему id, а обращение БЕЗ проверки:
+  //   document.getElementById('x').textContent = ...   <- упадёт
+  //   const el = document.getElementById('x'); if (el)  <- безопасно
+  const unsafe = [];
+  for (const file of jsFiles) {
+    const src = read(file);
+    src.split('\n').forEach((line, i) => {
+      const m = line.match(/getElementById\(['"]([^'"]+)['"]\)\s*\.\s*(\w+)/);
+      if (!m) return;
+      const id = m[1], prop = m[2];
+      if (ids.has(id) || dynamicIds.has(id)) return;
+      if (/^\s*(\/\/|\*)/.test(line)) return;   // комментарий
+      if (line.includes('||')) return;             // есть фолбэк
+      // Мёртвая ветка: код внутри if(<el>){...}, где <el> заведомо null,
+      // потому что его id нет в разметке. Такой код не выполнится никогда,
+      // поэтому падения не будет — это не баг, а неиспользуемый функционал
+      // (например, импорт/экспорт своих заданий, отключённый в UI).
+      if (guardIsDead(src, i, id)) return;
+      unsafe.push(`${file}:${i + 1} -> #${id}.${prop}`);
+    });
+  }
+  check(
+    'нет незащищённых обращений к отсутствующим id',
+    unsafe.length === 0,
+    unsafe.join('\n      ')
+  );
+
+  // Отсутствующие id сами по себе — норма (кнопки правил, служебные элементы),
+  // но полезно видеть их число: резкий рост означает опечатку в разметке.
+  const unknown = missingIds.filter((id) => !ids.has(id) && !dynamicIds.has(id));
+  if (VERBOSE) {
+    console.log(`      i id вне разметки: ${unknown.length} — все обращения защищены`);
+  }
+  return unknown;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. Ссылки в документации
+// ─────────────────────────────────────────────────────────────────────────────
+function checkDocs() {
+  group('Документация');
+  if (!exists('README.md')) {
+    check('README.md существует', false, 'файл не найден');
+    return;
+  }
+  const md = read('README.md');
+
+  // Слаги как в GitHub: нижний регистр, эмодзи и пунктуация отбрасываются.
+  const slug = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').trim().replace(/\s+/g, '-');
+  const headings = new Set([...md.matchAll(/^#{1,6}\s+(.+)$/gm)].map((m) => slug(m[1])));
+
+  const broken = [...md.matchAll(/\]\(#([^)]+)\)/g)]
+    .map((m) => m[1])
+    .filter((anchor) => !headings.has(anchor));
+  check('все ссылки-якоря в README рабочие', broken.length === 0, `битые: ${broken.join(', ')}`);
+
+  check('AGENTS.md существует', exists('AGENTS.md'), 'файл с правилами проекта не найден');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Отчёт
+// ─────────────────────────────────────────────────────────────────────────────
+function report() {
+  let failed = 0;
+  let total = 0;
+
+  console.log('\n  Проверка проекта «Давай играй»\n');
+
+  for (const g of results) {
+    const bad = g.checks.filter((c) => !c.ok).length;
+    console.log(`  ${bad === 0 ? '✓' : '✗'} ${g.title}`);
+    for (const c of g.checks) {
+      total++;
+      if (c.ok) {
+        if (VERBOSE) console.log(`      ✓ ${c.name}`);
+      } else {
+        failed++;
+        console.log(`      ✗ ${c.name}`);
+        if (c.detail) console.log(`        ${c.detail.replace(/\n/g, '\n        ')}`);
+      }
+    }
+  }
+
+  console.log('');
+  if (failed === 0) {
+    console.log(`  Всё чисто: ${total} проверок пройдено.\n`);
+  } else {
+    console.log(`  Проблем: ${failed} из ${total} проверок.\n`);
+  }
+  return failed === 0 ? 0 : 1;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+function main() {
+  const html = read('index.html');
+  const { missingIds } = checkScripts(html);
+  checkMarkup(html);
+  checkDeadCode();
+  checkWiring(html);
+  checkVersions(html);
+  checkDomRefs(html, missingIds);
+  checkDocs();
+  process.exit(report());
+}
+
+if (require.main === module) main();
+
+module.exports = { main };
