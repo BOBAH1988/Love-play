@@ -1529,24 +1529,98 @@ function performFullReset(){
    state.hiddenIndexes = [];
    state.usedIndexes = [];
    // Имена игроков (команд) — сбрасываются на дефолтные, как обещано в диалоге
-   // подтверждения ("имена команд… будут сброшены"). Возраст ребёнка (kidsAge)
-   // остается — это настройка, а не прогресс.
+   // подтверждения ("имена команд… будут сброшены").
    state.kidsPlayers = ['Родитель','Ребёнок'];
    state.businessPlayers = [businessDefaultName(0), businessDefaultName(1)];
    state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
-  state.gameMode = 'hot';
-  state.activeLevels = [3,4,5,6];
-  state.levelCap = 3;
-  state.autoMilestone = 0;
-  state.turnsAtLastLevelUp = 0;
-  state.starter = 'random';
-  state.favoritesOnly = false;
-  state.favoriteIndexes = [];
-  // Предложи партнеру (фото)
-  state.photoUsed = {};
-  state.photoHidden = [];
-  state.photoDone = [];
-  state.sexshopOwned = [];
+   state.name1 = 'Парень';
+   state.name2 = 'Девушка';
+   // Настройки звука — к дефолтам. muted (общий выключатель звука) сознательно
+   // НЕ трогаем: это настройка устройства, а не прогресс партии, и «внезапно
+   // зазвучало» после сброса — неприятный сюрприз.
+   state.autoSpeak = true;
+   state.gameMode = 'hot';
+   state.activeLevels = [3,4,5,6];
+   state.levelCap = 3;
+   state.autoMilestone = 0;
+   state.turnsAtLastLevelUp = 0;
+   state.starter = 'random';
+   state.favoritesOnly = false;
+   state.favoriteIndexes = [];
+   // Прогресс внутри партии «Фантов»: чей ход и сколько ходов набрано на
+   // текущем уровне. Без этого после сброса партия продолжалась бы с
+   // накопленным счётчиком повышения уровня (state.levelCap) прошлой игры.
+   state.currentPlayer = 1;
+   state.levelTurnCounts = {1:0, 2:0};
+   state.pendingLevelUp = false;
+   state.turnsPlayed = 0;
+   state.completedCount = 0;
+   state.skippedCount = 0;
+   state.score1 = 0;
+   state.score2 = 0;
+   state.gameType = 'fanty';
+   state.photoOrderMode = false;
+   state.tdSelectedLevel = 3;
+   state.bingoSelectedLevel = 1;
+   state.timerSelectedLevel = 1;
+   state.timerLevelUpCadence = 5;
+   state.timerCurrentPlayer = 1;
+   state.wishlistStarter = 'random';
+   state.znayuStarter = 'random';
+   state.krokodilSelectedLevel = 2;
+   state.krokodilMode = 'word';
+   state.kidsMemoryLevel = 1;
+   state.memesSelectedLevel = 2;
+   state.partyFantsSelectedLevel = 2;
+   state.partyTdSelectedLevel = 2;
+   state.famZnayuFamilyCount = 1;
+   state.famZnayuFamilies = [{p1:'Первый', p2:'Второй', p1Gender:'m', p2Gender:'f'}];
+   state.famZnayuSelectedLevel = 1;
+   state.quizSelectedLevel = 1;
+   state.quizAutoSpeak = false;
+   state.partyQuizSelectedLevel = 1;
+   state.partyQuizAutoSpeak = false;
+   state.kidsQuizAnswerSeconds = 15;
+   state.kidsQuizAutoSpeak = false;
+   state.soloQuizSelectedLevel = 1;
+   state.soloQuizAutoSpeak = false;
+   state.sexQuestCount = 1;
+   state.sexQuestMode = 'random';
+   state.sexQuestManualIds = [];
+   state.sexQuestExcluded = [];
+   state.passionMapCount = 1;
+   state.passionMapMode = 'random';
+   state.passionMapManualIds = [];
+   state.passionMapExcluded = [];
+   state.bizObsQuestionCount = 5;
+   state.bizObsCurrentPlayerIndex = 0;
+   state.kidsKrokodilMode = 'word';
+   state.kidsKrokodilRoundSeconds = 180;
+   state.kidsKrokodilWordsPerRound = 5;
+   state.kidsKrokodilRoundsPerPlayer = 5;
+   state.flashMode = 'learn';
+   state.flashTheme = 'english';
+   state.flashTimeSub = 'digital';
+   state.flashCount = 25;
+   state.flashAutoSpeak = true;
+   state.flashTimePool = [];
+   state.flashTimeIndex = 0;
+   state.flashTimeScore = 0;
+   state.flashTimeErrors = 0;
+   state.shopMode = 'buyer';
+   state.kidsTdCompleted = [];
+   state.kidsTdSkipped = [];
+   state.kidsTdCurrentPlayerIndex = 0;
+   state.kidsTdCurrentType = null;
+   state.kidsXoBoardSize = 3;
+   state.soloXoBoardSize = 3;
+   // Свои добавленные задания, «Понравившиеся» (избранное) и загруженные
+   // пользователем видео НЕ трогаем — см. диалог подтверждения.
+   // Предложи партнеру (фото)
+   state.photoUsed = {};
+   state.photoHidden = [];
+   state.photoDone = [];
+   state.sexshopOwned = [];
   // Видеорулетка
   state.videoUsed = {};
   state.videoHidden = [];
@@ -1730,8 +1804,6 @@ function performFullReset(){
   state.wrScore1 = 0;
   state.wrScore2 = 0;
   state.wishCurrentCard = null;
-  state.name1 = 'Парень';
-  state.name2 = 'Девушка';
   if(state.pausedMode === 'wishRoulette'){
     state.pausedMode = null;
     state.inProgress = false;
@@ -1757,6 +1829,40 @@ function performFullReset(){
   if(typeof drawWishWheel === 'function') drawWishWheel();
   updateFavoritesOnlyBtn();
   updateResumeUI();
+  // Перерисовываем настройки остальных игр, которые сброшены выше: уровни,
+  // режимы, состав семей, возраст ребёнка. Без этого state уже дефолтный, а
+  // подсветка кнопок и поля ввода на экранах настроек показывают прежние
+  // значения — игрок видит «сброшено не всё» и путается. Ссылки на функции
+  // берём по имени строкой и проверяем через typeof: многие из них живут в
+  // модулях игр, которые могут быть не подключены в index.html, а прямое
+  // обращение к необъявленному имени упало бы с ReferenceError.
+  [
+    'renderKidsPlayers', 'renderBusinessPlayers', 'renderPartyPlayers',
+    'renderKidsAgeGroup', 'renderKidsMemoryLevels',
+    'renderTdSetupLevels', 'renderTimerSetupLevels', 'renderTimerLevelUpGroup',
+    'renderMemesSetupLevels', 'renderKrokodilSetupLevels', 'renderKrokodilModeGroup',
+    'renderPartyFantsSetupLevels', 'renderPartyTdSetupLevels', 'renderPartyNeverSetupLevels',
+    'renderFamZnayuSetupLevels', 'renderFamZnayuFamilyCountGroup', 'renderFamZnayuFamiliesFields',
+    'renderQuizSetupLevels', 'renderPartyQuizSetupLevels', 'renderSoloQuizSetupLevels',
+    'renderQuizAnswerTimeGroup', 'renderQuizQuestionCountGroup',
+    'renderPartyQuizAnswerTimeGroup', 'renderPartyQuizQuestionCountGroup',
+    'renderSoloQuizAnswerTimeGroup', 'renderSoloQuizQuestionCountGroup',
+    'renderKidsQuizAnswerTimeGroup', 'renderKidsQuizQuestionCountGroup',
+    'renderShopModeGroup', 'renderPhotoSetupLevels',
+    'renderSexQuestCountGroup', 'renderSexQuestModeGroup',
+    'renderPassionMapCountGroup', 'renderPassionMapModeGroup',
+    'renderBizObsQuestionCountGroup',
+    'renderFlashModeGroup', 'renderFlashThemeGroup', 'renderFlashTimeSubGroup', 'renderFlashCountGroup',
+    'renderKidsKrokodilModeGroup', 'renderKidsKrokodilDurationGroup', 'renderKidsKrokodilWordsCountGroup',
+    'renderTimerDurationGroup', 'renderTimerModeGroup',
+    'renderKrokodilDurationGroup', 'renderKrokodilWordsCountGroup',
+    'renderTwisterDurationGroup',
+    'renderWishlistSetupStarterGroup', 'renderZnayuSetupStarterGroup',
+    'renderKidsXoSizeGroup', 'renderSoloXoSizeGroup', 'renderSoloMemoryLevels'
+  ].forEach(fnName=>{
+    const fn = window[fnName];
+    if(typeof fn === 'function') fn();
+  });
   clearAllVideoBlobs(); // архивное хранилище "Видеорулетки" — на всякий случай, обычно уже пусто после миграции
   clearAllDavayBlobs().then(()=>{
     importedDavayCards = [];
@@ -1778,7 +1884,7 @@ function performFullReset(){
   const setupEl = document.getElementById('setup');
   if(setupEl) setupEl.classList.add('active');
   if(typeof showSetupView === 'function') showSetupView('homeView');
-  showToast('Прогресс всех игр сброшен, добавленные видео удалены');
+  showToast('Прогресс и настройки сброшены. Свои задания в «Фантах» сохранены');
 }
 
 /* ============ ПОДБОР КАРТ ============ */
