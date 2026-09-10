@@ -14,6 +14,101 @@ const LEVELS = [
 
 /* ============ СОСТОЯНИЕ ============ */
 const STORAGE_KEY = 'couple-game-state-v1';
+
+/* ============ ВЕРСИЯ СХЕМЫ СОХРАНЕНИЙ ============
+ * Поле state.schemaVersion показывает, по какой версии формата записаны
+ * данные игрока. Если структура state изменится (поле переименуют, сменится
+ * тип, два поля объединятся в одно), старая запись не сломается: MIGRATIONS
+ * применит нужные шаги по порядку — от версии игрока до текущей.
+ *
+ * ПОЧЕМУ ЭТО НУЖНО. Раньше проверки вида `if (state.foo === undefined)`
+ * лежали подряд в loadState() и выполнялись при КАЖДОЙ загрузке. Проблемы:
+ *   — непонятно, какие из них ещё актуальны, а какие можно удалить;
+ *   — порядок не зафиксирован: вставив проверку не туда, легко получить
+ *     зависимость от ещё не мигрировавшего поля;
+ *   — нельзя проверить «что увидит игрок с версии 1», не правя localStorage.
+ * Теперь у каждого шага есть номер, и он выполняется один раз.
+ *
+ * КАК ДОБАВИТЬ МИГРАЦИЮ. Меняете структуру state — увеличьте SCHEMA_VERSION
+ * на 1 и добавьте в MIGRATIONS запись с этим номером:
+ *
+ *   MIGRATIONS[2] = (s) => { s.newField = s.oldField; delete s.oldField; };
+ *
+ * Старые шаги не удаляйте: у кого-то сохранение может быть с версии 1,
+ * и ему нужно пройти весь путь по порядку.
+ */
+const SCHEMA_VERSION = 1;
+// Таблица миграций: ключ — номер версии, значение — функция (state) => void.
+// Версия 1 — стартовая: сюда вошли все проверки, которые раньше лежали
+// подряд в loadState() (поля сапёра и «Счастливого билета», имена игроков
+// «Игрок N» → порядковые, «Команда 1/2» → «Первая/Вторая» и т.д.).
+// Они выполняются один раз для сейвов без версии — то есть для всех, кто
+// играл до введения версионирования.
+const MIGRATIONS = {};
+
+/**
+ * Версия 1: разовые миграции, которые до этого выполнялись при каждой
+ * загрузке безусловно. Логика та же — изменилось только то, что теперь
+ * они применяются однократно и только к старым сохранениям.
+ */
+MIGRATIONS[1] = function(s){
+  // Поля, добавленные в новых версиях: старые сейвы без них могли ронять
+  // логику из-за undefined в условиях.
+  if(s.kidsSaperLevel === undefined) s.kidsSaperLevel = 1;
+  if(s.kidsSaperCurrentTeamIndex === undefined) s.kidsSaperCurrentTeamIndex = 0;
+  if(!s.kidsSaperTeamTurnCount) s.kidsSaperTeamTurnCount = [0,0];
+  if(!s.kidsSaperCompleted) s.kidsSaperCompleted = [];
+  if(s.luckyLevel === undefined) s.luckyLevel = 1;
+  if(s.luckyCurrentTeamIndex === undefined) s.luckyCurrentTeamIndex = 0;
+  if(!s.luckyTeamTurnCount) s.luckyTeamTurnCount = [0,0];
+  if(s.lastSectionOnPause === undefined) s.lastSectionOnPause = null;
+
+  // «Игры для компании»: прежние «Игрок 1/2/...» → порядковые
+  // «Первый/Второй/...». Заменяем ТОЛЬКО точные старые дефолты —
+  // введённые вручную имена не трогаем.
+  if(Array.isArray(s.partyPlayers)){
+    s.partyPlayers = s.partyPlayers.map((n,i)=>
+      (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
+        ? partyDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
+        : (n || partyDefaultName(i)));
+  }
+  // «Игры с детьми»: «Игрок N» → «Родитель/Ребёнок/...».
+  if(Array.isArray(s.kidsPlayers)){
+    s.kidsPlayers = s.kidsPlayers.map((n,i)=>
+      (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
+        ? kidsDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
+        : (n || kidsDefaultName(i)));
+  }
+  // Бизнес-игры: «Игрок N» → должности (Предприниматель/Управляющий/...).
+  if(Array.isArray(s.businessPlayers)){
+    s.businessPlayers = s.businessPlayers.map((n,i)=>
+      (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
+        ? businessDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
+        : (n || businessDefaultName(i)));
+  }
+  // «Знаю тебя»: семьи — продолжение общего ряда (Семья 2 → «Третий/Четвёртый»).
+  if(Array.isArray(s.famZnayuFamilies)){
+    s.famZnayuFamilies = s.famZnayuFamilies.map((f,fIdx)=>{
+      if(!f || typeof f !== 'object') return f;
+      const out = Object.assign({}, f);
+      if(out.p1 === 'Игрок 1') out.p1 = partyDefaultName(fIdx*2);
+      if(out.p2 === 'Игрок 2') out.p2 = partyDefaultName(fIdx*2+1);
+      return out;
+    });
+  }
+  // «Счастливый билет»: «Команда 1/2» → «Первая/Вторая», «Он/Она» → «Парень/Девушка».
+  if(Array.isArray(s.luckyTeams)){
+    s.luckyTeams = s.luckyTeams.map(t=>{
+      if(!t || typeof t !== 'object') return t;
+      const out = Object.assign({}, t);
+      if(out.name === 'Команда 1') out.name = 'Первая команда';
+      if(out.name === 'Команда 2') out.name = 'Вторая команда';
+      if(out.m === 'Он') out.m = 'Парень';
+      if(out.f === 'Она') out.f = 'Девушка';
+      return out;
+    });
+  }
+};
 // Дефолтные имена игроков «Игр для компании» — порядковые: «Первый», «Второй», …
 // до «Десятый» (список ограничен 10). Используется renderPartyPlayers() в
 // games/krokodil.js и всеми играми компании как фолбэк вместо прежних «Игрок N».
@@ -42,6 +137,9 @@ function businessDefaultName(idx){
   return BUSINESS_PLAYER_DEFAULTS[idx] || ('Игрок ' + (idx + 1));
 }
 let state = {
+  // Версия формата сохранений (см. SCHEMA_VERSION и MIGRATIONS выше).
+  // У нового игрока сразу текущая — миграции ему не нужны.
+  schemaVersion: SCHEMA_VERSION,
   name1:'', name2:'', activeLevels:[3,4,5,6],
   starter:'random',
   gameMode:'hot', autoMilestone:0, turnsPlayed:0, turnsAtLastLevelUp:0,
@@ -268,12 +366,60 @@ function pickStartingPlayer(){
 function currentGender(){ return state.currentPlayer===1 ? 'M' : 'F'; }
 function getSortedActiveLevels(){ return [...state.activeLevels].sort((a,b)=>a-b); }
 
+/**
+ * Применяет миграции схемы к загруженному состоянию.
+ *
+ * Шаги выполняются по порядку — от версии, в которой записан сейв игрока,
+ * до текущей SCHEMA_VERSION. Сбой одного шага не блокирует остальные (иначе
+ * одна ошибка навсегда лишила бы игрока обновления), но попадает в журнал.
+ *
+ * @param {object} s — объект состояния из localStorage
+ * @returns {number} сколько шагов применили
+ */
+function applyMigrations(s){
+  // Сейв без версии — очень старое сохранение или запись до введения
+  // версионирования. Считаем версией 0 и прогоняем через все шаги.
+  const from = (typeof s.schemaVersion === 'number') ? s.schemaVersion : 0;
+
+  if(from > SCHEMA_VERSION){
+    // Сейв новее приложения: игрок открыл старую версию из кэша. Откатывать
+    // нельзя — новых полей мы не понимаем. Предупреждаем и работаем как есть.
+    try{ console.warn('[Love-play] сейв v' + from + ' новее приложения v' + SCHEMA_VERSION); }catch(_){}
+    return 0;
+  }
+
+  let applied = 0;
+  for(let v = from + 1; v <= SCHEMA_VERSION; v++){
+    const step = MIGRATIONS[v];
+    if(typeof step !== 'function') continue;
+    try{
+      step(s);
+      applied++;
+    }catch(err){
+      if(typeof logAppError === 'function'){
+        logAppError({
+          time: new Date().toISOString(),
+          message: 'миграция схемы v' + v + ' не удалась: ' + (err && err.message),
+          source: 'loadState',
+        });
+      }
+    }
+  }
+  s.schemaVersion = SCHEMA_VERSION;
+  return applied;
+}
+
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const s = JSON.parse(raw);
+      // Миграции схемы применяем ДО слияния с дефолтами: шаг может
+      // переименовать или удалить поле, и тогда Object.assign подставил бы
+      // устаревший дефолт поверх уже мигрированного значения.
+      const migrationsApplied = applyMigrations(s);
       state = Object.assign(state, s);
+      if(migrationsApplied > 0) saveState(); // фиксируем, чтобы не повторять
       // Миграция старых сейвов: flashAutoSpeak раньше был false по умолчанию,
       // из-за этого после обновления он оставался выключенным у существующих
       // пользователей. Включаем один раз (отдельный флаг — как у
@@ -290,72 +436,9 @@ function loadState(){
       }
     }
   }catch(e){}
-  // Миграция полей, добавленных в новых версиях — старые сохранения
-  // (без этих полей) могли ронять логику из-за undefined в условиях.
-  if(state.kidsSaperLevel === undefined) state.kidsSaperLevel = 1;
-  if(state.kidsSaperCurrentTeamIndex === undefined) state.kidsSaperCurrentTeamIndex = 0;
-  if(!state.kidsSaperTeamTurnCount) state.kidsSaperTeamTurnCount = [0,0];
-  if(!state.kidsSaperCompleted) state.kidsSaperCompleted = [];
-  if(state.luckyLevel === undefined) state.luckyLevel = 1;
-  if(state.luckyCurrentTeamIndex === undefined) state.luckyCurrentTeamIndex = 0;
-  if(!state.luckyTeamTurnCount) state.luckyTeamTurnCount = [0,0];
-  if(state.lastSectionOnPause === undefined) state.lastSectionOnPause = null;
-  // Миграция дефолтных имён «Игр для компании»: прежние «Игрок 1/2/...»
-  // заменяются на порядковые «Первый/Второй/...». Касается ТОЛЬКО имён, в
-  // точности совпадающих со старыми дефолтами — введённые вручную имена не
-  // трогаем. Списки детей и бизнес-игр («Игрок N») не мигрируют.
-  if(Array.isArray(state.partyPlayers)){
-    state.partyPlayers = state.partyPlayers.map((n,i)=>
-      (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
-        ? partyDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
-        : (n || partyDefaultName(i)));
-  }
-  // Миграция имён «Игр с детьми»: прежние «Игрок 1/2/...» заменяются на
-  // «Родитель/Ребёнок/...». Касается ТОЛЬКО имён, в точности совпадающих со
-  // старыми дефолтами — введённые вручную имена не трогаем.
-  if(Array.isArray(state.kidsPlayers)){
-    state.kidsPlayers = state.kidsPlayers.map((n,i)=>
-      (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
-        ? kidsDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
-        : (n || kidsDefaultName(i)));
-  }
-  // Миграция имён «Бизнес игр»: прежние «Игрок 1/2/...» заменяются на
-  // тематические должности (Предприниматель/Управляющий/...). Касается
-  // ТОЛЬКО имён, в точности совпадающих со старыми дефолтами — введённые
-  // вручную имена не трогаем.
-  if(Array.isArray(state.businessPlayers)){
-    state.businessPlayers = state.businessPlayers.map((n,i)=>
-      (typeof n === 'string' && /^Игрок\s+\d+$/.test(n.trim()))
-        ? businessDefaultName(parseInt(n.trim().replace(/\D/g,''),10)-1)
-        : (n || businessDefaultName(i)));
-  }
-  // «Знаю тебя»: та же замена для семей — старый дефолт каждой семьи был
-  // «Игрок 1/Игрок 2», новый — продолжение общего ряда (Семья 2 →
-  // «Третий/Четвёртый», Семья 3 → «Пятый/Шестой»).
-  if(Array.isArray(state.famZnayuFamilies)){
-    state.famZnayuFamilies = state.famZnayuFamilies.map((f,fIdx)=>{
-      if(!f || typeof f !== 'object') return f;
-      const out = Object.assign({}, f);
-      if(out.p1 === 'Игрок 1') out.p1 = partyDefaultName(fIdx*2);
-      if(out.p2 === 'Игрок 2') out.p2 = partyDefaultName(fIdx*2+1);
-      return out;
-    });
-  }
-  // «Счастливый билет»: та же схема — старые дефолты команд («Команда 1/2»,
-  // «Он»/«Она») заменяются на «Первая/Вторая команда», «Парень»/«Девушка».
-  // Касается ТОЛЬКО имён, в точности совпадающих со старыми дефолтами —
-  // введённые вручную имена не трогаем.
-  if(Array.isArray(state.luckyTeams)){
-    state.luckyTeams = state.luckyTeams.map(t=>{
-      if(!t || typeof t !== 'object') return t;
-      const out = Object.assign({}, t);
-      if(out.name === 'Команда 1') out.name = 'Первая команда';
-      if(out.name === 'Команда 2') out.name = 'Вторая команда';
-      if(out.m === 'Он') out.m = 'Парень';
-      if(out.f === 'Она') out.f = 'Девушка';
-      return out;
-    });
-  }
+  // Разовые миграции старых сохранений выполняет applyMigrations() —
+  // они переехали в таблицу MIGRATIONS с номерами версий (см. выше).
+  // Здесь остаётся только то, что должно срабатывать при КАЖДОМ запуске.
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){
@@ -1353,6 +1436,10 @@ document.getElementById('resetHiddenBtn').addEventListener('click', async ()=>{
 // страницы настроек (#resetHiddenBtn), и из плавающего меню (#menuResetBtn),
 // чтобы текст модалки подтверждения всегда соответствовал реальности.
 function performFullReset(){
+   // Версия схемы остаётся текущей: сбрасываем данные, а не формат.
+   // Если поставить 0, при следующей загрузке миграции пройдут заново и
+   // могут вернуть значения, которые игрок только что сбросил.
+   state.schemaVersion = SCHEMA_VERSION;
    // Обычная игра (карточки)
    state.hiddenIndexes = [];
    state.usedIndexes = [];

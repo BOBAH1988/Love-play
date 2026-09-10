@@ -479,6 +479,49 @@ function checkErrorGuard(html) {
   check('APP_BUILD объявлен в index.html', /window\.APP_BUILD\s*=/.test(html), 'нет версии сборки');
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 11. Версионирование сохранений
+// ─────────────────────────────────────────────────────────────────────────────
+function checkSchemaVersioning() {
+  group('Версии сохранений');
+  const core = read('games/core.js');
+
+  // Без версии схемы невозможно безопасно менять структуру state: у игроков
+  // останутся сохранения старого формата, и они сломаются молча.
+  check('SCHEMA_VERSION объявлен', /const SCHEMA_VERSION\s*=\s*\d+/.test(core), 'нет константы версии схемы');
+  check('MIGRATIONS объявлен', /const MIGRATIONS\s*=\s*\{/.test(core), 'нет таблицы миграций');
+  check('applyMigrations объявлена', /function\s+applyMigrations\s*\(/.test(core), 'нет функции миграций');
+
+  // Миграции обязаны вызываться из loadState — иначе они мертвы.
+  check('applyMigrations вызывается в loadState', /applyMigrations\(s\)/.test(core), 'loadState не применяет миграции');
+
+  const version = core.match(/const SCHEMA_VERSION\s*=\s*(\d+)/);
+  if (version) {
+    const v = Number(version[1]);
+    // Для каждого номера от 1 до SCHEMA_VERSION должен быть шаг — иначе
+    // игрок с версии N не сможет доехать до текущей.
+    const steps = [...core.matchAll(/MIGRATIONS\[(\d+)\]\s*=/g)].map((m) => Number(m[1]));
+    const missing = [];
+    for (let i = 1; i <= v; i++) if (!steps.includes(i)) missing.push(i);
+    check(
+      `для каждой версии есть шаг миграции (1..${v})`,
+      missing.length === 0,
+      `нет шагов для версий: ${missing.join(', ')}`
+    );
+  }
+
+  // Версия схемы не должна сбрасываться в 0: иначе после «Сбросить прогресс»
+  // миграции пройдут повторно и вернут сброшенные значения.
+  const reset = core.slice(core.indexOf('function performFullReset'));
+  const resetBody = reset.slice(0, reset.indexOf('\n}'));
+  check(
+    'сброс прогресса сохраняет текущую версию схемы',
+    /schemaVersion\s*=\s*SCHEMA_VERSION/.test(resetBody),
+    'performFullReset не выставляет SCHEMA_VERSION'
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Отчёт
 // ─────────────────────────────────────────────────────────────────────────────
@@ -525,6 +568,7 @@ function main() {
   checkRegistry();
   checkStyles(html);
   checkErrorGuard(html);
+  checkSchemaVersioning();
   process.exit(report());
 }
 
