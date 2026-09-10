@@ -79,7 +79,7 @@
   // Версия сборки — попадает в отчёт об ошибке (см. gameErrorGuard в core.js),
   // чтобы по сообщению игрока было понятно, на какой версии воспроизвелась
   // проблема. Меняется вручную вместе с CACHE_NAME в sw.js.
-  window.APP_BUILD = '2026-09-19 · v170';
+  window.APP_BUILD = '2026-09-20 · v171';
 </script>
 </head>
 <body>
@@ -136,6 +136,7 @@
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuAboutBtn"><span class="menu-icon">💡</span>О проекте</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑️</span>Сбросить весь прогресс</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuReportBtn"><span class="menu-icon">🐞</span>Сообщить о проблеме</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuStatsBtn"><span class="menu-icon">📊</span>Статистика</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon">📤</span>Экспортировать данные</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon">📥</span>Импортировать данные</button>
       </div>
@@ -3368,6 +3369,25 @@
        просто видел пустой или «залипший» экран без объяснений — самая
        частая причина негативных отзывов. Здесь три пути: перезапустить,
        обновить приложение, скопировать отчёт о проблеме. -->
+  <!-- ===== СТАТИСТИКА =====
+       Локальный счётчик партий на ЭТОМ устройстве (games/stats.js).
+       Никуда не отправляется: данные лежат в localStorage отдельным ключом
+       и не попадают в state. Телефон и компьютер считаются раздельно. -->
+  <div class="modal-overlay" id="statsModal">
+    <div class="modal-card">
+      <div class="modal-title">📊 Статистика <button type="button" class="modal-close-btn" id="statsCloseBtn" aria-label="Закрыть">✕</button></div>
+      <div class="intro-text" style="font-size:13px; text-align:left;">
+        Считается только на этом устройстве и никуда не отправляется.
+      </div>
+      <div id="statsBody" style="text-align:left; font-size:14px; line-height:1.5; color:#2b0f2e; margin:12px 0;"></div>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+        <button type="button" class="btn btn-secondary" id="statsExportBtn">📤 Экспортировать в файл</button>
+        <button type="button" class="btn btn-secondary" id="statsToggleBtn">⏸ Приостановить сбор</button>
+        <button type="button" class="btn btn-secondary" id="statsClearBtn">🗑 Очистить статистику</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="appErrorModal">
     <div class="modal-card">
       <div class="modal-title">😕 Что-то пошло не так</div>
@@ -3977,7 +3997,7 @@
   <div class="modal-overlay" id="resetConfirmModal">
     <div class="modal-card">
       <div class="modal-title">⚠️ Сбросить весь прогресс?</div>
-      <div style="text-align:left; font-size:14px; line-height:1.5; color:#5c3a52;">Сотрётся безвозвратно:</div>
+      <div class="reset-confirm-lead" style="text-align:left; font-size:14px; line-height:1.5; color:#5c3a52;">Сотрётся безвозвратно:</div>
       <ul style="text-align:left; margin:4px 0 12px 20px; padding:0; font-size:14px; line-height:1.55; color:#2b0f2e;">
         <li>счёт, избранное и вся история во всех играх</li>
         <li>❤️ понравившиеся фото и видео</li>
@@ -4052,11 +4072,13 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260919c"></script>
+<script src="games/core.js?v=20260920a"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт сразу после core.js — от него зависят resumeBtn, finishGameBtn,
      PAUSE_MAP и определение группы для «Продолжить игру». -->
-<script src="games/game-registry.js?v=20260919a"></script>
+<script src="games/game-registry.js?v=20260920a"></script>
+<!-- Локальная статистика: считает партии на этом устройстве, никуда не отправляет -->
+<script src="games/stats.js?v=20260919a"></script>
 <script src="games/twister.js?v=20260913e"></script>
 <script src="games/party-hangman.js?v=20260918a"></script>
 <script src="games/solo-quiz.js?v=20260830u"></script>
@@ -4099,7 +4121,7 @@
 <script src="games/sexquest.js?v=20260918a"></script>
 <script src="games/passionmap.js?v=20260918a"></script>
 <script src="games/whattoplay.js?v=20260830u"></script>
-<script src="games/init.js?v=20260917a"></script>
+<script src="games/init.js?v=20260920a"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует. -->
 <script>

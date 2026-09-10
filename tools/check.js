@@ -522,6 +522,55 @@ function checkSchemaVersioning() {
   );
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. Статистика
+// ─────────────────────────────────────────────────────────────────────────────
+function checkStats(html) {
+  group('Статистика');
+  const path = 'games/stats.js';
+  if (!exists(path)) {
+    check('games/stats.js существует', false, 'модуль статистики не найден');
+    return;
+  }
+  const stats = read(path);
+
+  check('модуль подключён в index.html', /games\/stats\.js/.test(html), 'нет <script src="games/stats.js">');
+  check('публичный интерфейс объявлен', /window\.AppStats\s*=/.test(stats), 'нет window.AppStats');
+
+  // Статистика обязана быть локальной: любая отправка данных нарушила бы
+  // обещание «данные не покидают устройство» из README.
+  const netCalls = [...stats.matchAll(/\bfetch\s*\(|XMLHttpRequest|navigator\.sendBeacon/g)];
+  check('статистика ничего не отправляет по сети', netCalls.length === 0,
+    `найдены сетевые вызовы: ${netCalls.length}`);
+
+  // Хранится отдельным ключом, а не в state: иначе попадёт в резервные копии
+  // и в сброс прогресса, чего для счётчика не нужно.
+  check('свой ключ localStorage', /couple-game-stats-v1/.test(stats), 'нет отдельного ключа');
+  // Убираем и блочные, и строчные комментарии — в них упоминание state
+  // допустимо (пояснение), а в коде оно означало бы связку с прогрессом.
+  const statsCode = stats
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+  check('данные вне state', !/\bstate\./.test(statsCode), 'модуль трогает state игрока');
+
+  // Точки сбора: без них счётчик останется пустым.
+  const core = read('games/core.js');
+  const init = read('games/init.js');
+  check('старт партии учитывается', /AppStats\.gameStart/.test(core), 'goToGame не отмечает старт');
+  check('завершение партии учитывается', /AppStats\.gameFinish/.test(core), 'finishGameBtn не отмечает завершение');
+  check('выход из партии учитывается', /AppStats\.gameExit/.test(core), 'exitGame не отмечает выход');
+  check('открытие приложения учитывается', /AppStats\.markOpen/.test(init), 'init.js не отмечает открытие');
+
+  // Экран статистики: все элементы должны быть в разметке.
+  const required = ['statsModal', 'statsBody', 'statsExportBtn', 'statsToggleBtn', 'statsClearBtn'];
+  const absent = required.filter((id) => !html.includes(`id="${id}"`));
+  check(`разметка экрана статистики (${required.length} элементов)`, absent.length === 0, `нет: ${absent.join(', ')}`);
+
+  check('кнопка в меню есть', html.includes('id="menuStatsBtn"'), 'нет кнопки «Статистика»');
+  check('обработчик экрана есть', /function\s+renderStatsScreen\s*\(/.test(core), 'нет renderStatsScreen');
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Отчёт
 // ─────────────────────────────────────────────────────────────────────────────
@@ -569,6 +618,7 @@ function main() {
   checkStyles(html);
   checkErrorGuard(html);
   checkSchemaVersioning();
+  checkStats(html);
   process.exit(report());
 }
 

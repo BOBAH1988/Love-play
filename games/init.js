@@ -87,3 +87,11 @@ try{
     history.replaceState(null, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
   }
 }catch(e){}
+
+/* ============ СТАТИСТИКА: ОТМЕТКА ОТКРЫТИЯ ============
+   Считаем уникальные дни использования. Вызов здесь, в последнем скрипте:
+   к этому моменту модуль статистики уже загружен, а приложение готово
+   к работе. Сбой записи не должен мешать запуску. */
+try{
+  if(window.AppStats) window.AppStats.markOpen();
+}catch(e){}

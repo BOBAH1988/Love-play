@@ -995,6 +995,12 @@ function goToGame(setupId, gameId, beforeSwitch){
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   const game = document.getElementById(gameId);
   if(game) game.classList.add('active');
+  // Статистика: отмечаем начало партии. Ключ игры берём из реестра по
+  // экрану — так счётчик не зависит от того, кто вызвал переход.
+  try{
+    const g = (typeof gameByScreen === 'function') ? gameByScreen(gameId) : null;
+    if(g && window.AppStats) window.AppStats.gameStart(g.mode);
+  }catch(e){ /* статистика не должна ломать переход между экранами */ }
 }
 function exitGame(gameId, setupId){
   const game = document.getElementById(gameId);
@@ -1007,6 +1013,14 @@ function exitGame(gameId, setupId){
   if(setup) setup.classList.add('active');
   // Останавливаем все звуки (Web Audio API + SpeechSynthesis)
   stopAllSounds();
+  // Статистика: партия прервана. Если игра вообще не начиналась (выход из
+  // настройки), считаем это выходом «из настройки» — он не означает, что
+  // игра не понравилась.
+  try{
+    if(window.AppStats){
+      window.AppStats.gameExit(state.inProgress ? 'midgame' : 'setup');
+    }
+  }catch(e){}
 }
 // Правило для «Только избранное»: либо 10+ карточек на двоих, либо минимум по 5 карточек,
 // доступных каждому партнёру отдельно (общая карточка засчитывается обоим).
@@ -1392,10 +1406,16 @@ if(__updateAppBtnEl){
    max-height 80vh, скролл при нехватке места). Показываем компактный
    текст и две кнопки; возвращаем Promise<boolean>. */
 let __resetConfirmResolve = null;
-function showResetConfirm(){
+function showResetConfirm(title, text){
   return new Promise(resolve=>{
     const modal = document.getElementById('resetConfirmModal');
     if(!modal){ resolve(true); return; } // модалки нет — ведём себя как старый confirm(true)
+    // Заголовок и текст можно переопределить — используется для подтверждения
+    // очистки статистики. Без параметров модалка остаётся прежней.
+    const titleEl = modal.querySelector('.modal-title');
+    const textEl = modal.querySelector('.reset-confirm-lead');
+    if(titleEl) titleEl.textContent = title || '⚠️ Сбросить весь прогресс?';
+    if(textEl) textEl.textContent = text || 'Сотрётся безвозвратно:';
     __resetConfirmResolve = resolve;
     modal.classList.add('show');
   });
@@ -4714,14 +4734,73 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
     return;
   }
 
-  if(callGame(game.finish)) showToast('Игра завершена');
-  else goToSetup();
+  if(callGame(game.finish)){
+    // Статистика: партия доведена до конца, а не брошена.
+    try{ if(window.AppStats) window.AppStats.gameFinish(mode); }catch(e){}
+    showToast('Игра завершена');
+  } else {
+    goToSetup();
+  }
 });
 
 // Определяет, что делать при закрытии общего окна итогов (#summaryModal) —
 // сброс Фантов или завершение "Правда или действие" (обе игры используют
 // одну и ту же модалку итогов, только с разными данными).
 let summaryModalMode = 'fanty';
+/**
+ * Рисует экран статистики: сводка, любимые игры, где выходят.
+ * Все данные — с этого устройства (games/stats.js), ничего не отправляется.
+ */
+function renderStatsScreen(){
+  const body = document.getElementById('statsBody');
+  const toggleBtn = document.getElementById('statsToggleBtn');
+  if(!body || !window.AppStats) return;
+
+  const s = window.AppStats.summary();
+
+  if(!s.enabled){
+    body.innerHTML = '<div style="color:#8a5c7a;">Сбор статистики приостановлен. '
+      + 'Данные за прошлые сессии сохранены.</div>';
+  } else if(s.totalGames === 0){
+    body.innerHTML = '<div style="color:#8a5c7a;">Пока нет данных — сыграйте партию, '
+      + 'и здесь появится сводка: сколько партий, какие игры чаще, где выходят.</div>';
+  } else {
+    const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    const row = (label, value) =>
+      '<div style="display:flex; justify-content:space-between; gap:10px; padding:2px 0;">'
+      + '<span>' + label + '</span><b>' + value + '</b></div>';
+
+    let html = '';
+    html += row('Всего партий', s.totalGames);
+    html += row('Дней в приложении', s.days);
+    html += row('Общее время игры', window.AppStats.formatDuration(s.totalMs));
+
+    if(s.games.length){
+      html += '<div style="margin-top:12px; font-weight:700;">Любимые игры</div>';
+      s.games.slice(0, 7).forEach((g) => {
+        const done = g.finished > 0 ? ' · доиграно ' + g.finished : '';
+        html += '<div style="display:flex; justify-content:space-between; gap:10px; padding:2px 0;">'
+          + '<span>' + g.icon + ' ' + esc(g.title) + '</span>'
+          + '<span style="white-space:nowrap; color:#6b4560;">' + g.started + done + '</span></div>';
+      });
+      if(s.games.length > 7){
+        html += '<div style="color:#8a5c7a; font-size:13px; margin-top:4px;">…и ещё '
+          + (s.games.length - 7) + '</div>';
+      }
+    }
+
+    html += '<div style="margin-top:12px; font-weight:700;">Где выходят</div>';
+    html += row('из настройки', s.exits.setup || 0);
+    html += row('посреди партии', s.exits.midgame || 0);
+
+    body.innerHTML = html;
+  }
+
+  if(toggleBtn){
+    toggleBtn.textContent = s.enabled ? '⏸ Приостановить сбор' : '▶ Возобновить сбор';
+  }
+}
+
 function showSummary(){
   summaryModalMode = 'fanty';
   document.getElementById('summaryBonusText').style.display = 'none';
@@ -4863,6 +4942,60 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     showToast(log.length
       ? `Отчёт скопирован (ошибок в журнале: ${log.length})`
       : 'Отчёт скопирован — ошибок в журнале нет');
+  });
+
+  /* ===== Статистика (меню → «📊 Статистика») =====
+     Данные считает games/stats.js и хранит отдельным ключом localStorage.
+     Экран только показывает сводку и даёт выгрузить/очистить. */
+
+
+  const __statsBtn = document.getElementById('menuStatsBtn');
+  if(__statsBtn) __statsBtn.addEventListener('click', ()=>{
+    closeMenu();
+    renderStatsScreen();
+    showModal('statsModal');
+  });
+
+  const __statsCloseBtn = document.getElementById('statsCloseBtn');
+  if(__statsCloseBtn) __statsCloseBtn.addEventListener('click', ()=>{ hideModal('statsModal'); });
+
+  const __statsToggleBtn = document.getElementById('statsToggleBtn');
+  if(__statsToggleBtn) __statsToggleBtn.addEventListener('click', ()=>{
+    if(!window.AppStats) return;
+    const now = !window.AppStats.enabled();
+    window.AppStats.setEnabled(now);
+    renderStatsScreen();
+    showToast(now ? 'Сбор статистики включён' : 'Сбор приостановлен (данные сохранены)');
+  });
+
+  const __statsClearBtn = document.getElementById('statsClearBtn');
+  if(__statsClearBtn) __statsClearBtn.addEventListener('click', async ()=>{
+    if(!window.AppStats) return;
+    if(!(await showResetConfirm('Очистить статистику?', 'Счётчики партий на этом устройстве будут удалены. Прогресс игр не тронется.'))) return;
+    window.AppStats.clear();
+    renderStatsScreen();
+    showToast('Статистика очищена');
+  });
+
+  const __statsExportBtn = document.getElementById('statsExportBtn');
+  if(__statsExportBtn) __statsExportBtn.addEventListener('click', ()=>{
+    if(!window.AppStats) return;
+    // Выгружаем JSON-файлом: его удобно обработать скриптом или прислать
+    // разработчику. Никакой отправки по сети — только локальное скачивание.
+    try{
+      const blob = new Blob([window.AppStats.exportText()], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'love-play-stats-' + new Date().toISOString().slice(0,10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      showToast('Файл статистики сохранён');
+    }catch(e){
+      showToast('Не удалось сохранить файл');
+    }
   });
   // Закрытие модалки «О проекте» кликом по фону
   const aboutProjectModal = document.getElementById('aboutProjectModal');

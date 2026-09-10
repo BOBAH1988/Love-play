@@ -175,12 +175,12 @@ window.GAME_REGISTRY = [
     screens: ['kidsQuizGame'],
   },
   {
-    mode: 'kidsC4', title: '«Четыре в ряд»', group: 'kids',
+    mode: 'kidsC4', title: '«Четыре в ряд»', group: 'kids', menuTitle: '🔴🟡 Четыре в ряд',
     pause: 'pauseKidsC4Game', resume: 'resumeKidsC4Game', finish: 'finishKidsC4Game',
     screens: ['kidsC4Game'],
   },
   {
-    mode: 'kidsSaper', title: '«Сапёр»', group: 'kids',
+    mode: 'kidsSaper', title: '«Сапёр»', group: 'kids', menuTitle: '💣 Сапёр',
     pause: 'pauseKidsSaperGame', resume: 'resumeKidsSaperGame', finish: 'finishKidsSaperGame',
     screens: ['kidsSaperGame'],
   },
@@ -197,7 +197,7 @@ window.GAME_REGISTRY = [
     screens: ['soloBsGame', 'soloBattleshipGame'],
   },
   {
-    mode: 'soloC4', title: '«Четыре в ряд»', group: 'solo',
+    mode: 'soloC4', title: '«Четыре в ряд»', group: 'solo', menuTitle: '🔴🟡 Четыре в ряд',
     pause: 'pauseSoloC4Game', resume: 'resumeSoloC4Game', finish: 'finishSoloC4Game',
     screens: ['soloC4Game'],
   },
