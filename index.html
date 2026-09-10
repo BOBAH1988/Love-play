@@ -79,7 +79,7 @@
   // Версия сборки — попадает в отчёт об ошибке (см. gameErrorGuard в core.js),
   // чтобы по сообщению игрока было понятно, на какой версии воспроизвелась
   // проблема. Меняется вручную вместе с CACHE_NAME в sw.js.
-  window.APP_BUILD = '2026-09-20 · v171';
+  window.APP_BUILD = '2026-09-20 · v172';
 </script>
 </head>
 <body>
@@ -4123,25 +4123,23 @@
 <script src="games/whattoplay.js?v=20260830u"></script>
 <script src="games/init.js?v=20260920a"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
-     Работает только на https (или localhost); на file:// браузер его игнорирует. -->
-<script>
-  // Авто-отмена сервис-воркера для принудительной загрузки свежих файлов
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-      registrations.forEach(function(reg) { reg.unregister(); });
-    });
-    navigator.serviceWorker.getControllers().then(function(controllers) {
-      controllers.forEach(function(ctrl) { ctrl.unregister(); });
-    });
-  }
-</script>
+     Работает только на https (или localhost); на file:// браузер его игнорирует.
+
+     Раньше перед этим блоком стоял ещё один, который при КАЖДОЙ загрузке
+     снимал регистрацию всех Service Worker'ов и вызывал несуществующий
+     navigator.serviceWorker.getControllers() — отсюда падала ошибка
+     «getControllers is not a function», а сразу следом воркер
+     регистрировался заново. То есть блок не помогал обновлению, а только
+     ломал его: приложение каждый раз стартовало без офлайн-кэша.
+     Принудительное обновление делает кнопка «🔄 Обновить приложение»
+     (hardUpdateApp в games/core.js) — осознанно, по действию игрока. -->
 <script>
   if ('serviceWorker' in navigator) {
     var isLocalhost = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20260909b').catch(function (e) {
+        navigator.serviceWorker.register('./sw.js?v=20260920a').catch(function (e) {
           console.warn('Service Worker registration failed:', e);
         });
       });

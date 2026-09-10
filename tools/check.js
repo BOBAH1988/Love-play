@@ -441,6 +441,50 @@ function checkStyles(html) {
     wrongMarkers.join('\n      ')
   );
 
+  // Вызовы методов serviceWorker по имени: опечатка здесь падает в рантайме
+  // и (если стоит в <head>) ломает запуск. Уже ловили getControllers() вместо
+  // getRegistrations() — метод, которого не существует.
+  const SW_METHODS = ['register', 'getRegistrations', 'getRegistration', 'ready', 'controller', 'addEventListener', 'unregister', 'update'];
+  const badSwCalls = [];
+  for (const file of ['index.html', ...fs.readdirSync(path.join(ROOT, 'games')).map((f) => path.join('games', f))]) {
+    const src = read(file);
+    const inHtml = file.endsWith('.html');
+    let insideHtmlComment = false;
+    src.split('\n').forEach((line, i) => {
+      // В HTML комментарии заключаются в <!-- -->, в JS — в // или /* */.
+      // Упоминать несуществующий метод в пояснении допустимо (мы как раз
+      // описываем исправленный баг), а вызывать — нет.
+      const trimmed = line.trim();
+      const inComment = inHtml
+        ? (insideHtmlComment || trimmed.startsWith('<!--') || trimmed.startsWith('//'))
+        : (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*'));
+      if (inHtml) {
+        if (trimmed.startsWith('<!--')) insideHtmlComment = true;
+        if (trimmed.includes('-->')) insideHtmlComment = false;
+      }
+      if (inComment) return;
+      const m = line.match(/(?:navigator\.)?serviceWorker\.(\w+)\s*\(/);
+      if (m && !SW_METHODS.includes(m[1])) {
+        badSwCalls.push(`${file}:${i + 1} — serviceWorker.${m[1]}()`);
+      }
+    });
+  }
+  check(
+    'вызовы методов serviceWorker корректны',
+    badSwCalls.length === 0,
+    `неизвестные методы: ${badSwCalls.join(', ')}`
+  );
+
+  // Приложение не должно снимать регистрацию Service Worker при загрузке:
+  // иначе офлайн-режим не работает никогда. Принудительное обновление делает
+  // hardUpdateApp по действию игрока.
+  const bootUnregister = /^\s*navigator\.serviceWorker\.getRegistrations\(\)[\s\S]{0,200}?unregister\(\)/m.test(html);
+  check(
+    'SW не снимается автоматически при загрузке',
+    !bootUnregister,
+    'при старте вызывается getRegistrations().unregister() — офлайн перестанет работать'
+  );
+
 }
 
 
