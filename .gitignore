@@ -8,6 +8,13 @@ node_modules/
 .windsurf/
 .aider*
 AGENTS.local.md
+.ai-backup/
+
+# Секреты и ключи — НИКОГДА не коммитить
+*.key
+*.pem
+secrets.json
+*-secrets.json
 
 # Системное
 .DS_Store
