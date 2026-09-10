@@ -443,6 +443,42 @@ function checkStyles(html) {
 
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. Защита от ошибок
+// ─────────────────────────────────────────────────────────────────────────────
+function checkErrorGuard(html) {
+  group('Защита от ошибок');
+  const core = read('games/core.js');
+
+  // Приложение должно показывать понятный экран, а не «залипать» молча.
+  const handlers = [
+    ["window.addEventListener('error'", 'перехват синхронных ошибок'],
+    ["window.addEventListener('unhandledrejection'", 'перехват отказов промисов'],
+  ];
+  for (const [needle, what] of handlers) {
+    check(what, core.includes(needle), 'нет обработчика — ошибка уйдёт пользователю молча');
+  }
+
+  // Экран ошибки: все элементы должны быть в разметке, иначе обработчик
+  // не сможет его показать (и это выяснится только в момент сбоя).
+  const required = ['appErrorModal', 'appErrorText', 'appErrorReloadBtn', 'appErrorReportBtn', 'appErrorCloseBtn'];
+  const absent = required.filter((id) => !html.includes(`id="${id}"`));
+  check(`разметка экрана ошибки (${required.length} элементов)`, absent.length === 0, `нет: ${absent.join(', ')}`);
+
+  // Журнал ошибок нужен для отчёта: без него игрок сообщит только «не работает».
+  for (const fn of ['logAppError', 'getErrorLog', 'buildErrorReport', 'clearErrorLog']) {
+    check(`функция ${fn} объявлена`, new RegExp(`function\\s+${fn}\\s*\\(`).test(core), 'не найдена');
+  }
+
+  // Журнал должен очищаться вместе с прогрессом — иначе после сброса
+  // в отчёт попадут ошибки прошлых сессий.
+  check('журнал очищается при сбросе прогресса', /clearErrorLog\(\)/.test(core), 'performFullReset не чистит журнал');
+
+  // Версия сборки нужна в отчёте, чтобы понять, на какой версии сбой.
+  check('APP_BUILD объявлен в index.html', /window\.APP_BUILD\s*=/.test(html), 'нет версии сборки');
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Отчёт
 // ─────────────────────────────────────────────────────────────────────────────
@@ -488,6 +524,7 @@ function main() {
   checkDocs();
   checkRegistry();
   checkStyles(html);
+  checkErrorGuard(html);
   process.exit(report());
 }
 

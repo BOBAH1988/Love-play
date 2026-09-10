@@ -75,6 +75,12 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
 <link rel="stylesheet" href="styles/app.css?v=20260919a">
+<script>
+  // Версия сборки — попадает в отчёт об ошибке (см. gameErrorGuard в core.js),
+  // чтобы по сообщению игрока было понятно, на какой версии воспроизвелась
+  // проблема. Меняется вручную вместе с CACHE_NAME в sw.js.
+  window.APP_BUILD = '2026-09-19 · v169';
+</script>
 </head>
 <body>
 <!-- ===== ВОЗРАСТНОЕ ПРЕДУПРЕЖДЕНИЕ (18+) =====
@@ -129,6 +135,7 @@
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon">📖</span>Правила игр</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuAboutBtn"><span class="menu-icon">💡</span>О проекте</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑️</span>Сбросить весь прогресс</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuReportBtn"><span class="menu-icon">🐞</span>Сообщить о проблеме</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon">📤</span>Экспортировать данные</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon">📥</span>Импортировать данные</button>
       </div>
@@ -3355,6 +3362,27 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- ===== ЭКРАН ОШИБКИ =====
+       Показывается, если во время работы произошла непойманная ошибка
+       (см. gameErrorGuard в games/core.js). Раньше в этом случае игрок
+       просто видел пустой или «залипший» экран без объяснений — самая
+       частая причина негативных отзывов. Здесь три пути: перезапустить,
+       обновить приложение, скопировать отчёт о проблеме. -->
+  <div class="modal-overlay" id="appErrorModal">
+    <div class="modal-card">
+      <div class="modal-title">😕 Что-то пошло не так</div>
+      <div class="intro-text" id="appErrorText">
+        Игра столкнулась с неожиданной ошибкой. Прогресс сохранён — можно продолжать.
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+        <button type="button" class="btn btn-primary" id="appErrorReloadBtn">🔄 Перезапустить приложение</button>
+        <button type="button" class="btn btn-secondary" id="appErrorReportBtn">📋 Скопировать отчёт о проблеме</button>
+        <button type="button" class="btn btn-secondary" id="appErrorCloseBtn">Продолжить как есть</button>
+      </div>
+      <div id="appErrorDetails" style="display:none; text-align:left; font-size:12px; line-height:1.45; color:#5c3a52; margin-top:14px; padding:10px; background:rgba(0,0,0,.06); border-radius:10px; word-break:break-word;"></div>
+    </div>
+  </div>
+
   <!-- ===== ЕДИНОЕ МЕНЮ ПАУЗЫ (одинаковое для всех игр) ===== -->
   <div class="modal-overlay" id="pauseMenuModal">
     <div class="modal-card">
@@ -4024,7 +4052,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260919a"></script>
+<script src="games/core.js?v=20260919b"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт сразу после core.js — от него зависят resumeBtn, finishGameBtn,
      PAUSE_MAP и определение группы для «Продолжить игру». -->

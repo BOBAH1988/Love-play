@@ -1692,6 +1692,7 @@ function performFullReset(){
     if(typeof fn === 'function') fn();
   });
   clearAllVideoBlobs(); // архивное хранилище "Видеорулетки" — на всякий случай, обычно уже пусто после миграции
+  clearErrorLog(); // журнал ошибок тоже чистим — сброс есть сброс
   clearAllDavayBlobs().then(()=>{
     importedDavayCards = [];
     importedDavayVideosLoaded = true;
@@ -4747,6 +4748,35 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       performFullReset();
     }
   });
+  // «Сообщить о проблеме» — копирует отчёт (версия, браузер, журнал ошибок).
+  // Журнал заполняется автоматически при любой непойманной ошибке, поэтому
+  // игроку достаточно нажать кнопку и вставить текст в сообщение.
+  const __reportBtn = document.getElementById('menuReportBtn');
+  if(__reportBtn) __reportBtn.addEventListener('click', async ()=>{
+    closeMenu();
+    const log = getErrorLog();
+    const report = buildErrorReport();
+    let copied = false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(report);
+        copied = true;
+      }
+    }catch(_){}
+    if(!copied){
+      // Фолбэк: показываем текст на экране ошибки, чтобы скопировать вручную.
+      const modal = document.getElementById('appErrorModal');
+      const detailsEl = document.getElementById('appErrorDetails');
+      const textEl = document.getElementById('appErrorText');
+      if(textEl) textEl.textContent = 'Отчёт ниже — выделите и скопируйте.';
+      if(detailsEl){ detailsEl.textContent = report; detailsEl.style.display = 'block'; }
+      if(modal) modal.classList.add('show');
+      return;
+    }
+    showToast(log.length
+      ? `Отчёт скопирован (ошибок в журнале: ${log.length})`
+      : 'Отчёт скопирован — ошибок в журнале нет');
+  });
   // Закрытие модалки «О проекте» кликом по фону
   const aboutProjectModal = document.getElementById('aboutProjectModal');
   if(aboutProjectModal){
@@ -5736,12 +5766,164 @@ document.getElementById('favoritesOnlyBtn').addEventListener('click', ()=>{
 });
 
 /* ============ УТИЛИТЫ ЗАЩИТЫ ============ */
-// Глобальный обработчик неперехваченных ошибок — не «роняем» приложение,
-// а только логируем в консоль, чтобы баг было проще отловить на устройстве
-// пользователя (DevTools не всегда доступны).
+/* Глобальная защита от непойманных ошибок.
+ *
+ * Раньше здесь был только console.warn — на телефоне игрока этого никто не
+ * видит, и приложение просто «залипало» или показывало пустой экран без
+ * объяснений. Теперь ошибка:
+ *   1) попадает в журнал (последние MAX_ERROR_LOG записей, хранится в
+ *      localStorage отдельным ключом — переживает перезапуск);
+ *   2) показывает игроку понятный экран с тремя путями выхода;
+ *   3) не спамит: повторные ошибки в течение минуты не открывают окно снова,
+ *      иначе одна сломанная анимация заблокировала бы игру.
+ *
+ * Экран ошибки НЕ показывается, пока идёт партия с незавершённым ходом, —
+ * сначала сохраняем прогресс, чтобы «Перезапустить» ничего не потеряло.
+ */
+const ERROR_LOG_KEY = 'couple-game-error-log-v1';
+const MAX_ERROR_LOG = 20;
+const ERROR_REPEAT_WINDOW = 60000; // мс: как часто показывать окно повторно
+let lastErrorShownAt = 0;
+
+/** Дописывает ошибку в журнал (в памяти и в localStorage). */
+function logAppError(info){
+  try{
+    const log = (() => {
+      try{ return JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]'); }catch(_){ return []; }
+    })();
+    log.push(info);
+    while(log.length > MAX_ERROR_LOG) log.shift();
+    localStorage.setItem(ERROR_LOG_KEY, JSON.stringify(log));
+  }catch(_){ /* переполнение или приватный режим — журнал не критичен */ }
+}
+
+/** Возвращает журнал ошибок (новые — первыми). */
+function getErrorLog(){
+  try{ return JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]').reverse(); }catch(_){ return []; }
+}
+
+/** Очищает журнал (вызывается при полном сбросе прогресса). */
+function clearErrorLog(){
+  try{ localStorage.removeItem(ERROR_LOG_KEY); }catch(_){}
+}
+
+/** Короткое описание окружения — чтобы понять, где именно сломалось. */
+function appEnvInfo(){
+  const sw = (navigator.serviceWorker && navigator.serviceWorker.controller) ? 'да' : 'нет';
+  return [
+    'версия сборки: ' + (window.APP_BUILD || 'неизвестна'),
+    'страница: ' + location.href,
+    'браузер: ' + navigator.userAgent,
+    'экран: ' + (window.screen ? screen.width + 'x' + screen.height : '?'),
+    'PWA: ' + (document.documentElement.classList.contains('pwa-standalone') ? 'да' : 'нет'),
+    'Service Worker: ' + sw,
+    'пауза: ' + (state && state.pausedMode ? state.pausedMode : 'нет'),
+  ].join('\n');
+}
+
+/** Текст отчёта для копирования в буфер (или отправки разработчику). */
+function buildErrorReport(){
+  const log = getErrorLog().slice(0, 5);
+  const lines = ['Ошибка в приложении «Давай играй»', '', appEnvInfo(), '', 'Последние ошибки:'];
+  if(log.length === 0) lines.push('  (журнал пуст)');
+  log.forEach((e, i) => {
+    lines.push(`  ${i + 1}) ${e.time}`);
+    lines.push(`     ${e.message}`);
+    if(e.source) lines.push(`     источник: ${e.source}`);
+  });
+  return lines.join('\n');
+}
+
+/** Показывает экран ошибки (не чаще, чем раз в ERROR_REPEAT_WINDOW). */
+function showAppError(message, source){
+  const now = Date.now();
+  if(now - lastErrorShownAt < ERROR_REPEAT_WINDOW) return;
+  lastErrorShownAt = now;
+
+  const modal = document.getElementById('appErrorModal');
+  if(!modal) return; // разметка не готова — молча выходим, ошибка уже в журнале
+
+  const textEl = document.getElementById('appErrorText');
+  const detailsEl = document.getElementById('appErrorDetails');
+  if(textEl){
+    textEl.textContent = message
+      ? 'Произошла ошибка: ' + message + '. Прогресс сохранён — можно продолжать.'
+      : 'Игра столкнулась с неожиданной ошибкой. Прогресс сохранён.';
+  }
+  if(detailsEl){
+    // Технические детали показываем только в отладочном режиме (localhost),
+    // обычному игроку они не нужны и только пугают.
+    const isDev = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+    detailsEl.textContent = source || '';
+    detailsEl.style.display = isDev && source ? 'block' : 'none';
+  }
+  modal.classList.add('show');
+}
+
+/** Скрывает экран ошибки. */
+function hideAppError(){
+  const modal = document.getElementById('appErrorModal');
+  if(modal) modal.classList.remove('show');
+}
+
+// Непойманные синхронные ошибки.
 window.addEventListener('error', (ev)=>{
-  try{ console.warn('[Love-play] uncaught:', ev.message, '@', ev.filename + ':' + ev.lineno); }catch(_){}
+  const info = {
+    time: new Date().toISOString(),
+    message: ev.message || String(ev.error || 'неизвестная ошибка'),
+    source: (ev.filename || '?') + ':' + (ev.lineno || '?') + ':' + (ev.colno || '?'),
+  };
+  try{ console.warn('[Love-play] uncaught:', info.message, '@', info.source); }catch(_){}
+  // Ошибки загрузки сторонних ресурсов (img/video) сюда тоже попадают,
+  // но у них нет message — их не показываем игроку, только логируем.
+  if(!ev.message) return;
+  logAppError(info);
+  showAppError(info.message, info.source);
 });
+
+// Непойманные отказы промисов (fetch, IndexedDB, audio.play()).
+window.addEventListener('unhandledrejection', (ev)=>{
+  const reason = ev.reason;
+  const info = {
+    time: new Date().toISOString(),
+    message: (reason && reason.message) ? reason.message : String(reason),
+    source: (reason && reason.stack) ? String(reason.stack).split('\n')[1]?.trim() || '' : '',
+  };
+  try{ console.warn('[Love-play] unhandled rejection:', info.message); }catch(_){}
+  logAppError(info);
+  showAppError(info.message, info.source);
+});
+
+// Кнопки на экране ошибки.
+const __errReloadBtn = document.getElementById('appErrorReloadBtn');
+if(__errReloadBtn) __errReloadBtn.addEventListener('click', ()=>{
+  hideAppError();
+  saveState();            // сохраняем прогресс перед перезапуском
+  const url = new URL(location.href);
+  url.searchParams.set('_r', Date.now());
+  location.replace(url.toString());
+});
+const __errReportBtn = document.getElementById('appErrorReportBtn');
+if(__errReportBtn) __errReportBtn.addEventListener('click', async ()=>{
+  const report = buildErrorReport();
+  let copied = false;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(report);
+      copied = true;
+    }
+  }catch(_){}
+  if(!copied){
+    // Фолбэк для http:// (буфер обмена доступен только на https/localhost)
+    // и старых WebView: показываем текст, чтобы выделить вручную.
+    const detailsEl = document.getElementById('appErrorDetails');
+    if(detailsEl){ detailsEl.textContent = report; detailsEl.style.display = 'block'; }
+  }
+  showToast(copied ? 'Отчёт скопирован — вставьте его в сообщение о проблеме' : 'Отчёт показан ниже — выделите и скопируйте');
+});
+const __errCloseBtn = document.getElementById('appErrorCloseBtn');
+if(__errCloseBtn) __errCloseBtn.addEventListener('click', ()=>{ hideAppError(); });
+
 // debounce(fn, ms) — обёртка: пропускает вызов fn, пока между нажатиями не
 // прошло ms миллисекунд. Используется для кнопок с быстрым повтором
 // (например, бинго/сапёр), где двойное нажатие за <300мс часто случайно.
