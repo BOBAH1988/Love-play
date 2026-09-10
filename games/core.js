@@ -1073,42 +1073,6 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
 document.getElementById('videoExtraToggle').addEventListener('click', ()=>{
   document.querySelector('.controls').classList.toggle('video-extra-open');
 });
-// Пока партия "Давай попробуем" не завершена (стоит на паузе), весь блок
-// "Выбери игру" скрыт (см. updateResumeUI) — эта проверка остаётся как
-// подстраховка на случай прямого вызова обработчика.
-// Человекочитаемые названия для всех режимов, которые умеют вставать на
-// паузу через общий блок "Продолжить игру"/"Закончить игру" на главном экране.
-const PAUSED_MODE_LABELS = {
-  fanty: '«Фанты»',
-  davay: '«Давай попробуем»',
-  bingo: '«Ваше бинго»',
-  krokodil: '«Крокодил»',
-  td: '«Правда/Действие»',
-  wishlist: '«Твои желания»',
-  znayu: '«Тайные ответы»',
-  timer: '«Таймер страсти»',
-  partyFants: '«Фанты» (компания)',
-  partyTd: '«Правда/Действие» (компания)',
-  famZnayu: '«Знаю тебя» (компания)',
-  lucky: '«Счастливый билет»',
-  partyRoulette: '«Рулетка» (компания)',
-   wishRoulette: '«Рулетка желаний»',
-  kidsMemory: '«Мемори»',
-  kidsTd: '«Правда/Действие» (дети)',
-  kidsC4: '«Четыре в ряд» (дети)',
-  quiz: '«Викторина»',
-  partyQuiz: '«Викторина» (компания)',
-   kidsQuiz: '«Викторина» (дети)',
-   soloBs: '«Морской бой» (бот)',
-   soloC4: '«Четыре в ряд» (бот)',
-   soloQuiz: '«Викторина» (один)',
-   partyHangman: '«Виселица»',
-   businessLemonade: '«Лимонадный ларёк»',
-   sexQuest: '«Секс-квест»',
-   passionMap: '«Карта страсти»',
-   shop: '«Магазин»',
-   kidsSaper: '«Сапёр»',
-};
 function blockedByDavayPause(){
   if(!state.pausedMode) return false;
   // Если пользователь уже в меню настроек (#setup активно) — сбрасываем
@@ -1122,7 +1086,7 @@ function blockedByDavayPause(){
     return false;
   }
   playErrorSound();
-  const label = PAUSED_MODE_LABELS[state.pausedMode] || '«Правда/Действие»';
+  const label = gameTitle(state.pausedMode);
   showToast(`Сначала завершите ${label} — «Продолжить игру» или «Закончить игру»`);
   return true;
 }
@@ -1277,118 +1241,16 @@ document.getElementById('fantyExitBtn').addEventListener('click', ()=>{
 });
 
 document.getElementById('resumeBtn').addEventListener('click', ()=>{
-  if(state.pausedMode === 'davay'){
-    resumeDavayGame();
+  // Продолжение партии: функция берётся из реестра игр (games/game-registry.js).
+  // Раньше здесь было 26 веток «если pausedMode === X, вызови resumeX()» —
+  // при добавлении игры ветку легко было забыть. Теперь достаточно записи
+  // в реестре. См. историю бага «Закончить игру не работала у 4 игр».
+  const game = gameByMode(state.pausedMode);
+  if(game && callGame(game.resume)){
+    ensureSingleActiveScreen();
     return;
   }
-  if(state.pausedMode === 'td'){
-    resumeTdGame();
-    return;
-  }
-  if(state.pausedMode === 'bingo'){
-    resumeBingoGame();
-    return;
-  }
-  if(state.pausedMode === 'krokodil'){
-    resumeKrokodilGame();
-    return;
-  }
-  if(state.pausedMode === 'wishlist'){
-    resumeWishlistGame();
-    return;
-  }
-  if(state.pausedMode === 'znayu'){
-    resumeZnayuGame();
-    return;
-  }
-  if(state.pausedMode === 'timer'){
-    resumeTimerGame();
-    return;
-  }
-  if(state.pausedMode === 'partyFants'){
-    resumePartyFantsGame();
-    return;
-  }
-  if(state.pausedMode === 'partyTd'){
-    resumePartyTdGame();
-    return;
-  }
-  if(state.pausedMode === 'famZnayu'){
-    resumeFamZnayuGame();
-    return;
-  }
-  if(state.pausedMode === 'lucky'){
-    resumeLuckyGame();
-    return;
-  }
-  if(state.pausedMode === 'partyRoulette'){
-    resumePartyRouletteGame();
-    return;
-  }
-  if(state.pausedMode === 'wishRoulette'){
-    resumeWrGame();
-    return;
-  }
-  if(state.pausedMode === 'kidsMemory'){
-    resumeKidsMemoryGame();
-    return;
-  }
-  if(state.pausedMode === 'kidsTd'){
-    resumeKidsTdGame();
-    return;
-  }
-  if(state.pausedMode === 'kidsC4'){
-    resumeKidsC4Game();
-    return;
-  }
-  if(state.pausedMode === 'quiz'){
-    resumeQuizGame();
-    return;
-  }
-  if(state.pausedMode === 'partyQuiz'){
-    resumePartyQuizGame();
-    return;
-  }
-  if(state.pausedMode === 'kidsQuiz'){
-    resumeKidsQuizGame();
-    return;
-  }
-  if(state.pausedMode === 'soloBs'){
-    resumeSoloBsGame();
-    return;
-  }
-  if(state.pausedMode === 'soloC4'){
-    resumeSoloC4Game();
-    return;
-  }
-  if(state.pausedMode === 'soloQuiz'){
-    resumeSoloQuizGame();
-    return;
-  }
-  if(state.pausedMode === 'partyHangman'){
-    resumePartyHangmanGame();
-    return;
-  }
-  if(state.pausedMode === 'businessLemonade'){
-    resumeBusinessLemonadeGame();
-    return;
-  }
-  if(state.pausedMode === 'sexQuest'){
-    resumeSexQuestGame();
-    return;
-  }
-  if(state.pausedMode === 'passionMap'){
-    resumePassionMapGame();
-    return;
-  }
-  if(state.pausedMode === 'shop'){
-    resumeShopGame();
-    return;
-  }
-  if(state.pausedMode === 'kidsSaper'){
-    resumeKidsSaperGame();
-    return;
-  }
+  // Запасной путь: у «Фантов» продолжение идёт через общую механику карточек.
   resumeFantyGame();
 });
 
@@ -2005,51 +1867,15 @@ document.addEventListener('click', (e)=>{
     showToast('Завершите игру, чтобы изменить настройки', 2000);
   }
 }, true);
-// Единое меню паузы — одна и та же модалка (иконка+название игры,
-// "Продолжить игру", "Закончить игру", кнопка звука) для абсолютно всех
-// игр приложения, по центру экрана поверх всего (см. #pauseMenuModal).
-const PAUSE_MENU_TITLES = {
-  fanty: '💘 Фанты',
-  davay: '🎬 Давай попробуем',
-  td: '❓ Правда/Действие',
-  bingo: '🎱 Ваше бинго',
-  timer: '⏱️ Таймер страсти',
-  wishlist: '💌 Твои желания',
-  znayu: '💑 Тайные ответы',
-  krokodil: '🐊 Крокодил',
-  partyFants: '🎉 Фанты',
-  partyTd: '🗣️ Правда/Действие',
-  famZnayu: '🧠 Знаю тебя',
-  lucky: '🎫 Счастливый билет',
-  partyRoulette: '🎰 Рулетка',
-  wishRoulette: '🎡 Рулетка желаний',
-  kidsMemory: '🧠 Мемори',
-  kidsTd: '🗣️ Правда/Действие',
-  kidsC4: '🔴🟡 Четыре в ряд',
-  quiz: '🎯 Викторина',
-  partyQuiz: '🎯 Викторина',
-   kidsQuiz: '🎯 Викторина',
-   soloBs: '🚢 Морской бой (бот)',
-   soloC4: '🔴🟡 Четыре в ряд',
-   soloQuiz: '🎯 Викторина',
-   partyHangman: '🪢 Виселица',
-   businessLemonade: '🍋 Лимонадный ларёк',
-   sexQuest: '💘 Секс-квест',
-   passionPass: '🎀 Карта страсти',
-   shop: '🛍️ Магазин',
-};
 // Группа, к которой относится игра на паузе (для видимости списков игр и
 // выбора блока при возобновлении). Единый источник истины: сюда включены ВСЕ
 // pausedMode. Возвращает 'party' | 'kids' | 'solo' | 'business' | 'two' | null.
 function getPausedGroup(){
-  const pm = state.pausedMode;
-  if(!pm) return null;
-  if(['krokodil','partyFants','partyTd','famZnayu','lucky','partyQuiz','partyHangman','partyRoulette'].includes(pm)) return 'party';
-  if(['kidsMemory','kidsTd','kidsC4','kidsQuiz','kidsSaper','kidsKrokodil'].includes(pm)) return 'kids';
-  if(['soloBs','soloC4','soloQuiz'].includes(pm)) return 'solo';
-  if(['shop','businessLemonade'].includes(pm)) return 'business';
-  if(['wishRoulette'].includes(pm)) return 'two';
-  return 'two';
+  // К какой категории хаба относится текущая пауза. Раньше здесь были
+  // четыре списка строк — при добавлении игры их легко было не обновить,
+  // из-за чего список чужой группы прятался (баг «исчезают все игры»).
+  // Теперь источник один — реестр игр (games/game-registry.js).
+  return gameByMode(state.pausedMode)?.group || (state.pausedMode ? 'two' : null);
 }
 function updateResumeUI(){
   const pauseModal = document.getElementById('pauseMenuModal');
@@ -2060,7 +1886,7 @@ function updateResumeUI(){
   if(pauseModal) pauseModal.classList.toggle('show', !!state.pausedMode);
   const pauseTitle = document.getElementById('pauseMenuTitle');
   if(pauseTitle){
-    const name = PAUSE_MENU_TITLES[state.pausedMode] || '⏸️ Игра';
+    const name = gameMenuTitle(state.pausedMode) || '⏸️ Игра';
     pauseTitle.innerHTML = `${name}<span class="pause-title-sub">Пауза</span>`;
   }
   // В меню паузы (когда видны "Продолжить игру"/"Закончить игру") незачем
@@ -2099,7 +1925,7 @@ function updateResumeUI(){
   // паузу этой игры.
   const partyTitleText = document.getElementById('partyGamesTitleText');
   const partyDesc = document.getElementById('partyGamesDesc');
-  if(partyTitleText) partyTitleText.textContent = isPartyPause ? (PAUSE_MENU_TITLES[state.pausedMode] || '🎉 Игры для компании') : '🎉 Игры для компании';
+  if(partyTitleText) partyTitleText.textContent = isPartyPause ? (gameMenuTitle(state.pausedMode) || '🎉 Игры для компании') : '🎉 Игры для компании';
   if(partyDesc) partyDesc.textContent = isPartyPause
     ? 'Счёт и игроки сохранены — продолжите партию или закончите её кнопкой выше.'
     : 'Шумные и весёлые игры для компании';
@@ -2107,7 +1933,7 @@ function updateResumeUI(){
   // описание блока "Игры с детьми" тоже меняются на паузу этой игры.
   const kidsTitleText = document.getElementById('kidsGamesTitleText');
   const kidsDesc = document.getElementById('kidsGamesDesc');
-  if(kidsTitleText) kidsTitleText.textContent = isKidsPause ? (PAUSE_MENU_TITLES[state.pausedMode] || '🧸 Игры с детьми') : '🧸 Игры с детьми';
+  if(kidsTitleText) kidsTitleText.textContent = isKidsPause ? (gameMenuTitle(state.pausedMode) || '🧸 Игры с детьми') : '🧸 Игры с детьми';
   if(kidsDesc) kidsDesc.textContent = isKidsPause
     ? 'Поле и счёт сохранены — продолжите партию или закончите её кнопкой выше.'
     : 'Давай играй, чтобы играть вместе с ребёнком';
@@ -4765,7 +4591,22 @@ document.getElementById('pauseBtn').addEventListener('click', ()=>{
   showToast('Игра на паузе — прогресс сохранён');
 });
 document.getElementById('finishGameBtn').addEventListener('click', ()=>{
-  if(state.pausedMode === 'davay'){
+  // Завершение партии: логика берётся из реестра игр (games/game-registry.js).
+  // Раньше здесь было 27 почти одинаковых веток «если pausedMode === X…» —
+  // именно из-за забытой ветки кнопка «Закончить игру» молча не работала
+  // у четырёх игр (Виселица, Лимонадный ларёк, Секс-квест, Карта страсти).
+  const mode = state.pausedMode;
+  const game = gameByMode(mode);
+
+  // «Фанты» — базовая парная игра: завершение идёт через общее окно итогов.
+  if(!game || mode === 'fanty'){
+    if((state.score1||0) === 0 && (state.score2||0) === 0){ goToSetup(); return; }
+    showSummary();
+    return;
+  }
+
+  // «Давай попробуем» — завершение без сводки: снимаем паузу и выходим.
+  if(mode === 'davay'){
     state.inProgress = false;
     abandonPausedSession('davay');
     saveState();
@@ -4773,139 +4614,20 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
     showToast('Игра завершена');
     return;
   }
-  if(state.pausedMode === 'td'){
-    if((state.tdScore1||0) === 0 && (state.tdScore2||0) === 0){ finishTdGame(); return; }
-    showTdSummary();
+
+  // Игры с окном итогов: показываем его только если партия не пустая,
+  // иначе сразу выходим (иначе игрок увидит сводку из нулей).
+  if(game.exitSummary && !(game.isEmpty && game.isEmpty())){
+    callGame(game.exitSummary);
     return;
   }
-  if(state.pausedMode === 'bingo'){
-    const bingoCheckedCount = (state.bingoChecked || []).filter(Boolean).length;
-    if(bingoCheckedCount === 0){ finishBingoGame(); return; }
-    showBingoExitSummary();
+  if(game.finishEmpty && game.isEmpty && game.isEmpty()){
+    callGame(game.finishEmpty);
     return;
   }
-  if(state.pausedMode === 'krokodil'){
-    const krokodilTotal = (state.krokodilScores || []).reduce((a,b)=>a+(b||0), 0);
-    if(krokodilTotal === 0){ finishKrokodilGame(); return; }
-    showKrokodilExitSummary();
-    return;
-  }
-  if(state.pausedMode === 'wishlist'){
-    finishWishlistGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'znayu'){
-    finishZnayuGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'timer'){
-    if((state.timerScore1||0) === 0 && (state.timerScore2||0) === 0){ exitTimerGame(); return; }
-    showTimerSummary();
-    return;
-  }
-  if(state.pausedMode === 'partyFants'){
-    const partyFantsTotal = (state.partyFantsCompleted || []).reduce((a,b)=>a+(b||0), 0);
-    if(partyFantsTotal === 0){ exitPartyFantsGame(); return; }
-    finishPartyFantsGame();
-    return;
-  }
-  if(state.pausedMode === 'partyTd'){
-    const partyTdTotal = (state.partyTdCompleted || []).reduce((a,b)=>a+(b||0), 0);
-    if(partyTdTotal === 0){ exitPartyTdGame(); return; }
-    finishPartyTdGame();
-    return;
-  }
-  if(state.pausedMode === 'famZnayu'){
-    finishFamZnayuGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'lucky'){
-    finishLuckyGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'partyRoulette'){
-    finishPartyRouletteGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'wishRoulette'){
-    finishWrGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'kidsMemory'){
-    finishKidsMemoryGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'kidsTd'){
-    finishKidsTdGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'kidsC4'){
-    finishKidsC4Game();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'quiz'){
-    finishQuizGame();
-    showToast('Игра завершена');
-    return;
-  }
-  if(state.pausedMode === 'partyQuiz'){
-    finishPartyQuizGame();
-    showToast('Игра завершена');
-    return;
-  }
-   if(state.pausedMode === 'kidsQuiz'){
-     finishKidsQuizGame();
-     showToast('Игра завершена');
-     return;
-   }
-   if(state.pausedMode === 'soloBs'){
-     finishSoloBsGame();
-     return;
-   }
-   if(state.pausedMode === 'soloC4'){
-     finishSoloC4Game();
-     showToast('Игра завершена');
-     return;
-   }
-   if(state.pausedMode === 'shop'){
-     finishShopGame();
-     return;
-   }
-   if(state.pausedMode === 'kidsSaper'){
-     finishKidsSaperGame();
-     return;
-   }
-   // Игры с «Выходом» вместо «Паузы» (Виселица, Лимонадный ларёк, Секс-квест,
-   // Карта страсти) в новой партии сюда не попадают — их кнопка ведёт в меню
-   // сразу. Ветки нужны для старых сохранений, где пауза уже стояла: иначе
-   // нажатие «Закончить игру» ничего бы не делало.
-   if(state.pausedMode === 'partyHangman'){
-     finishPartyHangmanGame();
-     return;
-   }
-   if(state.pausedMode === 'businessLemonade'){
-     finishBusinessLemonadeGame();
-     return;
-   }
-   if(state.pausedMode === 'sexQuest'){
-     finishPausedSexQuestGame();
-     return;
-   }
-   if(state.pausedMode === 'passionMap'){
-     finishPausedPassionMapGame();
-     return;
-   }
-   if((state.score1||0) === 0 && (state.score2||0) === 0){ goToSetup(); return; }
-   showSummary();
+
+  if(callGame(game.finish)) showToast('Игра завершена');
+  else goToSetup();
 });
 
 // Определяет, что делать при закрытии общего окна итогов (#summaryModal) —
@@ -5344,39 +5066,13 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       state.lastSectionOnPause = sectionId;
       saveState();
     }
-    const PAUSE_MAP = {
-      game: 'pauseGame',
-      bingoGame: 'pauseBingoGame',
-      krokodilSetup: 'pauseKrokodilGame', krokodilGame: 'pauseKrokodilGame',
-      tdSetup: 'pauseTdGame', tdGame: 'pauseTdGame',
-      truthDareSetup: 'pauseTdGame', truthDareGame: 'pauseTdGame',
-      wishlistSetup: 'pauseWishlistGame', wishlistGame: 'pauseWishlistGame',
-      desireSetup: 'pauseWishlistGame', desireGame: 'pauseWishlistGame',
-      znayuSetup: 'pauseZnayuGame', znayuGame: 'pauseZnayuGame',
-      timerSetup: 'pauseTimerGame', timerGame: 'pauseTimerGame',
-      quizSetup: 'pauseQuizGame', quizGame: 'pauseQuizGame',
-      partyQuizSetup: 'pausePartyQuizGame', partyQuizGame: 'pausePartyQuizGame',
-      partyFantsSetup: 'pausePartyFantsGame', partyFantsGame: 'pausePartyFantsGame',
-      partyTdSetup: 'pausePartyTdGame', partyTdGame: 'pausePartyTdGame',
-      luckySetup: 'pauseLuckyGame', luckyGame: 'pauseLuckyGame',
-      kidsMemorySetup: 'pauseKidsMemoryGame', kidsMemoryGame: 'pauseKidsMemoryGame',
-      kidsTdSetup: 'pauseKidsTdGame', kidsTdGame: 'pauseKidsTdGame',
-      kidsTdChoice: 'pauseKidsTdGame',
-      kidsC4Setup: 'pauseKidsC4Game', kidsC4Game: 'pauseKidsC4Game',
-      kidsQuizSetup: 'pauseKidsQuizGame', kidsQuizGame: 'pauseKidsQuizGame',
-      kidsSaperSetup: 'pauseKidsSaperGame', kidsSaperGame: 'pauseKidsSaperGame',
-      famZnayuSetup: 'pauseFamZnayuGame', famZnayuGame: 'pauseFamZnayuGame',
-      davaySetup: 'pauseDavayGame', davayGame: 'pauseDavayGame', davayQuiz: 'pauseDavayGame',
-      soloBsSetup: 'pauseSoloBattleshipGame', soloBsGame: 'pauseSoloBattleshipGame',
-      soloBattleshipSetup: 'pauseSoloBattleshipGame', soloBattleshipGame: 'pauseSoloBattleshipGame',
-      soloC4Setup: 'pauseSoloC4Game', soloC4Game: 'pauseSoloC4Game',
-      partyRouletteSetup: 'pauseGamePartyRoulette', partyRouletteGame: 'pauseGamePartyRoulette',
-      shopGame: 'pauseShopGame',
-    };
-    // Ищем pause-функцию по ЛЮБОМУ из активных экранов
+    // Пауза из игры: функция берётся из реестра игр по id игрового экрана
+    // (game-registry.js). Раньше здесь был отдельный список PAUSE_MAP из 40
+    // строк, дублировавший те же имена — два источника расходились.
     let fnName = null;
     for(const sid of screenIds){
-      if(PAUSE_MAP[sid]){ fnName = PAUSE_MAP[sid]; break; }
+      const g = gameByScreen(sid);
+      if(g && g.pause){ fnName = g.pause; break; }
     }
     if(fnName && typeof window[fnName] === 'function'){
       window[fnName]();

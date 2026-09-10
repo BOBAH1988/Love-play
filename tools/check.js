@@ -320,6 +320,63 @@ function checkDocs() {
   check('AGENTS.md существует', exists('AGENTS.md'), 'файл с правилами проекта не найден');
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. Реестр игр
+// ─────────────────────────────────────────────────────────────────────────────
+function checkRegistry() {
+  group('Реестр игр');
+  const regPath = 'games/game-registry.js';
+  if (!exists(regPath)) {
+    check('games/game-registry.js существует', false, 'файл реестра не найден');
+    return;
+  }
+  const src = read(regPath);
+  const allJs = fs.readdirSync(path.join(ROOT, 'games'))
+    .map((f) => read(path.join('games', f))).join('\n');
+
+  // Каждая игра обязана иметь mode, title, group и способ завершения.
+  // Запись игры: строка `mode: '<ключ>'` в начале строки. Перед ней может
+  // стоять комментарий, поэтому ищем по самому полю, а не по «{ mode: …».
+  const entries = [...src.matchAll(/^\s*mode:\s*'([^']+)'/gm)].map((m) => m[1]);
+  check(`реестр содержит игры (${entries.length})`, entries.length > 0, 'ни одной записи');
+
+  const dupes = entries.filter((m, i) => entries.indexOf(m) !== i);
+  check('нет дублирующихся mode', dupes.length === 0, `дубли: ${dupes.join(', ')}`);
+
+  const groups = [...src.matchAll(/group:\s*'([^']+)'/g)].map((m) => m[1]);
+  const allowed = ['two', 'party', 'kids', 'solo', 'business'];
+  const badGroup = groups.filter((g) => !allowed.includes(g));
+  check('группы игр допустимы', badGroup.length === 0, `неизвестные: ${badGroup.join(', ')}`);
+
+  // Все функции, на которые ссылается реестр, должны существовать в коде.
+  const fnNames = [...src.matchAll(/(?:pause|resume|finish|finishEmpty|exitSummary):\s*'([A-Za-z_$][\w$]*)'/g)]
+    .map((m) => m[1]);
+  const missing = [...new Set(fnNames)].filter((n) => {
+    const re = new RegExp(`function\\s+${n}\\s*\\(|${n}\\s*=\\s*function`);
+    return !re.test(allJs);
+  });
+  check(
+    `все функции реестра существуют (${new Set(fnNames).size})`,
+    missing.length === 0,
+    `не найдены: ${missing.join(', ')}`
+  );
+
+  // Каждый state.pausedMode, который выставляет код, обязан быть в реестре:
+  // иначе игра «потеряется» — не будет ни продолжения, ни завершения.
+  const coreSrc = read('games/core.js');
+  const modesInCore = new Set(
+    [...coreSrc.matchAll(/pausedMode\s*=\s*'([a-zA-Z]+)'/g)].map((m) => m[1])
+  );
+  const modesInReg = new Set(entries);
+  const unregistered = [...modesInCore].filter((m) => !modesInReg.has(m));
+  check(
+    'у каждого pausedMode есть запись в реестре',
+    unregistered.length === 0,
+    `нет в реестре: ${unregistered.join(', ')}`
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Отчёт
 // ─────────────────────────────────────────────────────────────────────────────
@@ -363,6 +420,7 @@ function main() {
   checkVersions(html);
   checkDomRefs(html, missingIds);
   checkDocs();
+  checkRegistry();
   process.exit(report());
 }
 
