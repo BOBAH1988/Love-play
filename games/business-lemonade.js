@@ -170,6 +170,13 @@ function bizWeatherInfo(){ return BIZ_WEATHERS.find(w => w.key === state.busines
 function bizEventInfo(){ return state.businessLemonadeEventIdx >= 0 ? BIZ_EVENTS[state.businessLemonadeEventIdx] : null; }
 function bizLocationInfo(){ return BIZ_LOCATIONS[state.businessLemonadeLocation] || null; }
 
+// Распределение денег партии: капитал на руках (стартовые 200₽ и дневная
+// выручка, из него платятся закупки) и резерв на цель — всё, что заработано
+// сверх капитала. Для игрока это одна сумма, поэтому в интерфейсе они всегда
+// показываются вместе (см. updateBizHeaderUI).
+function bizMoneyTotal(){
+  return (state.businessLemonadeCapital || 0) + (state.businessLemonadeGoalReserve || 0);
+}
 // Суммарная чистая прибыль за все сыгранные дни + резерв на цель.
 function bizTotalNet(){
    const dayProfits = state.businessLemonadeDayProfits || [];
@@ -203,16 +210,8 @@ function updateBizHeaderUI(){
   const pct = Math.max(0, Math.min(100, Math.round(totalNet / goal * 100)));
   document.getElementById('bizDayFill').style.width = pct + '%';
   document.getElementById('bizDayLabel').textContent = `День ${day} · ${icon} ${totalNet} из ${goal} ₽ (${name})`;
-  document.getElementById('bizCapitalRow').textContent = `Капитал: ${state.businessLemonadeCapital} ₽`;
-   const reserve = state.businessLemonadeGoalReserve || 0;
-   if(reserve > 0){
-     document.getElementById('bizReserveRow').textContent = `Резерв на цель: ${reserve} ₽`;
-     const reserveRow = document.getElementById('bizReserveRow');
-     if(reserveRow) reserveRow.style.display = '';
-   } else {
-     const reserveRow = document.getElementById('bizReserveRow');
-     if(reserveRow) reserveRow.style.display = 'none';
-   }
+  // Единственная денежная строка: капитал + резерв на цель одной суммой.
+  document.getElementById('bizMoneyRow').textContent = `💰 ${bizMoneyTotal()} ₽`;
 }
 function goToBizPhase(phaseId){
   document.querySelectorAll('#businessLemonadeGame .biz-phase').forEach(el=>{
@@ -327,7 +326,7 @@ function renderBizDayIntro(finance, spoiled){
   }
   if(finance && finance.loanInfo){
     const { borrowed, owed, dueDay } = finance.loanInfo;
-    messages.push(`💰 Капитал совсем закончился — друг одолжил ${borrowed} ₽, чтобы бизнес не встал. Верни ${owed} ₽ (на 20% больше — такова цена займа) до дня ${dueDay}.`);
+    messages.push(`💰 Деньги совсем закончились — друг одолжил ${borrowed} ₽, чтобы бизнес не встал. Верни ${owed} ₽ (на 20% больше — такова цена займа) до дня ${dueDay}.`);
   } else if((state.businessLemonadeLoanOwed || 0) > 0){
     messages.push(`💰 Не забудь: ты должен другу ${state.businessLemonadeLoanOwed} ₽, вернуть до дня ${state.businessLemonadeLoanDueDay}.`);
   }
@@ -361,7 +360,7 @@ btnsWrap.querySelectorAll('.biz-upgrade-btn').forEach(btn=>{
        const k = btn.dataset.key;
        const u = BIZ_UPGRADES[k];
        const price = bizUpgradePrice(u.basePrice);
-       const totalCapital = (state.businessLemonadeCapital || 0) + (state.businessLemonadeGoalReserve || 0);
+       const totalCapital = bizMoneyTotal();
        if(totalCapital < price) return;
        bizSpend(price);
        state.businessLemonadeUpgrades[k] = true;
@@ -380,7 +379,7 @@ document.getElementById('bizStartDayBtn').addEventListener('click', ()=>{
   const finance = bizHandleDailyFinance();
   if(finance.loanInfo){
     updateBizHeaderUI();
-    showToast(`💰 Друг одолжил ещё ${finance.loanInfo.borrowed} ₽ — капитал совсем закончился`);
+    showToast(`💰 Друг одолжил ещё ${finance.loanInfo.borrowed} ₽ — деньги совсем закончились`);
   }
   renderBizLocationList();
   document.getElementById('bizLocationEventCard').style.display = 'none';
@@ -550,12 +549,13 @@ function renderBizLemonsPhase(){
    } else {
      if(stockCard) stockCard.textContent = 'Запасов нет — купи лимоны и/или пакетики чая, чтобы было из чего готовить напитки.';
    }
-   const capital = state.businessLemonadeCapital || 0;
+   // Все деньги партии — одна сумма: кнопки покупки ориентируются на неё же.
+   const capital = bizMoneyTotal();
    const wrap = document.getElementById('bizLemonTiersGrid');
    const teaWrap = document.getElementById('bizTeaTiersGrid');
    const selLemonIdx = state.businessLemonadeSelectedLemonIdx;
    const selTeaIdx = state.businessLemonadeSelectedTeaIdx;
-const totalAvailable = capital + (state.businessLemonadeGoalReserve || 0);
+const totalAvailable = bizMoneyTotal();
     const canBuyLemon = selLemonIdx != null && totalAvailable >= (BIZ_LEMON_TIERS[selLemonIdx].qty * BIZ_LEMON_TIERS[selLemonIdx].pricePerUnit);
     const canBuyTea = selTeaIdx != null && totalAvailable >= (BIZ_TEA_TIERS[selTeaIdx].qty * BIZ_TEA_TIERS[selTeaIdx].pricePerUnit);
    const nextBtn = document.getElementById('bizToBuyBtn');
@@ -604,7 +604,7 @@ function bizOnToBuy(){
    const lemonSel = state.businessLemonadeSelectedLemonIdx;
    const teaSel = state.businessLemonadeSelectedTeaIdx;
    let bought = false;
-   const totalCapital = (state.businessLemonadeCapital || 0) + (state.businessLemonadeGoalReserve || 0);
+   const totalCapital = bizMoneyTotal();
    if(lemonSel != null){
      const tier = BIZ_LEMON_TIERS[lemonSel];
      const total = tier.qty * tier.pricePerUnit;
@@ -723,8 +723,7 @@ function updateBizBuyBreakdownUI(){
     }
   });
 const total = lemonExpenses + teaExpenses + rent + optionsCost;
-   const capital = state.businessLemonadeCapital || 0;
-   const totalAvailable = capital + (state.businessLemonadeGoalReserve || 0);
+   const totalAvailable = bizMoneyTotal();
 
    const rowsEl = document.getElementById('bizBuyBreakdownRows');
   let rowsHtml = '';
@@ -757,7 +756,7 @@ const total = lemonExpenses + teaExpenses + rent + optionsCost;
     if(teaShort) problems.push(`не хватает пакетиков чая: нужно ${state.businessLemonadeTeaCups} шт., в запасе ${teaStock} шт.`);
     if(overBudget) problems.push(`не хватает денег: расходы ${total} ₽ больше, чем доступно ${totalAvailable} ₽`);
      warnEl.style.display = problems.length ? 'block' : 'none';
-     warnEl.textContent = problems.length ? `Пока нельзя продолжить: ${problems.join('; ')}. Уменьши количество стаканов, отключи опции или докупи кнопкой выше${overBudget ? ' (сначала тратится резерв на цель, потом капитал; если не хватает — занять у друга кнопкой ниже)' : ''}.` : '';
+     warnEl.textContent = problems.length ? `Пока нельзя продолжить: ${problems.join('; ')}. Уменьши количество стаканов, отключи опции или докупи кнопкой выше${overBudget ? ' (расходы списываются из общей суммы; если её не хватает — занять у друга кнопкой ниже)' : ''}.` : '';
   }
   const nextBtn = document.getElementById('bizToPriceBtn');
   if(nextBtn) nextBtn.disabled = overBudget || lemonShort || teaShort;
@@ -766,8 +765,8 @@ const total = lemonExpenses + teaExpenses + rent + optionsCost;
   const loanBtn = document.getElementById("bizLoanBtn");
   if(loanBtn){
     if(overBudget){
-      const reserve = state.businessLemonadeGoalReserve || 0;
-      const needAfterReserve = Math.max(0, total - capital - reserve);
+      // Деньги партии — одна сумма (капитал + резерв), из неё и считаем нехватку.
+      const needAfterReserve = Math.max(0, total - bizMoneyTotal());
       if(needAfterReserve <= 0){
         loanBtn.style.display = 'none';
       } else {
@@ -801,16 +800,17 @@ document.getElementById('bizLoanBtn').addEventListener('click', ()=>{
        optionsCost += opt.costType === 'perCup' ? (lemonCups + teaCups) * opt.cost : opt.cost;
      }
    });
-// Сначала используем резерв на цель, потом — займ у друга
-    const reserve = state.businessLemonadeGoalReserve || 0;
-    const needAfterReserve = Math.max(0, (total + optionsCost) - (state.businessLemonadeCapital || 0) - reserve);
-    if(needAfterReserve <= 0 && (total + optionsCost) > (state.businessLemonadeCapital || 0)){
-      // Резерв покрывает нехватку — переводим из резерва
-      const shortfall = (total + optionsCost) - (state.businessLemonadeCapital || 0);
+// Деньги партии — одна сумма (капитал + резерв); займ нужен только на то,
+// чего не хватает сверх неё.
+    const moneyTotal = bizMoneyTotal();
+    const needAfterReserve = Math.max(0, (total + optionsCost) - moneyTotal);
+    if(needAfterReserve <= 0 && (total + optionsCost) > moneyTotal){
+      // Своих денег хватает после списания — покрываем из общей суммы.
+      const shortfall = (total + optionsCost) - moneyTotal;
       bizSpend(shortfall);
       saveState();
       playSuccessSound();
-      showToast(`🤝 Использован резерв на цель: ${shortfall} ₽`);
+      showToast(`🤝 Оплачено из накоплений: ${shortfall} ₽`);
     } else if(needAfterReserve <= 0){
       return;
     } else {
