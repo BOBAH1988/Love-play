@@ -409,23 +409,6 @@ function exitPassionMapSummary(){
 document.getElementById('passionMapSummaryExitBtn').addEventListener('click', ()=>{ exitPassionMapSummary(); });
 
 /* ===== Пауза: вернуться в меню — продолжить позже через общий блок ===== */
-function pausePassionMapGame(){
-  if(state.pausedMode === 'passionMap') return;
-  stopAllSounds();
-  state.passionMapPaused = {
-    index: state.passionMapIndex || 0,
-    stepIndex: passionMapCurrentStepIndex,
-    awaitingNext: passionMapAwaitingNext,
-    waitText: passionMapLastOutcomeText,
-    waitIcon: passionMapLastOutcomeIcon,
-  };
-  state.pausedMode = 'passionMap';
-  saveState();
-  document.getElementById('passionMapGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
-  showSetupView('twoPlayerView');
-  updateResumeUI();
-}
 function resumePassionMapGame(){
   state.pausedMode = null;
   const d = state.passionMapPaused || {};
@@ -478,9 +461,10 @@ document.getElementById('passionMapStartBtn').addEventListener('click', ()=>{
   playSuccessSound();
   startPassionMapGame();
 });
+// Кнопка «Выход» в игре — сразу в меню настройки, без промежуточной паузы.
+// Чек-лист партии при этом не сохраняется (прерывание — не честное завершение).
 document.getElementById('passionMapExitBtn').addEventListener('click', ()=>{
-  pausePassionMapGame();
-  showToast('Игра на паузе — прогресс сохранён');
+  finishPausedPassionMapGame();
 });
 // Кнопка «▶ Начать» на карточке знакомства: открываем ПЕРВЫЙ вопрос квеста
 // этого желания (quest[0]) — появляются кнопки «Да»/«Нет».

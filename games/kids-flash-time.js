@@ -69,9 +69,6 @@ function getFlashTimePool(){
   if(typeof FLASH_WORDS === 'undefined' || !Array.isArray(FLASH_WORDS)) return [];
   return FLASH_WORDS.filter(w => w.theme === 'time' && w.sub === state.flashTimeSub);
 }
-function isFlashTimeCard(card){
-  return card && card.theme === 'time' && (card.sub === 'digital' || card.sub === 'mech');
-}
 function renderFlashTimeCard(card){
   const wrap = document.getElementById('flashTimeCard');
   if(!wrap) return;

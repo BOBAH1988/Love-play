@@ -1126,50 +1126,16 @@ function blockedByDavayPause(){
   showToast(`Сначала завершите ${label} — «Продолжить игру» или «Закончить игру»`);
   return true;
 }
-// Универсальная функция сброса паузы (все abandonPausedXxxSession() — алиасы)
+// Универсальная функция сброса паузы. Вызывается напрямую с ключом игры:
+// abandonPausedSession('krokodil') и т.д. Раньше на каждую игру существовала
+// ещё и функция-обёртка вида abandonPausedKrokodilSession(), но все они
+// дублировали одну строку и нигде не вызывались — удалены при чистке.
 function abandonPausedSession(key){
   if(state.pausedMode === key) state.pausedMode = null;
 }
-// Симметрично остальным abandonPausedXSession() — сбрасывает "чужую" паузу
-// базовой парной игры "Фанты" (через общую pauseGame()), если вдруг
-// начинается другая игра (страховка).
+// Единственная обёртка, которая реально используется: запуск другой игры
+// из меню должен снять «чужую» паузу базовых «Фантов» (через pauseGame()).
 function abandonPausedFantySession(){ abandonPausedSession('fanty'); }
-// Симметрично abandonPausedSession('davay') — сбрасывает "чужую" паузу
-// "Правда или действие", если вдруг начинается другая игра (страховка,
-// т.к. в обычном UI выбор игры скрыт, пока есть активная пауза).
-function abandonPausedTdSession(){ abandonPausedSession('td'); }
-// Симметрично abandonPausedSession('td') — сбрасывает "чужую" паузу
-// "Секс-бинго", если вдруг начинается другая игра (страховка).
-function abandonPausedBingoSession(){ abandonPausedSession('bingo'); }
-// Симметрично остальным — сбрасывает "чужую" паузу «Крокодила» (страховка).
-function abandonPausedKrokodilSession(){ abandonPausedSession('krokodil'); }
-// Симметрично остальным — сбрасывает "чужие" паузы «Твоих желаний»,
-// «Тайных ответов» и «Таймера страсти» (страховка).
-function abandonPausedWishlistSession(){ abandonPausedSession('wishlist'); }
-function abandonPausedZnayuSession(){ abandonPausedSession('znayu'); }
-function abandonPausedTimerSession(){ abandonPausedSession('timer'); }
-function abandonPausedPartyFantsSession(){ abandonPausedSession('partyFants'); }
-function abandonPausedPartyTdSession(){ abandonPausedSession('partyTd'); }
-function abandonPausedFamZnayuSession(){ abandonPausedSession('famZnayu'); }
-function abandonPausedLuckySession(){ abandonPausedSession('lucky'); }
-// Симметрично остальным — сбрасывает "чужую" паузу «Рулетки» (страховка).
-function abandonPausedPartyRouletteSession(){ abandonPausedSession('partyRoulette'); }
-// Симметрично остальным — сбрасывает "чужую" паузу «Мемори» (страховка).
-function abandonPausedKidsMemorySession(){ abandonPausedSession('kidsMemory'); }
-// Симметрично остальным — сбрасывает "чужую" паузу «Правда/Действие» (дети).
-function abandonPausedKidsTdSession(){ abandonPausedSession('kidsTd'); }
-// Симметрично остальным — сбрасывает "чужие" паузы «Викторины» во всех трёх
-// разделах (пары/компания/дети) — каждый раздел хранит свою игру отдельно.
-function abandonPausedQuizSession(){ abandonPausedSession('quiz'); }
-function abandonPausedPartyQuizSession(){ abandonPausedSession('partyQuiz'); }
-// Симметрично остальным — сбрасывает "чужую" паузу «Викторины» (дети)
-// (страховка).
-function abandonPausedKidsQuizSession(){ abandonPausedSession('kidsQuiz'); }
-// Симметрично остальным — сбрасывает "чужую" паузу «Морского боя (бот)»
-// (страховка).
-function abandonPausedSoloBsSession(){ abandonPausedSession('soloBs'); }
-// Симметрично остальным — сбрасывает "чужую" паузу «Сапёра» (страховка).
-function abandonPausedKidsSaperSession(){ abandonPausedSession('kidsSaper'); }
 document.getElementById('gameFantyBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
@@ -3773,6 +3739,23 @@ document.getElementById('name1').addEventListener('input', updateDavaySetupStart
 document.getElementById('name2').addEventListener('input', updateDavaySetupStarterLabels);
 
 function goToDavaySetup(){
+  // Отменяем незавершённую паузу «Давай попробуем»: игрок вместо «Продолжить»
+  // открывает настройку заново, значит старая партия не нужна — чистим её
+  // состояние и следы режима. Раньше это делала отдельная функция
+  // abandonPausedDavaySession(), но её никто не вызывал: весь код пользовался
+  // общим abandonPausedSession('davay'), который только снимает паузу,
+  // оставляя историю и квиз от прошлой партии.
+  if(state.pausedMode === 'davay'){
+    state.pausedMode = null;
+    state.davayUsed = {};
+    state.davayHidden = [];
+    resetDavayQuiz();
+    currentDavayCard = null;
+    davayHistory = [];
+    davayHistoryPos = -1;
+    saveState();
+  }
+  document.getElementById('game').classList.remove('davay-mode');
   goToGameSetup('davaySetup', null, ()=>{
     renderDavaySetupStarterGroup();
     renderDavaySetupLevels();
@@ -4065,22 +4048,6 @@ function resumeDavayGame(){
   } else {
     renderDavayPlaceholderCard();
   }
-}
-
-// Полностью отменить незавершённую паузу "Давай попробуем" — используется,
-// если игрок вместо "Продолжить" запускает какую-то другую игру.
-function abandonPausedDavaySession(){
-  if(state.pausedMode === 'davay'){
-    state.pausedMode = null;
-    state.davayUsed = {};
-    state.davayHidden = [];
-    resetDavayQuiz();
-    currentDavayCard = null;
-    davayHistory = [];
-    davayHistoryPos = -1;
-    saveState();
-  }
-  document.getElementById('game').classList.remove('davay-mode');
 }
 
 function goToPlaceholderGame(){
@@ -4626,12 +4593,6 @@ function drawCardWithType(type){
   renderCard(card);
 }
 
-function refreshCard(){
-  if(!currentCard) return;
-  showToast('Новое задание 🔄');
-  drawCard();
-}
-
 function dislikeCurrentCard(){
   if(!currentCard) return;
   playErrorSound();
@@ -4921,6 +4882,26 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
    }
    if(state.pausedMode === 'kidsSaper'){
      finishKidsSaperGame();
+     return;
+   }
+   // Игры с «Выходом» вместо «Паузы» (Виселица, Лимонадный ларёк, Секс-квест,
+   // Карта страсти) в новой партии сюда не попадают — их кнопка ведёт в меню
+   // сразу. Ветки нужны для старых сохранений, где пауза уже стояла: иначе
+   // нажатие «Закончить игру» ничего бы не делало.
+   if(state.pausedMode === 'partyHangman'){
+     finishPartyHangmanGame();
+     return;
+   }
+   if(state.pausedMode === 'businessLemonade'){
+     finishBusinessLemonadeGame();
+     return;
+   }
+   if(state.pausedMode === 'sexQuest'){
+     finishPausedSexQuestGame();
+     return;
+   }
+   if(state.pausedMode === 'passionMap'){
+     finishPausedPassionMapGame();
      return;
    }
    if((state.score1||0) === 0 && (state.score2||0) === 0){ goToSetup(); return; }

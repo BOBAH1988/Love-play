@@ -348,9 +348,6 @@ function suggestRandomKidsSaperCell(){
     if(w) w.querySelectorAll('.bingo-cell.bingo-suggested').forEach(c=>c.classList.remove('bingo-suggested'));
   }, {capture:true, once:true});
 }
-function goToKidsSaperSetup(){
-  goToGameSetup('kidsSaperSetup');
-}
 function exitKidsSaperSetup(){
   document.getElementById('kidsSaperSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');

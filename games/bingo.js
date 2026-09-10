@@ -243,11 +243,6 @@ function showBingoSummary(){
   saveState();
   showModal('summaryModal');
 }
-function exitBingoGameToSetup(){
-  exitGame('bingoGame', 'setup');
-  showSetupView('twoPlayerView');
-  finishBingoGame();
-}
 // Все ещё не отмеченные клетки заменяются заданиями нового уровня. Уже
 // отмеченные клетки не трогаем — они остаются как есть, подтверждая, что
 // задание выполнено.

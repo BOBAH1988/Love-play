@@ -650,34 +650,6 @@ if(bizToBuyBtnEl){
 /* ============ ШАГ 4: ЗАКУПКА ОСТАЛЬНЫХ ПРОДУКТОВ ============ */
 // Лимоны сюда не входят — они уже оплачены и просто расходуются из запаса
 // (см. "Шаг 3"), поэтому в бюджет дня их стоимость не добавляется повторно.
-function bizBuyBreakdown(cups, options, locationKey, hours, isTea){
-  const optionCosts = {};
-  let optionsCost = 0;
-  Object.keys(BIZ_OPTIONS).forEach(key=>{
-    const opt = BIZ_OPTIONS[key];
-    const on = !!(options && options[key]);
-    const cost = on ? (opt.costType === 'perCup' ? cups * opt.cost : opt.cost) : 0;
-    optionCosts[key] = cost;
-    optionsCost += cost;
-  });
-  let sugarCost, cupCost, waterCost;
-  if(isTea){
-    // Чай: сахар + вода(0) + стаканчик. Пакетики уже куплены про запас (шаг 3),
-    // поэтому в расходы дня они входят как 0 ₽ — так же, как лимоны у лимонада.
-    sugarCost = cups * BIZ_TEA_COSTS.sugar;
-    cupCost = cups * BIZ_TEA_COSTS.cup;
-    waterCost = cups * BIZ_TEA_COSTS.water;
-  } else {
-    // Лимонад: лимоны(уже куплены) + сахар + вода(0) + стаканчик
-    sugarCost = cups * BIZ_SUGAR_PER_CUP;
-    cupCost = cups * BIZ_CUP_PER_CUP;
-    waterCost = cups * BIZ_WATER_PER_CUP;
-  }
-  const materials = sugarCost + cupCost + waterCost + optionsCost;
-  const rentPerHour = (BIZ_LOCATIONS[locationKey] || { rentPerHour: 0 }).rentPerHour;
-  const rent = rentPerHour * (hours || 1);
-  return { sugarCost, cupCost, waterCost, optionCosts, optionsCost, rent, total: materials + rent, isTea };
-}
 function renderBizOptionsGrid(){
   const wrap = document.getElementById('bizOptionsGrid');
   if(!state.businessLemonadeOptions) state.businessLemonadeOptions = {};
@@ -908,31 +880,6 @@ function bizDrinkExpenses(cups, drinkType){
   return sugarCost + cupCost + waterCost;
 }
 
-function bizOptionDemandMult(key, weatherKey, options){
-  const opt = BIZ_OPTIONS[key];
-  const on = !!(options && options[key]);
-  if(opt.weatherKey){
-    if(weatherKey !== opt.weatherKey) return 1;
-    return on ? opt.onMult : opt.offMult;
-  }
-  return on ? (opt.mult || 1) : 1;
-}
-function bizDemandFraction(price, weatherKey, locationKey, options, dow, hours){
-  const priceFrac = BIZ_LEMONADE_DEMAND[price] !== undefined ? BIZ_LEMONADE_DEMAND[price] : 1;
-  const loc = BIZ_LOCATIONS[locationKey] || BIZ_LOCATIONS.school;
-  const locWeatherMult = loc.demand[weatherKey] !== undefined ? loc.demand[weatherKey] : 1;
-  const locDowMult = dow && dow.weekend ? loc.weekendMult : loc.weekdayMult;
-  const ev = bizEventInfo();
-  const eventMult = ev ? ev.mult : 1;
-  const competitorMult = bizCompetitorMult(price, state.businessLemonadeCompetitorPrice);
-  const upgrades = state.businessLemonadeUpgrades || {};
-  let upgradeMult = 1;
-  Object.keys(BIZ_UPGRADES).forEach(k=>{ if(upgrades[k]) upgradeMult += BIZ_UPGRADES[k].mult; });
-  let optionsMult = 1;
-  Object.keys(BIZ_OPTIONS).forEach(k=>{ optionsMult *= bizOptionDemandMult(k, weatherKey, options); });
-  const hMult = bizHoursMult(hours);
-  return priceFrac * locWeatherMult * locDowMult * eventMult * competitorMult * upgradeMult * optionsMult * hMult;
-}
 function bizSellDay(){
   const dow = bizDayOfWeek(state.businessLemonadeDay || 1);
   const weatherKey = state.businessLemonadeWeatherKey || 'normal';
@@ -1350,17 +1297,6 @@ function exitBusinessLemonadeGame(){
 // Вся партия (капитал, день, закупки, цена и итоги дня) уже живёт в state,
 // поэтому при паузе достаточно запомнить текущую фазу дня — DOM-классы
 // .biz-phase-active восстанавливаются функцией goToBizPhase при возврате.
-function pauseBusinessLemonadeGame(){
-  if(state.pausedMode === 'businessLemonade') return;
-  const active = document.querySelector('#businessLemonadeGame .biz-phase.biz-phase-active');
-  state.businessLemonadePausedPhase = active ? active.id : null;
-  state.pausedMode = 'businessLemonade';
-  saveState();
-  document.getElementById('businessLemonadeGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
-  showSetupView('businessView');
-  updateResumeUI();
-}
 function resumeBusinessLemonadeGame(){
   state.pausedMode = null;
   const phase = state.businessLemonadePausedPhase || 'bizPhaseDayIntro';
@@ -1399,9 +1335,9 @@ document.querySelectorAll('#bizGoalGroup .starter-btn').forEach(btn=>{
 });
 document.getElementById('businessLemonadeSetupStartBtn').addEventListener('click', ()=>{ goToBusinessLemonadeGame(); });
 document.getElementById('businessLemonadeSetupExitBtn').addEventListener('click', ()=>{ exitBusinessLemonadeSetup(); });
+// Кнопка «Выход» в игре — сразу в меню настройки, без промежуточной паузы.
 document.getElementById('businessLemonadeExitBtn').addEventListener('click', ()=>{
-  pauseBusinessLemonadeGame();
-  showToast('Игра на паузе — прогресс сохранён');
+  exitBusinessLemonadeGame();
 });
 (document.getElementById('businessLemonadeSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('businessLemonadeRulesModal'); });
 setupRulesModal('businessLemonadeRulesModal', 'closeBusinessLemonadeRulesBtn');

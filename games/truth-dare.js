@@ -26,12 +26,6 @@ function renderTdSetupLevels(){
     wrap.appendChild(div);
   });
 }
-function goToTdSetup(){
-  goToGameSetup('tdSetup', null, ()=>{
-    renderTdSetupLevels();
-    updateMuteBtn();
-  });
-}
 function exitTdSetup(){
   document.getElementById('tdSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
@@ -142,17 +136,6 @@ function tdDraw(type){
       </div>
     `;
   }, ()=>{ tdLocked = false; });
-}
-function dislikeTdCard(){
-  if(!currentTdCard || !currentTdType) return;
-  playErrorSound();
-  if(!state.tdHidden) state.tdHidden = [];
-  if(!state.tdHidden.includes(currentTdCard.text)){
-    state.tdHidden.push(currentTdCard.text);
-  }
-  saveState();
-  showToast('Карточка скрыта навсегда 🚫');
-  tdDraw(currentTdType);
 }
 function tdNextTurn(completed){
   if(completed){

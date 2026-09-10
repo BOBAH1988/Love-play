@@ -412,23 +412,6 @@ function exitSexQuestSummary(){
 document.getElementById('sexQuestSummaryExitBtn').addEventListener('click', ()=>{ exitSexQuestSummary(); });
 
 /* ===== Пауза: вернуться в меню — продолжить позже через общий блок ===== */
-function pauseSexQuestGame(){
-  if(state.pausedMode === 'sexQuest') return;
-  stopAllSounds();
-  state.sexQuestPaused = {
-    index: state.sexQuestIndex || 0,
-    stepIndex: sexQuestCurrentStepIndex,
-    awaitingNext: sexQuestAwaitingNext,
-    waitText: sexQuestLastOutcomeText,
-    waitIcon: sexQuestLastOutcomeIcon,
-  };
-  state.pausedMode = 'sexQuest';
-  saveState();
-  document.getElementById('sexQuestGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
-  showSetupView('twoPlayerView');
-  updateResumeUI();
-}
 function resumeSexQuestGame(){
   state.pausedMode = null;
   const d = state.sexQuestPaused || {};
@@ -481,9 +464,10 @@ document.getElementById('sexQuestStartBtn').addEventListener('click', ()=>{
   playSuccessSound();
   startSexQuestGame();
 });
+// Кнопка «Выход» в игре — сразу в меню настройки, без промежуточной паузы.
+// Чек-лист партии при этом не сохраняется (прерывание — не честное завершение).
 document.getElementById('sexQuestExitBtn').addEventListener('click', ()=>{
-  pauseSexQuestGame();
-  showToast('Игра на паузе — прогресс сохранён');
+  finishPausedSexQuestGame();
 });
 // Кнопка «▶ Начать» на карточке знакомства: открываем ПЕРВЫЙ вопрос квеста
 // этого желания (quest[0]) — появляются кнопки «Да»/«Нет».

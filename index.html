@@ -3723,7 +3723,7 @@
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary" id="sexQuestStartPlayBtn" hidden>▶ Начать</button>
-        <button type="button" class="btn btn-secondary btn-pause" id="sexQuestExitBtn">Пауза</button>
+        <button type="button" class="btn btn-secondary btn-exit" id="sexQuestExitBtn">Выход</button>
       </div>
     </div>
   
@@ -3804,7 +3804,7 @@
         </div>
         <div class="timer-actions-bottom">
           <button type="button" class="btn btn-secondary" id="passionMapStartPlayBtn" hidden>▶ Начать</button>
-          <button type="button" class="btn btn-secondary btn-pause" id="passionMapExitBtn">Пауза</button>
+          <button type="button" class="btn btn-secondary btn-exit" id="passionMapExitBtn">Выход</button>
         </div>
       </div>
     </div>
@@ -4497,7 +4497,7 @@
       <div class="znayu-answers" id="bizQuizAnswers"></div>
     </div>
 
-    <button type="button" class="btn btn-secondary btn-pause" id="businessLemonadeExitBtn" style="margin-top:14px;">Пауза</button>
+    <button type="button" class="btn btn-secondary btn-exit" id="businessLemonadeExitBtn" style="margin-top:14px;">Выход</button>
   </section>
 
   <!-- ===== ЛИМОНАДНЫЙ ЛАРЁК (БИЗНЕС): ИТОГИ ===== -->
@@ -4528,7 +4528,7 @@
         <li><b>Цена.</b> Себестоимость — сколько денег ушло на один стакан. Слишком высокая цена — купят меньше. Цена ниже себестоимости — убыток, даже если продашь всё. Если рядом конкурент — твоя цена относительно его цены тоже влияет на продажи.</li>
         <li>Итоги дня: выручка (все деньги от покупателей) и чистая прибыль (что осталось после расходов) — общая сумма переходит на следующий день, но никогда не опускается ниже 0. Если денег совсем не осталось даже на самую скромную закупку — одолжит друг, но вернуть придётся на 20% больше и в течение 2 дней.</li>
         <li>Когда накопленная чистая прибыль достигнет выбранной цели — итоговый график прибыли по дням, пять вопросов на проверку (числа в них берутся из твоей же партии, поэтому каждый раз разные) и оценка бизнеса.</li>
-        <li>«Пауза» сохранит весь прогресс дня — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>«Выход» вернёт в меню игры. Партия при этом не сохраняется — начать заново можно с первого дня.</li>
       </ol>
       <button class="btn btn-primary" id="closeBusinessLemonadeRulesBtn">Понятно</button>
     </div>
@@ -5089,6 +5089,7 @@
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;">🔥 Горячее</button>
       </div>
+    </div>
     </div>
 
 </section>
@@ -5836,7 +5837,7 @@
         <button type="button" class="btn btn-primary" id="partyHangmanNextBtn" style="display:none;">Следующее слово</button>
       </div>
       <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-pause" id="partyHangmanExitBtn">Пауза</button>
+        <button type="button" class="btn btn-secondary btn-exit" id="partyHangmanExitBtn">Выход</button>
       </div>
     </div>
   </section>
@@ -5852,7 +5853,7 @@
         <li>Если буква есть в слове — она откроется во всех клетках. Если нет — засчитывается ошибка, и на рисунке появляется новая часть виселицы.</li>
         <li>6 ошибок — поражение, слово будет показано полностью. Собрали все буквы раньше — победа!</li>
         <li>«Следующее слово» начнёт новый раунд. Общий счёт побед и поражений сохраняется.</li>
-        <li>«Пауза» в любой момент сохранит игру — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>«Выход» в любой момент вернёт в меню игры. Счёт побед и поражений при этом сохраняется — он ведётся отдельно от партии.</li>
       </ol>
       <button class="btn btn-primary" id="closePartyHangmanRulesBtn">Понятно</button>
     </div>
@@ -6243,7 +6244,7 @@
         <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
         <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
         <li>После партии итоги сохраняются в «✅ Пройденные» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
-        <li>«Пауза» сохранит партию — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>«Выход» вернёт в меню игры. Чек-лист прерванной партии не сохраняется — доиграть её позже нельзя.</li>
       </ol>
       <button class="btn btn-primary" id="closeSexQuestRulesBtn">Понятно</button>
     </div>
@@ -6270,7 +6271,7 @@
         <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
         <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
         <li>После партии итоги сохраняются в «✅ Пройденные» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
-        <li>«Пауза» сохранит текущую точку маршрута — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>«Выход» вернёт в меню игры. Чек-лист прерванной партии не сохраняется — доиграть её позже нельзя.</li>
       </ol>
       <button class="btn btn-primary" id="closePassionMapRulesBtn">Понятно</button>
     </div>
@@ -6799,9 +6800,9 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260917b"></script>
+<script src="games/core.js?v=20260918a"></script>
 <script src="games/twister.js?v=20260913e"></script>
-<script src="games/party-hangman.js?v=20260830u"></script>
+<script src="games/party-hangman.js?v=20260918a"></script>
 <script src="games/solo-quiz.js?v=20260830u"></script>
 <script src="games/solo-memory.js?v=20260830u"></script>
 <script src="games/solo-xo.js?v=20260830u"></script>
@@ -6809,15 +6810,15 @@
 <script src="games/shop.js?v=20260830u"></script>
 <script src="games/business-observer.js?v=20260830w"></script>
 <script src="games/party-roulette.js?v=20260914t"></script>
-<script src="games/business-lemonade.js?v=20260917a"></script>
+<script src="games/business-lemonade.js?v=20260918a"></script>
 <script src="games/kids-xo.js?v=20260913a"></script>
 <script src="games/kids-battleship.js?v=20260913a"></script>
 <script src="games/kids-connect4.js?v=20260913a"></script>
 <script src="games/solo-battleship.js?v=20260830u"></script>
 <script src="cards/wish-roulette-cards.js?v=20260916a"></script>
-<script src="games/wish-roulette.js?v=20260916a"></script>
-<script src="games/truth-dare.js?v=20260913a"></script>
-<script src="games/bingo.js?v=20260913b"></script>
+<script src="games/wish-roulette.js?v=20260918a"></script>
+<script src="games/truth-dare.js?v=20260918a"></script>
+<script src="games/bingo.js?v=20260918a"></script>
 <script src="games/timer-game.js?v=20260913b"></script>
 <script src="games/krokodil.js?v=20260913b"></script>
 <script src="games/memes.js?v=20260913b"></script>
@@ -6827,11 +6828,11 @@
 <script src="games/fam-znayu.js?v=20260913a"></script>
 <script src="games/lucky.js?v=20260913c"></script>
 <script src="games/kids-memory.js?v=20260913a"></script>
-<script src="games/kids-krokodil.js?v=20260913a"></script>
+<script src="games/kids-krokodil.js?v=20260918a"></script>
 <script src="games/kids-memes.js?v=20260913b"></script>
 <script src="games/kids-flash.js?v=20260830u"></script>
-<script src="games/kids-flash-time.js?v=20260902a"></script>
-<script src="games/kids-saper.js?v=20260913a"></script>
+<script src="games/kids-flash-time.js?v=20260918a"></script>
+<script src="games/kids-saper.js?v=20260918a"></script>
 <script src="games/kids-td.js?v=20260913b"></script>
 <script src="games/quiz.js?v=20260830u"></script>
 <script src="games/party-quiz.js?v=20260913a"></script>
@@ -6839,8 +6840,8 @@
 <script src="games/wishlist.js?v=20260913a"></script>
 <script src="games/znayu.js?v=20260917a"></script>
 <script src="games/ideas.js?v=20260830u"></script>
-<script src="games/sexquest.js?v=20260913a"></script>
-<script src="games/passionmap.js?v=20260913b"></script>
+<script src="games/sexquest.js?v=20260918a"></script>
+<script src="games/passionmap.js?v=20260918a"></script>
 <script src="games/whattoplay.js?v=20260830u"></script>
 <script src="games/init.js?v=20260917a"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».

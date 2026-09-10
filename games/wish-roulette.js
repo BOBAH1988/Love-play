@@ -19,7 +19,6 @@ function wishColorOf(n){ if(n===0) return 'green'; return WISH_ROULETTE_RED.has(
 function wishColorName(n){ const c=wishColorOf(n); return c==='red'?'красное':c==='black'?'чёрное':'зелёное(ноль)'; }
 function wishColorHex(n){ const c=wishColorOf(n); return c==='red'?'#e74c3c':c==='black'?'#fff':'#2ecc71'; }
 
-function wrLevelById(id){ return WR_LEVELS.find(l => l.id === id) || WR_LEVELS[0]; }
 // Экранирование пользовательских строк (имена игроков) перед вставкой в innerHTML
 function wrEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -293,9 +292,6 @@ function finishWrGame(){
   window.scrollTo(0, 0);
 }
 
-function exitWrGame(){
-  finishWrGame();
-}
 
 // «✅ Выполнено» — задание принято, сразу крутим следующий сектор
 const wrSpinDoneBtn = document.getElementById('wrSpinDoneBtn');

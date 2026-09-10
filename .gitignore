@@ -1,11 +1,18 @@
 # Зависимости для локальных проверок (не часть приложения)
 node_modules/
 
-# Служебные файлы ИИ-ассистентов
+# Служебные файлы ИИ-ассистентов (остаются локально, в репозиторий не идут)
 .kilo/
 .clineignore
+.cursor/
+.windsurf/
+.aider*
+AGENTS.local.md
 
 # Системное
 .DS_Store
-Thumbs.db.verify_kroko.png
-.tmp-*.js
+Thumbs.db
+
+# Временные файлы
+.tmp-*
+*.log

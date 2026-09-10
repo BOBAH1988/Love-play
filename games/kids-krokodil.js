@@ -87,17 +87,6 @@ function pauseKidsKrokodilGame(){
   document.getElementById('setup').classList.add('active');
   updateResumeUI();
 }
-function resumeKidsKrokodilGame(){
-  state.pausedMode = null;
-  saveState();
-  updateResumeUI();
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('kidsKrokodilGame').classList.add('active');
-  renderKkrScoreUI();
-  renderKidsKrokodilCard();
-  updateMuteBtn();
-  requestWakeLock();
-}
 function stopKkrInterval(){
   kkrIntervalId = stopInterval(kkrIntervalId);
 }

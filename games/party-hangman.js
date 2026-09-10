@@ -160,16 +160,10 @@ function exitPartyHangmanGame(){
   saveState();
   updateResumeUI();
 }
-/* ===== Пауза: вернуться в меню — продолжить позже через общий блок ===== */
-function pausePartyHangmanGame(){
-  if(state.pausedMode === 'partyHangman') return;
-  state.pausedMode = 'partyHangman';
-  saveState();
-  document.getElementById('partyHangmanGame').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
-  showSetupView('soloView');
-  updateResumeUI();
-}
+// Пауза у «Виселицы» не нужна: партия короткая, а сохранённое состояние —
+// только счёт побед/поражений. Кнопка выхода сразу возвращает в меню игры.
+// Функции pause/resume оставлены: их вызывает общий каркас (core.js) при
+// нажатии «Продолжить игру» на главном экране для старых сохранений.
 function resumePartyHangmanGame(){
   state.pausedMode = null;
   saveState();
@@ -206,14 +200,14 @@ function finishPartyHangmanGame(){
   updateResumeUI();
   showToast('Игра завершена');
 }
+// Кнопка «Выход» в игре — сразу в меню, без промежуточной паузы.
+document.getElementById('partyHangmanExitBtn').addEventListener('click', ()=>{
+  exitPartyHangmanGame();
+});
 
 document.getElementById('partyHangmanNextBtn').addEventListener('click', ()=>{
   playSuccessSound();
   partyHangmanDrawWord();
-});
-document.getElementById('partyHangmanExitBtn').addEventListener('click', ()=>{
-  pausePartyHangmanGame();
-  showToast('Игра на паузе — прогресс сохранён');
 });
 openRulesModal('partyHangmanGameRulesBtn', 'partyHangmanRulesModal');
 setupRulesModal('partyHangmanRulesModal', 'closePartyHangmanRulesBtn');
