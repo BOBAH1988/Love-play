@@ -14,6 +14,7 @@
  *  - FETCH:
  *      * навигация (открытие index.html) — network-first: всегда качаем свежую
  *        версию и кладём её в кэш; офлайн — отдаём из кэша.
+ *      * стили (styles/*) и игры (games/*) — network-first: свежие сразу
  *      * остальные GET своего origin — stale-while-revalidate: сначала кэш
  *        (мгновенно), параллельно тянем сетевую версию и обновляем кэш.
  *  - Активация: удаляем кэши старых версий и вычищаем устаревшие записи
@@ -23,7 +24,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v167';
+const CACHE_NAME = 'veselye-igry-cache-v168';
 
 // Ссылка на контекст воркера. Из-за lib.dom глобальный `self` в JS-файле
 // типизируется как Window, где нет skipWaiting()/clients. Кэстим через any,
@@ -34,6 +35,7 @@ const ctx = (self);
 // Ключевые файлы, нужные сразу при первом открытии (вне index.html).
 const PRECACHE_URLS = [
   './index.html',
+  './styles/app.css',
   './manifest.json',
   './icon-180.png',
   './icon-192.png',
@@ -42,7 +44,7 @@ const PRECACHE_URLS = [
 
 // Собирает полный список предкэшируемых ресурсов: базовый набор + все
 // cards/*.js, на которые ссылается текущий index.html (с их версией ?v=…).
-// games/*.js НЕ кэшируются — всегда грузятся из сети (network-first).
+// games/*.js и styles/*.css НЕ кэшируются вперёд — грузятся из сети (network-first).
 async function collectAssetUrls() {
   const urls = new Set(PRECACHE_URLS);
   try {
@@ -141,8 +143,11 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // Игровые скрипты — всегда network-first.
-    if (url.pathname.startsWith('/games/')) {
+    // Стили и игровые скрипты — всегда network-first.
+    // CSS вынесен из index.html в styles/app.css: при stale-while-revalidate
+    // (как у картинок) устройство сначала отдавало бы СТАРЫЙ стиль, и правки
+    // внешнего вида «не применялись» до второй перезагрузки.
+    if (url.pathname.startsWith('/games/') || url.pathname.startsWith('/styles/')) {
       event.respondWith(
         fetch(request)
           .then((response) => {

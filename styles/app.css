@@ -1,0 +1,2862 @@
+  :root{
+    --bg1:#2b0f2e;
+    --bg2:#4a1240;
+    --card-bg:#fff;
+    --accent:#ff5e8e;
+    --gold:#ffd27a;
+    --btn-height:52px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
+  input, textarea{-webkit-user-select:text; user-select:text; -webkit-touch-callout:default;}
+  /* html НАРОЧНО без явной height (не 100%, не 100dvh, не --real-vh расчёт):
+     фон корневого элемента (html) браузер по умолчанию рисует на весь
+     видимый холст страницы (canvas) независимо от реальной высоты его
+     собственного бокса — это не требует точных пересчётов вообще и не
+     отстаёт от поворота экрана/показа-скрытия панели браузера, в отличие от
+     любых JS-измерений высоты. Раньше здесь пытались точно подогнать height
+     под --real-vh, но JS-расчёт неизбежно на миг отстаёт от реального
+     изменения видимой области — и именно этот один момент отставания
+     оставлял внизу белую полосу. Без явной height отставать нечему.
+     Единственное исключение — установленная PWA (standalone): iOS на холодном
+     старте считает dvh от «маленького» viewport (как будто тулбар браузера ещё
+     есть), поэтому в standalone height задаётся отдельным блоком после body
+     (класс pwa-standalone → height:100lvh). */
+  html{
+    width:100%;
+    overflow:hidden;
+    background-color:var(--bg1);
+    background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    overscroll-behavior:none;
+  }
+  /* body закреплён через position:fixed + inset:0 — это само по себе всегда
+     точно совпадает с текущим видимым viewport (реагирует мгновенно, без
+     задержек). Раньше здесь ЕЩЁ и явно задавалась height (100dvh /
+     --real-vh) — но когда у fixed-элемента одновременно заданы top, bottom
+     (через inset:0) И height, по спецификации CSS bottom игнорируется и
+     пересчитывается из height. Если height хоть на миг оказывался неточным
+     (а расчёт --real-vh в JS неизбежно немного отстаёт от реального
+     поворота/показа панели браузера), нижний край body переставал доходить
+     до настоящего края экрана — и снизу оставалась белая полоса. Убрали
+     явную height, оставили только inset:0 — так body всегда без всяких
+     пересчётов точно соответствует экрану. */
+  body{
+    position:fixed;
+    inset:0;
+    width:100%;
+    margin:0;
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    background-color:var(--bg1);
+    background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    color:#fff;
+    overflow:hidden;
+    overscroll-behavior:none;
+    -webkit-overflow-scrolling:auto;
+  }
+  /* ===== ФИКС БЕЛОЙ ПОЛОСЫ ВНИЗУ В УСТАНОВЛЕННОЙ PWA (iOS standalone) =====
+     Симптом: в PWA, добавленной на экран «Домой», внизу экрана белая полоса
+     высотой ≈ тулбара браузера; в обычном Safari всё чисто.
+     Причина: на холодном старте standalone-PWA iOS считает viewport-единицы
+     (dvh/vh) и containing block fixed-элементов от МАЛЕНЬКОГО viewport — как
+     будто тулбар браузера всё ещё занимает низ экрана. В Safari полосы не
+     видно, потому что его тулбар физически занимает этот остаток, а в
+     standalone тулбара нет — под каркасом, не дотянувшим до физического низа
+     на высоту «виртуального» тулбара (~50-100px), просвечивает белая подложка
+     WKWebView. Фикс: только в standalone приколачиваем html/body к БОЛЬШОМУ
+     viewport (100lvh = полный экран без браузерного UI), с фолбэком
+     -webkit-fill-available для старых iOS без lvh. Класс pwa-standalone
+     ставится инлайн-скриптом в <head>. НЕ возвращайте height:100dvh в базовые
+     правила html/body: в браузере у fixed body с inset:0+height параметр
+     bottom игнорируется, и любая неточность dvh (клавиатура, анимация тулбара)
+     снова оставляет белую полосу — в этом проекте это уже дважды ломалось. */
+  html.pwa-standalone,
+  html.pwa-standalone body{
+    height:100lvh;
+    min-height:100lvh;
+  }
+  @media (display-mode: standalone){
+    html, body{
+      height:100lvh;
+      min-height:100lvh;
+    }
+  }
+  @supports not (height:100lvh){
+    html.pwa-standalone,
+    html.pwa-standalone body{
+      height:-webkit-fill-available;
+      min-height:-webkit-fill-available;
+    }
+  }
+  /* Карточка с видео («Видеорулетка»/«Давай попробуем») задана в dvh — в
+     standalone на холодном старте она тоже не дотянула бы до низа экрана. */
+  html.pwa-standalone #game.video-mode .card,
+  html.pwa-standalone #game.davay-mode .card{
+    height:100lvh;
+  }
+  /* При viewport-fit=cover фон html/body сам заполняет всё под home-indicator, */
+  /* подложка не нужна. */
+  #app{
+    /* #app не позиционирован fixed, а лежит в потоке внутри body — раз body
+       теперь всегда точно равен экрану (см. комментарий выше), простого
+       height:100% достаточно и без dvh/--real-vh пересчётов. */
+    height:100%;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    padding: max(16px, env(safe-area-inset-top)) 0 max(16px, env(safe-area-inset-bottom));
+    position:relative;
+    overscroll-behavior:none;
+  }
+  /* На компьютере (широкий экран) не растягиваем интерфейс во всю ширину —
+     держим комфортную "мобильную" колонку по центру, с рамкой для наглядности. */
+  @media (min-width:640px){
+    #app{
+      max-width:480px;
+      margin:0 auto;
+      border-left:1px solid rgba(255,255,255,.08);
+      border-right:1px solid rgba(255,255,255,.08);
+      box-shadow:0 0 80px rgba(0,0,0,.55);
+    }
+  }
+  /* На телефоне, повёрнутом на бок, во время "Видеорулетки"/"Давай попробуем"
+     снимаем это ограничение по ширине — приложение растягивается на весь
+     доступный ландшафтный экран вместо узкой колонки посередине с рамками
+     (класс включается/выключается в updateForcedPortraitLock). */
+  html.video-landscape-fill #app{
+    max-width:none;
+    margin:0;
+    border-left:none;
+    border-right:none;
+    box-shadow:none;
+  }
+  /* Горизонтальная ориентация телефона в "Видеорулетке" и "Давай попробуем":
+     высота экрана резко сокращается, поэтому служебные элементы (имена
+     игроков, шкала прогресса, кнопки) сжимаем, чтобы видео заняло максимум
+     доступного места. */
+  @media (orientation:landscape) and (max-height:600px){
+    #game.video-mode .card, #game.davay-mode .card{margin-top:6px;}
+    #game.davay-mode .davay-player-row{margin-bottom:6px;}
+    #game.davay-mode .davay-player-row .btn{padding:8px;}
+    #game.davay-mode .davay-progress-row{margin-bottom:6px;}
+    #game.video-mode .controls, #game.davay-mode .controls{gap:5px; margin-top:6px;}
+    #game.video-mode .controls .btn, #game.davay-mode .controls .btn{height:36px; font-size:13px;}
+    #game.davay-mode .davay-repeat-label{padding:0 0 2px; font-size:13px;}
+  }
+  /* Во всех остальных играх (кроме Видеорулетки и "Давай попробуем")
+     ориентация всегда должна оставаться вертикальной. Раньше при повороте
+     телефона на бок #app визуально разворачивался обратно на 90° через CSS
+     transform — но это давало то белую полосу (сырые 100vh/100vw в мобильных
+     браузерах неточно совпадают с реальной видимой областью), то заметный
+     глазу "щелчок" в момент поворота, то (после попытки замаскировать щелчок
+     плавным затемнением) настоящий разворот всё равно оставлял артефакты —
+     слишком много факторов, которые браузер считает независимо от нас и с
+     задержкой. Вместо трансформации #app просто показываем поверх всего
+     простую заглушку с просьбой повернуть телефон обратно — без единой
+     трансформации или пересчёта размеров тут нечему разъезжаться. Заглушка
+     показывается/прячется классом show на #rotateStub, см. updateForcedPortraitLock. */
+  #rotateStub{
+    display:none;
+    position:fixed; inset:0;
+    z-index:9999;
+    flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:14px;
+    padding:24px;
+    text-align:center;
+    background-color:var(--bg1);
+    background-image:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20);
+    color:#fff;
+  }
+  #rotateStub.show{display:flex;}
+  #rotateStub .rotate-stub-icon{font-size:44px;}
+  #rotateStub .rotate-stub-text{font-size:17px; font-weight:700; max-width:280px;}
+  #rotateStub .rotate-stub-sub{font-size:13px; color:#e8c9dd; max-width:260px; line-height:1.5;}
+  .screen{
+    flex:1;
+    display:none;
+    flex-direction:column;
+    height:100%;
+    width:100%;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    box-sizing:border-box;
+  }
+  .screen.active{display:flex;}
+
+  /* Все экраны получают одинаковый горизонтальный отступ 8px от краёв —
+     и setup-экраны (меню, настройки), и игровые экраны. Карточка в игровых
+     экранах занимает всю ширину контента (card-area + align-items:stretch
+     + card { width:100%; box-sizing:border-box }), благодаря чему визуально
+     совпадает по ширине с рядами кнопок внизу (тоже width:100%). */
+  .screen{padding:0 8px;}
+
+  h1.title{
+    text-align:center;
+    font-size:26px;
+    font-weight:800;
+    margin: 6px 0 4px;
+    letter-spacing:.3px;
+  }
+  #homeTitle{
+    margin-top:0;
+    margin-bottom:16px;
+  }
+  .subtitle{
+    text-align:center;
+    color:#e8c9dd;
+    font-size:14px;
+    margin-bottom:18px;
+  }
+  .intro-text{
+    text-align:center;
+    color:#e8c9dd;
+    font-size:13px;
+    line-height:1.5;
+    margin:0 auto 16px;
+    max-width:320px;
+  }
+
+  /* ---- Setup screen ---- */
+  .field{margin-bottom:16px;}
+  .section-title{
+    text-align:center;
+    font-size:20px;
+    font-weight:800;
+    margin:0 0 12px;
+    letter-spacing:.2px;
+  }
+  .names-row{display:flex; flex-direction:row; gap:10px;}
+  .names-row .field{flex:1; min-width:0;}
+  @media (min-width:700px){
+    .names-row{gap:16px;}
+  }
+  .field label{
+    display:block; font-size:13px; color:#e8c9dd; margin-bottom:6px; font-weight:600;
+  }
+  .field input[type=text]{
+    width:100%; padding:12px 14px; border-radius:12px; border:none;
+    background:rgba(255,255,255,.12); color:#fff; font-size:16px;
+    outline:none; border:1px solid rgba(255,255,255,.2);
+  }
+  .field input[type=text]::placeholder{color:rgba(255,255,255,.5);}
+  /* Внутри модалок (.modal-card) фон белый — обычный светлый текст поля
+     ввода становится невидимым (белое на белом). Например поле имени в
+     итогах "Мемори" (один) для таблицы лидеров. */
+  .modal-card .field input[type=text]{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .modal-card .field input[type=text]::placeholder{color:rgba(43,15,46,.4);}
+  /* Заголовки полей внутри светлых модалок: бледно-розовый #e8c9dd (для
+     тёмного фона) на белой карточке почти не виден — используем яркий
+     малиновый, читаемый на светлом фоне. */
+  .modal-card .field > label{ color:#d81b60; }
+
+  /* «Своё задание» (#addCardModal): карточка по умолчанию 80vh с прокруткой —
+     на телефонах не помещалась. Ужимаем отступы и поля, список заданий
+     ограничиваем по высоте — всё окно умещается на экране без прокрутки
+     (прокрутка остаётся только внутри списка своих заданий). */
+  #addCardModal .modal-card{
+    max-height:94vh; padding:18px 16px;
+    display:flex; flex-direction:column;
+  }
+  #addCardModal .modal-close-btn{ top:6px; right:8px; }
+  #addCardModal .modal-title{ margin-bottom:10px; font-size:18px; }
+  #addCardModal .field{ margin-bottom:8px; }
+  #addCardModal .field label{ margin-bottom:3px; font-size:12px; }
+  #addCardModal .select-input,
+  #addCardModal .textarea-input,
+  #addCardModal .field input[type=text]{ padding:8px 12px; font-size:14px; }
+  #addCardModal .starter-btn{ padding:8px 10px; font-size:13px; }
+  #addCardModal .btn{ padding:9px 14px; }
+  #addCardModal .custom-cards-list{
+    margin-top:8px; gap:6px;
+    max-height:14vh; overflow-y:auto; overscroll-behavior:contain;
+  }
+  .select-input, .textarea-input{
+    width:100%; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,.12); color:#fff; font-size:15px;
+    outline:none; border:1px solid rgba(255,255,255,.2); font-family:inherit;
+  }
+  .modal-card .select-input, .modal-card .textarea-input{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .modal-card .starter-btn{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .modal-card .starter-btn.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
+  .modal-card .btn-secondary{
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .textarea-input{resize:vertical;}
+
+  .toggle-row{display:flex; gap:8px; margin-bottom:16px;}
+  .toggle-pill{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    color:#fff; border-radius:12px; padding:10px 8px; font-size:13px; font-weight:700;
+    cursor:pointer; text-align:center;
+  }
+  .toggle-pill.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
+  /* "Правила" — везде получает один и тот же узнаваемый голубой акцент,
+     чтобы отличаться от остальных кнопок с первого взгляда (кнопка
+     справки/ориентира). Работает и на toggle-pill (кнопки в настройках),
+     и как модификатор для обычных .btn (Секс-бинго, где "Правила" стоит
+     рядом с "Пауза" прямо в игре). */
+  .rules-pill, .btn-rules{
+    background:rgba(110,198,255,.12)!important;
+    border-color:rgba(110,198,255,.5)!important;
+    color:#bfe4ff!important;
+  }
+  /* "Пауза"/"Выход" во время игры — та же формула оформления, что и у
+     "Правила" (.rules-pill/.btn-rules), только слегка красный акцент вместо
+     голубого — отдельный и узнаваемый и от "Правила", и от обычных
+     вторичных кнопок (Отказ, Скрыть и т.п.), плюс заметно ниже основных
+     кнопок действия (Да/Нет, Выполнено и т.д.). */
+  .btn-pause{
+    padding:7px 15px;
+    font-size:15px;
+    background:rgba(255,99,110,.14)!important;
+    border-color:rgba(255,99,110,.5)!important;
+    color:#ffc2c8!important;
+  }
+  /* Рулетка: кнопки действий идут сразу после строки ставок, а свободное
+     пространство заполняет поле с цифрами (flex-растяжение сетки), чтобы
+     между «Ставка: …» и кнопками не было пустоты. */
+  #partyRouletteGame .timer-actions-row{
+    padding-top:3px;
+    gap:3px;
+    margin-top:7px;
+  }
+  #partyRouletteGame .timer-actions-top{
+    flex-direction:row;
+    flex-wrap:wrap;
+  }
+  #partyRouletteGame .timer-actions-row .btn{padding:10px; font-size:15px;}
+  /* «Сброс ставок» — минимальной ширины, «Крутить» занимает остаток. */
+  #partyRouletteGame #rouletteSpinBtn{flex:1;}
+  #partyRouletteGame #rouletteClearBetsBtn{flex:0 0 auto; width:auto; padding:10px 18px; white-space:nowrap;}
+  #partyRouletteGame #rouletteExitBtn{flex:0 0 auto; width:auto; padding:7px 20px; align-self:center;}
+  /* «Свое поле» — рулетка без ставок под кнопками действий */
+  #partyRouletteGame #rouletteCustomBoardBtn{display:block; width:100%; margin-top:3px; padding:10px; font-size:15px;}
+  #partyRouletteGame .roulette-bet-total{text-align:center; margin:0 0 1px; padding:0;}
+  /* Компактное поле ставок рулетки: сетка чисел сжимается по высоте экрана,
+     а при свободном месте растягивается (ряды 1fr), заполняя пространство,
+     чтобы между ставкой и кнопками не было пустоты. */
+  #partyRouletteGame .roulette-number-grid{
+    flex:1 1 auto;
+    max-height:min(64vh, 500px);
+    grid-template-rows:repeat(6, 1fr);
+    align-content:stretch;
+  }
+  #partyRouletteGame .roulette-number-cell{
+    aspect-ratio:auto; height:auto; min-height:28px;
+  }
+  #partyRouletteGame .roulette-top-btn,
+  #partyRouletteGame .roulette-zero-cell,
+  #partyRouletteGame .roulette-outside-btn{padding:6px 2px;}
+  #partyRouletteGame .roulette-chip{width:44px; height:44px; font-size:13px;}
+  #partyRouletteGame .roulette-chips-row{gap:14px; margin:3px 0 10px;}
+  #partyRouletteGame .roulette-players-row{margin:6px 0 6px;}
+  #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:6px 12px; font-size:12px;}
+  #partyRouletteGame .roulette-players-row .roulette-player-btn .roulette-player-bet-info{font-size:9px; padding:1px 6px; margin-top:2px;}
+  @media (max-height:700px){
+    #partyRouletteGame .roulette-number-grid{max-height:min(58vh, 420px);}
+    #partyRouletteGame .roulette-number-cell{min-height:24px;}
+    #partyRouletteGame .roulette-top-btn,
+    #partyRouletteGame .roulette-zero-cell,
+    #partyRouletteGame .roulette-outside-btn{padding:5px 2px; font-size:12px;}
+    #partyRouletteGame .roulette-chip{width:40px; height:40px; font-size:12px;}
+    #partyRouletteGame .roulette-chips-row{gap:12px;}
+    #partyRouletteGame .roulette-players-row .roulette-player-btn{padding:5px 10px; font-size:11px;}
+    #partyRouletteGame .roulette-players-row .roulette-player-btn .roulette-player-bet-info{font-size:9px; padding:1px 5px; margin-top:1px;}
+    #partyRouletteGame .timer-actions-row .btn{padding:8px; font-size:14px;}
+    #partyRouletteGame #rouletteClearBetsBtn{padding:8px 14px;}
+    #partyRouletteGame #rouletteCustomBoardBtn{padding:8px; font-size:14px; margin-top:3px;}
+    #partyRouletteGame .roulette-result{margin-bottom:2px;}
+  }
+  /* Кнопки блока "Резервная копия" — ниже обычных toggle-pill и заметно
+     прозрачнее, чтобы визуально не путались с кнопками игр в меню. */
+  #exportDataBtn, #importDataBtn{
+    padding:6px 8px; font-size:12px;
+    background:rgba(255,255,255,.03); border-color:rgba(255,255,255,.1);
+    color:#d8b8cd;
+  }
+  #exportDataBtn:active, #importDataBtn:active{ background:rgba(255,255,255,.07); }
+
+  /* Блок "Резервная копия" сворачивается по нажатию на заголовок, по
+     умолчанию свёрнут. */
+  #backupContent{display:none;}
+  #backupField.backup-open #backupContent{display:flex;}
+  .backup-toggle-arrow{display:inline-block; font-size:10px; transition:transform .2s ease;}
+  #backupField.backup-open .backup-toggle-arrow{transform:rotate(180deg);}
+
+  /* Сворачиваемые блоки списков игр ("Игры для пар 18+" / "Игры для компании") —
+     по умолчанию свёрнуты, разворачиваются по клику на заголовок. */
+  .field-collapsible{display:none;}
+  .field-collapsible.section-open{display:block;}
+  /* Отступ контента от плавающей кнопки меню (☰) */
+  #homeView{padding-top:5px;}
+  .section-toggle-arrow{display:inline-block; font-size:13px; transition:transform .2s ease; opacity:.75;}
+  .section-toggle-arrow.section-open{transform:rotate(180deg);}
+
+  .levels{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
+  .level-toggle{
+    display:flex; flex-direction:column; align-items:flex-start;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:14px; padding:8px 12px; cursor:pointer;
+    position:relative; min-height:56px;
+  }
+  .level-toggle.on{border-color:var(--accent); background:rgba(255,94,142,.18);}
+  .level-toggle .lname{font-weight:700; font-size:14px; padding-right:22px;}
+  .level-toggle .ldesc{font-size:11px; color:#e8c9dd; margin-top:3px; line-height:1.3;}
+  .level-check{
+    position:absolute; top:10px; right:10px; width:18px; height:18px; border-radius:50%;
+    border:2px solid rgba(255,255,255,.3); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .level-toggle.on .level-check{background:var(--accent); border-color:var(--accent);}
+  .level-toggle.on .level-check::after{
+    content:'✓'; font-size:11px; font-weight:900; color:#2b0f2e; line-height:1;
+  }
+
+  .starter-group{display:flex; gap:8px;}
+  /* Темы «Флеш карт» — 2 кнопки в ряд (оборачиваются на 3-й/4-й). */
+  .starter-group-2{flex-wrap:wrap;}
+  .starter-group-2 .starter-btn{flex:1 1 calc(50% - 6px); max-width:calc(50% - 6px);}
+  .starter-btn{
+    flex:1; padding:9px 8px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);
+    color:#fff; font-weight:800; font-size:14px; cursor:pointer;
+  }
+  .starter-btn.on{
+    background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
+  .starter-btn:disabled{ opacity:.35; cursor:default; }
+  .mode-btn{font-size:11.5px; padding:9px 4px; letter-spacing:-.1px;}
+  #timerModeGroup .mode-btn{font-size:15px; padding:10px 8px; letter-spacing:normal;}
+  .timer-mode-caption{display:block; font-size:11.5px; font-weight:600; opacity:.75; margin-top:4px; letter-spacing:0;}
+  .timer-mode-single-row{display:flex; justify-content:center; margin-top:8px;}
+  .timer-mode-single-row .btn{flex:0 0 auto; width:auto; padding:14px 26px;}
+  #timerLevelsField.timer-levels-locked .levels{opacity:.4; pointer-events:none;}
+  #timerDurationField.timer-levels-locked .timer-duration-group{opacity:.4; pointer-events:none;}
+  .timer-levelup-group{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  #timerLevelUpField.timer-levels-locked .timer-levelup-group{opacity:.4; pointer-events:none;}
+  #timerHotterBtn.timer-hotter-ready{
+    background:linear-gradient(135deg,#ff9a5e,#ff3b5c); color:#fff; border-color:transparent;
+    box-shadow:0 6px 16px rgba(255,59,92,.4);
+  }
+  .timer-levels-note{font-size:12px; color:#cba0bf; margin-top:4px; text-align:center;}
+
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    width:100%; text-align:center; padding:15px;
+    border-radius:16px; border:1px solid transparent; font-size:17px; font-weight:800; line-height:1.2;
+    cursor:pointer; -webkit-appearance:none; box-sizing:border-box;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,#ff5e8e,#ff8a5e);
+    color:#2b0f2e;
+    box-shadow:0 8px 20px rgba(255,94,142,.35);
+  }
+  .btn-secondary{
+    background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25);
+  }
+  /* Кнопка "Выход" — везде в приложении помечается красной обводкой, чтобы
+     явно отличаться от остальных вторичных кнопок (см. games/init.js —
+     класс проставляется по тексту кнопки при загрузке страницы). */
+  .btn-exit{ border-color:#ff5e8e; }
+  .placeholder-label{
+    text-align:center; font-size:12px; font-weight:700; color:#cba0bf;
+    text-transform:uppercase; letter-spacing:.5px; margin-top:14px; margin-bottom:8px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .placeholder-label .placeholder-arrow{
+    display:inline-block; font-size:10px; transition:transform .2s ease;
+  }
+  #placeholderBlock.open .placeholder-arrow{transform:rotate(180deg);}
+  .placeholder-row{display:none; gap:10px; flex-wrap:wrap;}
+  #placeholderBlock.open .placeholder-row{display:flex;}
+  .placeholder-row .btn{flex:1 1 140px; padding:10px; font-size:14px;}
+  /* Список игр на главной странице — единый спокойный стиль вместо разноцветных градиентов;
+     сетка сама переходит на 2 колонки, если хватает ширины экрана. */
+  /* ===== Страница правил всех игр =====
+     ВАЖНО: селектор именно .modal-card.rules-hub-card, а не просто
+     .rules-hub-card. У карточки два класса, и .modal-card объявлен в
+     таблице стилей ПОЗЖЕ — при равной специфичности его
+     background:var(--card-bg) (#fff) перебивал тёмный градиент: карточка
+     становилась белой, а белые названия игр на белом фоне пропадали
+     (видны только иконки). Двойной класс повышает специфичность и
+     гарантирует тёмный фон + белый текст независимо от порядка правил. */
+  .modal-card.rules-hub-card{ width:min(430px,94vw); max-width:min(430px,94vw);
+    max-height:80vh; overflow-y:auto;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20); color:#fff; }
+
+  /* ===== О проекте (карточка-описание) ===== */
+  .modal-card.about-card{ width:min(430px,94vw); max-width:min(430px,94vw);
+    max-height:80vh; overflow-y:auto;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%, #1a0a20); color:#fff; }
+  .about-card .modal-title{ color:#fff; }
+  .about-card .modal-close-btn{ color:rgba(255,255,255,.6); }
+  .about-card .modal-close-btn:hover{ color:#fff; }
+  .about-logo{ font-size:52px; text-align:center; margin:2px 0 10px; line-height:1; }
+  .about-headline{ font-size:18px; font-weight:800; text-align:center; color:#fff; margin-bottom:10px; line-height:1.3; }
+  .about-text{ font-size:14px; line-height:1.55; color:rgba(255,255,255,.85); text-align:center; margin-bottom:14px; }
+  .about-ideas-title{ font-size:14px; font-weight:700; color:rgba(255,255,255,.7); margin:8px 0 8px; text-align:center; text-transform:uppercase; letter-spacing:.4px; }
+  .about-idea-block{ display:flex; align-items:flex-start; gap:12px; padding:11px 13px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:13px; margin-bottom:8px; }
+  .about-idea-icon{ font-size:22px; line-height:1.2; flex-shrink:0; }
+  .about-idea-name{ font-size:15px; font-weight:700; color:#fff; margin-bottom:2px; }
+  .about-idea-desc{ font-size:13px; line-height:1.45; color:rgba(255,255,255,.75); }
+  .about-footer{ margin-top:12px; padding-top:12px; border-top:1px dashed rgba(255,255,255,.15);
+    font-size:13.5px; line-height:1.5; text-align:center; color:#ffd9ec; }
+  .rules-group{ margin-top:10px; }
+  .rules-group-head{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:11px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05); color:#fff; font-size:15px; font-weight:700;
+    text-align:left; cursor:pointer;
+  }
+  .rules-group-head .rules-chev{ transition:transform .2s; color:#e8c9dd; }
+  .rules-group.open .rules-group-head .rules-chev{ transform:rotate(90deg); }
+  .rules-group-body{ display:none; flex-direction:column; gap:6px; margin-top:6px; }
+  .rules-group.open .rules-group-body{ display:flex; }
+  .rules-item{
+    display:flex; align-items:center; gap:8px; width:100%; padding:9px 12px;
+    border-radius:10px; border:1px solid rgba(255,255,255,.1); background:transparent;
+    color:#fff; font-size:14px; text-align:left; cursor:pointer;
+  }
+  .rules-item:active{ background:rgba(255,255,255,.08); }
+  .rules-item .rules-chev{ margin-left:auto; color:#e8c9dd; }
+  .rules-icon{ width:1.5em; text-align:center; flex-shrink:0; }
+  .rules-name{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rules-subgroup{ margin:8px 0 2px; font-size:12px; color:#e8c9dd; font-weight:700; }
+  .rules-item.nested{ margin-left:14px; width:calc(100% - 14px); }
+
+  .game-select-list{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    /* Все ряды сетки — одной высоты (по самому высокому ряду): без этого
+       ряд с двухстрочной кнопкой («Крестики нолики») выше соседних и
+       кнопки в списке получаются разной высоты. */
+    grid-auto-rows:1fr;
+    gap:12px;
+    margin-top:6px;
+    padding:0 8px;
+  }
+  .game-select-list .btn{
+    padding:9px 12px; font-size:16px; line-height:1.25; justify-content:flex-start; text-align:center; white-space:normal;
+    /* 60px = высота двух строк (2×16px×1.25=40px) + паддинг (9+9) + граница
+       (1+1, box-sizing:border-box). Ровно две строки — даже если все названия
+       уместились в одну (широкий экран), кнопки остаются двухстрочной высоты
+       и все ряды списка одинаковые. */
+    min-height:60px;
+  }
+  /* Иконка в начале названия игры — крупнее самого текста, чтобы список игр
+     читался легче. Раньше комментарий был не закрыт, и это правило молча
+     не применялось — браузер считал его частью комментария. */
+  .game-select-list .btn .menu-icon{
+    font-size:1.7em; line-height:1; flex-shrink:0;
+    width:auto; min-width:32px; white-space:nowrap;
+  }
+  /* Главная страница (хаб) — 3 крупные кнопки формата игры, всегда в один
+     столбец (не сетка), чтобы они читались как главный выбор, а не как
+     рядовые пункты списка игр. */
+  #homeMenuList{
+    display:flex; flex-direction:column; gap:14px; margin-top:22px;
+    padding:0 8px;
+  }
+  #homeMenuList .btn{
+    padding:18px 13px; font-size:19px; font-weight:800;
+  }
+  /* Главная страница (1 кнопка в ряд) — иконка+текст центрируются вместе.
+     В game-select-list (2 в ряд) — иконка слева, текст по центру (см. .btn-menu-item выше). */
+  #homeMenuList .btn-menu-item{
+    justify-content:center;
+  }
+  /* В game-select-list (2 в ряд) текст слева, иконка в столбике слева */
+  .game-select-list .btn-menu-item{
+    justify-content:flex-start;
+  }
+  .btn-menu-item{
+    background:linear-gradient(135deg, rgba(255,94,142,.22), rgba(255,255,255,.05));
+    color:#fff;
+    border:1px solid rgba(255,255,255,.32);
+    box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+    font-weight:700;
+    /* Flexbox: иконка слева, текст в контейнере который центрируется */
+    display:flex; align-items:center; justify-content:flex-start; gap:8px;
+  }
+  /* Иконка фиксированной ширины 32px — все иконки в одном столбике */
+  .btn-menu-item .menu-icon{
+    width:32px; min-width:32px; flex-shrink:0;
+    font-size:1.7em; line-height:1;
+  }
+  /* Текст занимает оставшееся место и центрируется (для .game-select-list).
+     В #homeMenuList отменяем text-align:center чтобы не было двойного центрирования. */
+  .btn-menu-item > :not(.menu-icon){ flex:1;
+  }
+  #homeMenuList .btn-menu-item > :not(.menu-icon){
+    text-align:left; padding-left:32px; /* компенсация иконки, текст идёт сразу за ней */
+  }
+  .btn-menu-item:active{background:rgba(255,94,142,.32); border-color:rgba(255,255,255,.5);}
+  .btn-ghost{
+    background:transparent; color:#e8c9dd; text-decoration:underline; font-weight:600; font-size:14px;
+    cursor:pointer;
+  }
+  .btn:active{transform:scale(.98);}
+
+  /* ---- Game screen ---- */
+  /* .score-row убран — вместо него .krokodil-score-row в единой системе */
+  .krokodil-score-row #score1, .krokodil-score-row #score2{white-space:nowrap;}
+  .level-progress{
+    text-align:center; font-size:11px; color:#cba0bf; min-height:14px; margin-bottom:6px;
+  }
+
+  .card-area{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    perspective:1200px;
+    min-height:0;
+  }
+  .card{
+    width:100%;
+    /* box-sizing:border-box гарантирует, что padding входит в width —
+       визуальная ширина карточки совпадает с шириной рядов кнопок
+       внизу (.quiz-pause-row, .wishlist-actions-row и т.д.).
+       max-width убран: карточка растягивается на всю ширину контента
+       (.screen с padding:0 8px), как и ряды кнопок под ней. */
+    box-sizing:border-box;
+    /* Карточка растягивается на всю доступную высоту .card-area (она flex:1
+       внутри .screen). Раньше margin:calc(var(--btn-height)/2) 0 оставлял
+       большие отступы сверху/снизу и карточка выглядела короткой; теперь
+       она занимает всё пространство от заголовка/счёта до ряда кнопок,
+       а контент внутри центрируется .card-body { flex:1; justify-content:center }. */
+    flex:1;
+    margin:8px 0;
+    border-radius:24px;
+    background:var(--card-bg);
+    color:#2b0f2e;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:flex-start;
+    padding:20px 22px 26px;
+    text-align:center;
+    box-shadow:0 20px 50px rgba(0,0,0,.45);
+    position:relative;
+    transform-style:preserve-3d;
+    min-height:0;
+  }
+  /* В "Видеорулетке" карточка по высоте всегда занимает всё доступное место.
+     По ширине — на весь экран по умолчанию; JS сужает её под соотношение
+     сторон текущего видео (aspect-ratio), но только если видео "уже" экрана
+     (портретное) — для широких/горизонтальных видео ширина остаётся на весь
+     экран, чтобы высота никогда не уменьшалась. */
+  #game.video-mode .card, #game.davay-mode .card{
+    width:100%;
+    max-width:none;
+    padding:0;
+    height:100dvh;
+    overflow:hidden;
+    /* Отступ сверху сокращён, чтобы был как отступ снизу до кнопки "Следующее" */
+    margin-top:18px;
+    background:#000;
+  }
+  #game.video-mode .card-split-media, #game.davay-mode .card-split-media{
+    border-radius:24px;
+    background:#000;
+  }
+  /* Полноэкранный режим карточки с видео: заполняем весь экран целиком —
+     вертикально, если телефон вертикально, и горизонтально, если горизонтально.
+     object-fit:contain, чтобы видео не обрезалось, а просто вписывалось
+     в текущую ориентацию экрана. */
+  #card:fullscreen, #card:-webkit-full-screen{
+    width:100%;
+    height:100%;
+    max-width:none;
+    max-height:none;
+    margin:0;
+    border-radius:0;
+    padding:0;
+    background:#000;
+  }
+  #card:fullscreen .card-inner, #card:-webkit-full-screen .card-inner{
+    width:100%;
+    height:100%;
+  }
+  #card:fullscreen .card-split-media, #card:-webkit-full-screen .card-split-media{
+    width:100%;
+    height:100%;
+    border-radius:0;
+    background:#000;
+  }
+  #card:fullscreen .card-split-media video, #card:-webkit-full-screen .card-split-media video{
+    object-fit:contain;
+  }
+  /* В "Видеорулетке" уровней нет — прячем пустую полоску прогресса над карточкой */
+  #game.video-mode #levelProgress, #game.davay-mode #levelProgress{display:none;}
+  .card-inner{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    min-height:0;
+    opacity:1;
+    transform:translateY(0);
+    transition:opacity .22s ease, transform .22s ease;
+  }
+  .card-inner.card-hidden{
+    opacity:0;
+    transform:translateY(6px);
+  }
+  .card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding-bottom:10px;
+    margin-bottom:10px;
+    border-bottom:2px solid rgba(43,15,46,.1);
+  }
+  .card .badge{
+    display:flex; flex-direction:column; align-items:flex-end;
+    gap:6px;
+  }
+  .card-turn{
+    text-align:left;
+  }
+  .card-turn-label{
+    font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:#9b7a92;
+  }
+  .card-turn-name{
+    font-size:19px; font-weight:800; color:#2b0f2e;
+  }
+  .level-pill{
+    font-size:13px; font-weight:800; padding:6px 12px; border-radius:20px; color:#fff;
+    letter-spacing:.3px;
+  }
+  .type-pill{
+    font-size:15px; font-weight:800; padding:7px 13px; border-radius:20px;
+    background:rgba(0,0,0,.08); color:#2b0f2e;
+  }
+  .card-type-row{
+    display:flex; justify-content:center; margin-bottom:14px;
+  }
+  .card-body{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:0;
+  }
+  .card-icon{font-size:38px; margin-bottom:10px; margin-top:10px;}
+  /* Сердце на карточке "Передайте телефон" в "Тайных ответах" — увеличено
+     в 2 раза относительно обычной иконки карточки (38px → 76px). */
+  .znayu-handoff-icon{font-size:76px;}
+  /* Твистер — кружок цвета хода (как на самом коврике) с иконкой руки/ноги
+     внутри, вместо статичной иконки 🌀 на карточке. Цвет фона задаётся
+     инлайн-стилем из games/twister.js под цвет текущего хода. */
+  .twister-limb-circle{
+    width:101px; height:101px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:50px; margin:6px auto 14px;
+    background:#fff;
+    box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 2px 6px rgba(255,255,255,.25);
+  }
+  .card-text{
+    font-size:19px; font-weight:700; line-height:1.4;
+  }
+  /* Виселица (компания) — рисунок висельника (SVG), слово клетками и
+     экранная клавиатура русского алфавита. */
+  .hangman-svg{
+    display:block; width:140px; height:auto; margin:6px auto 10px; color:#fff;
+  }
+  .hangman-part{ opacity:0; transition:opacity .2s ease; }
+  .hangman-part.hangman-part-visible{ opacity:1; }
+  .hangman-word-row{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:8px 0 4px;
+  }
+  .hangman-letter-box{
+    width:26px; height:32px; border-bottom:3px solid rgba(255,255,255,.5);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:800; color:#fff;
+  }
+  .hangman-status{
+    text-align:center; font-size:14px; color:#e8c9dd; min-height:18px; margin-bottom:8px;
+  }
+  .hangman-keyboard{
+    display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:10px;
+  }
+  .hangman-keyboard.hangman-keyboard-disabled{ opacity:.5; pointer-events:none; }
+  .hangman-key{
+    aspect-ratio:1/1; border-radius:8px; border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.1); color:#fff; font-size:14px; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .hangman-key:disabled{ cursor:default; }
+  .hangman-key-correct{ background:rgba(76,217,100,.85); color:#0b3d1f; border-color:transparent; }
+  .hangman-key-wrong{ background:rgba(255,69,58,.6); color:#fff; border-color:transparent; opacity:.7; }
+  /* Магазин (дети) — корзина покупателя, касса продавца, денежный лоток. */
+  .shop-cart-panel{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+    border-radius:16px; padding:14px; margin-top:12px;
+  }
+  .shop-cart-title{ font-weight:800; margin-bottom:8px; }
+  .shop-cart-list{ list-style:none; padding:0; margin:0 0 8px; display:flex; flex-direction:column; gap:4px; font-size:14px; }
+  .shop-cart-empty{ color:#cba0bf; font-style:italic; }
+  .shop-cart-total{ font-weight:800; font-size:16px; margin-bottom:10px; }
+  .shop-register-card .card-icon{ font-size:48px; }
+  .shop-register-card .shop-cart-list{ text-align:left; width:100%; }
+  .shop-cash-given{ font-weight:800; margin-top:10px; font-size:16px; color:#ffd27a; }
+  .shop-money-panel{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+    border-radius:16px; padding:16px; margin-top:12px;
+  }
+  .shop-money-target{ font-weight:700; margin-bottom:2px; font-size:14px; color:#e8c9dd; }
+  .shop-money-sum{ font-size:28px; font-weight:900; margin-bottom:14px; color:#ffd27a; text-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .shop-money-group{ margin-bottom:12px; }
+  .shop-money-group-label{
+    font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    color:#cba0bf; margin-bottom:8px;
+  }
+  .shop-money-row{ display:flex; flex-wrap:wrap; gap:10px; }
+  .shop-money-btn{
+    border:none; cursor:pointer; font-weight:800; color:#3d2b00;
+    box-shadow:0 3px 8px rgba(0,0,0,.35), inset 0 0 0 2px rgba(255,255,255,.4);
+    transition:transform .12s ease;
+  }
+  .shop-money-btn:active{ transform:scale(.92); }
+  .shop-money-btn.shop-money-coin{
+    width:54px; height:54px; border-radius:50%; font-size:14px;
+    background:radial-gradient(circle at 35% 30%, #fff6d9, #ffcf5c 55%, #dd9c2a);
+  }
+  .shop-money-btn.shop-money-bill{
+    min-width:78px; height:46px; padding:0 12px; border-radius:8px; font-size:14px;
+    background:linear-gradient(135deg,#dfffe4,#8ee89e 60%,#4ac26a);
+  }
+  .shop-money-selected{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 12px; min-height:22px; }
+  .shop-money-chip{
+    display:inline-flex; align-items:center; gap:7px;
+    background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.28);
+    border-radius:20px; padding:5px 6px 5px 12px; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .shop-money-chip-remove{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.25); font-size:11px; line-height:1;
+  }
+  /* Лимонадный ларёк (бизнес) — партия без фиксированного числа дней:
+     утро (погода/событие/апгрейды) → место → закупка → приготовление
+     напитков → цена → итоги дня. Игра продолжается, пока не накоплена
+     выбранная на старте цель чистыми. Шаги — обычные div внутри одного
+     экрана #businessLemonadeGame, переключаются через .biz-phase-active
+     (без отдельных экранов-секций, чтобы не плодить лишнюю навигацию). */
+.biz-phase{ display:none; }
+   .biz-phase.biz-phase-active{ display:block; }
+/* Лимонадный ларёк — компактные размеры, скролл доступен */
+   #businessLemonadeGame .biz-phase{
+     flex-direction:column;
+     align-items:center;
+     padding:4px 8px;
+     gap:4px;
+   }
+   #businessLemonadeGame .biz-step-title{ font-size:15px; font-weight:800; margin:2px 0 4px; }
+   #businessLemonadeGame .biz-day-bar{ margin:3px 0 2px; }
+   #businessLemonadeGame .biz-money-row{ font-size:21px; margin-bottom:3px; }
+   #businessLemonadeGame .biz-context-bar{ margin-bottom:8px; }
+   #businessLemonadeGame .biz-weather-card{ font-size:14px; padding:8px; margin-bottom:6px; border-radius:10px; }
+   #businessLemonadeGame .biz-event-card{ font-size:12px; padding:6px; margin-bottom:6px; border-radius:8px; }
+   #businessLemonadeGame .biz-upgrade-btn{ padding:5px 10px; font-size:12px; margin-top:5px; border-radius:10px; }
+   #businessLemonadeGame .biz-upgrade-btn .biz-upgrade-price{ font-size:10px; margin-top:1px; }
+   #businessLemonadeGame .biz-location-item{ padding:6px 10px; margin-top:6px; border-radius:10px; font-size:14px; }
+   #businessLemonadeGame .biz-location-name{ font-size:14px; }
+   #businessLemonadeGame .biz-location-hint{ font-size:11px; margin-top:2px; }
+   #businessLemonadeGame .biz-location-rent{ font-size:12px; margin-top:4px; }
+   #businessLemonadeGame .biz-options-grid{ gap:5px; }
+   #businessLemonadeGame .biz-option-btn{ padding:6px 5px; font-size:12px; border-radius:10px; }
+   #businessLemonadeGame .biz-option-btn .biz-option-cost{ font-size:10px; margin-top:1px; }
+   #businessLemonadeGame .biz-option-btn .biz-option-hint{ font-size:9px; }
+   #businessLemonadeGame .biz-breakdown-box{ padding:8px; margin:6px 0; border-radius:10px; }
+   #businessLemonadeGame .biz-breakdown-row{ font-size:12px; padding:2px 0; }
+   #businessLemonadeGame .biz-breakdown-row.biz-total{ font-size:14px; padding-top:5px; margin-top:4px; }
+   #businessLemonadeGame .biz-formula-line{ font-size:11px; margin:3px 0 1px; }
+   #businessLemonadeGame .biz-result-highlight{ font-size:24px; margin:3px 0 2px; }
+   #businessLemonadeGame .biz-warning{ font-size:12px; }
+   #businessLemonadeGame .biz-day-track{ height:4px; }
+   #businessLemonadeGame .biz-day-label{ font-size:11px; margin-top:2px; }
+   #businessLemonadeGame .biz-context-chip{ padding:2px 7px; font-size:11px; }
+   #businessLemonadeGame .biz-summary-drinks{ margin:6px 0; }
+   #businessLemonadeGame .biz-drink-title{ font-size:13px; margin-bottom:4px; }
+   #businessLemonadeGame .biz-quiz-progress{ font-size:12px; margin-bottom:6px; }
+   /* Кнопки внутри бизнес-экрана — компактнее */
+   #businessLemonadeGame .btn{ padding:8px 16px; font-size:14px; min-height:40px; }
+   #businessLemonadeGame .btn-primary{ min-height:40px; }
+   #businessLemonadeGame .starter-btn{ padding:6px 10px; font-size:13px; min-height:38px; }
+   .biz-step-title{ font-size:18px; font-weight:800; margin:4px 0 10px; text-align:center; }
+  .biz-breakdown-box{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+    border-radius:16px; padding:14px; margin:12px 0;
+  }
+  /* Итоги партии: отдельные карточки по лимонаду и чаю */
+  .biz-summary-drinks{ margin:12px 0; }
+  .biz-summary-drinks .biz-breakdown-box{ margin:10px 0; }
+  .biz-drink-title{ font-weight:800; font-size:15px; margin-bottom:6px; }
+  .biz-breakdown-row{ display:flex; justify-content:space-between; gap:10px; font-size:14px; padding:4px 0; }
+  .biz-breakdown-row.biz-total{
+    font-weight:800; font-size:16px; border-top:1px solid rgba(255,255,255,.15); margin-top:6px; padding-top:8px;
+  }
+  .biz-formula-line{ font-size:12px; color:#cba0bf; text-align:center; margin:6px 0 2px; }
+  .biz-result-highlight{
+    font-size:30px; font-weight:900; text-align:center; margin:6px 0 4px; color:#ffd27a;
+    text-shadow:0 2px 8px rgba(0,0,0,.3);
+  }
+  .biz-result-highlight.biz-loss{ color:#ff6b6b; }
+  .biz-quiz-progress{ text-align:center; font-size:13px; color:#cba0bf; margin-bottom:10px; }
+  /* Мини-проверка "Лимонадного ларька" лежит прямо на тёмном фоне экрана
+     (без карточки-обёртки) — кнопки .znayu-answer-btn по умолчанию тёмные
+     полупрозрачные (рассчитаны на светлую карточку), поэтому здесь были
+     невидимы. Перекрашены в светлые полупрозрачные — тот же приём, что и
+     у карточек "Знаю тебя"/"Викторины" в компании. */
+  #bizPhaseQuiz .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  #bizPhaseQuiz .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
+  /* Шкала дней вверху экрана — видна на всех шагах, чтобы было понятно,
+     где в партии сейчас находишься. */
+  .biz-day-bar{ margin:8px 0 4px; }
+  .biz-day-track{ height:6px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden; }
+  .biz-day-fill{ height:100%; background:linear-gradient(90deg,#ff5e8e,#ff8a5e); border-radius:3px; transition:width .3s ease; }
+  .biz-day-label{ text-align:center; font-size:12px; font-weight:700; color:#cba0bf; margin-top:4px; }
+  /* Единственная денежная строка партии (капитал + резерв): заметно крупнее
+     остальных подписей вверху — это главное число, на которое смотрит игрок,
+     решая, что покупать. */
+  .biz-money-row{ text-align:center; font-size:24px; font-weight:800; color:#ffd27a; margin-bottom:8px; flex-shrink:0; }
+  .biz-weather-card{
+    text-align:center; font-size:17px; font-weight:700; padding:12px; border-radius:14px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); margin-bottom:10px;
+  }
+  .biz-event-card{
+    text-align:center; font-size:14px; padding:10px; border-radius:12px;
+    background:rgba(255,210,122,.14); border:1px solid rgba(255,210,122,.3); color:#ffd27a; margin-bottom:10px;
+  }
+  .biz-upgrade-box{ margin-top:8px; }
+  .biz-upgrade-btn{
+    width:100%; text-align:left; padding:8px 14px; border-radius:14px; margin-top:8px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff;
+    font-size:14px; font-weight:700; cursor:pointer;
+  }
+  .biz-upgrade-btn.biz-upgrade-owned{ opacity:.55; cursor:default; }
+  .biz-upgrade-btn .biz-upgrade-price{ display:block; font-size:12px; font-weight:600; color:#cba0bf; margin-top:2px; }
+  .biz-location-item{
+    width:100%; text-align:left; padding:9px 14px; border-radius:14px; margin-top:10px;
+    background:rgba(255,255,255,.06); border:2px solid rgba(255,255,255,.15); color:#fff; cursor:pointer;
+  }
+  .biz-location-item.on{ border-color:#ff5e8e; background:rgba(255,94,142,.14); }
+  .biz-location-name{ font-size:16px; font-weight:800; }
+  .biz-location-hint{ font-size:12px; color:#cba0bf; margin-top:3px; }
+.biz-location-hint{ font-size:12px; color:#cba0bf; margin-top:3px; }
+  .biz-location-rent{ font-size:13px; font-weight:600; color:#ffd27a; margin-top:6px; }
+  /* Строка выбранных параметров — видна на всех шагах партии (погода и день
+     всегда известны, место/время появляются в ней по мере выбора), чтобы не
+     приходилось листать назад, чтобы вспомнить, какая сегодня погода. */
+  .biz-context-bar{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:6px;
+    flex-shrink:0; margin-bottom:20px;
+  }
+  .biz-context-chip{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+    border-radius:10px; padding:4px 10px; font-size:12px; font-weight:700; color:#e8c9dd;
+  }
+  /* Опции к напитку (лёд/зонтик/цветной стакан/трубочка) — при выборе кнопка
+     подсвечивается красным (сигнал "это сейчас стоит денег"), в отличие от
+     обычного розового акцента ".on" у остальных кнопок-переключателей. */
+  .biz-options-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .biz-option-btn{
+    padding:10px 8px; border-radius:14px; text-align:center;
+    border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);
+    color:#fff; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .biz-option-btn .biz-option-cost{ display:block; font-size:11px; font-weight:600; color:#cba0bf; margin-top:2px; }
+  .biz-option-btn .biz-option-hint{ display:block; font-size:10px; line-height:1.35; color:rgba(255,255,255,.55); margin-top:3px; }
+  .biz-option-btn.on .biz-option-hint{ color:rgba(255,255,255,.75); }
+  .biz-option-btn.on{ background:linear-gradient(135deg,#ff5e5e,#c62828); border-color:transparent; color:#fff; }
+  .biz-option-btn.on .biz-option-cost{ color:rgba(255,255,255,.85); }
+  .biz-warning{
+    text-align:center; font-size:13px; font-weight:700; color:#ff9d9d;
+    background:rgba(255,107,107,.14); border:1px solid rgba(255,107,107,.3);
+    border-radius:12px; padding:8px; margin-bottom:10px;
+  }
+  /* Пачки лимонов на "Шаге 3" — тот же внешний вид, что у карточек развития. */
+  .biz-lemon-tier-btn{
+    width:100%; text-align:left; padding:8px 14px; border-radius:14px; margin-top:8px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff;
+    font-size:14px; font-weight:700; cursor:pointer;
+  }
+  .biz-lemon-tier-btn.biz-upgrade-owned{ opacity:.55; cursor:default; }
+  .biz-lemon-tier-btn.biz-tier-selected{ background:rgba(76,175,80,.35); border:2px solid #4caf50; box-shadow:0 0 12px rgba(76,175,80,.5); }
+  /* Простой столбчатый график прибыли по дням в итогах партии — выше
+     столбик, больше заработал; красный столбик — день в минусе. */
+  .biz-chart{ display:flex; justify-content:space-between; gap:6px; margin:14px 0; }
+  .biz-chart-col{ flex:1; display:flex; flex-direction:column; align-items:center; }
+  .biz-chart-value{ font-size:10px; font-weight:800; color:#e8c9dd; margin-bottom:2px; white-space:nowrap; }
+  .biz-chart-bar-track{
+    width:100%; max-width:28px; height:90px; display:flex; align-items:flex-end;
+    background:rgba(255,255,255,.06); border-radius:6px; overflow:hidden;
+  }
+  .biz-chart-bar{ width:100%; background:linear-gradient(180deg,#3ddc84,#1fa35c); border-radius:6px 6px 0 0; }
+  .biz-chart-bar-loss{ background:linear-gradient(180deg,#ff6b6b,#c62828); }
+  .biz-chart-label{ font-size:11px; font-weight:700; color:#cba0bf; margin-top:4px; }
+  /* Рулетка (компания) — волчок, поле ставок, фишки. */
+  .roulette-wheel-wrap{
+    position:relative; width:140px; height:140px; margin:6px auto 4px;
+  }
+  .roulette-wheel{
+    width:100%; height:100%; border-radius:50%;
+    border:3px solid rgba(255,255,255,.5);
+    box-shadow:0 6px 18px rgba(0,0,0,.45);
+    will-change:transform;
+  }
+  .roulette-pointer{
+    position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+    font-size:16px; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,.5);
+  }
+  .roulette-result{
+    text-align:center; font-size:13px; font-weight:700; min-height:18px; margin-bottom:4px; color:#fff;
+  }
+  /* Верхняя строка поля ставок: Красное | 0 | Чёрное — той же ширины, что и
+     сетка чисел ниже (min(80%, 360px)) */
+  .roulette-top-row{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px;
+    width:min(80%, 360px); margin:0 auto 4px;
+  }
+  .roulette-top-btn{
+    padding:7px 2px; border-radius:6px; border:1px solid rgba(255,255,255,.25);
+    color:#fff; font-weight:800; font-size:13px; cursor:pointer; position:relative;
+  }
+  .roulette-top-btn.roulette-red{ background:rgba(230,57,70,.85); }
+  .roulette-top-btn.roulette-black{ background:rgba(34,34,34,.9); }
+  .roulette-zero-cell{
+    display:block; width:100%; padding:7px; border-radius:6px;
+    background:#2ecc71; color:#fff; font-weight:800; font-size:15px; border:1px solid rgba(255,255,255,.25);
+    cursor:pointer; position:relative;
+  }
+  .roulette-number-grid{
+    width:min(80%, 360px); margin:0 auto;
+    display:grid; grid-template-columns:repeat(6, 1fr); gap:2px; margin-bottom:6px;
+  }
+  .roulette-number-cell{
+    aspect-ratio:1/1; border-radius:3px; border:1px solid rgba(255,255,255,.25);
+    font-weight:800; font-size:12px; cursor:pointer; color:#fff; position:relative;
+    /* Цифра прижата к верху клетки, чтобы не слипалась с круглым жетоном
+       ставки в центре: сверху отступ больше, к низу клетки воздуха больше */
+    display:flex; align-items:flex-start; justify-content:center; padding-top:3px;
+  }
+  /* Чтобы поле ставок целиком помещалось в высоту экрана без прокрутки:
+     сетка чисел сжимается по высоте (min() от 100% контейнера и фиксированного
+     максимума), остальные блоки компактнее. */
+  #partyRouletteGame .roulette-number-grid{
+    flex:0 1 auto;
+    max-height:min(46vh, 330px);
+    align-content:start;
+  }
+  #partyRouletteGame .roulette-number-cell{
+    aspect-ratio:auto; height:min(7.4vh, 52px); max-height:52px;
+  }
+  .roulette-number-cell.roulette-red{ background:#e63946; }
+  .roulette-number-cell.roulette-black{ background:#222; }
+  /* Нижняя строка поля ставок: Чёт | Нечет | 1-18 | 19-36 — той же ширины,
+     что и сетка чисел */
+  .roulette-outside-grid{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:4px;
+    width:min(80%, 360px); margin:0 auto 3px;
+  }
+  .roulette-outside-btn{
+    padding:7px 2px; border-radius:4px; border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.1); color:#fff; font-weight:800; font-size:13px;
+    cursor:pointer; position:relative;
+  }
+  .roulette-outside-btn.roulette-red{ background:rgba(230,57,70,.7); }
+  .roulette-outside-btn.roulette-black{ background:rgba(34,34,34,.85); }
+  /* Ставка на поле: круглый жетон по центру клетки только с СУММОЙ ставок
+     всех игроков (кто сколько поставил — видно в инфо-полях под именами). */
+  .roulette-bet-badge{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(72%, 34px); aspect-ratio:1/1; border-radius:50%; padding:0;
+    background:rgba(59,130,246,.92); color:#fff;
+    border:2px solid rgba(255,255,255,.75);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800; line-height:1; z-index:5;
+    box-shadow:0 2px 6px rgba(0,0,0,.5); pointer-events:none;
+  }
+  .roulette-chips-row{ display:flex; gap:16px; justify-content:center; margin:4px 0 10px; }
+  .roulette-chip{
+    width:48px; height:48px; border-radius:50%; border:3px dashed rgba(255,255,255,.5);
+    background:var(--chip-bg, linear-gradient(135deg,#ffd27a,#ff8a5e));
+    color:var(--chip-text, #2b0f2e); font-weight:800; font-size:14px;
+    cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  /* Цвета фишек по номиналам — 10 голубая (светлая), 50 синяя, 100 зелёная, 500 красная.
+     Фолбэк через data-chip: применяется, если JS ещё не выставил переменные. */
+  .roulette-chip[data-chip="10"]{ background:linear-gradient(135deg,#bae6fd,#38bdf8); color:#fff; }
+  .roulette-chip[data-chip="50"]{ background:linear-gradient(135deg,#60a5fa,#1d4ed8); color:#fff; }
+  .roulette-chip[data-chip="100"]{ background:linear-gradient(135deg,#4ade80,#15803d); color:#fff; }
+  .roulette-chip[data-chip="500"]{ background:linear-gradient(135deg,#f87171,#b91c1c); color:#fff; }
+  .roulette-chip.roulette-chip-selected,
+  .roulette-chip.active{
+    border-color:#8b0000;
+    box-shadow:
+      inset 0 0 0 3px #8b0000,        /* красное кольцо по контуру внутри */
+      0 0 0 2px #ffd23f,              /* тонкая жёлтая полоска снаружи */
+      0 0 10px rgba(255,210,63,.55);  /* мягкое жёлтое свечение вокруг */
+  }
+  /* Ряд игроков в рулетке */
+  .roulette-players-row{ display:flex; gap:14px; justify-content:center; margin:6px 0 8px; }
+  /* Окна «Итоги игры» и «Фишки закончились» — ПОВЕРХ меню паузы: у .modal-overlay
+     z-index:200 у всех, а pauseMenuModal стоит ниже по DOM и при равном z-index
+     перекрыл бы итоги. Поднимаем оба окна выше паузы (ниже тостов 600 и
+     окна кручения 300). */
+  #rouletteResultsModal, #rouletteBrokeModal{ z-index:250; }
+  .roulette-player-btn{
+    padding:8px 16px; border-radius:10px; border:2px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.1); color:#fff; font-weight:700; font-size:13px;
+    cursor:pointer; flex:1; max-width:180px;
+  }
+  .roulette-player-btn.active{
+    border-color:#ffd23f; background:rgba(255,210,63,.2); color:#ffd23f;
+  }
+  /* Информационное поле под именем игрока: куда поставил и сумма */
+  .roulette-player-btn .roulette-player-bet-info{
+    display:block; margin-top:3px; padding:2px 8px; border-radius:8px;
+    background:rgba(0,0,0,.35); font-size:10px; font-weight:700; line-height:1.3;
+    color:#fff; text-align:center; max-width:100%;
+  }
+  .roulette-player-btn.active .roulette-player-bet-info{ color:#ffd23f; }
+
+  /* Полноэкранное модальное окно рулетки */
+  #rouletteSpinModal{
+    background:rgba(10,3,10,.92); padding:0; z-index:300;
+  }
+  #wrSpinModal{
+    background:rgba(10,3,10,.92); padding:0; z-index:300;
+  }
+  .roulette-spin-card{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    width:100%; height:100%; padding:20px; overflow-y:auto;
+  }
+  /* Красный крестик — экстренный выход из режима «Свое поле». Прибит к углу
+     экрана (модалка position:fixed; inset:0). Все рабочие стили задаются
+     инлайново из JS (ensureRouletteCustomCloseX) — этот блок лишь дублирует
+     их для читаемости; видимость управляет JS (flex/none). */
+  #rouletteCustomCloseX{
+    position:absolute; top:calc(14px + env(safe-area-inset-top)); right:14px;
+    width:34px; height:34px; padding:0; margin:0; flex:none;
+    border-radius:50%; border:2px solid rgba(255,255,255,.45);
+    background:#8b0000; color:#fff; font-size:18px; font-weight:700; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,.55); cursor:pointer; z-index:310;
+  }
+  #rouletteCustomCloseX:active{ transform:scale(.92); }
+  .roulette-spin-wheel-wrap{
+    position:relative; width:min(calc(100vw - 48px), 368px, 62vh); height:min(calc(100vw - 48px), 368px, 62vh); margin-bottom:20px;
+  }
+  .roulette-spin-wheel{
+    width:100%; height:100%; border-radius:50%;
+    border:4px solid rgba(255,255,255,.5);
+    box-shadow:0 8px 32px rgba(0,0,0,.6);
+    will-change:transform;
+    overflow:hidden;
+  }
+  .roulette-spin-wheel svg{
+    display:block; width:100%; height:100%;
+  }
+  .roulette-spin-pointer{
+    position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+    font-size:28px; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.6);
+  }
+  .roulette-spin-result{
+    text-align:center; font-size:20px; font-weight:700; min-height:32px;
+    margin-bottom:20px; color:#fff; padding:0 20px;
+  }
+  #wrSpinDoneBtn{
+    display:inline-block; margin:0 5px;
+  }
+  /* Колесо «Рулетки желаний» в полноэкранном окне: тёмный фон под секторами
+     SVG (секторы не доходят до самого края viewBox), чтобы не просвечивала
+     подложка окна. Только для #wrSpinModal — обычную рулетку не затрагиваем. */
+  #wrSpinModal .roulette-spin-wheel{background:#1a1a2e;}
+  /* Кнопка «✅ Выполнено» в окне кручения — сразу запускает следующий спин */
+  /* Карточки "Игры для двоих" — у раздела нет одной общей карточки: у каждой
+     мини-игры (Викторина, Идеи для вас, Правда/Действие, Тайные ответы,
+     Твои желания, Таймер страсти) — свой элемент с собственным id, плюс
+     общая #card (стартовая колода/Фанты/Давай попробуем/Предложи партнёру).
+     Тёмно-розовый градиент вместо плоского белого фона — тот же стандарт
+     оформления, что и у карточек компании/детей, только в розовом тоне.
+     Фон тёмный, поэтому текст (включая заголовок хода и плашку типа
+     Правда/Действие) перекрашен в белый. */
+  #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard, #sexQuestCard, #passionMapCard{
+    background:linear-gradient(160deg, #e0559a, #8a2f66 55%, var(--bg2));
+    color:#fff;
+  }
+  #card .card-text, #tdCard .card-text, #timerCard .card-text,
+  #wishlistCard .card-text, #znayuCard .card-text, #ideasCard .card-text, #sexQuestCard .card-text,
+  #passionMapCard .card-text{
+    color:#fff;
+  }
+  /* Заголовок "Ход игрока" и разделитель под ним рассчитаны на светлый фон
+     карточки (тёмно-серый текст, тёмная линия) — на тёмном фоне этих карточек
+     были почти невидимы. */
+  #card .card-turn-label, #tdCard .card-turn-label, #timerCard .card-turn-label,
+  #wishlistCard .card-turn-label, #znayuCard .card-turn-label, #sexQuestCard .card-turn-label,
+  #passionMapCard .card-turn-label{
+    color:rgba(255,255,255,.65);
+  }
+  #card .card-header, #tdCard .card-header, #timerCard .card-header,
+  #wishlistCard .card-header, #znayuCard .card-header, #sexQuestCard .card-header,
+  #passionMapCard .card-header{
+    border-bottom-color:rgba(255,255,255,.18);
+  }
+  #sexQuestCard .card-split-title{
+    color:#ffd166; font-size:15px; font-weight:900;
+    text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px;
+  }
+  #sexQuestCard .card-icon{ font-size:76px; }
+  #passionMapCard .card-icon{ font-size:76px; }
+  /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт
+     и "Старт") — тоже рассчитан на светлый фон, на тёмном был почти невидим. */
+  #card .card-timer{ border-top-color:rgba(255,255,255,.18); }
+  #card .timer-dur-btn{ background:rgba(255,255,255,.14); color:#fff; }
+  #card .timer-dur-btn.on{ background:var(--accent); color:#2b0f2e; }
+  #card .timer-display{ color:#fff; }
+  #card .timer-btn{ background:rgba(255,255,255,.14); color:#fff; }
+  #card .timer-btn.running{ background:var(--accent); color:#2b0f2e; }
+  /* Название идеи должно явно отличаться от текста задания под ним — иначе
+     они визуально сливаются в один абзац (оба были похожего размера и
+     цвета). Тут название — короткая заглавная "плашка" акцентным цветом,
+     задание ниже остаётся обычным белым текстом. */
+  #ideasCard .card-split-title{
+    color:#ffd166; font-size:15px; font-weight:900;
+    text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px;
+  }
+  #ideasCard .card-icon{ font-size:76px; }
+   /* В "Во что поиграть?" название игры — акцентная цветная "плашка", а
+      описание под ним — обычный (не жирный) текст, чтобы они не сливались.
+      Селекторами — id самих элементов (приоритет выше, чем правило цвета
+      .card-text/.card-split-title для всех карточек ниже). */
+   #whatToPlayCard #whatToPlayCardTitle{
+     color:#ffd166; font-size:19px; font-weight:800;
+     text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px;
+   }
+   #whatToPlayCard #whatToPlayCardText{
+     color:rgba(255,255,255,.9); font-size:16px; font-weight:400; line-height:1.5;
+   }
+  #card .card-turn-name, #tdCard .card-turn-name, #timerCard .card-turn-name,
+  #wishlistCard .card-turn-name, #znayuCard .card-turn-name, #sexQuestCard .card-turn-name,
+  #passionMapCard .card-turn-name{
+    color:#fff;
+  }
+  /* Название желания в "Секс-квесте" крупнее базового (19px) на ~25% —
+     это главный текст карточки знакомства и вопросов квеста. */
+  #sexQuestCard .card-turn-name{
+    font-size:24px;
+    line-height:1.2;
+  }
+  /* Название желания в «Карте страсти» — крупнее базового, как в квесте. */
+  #passionMapCard .card-turn-name{
+    font-size:24px;
+    line-height:1.2;
+  }
+  /* Описание пункта желаний рассчитано на светлый фон (приглушённый
+     тёмно-фиолетовый) — на тёмной карточке было почти невидимо. */
+  #wishlistCard .wishlist-item-desc{
+    color:rgba(255,255,255,.75);
+  }
+  #card .type-pill, #tdCard .type-pill{
+    background:rgba(255,255,255,.18); color:#fff;
+  }
+  /* Карточка товара "Секс-шоп" (модуль игры "Предложи партнеру") —
+     название, "Подходит: ..." и оценки ♀/♂ рассчитаны на светлую карточку
+     (тёмный текст на бледной плашке) — на тёмном фоне #card были почти
+     невидимы. */
+  #card .card-split-title{
+    color:#ffd166; font-size:15px; font-weight:900;
+    text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px;
+  }
+  #card .forwhom-pill{
+    background:rgba(255,255,255,.16); color:#fff;
+  }
+  #card .rating-pill.rating-women{
+    background:rgba(255,110,168,.28); color:#ffd6e6;
+  }
+  #card .rating-pill.rating-men{
+    background:rgba(94,158,255,.28); color:#d6e8ff;
+  }
+  /* "Тайные ответы" — тоже переиспользует компонент вопрос/ответы
+     (.znayu-answers), который по умолчанию рассчитан на светлый фон
+     (тёмные полупрозрачные кнопки) — на тёмном фоне этой карточки варианты
+     ответа были почти нечитаемы. Тот же приём, что и у остальных карточек
+     с этим компонентом (Викторины, "Знаю тебя" и т.д.). */
+  #znayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  #znayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
+  #znayuCard .znayu-skip-btn:not(.answer-correct):not(.answer-wrong){
+    color:rgba(255,255,255,.85); border-color:rgba(255,255,255,.4);
+  }
+  /* Карточка "Викторины" — переиспользует компонент вопрос/ответы
+     (.znayu-answers), кнопки которого по умолчанию тёмные полупрозрачные
+     (рассчитаны на светлый фон) — здесь перекрашены в светлые полупрозрачные,
+     тот же приём, что и у карточек "Знаю тебя"/"Викторины" в компании. */
+  #quizCard{
+    background:linear-gradient(160deg, #b03e7d, #5e1f47 55%, var(--bg2));
+    color:#fff;
+  }
+  #quizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  #quizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
+  /* Карточки "Игры с детьми" — спокойный зелёный градиент вместо белого фона.
+     Большинство карточек (Правда/Действие, Крокодил, Мемасики, Во что
+     поиграть, Магазин) простые — иконка/текст, поэтому берём насыщенный
+     вариант с белым текстом, как у карточек компании. Карточка Викторины
+     переиспользует компонент вопрос/ответы (.znayu-answers) — он рассчитан
+     на светлый фон (тёмные полупрозрачные кнопки поверх карточки), поэтому
+     для неё — светлый мятный оттенок того же зелёного тона вместо тёмного. */
+  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #flashCard, #whatToPlayCard, #shopProductCard, .shop-register-card{
+    background:linear-gradient(160deg, #5ecf93, #23784f 55%, var(--bg2));
+    color:#fff;
+  }
+  #kidsTdCard .card-text, #kidsKrokodilCard .card-text, #kidsMemesCard .card-text,
+  #whatToPlayCard .card-text, #whatToPlayCard .card-split-title,
+  #shopProductCard .card-text, #shopProductCard .card-split-title{
+    color:#fff;
+  }
+  .shop-register-card .shop-cart-list, .shop-register-card .shop-cart-total{ color:#fff; }
+  #kidsQuizCard{
+    background:linear-gradient(160deg, #e3f8ec, #b9ecce 55%, #8fdfb0);
+  }
+  /* Карточка "Крокодила" — вместо обычного белого фона с чёрным текстом
+     спокойный сине-голубой градиент вместо обычного плоского бело-чёрного
+     оформления и белый текст, чтобы слово выделялось на карточке. */
+  #krokodilCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  #krokodilCard .card-text{color:#fff;}
+  /* Карточка "Твистера" — та же заливка и цвет текста, что у "Крокодила". */
+  #twisterCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  #twisterCard .card-text{color:#fff;}
+  #twisterCard .card-split-title{color:#fff;}
+  /* Карточка "Мемасиков" — то же оформление, что у "Крокодила" (синий
+     градиент + белый текст по центру), но без иконки — просто текст ситуации. */
+  #memesCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  #memesCard .card-text{color:#fff;}
+  /* Карточка "Я никогда не" (компания) — тот же стандарт, что у "Мемасиков". */
+  #partyNeverCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  #partyNeverCard .card-text{color:#fff;}
+  .partynever-text{
+    font-size:22px;
+    font-weight:800;
+    line-height:1.4;
+    text-shadow:0 3px 12px rgba(0,0,0,.3);
+  }
+  .memes-situation{
+    font-size:23px;
+    font-weight:800;
+    line-height:1.4;
+    text-shadow:0 3px 12px rgba(0,0,0,.3);
+  }
+  /* "Флеш карты" — крупное слово по центру, транскрипция помельче и
+     приглушённее сразу под ним, перевод обычным текстом ниже (только в
+     режиме "Обучение" — см. games/kids-flash.js). */
+  .flash-word{
+    font-size:50px; font-weight:900; line-height:1.2;
+    text-shadow:0 3px 12px rgba(0,0,0,.3);
+    word-break:break-word;
+  }
+  .flash-transcription{
+    font-size:18px; font-weight:600; color:rgba(255,255,255,.75);
+    margin-top:10px;
+  }
+  .flash-translation{
+    font-size:22px; font-weight:700; margin-top:14px; color:#ffd166;
+  }
+  /* Блок темы в настройках — название темы подписью над кнопками выбора
+     объёма подборки слов (100/250), другие темы добавятся сюда же позже. */
+  .flash-theme-block{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px;
+  }
+  .flash-theme-name{ font-weight:800; font-size:15px; margin-bottom:10px; }
+  /* Множественный выбор для карточек темы «Время» */
+  .flash-time-options{
+    display:flex; flex-direction:column; gap:10px; margin-top:16px;
+  }
+  .flash-time-option{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    border-radius:12px; padding:12px 14px; font-size:18px; font-weight:600;
+    color:rgba(255,255,255,.85); cursor:pointer; text-align:center;
+    transition:all .18s ease;
+  }
+  .flash-time-option:hover{ background:rgba(255,255,255,.12); }
+  .flash-time-option.correct{ background:rgba(76,175,80,.3); border-color:rgba(76,175,80,.6); color:#4caf50; }
+  .flash-time-option.wrong{ background:rgba(244,67,54,.3); border-color:rgba(244,67,54,.6); color:#f44336; }
+  .flash-time-option:disabled{ cursor:default; }
+  .flash-time-display{ font-size:48px; font-weight:800; text-align:center; margin:20px 0; color:#fff; }
+  .flash-time-display .flash-time-mechanical{ font-size:16px; }
+  .flash-time-digital{ font-family:'Courier New',monospace; letter-spacing:4px; }
+  .flash-time-mechanical{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .flash-time-mechanical svg{ display:block; filter:drop-shadow(0 4px 12px rgba(0,0,0,.4)); }
+  .clock-style-hint{ font-size:13px; color:#e8c9dd; font-weight:600; opacity:.8; font-family:system-ui,sans-serif; font-style:normal; }
+  .flash-card-progress{ text-align:center; font-size:13px; color:#e8c9dd; margin-top:10px; }
+  /* "Оцени бизнес" — карточка сценария: заголовок бизнеса, таблица его
+     данных (цена/себестоимость/расходы/продажи), затем сам вопрос и
+     варианты ответа (games/business-observer.js, .znayu-question-text/
+     .znayu-answers переиспользованы из "Викторины"). */
+  .bizobs-scenario-title{ font-size:18px; font-weight:800; margin-bottom:6px; }
+  .bizobs-scenario-data{
+    width:100%; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    border-radius:14px; padding:2px 14px; margin-bottom:10px;
+  }
+  .bizobs-data-row{
+    display:flex; justify-content:space-between; gap:10px; padding:5px 0; font-size:14px;
+  }
+  .bizobs-data-row + .bizobs-data-row{ border-top:1px solid rgba(255,255,255,.1); }
+  .bizobs-data-row span:first-child{ opacity:.75; }
+  .bizobs-data-row span:last-child{ font-weight:700; }
+  /* Контента на карточке ощутимо больше, чем в обычной "Викторине" (иконка +
+     заголовок + таблица данных + вопрос + 4 кнопки), поэтому вместо
+     стандартного центрирования по высоте (которое при переполнении
+     накладывает верх и низ друг на друга) — выравнивание по верху и скролл
+     самой карточки, если контент всё равно не помещается на маленьком экране. */
+  #bizObsCard{ overflow-y:auto; }
+  #bizObsCard .card-body{ justify-content:flex-start; }
+  #bizObsCard .znayu-question-text{ margin-top:4px; }
+  #krokodilCard .card-icon{font-size:76px; margin-bottom:14px; filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}
+  /* Слово в "Крокодиле" — крупно, по центру карточки (card-body уже центрирует
+     содержимое и по горизонтали, и по вертикали), сверху крупная иконка-подсказка. */
+  .krokodil-word-icon{
+    font-size:96px;
+    line-height:1;
+    margin-bottom:16px;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
+  }
+  .krokodil-word{
+    font-size:34px;
+    font-weight:800;
+    line-height:1.25;
+    text-shadow:0 3px 12px rgba(0,0,0,.3);
+    max-width:100%;
+    overflow-wrap:break-word;
+    word-break:break-word;
+    hyphens:auto;
+  }
+  /* Карточка "Фанты" (компания) — тот же стиль-стандарт, что у "Крокодила"/
+     "Мемасиков" (синий градиент, белый текст по центру), без иконки —
+     задание достаточно длинное само по себе, как у "Мемасиков". */
+  #partyFantsCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  #partyFantsCard .card-text{color:#fff;}
+  .partyfants-text{
+    font-size:22px;
+    font-weight:800;
+    line-height:1.4;
+    text-shadow:0 3px 12px rgba(0,0,0,.3);
+  }
+  /* Карточка "Правда/Действие" (компания) — тот же карточный стандарт, плюс
+     значок сверху, показывающий, что выбрал игрок: Правда или Действие. */
+  #partyTdCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  #partyTdCard .card-text{color:#fff;}
+  .partytd-type-badge{
+    display:inline-block;
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:5px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,.18);
+    margin-bottom:14px;
+  }
+  .partytd-text{
+    font-size:22px;
+    font-weight:800;
+    line-height:1.4;
+    text-shadow:0 3px 12px rgba(0,0,0,.3);
+  }
+  /* Карточка "Знаю тебя" (компания) — тот же стандарт, что у "Крокодила".
+     JS (games/fam-znayu.js) на экране вопроса подменяет содержимое карточки
+     на .znayu-question-text + .znayu-answers (тот же компонент, что и у
+     Викторины) — кнопки ответов по умолчанию тёмные (рассчитаны на светлый
+     фон), поэтому тоже перекрашены в светлые полупрозрачные. */
+  #famZnayuCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  #famZnayuCard .card-text{color:#fff;}
+  #famZnayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  #famZnayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
+  /* Карточка "Викторины" (компания) — тот же тёмно-синий стандарт, что и у
+     остальных карточек компании. Кнопки ответов (.znayu-answer-btn) по
+     умолчанию тёмные полупрозрачные (рассчитаны на светлый фон) — здесь
+     перекрашены в светлые полупрозрачные, чтобы остаться читаемыми на
+     тёмном фоне карточки. */
+  #partyQuizCard{
+    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    color:#fff;
+  }
+  /* Текст вопроса — тёплый золотой вместо плоского белого, чтобы не
+     сливаться с холодным сине-голубым фоном карточки; кнопки ответов
+     остаются белыми (не вопрос, читаются нормально на своём полупрозрачном
+     фоне). */
+  #partyQuizCard .znayu-question-text{ color:#ffd166; }
+  #partyQuizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  #partyQuizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
+  /* Крупные кнопки выбора «Правда/Действие» НАД полем — используется только
+     детской П/Д (kidsTdChoiceRow). В компании выбор переехал под карточку на
+     .td-actions-row (единая система с парной П/Д). */
+  .party-td-choice-row{
+    display:flex;
+    gap:12px;
+    margin:40px 0 16px;
+  }
+  .party-td-choice-row .btn{
+    flex:1;
+    min-height:120px;
+    font-size:19px;
+  }
+  /* "Знаю тебя" (компания, семьями) — блок настройки одной семьи: подпись
+     "Семья N" + два поля имени рядом, в том же визуальном стиле, что и
+     список игроков "Крокодила"/"Игр для компании". */
+  .fam-znayu-family-block{
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:14px;
+    padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .fam-znayu-family-label{
+    font-size:13px;
+    font-weight:700;
+    opacity:.7;
+    margin-bottom:6px;
+  }
+  .fam-znayu-family-inputs{
+    display:flex;
+    gap:8px;
+  }
+  .fam-znayu-family-inputs input[type=text]{
+    flex:1;
+    min-width:0;
+    padding:12px 14px;
+    border-radius:12px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    font-size:15px;
+    outline:none;
+    border:1px solid rgba(255,255,255,.2);
+  }
+  .fam-znayu-family-inputs input[type=text]::placeholder{color:rgba(255,255,255,.5);}
+  /* Пол каждого игрока семьи — нужен, чтобы правильно склонять вопрос
+     ("него/неё" → одно конкретное местоимение), когда именно этот игрок —
+     "герой" вопроса (см. resolveFamZnayuGenderText). Маленькие круглые
+     переключатели М/Ж рядом с полем имени, в одном ряду с ним. */
+  .fam-znayu-gender-toggle{
+    display:flex; flex:0 0 auto; gap:4px;
+  }
+  .fam-znayu-gender-btn{
+    width:34px; height:34px; border-radius:10px;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+    color:rgba(255,255,255,.7); font-size:13px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fam-znayu-gender-btn.on{
+    background:rgba(255,255,255,.9); color:#2b0f2e; border-color:rgba(255,255,255,.9);
+  }
+  /* Метка роли над вопросом в "Знаю тебя" — поясняет, что именно нужно
+     сделать с этим конкретным вопросом: ответить как есть (герой раунда)
+     или угадать ответ героя (второй игрок семьи). Роль случайно меняется
+     от вопроса к вопросу (см. famZnayuHeroSide). */
+  .fam-znayu-role-label{
+    display:inline-block; font-size:15px; font-weight:800; text-align:center;
+    padding:7px 16px; border-radius:20px; margin-bottom:14px;
+    box-shadow:0 3px 10px rgba(0,0,0,.25);
+  }
+  .fam-znayu-role-label.role-hero{background:rgba(76,217,100,.92); color:#0b3d1f;}
+  .fam-znayu-role-label.role-guess{background:rgba(255,159,10,.92); color:#3d2200;}
+  /* "Счастливый билет" — общее поле 5×5 (25 клеток, 10 линий), точно как в
+     "Секс-бинго". Оформление клеток то же самое (.bingo-cell/.checked,
+     авто-подгонка шрифта через fitBingoCellText) — единый визуальный язык
+     для обеих игр с карточным полем. */
+  .lucky-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:12px 0; max-width:100%;}
+  .lucky-level-label{
+    text-align:center;
+    font-size:14px;
+    font-weight:700;
+    opacity:.85;
+    margin-bottom:4px;
+  }
+  /* Динамический список игроков "Крокодила" — от 2 до 10 полей с именами,
+     добавляются/удаляются кнопками, оформлены как обычные текстовые поля. */
+  /* Имена игроков компании — как в блоке "Игры для пар 18+": по 2 в ряд,
+     поля покороче, вместо одной колонки во всю ширину. */
+  #partyPlayersList, #kidsPlayersList, #businessPlayersList{display:flex; flex-wrap:wrap; gap:8px 10px;}
+  .krokodil-player-row{
+    display:flex; align-items:center; gap:6px;
+    flex:1 1 calc(50% - 5px); min-width:118px;
+  }
+  .krokodil-player-row input[type=text]{
+    flex:1; min-width:0; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,.12); color:#fff; font-size:15px;
+    outline:none; border:1px solid rgba(255,255,255,.2);
+  }
+  .krokodil-player-row input[type=text]::placeholder{color:rgba(255,255,255,.5);}
+  .krokodil-player-remove{
+    flex:0 0 auto; width:40px; height:40px; border-radius:10px; border:none;
+    background:rgba(255,255,255,.12); color:#fff; font-size:16px; cursor:pointer;
+  }
+  /* Строка счёта "Крокодила" — от 2 до 10 игроков, поэтому вместо
+     space-between (как в остальных играх на двоих) — перенос строк по центру. */
+  /* Единая верхняя панель игр с именами игроков:
+     [☰ меню] [turn-label по центру] [← стрелка]
+     [Имя1] ······················ [Имя2]   <- krokodil-score-row по краям
+     [игровое поле] */
+  .krokodil-score-row{
+    display:flex; flex-wrap:wrap; justify-content:space-between;
+    gap:6px 8px; margin-bottom:10px;
+  }
+  .krokodil-score-row .krokodil-score-item{
+    padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700;
+    background:rgba(255,255,255,.08); color:#cba0bf;
+  }
+  .krokodil-score-row .krokodil-score-item.active{
+    background:rgba(255,255,255,.22); color:#fff;
+  }
+  /* Если игроков > 2 (party/company) — равномерно распределяем по ширине */
+  .krokodil-score-row.multi-player .krokodil-score-item{
+    flex: 1 1 auto; text-align:center;
+  }
+  /* Для игр 1 на 1 (Фанты для двоих) — крупнее шрифт, без pill-стиля */
+  .krokodil-score-row.two-player .krokodil-score-item{
+    font-size:22px; padding:0; background:none; border-radius:0; color:#cba0bf;
+  }
+  .krokodil-score-row.two-player .krokodil-score-item.active{
+    font-size:22px; padding:0; background:none; border-radius:0; color:#fff;
+  }
+  .card-empty .card-inner{align-items:center; justify-content:center;}
+  .card-empty .card-icon{font-size:52px;}
+  .card-empty .card-text{font-size:16px; color:#7a5a72; font-weight:600;}
+  /* Карточка "Передайте телефон" — крупнее и светлее, чем обычный плейсхолдер */
+  .card-empty .card-text.davay-handoff-text{
+    font-size:22px; color:var(--accent); font-weight:800;
+  }
+  @media (min-width:380px) and (min-height:640px){
+    .card-empty .card-text.davay-handoff-text{ font-size:26px; }
+  }
+
+  .card-split{display:flex; flex-direction:column; height:100%; gap:14px;}
+  .card-split-media{
+    flex:1; min-height:0; border-radius:16px; overflow:hidden;
+    background:rgba(43,15,46,.06);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card-split-media img{width:100%; height:100%; object-fit:cover; display:block;}
+  .card-split-media .card-icon{margin:0; font-size:48px;}
+  .card-split-desc{
+    flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:0 4px; gap:6px; overflow-y:auto;
+  }
+  .card-split-title{
+    font-size:17px; font-weight:800; color:#2b0f2e;
+  }
+  /* Номер в рейтинге продаж — модуль "Секс-шоп" в "Предложи партнеру", крупный значок над названием */
+  .card-split-rank-badge{
+    display:inline-block; background:var(--accent); color:#2b0f2e;
+    border-radius:12px; padding:4px 14px; font-size:19px; font-weight:900;
+    letter-spacing:.3px; margin-bottom:2px;
+  }
+  /* "Подходит: ..." — отдельная строка под описанием (модуль "Секс-шоп") */
+  .card-forwhom-row{
+    display:none; justify-content:center; margin-top:10px;
+  }
+  .forwhom-pill{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:6px 13px; border-radius:16px; font-size:13px; font-weight:800;
+    letter-spacing:.2px; background:rgba(180,140,255,.16); color:#6a3fc2;
+  }
+  /* Оценки партнёров — отдельная строка ниже (модуль "Секс-шоп") */
+  .card-rating-row{
+    display:none; justify-content:center; gap:10px; margin-top:12px; flex-wrap:wrap;
+  }
+  .rating-pill{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:6px 13px; border-radius:16px; font-size:13px; font-weight:800;
+    letter-spacing:.2px;
+  }
+  .rating-pill.rating-women{ background:rgba(255,110,168,.16); color:#c2185b; }
+  .rating-pill.rating-men{ background:rgba(94,158,255,.16); color:#1a5fb4; }
+
+  #game.placeholder-mode .krokodil-score-row, #game.video-mode .krokodil-score-row, #game.davay-mode .krokodil-score-row,
+  #game.placeholder-mode .td-turn-label, #game.video-mode .td-turn-label, #game.davay-mode .td-turn-label{display:none;}
+  #game.placeholder-mode #skipBtn, #game.video-mode #skipBtn, #game.davay-mode #skipBtn{display:none;}
+  /* "Обновить задание" (Фанты) убрана; "Скрыть навсегда" (Фанты) заменена
+     иконкой на кнопке "Отказ" — сама dislikeBtn в Фантах теперь скрыта,
+     но остаётся рабочей в остальных режимах, использующих этот же экран
+     (Видеорулетка, Давай попробуем). В "Предложи партнеру" кнопку
+     "Скрыть карточку" убрали по просьбе — во всех уровнях карточки больше
+     нельзя спрятать навсегда. */
+  #game:not(.video-mode):not(.davay-mode) #dislikeBtn{display:none;}
+  #game.placeholder-mode #favoriteBtn, #game.video-mode #favoriteBtn{
+    flex:0 0 auto; width:auto; padding:0 16px; font-size:20px;
+  }
+  #game.placeholder-mode #favoriteBtn.active, #game.video-mode #favoriteBtn.active{
+    background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25);
+  }
+  /* "Уже есть" — отметка "выполнено" для товаров модуля "Секс-шоп" */
+  #sexshopOwnedBtn{display:none;}
+  #game.placeholder-mode #sexshopOwnedBtn{
+    flex:0 0 auto; width:auto; padding:0 14px; font-size:30px;
+  }
+  #game.placeholder-mode #sexshopOwnedBtn.active{
+    background:rgba(120,220,150,.18); color:#37b567; border-color:rgba(120,220,150,.4);
+  }
+  /* Переключатель "случайно/по порядку" ("Предложи партнеру", рядом с
+     "Следующая") — по умолчанию выключен (карточки случайны, как раньше);
+     включённое состояние показывает карточки по порядку от №1 (см.
+     photoOrderMode/drawPhotoCard в games/core.js). Состояние обозначается
+     только сменой иконки (🔀 ↔ 📶), без дополнительной подсветки кнопки. */
+  #photoRandomToggleBtn{display:none;}
+  #game.placeholder-mode #photoRandomToggleBtn{
+    flex:0 0 auto; width:auto; padding:0 14px; font-size:30px;
+  }
+  /* В "Давай попробуем" избранное формируется только совпадением "Да" у
+     обоих игроков — ручная кнопка-сердечко тут не нужна. */
+  #game.davay-mode #favoriteBtn{display:none;}
+  /* Просмотр избранного "Предложи партнеру": вместо "Следующая"/сердечка/
+     "уже есть"/уровня — Предыдущее/Следующее для перелистывания отмеченных
+     карточек. "Выход" (pauseBtn) в row2 оставляем видимым — это единственный
+     способ покинуть просмотр избранного. */
+  #photoFavPrevBtn, #photoFavNextBtn{display:none;}
+  #game.placeholder-mode.photo-favview #levelProgress{display:none;}
+  #game.placeholder-mode.photo-favview #doneBtn,
+  #game.placeholder-mode.photo-favview #favoriteBtn,
+  #game.placeholder-mode.photo-favview #sexshopOwnedBtn,
+  #game.placeholder-mode.photo-favview #photoRandomToggleBtn,
+  #game.placeholder-mode.photo-favview #levelUpBtn,
+  #game.placeholder-mode.photo-favview #levelDownBtn,
+  #game.placeholder-mode.photo-favview #dislikeBtn{display:none;}
+  #game.placeholder-mode.photo-favview #photoFavPrevBtn,
+  #game.placeholder-mode.photo-favview #photoFavNextBtn{
+    display:flex; flex:1; min-width:0; font-size:14px; padding:0 8px;
+  }
+  #levelDownBtn{display:none;}
+  #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
+  #videoMuteBtn, #videoLoopBtn, #videoFavoritesBtn, #videoFullscreenBtn,
+  #davayMuteBtn{display:none;}
+  #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoFavoritesBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
+  #game.davay-mode #davayMuteBtn{display:flex;}
+  /* В "Видеорулетке" и "Давай попробуем" обычные кнопки уровня скрыты — вместо них своя "Горячее" */
+  #game.video-mode #levelUpBtn, #game.video-mode #levelDownBtn,
+  #game.davay-mode #levelUpBtn, #game.davay-mode #levelDownBtn{display:none;}
+  #videoLevelUpBtn, #davayLevelUpBtn{display:none;}
+  #game.video-mode #videoLevelUpBtn{display:flex;}
+  #game.davay-mode #davayLevelUpBtn{display:flex;}
+  /* В "Видеорулетке" два ряда: сверху "Следующее" + лайк, снизу — "Смотреть
+     избранное" + звук/автопереключение/дизлайк/поделиться/выход. Нижний ряд
+     скрыт по умолчанию и раскрывается кнопкой "Дополнительно". В "Давай
+     попробуем" такого блока нет — все кнопки сразу в одном ряду. */
+  #game.video-mode .controls, #game.davay-mode .controls{flex-direction:row; flex-wrap:wrap; align-items:stretch; gap:6px;}
+  #game.video-mode .row1, #game.davay-mode .row1{display:contents;}
+  #game.video-mode .row2{display:none;}
+  #game.davay-mode .row2{display:none;}
+  #game.video-mode .controls.video-extra-open .row2{display:contents;}
+  #game.video-mode .controls .btn, #game.davay-mode .controls .btn{height:44px;}
+  .video-extra-toggle{display:none;}
+  #game.video-mode .video-extra-toggle#videoExtraToggle{
+    display:flex; order:5; flex-basis:100%; align-items:center; justify-content:center; gap:6px;
+    text-align:center; font-size:12px; font-weight:700; color:#cba0bf;
+    text-transform:uppercase; letter-spacing:.5px; cursor:pointer; padding:4px 0;
+  }
+  .video-extra-toggle .video-extra-arrow{display:inline-block; font-size:10px; transition:transform .2s ease;}
+  .controls.video-extra-open .video-extra-toggle .video-extra-arrow{transform:rotate(180deg);}
+  #game.video-mode #doneBtn{order:1; flex:1; min-width:0; font-size:14px; padding:0 8px;}
+  #game.video-mode #videoLevelUpBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:13px;}
+  /* В "Давай попробуем" вместо "Следующее"/"Горячее" — заголовок и три кнопки,
+     "Выход" стоит рядом с этими тремя кнопками, "Избранное" (сердечко) теперь
+     хранит видео, на которые оба игрока независимо ответили "Да". */
+  #game.davay-mode #doneBtn, #game.davay-mode #davayLevelUpBtn{display:none;}
+  /* Ряд с именами игроков над карточкой: кто сейчас отвечает — выбор игрока
+     сделан заранее на странице настройки, кнопки тут только для отображения. */
+  .davay-player-row{display:none;}
+  #game.davay-mode .davay-player-row{
+    display:flex; gap:10px; margin-bottom:10px;
+  }
+  .davay-player-row .btn{
+    flex:1; opacity:.45; background:rgba(255,255,255,.08);
+    pointer-events:none; cursor:default;
+  }
+  .davay-player-row .btn.active{
+    opacity:1; background:linear-gradient(135deg,#ff9a5e,#ff6b8b); color:#3a1208;
+  }
+  .davay-player-row .btn.done{
+    opacity:.3;
+  }
+  /* Графическая шкала прогресса: сколько из 10 видео уже пройдено */
+  .davay-progress-row{display:none;}
+  #game.davay-mode .davay-progress-row{
+    display:flex; align-items:center; gap:8px; margin-bottom:10px;
+  }
+  .davay-progress-track{
+    flex:1; height:8px; border-radius:6px; background:rgba(255,255,255,.15); overflow:hidden;
+  }
+  .davay-progress-fill{
+    height:100%; width:0%; border-radius:6px;
+    background:linear-gradient(135deg,#ff9a5e,#ff6b8b);
+    transition:width .25s ease;
+  }
+  .davay-progress-label{
+    font-size:12px; color:#cba0bf; white-space:nowrap; min-width:44px; text-align:right;
+  }
+  .davay-repeat-label{display:none;}
+  #game.davay-mode .davay-repeat-label{
+    display:flex; order:1; flex-basis:100%; align-items:center; justify-content:center;
+    text-align:center; font-size:14px; font-weight:800; color:#fff; padding:2px 0 4px;
+  }
+  #davayYesBtn, #davayLaterBtn, #davayNoBtn{display:none;}
+  #game.davay-mode #davayYesBtn, #game.davay-mode #davayLaterBtn, #game.davay-mode #davayNoBtn{
+    display:flex; flex:1; min-width:0; font-size:13px; padding:0 6px;
+  }
+  #game.davay-mode #davayYesBtn{order:2;}
+  #game.davay-mode #davayLaterBtn{order:3;}
+  #game.davay-mode #davayNoBtn{order:4;}
+  /* Передача устройства второму игроку: пустая карточка + кнопка "Начать"
+     вместо вопросов Да/Не сейчас/Нет. */
+  #davayHandoffStartBtn{display:none;}
+  #game.davay-mode.davay-handoff #davayYesBtn,
+  #game.davay-mode.davay-handoff #davayLaterBtn,
+  #game.davay-mode.davay-handoff #davayNoBtn,
+  #game.davay-mode.davay-handoff .davay-repeat-label{
+    display:none;
+  }
+  #game.davay-mode.davay-handoff #davayHandoffStartBtn{
+    display:flex; order:1; flex:1; min-width:0;
+  }
+  /* Пауза — рядом с "Начать" на том же уровне, минимальной ширины */
+  #game.davay-mode.davay-handoff #pauseBtn{
+    order:2;
+  }
+  /* Просмотр избранного: вместо Да/Не сейчас/Нет — Следующее/Предыдущее для
+     перелистывания совпавших видео этого уровня. */
+  #davayFavPrevBtn, #davayFavNextBtn{display:none;}
+  #game.davay-mode.davay-favview #davayYesBtn,
+  #game.davay-mode.davay-favview #davayLaterBtn,
+  #game.davay-mode.davay-favview #davayNoBtn,
+  #game.davay-mode.davay-favview .davay-repeat-label{
+    display:none;
+  }
+  #game.davay-mode.davay-favview #davayFavPrevBtn,
+  #game.davay-mode.davay-favview #davayFavNextBtn{
+    display:flex; flex:1; min-width:0; font-size:13px; padding:0 6px;
+  }
+  #game.davay-mode #davayFavPrevBtn{order:2;}
+  #game.davay-mode #davayFavNextBtn{order:3;}
+  /* В просмотре избранного не нужны: имена игроков, шкала прогресса квиза. */
+  #game.davay-mode.davay-favview .davay-player-row,
+  #game.davay-mode.davay-favview .davay-progress-row{
+    display:none;
+  }
+  #game.video-mode #favoriteBtn{order:3; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
+  #game.video-mode #pauseBtn{order:4; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
+  #game.davay-mode #pauseBtn{order:6; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
+  /* Кнопка звука — сразу рядом с "Пауза", без блока "Дополнительно" */
+  #game.davay-mode #davayMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #videoFavoritesBtn{order:6; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
+  #game.video-mode #videoMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #videoLoopBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #videoFullscreenBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #dislikeBtn{order:10; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
+  #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active{
+    background:rgba(255,255,255,.35); border-color:rgba(255,255,255,.5);
+  }
+  .card-split-media video{width:100%; height:100%; object-fit:cover; display:block;}
+
+  .card-timer{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding-top:12px; margin-top:8px;
+    border-top:2px solid rgba(43,15,46,.08);
+  }
+  .timer-durations{display:flex; gap:8px;}
+  .timer-dur-btn{
+    background:rgba(0,0,0,.06); border:none; border-radius:16px;
+    padding:5px 12px; font-size:12px; font-weight:800; cursor:pointer; color:#7a5a72;
+  }
+  .timer-dur-btn.on{background:var(--accent); color:#2b0f2e;}
+  .timer-controls{display:flex; align-items:center; justify-content:center; gap:12px;}
+  .timer-display{
+    font-size:20px; font-weight:800; color:#2b0f2e;
+    font-variant-numeric:tabular-nums; min-width:58px; text-align:center;
+  }
+  .timer-btn{
+    background:rgba(0,0,0,.06); border:none; border-radius:20px;
+    padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; color:#2b0f2e;
+  }
+  .timer-btn.running{background:var(--accent);}
+  .timer-btn:active{transform:scale(.96);}
+
+  @keyframes timerPulse{
+    0%,100%{ transform:scale(1); color:#fff; }
+    50%{ transform:scale(1.35); color:var(--accent); }
+  }
+  .timer-display.done{
+    animation: timerPulse .5s ease-in-out 4;
+  }
+  @keyframes cardShake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-8px); }
+    40%{ transform:translateX(8px); }
+    60%{ transform:translateX(-6px); }
+    80%{ transform:translateX(6px); }
+  }
+  .card.done-shake{
+    animation: cardShake .4s ease-in-out 1;
+  }
+
+  .controls{
+    margin-top:8px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .row1{display:flex; gap:10px;}
+  .row1 #doneBtn{flex:1;}
+  .row1 #skipBtn{
+    flex:0 0 auto; width:auto; padding:0 14px; font-size:14px;
+    background:linear-gradient(135deg,#0f3d63,#1c6ea4); color:#fff; border-color:transparent;
+    box-shadow:0 8px 20px rgba(15,61,99,.35);
+  }
+  .row1 .btn.btn-square{
+    flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:22px;
+  }
+  #favoriteBtn.active{
+    background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00; border-color:transparent;
+  }
+  .row2{display:flex; gap:8px; align-items:stretch;}
+  .row2 .btn{flex:1; height:40px; padding:0 10px;}
+  .row2 #levelUpBtn{flex:1; font-size:14px;}
+  .row2 .btn.btn-square{
+    flex:0 0 40px; width:40px; height:40px; padding:0; font-size:17px;
+  }
+  .row2 .btn.btn-square.btn-text-square{
+    font-size:10px; font-weight:800; letter-spacing:.3px; padding:0 2px;
+    text-transform:uppercase;
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  .row2 #pauseBtn{
+    flex:0 0 auto; width:auto; padding:0 12px; font-size:11px; text-transform:none;
+  }
+
+  /* Уведомления показываются у самого верха экрана — над игровой картой И
+     над модальными окнами (правила, бонусы и т.д.), чтобы всплывающее окно
+     игры никогда не перекрывало тост. z-index тоже выше любого модального
+     окна в приложении на случай, если модалка растянется до самого верха. */
+  .toast{
+    position:fixed; left:50%; top:calc(16px + env(safe-area-inset-top, 0px));
+    transform:translate(-50%,-10px) scale(.92);
+    max-width:80vw;
+    background:rgba(0,0,0,.85); color:#fff; padding:14px 22px; border-radius:16px;
+    font-size:17px; font-weight:700; text-align:center; opacity:0; transition:all .3s ease; pointer-events:none; z-index:600;
+    white-space:normal;
+  }
+  .toast.show{opacity:1; transform:translate(-50%,0) scale(1);}
+
+  /* Единое меню паузы теперь отдельное модальное окно (#pauseMenuModal,
+     см. .modal-overlay/.modal-card) по центру экрана — .resume-row как
+     блок внутри страницы настроек больше не используется, но сами кнопки
+     ("Продолжить игру"/"Закончить игру"/звук) переехали внутрь модалки с
+     теми же id, поэтому вся остальная логика (dispatch по pausedMode)
+     не изменилась. */
+  .resume-bottom-row{display:flex; gap:10px; margin-top:12px;}
+  .resume-bottom-row .btn{flex:1;}
+  #resumeMuteBtn{flex:0 0 44px; width:44px; padding:0; font-size:18px;}
+
+  .locked-settings{opacity:.4; cursor:not-allowed;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(20,6,20,.7);
+    display:none; align-items:center; justify-content:center;
+    padding:20px; z-index:200;
+  }
+  .modal-overlay.show{display:flex;}
+  #imageZoomModal{background:rgba(10,3,10,.95); padding:20px; z-index:260;}
+  #imageZoomModal img{max-width:100%; max-height:100%; object-fit:contain; border-radius:12px;}
+  .modal-card{
+    position:relative;
+    background:var(--card-bg); color:#2b0f2e; border-radius:22px;
+    padding:26px 22px; max-width:360px; width:100%; max-height:80vh; overflow-y:auto;
+    overscroll-behavior:contain;
+    box-shadow:0 20px 50px rgba(0,0,0,.5);
+  }
+  .modal-title{font-size:20px; font-weight:800; text-align:center; margin-bottom:16px;}
+  .modal-close-btn{
+    position:absolute; top:10px; right:12px;
+    background:none; border:none; color:#ff4d4d; font-size:22px; line-height:1;
+    cursor:pointer; padding:4px; z-index:10;
+  }
+  .modal-close-btn:active{color:#c62828;}
+  /* Меню паузы — название игры на первой строке, "Пауза" отдельной строкой
+     ниже (не одной длинной фразой через тире, которая раньше рвалась
+     переносом посреди слова на узких экранах), см. PAUSE_MENU_TITLES. */
+  .pause-title-sub{ display:block; font-size:15px; font-weight:700; color:#5c3a52; margin-top:4px; }
+  /* Внутри .rules-hub-card (тёмный градиент) текст .intro-text должен быть
+     светлым, иначе .modal-card .intro-text (color:#5c3a52) перекрывает
+     светлый color:#fff и текст становится тёмно-фиолетовым на тёмном фоне,
+     почти невидимым. Правило идёт ПОСЛЕ общего .modal-card .intro-text. */
+  .rules-hub-card .intro-text{color:#fff; max-width:none;}
+  .modal-rules{
+    margin:0 0 20px; padding-left:20px;
+    display:flex; flex-direction:column; gap:11px;
+    font-size:14px; line-height:1.5; text-align:left; color:#3a2438;
+  }
+  .modal-rules li{padding-left:4px;}
+  /* Пункты списка совпадений "Твои желания" кликабельны — открывают карточку с описанием */
+  #wishlistSummaryList li, #wishlistHistoryList li{
+    cursor:pointer; border-radius:8px; padding:4px 6px 4px 4px; margin:0 -6px;
+    transition:background .15s ease;
+  }
+  #wishlistSummaryList li:active, #wishlistHistoryList li:active,
+  #wishlistSummaryList li:hover, #wishlistHistoryList li:hover{
+    background:rgba(255,110,168,.12);
+  }
+  /* Список совпадений "Тайные ответы" — не кликабельны (в строке уже весь текст
+     вопроса и ответа, отдельной карточки с описанием для них нет) */
+  #znayuSummaryList li, #znayuHistoryList li{
+    padding:4px 6px 4px 4px; margin:0 -6px;
+  }
+  /* Карточка вопроса "Тайные ответы": .card-body содержит ТОЛЬКО вопрос и
+     благодаря flex:1 центрирует его в оставшемся месте карточки; кнопки
+     ответов (.znayu-answers) и "Не хочу отвечать" — отдельные потомки
+     .card-inner ПОСЛЕ .card-body, поэтому всегда прижаты к самому низу
+     карточки, независимо от длины вопроса. */
+  .znayu-question-text{
+    font-size:19px; font-weight:700; line-height:1.35; text-align:center;
+    padding:0 4px; margin-bottom:4px;
+  }
+  .znayu-answers{display:flex; flex-direction:column; gap:10px; width:100%; margin-top:14px;}
+  /* Кнопки ответов лежат прямо на белой карточке — обычный .btn-secondary
+     (белый текст на полупрозрачно-белом фоне) рассчитан на тёмный фон
+     приложения и на карточке был практически невидим. Берём ту же тёмную-
+     на-светлом схему, что и у кнопок внутри .modal-card. */
+  .znayu-answers .znayu-answer-btn{
+    width:100%; white-space:normal; height:auto; min-height:var(--btn-height); padding:10px 14px; line-height:1.3;
+    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+  }
+  .znayu-answers .znayu-answer-btn:active{ background:rgba(43,15,46,.14); }
+  /* "Не хочу отвечать" — не вариант ответа, а отказ от вопроса, поэтому
+     стоит отдельно под .znayu-answers, приглушённым пунктирным стилем,
+     чтобы не путали с обычным вариантом ответа. */
+  .znayu-skip-btn{
+    width:100%;
+    margin-top:14px;
+    background:transparent;
+    border:1px dashed rgba(43,15,46,.35);
+    color:rgba(43,15,46,.6);
+    font-size:13px;
+    min-height:auto; padding:8px 14px;
+  }
+  .znayu-skip-btn:active{ background:rgba(43,15,46,.08); }
+  /* Викторина (пары/компания/дети) — переиспользует карточку и кнопки
+     ответов "Тайных ответов" (.znayu-question-text/.znayu-answers/
+     .znayu-answer-btn), добавляя подсветку результата после выбора:
+     зелёным — верный вариант, красным — выбранный неверный. */
+  .znayu-answer-btn.answer-correct{
+    background:rgba(76,217,100,.85); color:#2b0f2e; border-color:#2ecc55;
+    box-shadow:0 0 0 2px rgba(46,204,85,.55), 0 6px 16px rgba(0,0,0,.25);
+  }
+  .znayu-answer-btn.answer-wrong{
+    background:rgba(255,69,58,.85); color:#2b0f2e; border-color:#ff453a;
+    box-shadow:0 0 0 2px rgba(255,69,58,.55), 0 6px 16px rgba(0,0,0,.25);
+  }
+  /* Специфичность выше, чем у общего .btn:disabled{opacity:.5} (иначе он
+     перебивает это правило по порядку в файле) — после ответа кнопки должны
+     оставаться яркими (правильный/неправильный вариант), а не тускнеть. */
+  .znayu-answers .znayu-answer-btn:disabled{opacity:.9; pointer-events:none;}
+  /* Озвучка вопроса по тапу на карточку — та же иконка-подсказка 🔊, что и
+     .memes-tts-hint в "Мемасиках", только под своим именем для карточек
+     Викторины (пары/компания/дети): карточка кликабельна (см. #quizCard и
+     т.п. ниже), сама иконка тап не перехватывает. */
+  #quizCard, #partyQuizCard, #kidsQuizCard{cursor:pointer;}
+  .quiz-tts-hint{
+    display:none;
+    position:absolute; right:16px; bottom:14px; font-size:17px; opacity:.5;
+    pointer-events:none;
+  }
+  .quiz-tts-hint.speaking{opacity:.9;}
+  /* Кнопка автоозвучки вопросов "Викторины" — удалена, управление перенесено в меню. */
+  .modal-pagination{display:flex; align-items:center; justify-content:center; gap:16px; margin:2px 0 18px;}
+  .modal-pagination .modal-pagination-btn{flex:0 0 auto; width:44px; height:40px; padding:0; font-size:16px;}
+  .modal-pagination-label{font-size:13px; color:#5c3a52; min-width:56px; text-align:center;}
+  .video-level-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .video-level-grid .btn{width:100%;}
+  .summary-stats{
+    display:flex; flex-direction:column; gap:10px; margin-bottom:22px; text-align:center;
+  }
+  .summary-row{font-size:16px; font-weight:700; color:#3a2438;}
+  /* "Секс-квест" — счёт/прогресс над карточкой, итог партии и история
+     чек-листов (games/sexquest.js). */
+  .sexquest-status-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 4px; margin-bottom:10px; font-size:14px; font-weight:800; color:#cba0bf;
+  }
+  .sexquest-summary-list{ list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .sexquest-summary-list li{
+    background:rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;
+  }
+  .sexquest-summary-title{ font-size:14px; font-weight:800; color:#fff; }
+  .sexquest-summary-outcome{ font-size:13px; color:rgba(255,255,255,.7); margin-top:2px; }
+  .sexquest-history-wrap{ display:flex; flex-direction:column; gap:14px; margin:14px 0; max-height:60vh; overflow-y:auto; }
+  .sexquest-history-entry{
+    background:rgba(255,255,255,.08); border-radius:14px; padding:12px 14px;
+  }
+  .sexquest-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+  .sexquest-history-items{ list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .sexquest-history-items > li + li{ border-top:1px solid rgba(255,255,255,.14); padding-top:10px; }
+  .sexquest-history-steps{ margin:6px 0 0; padding-left:18px; font-size:12px; color:rgba(255,255,255,.6); line-height:1.5; }
+  .sexquest-history-steps li{ margin-bottom:2px; }
+  /* Строка сохранённого задания в "Пройденных": слева — название/итог/шаги,
+     справа — красный крестик, удаляющий задание из сохранённого чек-листа.
+     Те же классы-алиасы (.match-item-*) используются в списках "Совпадения"
+     ("Твои желания", "Тайные ответы") — стиль один на все три места. */
+  .sexquest-item-row, .match-item-row{ display:flex; align-items:flex-start; gap:10px; }
+  .sexquest-item-main, .match-item-main{ flex:1; min-width:0; }
+  .sexquest-item-del, .match-item-del{
+    flex:0 0 auto; width:26px; height:26px; border-radius:50%;
+    border:1px solid rgba(255,99,110,.55); background:rgba(255,99,110,.12);
+    color:#ffc2c8; font-size:13px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0;
+  }
+  .sexquest-item-del:active, .match-item-del:active{ background:rgba(255,99,110,.3); }
+  .sexquest-step-agreed{ color:#4cd964; font-weight:700; }
+  #sexQuestHistoryBtn:disabled{ opacity:.4; cursor:default; }
+  /* Модалка "Выбор вопросов" — светлый .modal-card, поэтому пункты чек-листа
+     в тёмных тонах (как .custom-card-row), а не в белом варианте .level-toggle. */
+  .sexquest-pick-list{
+    display:flex; flex-direction:column; gap:8px; margin:14px 0;
+    text-align:left; max-height:50vh; overflow-y:auto;
+  }
+  .sexquest-pick-item{
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    background:rgba(43,15,46,.06); border:1px solid rgba(43,15,46,.12);
+    border-radius:14px; padding:10px 12px;
+  }
+  .sexquest-pick-item.on{ border-color:var(--accent); background:rgba(255,94,142,.14); }
+  .sexquest-pick-item.disabled{ opacity:.4; cursor:default; }
+  .sexquest-pick-check{
+    width:20px; height:20px; border-radius:50%; flex-shrink:0;
+    border:2px solid rgba(43,15,46,.25);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sexquest-pick-item.on .sexquest-pick-check{ background:var(--accent); border-color:var(--accent); }
+  .sexquest-pick-item.on .sexquest-pick-check::after{
+    content:'✓'; font-size:12px; font-weight:900; color:#2b0f2e; line-height:1;
+  }
+  .sexquest-pick-title{ flex:1; font-size:14px; font-weight:700; color:#2b0f2e; }
+  /* Крестик справа — исключает желание из случайной выдачи (не из ручного
+     выбора чек-листом, это независимая настройка), поэтому не участвует в
+     клике по всей строке (см. stopPropagation в sexquest.js). */
+  .sexquest-pick-exclude{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%;
+    border:1px solid rgba(43,15,46,.2); background:transparent; color:#8a6a80;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .sexquest-pick-exclude.on{ background:#ff5e6c; border-color:#ff5e6c; color:#fff; }
+  .sexquest-pick-item.excluded{ opacity:.55; }
+  .sexquest-pick-item.excluded .sexquest-pick-title{ text-decoration:line-through; }
+
+  /* «Карта страсти» (games/passionmap.js) — счёт/прогресс над карточкой,
+     итог партии и история маршрутов. Копия стилей секс-квеста под своим
+     префиксом pmap-: игры независимы, стили тоже. */
+  .pmap-status-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 4px; margin-bottom:10px; font-size:14px; font-weight:800; color:#cba0bf;
+  }
+  .pmap-summary-list{ list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .pmap-summary-list li{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; padding:8px 12px;
+  }
+  .pmap-summary-title{ font-size:14px; font-weight:800; color:#fff; }
+  .pmap-summary-outcome{ font-size:13px; color:rgba(255,255,255,.7); margin-top:2px; }
+  .pmap-history-wrap{ display:flex; flex-direction:column; gap:14px; margin:14px 0; max-height:60vh; overflow-y:auto; }
+  .pmap-history-entry{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px 14px;
+  }
+  .pmap-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+  .pmap-history-items{ list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .pmap-history-items > li + li{ border-top:1px solid rgba(255,255,255,.14); padding-top:10px; }
+  .pmap-history-steps{ margin:6px 0 0; padding-left:18px; font-size:12px; color:rgba(255,255,255,.6); line-height:1.5; }
+  .pmap-history-steps li{ margin-bottom:2px; }
+  .pmap-item-row, .pmap-item-main{ }
+  .pmap-item-row{ display:flex; align-items:flex-start; gap:10px; }
+  .pmap-item-main{ flex:1; min-width:0; }
+  .pmap-item-del{
+    flex-shrink:0; width:28px; height:28px; border-radius:50%;
+    border:1px solid rgba(255,99,110,.4); background:transparent; color:#ff8b96;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .pmap-item-del:active{ background:rgba(255,99,110,.3); }
+  .pmap-step-agreed{ color:#4cd964; font-weight:700; }
+  #passionMapHistoryBtn:disabled{ opacity:.4; cursor:default; }
+  .pmap-pick-list{
+    display:flex; flex-direction:column; gap:8px; margin:14px 0;
+    text-align:left; max-height:50vh; overflow-y:auto;
+  }
+  .pmap-pick-item{
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    background:rgba(43,15,46,.06); border:1px solid rgba(43,15,46,.12);
+    border-radius:14px; padding:10px 12px;
+  }
+  .pmap-pick-item.on{ border-color:var(--accent); background:rgba(255,94,142,.14); }
+  .pmap-pick-item.disabled{ opacity:.4; cursor:default; }
+  .pmap-pick-check{
+    width:20px; height:20px; border-radius:50%; flex-shrink:0;
+    border:2px solid rgba(43,15,46,.25);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pmap-pick-item.on .pmap-pick-check{ background:var(--accent); border-color:var(--accent); }
+  .pmap-pick-item.on .pmap-pick-check::after{
+    content:'✓'; font-size:12px; font-weight:900; color:#2b0f2e; line-height:1;
+  }
+  .pmap-pick-title{ flex:1; font-size:14px; font-weight:700; color:#2b0f2e; }
+  /* Крестик справа — исключает желание из случайной выдачи (не из ручного
+     выбора), поэтому не участвует в клике по всей строке
+     (см. stopPropagation в passionmap.js). */
+  .pmap-pick-exclude{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%;
+    border:1px solid rgba(43,15,46,.2); background:transparent; color:#8a6a80;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .pmap-pick-exclude.on{ background:#ff5e6c; border-color:#ff5e6c; color:#fff; }
+  .pmap-pick-item.excluded{ opacity:.55; }
+  .pmap-pick-item.excluded .pmap-pick-title{ text-decoration:line-through; }
+  /* "Почти совпало" в итогах "Тайных ответов" — крупнее, по центру и с
+     хорошо заметным отступом сверху (заметно ниже интро-текста), но без
+     абсолютного позиционирования — чтобы не наезжать на текст рядом,
+     если он длинный. */
+  #znayuSummaryAlmost{font-size:21px; text-align:center; margin:56px 0 20px;}
+  .custom-cards-list{margin-top:16px; display:flex; flex-direction:column; gap:8px;}
+  .custom-cards-empty{font-size:13px; color:#8a6a80; text-align:center; padding:8px 0;}
+  .custom-card-row{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(43,15,46,.06); border-radius:12px; padding:8px 10px;
+  }
+  .custom-card-text{flex:1; font-size:13px; color:#3a2438; line-height:1.35; text-align:left;}
+  .custom-card-del{
+    flex:0 0 auto; background:none; border:none; font-size:16px; cursor:pointer; padding:4px;
+  }
+  .icon-btn{
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    color:#fff; border-radius:12px; padding:8px 12px; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .icon-btn:disabled{opacity:.5; cursor:default;}
+  .btn:disabled{opacity:.5; cursor:default;}
+
+  /* ---- Правда или действие ---- */
+  /* .td-score-row убран — теперь используется krokodil-score-row.two-player */
+  .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd;}
+  /* Фанты (парные): метка показывает «💘 Фанты» вместо «Ходит: …» — крупнее
+     вдвое, как заголовок. Строку «До след. уровня» (#levelProgress) опускаем
+     ниже, чтобы не залезала под увеличенную метку. */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .td-turn-label{font-size:28px;}
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
+  /* В «Фантах» «До след. уровня» показывается внутри карточки (над пилюлей
+     «Правда/Действие»), поэтому плавающая строка сверху скрыта. */
+  .game-type-btn{flex:1; min-width:0; font-size:13px; padding:9px 6px;}
+  .game-type-btn.active{background:var(--accent); color:#2b0f2e;}
+  /* В режиме Правда/Действие — пилюли выбора перед ходом внутри карточки */
+  .td-choice-row{display:flex; gap:10px; margin:6px 0 2px; justify-content:center;}
+  .td-choice-btn{flex:1; padding:10px 8px; border-radius:14px; font-size:13px; font-weight:700;
+    border:2px solid rgba(255,255,255,.3); background:rgba(255,255,255,.12); color:#fff; cursor:pointer;}
+  .td-choice-btn:active{transform:scale(.96);}
+  /* В «Фантах» кнопка «Пауза» скрыта — выход/пауза работает по стрелке «назад». */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #pauseBtn{display:none;}
+  /* В «Фантах» избранное — кнопка ⭐ внутри карточки (справа от таймера),
+     плавающая кнопка снизу скрыта. */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #favoriteBtn{display:none;}
+  /* В «Фантах» кнопка «Горячее» — 🔥 внутри карточки у ЛЕВОГО края (зеркально
+     ⭐ избранного справа), плавающая кнопка в row2 скрыта. */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelUpBtn{display:none;}
+  .card-hot-btn{position:absolute; left:18px; bottom:10px; width:44px; height:44px;
+    padding:0; border-radius:50%; font-size:26px; line-height:1; margin:0;
+    background:rgba(255,255,255,.14); border:none; cursor:pointer; color:#fff; z-index:5;}
+  .card-hot-btn:disabled{opacity:.4; cursor:default;}
+  .card-hot-btn:active{transform:scale(.96);}
+  /* Рулетка желаний */
+  .wr-level-label{text-align:center; font-size:14px; font-weight:700; color:#ffd23f; margin:6px 0;}
+  .wr-legend{text-align:center; font-size:12px; line-height:1.6; color:rgba(255,255,255,.78); margin:4px 0 12px;}
+  .wr-wheel{display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-width:360px; margin:0 auto 8px;}
+  .wr-cell{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); border-radius:8px;
+    padding:6px 2px; text-align:center; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .wr-cell.active{border-color:#ffd23f; background:rgba(255,210,63,.2);}
+  .wr-cell-type{font-size:14px;}
+  .wr-cell-text{font-size:9px; color:#ddd; line-height:1.1; word-break:break-word;}
+  .wr-result{text-align:center; font-size:15px; font-weight:600; min-height:50px; padding:8px; margin:6px 0;
+    background:rgba(0,0,0,.2); border-radius:12px;}
+  .wr-landed{font-size:14px; color:#ccc; margin-bottom:6px;}
+  .wr-task{font-size:16px; font-weight:700; line-height:1.4;}
+  .wr-task.truth{color:#9fb3ff;}
+  .wr-task.dare{color:#ff9fb0;}
+  .wr-result.show{animation:fadeIn .3s;}
+  .wr-summary-congrats{font-size:22px; font-weight:700; text-align:center; margin:8px 0;}
+  .wr-summary-count{font-size:18px; text-align:center; margin:6px 0;}
+  .wr-summary-text{font-size:15px; text-align:center; color:#ccc; margin-bottom:12px;}
+  /* Рулетка желаний — колесо */
+  .wr-title{text-align:center; font-size:22px; font-weight:700; color:#fff; margin-bottom:8px;}
+  .wr-wheel-wrap{position:relative; width:min(calc(100vw - 48px), 340px, 58vh); height:min(calc(100vw - 48px), 340px, 58vh); margin:0 auto 12px;}
+  .wr-wheel{width:100%; height:100%; border-radius:50%; border:4px solid rgba(255,255,255,.5);
+    box-shadow:0 8px 32px rgba(0,0,0,.6); will-change:transform; overflow:hidden; background:#1a1a2e; display:block;}
+  .wr-wheel svg{display:block; width:100%; height:100%;}
+  .wr-pointer{position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+    font-size:28px; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.6);}
+  .wr-actions{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px;}
+  .wr-actions .btn{flex:1; min-width:80px; max-width:140px;}
+  .wr-summary-winner{font-size:18px; font-weight:700; text-align:center; margin:10px 0;}
+  .wr-summary-scores{display:flex; justify-content:space-around; font-size:15px; margin-bottom:12px;}
+  /* Кастомные подсказки для ⭐ и 🔥 — работают и на touch (:active), и на hover */
+  [data-tt]::after{
+    content:attr(data-tt);
+    position:absolute; bottom:110%; left:50%; transform:translateX(calc(-50% + var(--tt-shift, 0px))) scale(.9);
+    background:rgba(0,0,0,.85); color:#fff; font-size:12px; font-weight:600;
+    padding:5px 10px; border-radius:8px; white-space:nowrap;
+    opacity:0; pointer-events:none; transition:opacity .15s, transform .15s;
+    z-index:100; max-width:160px; text-align:center; line-height:1.3;
+  }
+  [data-tt]:hover::after, [data-tt]:active::after{opacity:1; transform:translateX(calc(-50% + var(--tt-shift, 0px))) scale(1);}
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card{position:relative;}
+  .card-fav-btn{position:absolute; right:18px; bottom:10px; width:44px; height:44px;
+    padding:0; border-radius:50%; font-size:22px; line-height:1; margin:0; z-index:5;}
+  .card-fav-btn.active{background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00;}
+  /* В «Фантах» строка типа карточки: слева пилюля «Правда/Действие», справа —
+     «До след. уровня» (только фанты — в П/Д и таймере строка остаётся по центру). */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row{
+    justify-content:space-between; align-items:center;
+    /* растягиваем строку на всю ширину карточки, компенсируя её padding
+       (20px/22px), чтобы «До след. уровня» была у самого левого края */
+    margin-left:-22px; margin-right:-22px; padding:0 10px;
+  }
+  /* Пилюля «Правда/Действие» всегда прижата вправо, даже когда «До след.
+     уровня» пуста (максимальный уровень) — иначе пилюля уезжает влево. */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row .type-pill{margin-left:auto;}
+  #cardLevelProgress{
+    font-size:12px; font-weight:700;
+    color:#fff; margin-right:auto; white-space:nowrap;
+  }
+  /* Turn-label — ПЕРВЫЙ элемент экрана (Фанты, Правда/Действие, Крокодил, Таймер,
+     «Знаю тебя», kids-игры и т.д.) — парит в самой верхней полосе: по центру между
+     FAB-кнопками «←»/«☰» (тот же top:12px + safe-area, что и у кнопок) на всех
+     ширинах экрана, как единая верхняя панель [☰] [Ходит: …] [←]. Контент экрана
+     начинается ниже — отступ дают правила .screen:has(...) ниже. Метки НЕ-первые
+     (flash «Карточка 1 из 25», сапёр, счастливый билет, морской бой — идут под
+     h1.title) остаются в потоке на своём месте. */
+  .td-turn-label:first-child{
+    position:absolute; top:calc(12px + env(safe-area-inset-top));
+    left:50%; transform:translateX(-50%);
+    z-index:10; margin:0; white-space:nowrap;
+    max-width:calc(100% - 112px);
+  }
+  /* Фанты (парная игра): строка «До след. уровня» — второй строкой верхней панели,
+     прямо под плавающей меткой хода «Ходит: …» (top метки 12px + строка ~17px + зазор).
+     Только экран #game: на других экранах .level-progress нет. Скрытия в video/davay/
+     placeholder-режимах (#game.… #levelProgress{display:none}) специфичнее и работают. */
+  #game #levelProgress{
+    position:absolute;
+    top:calc(12px + env(safe-area-inset-top) + 22px);
+    left:50%; transform:translateX(-50%);
+    z-index:10; margin:0; white-space:nowrap;
+    max-width:calc(100% - 112px);
+  }
+  /* Mobile: фиксированные FAB-кнопки парят сверху — нужны отступы,
+     чтобы имена/контент не налезали на кнопки. ~50px (высота кнопки 36 + safe area 12). */
+  .screen:has(> .krokodil-score-row){
+    padding-top: 50px;
+  }
+  .screen:has(> .td-turn-label):not(:has(> .krokodil-score-row)){
+    padding-top: 50px;
+  }
+  /* Экраны игр без верхней строки (turn-label/score-row): первым элементом
+     у них идёт широкое поле на всю ширину (карточка, ряд кнопок игроков,
+     строка статуса) — оно начинается вплотную к верху экрана и заезжает
+     под плавающие FAB-кнопки «←»/«☰». Даём им такой же отступ сверху.
+     Явные ID вместо :has(> .card-area): card-area есть и на экранах С
+     turn-label/score-row (ниже неё), где отдельный отступ не нужен. */
+  #ideasGame, #whatToPlayGame, #kidsMemesGame, #memesGame,
+  #partyNeverGame, #twisterGame, #sexQuestGame,
+  #wishlistGame, #znayuGame, #passionMapGame{
+    padding-top: 50px;
+  }
+  /* Хаб #setup: каждый его вид (главный, «Игры для пар/компании/детей»…)
+     начинается с центрированного h1.title вплотную к верху, а паузные
+     заголовки игр («Правда/Действие», «Счастливый билет»…) бывают длинными —
+     без отступа заголовок заходит под плавающие FAB-кнопки «←»/«☰». */
+  #setup{
+    padding-top: 8px;
+  }
+  /* «Сапёр», «Четыре в ряд» (дети и один), «Крестики-нолики» (дети и один),
+     «Морской бой» (дети), «Мемори» (один), «Английский язык» и «Время»:
+     у первых шести krokodil-score-row идёт после h1.title, поэтому
+     общий padding-top экрана не нужен — иначе между шапкой «←»/«☰»
+     и заголовком появляется лишний зазор 50px. «Английский язык» —
+     без score-row, но с td-turn-label, который парит из-за :has-правила.
+     «Время» имеет score-row первым ребёнком после h1.title, и та же
+     проблема. Сдвигаем только сам score-row. */
+  #kidsSaperGame, #kidsC4Game, #kidsXoGame, #kidsBattleshipGame,
+  #soloMemoryGame, #soloXoGame, #soloC4Game,
+  #flashGame, #flashTimeGame{ padding-top: 0; }
+  #kidsSaperGame > .krokodil-score-row,
+  #kidsC4Game > .krokodil-score-row,
+  #kidsXoGame > .krokodil-score-row,
+  #soloMemoryGame > .krokodil-score-row,
+  #soloXoGame > .krokodil-score-row,
+  #soloC4Game > .krokodil-score-row,
+  #flashTimeGame > .krokodil-score-row{ margin-top: 10px; }
+  /* Desktop: krokodil-score-row с именами по краям. Turn-label парит в верхней
+     полосе на всех ширинах (базовое правило .td-turn-label:first-child выше). */
+  @media (min-width:640px){
+    .krokodil-score-row{
+      justify-content:space-between;
+    }
+    .krokodil-score-row.multi-player .krokodil-score-item{
+      flex:1 1 auto; text-align:center;
+    }
+    .screen:has(> .td-turn-label){
+      padding-top: 48px;
+    }
+    /* На desktop FAB-кнопки absolute, а #app уже имеет padding ~16px,
+       поэтому дополнительный padding-top нужен меньше */
+    .screen:has(> .krokodil-score-row){
+      padding-top: 56px;
+    }
+    /* Экраны без верхней строки (см. мобильное правило выше):
+       на desktop FAB-кнопки absolute с top:12px (зона 12–48px) */
+    #ideasGame, #whatToPlayGame, #kidsMemesGame, #memesGame,
+    #partyNeverGame, #twisterGame, #sexQuestGame,
+    #wishlistGame, #znayuGame, #passionMapGame{
+      padding-top: 48px;
+    }
+    /* Хаб #setup — как на мобильном: FAB-кнопки absolute с top:12px
+       (зона 12–48px), а #app даёт только 16px сверху. */
+    #setup{
+      padding-top: 48px;
+    }
+  }
+  #kidsXoTurnLabel, #soloXoTurnLabel, #kidsC4TurnLabel{ font-size:28px; font-weight:900; }
+  .td-actions-row{display:flex; gap:10px; margin-top:10px; width:100%;}
+  .quiz-pause-row{display:flex; justify-content:center; width:100%; margin-top:10px;}
+  .td-actions-row .btn{flex:1;}
+  .td-actions-row #tdPauseBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .td-actions-row #tdSkipBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+
+  /* ---- Секс-бинго ---- */
+  .bingo-level-label{
+    text-align:center; font-size:13px; font-weight:800; color:var(--gold);
+    margin-bottom:10px;
+  }
+  .bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:12px 0; max-width:100%;}
+  .bingo-cell{
+    aspect-ratio:1/1; border-radius:10px; border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08); color:#fff; font-size:9.5px; line-height:1.15;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:3px; cursor:pointer; font-weight:600; overflow:hidden;
+    word-break:break-word; hyphens:auto;
+  }
+  .bingo-cell.checked{
+    background:linear-gradient(135deg,#ff5e8e,#ff8a5e); color:#2b0f2e; border-color:transparent;
+  }
+  /* Режим "Скрыть задания" — невыполненные клетки показывают только иконку,
+     без текста задания (сюрприз до тапа), пока их не откроют по одной.
+     Тот же приём, что и у закрытых клеток Сапёра ("Игры с детьми"). */
+  .bingo-cell.hidden{ font-size:min(12vw, 51px); line-height:1; padding:0; }
+  /* Крестики нолики (дети) — поле 3×3. */
+  .kids-xo-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+    width:100%; max-width:280px; margin:14px auto;
+  }
+  .kids-xo-cell{
+    aspect-ratio:1/1; border-radius:14px; border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08); color:#fff; font-size:64px; font-weight:800; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+  }
+  /* Поле 5×5 — клеток больше, каждая мельче, знак пропорционально меньше. */
+  .kids-xo-grid.kids-xo-grid-5{
+    grid-template-columns:repeat(5,1fr); gap:6px; max-width:340px;
+  }
+  .kids-xo-grid.kids-xo-grid-5 .kids-xo-cell{ font-size:30px; border-radius:8px; }
+  .kids-xo-cell:disabled{ cursor:default; }
+  .kids-xo-cell.kids-xo-win{
+    background:linear-gradient(135deg,#ff5e8e,#ff8a5e); border-color:transparent;
+  }
+  .kids-xo-mark-x{ color:#3ddc84; }
+  .xo-green-x{ color:#3ddc84; font-weight:900; }
+  .xo-o{ color:#ff5e8e; font-weight:900; }
+  /* XO в меню: горизонтально (X слева, O справа) — увеличиваем ширину иконки и
+     используем flex, чтобы они не переносились. Для остальных иконок (эмодзи)
+     сохраняем 32px фиксировано. */
+  .btn-menu-item .menu-icon.xo-icon{ width:38px; min-width:38px; display:flex; gap:0; }
+  .btn-menu-item .menu-icon.xo-icon > .xo-green-x,
+  .btn-menu-item .menu-icon.xo-icon > .xo-o{
+    display:inline-block; width:18px; text-align:center; line-height:1;
+  }
+  /* «Четыре в ряд» (дети) — поле 7 колонок × 6 рядов, шашки падают вниз.
+     Заполненная ячейка — цветной диск (фон), пустая — тусклый кружок,
+     куда упадёт шашка выбранной колонки — помечена стрелкой ⬇. */
+  .kids-c4-grid{
+    display:grid; grid-template-columns:repeat(7,1fr); gap:5px;
+    width:100%; max-width:380px; margin:14px auto;
+  }
+  .kids-c4-cell{
+    aspect-ratio:1/1; border-radius:50%; border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.08); color:rgba(255,255,255,.6);
+    font-size:min(5vw,22px); font-weight:800; line-height:1; padding:0;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .kids-c4-cell:disabled{ cursor:default; }
+  .kids-c4-cell.kids-c4-red{ background:#e53935; border-color:transparent; }
+  .kids-c4-cell.kids-c4-yellow{ background:#fdd835; border-color:transparent; }
+  .kids-c4-cell.kids-c4-win{ outline:3px solid #3ddc84; outline-offset:-3px; }
+  .kids-c4-hint{ opacity:.7; }
+  .kids-xo-mark-o{ color:#ff5e8e; }
+  .kids-xo-cell.kids-xo-win .kids-xo-mark-x, .kids-xo-cell.kids-xo-win .kids-xo-mark-o{ color:#fff; }
+  /* Морской бой (дети) — поле 10×10, клетки поменьше, чем в крестиках-ноликах. */
+  .battleship-grid{
+    display:grid; grid-template-columns:repeat(10,1fr); gap:2px;
+    width:100%; max-width:360px; margin:10px auto;
+  }
+  .battleship-cell{
+    aspect-ratio:1/1; border-radius:5px; border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.08); color:#fff; font-size:13px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+  }
+  .battleship-cell:disabled{ cursor:default; }
+  .battleship-cell.bs-miss{ background:rgba(255,255,255,.04); color:#7d93bf; }
+  .battleship-cell.bs-hit{ background:linear-gradient(135deg,#ff8a5e,#ff3b5c); border-color:transparent; }
+  .battleship-cell.bs-sunk{ background:linear-gradient(135deg,#5a1620,#2b0f2e); border-color:transparent; }
+  /* Свои корабли на поле игрока (одиночка) — тоненькая подсказка, не заглушающая
+     выстрелы бота. */
+  .bs-own-ship{ color:rgba(255,255,255,.35); }
+  /* Имена игроков в подписях хода — разного цвета, активный — золотом, чтобы
+     сразу было видно, кому телефон/ход. */
+  .bs-name{ font-weight:800; }
+  #kidsBattleshipTurnLabel{
+    text-align:center; font-size:40px; font-weight:900; color:#ffd166;
+    min-height:48px; line-height:1.15; margin:2px 0 4px;
+  }
+  .bs-board-title{
+    text-align:center; font-size:12px; font-weight:600; color:rgba(255,255,255,.6);
+    margin:6px 0 2px; letter-spacing:.5px;
+  }
+  #soloBattleshipGame .bs-board-title{ margin-top:2px; }
+  #kidsBattleshipGrid.player1 .battleship-cell{ background:rgba(255,255,255,.08); }
+  #kidsBattleshipGrid.player1 .battleship-cell.bs-miss{ background:rgba(255,255,255,.04); color:#7d93bf; }
+  #kidsBattleshipGrid.player2 .battleship-cell{ background:rgba(110,198,255,.15); border-color:rgba(110,198,255,.3); }
+  #kidsBattleshipGrid.player2 .battleship-cell.bs-miss{ background:rgba(110,198,255,.08); color:#7db8e8; }
+  .bingo-actions-row{display:flex; gap:10px; margin-top:6px;}
+  .bingo-actions-row .btn{flex:1;}
+  .bingo-actions-bottom{margin-top:8px;}
+  .bingo-actions-bottom .btn{height:40px; padding:0 10px; font-size:14px;}
+  .bingo-cell.bingo-suggested{
+    box-shadow:0 0 0 3px var(--accent) inset;
+  }
+  /* Сапёр (дети) — настоящий минный ландшафт. */
+  .kids-saper-cell.kids-saper-closed{ font-size:min(15vw, 64px); line-height:1; padding:0; cursor:pointer; }
+  .kids-saper-cell.kids-saper-flagged{ color:#ffd166; }
+  .kids-saper-cell.kids-saper-mine{ background:linear-gradient(135deg,#ff8a5e,#ff3b5c); color:#1a0b00; border-color:transparent; }
+  .kids-saper-cell.kids-saper-task{ background:linear-gradient(135deg,#43c5f0,#48e0c0); color:#0b2a3d; border-color:transparent; }
+  .kids-saper-cell.kids-saper-number{ font-size:min(11vw, 46px); font-weight:800; line-height:1; }
+  .kids-saper-cell.kids-saper-green{ background:linear-gradient(135deg,#4cd964,#2ecc71); color:#0b3d1f; border-color:transparent; font-size:min(6vw, 22px); font-weight:700; line-height:1.2; }
+  .kids-saper-cell.kids-saper-suggested{ box-shadow:0 0 0 3px var(--accent) inset; }
+  /* Счастливые клетки «пропустите ход» — зелёные (Секс-бинго; в Сапёре больше нет). */
+  .bingo-cell.checked.bingo-lucky{ background:linear-gradient(135deg,#4cd964,#2ecc71); color:#0b3d1f; }
+
+  /* ---- Мемори (игры с детьми) ---- */
+  .memory-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0; max-width:100%;}
+  .memory-card{
+    aspect-ratio:1/1; border-radius:14px; border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.10); color:#fff; font-size:min(9vw,34px);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0; transition:background .15s ease, opacity .15s ease;
+  }
+  .memory-card.flipped, .memory-card.matched{
+    font-size:min(13vw,52px); background:rgba(255,255,255,.22);
+  }
+  .memory-card.matched{
+    background:linear-gradient(135deg,#ff5e8e,#ff8a5e); border-color:transparent; opacity:.55;
+  }
+  .memory-card:disabled{cursor:default;}
+
+  /* Таблица лидеров "Мемори" (один) — топ-10 лучших результатов по времени. */
+  .leaderboard-list{ display:flex; flex-direction:column; gap:6px; }
+  .leaderboard-empty{ text-align:center; color:#cba0bf; font-size:14px; padding:10px 0; }
+  .leaderboard-row{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; padding:9px 14px;
+  }
+  .leaderboard-rank{ font-weight:800; font-size:14px; width:24px; text-align:center; color:#e8c9dd; flex-shrink:0; }
+  .leaderboard-row.leaderboard-top1, .leaderboard-row.leaderboard-top2, .leaderboard-row.leaderboard-top3{
+    background:rgba(255,255,255,.1);
+  }
+  .leaderboard-top1 .leaderboard-rank, .leaderboard-top2 .leaderboard-rank, .leaderboard-top3 .leaderboard-rank{ font-size:18px; }
+  .leaderboard-name{ flex:1; font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .leaderboard-time{ font-weight:800; font-size:14px; color:#ffd27a; flex-shrink:0; }
+
+  /* Блок "Бонусные задания" — накопительный чек-лист бонусов, заработанных
+     за собранные линии и победы в "Секс-бинго". В отличие от самой карты
+     (которая обнуляется в каждой новой партии), этот список НЕ сбрасывается
+     между играми — только вручную (крестиком на отдельном пункте) или через
+     общий "Сбросить прогресс" в настройках. */
+  .bingo-bonus-checklist-block{margin-top:14px;}
+  .bingo-bonus-checklist-title{font-size:13px; font-weight:700; color:rgba(255,255,255,.75); margin-bottom:8px;}
+  .bingo-bonus-checklist{display:flex; flex-direction:column; gap:6px; list-style:none; padding:0; margin:0;}
+  .bingo-bonus-checklist-item{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:10px;
+    padding:8px 10px;
+  }
+  .bingo-bonus-checklist-text{
+    flex:1; font-size:13px; line-height:1.35; color:#fff; cursor:pointer;
+  }
+  .bingo-bonus-checklist-item.done .bingo-bonus-checklist-text{
+    text-decoration:line-through; color:rgba(255,255,255,.5);
+  }
+  .bingo-bonus-checklist-delete{
+    flex:0 0 auto; width:26px; height:26px; border-radius:50%; border:none;
+    background:rgba(255,255,255,.14); color:#fff; font-size:14px; line-height:1;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .bingo-bonus-checklist-delete:active{background:rgba(255,255,255,.28);}
+
+  /* Мемасики: тап по карточке озвучивает ситуацию (если браузер поддерживает
+     синтез речи) — иконка-подсказка в углу карточки, чтобы было понятно, что
+     на неё можно нажать. Сама иконка не перехватывает тап (pointer-events:none). */
+  #memesCard{cursor:pointer;}
+  .memes-tts-hint{
+    display:none;
+    position:absolute; right:16px; bottom:14px; font-size:17px; opacity:.5;
+    pointer-events:none;
+  }
+  .memes-tts-hint.speaking{opacity:.9;}
+
+  /* Итоговая таблица результатов "Крокодила" — модалка с местом, именем и
+     счётом каждого игрока (вместо прежней короткой строки текста под
+     карточкой, которая не показывала пропуски и терялась при большом числе
+     игроков). */
+  .krokodil-summary-list{display:flex; flex-direction:column; gap:8px; margin:14px 0;}
+  .krokodil-summary-row{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(43,15,46,.06); border-radius:12px; padding:10px 12px;
+  }
+  .krokodil-summary-row.krokodil-summary-first{
+    background:linear-gradient(135deg,#ffd76e,#ff9f5e); color:#2b0f2e;
+  }
+  .krokodil-summary-place{font-size:18px; font-weight:800; flex:0 0 auto; min-width:26px; text-align:center;}
+  .krokodil-summary-name{flex:1; font-size:15px; font-weight:700; color:#2b0f2e; overflow-wrap:anywhere;}
+  .krokodil-summary-score{font-size:13px; color:#5c3a52; flex:0 0 auto; text-align:right; line-height:1.5;}
+  .krokodil-summary-row.krokodil-summary-first .krokodil-summary-name,
+  .krokodil-summary-row.krokodil-summary-first .krokodil-summary-score{color:#2b0f2e;}
+
+  /* ---- Таймер ---- */
+  .timer-bar-track{height:10px; border-radius:6px; background:rgba(255,255,255,.15); overflow:hidden; margin-top:14px;}
+  .timer-bar-fill{
+    height:100%; width:100%; border-radius:6px;
+    background:linear-gradient(135deg,#ff9a5e,#ff6b8b); transition:width 1s linear;
+  }
+  .timer-label{text-align:center; font-size:28px; font-weight:800; margin-top:8px; color:#fff;}
+  /* Ряды с кнопками внутри .screen (display:flex; flex-direction:column;
+     align-items:stretch по умолчанию) центрируются по горизонтали
+     явно через align-self:center. max-width:340px убран — ряды
+     растягиваются на width:100% и визуально совпадают с карточкой
+     (у неё box-sizing:border-box + width:100%, без max-width). */
+  .timer-actions-row, .flash-card-actions, .wishlist-actions-row,
+  .td-actions-row, .quiz-pause-row{
+    align-self:center;
+  }
+  .timer-actions-row{display:flex; flex-direction:column; gap:10px; margin-top:14px; width:100%;}
+  .flash-card-actions{display:flex; gap:10px; margin-top:14px; justify-content:flex-end; width:100%;}
+  .flash-card-actions #flashNextBtn{flex:1; width:auto;}
+  .flash-card-actions #flashAnswerBtn{flex:0 0 auto; padding:10px 18px; width:auto;}
+  .timer-actions-top{display:flex; gap:10px;}
+  .timer-actions-top .btn{flex:1;}
+  .timer-actions-top #timerSkipBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .timer-actions-top #timerExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  /* Твистер: кнопки и таймер внутри карточки, кнопки на всю ширину */
+  #twisterGame .timer-actions-row{align-self:stretch;}
+  #twisterGame .timer-actions-top{flex-direction:column;}
+  #twisterGame .timer-actions-bottom{align-self:stretch;}
+  #twisterGame .timer-actions-top .btn,
+  #twisterGame .timer-actions-bottom .btn{
+    flex:1; width:100%; white-space:nowrap;
+  }
+  #twisterGame .starter-group.timer-duration-group{width:100%;}
+  #twisterGame .timer-bar-track{width:100%;}
+  /* "Нет"/"Отказ" — минимальная ширина рядом с основной кнопкой действия
+     (тот же принцип, что и у #timerSkipBtn выше). */
+  .timer-actions-top #partyFantsSkipBtn,
+  .timer-actions-top #partyTdSkipBtn{
+    flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;
+  }
+  /* "Ответ" в "Флеш картах" (режим "Повторение") — минимальной ширины рядом
+     с "Далее", открывает транскрипцию и перевод текущего слова по запросу
+     (games/kids-flash.js). В режиме "Обучение" ответ виден сразу — кнопка
+     скрывается через display:none. */
+  .timer-actions-top #flashAnswerBtn{
+    flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;
+  }
+  /* "Идеи для вас" / "Во что поиграть?" — сердечко-избранное узкой квадратной
+     кнопкой, "Далее" занимает всё оставшееся место в ряду. */
+  .timer-actions-top #ideasFavBtn,
+  .timer-actions-top #whatToPlayFavBtn{
+    flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:22px;
+  }
+  /* Автоозвучка "Мемасиков" и "Флеш карт" удалена, управление перенесено в меню. */
+   /* "Дополнительно" в "Флеш картах": сворачиваемая строка с автоозвучкой,
+      правилами и выходом под кнопкой-переключателем. */
+   .timer-actions-extra{display:flex; flex-direction:column; gap:8px;}
+   .timer-actions-extra-row{display:flex; gap:8px;}
+   .timer-actions-extra-row .btn{flex:1; height:40px;}
+   .more-pill{font-size:12px; padding:6px 10px; white-space:nowrap; cursor:pointer;}
+  .timer-actions-bottom{display:flex; gap:10px;}
+  .timer-actions-bottom .btn{flex:1; height:40px; padding:0 10px;}
+  /* Секс-квест: «Выход» по умолчанию на всю ширину ряда. Только на карточке
+     знакомства (класс sexquest-intro на секции), где рядом стоит «▶ Начать»,
+     она сжимается до минимума. */
+  .timer-actions-bottom #sexQuestExitBtn{flex:1;}
+  #sexQuestGame.sexquest-intro .timer-actions-bottom #sexQuestExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .timer-actions-bottom #sexQuestStartPlayBtn{flex:1;}
+  /* Карта страсти: «Выход» по умолчанию на всю ширину ряда. Только на карточке
+     знакомства (класс pmap-intro на секции), где рядом стоит «▶ Начать»,
+     она сжимается до минимума. */
+  .timer-actions-bottom #passionMapExitBtn{flex:1;}
+  #passionMapGame.pmap-intro .timer-actions-bottom #passionMapExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .timer-actions-bottom #passionMapStartPlayBtn{flex:1;}
+
+  /* ---- Плейлист желаний ---- */
+  .wishlist-player-row{display:flex; gap:10px; margin-bottom:10px;}
+  .wishlist-player-row .btn{flex:1; pointer-events:none;}
+  .wishlist-player-row .btn.active{
+    background:linear-gradient(135deg,#ff9a5e,#ff6b8b); color:#3a1208; border-color:transparent;
+  }
+  .wishlist-player-row .btn.done{opacity:.4;}
+  .wishlist-progress-row{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+  .wishlist-progress-track{flex:1; height:8px; border-radius:6px; background:rgba(255,255,255,.15); overflow:hidden;}
+  .wishlist-progress-fill{
+    height:100%; width:0%; border-radius:6px;
+    background:linear-gradient(135deg,#ff9a5e,#ff6b8b); transition:width .25s ease;
+  }
+  .wishlist-progress-label{font-size:12px; color:#cba0bf; white-space:nowrap; min-width:44px; text-align:right;}
+  /* Заголовок пункта — как раньше card-text; описание — компактный подзаголовок
+     под ним, чтобы обе части гарантированно помещались в карточку на телефоне. */
+  .wishlist-item-title{font-size:22px; font-weight:700; line-height:1.3;}
+  .wishlist-item-desc{font-size:16px; font-weight:500; line-height:1.4; color:#7a5a72; margin-top:8px; padding:0 4px;}
+  .wishlist-actions-row{display:flex; gap:10px; margin-top:14px; width:100%;}
+  .wishlist-actions-row .btn{flex:1;}
+  .wishlist-actions-row #wishlistNoBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .wishlist-setup-actions-row{display:flex; gap:10px; margin-top:10px;}
+  .wishlist-setup-actions-row #wishlistHistoryBtn, .wishlist-setup-actions-row #znayuHistoryBtn{flex:1;}
+  .wishlist-setup-actions-row #wishlistSetupExitBtn, .wishlist-setup-actions-row #znayuSetupExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+
+  /* ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== */
+  .fab-menu-btn{
+    position:fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    right: calc(12px + env(safe-area-inset-right));
+    z-index:150;
+    width:36px; height:36px; border-radius:50%;
+    background:rgba(20,10,28,.85); border:1px solid rgba(255,255,255,.25);
+    color:rgba(255,255,255,.85); font-size:16px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s ease, color .2s ease, border-color .2s ease;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  }
+  .fab-menu-btn:hover{background:rgba(255,255,255,.2); color:#fff; border-color:rgba(255,255,255,.4);}
+  .fab-menu-btn:active{background:rgba(255,255,255,.25);}
+  /* Кнопка "Назад" слева */
+  .fab-back-btn{right:auto; left:12px; font-size:18px; line-height:1; transition:opacity .2s ease;}
+  /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
+     чтобы media query не перекрывался ими с тем же приоритетом).
+     Кнопки привязываются к краям #app (контейнер приложения с другим
+     фоном, отличающимся от заднего фона body) — на 12px от верхнего
+     правого/левого края. position:absolute работает относительно #app
+     (position:relative). Чтобы контент с score-row не наезжал на
+     кнопки, добавлен padding-top экранам с score-row (см. ниже). */
+  @media (min-width:640px){
+    .fab-menu-btn {
+      position:absolute;
+      top:12px;
+      right:12px;
+      left: auto;
+    }
+    .fab-back-btn {
+      position:absolute;
+      top:12px;
+      left:12px;
+      right: auto;
+    }
+    /* Убран дубль — единый селектор в .td-turn-label блоке выше */
+  }
+  /* Скрываем все кнопки выхода — теперь навигация через глобальную кнопку "←" */
+  [id$="ExitBtn"], [id$="exitBtn"]{display:none !important;}
+  /* Скрываем экспорт/импорт — временно отключено */
+  #menuExportBtn, #menuImportBtn{display:none !important;}
+  .menu-modal-card{
+    max-width:260px; padding:14px 12px;
+    background:rgba(30,10,28,.85); color:#fff; border-radius:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.1);
+  }
+  .menu-modal-card .modal-title{
+    color:rgba(255,255,255,.7); margin-bottom:10px; position:relative; padding-right:28px;
+    font-size:14px; font-weight:500;
+  }
+  .menu-modal-card .modal-close-btn{
+    position:absolute; top:-2px; right:0;
+    background:none; border:none; color:rgba(255,255,255,.5); font-size:18px; line-height:1;
+    cursor:pointer; padding:4px;
+  }
+  .menu-modal-card .modal-close-btn:hover{color:#fff;}
+  .menu-list{display:flex; flex-direction:column; gap:4px;}
+  .menu-list .btn-secondary{
+    background:transparent; border:1px solid rgba(255,255,255,.08);
+    color:rgba(255,255,255,.85); justify-content:flex-start; text-align:left;
+    padding:10px 12px; border-radius:10px; font-size:14px;
+  }
+  .menu-list .btn-secondary:hover{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.15);}
+  .menu-list .btn-secondary:active{background:rgba(255,255,255,.12);}
+  /* Иконки меню — фиксированная ширина 32px, все иконки в одном столбике */
+  .menu-icon{
+    font-size:15px; width:32px; min-width:32px; text-align:center; flex-shrink:0;
+  }

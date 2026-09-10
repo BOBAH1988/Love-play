@@ -377,6 +377,72 @@ function checkRegistry() {
   );
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. Стили
+// ─────────────────────────────────────────────────────────────────────────────
+function checkStyles(html) {
+  group('Стили');
+  const cssPath = 'styles/app.css';
+
+  // CSS вынесен из index.html в отдельный файл: так index.html стал вдвое
+  // меньше, а стили кэшируются браузером независимо от разметки.
+  check(`${cssPath} существует`, exists(cssPath), 'файл стилей не найден');
+
+  const linked = /<link[^>]+href="styles\/app\.css/.test(html);
+  check('стили подключены из index.html', linked, 'нет <link href="styles/app.css">');
+
+  const versioned = /styles\/app\.css\?v=\d{8}[a-z]/.test(html);
+  check('у стилей проставлена версия ?v=', versioned, 'link без ?v= — кэш не обновится');
+
+  // Внутри index.html не должно остаться инлайновых <style>: иначе стили
+  // разъедутся по двум местам, и правка одного не подействует.
+  const inline = (html.match(/<style[\s>]/g) || []).length;
+  check('нет инлайновых <style> в index.html', inline === 0, `найдено блоков: ${inline}`);
+
+  if (exists(cssPath)) {
+    const css = read(cssPath);
+    const open = (css.match(/\{/g) || []).length;
+    const close = (css.match(/\}/g) || []).length;
+    check(`баланс скобок в CSS (${open}/${close})`, open === close, `разница ${open - close}`);
+
+    // Незакрытый комментарий «съедает» все правила до следующего */.
+    const openC = (css.match(/\/\*/g) || []).length;
+    const closeC = (css.match(/\*\//g) || []).length;
+    check('нет незакрытых комментариев в CSS', openC === closeC, `/* : ${openC}, */ : ${closeC}`);
+  }
+
+  // Service Worker обязан обновлять стили сразу, а не «со второй загрузки»:
+  // при stale-while-revalidate устройство отдаёт старый CSS и правки
+  // внешнего вида не видны — этот баг уже ловили на игровых скриптах.
+  const sw = read('sw.js');
+  const cssIsFresh = /startsWith\('\/styles\/'\)/.test(sw);
+  check('SW грузит стили network-first', cssIsFresh, "в sw.js нет ветки для '/styles/'");
+  // Навигационные маркеры: перед каждой секцией стоит комментарий с путём
+  // к файлу логики. Это позволяет найти код игры, не читая весь index.html
+  // (файл на 4000+ строк). Проверяем, что маркер не врёт.
+  const htmlLines = html.split('\n');
+  const wrongMarkers = [];
+  let markerCount = 0;
+  for (let i = 0; i < htmlLines.length - 1; i++) {
+    const m = htmlLines[i].match(/логика: games\/([a-z0-9-]+\.js)/);
+    const sec = htmlLines[i + 1].match(/<section id="([^"]+)"/);
+    if (!m || !sec) continue;
+    markerCount++;
+    if (m[1] === 'core.js') continue; // ядро содержит общие экраны
+    if (!exists('games/' + m[1])) { wrongMarkers.push(`${sec[1]}: файла games/${m[1]} нет`); continue; }
+    if (!read('games/' + m[1]).includes(sec[1])) {
+      wrongMarkers.push(`${sec[1]} → указан games/${m[1]}, но id там не упоминается`);
+    }
+  }
+  check(
+    `маркеры секций указывают верный файл (${markerCount})`,
+    wrongMarkers.length === 0,
+    wrongMarkers.join('\n      ')
+  );
+
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Отчёт
 // ─────────────────────────────────────────────────────────────────────────────
@@ -421,6 +487,7 @@ function main() {
   checkDomRefs(html, missingIds);
   checkDocs();
   checkRegistry();
+  checkStyles(html);
   process.exit(report());
 }
 
