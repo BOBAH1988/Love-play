@@ -288,6 +288,55 @@ function checkDomRefs(html, missingIds) {
     unsafe.join('\n      ')
   );
 
+  // Второй класс той же ошибки — «размазанный» по строкам:
+  //   const el = document.getElementById('нет-в-разметке');   <- строка N
+  //   ...                                                     <- строка N+1
+  //   el.textContent = '...';                                  <- строка N+2
+  // Однострочная регулярка выше это НЕ видит (реальный баг «Рулетки»,
+  // v172: resultEl.textContent падал, хотя check.js был зелёный).
+  const varUnsafe = [];
+  for (const file of jsFiles) {
+    const src = read(file);
+    const lines = src.split('\n');
+    // Все переменные, получающие getElementById(id-вне-разметки)
+    const decls = [];
+    lines.forEach((line, i) => {
+      const m = line.match(/(?:const|let|var)\s+(\w+)\s*=\s*document\.getElementById\(['"]([^'"]+)['"]\)/);
+      if (!m) return;
+      if (ids.has(m[2]) || dynamicIds.has(m[2])) return;
+      decls.push({ varName: m[1], id: m[2], line: i });
+    });
+    if (!decls.length) continue;
+    lines.forEach((line, j) => {
+      for (const { varName, id, line: di } of decls) {
+        if (j <= di || j > di + 400) continue;
+        const use = line.match(new RegExp(`(?<![\\w.])${varName}\\s*\\.\\s*(\\w+)\\s*=[^=]`));
+        if (!use) continue;
+        if (/^\s*(\/\/|\*)/.test(line)) continue;                       // комментарий
+        if (line.includes('&&') || line.includes('||') || line.includes('?.')) continue; // фолбэк/опциональная цепочка
+        if (new RegExp(`${varName}\\s*&&`).test(line)) continue;        // el && (el.style…)
+        // Защита между объявлением и использованием:
+        //   if (varName) { ... }                — классический гвард
+        //   if (!varName) return; / guard-выход — early-return в начале функции
+        let guarded = false;
+        // Префиксное совпадение: ловит и if (el), и if (!el) return, и
+        // if (!el || el.querySelector('svg')) return (early-return с доп. условием)
+        const guardRe = new RegExp(`if\\s*\\(\\s*!?\\s*${varName}\\b`);
+        for (let k = di + 1; k < j; k++) {
+          if (guardRe.test(lines[k])) { guarded = true; break; }
+        }
+        if (guardRe.test(lines[di])) guarded = true;
+        if (guarded) continue;
+        varUnsafe.push(`${file}:${j + 1} -> ${varName}.${use[1]} (#${id} нет в разметке)`);
+      }
+    });
+  }
+  check(
+    'нет незащищённых обращений через переменные (многострочный случай)',
+    varUnsafe.length === 0,
+    varUnsafe.join('\n      ')
+  );
+
   // Отсутствующие id сами по себе — норма (кнопки правил, служебные элементы),
   // но полезно видеть их число: резкий рост означает опечатку в разметке.
   const unknown = missingIds.filter((id) => !ids.has(id) && !dynamicIds.has(id));
