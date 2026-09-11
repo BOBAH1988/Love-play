@@ -1688,6 +1688,11 @@
     flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
     text-align:center; padding:0 4px; gap:6px; overflow-y:auto;
   }
+  /* Фото-модуль: описание выстраивается как столбец, рейтинг/«подходит»
+     прижимаются к низу карточки, чтобы не мешать чтению текста. */
+  #game.placeholder-mode .card-split-desc{
+    justify-content:flex-start;
+  }
   .card-split-title{
     font-size:17px; font-weight:800; color:#2b0f2e;
   }
@@ -1700,6 +1705,7 @@
   /* "Подходит: ..." — отдельная строка под описанием (модуль "Секс-шоп") */
   .card-forwhom-row{
     display:none; justify-content:center; margin-top:10px;
+    margin-top:auto;
   }
   .forwhom-pill{
     display:inline-flex; align-items:center; gap:5px;
@@ -1709,6 +1715,7 @@
   /* Оценки партнёров — отдельная строка ниже (модуль "Секс-шоп") */
   .card-rating-row{
     display:none; justify-content:center; gap:10px; margin-top:12px; flex-wrap:wrap;
+    margin-top:auto;
   }
   .rating-pill{
     display:inline-flex; align-items:center; gap:5px;
@@ -1718,7 +1725,11 @@
   .rating-pill.rating-women{ background:rgba(255,110,168,.16); color:#c2185b; }
   .rating-pill.rating-men{ background:rgba(94,158,255,.16); color:#1a5fb4; }
 
-  #game.placeholder-mode .krokodil-score-row, #game.video-mode .krokodil-score-row, #game.davay-mode .krokodil-score-row,
+  /* Фото-модуль: описание выстраивается как столбец, рейтинг/«подходит»
+     прижимаются к низу карточки, чтобы не мешать чтению текста. */
+  #game.placeholder-mode .card-split-desc{
+    justify-content:flex-start;
+  }
   #game.placeholder-mode .td-turn-label, #game.video-mode .td-turn-label, #game.davay-mode .td-turn-label{display:none;}
   #game.placeholder-mode #skipBtn, #game.video-mode #skipBtn, #game.davay-mode #skipBtn{display:none;}
   /* "Обновить задание" (Фанты) убрана; "Скрыть навсегда" (Фанты) заменена
