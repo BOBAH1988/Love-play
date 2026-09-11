@@ -401,7 +401,9 @@ function spinRouletteWheel(){
   const resultEl = document.getElementById('rouletteSpinResult');
   const doneBtn = document.getElementById('rouletteSpinDoneBtn');
     doneBtn && (doneBtn.style.display = 'none');
-  resultEl.textContent = 'Крутится...';
+  // resultEl создаётся в модалке кручения; при рассинхроне кэша HTML/JS его
+  // может не быть — как в остальных местах этого файла, проверяем на null
+  if(resultEl) resultEl.textContent = 'Крутится...';
   
   // Анимация колеса. ПРИНЦИПЫ:
   // 1) ВСЕГДА по часовой стрелке: угол НАКАПЛИВАЕТСЯ — к текущему положению
@@ -458,7 +460,7 @@ function spinRouletteWheel(){
       rouletteSpinning = false;
       const color = rouletteColorOf(winningNumber);
       const colorName = color === 'red' ? 'красное' : color === 'black' ? 'чёрное' : 'зеро';
-      resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})`;
+      if(resultEl) resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})`;
       if(doneBtn) doneBtn.style.display = 'block';
       return;
     }
@@ -491,7 +493,7 @@ function spinRouletteWheel(){
     // Раунд сыгран — учитываем для итогов при выходе
     state.rouletteRoundsPlayed = (state.rouletteRoundsPlayed || 0) + 1;
     
-    resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})<br>${net >= 0 ? '🎉 Выигрыш' : '😔 Проигрыш'} <b>${net >= 0 ? '+' : ''}${net}</b>`;
+    if(resultEl) resultEl.innerHTML = `Выпало: <b>${winningNumber}</b> (${colorName})<br>${net >= 0 ? '🎉 Выигрыш' : '😔 Проигрыш'} <b>${net >= 0 ? '+' : ''}${net}</b>`;
     if(doneBtn) doneBtn.style.display = 'block';
   }, 3700);
 }
