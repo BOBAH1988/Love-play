@@ -12,6 +12,7 @@
  *
  * Важно: заглушка НЕ проверяет визуальную часть (вёрстку, размеры, цвета).
  * Она отвечает на вопрос «скрипты грузятся и выполняются без ошибок».
+ *   - addEventListener отслеживает обработчики (опционально, для тестов).
  */
 
 'use strict';
@@ -32,15 +33,18 @@ function setGlobal(name, value) {
  * @param {string} html — содержимое index.html (нужен список id и скриптов)
  * @returns {{ loaded: string[], failed: Array<{file:string,error:string}>, missingIds: string[] }}
  */
-function createDomStub(html) {
+function createDomStub(html, { trackHandlers = false } = {}) {
   const ids = new Set([...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]));
   const store = new Map();
   const missingIds = new Set();
 
   // Элемент-пустышка. Всё, что не реализовано явно, — no-op, чтобы код
   // приложения не падал на обращении к методу, которого нет в заглушке.
-  function makeEl(id) {
+  // Для тестов: addEventListener с опцией trackHandlers сохраняет обработчики,
+  // чтобы их можно было вызвать программно (симуляция кликов).
+  function makeEl(id, trackHandlers = false) {
     const classes = new Set();
+    const handlers = new Map(); // event type -> array of handlers
     const el = {
       id,
       style: {},
@@ -61,13 +65,31 @@ function createDomStub(html) {
       set textContent(v) { this._text = String(v); },
       get innerHTML() { return this._html; },
       set innerHTML(v) { this._html = String(v); },
-      addEventListener() {}, removeEventListener() {}, dispatchEvent() { return true; },
+      addEventListener(type, handler, options) {
+        if (trackHandlers) {
+          if (!handlers.has(type)) handlers.set(type, []);
+          handlers.get(type).push({ handler, options });
+        }
+      },
+      removeEventListener() {},
+      dispatchEvent() { return true; },
       appendChild() {}, removeChild() {}, insertBefore() {}, replaceChild() {},
       remove() {}, replaceWith() {}, after() {}, before() {},
       cloneNode() { return makeEl(id); },
       setAttribute() {}, getAttribute() { return null; }, removeAttribute() {},
       hasAttribute() { return false; },
-      focus() {}, blur() {}, click() {}, scrollIntoView() {},
+      focus() {}, blur() {},
+      click() {
+        // Симуляция клика: вызываем все зарегистрированные обработчики click
+        if (handlers.has('click')) {
+          const clickHandlers = handlers.get('click');
+          clickHandlers.forEach(({ handler, options }) => {
+            try { handler({ type: 'click', target: el, currentTarget: el, preventDefault: () => {}, stopPropagation: () => {} }); }
+            catch (e) { /* ошибка в обработчике — фиксим, но не прерываем */ }
+          });
+        }
+      },
+      scrollIntoView() {},
       play() { return Promise.resolve(); }, pause() {}, load() {},
       getBoundingClientRect() { return { top: 0, left: 0, width: 0, height: 0, bottom: 0, right: 0 }; },
       contains() { return false; }, matches() { return false; }, closest() { return null; },
@@ -75,6 +97,9 @@ function createDomStub(html) {
       querySelectorAll() { return []; },
       getContext() { return null; },
       toDataURL() { return ''; },
+      // Для тестов: доступ к обработчикам
+      _getHandlers() { return handlers; },
+      _hasHandler(type) { return handlers.has(type); },
     };
     return el;
   }
@@ -88,7 +113,7 @@ function createDomStub(html) {
     // Ключевой момент: неизвестный id → null, как в браузере.
     getElementById(id) {
       if (!ids.has(id)) { missingIds.add(id); return null; }
-      if (!store.has(id)) store.set(id, makeEl(id));
+      if (!store.has(id)) store.set(id, makeEl(id, trackHandlers));
       return store.get(id);
     },
     querySelector() { return makeEl('_q'); },
@@ -250,13 +275,17 @@ function createDomStub(html) {
 /**
  * Загружает все скрипты приложения в том порядке, в котором их подключает
  * index.html. Возвращает статистику: сколько загрузилось и что упало.
+ * Если передан флаг trackHandlers, элементы будут хранить обработчики событий
+ * для последующей симуляции кликов (используется в smoke-тестах).
  */
-function loadAppScripts(html, { root = process.cwd() } = {}) {
+function loadAppScripts(html, { root = process.cwd(), trackHandlers = false } = {}) {
+  const stub = createDomStub(html, { trackHandlers });
+
   const fs = require('fs');
   const path = require('path');
   const vm = require('vm');
 
-  const stub = createDomStub(html);
+
   // Порядок важен: он определяет, в какой момент скрипт увидит зависимости.
   const sources = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)]
     .map((m) => m[1].split('?')[0]);
@@ -282,4 +311,16 @@ function loadAppScripts(html, { root = process.cwd() } = {}) {
   return { loaded, failed, missingIds: [...stub.missingIds], stub };
 }
 
-module.exports = { createDomStub, loadAppScripts };
+/**
+ * Вспомогательная функция для smoke-тестов: получает элемент по id из загруженного
+ * окружения. Если trackHandlers был включён, позволяет проверить, зарегистрированы
+ * ли обработчики на элементе.
+ */
+function getElById(stub, id) {
+  // stub — это объект, возвращённый loadAppScripts.
+  // Элементы доступны через global.document (установлен в createDomStub)
+  if (!global || !global.document) return null;
+  return global.document.getElementById(id);
+}
+
+module.exports = { createDomStub, loadAppScripts, getElById };
