@@ -5813,7 +5813,9 @@ document.getElementById('levelUpBtn').addEventListener('click', ()=>{
   // videoLevelUpBtn/davayLevelUpBtn), поэтому здесь нет веток под эти режимы.
   if(isPlaceholderMode()){
     playLevelUpSound();
-    drawPhotoCard(photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1);
+    const nextLevel = photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1;
+    drawPhotoCard(nextLevel);
+    showToast(`Уровень: ${nextLevel}`);
     return;
   }
   levelUp();
