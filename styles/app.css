@@ -1678,7 +1678,7 @@
 
   .card-split{display:flex; flex-direction:column; height:100%; gap:14px;}
   .card-split-media{
-    flex:1; min-height:0; border-radius:16px; overflow:hidden;
+    flex:1; min-height:0; border-radius:16px; overflow:hidden; position:relative;
     background:rgba(43,15,46,.06);
     display:flex; align-items:center; justify-content:center;
   }
@@ -1691,27 +1691,17 @@
   /* Фото-модуль: описание выстраивается как столбец, рейтинг/«подходит»
      прижимаются к низу карточки, чтобы не мешать чтению текста. */
   #game.placeholder-mode .card-split-desc{
-    justify-content:flex-start;
+    justify-content:flex-end;
+    padding-bottom:4px;
   }
   .card-split-title{
     font-size:17px; font-weight:800; color:#2b0f2e;
   }
-  /* Номер в рейтинге продаж — модуль "Секс-шоп" в "Предложи партнеру", крупный значок над названием */
-  .card-split-rank-badge{
-    display:inline-block; background:var(--accent); color:#2b0f2e;
-    border-radius:12px; padding:4px 14px; font-size:19px; font-weight:900;
-    letter-spacing:.3px; margin-bottom:2px;
-  }
-  /* Название уровня — плашка над названием карточки (модуль "Предложи партнеру") */
-  .card-level-badge{
-    display:inline-block; background:linear-gradient(135deg,#ff5e8e,#ff8a5e);
-    color:#fff; border-radius:12px; padding:4px 14px; font-size:13px; font-weight:800;
-    letter-spacing:.3px; margin-bottom:6px; text-transform:uppercase;
-  }
+
+
   /* "Подходит: ..." — отдельная строка под описанием (модуль "Секс-шоп") */
   .card-forwhom-row{
-    display:none; justify-content:center; margin-top:10px;
-    margin-top:auto;
+    display:none; justify-content:center; margin-top:auto;
   }
   .forwhom-pill{
     display:inline-flex; align-items:center; gap:5px;
@@ -1720,8 +1710,7 @@
   }
   /* Оценки партнёров — отдельная строка ниже (модуль "Секс-шоп") */
   .card-rating-row{
-    display:none; justify-content:center; gap:10px; margin-top:12px; flex-wrap:wrap;
-    margin-top:auto;
+    display:none; justify-content:center; gap:10px; margin-top:2px; flex-wrap:wrap;
   }
   .rating-pill{
     display:inline-flex; align-items:center; gap:5px;
@@ -1734,7 +1723,8 @@
   /* Фото-модуль: описание выстраивается как столбец, рейтинг/«подходит»
      прижимаются к низу карточки, чтобы не мешать чтению текста. */
   #game.placeholder-mode .card-split-desc{
-    justify-content:flex-start;
+    justify-content:flex-end;
+    padding-bottom:4px;
   }
   #game.placeholder-mode .td-turn-label, #game.video-mode .td-turn-label, #game.davay-mode .td-turn-label{display:none;}
   #game.placeholder-mode #skipBtn, #game.video-mode #skipBtn, #game.davay-mode #skipBtn{display:none;}
@@ -2311,11 +2301,33 @@
   /* ---- Правда или действие ---- */
   /* .td-score-row убран — теперь используется krokodil-score-row.two-player */
   .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd;}
+  .game-level-label{
+    position:fixed; top:0; left:0; right:0; z-index:1100;
+    text-align:center; font-size:26px; font-weight:800;
+    color:#ffd166; padding:12px 16px 8px;
+    letter-spacing:.5px; line-height:1.2;
+    background:linear-gradient(180deg, rgba(43,15,46,.95) 0%, rgba(43,15,46,0) 100%);
+    pointer-events:none;
+  }
+  .card-rank-badge{
+    display:block; background:var(--accent); color:#2b0f2e; flex-shrink:0;
+    border-radius:12px; padding:4px 14px; font-size:19px; font-weight:900;
+    letter-spacing:.3px; align-self:center;
+  }
+  .card-rank-badge-wrap{
+    position:absolute; top:4px; left:0; right:0; display:flex; justify-content:center;
+    pointer-events:none; z-index:2;
+  }
+  .card-rank-badge-wrap .card-rank-badge{
+    box-shadow:0 2px 8px rgba(0,0,0,.3);
+  }
   /* Фанты (парные): метка показывает «💘 Фанты» вместо «Ходит: …» — крупнее
      вдвое, как заголовок. Строку «До след. уровня» (#levelProgress) опускаем
      ниже, чтобы не залезала под увеличенную метку. */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .td-turn-label{font-size:28px;}
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
+  /* В игре «Предложи партнеру» нет соревнования — скрываем счёт Парень/Девушка */
+  #game.placeholder-mode #gameScoreRow{display:none;}
   /* В «Фантах» «До след. уровня» показывается внутри карточки (над пилюлей
      «Правда/Действие»), поэтому плавающая строка сверху скрыта. */
   .game-type-btn{flex:1; min-width:0; font-size:13px; padding:9px 6px;}
