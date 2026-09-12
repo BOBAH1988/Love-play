@@ -2,36 +2,16 @@
 // Загружается через <script src="games/ideas.js"></script> в index.html.
 // Основа взята с "Предложи партнеру" (games/core.js: drawPhotoCard/goToPhotoSetup),
 // но без уровней и без картинок — просто текстовые карточки вопрос/ответ из
-// cards/cards_sex_coach_qa.js (SEX_COACH_QA_CARDS), с избранным по аналогии
-// с остальными играми. Имена функций/переменных/id остались "ideas*" по
-// историческим причинам (раньше здесь была игра "Идеи для вас" — теперь она
-// переехала внутрь "Предложи партнеру" уровнем, см. games/core.js), но само
-// содержимое игры — вопросы и ответы сексологов, а не сценарии вечеров.
+// cards/cards_sex_coach_qa.js (SEX_COACH_QA_CARDS). Имена функций/переменных/id
+// остались "ideas*" по историческим причинам (раньше здесь была игра
+// "Идеи для вас" — теперь она переехала внутрь "Предложи партнеру" уровнем,
+// см. games/core.js), но само содержимое игры — вопросы и ответы сексологов.
+// Избранное в игре удалено — она про чтение вопросов/ответов, не про подбор.
 
 let ideasCurrentCard = null;
 
 function getIdeasPool(){
-  const all = (typeof SEX_COACH_QA_CARDS !== 'undefined' && Array.isArray(SEX_COACH_QA_CARDS)) ? SEX_COACH_QA_CARDS : [];
-  if(state.ideasFavView){
-    const favs = state.ideasFavorites || [];
-    return all.filter(c=>favs.includes(c.title));
-  }
-  return all;
-}
-
-function updateIdeasFavBtn(){
-  const btn = document.getElementById('ideasFavBtn');
-  if(!btn) return;
-  const isFav = !!(ideasCurrentCard && (state.ideasFavorites||[]).includes(ideasCurrentCard.title));
-  btn.textContent = isFav ? '❤️' : '☆';
-  btn.classList.toggle('active', isFav);
-}
-
-function updateIdeasFavViewBtn(){
-  const btn = document.getElementById('ideasFavViewBtn');
-  if(!btn) return;
-  btn.classList.toggle('active', !!state.ideasFavView);
-  btn.textContent = state.ideasFavView ? '⭐ Все вопросы' : '⭐ Избранное';
+  return (typeof SEX_COACH_QA_CARDS !== 'undefined' && Array.isArray(SEX_COACH_QA_CARDS)) ? SEX_COACH_QA_CARDS : [];
 }
 
 function drawIdeaCard(){
@@ -39,9 +19,8 @@ function drawIdeaCard(){
   if(pool.length === 0){
     ideasCurrentCard = null;
     fadeSwapEl('ideasCard', (el)=>{
-      el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">💭</div><div class="card-text">${state.ideasFavView ? 'Пока нет избранных вопросов — отметьте понравившиеся ☆' : 'Вопросы скоро появятся — добавьте их в cards_sex_coach_qa.js'}</div></div></div>`;
+      el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">💭</div><div class="card-text">Вопросы скоро появятся — добавьте их в cards_sex_coach_qa.js</div></div></div>`;
     });
-    updateIdeasFavBtn();
     return;
   }
   if(!state.ideasUsed) state.ideasUsed = [];
@@ -68,13 +47,10 @@ function drawIdeaCard(){
       </div>
     `;
   });
-  updateIdeasFavBtn();
 }
 
 function goToIdeasGame(){
-  state.ideasFavView = false;
   goToGame('setup', 'ideasGame');
-  updateIdeasFavViewBtn();
   drawIdeaCard();
   updateMuteBtn();
   requestWakeLock();
@@ -88,35 +64,8 @@ document.getElementById('ideasNextBtn').addEventListener('click', ()=>{
   playSuccessSound();
   drawIdeaCard();
 });
-document.getElementById('ideasFavBtn').addEventListener('click', ()=>{
-  if(!ideasCurrentCard) return;
-  if(!state.ideasFavorites) state.ideasFavorites = [];
-  const idx = state.ideasFavorites.indexOf(ideasCurrentCard.title);
-  const wasFavorite = idx >= 0;
-  if(wasFavorite){
-    state.ideasFavorites.splice(idx, 1);
-    showToast('Убрано из избранного');
-  } else {
-    state.ideasFavorites.push(ideasCurrentCard.title);
-    playSuccessSound();
-    showToast('Добавлено в избранное ❤️');
-  }
-  saveState();
-  updateIdeasFavBtn();
-  if(state.ideasFavView && wasFavorite) drawIdeaCard();
-});
-document.getElementById('ideasFavViewBtn').addEventListener('click', ()=>{
-  if(!state.ideasFavView && (state.ideasFavorites||[]).length === 0){
-    playErrorSound();
-    showToast('Пока нет избранных идей');
-    return;
-  }
-  state.ideasFavView = !state.ideasFavView;
-  saveState();
-  updateIdeasFavViewBtn();
-  drawIdeaCard();
-});
 document.getElementById('ideasExitBtn').addEventListener('click', ()=>{ exitIdeasGame(); });
 openRulesModal('ideasGameRulesBtn', 'ideasRulesModal');
 setupRulesModal('ideasRulesModal', 'closeIdeasRulesBtn');
+
 

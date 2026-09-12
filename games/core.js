@@ -244,7 +244,7 @@ let state = {
   kidsQuizQueue:[], kidsQuizIndex:0, kidsQuizCurrentPlayerIndex:0, kidsQuizCorrect:[], kidsQuizTimeMs:[],
   kidsQuizAutoSpeak:false,
   // Идеи для вас (без уровней — единая колода из 100 карточек)
-  ideasUsed:[], ideasFavorites:[], ideasFavView:false,
+  ideasUsed:[],
   // Секс-квест — очередь желаний текущей партии, счёт и результаты по
   // каждому желанию; sexQuestChecklists — история завершённых партий
   // ("чек-листы" в избранном, см. games/sexquest.js).
@@ -1638,8 +1638,6 @@ function performFullReset(){
   state.partyNeverUsed = {};
   // Идеи для вас
   state.ideasUsed = [];
-  state.ideasFavorites = [];
-  state.ideasFavView = false;
   // Секс-квест
   state.sexQuestQueue = [];
   state.sexQuestIndex = 0;
