@@ -323,8 +323,11 @@ function goToTimerGame(){
   state.inProgress = true;
   saveState();
   goToGame('timerSetup', 'timerGame');
-  mtUpdateScoreUI();
   mtDrawCard();
+  // Обновляем счёт и надпись «Ход: …» после отрисовки карточки,
+  // чтобы timerTurnLabel (который только что создан в mtCardHeaderHtml)
+  // получил правильный текст.
+  mtUpdateScoreUI();
 }
 function exitTimerGame(){
   stopMtInterval();
