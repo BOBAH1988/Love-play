@@ -2142,7 +2142,7 @@ function updateLevelUI(){
     btn.disabled = false;
     btn.textContent = 'Следующий вариант';
     const downBtn = document.getElementById('levelDownBtn');
-    if(downBtn) downBtn.disabled = photoLevel <= 1;
+    if(downBtn) downBtn.disabled = false;
     const el = document.getElementById('levelProgress');
     if(el) el.textContent = '';
     if(levelLabel){
@@ -5821,13 +5821,10 @@ document.getElementById('levelUpBtn').addEventListener('click', ()=>{
 document.getElementById('levelDownBtn').addEventListener('click', ()=>{
   // См. примечание у levelUpBtn — в Видеорулетке/"Давай попробуем" кнопка скрыта.
   if(isPlaceholderMode()){
-    if(photoLevel > 1){
-      playNeutralSound();
-      drawPhotoCard(photoLevel - 1);
-      showToast(`Уровень понижен: ${photoLevel}`);
-    } else {
-      showToast('Это минимальный уровень');
-    }
+    playNeutralSound();
+    const prevLevel = photoLevel > 1 ? photoLevel - 1 : PHOTO_LEVELS.length;
+    drawPhotoCard(prevLevel);
+    showToast(`Уровень: ${prevLevel}`);
   }
 });
 document.getElementById('dislikeBtn').addEventListener('click', ()=>{
