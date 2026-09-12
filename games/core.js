@@ -5295,6 +5295,15 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       return;
     }
 
+    // «Предложи партнеру»: нижний ряд с кнопкой «Выход» убран — выход из игры
+    // (и из просмотра избранного) выполняется стрелкой «←» в шапке напрямую,
+    // без меню паузы (как раньше работала кнопка «Выход»).
+    if(typeof isPlaceholderMode === 'function' && isPlaceholderMode()
+      && typeof exitPlaceholderGame === 'function'){
+      exitPlaceholderGame();
+      return;
+    }
+
     const setup = document.getElementById('setup');
     const homeView = document.getElementById('homeView');
     const isSetupActive = setup && setup.classList.contains('active');

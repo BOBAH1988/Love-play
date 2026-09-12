@@ -1690,7 +1690,13 @@
   }
   /* Фото-модуль: описание выстраивается как столбец, рейтинг/«подходит»
      прижимаются к низу карточки, чтобы не мешать чтению текста. */
-  #game.placeholder-mode .card-split-desc{
+  /* В карточках с картинкой медиа-блок и описание раньше делили высоту
+     пополам (у обоих flex:1), из-за чего вертикальные фото в «Секс-шопе»
+     выглядели маленькими. Теперь картинка забирает всё свободное место,
+     а описание занимает только свою высоту внизу. */
+  #game.placeholder-mode .card-split{gap:6px;}
+  #game.placeholder-mode .card-split:not(.card-split-text-only) .card-split-desc{
+    flex:0 0 auto;
     justify-content:flex-end;
     padding-bottom:4px;
   }
@@ -1720,12 +1726,14 @@
   .rating-pill.rating-women{ background:rgba(255,110,168,.16); color:#c2185b; }
   .rating-pill.rating-men{ background:rgba(94,158,255,.16); color:#1a5fb4; }
 
-  /* Фото-модуль: описание выстраивается как столбец, рейтинг/«подходит»
-     прижимаются к низу карточки, чтобы не мешать чтению текста. */
+  /* Текстовые уровни без фото (желания, советы) — описание тянется на всю
+     высоту и центрируется, стрелки-навигация по-прежнему работают. */
   #game.placeholder-mode .card-split-desc{
     justify-content:flex-end;
     padding-bottom:4px;
   }
+  /* Не даём стрелкам-навигации в углах карточки пересекаться с кнопками.
+     Повтор блока выше убран: для фото-карточек правило задано раньше. */
   #game.placeholder-mode .td-turn-label, #game.video-mode .td-turn-label, #game.davay-mode .td-turn-label{display:none;}
   #game.placeholder-mode #skipBtn, #game.video-mode #skipBtn, #game.davay-mode #skipBtn{display:none;}
   /* "Обновить задание" (Фанты) убрана; "Скрыть навсегда" (Фанты) заменена
@@ -1735,6 +1743,12 @@
      "Скрыть карточку" убрали по просьбе — во всех уровнях карточки больше
      нельзя спрятать навсегда. */
   #game:not(.video-mode):not(.davay-mode) #dislikeBtn{display:none;}
+  /* «Предложи партнеру»: нижний ряд кнопок (Ещё варианты / Предыдущее / Выход)
+     убран — навигация стрелками ◀▶ по углам карточки, выход через «←» в шапке.
+     В просмотре избранного «Выход» остаётся видимым (там своя навигация). */
+  #game.placeholder-mode:not(.photo-favview) #levelUpBtn,
+  #game.placeholder-mode:not(.photo-favview) #levelDownBtn,
+  #game.placeholder-mode:not(.photo-favview) #pauseBtn{display:none;}
   #game.placeholder-mode #favoriteBtn, #game.video-mode #favoriteBtn{
     flex:0 0 auto; width:auto; padding:0 16px; font-size:20px;
   }
