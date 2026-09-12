@@ -2141,9 +2141,8 @@ function updateLevelUI(){
   const btn = document.getElementById('levelUpBtn');
   const levelLabel = document.getElementById('gameLevelLabel');
   if(isPlaceholderMode()){
-    const atMax = photoLevel >= PHOTO_MAX_LEVEL;
     btn.disabled = false;
-    btn.textContent = atMax ? 'Следующий' : 'Ещё варианты';
+    btn.textContent = 'Следующий уровень';
     const downBtn = document.getElementById('levelDownBtn');
     if(downBtn) downBtn.disabled = photoLevel <= 1;
     const el = document.getElementById('levelProgress');
@@ -2476,8 +2475,8 @@ function renderPhotoCard(card, level){
           <div class="card-rating-row" id="placeholderRating"></div>
         </div>
       </div>
-      <button type="button" class="card-photo-nav card-photo-prev" id="photoPrevCardBtn" data-tt="Предыдущее" aria-label="Предыдущее">◀</button>
-      <button type="button" class="card-photo-nav card-photo-next" id="photoNextCardBtn" data-tt="Ещё варианты" aria-label="Ещё варианты">▶</button>
+      <button type="button" class="card-photo-nav card-photo-prev" id="photoPrevCardBtn" data-tt="Предыдущий уровень" aria-label="Предыдущий уровень">◀</button>
+      <button type="button" class="card-photo-nav card-photo-next" id="photoNextCardBtn" data-tt="Следующий уровень" aria-label="Следующий уровень">▶</button>
     `;
     const img = document.getElementById('placeholderImg');
     if(img){
@@ -2487,8 +2486,8 @@ function renderPhotoCard(card, level){
       });
       img.addEventListener('click', ()=>openImageZoom(card.image));
     }
-    // Стрелки в нижних углах карточки: ◀ = «Предыдущее» (levelDownBtn),
-    // ▶ = «Ещё варианты» (levelUpBtn). Навешиваем обработчики каждый раз,
+    // Стрелки в нижних углах карточки: ◀ = «Предыдущий уровень» (levelDownBtn),
+    // ▶ = «Следующий уровень» (levelUpBtn). Навешиваем обработчики каждый раз,
     // потому что карточка (и кнопки) пересоздаются при каждой перерисовке.
     const navPrevBtn = document.getElementById('photoPrevCardBtn');
     if(navPrevBtn) navPrevBtn.addEventListener('click', ()=>{
