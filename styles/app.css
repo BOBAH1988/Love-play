@@ -2847,7 +2847,9 @@
 
   /* ---- Плейлист желаний ---- */
   .wishlist-player-row{display:flex; gap:10px; margin-bottom:10px;}
-  .wishlist-player-row .btn{flex:1; pointer-events:none;}
+  /* Кнопки «Парень/Девушка» — индикатор, не действие: ниже и компактнее
+     обычных .btn (паддинг и шрифт уменьшены ≈ на 30% по высоте). */
+  .wishlist-player-row .btn{flex:1; pointer-events:none; padding:9px 10px; font-size:14px;}
   .wishlist-player-row .btn.active{
     background:linear-gradient(135deg,#ff9a5e,#ff6b8b); color:#3a1208; border-color:transparent;
   }
