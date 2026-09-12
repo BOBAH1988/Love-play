@@ -2043,6 +2043,12 @@
      светлый color:#fff и текст становится тёмно-фиолетовым на тёмном фоне,
      почти невидимым. Правило идёт ПОСЛЕ общего .modal-card .intro-text. */
   .rules-hub-card .intro-text{color:#fff; max-width:none;}
+  /* В модалках с белым фоном (.modal-card) бледно-розовый #e8c9dd плохо виден.
+     Переопределяем .intro-text на тёмно-фиолетовый, читаемый на светлом фоне. */
+  .modal-card .intro-text{color:#d81b60;}
+  /* Кнопки .btn-ghost (например «Отмена» в диалогах) тоже бледно-розовые —
+     делаем их малиновыми, как заголовки полей в модалках. */
+  .modal-card .btn-ghost{color:#d81b60;}
   .modal-rules{
     margin:0 0 20px; padding-left:20px;
     display:flex; flex-direction:column; gap:11px;
