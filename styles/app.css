@@ -2328,6 +2328,9 @@
     background:linear-gradient(180deg, rgba(43,15,46,.95) 0%, rgba(43,15,46,0) 100%);
     pointer-events:none;
   }
+  /* Экран с закреплённым ярлыком: сдвигаем первый блок (строка хода/счёта)
+     вниз, чтобы ярлык его не перекрывал. */
+  .screen:has(> .game-level-label):not(#game):not(#ideasGame):not(#znayuGame):not(#memesGame):not(#partyNeverGame):not(#twisterGame):not(#whatToPlayGame){ padding-top:56px; }
   .card-rank-badge{
     display:block; background:var(--accent); color:#2b0f2e; flex-shrink:0;
     border-radius:12px; padding:4px 14px; font-size:19px; font-weight:900;

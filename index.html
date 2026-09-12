@@ -74,7 +74,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260920h">
+<link rel="stylesheet" href="styles/app.css?v=20260920i">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (см. gameErrorGuard в core.js),
   // чтобы по сообщению игрока было понятно, на какой версии воспроизвелась
@@ -860,6 +860,7 @@
   <!-- ===== СЕКС-КВЕСТ: ИГРА ===== -->
   <!-- 📍 логика: games/sexquest.js | карточки: cards/cards_sexquest.js -->
   <section id="sexQuestGame" class="screen">
+    <div class="game-level-label">🧩 Пройди квест</div>
     <div class="sexquest-status-row">
       <span id="sexQuestProgressLabel">1 / 12</span>
       <span id="sexQuestScoreLabel">0 🏆</span>
@@ -946,6 +947,7 @@
   <!-- ===== КАРТА СТРАСТИ: ИГРА ===== -->
   <!-- 📍 логика: games/passionmap.js | карточки: cards/cards_passionmap.js -->
   <section id="passionMapGame" class="screen">
+    <div class="game-level-label">🎀 Карта страсти</div>
     <div class="pmap-status-row">
       <span id="passionMapProgressLabel">1 / 12</span>
       <span id="passionMapScoreLabel">0 🏆</span>
@@ -2124,6 +2126,7 @@
   <!-- ===== ПРАВДА ИЛИ ДЕЙСТВИЕ: ИГРА ===== -->
   <!-- 📍 логика: games/truth-dare.js | карточки: cards/cards_kids_td.js -->
   <section id="tdGame" class="screen">
+    <div class="game-level-label">❓ Правда/Действие</div>
     <!-- Единая система: turn-label между FAB, имена по краям (two-player) -->
     <div class="td-turn-label" id="tdTurnLabel">Выбирает: Men</div>
     <div class="krokodil-score-row two-player" id="tdScoreRow">
@@ -2261,6 +2264,7 @@
   <!-- ===== ТАЙМЕР-ИГРА: ИГРА ===== -->
   <!-- 📍 логика: games/timer-game.js | карточки: cards/cards_timer.js -->
   <section id="timerGame" class="screen">
+    <div class="game-level-label">⏱️ Таймер страсти</div>
     <!-- Единая система: turn-label между FAB, имена по краям (two-player) -->
     <div class="td-turn-label" id="timerTurnLabel">Ходит: Парень</div>
     <div class="krokodil-score-row two-player" id="timerScoreRow">
@@ -3188,6 +3192,7 @@
   <!-- ===== ПЛЕЙЛИСТ ЖЕЛАНИЙ: ИГРА ===== -->
   <!-- 📍 логика: games/wishlist.js | карточки: cards/cards_wishlist.js -->
   <section id="wishlistGame" class="screen">
+    <div class="game-level-label">💌 Твои желания</div>
     <div class="wishlist-player-row" id="wishlistPlayerRow">
       <button type="button" class="btn btn-secondary" id="wishlistPlayer1Btn">Парень</button>
       <button type="button" class="btn btn-secondary" id="wishlistPlayer2Btn">Девушка</button>
@@ -3308,6 +3313,7 @@
   <!-- ===== ВИКТОРИНА (ПАРЫ 18+): ИГРА ===== -->
   <!-- 📍 логика: games/quiz.js | карточки: cards/cards_quiz.js -->
   <section id="quizGame" class="screen">
+    <div class="game-level-label">🎯 Викторина</div>
     <div class="td-turn-label" id="quizTurnLabel">Отвечает: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="quizScoreRow"></div>
     <div class="wishlist-progress-row" id="quizProgressRow">
