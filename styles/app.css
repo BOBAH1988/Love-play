@@ -1732,6 +1732,12 @@
     justify-content:flex-end;
     padding-bottom:4px;
   }
+  /* Для текстовых уровней без фото (без медиа-блока) центрируем описание
+     по вертикали — название и текст Reflections по середине карточки. */
+  #game.placeholder-mode .card-split.card-split-text-only .card-split-desc{
+    justify-content:center;
+    align-items:center;
+  }
   /* Не даём стрелкам-навигации в углах карточки пересекаться с кнопками.
      Повтор блока выше убран: для фото-карточек правило задано раньше. */
   #game.placeholder-mode .td-turn-label, #game.video-mode .td-turn-label, #game.davay-mode .td-turn-label{display:none;}
