@@ -5427,9 +5427,7 @@ document.getElementById('closeDavayRulesBtn').addEventListener('click', ()=>{
 document.getElementById('davayRulesModal').addEventListener('click', (e)=>{
   if(e.target.id === 'davayRulesModal') e.currentTarget.classList.remove('show');
 });
-(document.getElementById('photoSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{
-  showModal('photoRulesModal');
-});
+
 document.getElementById('closePhotoRulesBtn').addEventListener('click', ()=>{
   hideModal('photoRulesModal');
 });

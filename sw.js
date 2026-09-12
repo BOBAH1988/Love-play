@@ -24,7 +24,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v181';
+const CACHE_NAME = 'veselye-igry-cache-v182';
 
 // Ссылка на контекст воркера. Из-за lib.dom глобальный `self` в JS-файле
 // типизируется как Window, где нет skipWaiting()/clients. Кэстим через any,

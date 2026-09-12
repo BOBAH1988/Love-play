@@ -1992,6 +1992,11 @@
     text-transform:uppercase;
     background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
   }
+  /* «Предложи партнеру»: избранное — иконка-сердечко справа от «Начать»
+     (на странице настройки, вне .row1/.row2, где btn-square размера нет) */
+  #photoSetupFavoritesBtn{
+    flex:0 0 44px; width:44px; height:44px; padding:0; font-size:22px;
+  }
   .row2 #pauseBtn{
     flex:0 0 auto; width:auto; padding:0 12px; font-size:11px; text-transform:none;
   }

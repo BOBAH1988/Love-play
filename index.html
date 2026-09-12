@@ -74,7 +74,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260920g">
+<link rel="stylesheet" href="styles/app.css?v=20260920h">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (см. gameErrorGuard в core.js),
   // чтобы по сообщению игрока было понятно, на какой версии воспроизвелась
@@ -724,11 +724,9 @@
       <div class="levels" id="photoSetupLevels"></div>
     </div>
 
-    <button class="btn btn-primary" id="photoSetupStartBtn">Начать</button>
-
-    <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill" id="photoSetupFavoritesBtn">❤️ Избранное</button>
-      <button type="button" class="toggle-pill" id="photoSetupRulesBtn">📖 Правила</button>
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button class="btn btn-primary" id="photoSetupStartBtn" style="flex:1;">Начать</button>
+      <button type="button" class="btn btn-secondary btn-square" id="photoSetupFavoritesBtn" aria-label="Избранное">❤️</button>
     </div>
 
     <button class="btn btn-secondary" id="photoSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4089,7 +4087,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260920h"></script>
+<script src="games/core.js?v=20260920i"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт сразу после core.js — от него зависят resumeBtn, finishGameBtn,
      PAUSE_MAP и определение группы для «Продолжить игру». -->
