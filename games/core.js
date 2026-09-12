@@ -4156,14 +4156,24 @@ document.getElementById('photoFavPrevBtn').addEventListener('click', ()=>{
 });
 
 function exitPlaceholderGame(){
+  stopAllSounds();
   state.inProgress = false;
   state.photoFavView = false;
+  state.pausedMode = null;
+  const pauseModalEl = document.getElementById('pauseMenuModal');
+  if(pauseModalEl) pauseModalEl.classList.remove('show');
   saveState();
   document.getElementById('game').classList.remove('placeholder-mode');
   document.getElementById('game').classList.remove('photo-favview');
   document.getElementById('doneBtn').textContent = '💕 Готово';
   document.getElementById('pauseBtn').textContent = 'Пауза';
-  returnToSetupUI();
+  // Выход в меню игры «Предложи партнеру» (экран настройки уровня), а не
+  // в общий хаб: goToPhotoSetup гасит все активные экраны и перерисовывает
+  // список уровней. Раньше здесь был returnToSetupUI(), который открывал
+  // экран настройки «Фантов» — из-за этого выход из «Предложи партнеру»
+  // по виду совпадал с паузой «Фантов».
+  goToPhotoSetup();
+  if(typeof releaseWakeLockNow === 'function') releaseWakeLockNow();
 }
 
 /* ============ ТАЙМЕР ЗАДАНИЯ ============ */
@@ -5359,6 +5369,14 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       if(g && g.pause){ fnName = g.pause; break; }
     }
     if(fnName && typeof window[fnName] === 'function'){
+      // Страховка: «Предложи партнеру» использует общий экран #game (в реестре
+      // он принадлежит «Фантам» с pause=pauseGame). Если активен placeholder-
+      // режим — выходим в меню игры напрямую, минуя паузу «Фантов».
+      if(typeof isPlaceholderMode === 'function' && isPlaceholderMode()
+        && typeof exitPlaceholderGame === 'function'){
+        exitPlaceholderGame();
+        return;
+      }
       window[fnName]();
       // Страховка: pause-функция могла оставить лишний экран активным
       setTimeout(ensureSingleActiveScreen, 0);
