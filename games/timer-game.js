@@ -120,15 +120,14 @@ function mtUpdateScoreUI(){
   }
 }
 // Карточка оформлена в стиле "Фантов": полоса сверху по полу текущего
-// игрока и шапка с именем хода и уровнем.
+// игрока и шапка с именем хода и уровнем. Строка «Ход: Имя» — одна строка
+// вверху карточки (сразу под цветной чертой, над текстом задания);
+// id #timerTurnLabel сохранён — mtUpdateScoreUI продолжает обновлять текст.
 function mtCardHeaderHtml(levelInfo){
-  const turnName = state.timerCurrentPlayer === 1 ? (state.name1 || 'Игрок 1') : (state.name2 || 'Игрок 2');
+  const turnName = state.timerCurrentPlayer === 1 ? (state.name1 || 'Парень') : (state.name2 || 'Девушка');
   return `
     <div class="card-header">
-      <div class="card-turn">
-        <div class="card-turn-label">Ход игрока</div>
-        <div class="card-turn-name">${turnName}</div>
-      </div>
+      <div class="card-turn card-turn-name" id="timerTurnLabel">Ход: ${turnName}</div>
       <div class="badge">
         <span class="level-pill" style="background:${levelInfo ? levelInfo.color : '#ff9a5e'}">${levelInfo ? levelInfo.icon + ' ' + levelInfo.name : '⏱️'}</span>
       </div>
