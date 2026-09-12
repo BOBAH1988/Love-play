@@ -2350,6 +2350,22 @@
     background:rgba(255,255,255,.14); border:none; cursor:pointer; color:#fff; z-index:5;}
   .card-hot-btn:disabled{opacity:.4; cursor:default;}
   .card-hot-btn:active{transform:scale(.96);}
+  /* «Предложи партнеру»: стрелки-навигация в нижних углах карточки
+     (◀ = «Предыдущее», ▶ = «Ещё варианты») — зеркально кнопкам
+     «Горячее»/«Избранное» в «Фантах». Карточке нужен position:relative. */
+  #game.placeholder-mode .card{position:relative;}
+  .card-photo-nav{
+    position:absolute; bottom:8px; width:42px; height:42px;
+    padding:0; border-radius:50%; margin:0; z-index:6; cursor:pointer;
+    background:rgba(43,15,46,.45); color:#fff;
+    border:1px solid rgba(255,255,255,.4);
+    font-size:20px; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .card-photo-prev{left:10px;}
+  .card-photo-next{right:10px;}
+  .card-photo-nav:active{transform:scale(.94);}
+  /* В просмотре избранного навигация идёт кнопками внизу — стрелки не нужны */
+  #game.placeholder-mode.photo-favview .card-photo-nav{display:none;}
   /* Рулетка желаний */
   .wr-level-label{text-align:center; font-size:14px; font-weight:700; color:#ffd23f; margin:6px 0;}
   .wr-legend{text-align:center; font-size:12px; line-height:1.6; color:rgba(255,255,255,.78); margin:4px 0 12px;}

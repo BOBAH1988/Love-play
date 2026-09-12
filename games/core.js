@@ -2476,6 +2476,8 @@ function renderPhotoCard(card, level){
           <div class="card-rating-row" id="placeholderRating"></div>
         </div>
       </div>
+      <button type="button" class="card-photo-nav card-photo-prev" id="photoPrevCardBtn" data-tt="Предыдущее" aria-label="Предыдущее">◀</button>
+      <button type="button" class="card-photo-nav card-photo-next" id="photoNextCardBtn" data-tt="Ещё варианты" aria-label="Ещё варианты">▶</button>
     `;
     const img = document.getElementById('placeholderImg');
     if(img){
@@ -2485,6 +2487,19 @@ function renderPhotoCard(card, level){
       });
       img.addEventListener('click', ()=>openImageZoom(card.image));
     }
+    // Стрелки в нижних углах карточки: ◀ = «Предыдущее» (levelDownBtn),
+    // ▶ = «Ещё варианты» (levelUpBtn). Навешиваем обработчики каждый раз,
+    // потому что карточка (и кнопки) пересоздаются при каждой перерисовке.
+    const navPrevBtn = document.getElementById('photoPrevCardBtn');
+    if(navPrevBtn) navPrevBtn.addEventListener('click', ()=>{
+      const b = document.getElementById('levelDownBtn');
+      if(b) b.click();
+    });
+    const navNextBtn = document.getElementById('photoNextCardBtn');
+    if(navNextBtn) navNextBtn.addEventListener('click', ()=>{
+      const b = document.getElementById('levelUpBtn');
+      if(b) b.click();
+    });
     fitTextToContainer(
       document.getElementById('placeholderDesc'),
       document.getElementById('placeholderText'),
