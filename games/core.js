@@ -2139,6 +2139,7 @@ document.getElementById('resumeMuteBtn').addEventListener('click', ()=>{
 
 function updateLevelUI(){
   const btn = document.getElementById('levelUpBtn');
+  const levelLabel = document.getElementById('gameLevelLabel');
   if(isPlaceholderMode()){
     const atMax = photoLevel >= PHOTO_MAX_LEVEL;
     btn.disabled = false;
@@ -2147,8 +2148,14 @@ function updateLevelUI(){
     if(downBtn) downBtn.disabled = photoLevel <= 1;
     const el = document.getElementById('levelProgress');
     if(el) el.textContent = '';
+    if(levelLabel){
+      const lvl = PHOTO_LEVELS.find(l => l.id === photoLevel);
+      levelLabel.textContent = lvl ? `${lvl.icon} ${lvl.name}` : '';
+      levelLabel.style.display = lvl ? 'block' : 'none';
+    }
     return;
   }
+  if(levelLabel) levelLabel.style.display = 'none';
   if(isVideoMode() || isDavayMode()){
     btn.disabled = false;
     btn.textContent = 'Сложнее';
@@ -2457,12 +2464,12 @@ function renderPhotoCard(card, level){
       <div class="card-inner card-split${card.image ? '' : ' card-split-text-only'}">
         ${card.image ? `
         <div class="card-split-media" id="placeholderMedia">
+          <div class="card-rank-badge-wrap">${card.rank ? `<div class="card-rank-badge">№${card.rank}</div>` : ''}</div>
           <img src="${card.image}" alt="" id="placeholderImg">
         </div>
         ` : ''}
+        ${!card.image && card.rank ? `<div class="card-rank-badge">№${card.rank}</div>` : ''}
         <div class="card-split-desc" id="placeholderDesc">
-          ${state.photoSelectedLevel ? `<div class="card-level-badge">${PHOTO_LEVELS.find(l => l.id === state.photoSelectedLevel)?.name || ''}</div>` : ''}
-          ${card.rank ? `<div class="card-split-rank-badge">№${card.rank}</div>` : ''}
           ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
           <div class="card-text" id="placeholderText"></div>
           <div class="card-forwhom-row" id="placeholderForWhom"></div>
