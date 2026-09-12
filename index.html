@@ -74,7 +74,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260920k">
+<link rel="stylesheet" href="styles/app.css?v=20260920l">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (см. gameErrorGuard в core.js),
   // чтобы по сообщению игрока было понятно, на какой версии воспроизвелась
@@ -475,6 +475,7 @@
   <!-- ===== ПРАВДА/ДЕЙСТВИЕ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-td.js | карточки: cards/cards_kids_td.js -->
   <section id="kidsTdGame" class="screen">
+    <div class="game-level-label">🗣️ Правда/Действие</div>
     <div class="td-turn-label" id="kidsTdTurnLabel">Выбирает: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsTdScoreRow"></div>
 
@@ -568,6 +569,7 @@
   <!-- ===== ВИКТОРИНА (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-quiz.js | карточки: cards/cards_kids_quiz.js -->
   <section id="kidsQuizGame" class="screen">
+    <div class="game-level-label">🎯 Викторина</div>
     <div class="td-turn-label" id="kidsQuizTurnLabel">Отвечает: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsQuizScoreRow"></div>
     <div class="wishlist-progress-row" id="kidsQuizProgressRow">
@@ -1070,6 +1072,7 @@
   <!-- ===== КРОКОДИЛ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-krokodil.js | карточки: cards/cards_kids_krokodil.js -->
   <section id="kidsKrokodilGame" class="screen">
+    <div class="game-level-label">🐊 Крокодил</div>
     <div class="td-turn-label" id="kidsKrokodilTurnLabel">Показывает: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsKrokodilScoreRow"></div>
 
@@ -1129,6 +1132,7 @@
   <!-- ===== МЕМАСИКИ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-memes.js | карточки: cards/cards_kids_memes.js -->
   <section id="kidsMemesGame" class="screen">
+    <div class="game-level-label">😂 Мемасики</div>
     <div class="card-area">
       <div class="card" id="kidsMemesCard">
         <div class="card-inner">
@@ -1449,6 +1453,7 @@
   <!-- ===== ОЦЕНИ БИЗНЕС (БИЗНЕС): ИГРА ===== -->
   <!-- 📍 логика: games/business-observer.js -->
   <section id="bizObsGame" class="screen">
+    <div class="game-level-label">🔍 Оцени бизнес</div>
     <div class="td-turn-label" id="bizObsTurnLabel">Отвечает: Предприниматель</div>
     <div class="krokodil-score-row two-player" id="bizObsScoreRow"></div>
     <div class="wishlist-progress-row" id="bizObsProgressRow">
@@ -2347,6 +2352,7 @@
   <!-- ===== КРОКОДИЛ: ИГРА ===== -->
   <!-- 📍 логика: games/krokodil.js | карточки: cards/cards_krokodil.js -->
   <section id="krokodilGame" class="screen">
+    <div class="game-level-label">🐊 Крокодил</div>
     <div class="td-turn-label" id="krokodilTurnLabel">Показывает: Первый</div>
     <div class="krokodil-score-row two-player" id="krokodilScoreRow"></div>
 
@@ -2509,6 +2515,7 @@
   <!-- ===== ФАНТЫ (КОМПАНИЯ): ИГРА ===== -->
   <!-- 📍 логика: games/party-fants.js | карточки: cards/cards_party_fants.js -->
   <section id="partyFantsGame" class="screen">
+    <div class="game-level-label">🎉 Фанты</div>
     <div class="td-turn-label" id="partyFantsTurnLabel">Ходит: Первый</div>
     <div class="krokodil-score-row multi-player" id="partyFantsScoreRow"></div>
 
@@ -2562,6 +2569,7 @@
   <!-- ===== ПРАВДА/ДЕЙСТВИЕ (КОМПАНИЯ): ИГРА ===== -->
   <!-- 📍 логика: games/party-td.js | карточки: cards/cards_party_td.js -->
   <section id="partyTdGame" class="screen">
+    <div class="game-level-label">🗣️ Правда/Действие</div>
     <div class="td-turn-label" id="partyTdTurnLabel">Выбирает: Первый</div>
     <div class="krokodil-score-row multi-player" id="partyTdScoreRow"></div>
 
@@ -2636,6 +2644,7 @@
   <!-- ===== ЗНАЮ ТЕБЯ (КОМПАНИЯ, СЕМЬЯМИ): ИГРА ===== -->
   <!-- 📍 логика: games/fam-znayu.js | карточки: cards/cards_fam_znayu.js -->
   <section id="famZnayuGame" class="screen">
+    <div class="game-level-label">🧠 Знаю тебя</div>
     <div class="td-turn-label" id="famZnayuFamilyLabel">Первая семья из 2</div>
     <div class="wishlist-player-row" id="famZnayuPlayerRow">
       <button type="button" class="btn btn-secondary" id="famZnayuPlayer1Btn">Первый</button>
@@ -2693,6 +2702,7 @@
   <!-- ===== СЧАСТЛИВЫЙ БИЛЕТ: ИГРА ===== -->
   <!-- 📍 логика: games/lucky.js | карточки: cards/cards_lucky.js -->
   <section id="luckyGame" class="screen">
+    <div class="game-level-label">🎫 Счастливый билет</div>
     <div class="lucky-level-label" id="luckyLevelLabel">Уровень: 🤝 Знакомство</div>
     <div class="td-turn-label" id="luckyTurnLabel">Ходит: Первая команда</div>
     <div class="krokodil-score-row multi-player" id="luckyScoreRow"></div>
@@ -2767,6 +2777,7 @@
   <!-- ===== ВИКТОРИНА (КОМПАНИЯ): ИГРА ===== -->
   <!-- 📍 логика: games/party-quiz.js | карточки: cards/cards_party_quiz.js -->
   <section id="partyQuizGame" class="screen">
+    <div class="game-level-label">🎯 Викторина</div>
     <div class="td-turn-label" id="partyQuizTurnLabel">Отвечает: Первый</div>
     <div class="krokodil-score-row multi-player" id="partyQuizScoreRow"></div>
     <div class="wishlist-progress-row" id="partyQuizProgressRow">
@@ -2905,6 +2916,7 @@
   <!-- ===== ВИКТОРИНА (ОДИН): ИГРА ===== -->
   <!-- 📍 логика: games/solo-quiz.js | карточки: cards/cards_quiz.js -->
   <section id="soloQuizGame" class="screen">
+    <div class="game-level-label">🎯 Викторина</div>
     <div class="krokodil-score-row" id="soloQuizScoreRow">✅ Верно: 0</div>
     <div class="wishlist-progress-row" id="soloQuizProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="soloQuizProgressFill"></div></div>
@@ -3314,7 +3326,6 @@
   <!-- 📍 логика: games/quiz.js | карточки: cards/cards_quiz.js -->
   <section id="quizGame" class="screen">
     <div class="game-level-label">🎯 Викторина</div>
-    <div class="td-turn-label" id="quizTurnLabel">Отвечает: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="quizScoreRow"></div>
     <div class="wishlist-progress-row" id="quizProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="quizProgressFill"></div></div>
@@ -4136,7 +4147,7 @@
 <script src="games/kids-flash-time.js?v=20260918a"></script>
 <script src="games/kids-saper.js?v=20260918a"></script>
 <script src="games/kids-td.js?v=20260913b"></script>
-<script src="games/quiz.js?v=20260830u"></script>
+<script src="games/quiz.js?v=20260920a"></script>
 <script src="games/party-quiz.js?v=20260913a"></script>
 <script src="games/kids-quiz.js?v=20260913a"></script>
 <script src="games/wishlist.js?v=20260913a"></script>

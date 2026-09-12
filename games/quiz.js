@@ -183,7 +183,7 @@ function showQuizHandoffCard(){
   if(barTrack) barTrack.style.display = 'none';
   fadeSwapEl('quizCard', (el)=>{
     el.className = 'card';
-    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon znayu-handoff-icon">🎯</div><div class="card-text">Передайте телефон игроку «${name}»</div></div></div>`;
+    el.innerHTML = `<div class="card-inner"><div class="quiz-turn-in-card" id="quizTurnLabel">Отвечает: ${name}</div><div class="card-body"><div class="card-icon znayu-handoff-icon">🎯</div><div class="card-text">Передайте телефон игроку «${name}»</div></div></div>`;
   });
   updateQuizScoreUI();
   updateQuizProgressBar();
@@ -203,6 +203,8 @@ function showQuizQuestion(){
     return;
   }
   quizAnswered = false;
+  const turnPlayers = quizPlayersList();
+  const turnName = turnPlayers[state.quizCurrentPlayerIndex || 0] || 'Игрок 1';
   const opts = [
     {text:item.a[0], correct:true},
     {text:item.a[1], correct:false},
@@ -216,7 +218,7 @@ function showQuizQuestion(){
   fadeSwapEl('quizCard', (el)=>{
     el.className = 'card';
     const answersHtml = quizCurrentOptions.map((o,i)=>`<button type="button" class="btn btn-secondary znayu-answer-btn" data-idx="${i}">${o.text}</button>`).join('');
-    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="znayu-question-text">${item.q}</div></div><div class="znayu-answers">${answersHtml}</div><div class="quiz-tts-hint" id="quizTtsHint">🔊</div></div>`;
+    el.innerHTML = `<div class="card-inner"><div class="quiz-turn-in-card" id="quizTurnLabel">Отвечает: ${turnName}</div><div class="card-body"><div class="znayu-question-text">${item.q}</div></div><div class="znayu-answers">${answersHtml}</div><div class="quiz-tts-hint" id="quizTtsHint">🔊</div></div>`;
     el.querySelectorAll('.znayu-answer-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         answerQuizQuestion(parseInt(btn.dataset.idx, 10));
