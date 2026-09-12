@@ -2461,6 +2461,7 @@ function renderPhotoCard(card, level){
         </div>
         ` : ''}
         <div class="card-split-desc" id="placeholderDesc">
+          ${state.photoSelectedLevel ? `<div class="card-level-badge">${PHOTO_LEVELS.find(l => l.id === state.photoSelectedLevel)?.name || ''}</div>` : ''}
           ${card.rank ? `<div class="card-split-rank-badge">№${card.rank}</div>` : ''}
           ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
           <div class="card-text" id="placeholderText"></div>

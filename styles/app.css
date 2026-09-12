@@ -1702,6 +1702,12 @@
     border-radius:12px; padding:4px 14px; font-size:19px; font-weight:900;
     letter-spacing:.3px; margin-bottom:2px;
   }
+  /* Название уровня — плашка над названием карточки (модуль "Предложи партнеру") */
+  .card-level-badge{
+    display:inline-block; background:linear-gradient(135deg,#ff5e8e,#ff8a5e);
+    color:#fff; border-radius:12px; padding:4px 14px; font-size:13px; font-weight:800;
+    letter-spacing:.3px; margin-bottom:6px; text-transform:uppercase;
+  }
   /* "Подходит: ..." — отдельная строка под описанием (модуль "Секс-шоп") */
   .card-forwhom-row{
     display:none; justify-content:center; margin-top:10px;
