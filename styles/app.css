@@ -2856,7 +2856,7 @@
   .wishlist-item-desc{font-size:16px; font-weight:500; line-height:1.4; color:#7a5a72; margin-top:8px; padding:0 4px;}
   .wishlist-actions-row{display:flex; gap:10px; margin-top:14px; width:100%;}
   .wishlist-actions-row .btn{flex:1;}
-  .wishlist-actions-row #wishlistNoBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
+  .wishlist-actions-row #wishlistNoBtn{flex:0 0 auto; width:auto; padding:0 32px; white-space:nowrap;}
   .wishlist-setup-actions-row{display:flex; gap:10px; margin-top:10px;}
   .wishlist-setup-actions-row #wishlistHistoryBtn, .wishlist-setup-actions-row #znayuHistoryBtn{flex:1;}
   .wishlist-setup-actions-row #wishlistSetupExitBtn, .wishlist-setup-actions-row #znayuSetupExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
