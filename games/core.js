@@ -3395,7 +3395,70 @@ function migrateVideoDbIntoDavay(){
 }
 migrateVideoDbIntoDavay();
 
-// Модалка выбора уровня для только что выбранных файлов
+// ===== Интеграция с Яндекс Диск (прототип) =====
+// Загрузка видео с Яндекс Диск через API v1.
+// Публичная папка: https://disk.yandex.ru/d/fv1y_t0ZQ3YASg
+// Получаем список файлов и прямые ссылки на скачивание через API.
+const YANDEX_DISK_PUBLIC_KEY = 'https://disk.yandex.ru/d/fv1y_t0ZQ3YASg';
+const YANDEX_DISK_API_BASE = 'https://cloud-api.yandex.net/v1/disk/public/resources';
+let yandexDiskLoading = false;
+
+// Получить список файлов в публичной папке/подпапке
+async function fetchYandexDiskFiles(path){
+  const url = `${YANDEX_DISK_API_BASE}?public_key=${encodeURIComponent(YANDEX_DISK_PUBLIC_KEY)}&path=${encodeURIComponent(path)}&limit=100`;
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('Yandex API error: ' + resp.status);
+  const data = await resp.json();
+  return data._embedded ? data._embedded.items : [];
+}
+
+// Получить прямую ссылку на скачивание файла
+async function fetchYandexDiskDownloadLink(path){
+  const url = `${YANDEX_DISK_API_BASE}/download?public_key=${encodeURIComponent(YANDEX_DISK_PUBLIC_KEY)}&path=${encodeURIComponent(path)}`;
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('Yandex API download error: ' + resp.status);
+  const data = await resp.json();
+  return data.href;
+}
+
+// Загрузить видеофайл по прямой ссылке и сохранить в IndexedDB
+async function downloadYandexDiskFile(fileInfo, level){
+  const directLink = await fetchYandexDiskDownloadLink(fileInfo.path);
+  const resp = await fetch(directLink, { mode:'cors' });
+  if(!resp.ok) throw new Error('HTTP ' + resp.status);
+  const blob = await resp.blob();
+  const file = new File([blob], fileInfo.name, { type:blob.type || 'video/webm' });
+  await saveDavayBlob(file, level);
+  return { name:fileInfo.name, level:level };
+}
+
+// Загрузить все видео из папки уровня на Яндекс Диске
+// path — относительный путь внутри публичной папки, например '/Level 001 Ласки разогрев'
+async function loadYandexDiskLevel(level, path){
+  if(yandexDiskLoading) return { added:0, level:level };
+  yandexDiskLoading = true;
+  try {
+    const items = await fetchYandexDiskFiles(path);
+    const videoItems = items.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
+    if(videoItems.length === 0){
+      yandexDiskLoading = false;
+      return { added:0, level:level };
+    }
+    const results = await Promise.all(videoItems.map(i => downloadYandexDiskFile(i, level).catch(()=>null)));
+    const added = results.filter(r => r !== null).length;
+    if(added > 0){
+      importedDavayVideosLoaded = false;
+      ensureImportedDavayVideosLoaded();
+    }
+    return { added:added, level:level };
+  } catch(err){
+    showToast('Ошибка загрузки с Яндекс Диск: ' + err.message);
+    return { added:0, level:level };
+  } finally {
+    yandexDiskLoading = false;
+  }
+}
+// ===== Модалка выбора уровня для только что выбранных файлов =====
 let pendingDavayImportFiles = [];
 const davayImportInputEl = document.getElementById('davayImportInput');
 const davayLevelModalEl = document.getElementById('davayLevelModal');
@@ -3736,6 +3799,17 @@ function exitDavaySetup(){
 }
 document.getElementById('davaySetupImportBtn').addEventListener('click', ()=>{
   davayImportInputEl.click();
+});
+document.getElementById('davaySetupYandexBtn').addEventListener('click', async ()=>{
+  // Прототип: загружаем видео из папки "Level 001 Ласки разогрев" для уровня "Разогрев" (level=2)
+  const level = 2; // Разогрев (id=4, level=id-2)
+  showToast('Загрузка с Яндекс Диска...');
+  const result = await loadYandexDiskLevel(level, '/Level 001 Ласки разогрев');
+  if(result.added > 0){
+    showToast(`Загружено ${result.added} видео`);
+  } else {
+    showToast('Видео не найдены или уже загружены');
+  }
 });
 document.getElementById('davaySetupStartBtn').addEventListener('click', async ()=>{
   await ensureImportedDavayVideosLoaded();
