@@ -944,6 +944,19 @@ function hideModal(id){
   if(m) m.classList.remove('show');
 }
 
+// Гарантирует, что активен только #setup — чинит «экран, поделённый на 2 части».
+// Вынесена в глобальную область, чтобы вызов из обработчика resumeBtn (строка ~1347)
+// видел функцию. function declaration поднимается (hoisting) в начало области видимости.
+function ensureSingleActiveScreen(){
+  const screens = document.querySelectorAll('.screen.active');
+  if(screens.length <= 1) return false;
+  const setup = document.getElementById('setup');
+  screens.forEach(s=>{ if(s !== setup) s.classList.remove('active'); });
+  if(setup && !setup.classList.contains('active')) setup.classList.add('active');
+  window.scrollTo(0, 0);
+  return true;
+}
+
 /* ============ УНИВЕРСАЛЬНОЕ ПОДКЛЮЧЕНИЕ RULES-МОДАЛКИ ============ */
 // Каждая игра дублировала 2 строки:
 //   closeXxxRulesBtn.click -> hideModal('xxxRulesModal')
@@ -4827,7 +4840,7 @@ document.getElementById('closeSummaryBtn').addEventListener('click', ()=>{
   }
   if(summaryModalMode === 'bingo'){
     // Оставляем на экране игры — выход только вручную
-    closeModal('summaryModal');
+    hideModal('summaryModal');
     return;
   }
   if(summaryModalMode === 'bingoExit'){
@@ -5129,10 +5142,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     return ids;
   }
 
-  // Гарантирует, что активен только #setup — чинит "экран, поделённый на 2 части"
-  /* function ensureSingleActiveScreen() объявлена на уровне модуля (см. конец блока «Назад»),
-     вынесена из IIFE, чтобы вызов в resumeBtn handler (строка ~1347) видел функцию */
-
   // Карта "идентификатор экрана → ID группы внутри #setup".
   // По ней определяется, в какую группу возвращаться после паузы или
   // из экрана настроек.
@@ -5359,21 +5368,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     updateBackBtn();
   }
 })();
-
-// Гарантирует, что активен только #setup — чинит «экран, поделённый на 2 части».
-// Выносим за пределы IIFE «Назад», чтобы вызов на строке 1347 (resumeBtn handler)
-// видел функцию: в замыкании, созданном при добавлении обработчика (строки 1340–1352),
-// ссылка на функцию, объявленную ниже в том же файле, но внутри другого замыкания,
-// разрешается к области видимости замыкания, где её ещё нет — ReferenceError.
-function ensureSingleActiveScreen(){
-  const screens = document.querySelectorAll('.screen.active');
-  if(screens.length <= 1) return false;
-  const setup = document.getElementById('setup');
-  screens.forEach(s=>{ if(s !== setup) s.classList.remove('active'); });
-  if(setup && !setup.classList.contains('active')) setup.classList.add('active');
-  window.scrollTo(0, 0);
-  return true;
-}
 
 (document.getElementById('davaySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{
   showModal('davayRulesModal');
