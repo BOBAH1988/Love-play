@@ -2142,7 +2142,7 @@ function updateLevelUI(){
   const levelLabel = document.getElementById('gameLevelLabel');
   if(isPlaceholderMode()){
     btn.disabled = false;
-    btn.textContent = 'Следующий уровень';
+    btn.textContent = 'Следующий вариант';
     const downBtn = document.getElementById('levelDownBtn');
     if(downBtn) downBtn.disabled = photoLevel <= 1;
     const el = document.getElementById('levelProgress');
@@ -2475,8 +2475,8 @@ function renderPhotoCard(card, level){
           <div class="card-rating-row" id="placeholderRating"></div>
         </div>
       </div>
-      <button type="button" class="card-photo-nav card-photo-prev" id="photoPrevCardBtn" data-tt="Предыдущий уровень" aria-label="Предыдущий уровень">◀</button>
-      <button type="button" class="card-photo-nav card-photo-next" id="photoNextCardBtn" data-tt="Следующий уровень" aria-label="Следующий уровень">▶</button>
+      <button type="button" class="card-photo-nav card-photo-prev" id="photoPrevCardBtn" data-tt="Предыдущий вариант" aria-label="Предыдущий вариант">◀</button>
+      <button type="button" class="card-photo-nav card-photo-next" id="photoNextCardBtn" data-tt="Следующий вариант" aria-label="Следующий вариант">▶</button>
     `;
     const img = document.getElementById('placeholderImg');
     if(img){
@@ -2486,8 +2486,8 @@ function renderPhotoCard(card, level){
       });
       img.addEventListener('click', ()=>openImageZoom(card.image));
     }
-    // Стрелки в нижних углах карточки: ◀ = «Предыдущий уровень» (levelDownBtn),
-    // ▶ = «Следующий уровень» (levelUpBtn). Навешиваем обработчики каждый раз,
+    // Стрелки в нижних углах карточки: ◀ = «Предыдущий вариант» (levelDownBtn),
+    // ▶ = «Следующий вариант» (levelUpBtn). Навешиваем обработчики каждый раз,
     // потому что карточка (и кнопки) пересоздаются при каждой перерисовке.
     const navPrevBtn = document.getElementById('photoPrevCardBtn');
     if(navPrevBtn) navPrevBtn.addEventListener('click', ()=>{
