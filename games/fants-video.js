@@ -511,6 +511,42 @@ function setupVideoPlayerElement(video, card, level, reuse){
   };
   attemptPlay();
   const cardEl = document.getElementById('card');
+  // ВРЕМЕННАЯ ДИАГНОСТИКА (убрать после отладки): показывает на экране, что
+  // реально происходит с плеером — размеры контейнера, кадра и код ошибки.
+  (function(){
+    const diag = function(tag){
+      try{
+        const el = video;
+        const media = document.getElementById('videoMedia');
+        const cardElNow = document.getElementById('card');
+        const r = el ? el.getBoundingClientRect() : null;
+        const m = media ? media.getBoundingClientRect() : null;
+        const c = cardElNow ? cardElNow.getBoundingClientRect() : null;
+        let box = document.getElementById('vidDiagBox');
+        if(!box){
+          box = document.createElement('div');
+          box.id = 'vidDiagBox';
+          box.style.cssText = 'position:fixed;left:4px;right:4px;bottom:4px;z-index:99999;background:rgba(0,0,0,.88);color:#0f0;font:10px monospace;padding:6px;border-radius:6px;white-space:pre-wrap;line-height:1.35;pointer-events:none';
+          document.body.appendChild(box);
+        }
+        box.textContent = '[VID ' + tag + '] '
+          + 'video=' + (r ? Math.round(r.width)+'x'+Math.round(r.height) : 'нет') + ' '
+          + 'media=' + (m ? Math.round(m.width)+'x'+Math.round(m.height) : 'нет') + ' '
+          + 'card=' + (c ? Math.round(c.width)+'x'+Math.round(c.height) : 'нет') + '\n'
+          + 'кадр=' + (el ? el.videoWidth+'x'+el.videoHeight : '-')
+          + ' ready=' + (el ? el.readyState : '-')
+          + ' paused=' + (el ? el.paused : '-')
+          + ' err=' + (el && el.error ? el.error.code : '0') + '\n'
+          + String(card && card.video).slice(0, 80);
+      }catch(e){}
+    };
+    if(video){
+      video.addEventListener('loadedmetadata', function(){ diag('loadedmetadata'); });
+      video.addEventListener('playing', function(){ diag('playing'); });
+      video.addEventListener('error', function(){ diag('ERROR'); });
+      setTimeout(function(){ diag('+3s'); }, 3000);
+    }
+  })();
   // {once:true} — при reuse=true эти слушатели навешиваются заново на каждую
   // смену видео на одном и том же элементе; без once они бы копились один
   // поверх другого при каждом переключении.
