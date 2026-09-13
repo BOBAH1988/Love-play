@@ -510,6 +510,23 @@ function checkPauseResetOnStart() {
     !!videoBtn && /pausedMode\s*=\s*null/.test(videoBtn[0]),
     'кнопка «🎥 Видеорулетка» не сбрасывает pausedMode'
   );
+
+  // Выход из «Видеорулетки» — на шаг назад, в меню «Давай попробуем»
+  // (#davaySetup), из которого игра запускается. Раньше здесь был
+  // returnToSetupUI(), и выход перепрыгивал уровень — игрок оказывался
+  // в списке «Игры для пар 18+».
+  const videoSrc = read('games/fants-video.js');
+  const exitVideo = videoSrc.match(/function exitVideoGame\s*\(\)\s*\{[\s\S]*?\n\}/);
+  check(
+    'выход из «Видеорулетки» ведёт в меню «Давай попробуем»',
+    !!exitVideo && /davaySetup/.test(exitVideo[0]),
+    'exitVideoGame() не открывает #davaySetup'
+  );
+  check(
+    'выход из «Видеорулетки» не уводит в хаб пар',
+    !!exitVideo && !/returnToSetupUI/.test(exitVideo[0]),
+    'exitVideoGame() по-прежнему вызывает returnToSetupUI() (#setup)'
+  );
 }
 
 
