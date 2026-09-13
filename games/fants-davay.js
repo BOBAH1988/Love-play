@@ -123,6 +123,12 @@ function ensureImportedDavayVideosLoaded(){
         video: src,
         id: 'imported-' + r.id,
         dbId: r.id,
+        // Имя файла обязательно переносим в карточку: по нему восстанавливается
+        // ссылка для записей, у которых не сохранён путь внутри папки, и оно же
+        // попадает в диагностику. Раньше карточка его не имела — в отчёте было
+        // видно только «imported-343» вместо имени ролика, а поиск по имени для
+        // старых записей не работал вовсе.
+        name: r.name || '',
         urlAt: r.urlAt || 0,
         yandexPath: r.yandexPath || null,
         imported: true,
@@ -324,6 +330,9 @@ function updateYandexRows(updates){
         if(!row) return;
         row.url = u.url;
         row.urlAt = u.urlAt;
+        // Путь внутри папки мог быть найден только сейчас (у старых записей
+        // его не было) — сохраняем, чтобы в следующий раз не искать по имени.
+        if(u.yandexPath) row.yandexPath = u.yandexPath;
         store.put(row);
       };
     });
@@ -479,29 +488,51 @@ function davayVideoDiagnostics(video, card, gameName){
   }
 }
 
-// Обновить ссылку ОДНОГО видео (по его пути в папке). Нужна в момент, когда
-// ролик не открылся: перебирать всю папку (172 файла) ради одного кадра
-// бессмысленно, а один запрос к API отвечает быстро. true — адрес обновлён.
+// Обновить ссылку ОДНОГО видео. Нужна в момент, когда ролик не открылся:
+// перебирать всю папку (172 файла) ради одного кадра бессмысленно, а один
+// запрос к API отвечает быстро. true — свежий адрес получен.
+//
+// Путь внутри папки (yandexPath) есть не у всех записей: видео, добавленные
+// ДО того, как приложение начало его сохранять, лежат в базе только с именем
+// файла. Раньше такие карточки молча выпадали из восстановления (ранний
+// return), и их ссылки не обновлялись никогда — ролик показывал чёрный экран
+// с ошибкой 4, хотя файл на Диске рабочий. Поэтому если пути нет, ищем файл
+// по имени в списке папки и запоминаем найденный путь.
 async function refreshYandexCardHref(card){
-  if(!card || !card.yandexPath) return false;
+  if(!card) return false;
   try{
-    const href = await fetchYandexDiskHref(card.yandexPath);
+    let path = card.yandexPath;
+    // Ссылку можно получить либо по пути, либо (запасной вариант) по имени
+    // файла: эндпоинт /download принимает путь, поэтому сначала его ищем.
+    let href = null;
+    if(path){
+      href = await fetchYandexDiskHref(path);
+    } else if(card.name){
+      const items = await fetchYandexDiskFiles('/');
+      const found = items.filter(i => i.type === 'file' && i.name === card.name)[0];
+      if(found){
+        path = found.path;
+        href = found.file || await fetchYandexDiskHref(found.path);
+      }
+    }
     if(!href) return false;
     const at = Date.now();
     // Адрес мог не измениться — это НЕ повод считать, что восстановить не
     // удалось: Яндекс вправе отдать ту же ссылку, и она при этом рабочая.
-    // Раньше здесь возвращался false, и вызывающий код помечал такое видео
-    // «битым» и пропускал его, хотя файл в полном порядке. Именно поэтому
-    // в «битые» попадали рабочие ролики с Диска.
     if(href !== card.video){
       card.video = href;
       applyFreshYandexHref(card.id, href, at);
     }
     card.urlAt = at;
-    // Строку обновляем в базе в любом случае, чтобы адрес пережил перезагрузку.
+    if(path) card.yandexPath = path;
+    // Строку обновляем в базе в любом случае, чтобы адрес и найденный путь
+    // пережили перезагрузку страницы.
     const row = importedDavayCards.find(c => c.id === card.id);
-    if(row && row.dbId){
-      await updateYandexRows([{ id: row.dbId, url: href, urlAt: at }]);
+    if(row){
+      if(path) row.yandexPath = path;
+      if(row.dbId){
+        await updateYandexRows([{ id: row.dbId, url: href, urlAt: at, yandexPath: path }]);
+      }
     }
     return true;
   }catch(err){
@@ -510,18 +541,32 @@ async function refreshYandexCardHref(card){
 }
 
 async function refreshYandexLinks(force){
-  const cards = importedDavayCards.filter(c => c.source === 'yandex' && c.yandexPath && c.dbId);
+  // Берём все видео с Диска. Путь внутри папки есть не у всех: записи,
+  // добавленные до того, как приложение начало его сохранять, содержат только
+  // имя файла — раньше они молча выпадали из обновления (фильтр по
+  // c.yandexPath), и их ссылки не обновлялись никогда. Такие записи ниже
+  // сопоставляем с папкой по имени.
+  const cards = importedDavayCards.filter(c => c.source === 'yandex' && c.dbId);
   if(!cards.length) return { updated:0 };
   const need = cards.filter(c => force || !c.urlAt || Date.now() - c.urlAt > YANDEX_HREF_TTL);
   if(!need.length) return { updated:0 };
   try{
     const items = await fetchYandexDiskFiles('/');
-    const byPath = new Map(items.filter(i => i.type === 'file' && i.file).map(i => [i.path, i.file]));
+    const files = items.filter(i => i.type === 'file' && i.file);
+    const byPath = new Map(files.map(i => [i.path, i.file]));
+    const byName = new Map(files.map(i => [i.name, i]));
     const now = Date.now();
     const updates = [];
     need.forEach(c=>{
-      const href = byPath.get(c.yandexPath);
+      let href = c.yandexPath ? byPath.get(c.yandexPath) : null;
+      let path = c.yandexPath;
+      // Пути нет — ищем файл по имени и запоминаем найденный путь.
+      if(!href && c.name){
+        const found = byName.get(c.name);
+        if(found){ href = found.file; path = found.path; }
+      }
       if(!href) return;
+      if(path) c.yandexPath = path;
       // Свежая ссылка — это, по сути, другое видео для игрока (раньше оно не
       // открывалось), поэтому снимаем отметку «показано» в обеих играх: иначе
       // ролик не вернётся в пул до полного круга колоды.
@@ -530,7 +575,7 @@ async function refreshYandexLinks(force){
       c.urlAt = now;
       // Тот же id может быть сейчас на экране или в истории — обновляем и там.
       applyFreshYandexHref(c.id, href, now);
-      updates.push({ id: c.dbId, url: href, urlAt: now });
+      updates.push({ id: c.dbId, url: href, urlAt: now, yandexPath: path });
     });
     await updateYandexRows(updates);
     return { updated: updates.length };
