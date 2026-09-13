@@ -3021,8 +3021,40 @@ function showAppError(message, source){
   modal.classList.add('show');
 }
 
+// Отдельный текст для кнопки «Скопировать отчёт», когда окно открыто не из-за
+// исключения, а по диагностике видео. buildErrorReport читает журнал ошибок,
+// но диагностику мы в журнал не пишем (иначе он забьётся), поэтому здесь
+// собираем отчёт из переданного текста + окружение.
+let __pendingErrorReport = null;
+
+/**
+ * Показать окно ошибки с конкретным отчётом (для диагностики, не для
+ * исключений). В отличие от showAppError:
+ *   • показывает детали ВСЕГДА, а не только на localhost — без них отчёт
+ *     бесполезен, а именно его игрок и передаёт разработчику;
+ *   • не срабатывает защита от повторов: диагностику запрашивает сам игрок;
+ *   • кнопка «Скопировать отчёт» отдаёт переданный текст, а не журнал ошибок.
+ */
+function showDiagnosticReport(title, details){
+  const modal = document.getElementById('appErrorModal');
+  if(!modal) return false;
+  const textEl = document.getElementById('appErrorText');
+  if(textEl) textEl.textContent = title || 'Диагностика';
+  const detailsEl = document.getElementById('appErrorDetails');
+  if(detailsEl){
+    detailsEl.textContent = details || '';
+    detailsEl.style.display = details ? 'block' : 'none';
+  }
+  __pendingErrorReport = details || title || '';
+  modal.classList.add('show');
+  return true;
+}
+
 /** Скрывает экран ошибки. */
 function hideAppError(){
+  // Сбрасываем отчёт диагностики: иначе он «протёк» бы в следующее окно,
+  // открытое уже из-за настоящего исключения.
+  __pendingErrorReport = null;
   const modal = document.getElementById('appErrorModal');
   if(modal) modal.classList.remove('show');
 }
@@ -3066,7 +3098,9 @@ if(__errReloadBtn) __errReloadBtn.addEventListener('click', ()=>{
 });
 const __errReportBtn = document.getElementById('appErrorReportBtn');
 if(__errReportBtn) __errReportBtn.addEventListener('click', async ()=>{
-  const report = buildErrorReport();
+  // Если окно открыто диагностикой (showDiagnosticReport) — копируем её отчёт,
+  // а не журнал ошибок: диагностику в журнал не пишем, чтобы не забивать его.
+  const report = __pendingErrorReport || buildErrorReport();
   let copied = false;
   try{
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -3079,11 +3113,22 @@ if(__errReportBtn) __errReportBtn.addEventListener('click', async ()=>{
     // и старых WebView: показываем текст, чтобы выделить вручную.
     const detailsEl = document.getElementById('appErrorDetails');
     if(detailsEl){ detailsEl.textContent = report; detailsEl.style.display = 'block'; }
+    // Плюс выделяем текст: на телефоне так проще нажать «Копировать».
+    try{
+      const range = document.createRange();
+      range.selectNodeContents(detailsEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }catch(_){}
   }
   showToast(copied ? 'Отчёт скопирован — вставьте его в сообщение о проблеме' : 'Отчёт показан ниже — выделите и скопируйте');
 });
 const __errCloseBtn = document.getElementById('appErrorCloseBtn');
-if(__errCloseBtn) __errCloseBtn.addEventListener('click', ()=>{ hideAppError(); });
+if(__errCloseBtn) __errCloseBtn.addEventListener('click', ()=>{
+  __pendingErrorReport = null;
+  hideAppError();
+});
 
 // debounce(fn, ms) — обёртка: пропускает вызов fn, пока между нажатиями не
 // прошло ms миллисекунд. Используется для кнопок с быстрым повтором

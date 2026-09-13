@@ -444,6 +444,41 @@ function applyFreshYandexHref(cardId, href, at){
   });
 }
 
+// ===== Диагностика видео для передачи разработчику =====
+// Показывает окно ошибки (штатное, с кнопкой «Скопировать отчёт») и собирает
+// понятный отчёт: размеры плеера и контейнера, состояние кадра, код ошибки
+// медиа и адрес. Зелёной плашки поверх игры больше нет — она мешала играть,
+// а отчёт теперь уходит в готовое окно, откуда копируется одной кнопкой.
+// В журнал ошибок запись НЕ пишем: диагностику вызывают многократно, журнал
+// на 20 записей забился бы ею и вытеснил настоящие исключения.
+function davayVideoDiagnostics(video, card, gameName){
+  const code = (video && video.error && video.error.code) || 0;
+  const codeText = {
+    1: 'MEDIA_ERR_ABORTED (загрузку прервали)',
+    2: 'MEDIA_ERR_NETWORK (сетевая ошибка)',
+    3: 'MEDIA_ERR_DECODE (файл не декодируется)',
+    4: 'MEDIA_ERR_SRC_NOT_SUPPORTED (источник недоступен или формат не поддержан)'
+  }[code] || (code ? String(code) : 'нет');
+  const rect = (el)=>{ try{ const r = el.getBoundingClientRect(); return Math.round(r.width) + 'x' + Math.round(r.height); }catch(e){ return '?'; } };
+  const media = document.getElementById('videoMedia') || document.getElementById('davayMedia');
+  const src = (video && (video.currentSrc || video.src)) || '';
+  const lines = [
+    'Диагностика видео — «' + gameName + '»',
+    '',
+    'код ошибки: ' + codeText,
+    'кадр: ' + (video ? video.videoWidth + 'x' + video.videoHeight : '?'),
+    'readyState: ' + (video ? video.readyState : '?') + ', paused: ' + (video ? video.paused : '?'),
+    'плеер: ' + rect(video) + ', контейнер: ' + rect(media) + ', карточка: ' + rect(document.getElementById('card')),
+    'источник: ' + (card && card.source) + ', файл: ' + ((card && card.name) || (card && card.id) || '?'),
+    'ссылка: ' + String(src).slice(0, 200),
+    '',
+    appEnvInfo()
+  ];
+  if(typeof showDiagnosticReport === 'function'){
+    showDiagnosticReport('Видео не воспроизводится (' + codeText + ')', lines.join('\n'));
+  }
+}
+
 // Обновить ссылку ОДНОГО видео (по его пути в папке). Нужна в момент, когда
 // ролик не открылся: перебирать всю папку (172 файла) ради одного кадра
 // бессмысленно, а один запрос к API отвечает быстро. true — адрес обновлён.
@@ -756,8 +791,6 @@ function setupDavayPlayerElement(video, card, level, reuse){
     // У видео с Яндекс Диска ссылка подписанная и со временем перестаёт
     // работать. Один раз пробуем получить свежую и перезапустить ролик;
     // если и это не помогло — показываем заглушку, как раньше.
-    const mediaEl = video.currentSrc || video.src || '';
-    const code = (video.error && video.error.code) || 0;
     if(card.source === 'yandex' && !card.hrefRefreshed){
       card.hrefRefreshed = true;
       // Берём свежий адрес ИМЕННО ЭТОГО файла: один запрос вместо перебора
@@ -771,22 +804,21 @@ function setupDavayPlayerElement(video, card, level, reuse){
           if(p && typeof p.catch === 'function') p.catch(()=>{});
           return;
         }
-        // Причину пишем и в журнал ошибок (виден в приложении), и тостом:
-        // без этого «чёрный экран» невозможно объяснить — ни кода ошибки,
-        // ни адреса, который отказал.
-        const detail = `${card.name || card.id}: свежая ссылка ${ok ? 'получена' : 'НЕ получена'}, `
-                     + `ошибка медиа ${code}, url ${String(mediaEl).slice(0, 120)}`;
-        if(typeof logAppError === 'function'){
-          logAppError({ message: 'Видео с Яндекс Диска не воспроизводится', detail: detail, at: new Date().toISOString() });
-        }
-        showToast('Видео с Яндекс Диска не открылось — причина записана в журнал ошибок');
         const media = document.getElementById('davayMedia');
         if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+        // Отчёт уходит в штатное окно ошибки — оттуда копируется кнопкой.
+        davayVideoDiagnostics(video, card, 'Давай попробуем');
       });
       return;
     }
-    const media = document.getElementById('davayMedia');
-    if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+    const media2 = document.getElementById('davayMedia');
+    if(media2) media2.innerHTML = '<div class="card-icon">🎬</div>';
+    if(card.source === 'yandex') davayVideoDiagnostics(video, card, 'Давай попробуем');
+  }, {once:true});
+  // Видео пошло — закрываем окно диагностики от прошлой ошибки, чтобы оно
+  // не перекрывало рабочий ролик.
+  video.addEventListener('playing', ()=>{
+    if(typeof hideAppError === 'function') hideAppError();
   }, {once:true});
   video.addEventListener('ended', ()=>{
     if(state.davayAutoAdvance) drawDavayCard(davayLevel);

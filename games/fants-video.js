@@ -541,8 +541,6 @@ function setupVideoPlayerElement(video, card, level, reuse){
     // (MEDIA_ERR_SRC_NOT_SUPPORTED) — игрок видит чёрный экран. Берём свежий
     // адрес ИМЕННО ЭТОГО файла (один запрос вместо перебора всей папки) и
     // перезапускаем ролик; если не вышло — демо/заглушка.
-    const mediaEl = video.currentSrc || video.src || '';
-    const code = (video.error && video.error.code) || 0;
     if(card.source === 'yandex' && !card.hrefRefreshed && typeof refreshYandexCardHref === 'function'){
       card.hrefRefreshed = true;
       refreshYandexCardHref(card).then(ok=>{
@@ -553,18 +551,28 @@ function setupVideoPlayerElement(video, card, level, reuse){
           if(p && typeof p.catch === 'function') p.catch(()=>{});
           return;
         }
-        // Причину пишем в журнал ошибок (виден в приложении): без него
-        // «чёрный экран» невозможно объяснить — ни кода ошибки, ни адреса.
-        const detail = `${card.name || card.id}: свежая ссылка ${ok ? 'получена' : 'НЕ получена'}, `
-                     + `ошибка медиа ${code}, url ${String(mediaEl).slice(0, 120)}`;
-        if(typeof logAppError === 'function'){
-          logAppError({ message: 'Видео с Яндекс Диска не воспроизводится', detail: detail, at: new Date().toISOString() });
-        }
         showVideoErrorFallback(card, level);
+        // Показываем отчёт в штатном окне ошибки: оттуда он копируется
+        // кнопкой «Скопировать отчёт». Ссылку обновить не удалось — значит
+        // дело не в ней, и игроку нужно передать детали разработчику.
+        if(typeof davayVideoDiagnostics === 'function'){
+          davayVideoDiagnostics(video, card, 'Видеорулетка');
+        }
       });
       return;
     }
+    // Ошибка не связана с Диском (локальный файл) либо повторная попытка
+    // уже была — показываем заглушку и всё равно даём отчёт.
     showVideoErrorFallback(card, level);
+    if(card.source === 'yandex' && typeof davayVideoDiagnostics === 'function'){
+      davayVideoDiagnostics(video, card, 'Видеорулетка');
+    }
+  }, {once:true});
+  // Видео пошло — окно диагностики (если было открыто после прошлой ошибки)
+  // закрываем сами: игрок уже видит рабочий ролик, отчёт ему больше не нужен
+  // и только перекрывал бы картинку.
+  video.addEventListener('playing', ()=>{
+    if(typeof hideAppError === 'function') hideAppError();
   }, {once:true});
   video.addEventListener('ended', ()=>{
     if(state.videoAutoAdvance) drawVideoCard(videoLevel);
