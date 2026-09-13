@@ -210,11 +210,27 @@ function checkVersions(html) {
   const cache = sw.match(/CACHE_NAME\s*=\s*'([^']+)'/);
   check('CACHE_NAME объявлен', !!cache, 'не найдена строка CACHE_NAME');
   if (cache) {
+    const cacheVer = (cache[1].match(/v(\d+)$/) || [])[1];
     check(
       `CACHE_NAME в формате vNNN (${cache[1]})`,
-      /-v\d+$/.test(cache[1]),
+      !!cacheVer,
       'ожидается имя вида veselye-igry-cache-vN'
     );
+
+    // APP_BUILD попадает в отчёт об ошибке и в выгрузку статистики — по нему
+    // определяется, на какой версии у игрока случился сбой. Рассинхрон с
+    // CACHE_NAME уже случался (кэш v212, а в отчёте v174), из-за чего
+    // диагностика вводила в заблуждение. Держим их синхронными.
+    const build = html.match(/window\.APP_BUILD\s*=\s*'([^']*)'/);
+    check('APP_BUILD объявлен в index.html', !!build, 'нет window.APP_BUILD');
+    if (build && cacheVer) {
+      const buildVer = (build[1].match(/v(\d+)\s*$/) || [])[1];
+      check(
+        `APP_BUILD совпадает с CACHE_NAME (v${buildVer || '?'} / v${cacheVer})`,
+        buildVer === cacheVer,
+        `APP_BUILD «${build[1]}» не совпадает с CACHE_NAME «${cache[1]}» — отчёт покажет неверную версию`
+      );
+    }
   }
 }
 
