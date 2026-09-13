@@ -246,6 +246,15 @@
     background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
   }
   .modal-card .field input[type=text]::placeholder{color:rgba(43,15,46,.4);}
+  /* Поля ввода в модалках Яндекс Диска — принудительно тёмные на светлом фоне */
+  #yandexSettingsModal input[type=text],
+  #yandexLinksModal textarea,
+  #yandexLinksModal select{
+    background:#f5e6f0 !important; color:#2b0f2e !important;
+    border:1px solid rgba(43,15,46,.3) !important;
+  }
+  #yandexSettingsModal label{ color:#d81b60 !important; }
+
   /* Заголовки полей внутри светлых модалок: бледно-розовый #e8c9dd (для
      тёмного фона) на белой карточке почти не виден — используем яркий
      малиновый, читаемый на светлом фоне. */

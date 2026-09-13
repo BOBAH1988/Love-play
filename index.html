@@ -74,7 +74,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260920u">
+<link rel="stylesheet" href="styles/app.css?v=20260920v">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (см. gameErrorGuard в core.js),
   // чтобы по сообщению игрока было понятно, на какой версии воспроизвелась
@@ -706,6 +706,7 @@
       <button type="button" class="toggle-pill" id="davaySetupFavoritesBtn">❤️ Избранное</button>
       <button type="button" class="toggle-pill" id="davaySetupImportBtn">➕ Добавить видео</button>
       <button type="button" class="toggle-pill" id="davaySetupYandexBtn">☁️ Яндекс Диск</button>
+      <button type="button" class="toggle-pill" id="davaySetupYandexSettingsBtn">⚙️ Настройки</button>
       <button type="button" class="toggle-pill" id="davaySetupSoundBtn" aria-label="Включить звук видео">🔇 Звук выключен</button>
     </div>
 
@@ -721,10 +722,10 @@
     <div class="modal-card" style="max-width:520px;">
       <div class="modal-title">☁️ Прямые ссылки на видео<button type="button" class="modal-close-btn" id="yandexLinksCloseBtn" aria-label="Закрыть">✕</button></div>
       <div class="intro-text" style="margin-bottom:10px;">Вставьте прямые ссылки на видеофайлы (по одной на строку). Поддерживаются только ссылки с CORS-заголовками.</div>
-      <textarea id="yandexLinksInput" rows="6" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:10px; font-size:13px;" placeholder="https://example.com/video1.mp4&#10;https://example.com/video2.mp4"></textarea>
+      <textarea id="yandexLinksInput" rows="6" style="width:100%; box-sizing:border-box; background:rgba(43,15,46,.06); color:#2b0f2e; border:1px solid rgba(43,15,46,.2); border-radius:8px; padding:10px; font-size:13px;" placeholder="https://example.com/video1.mp4&#10;https://example.com/video2.mp4"></textarea>
       <div class="field" style="margin-top:10px;">
         <label>Уровень</label>
-        <select id="yandexLinksLevelSelect" style="width:100%; background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:8px;">
+        <select id="yandexLinksLevelSelect" style="width:100%; background:rgba(43,15,46,.06); color:#2b0f2e; border:1px solid rgba(43,15,46,.2); border-radius:8px; padding:8px;">
           <option value="1">Уровень 1 — Ласки разогрев</option>
           <option value="2">Уровень 2</option>
           <option value="3">Уровень 3</option>
@@ -734,6 +735,23 @@
         </select>
       </div>
       <button type="button" class="btn btn-primary" id="yandexLinksImportBtn" style="margin-top:14px;">⬇️ Загрузить видео</button>
+    </div>
+  </div>
+
+  <!-- ===== МОДАЛКА: НАСТРОЙКИ ЯНДЕКС ДИСКА (OAuth-токен) ===== -->
+  <div class="modal-overlay" id="yandexSettingsModal">
+    <div class="modal-card" style="max-width:520px;">
+      <div class="modal-title">⚙️ Настройки Яндекс Диска<button type="button" class="modal-close-btn" id="yandexSettingsCloseBtn" aria-label="Закрыть">✕</button></div>
+      <div class="intro-text" style="margin-bottom:10px; color:#5c3a52;">Введите OAuth-токен для автоматической загрузки видео из папок Яндекс Диска.</div>
+      <div class="field" style="margin-top:10px;">
+        <label style="color:#d81b60;">OAuth-токен</label>
+        <input type="text" id="yandexTokenInput" style="width:100%; box-sizing:border-box; background:#f5e6f0 !important; color:#2b0f2e !important; border:1px solid rgba(43,15,46,.3); border-radius:8px; padding:10px; font-size:13px; caret-color:#ff5e8e;" placeholder="y0_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label style="color:#d81b60;">Публичный ключ папки</label>
+        <input type="text" id="yandexPublicKeyInput" style="width:100%; box-sizing:border-box; background:#f5e6f0 !important; color:#2b0f2e !important; border:1px solid rgba(43,15,46,.3); border-radius:8px; padding:10px; font-size:13px; caret-color:#ff5e8e;" value="https://disk.yandex.ru/d/fv1y_t0ZQ3YASg">
+      </div>
+      <button type="button" class="btn btn-primary" id="yandexSettingsSaveBtn" style="margin-top:14px;">💾 Сохранить настройки</button>
     </div>
   </div>
 
@@ -4128,7 +4146,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260920n"></script>
+<script src="games/core.js?v=20260920p"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт сразу после core.js — от него зависят resumeBtn, finishGameBtn,
      PAUSE_MAP и определение группы для «Продолжить игру». -->
