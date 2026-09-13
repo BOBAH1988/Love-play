@@ -423,11 +423,20 @@ function drawVideoCard(level, announceEmpty){
       return playFallbackVideoCard(level, announceEmpty);
     }
   }
+  // Битые ролики (те, что уже не открылись) из выбора исключаем — иначе игра
+  // будет натыкаться на них снова и снова. Если после исключения не осталось
+  // ничего, метки снимаем: ссылки могли обновиться и видео ожило. Демо при
+  // этом НЕ включаем — оно только для случая «своих видео нет вовсе».
+  let selectable = all.filter(c => !isVideoBroken(c));
+  if(selectable.length === 0){
+    all.forEach(c => brokenVideoIds.delete(String(c.id)));
+    selectable = all;
+  }
   if(!state.videoUsed) state.videoUsed = {};
   let used = state.videoUsed[level] || [];
-  let pool = all.filter(c=>!used.includes(videoCardId(c)));
+  let pool = selectable.filter(c=>!used.includes(videoCardId(c)));
   if(pool.length===0){
-    pool = all;
+    pool = selectable;
     used = [];
     showToast('Видео этого уровня показаны заново 🔀');
   }
@@ -471,14 +480,64 @@ function videoSwipeNext(){
   }
 }
 
-// Показать демо/заглушку, когда своё видео действительно не проигрывается.
+// Показать заглушку, когда своё видео действительно не проигрывается.
+//
+// ВАЖНО про демо-ролик: он включается ТОЛЬКО когда своих видео нет вообще
+// (см. playFallbackVideoCard из drawVideoCard). Если видео добавлены, но
+// конкретный файл не открылся, демо показывать нельзя — иначе демо мелькает
+// через каждый ролик и игрок думает, что игра сломана. В этом случае берём
+// следующее СВОЁ видео, а битое запоминаем, чтобы не наткнуться на него
+// снова и не зациклиться, когда не открывается всё подряд.
+const BROKEN_VIDEO_TTL = 10 * 60 * 1000; // мс: сколько помним «битый» ролик
+let brokenVideoIds = new Map(); // id карточки -> время, когда признали битой
+
+function markVideoBroken(card){
+  if(!card || !card.id) return;
+  brokenVideoIds.set(String(card.id), Date.now());
+}
+function isVideoBroken(card){
+  if(!card || !card.id) return false;
+  const at = brokenVideoIds.get(String(card.id));
+  if(!at) return false;
+  if(Date.now() - at > BROKEN_VIDEO_TTL){ brokenVideoIds.delete(String(card.id)); return false; }
+  return true;
+}
+function forgetBrokenVideos(){
+  brokenVideoIds = new Map();
+}
+
+// Показать следующее СВОЁ видео того же уровня, пропуская признанные битыми.
+// Возвращает true, если получилось (тогда демо не нужно).
+function playNextOwnVideo(level){
+  const hidden = state.videoHidden || [];
+  const broken = [];
+  const all = getDavayCardsList().filter(c => c.level === level && !hidden.includes(videoCardId(c)));
+  all.forEach(c=>{ if(isVideoBroken(c)) broken.push(c); });
+  const usable = all.filter(c => !isVideoBroken(c));
+  // Ничего, кроме битых, не осталось — снимаем с них метку: пусть игра
+  // попробует ещё раз (ссылки Яндекса обновляются и могли ожить), иначе
+  // игрок упёрся бы в тупик.
+  if(usable.length === 0 && broken.length > 0){
+    broken.forEach(c => brokenVideoIds.delete(String(c.id)));
+    if(all.length === 0) return false;
+  } else if(usable.length === 0){
+    return false;
+  }
+  drawVideoCard(level, false);
+  return true;
+}
+
 function showVideoErrorFallback(card, level){
-  const fallback = getFallbackVideoCard();
-  // Если сломался не сам образец — показываем вместо него образец из
-  // cards_video.js. Если сломался и он тоже — тогда уже просто иконка,
-  // чтобы не зациклиться.
-  if(fallback && card.video !== fallback.video){
-    renderVideoCard(fallback, level);
+  // Своё видео не открылось — запоминаем его как битое и показываем другое
+  // СВОЁ. Демо-ролик здесь намеренно не используется: он остаётся только для
+  // случая «своих видео нет вовсе».
+  markVideoBroken(card);
+  const hasOwn = getDavayCardsList().some(c=>c.level===level);
+  if(hasOwn && typeof drawVideoCard === 'function'){
+    // Если после исключения битых своих видео не осталось — playNextOwnVideo
+    // сам снимет метки и попробует ещё раз.
+    renderVideoPlaceholderCard();
+    setTimeout(()=>{ playNextOwnVideo(level); }, 0);
     return;
   }
   const media = document.getElementById('videoMedia');
@@ -543,7 +602,7 @@ function setupVideoPlayerElement(video, card, level, reuse){
     // перезапускаем ролик; если не вышло — демо/заглушка.
     if(card.source === 'yandex' && !card.hrefRefreshed && typeof refreshYandexCardHref === 'function'){
       card.hrefRefreshed = true;
-      refreshYandexCardHref(card).then(ok=>{
+      refreshYandexCardHref(card).catch(()=>false).then(ok=>{
         if(ok && card.video && !videoNativeFullscreenActive){
           video.src = card.video;
           video.load();
@@ -665,6 +724,10 @@ async function goToVideoGame(){
   videoLevel = 1;
   state.videoUsed = {};
   state.videoHidden = [];
+  // Новая партия — начинаем с чистого листа: список «битых» роликов сбрасываем,
+  // чтобы игра попробовала все свои видео заново (ссылки Яндекса могли
+  // обновиться, и то, что не открылось в прошлый раз, теперь работает).
+  forgetBrokenVideos();
   // Новая партия — всегда все видео, а не режим "только избранное" (иначе
   // после захода в избранное через сердечко на davaySetup игра застревала
   // бы в этом фильтре). Аналогично сделано для "Давай попробуем".
