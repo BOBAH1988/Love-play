@@ -154,7 +154,7 @@ let state = {
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
   photoOrderMode:false, photoSeqIndex:{},
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false, videoSoundOn:false,
-  videoDbMigrated:false,
+  videoDbMigrated:false, videoResetAt:0,
   davayUsed:{}, davayHidden:[], davayLiked:[], davayFavoritesOnly:false, davayAutoAdvance:false,
   davayFavYes:[], davayFavLater:[], davayFavNo:[],
   davayQuizActivePlayer:0, davayQuizQueue:[], davayQuizIndex:0, davayQuizAnswers:{},
@@ -1812,10 +1812,13 @@ function performFullReset(){
   });
   clearAllVideoBlobs(); // архивное хранилище "Видеорулетки" — на всякий случай, обычно уже пусто после миграции
   clearErrorLog(); // журнал ошибок тоже чистим — сброс есть сброс
-  clearAllDavayBlobs().then(()=>{
-    importedDavayCards = [];
-    importedDavayVideosLoaded = true;
-  });
+  clearAllDavayBlobs(); // общий каталог видео: чистится в IndexedDB, см. сброс ниже
+  // Память о сбросе: clearAllDavayBlobs() завершается асинхронно, а «Вселенная»
+  // игры узнаёт об очистке только из флагов в localStorage. Без этой отметки
+  // каталог и «показанные» видео переживали сброс: игрок жал «Сбросить весь
+  // прогресс», возвращался в игру — и видел свои прежние ролики.
+  state.videoResetAt = Date.now();
+  refreshDavayCatalogInMemory();
   // Закрываем все модальные окна (рулетка и другие)
   document.querySelectorAll('.modal.show, [class*="modal"].show, .show').forEach(el=>{
     if(el.classList.contains('modal') || el.querySelector('.modal-content')){
@@ -2096,19 +2099,26 @@ function updateTurnUI(){
   document.getElementById('score1').textContent = `${state.name1}: ${state.score1}`;
   document.getElementById('score2').textContent = `${state.name2}: ${state.score2}`;
   // turn-label между FAB-кнопками (единая система для всех игр).
-  // В «Фантах» (общий #game без видео/davay/placeholder режимов) вместо
-  // «Ходит: …» показываем иконку и название игры — чей ход, видно на самой
-  // карточке задания.
-  const gameScreenEl = document.getElementById('game');
-  const isFantyGame = !!(gameScreenEl
-    && !gameScreenEl.classList.contains('video-mode')
-    && !gameScreenEl.classList.contains('davay-mode')
-    && !gameScreenEl.classList.contains('placeholder-mode'));
+  // «Фанты» (общий #game без видео/davay/placeholder режимов) — исключение:
+  // название режима («💘 Фанты» / «Правда/Действие») показываем в штатном
+  // заголовке игры (.game-level-label), как во всех остальных играх, а не в
+  // метке хода. Раньше текст подставлялся в .td-turn-label и там же
+  // подгонялся шрифт (font-size:28px) — получалась копия заголовка мимо
+  // общих стилей: другой размер, без жирности и межбуквенного интервала.
+  // Чей ход — видно на самой карточке задания.
+  const isFantyGame = isFantyGameScreen();
+  const titleLabel = document.getElementById('gameLevelLabel');
   const turnLabel = document.getElementById('gameTurnLabel');
-  if(turnLabel){
-    if(isFantyGame){
-      turnLabel.textContent = state.gameType === 'td' ? 'Правда/Действие' : '💘 Фанты';
-    } else {
+  if(isFantyGame){
+    if(titleLabel){
+      titleLabel.textContent = state.gameType === 'td' ? '❓ Правда/Действие' : '💘 Фанты';
+      titleLabel.style.display = 'block';
+    }
+    // Метка хода в «Фантах» не нужна — режим уже виден в заголовке.
+    if(turnLabel) turnLabel.style.display = 'none';
+  } else {
+    if(turnLabel){
+      turnLabel.style.display = '';
       const currentName = state.currentPlayer === 1 ? state.name1 : state.name2;
       turnLabel.textContent = 'Ходит: ' + currentName;
     }
@@ -2160,6 +2170,16 @@ document.getElementById('resumeMuteBtn').addEventListener('click', ()=>{
   updateMuteBtn();
 });
 
+// «Фанты» (двоих): общий экран #game без видео/davay/placeholder режимов.
+// В этом режиме название игры показывается в заголовке, а не в метке хода.
+function isFantyGameScreen(){
+  const el = document.getElementById('game');
+  return !!(el
+    && !el.classList.contains('video-mode')
+    && !el.classList.contains('davay-mode')
+    && !el.classList.contains('placeholder-mode'));
+}
+
 function updateLevelUI(){
   const btn = document.getElementById('levelUpBtn');
   const levelLabel = document.getElementById('gameLevelLabel');
@@ -2177,7 +2197,10 @@ function updateLevelUI(){
     }
     return;
   }
-  if(levelLabel) levelLabel.style.display = 'none';
+  // В «Фантах» заголовок занят названием режима (см. updateTurnUI) — не гасим
+  // его здесь, иначе название пропадёт: updateLevelUI вызывается после
+  // updateTurnUI и раньше безусловно ставил display:none.
+  if(levelLabel && !isFantyGameScreen()) levelLabel.style.display = 'none';
   if(isVideoMode() || isDavayMode()){
     btn.disabled = false;
     btn.textContent = 'Сложнее';

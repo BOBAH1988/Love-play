@@ -245,6 +245,101 @@ test('В реестре есть игра "Рулетка"', () => {
   assert(typeof global[roulette.resume] === 'function', 'функция resume должна быть доступна глобально');
 });
 
+console.log('\n=== Название игры в «Фантах» (общий экран #game) ===');
+
+// «Фанты» для двоих живут на общем экране #game и переключают два режима:
+// «💘 Фанты» и «❓ Правда/Действие». Название режима должно показываться в
+// штатном заголовке игры (.game-level-label), как во всех остальных играх —
+// раньше оно уходило в метку хода (.td-turn-label) и там подгонялось
+// font-size:28px, из-за чего выбивалось из общего стиля заголовков.
+// Здесь проверяем фактическое поведение: вызываем updateTurnUI/updateLevelUI
+// и смотрим, в каком элементе оказался текст.
+const MODE_CLASSES = ['video-mode', 'davay-mode', 'placeholder-mode'];
+const asFantyScreen = () => {
+  const gameEl = getElById(stub, 'game');
+  MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
+  return gameEl;
+};
+
+test('Сценарий: название режима «Фанты» попадает в заголовок игры', () => {
+  const title = getElById(stub, 'gameLevelLabel');
+  const turn = getElById(stub, 'gameTurnLabel');
+  asFantyScreen();
+
+  state.gameType = 'fanty';
+  global.updateTurnUI();
+  assert(title.textContent === '💘 Фанты', `в заголовке ожидалось «💘 Фанты», получено «${title.textContent}»`);
+  assert(title.style.display !== 'none', 'заголовок не должен быть скрыт');
+  assert(turn.style.display === 'none', 'метка хода в «Фантах» скрыта — режим виден в заголовке');
+});
+
+test('Сценарий: название режима «Правда/Действие» попадает в заголовок игры', () => {
+  const title = getElById(stub, 'gameLevelLabel');
+  asFantyScreen();
+
+  state.gameType = 'td';
+  global.updateTurnUI();
+  assert(title.textContent === '❓ Правда/Действие',
+    `в заголовке ожидалось «❓ Правда/Действие», получено «${title.textContent}»`);
+  assert(title.style.display !== 'none', 'заголовок не должен быть скрыт');
+});
+
+test('Сценарий: updateLevelUI не гасит заголовок «Фантов»', () => {
+  // updateLevelUI вызывается ПОСЛЕ updateTurnUI и раньше безусловно ставил
+  // заголовку display:none — название режима пропадало.
+  const title = getElById(stub, 'gameLevelLabel');
+  asFantyScreen();
+
+  state.gameType = 'fanty';
+  global.updateTurnUI();
+  global.updateLevelUI();
+  assert(title.textContent === '💘 Фанты', 'заголовок сохранил текст после updateLevelUI');
+  assert(title.style.display !== 'none', 'updateLevelUI не должен скрывать заголовок «Фантов»');
+});
+
+test('Сценарий: в видеорежиме #game заголовок по-прежнему скрыт', () => {
+  // Видеорулетка и «Давай попробуем» используют #game, но название игры там
+  // не показывается — регресс в этих режимах недопустим.
+  const gameEl = getElById(stub, 'game');
+  const title = getElById(stub, 'gameLevelLabel');
+  const turn = getElById(stub, 'gameTurnLabel');
+
+  asFantyScreen();
+  gameEl.classList.add('video-mode');
+  state.name1 = 'Парень';
+  global.updateTurnUI();
+  global.updateLevelUI();
+  assert(turn.style.display !== 'none', 'в видеорежиме метка хода должна быть видна');
+  assert(turn.textContent.startsWith('Ходит:'), `ожидалась метка хода, получено «${turn.textContent}»`);
+  assert(title.style.display === 'none', 'в видеорежиме заголовок игры должен быть скрыт');
+  MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
+});
+
+test('Сценарий: метка хода возвращается после выхода из «Фантов»', () => {
+  // У «Фантов» метка хода скрывается; при возврате в обычный режим она должна
+  // появиться снова, иначе имя игрока пропадёт навсегда.
+  const gameEl = getElById(stub, 'game');
+  const title = getElById(stub, 'gameLevelLabel');
+  const turn = getElById(stub, 'gameTurnLabel');
+
+  asFantyScreen();
+  state.gameType = 'fanty';
+  global.updateTurnUI();
+  assert(turn.style.display === 'none', 'исходно метка хода скрыта');
+
+  // Выходим из «Фантов» в режим «Давай попробуем» (свой заголовок не ставит).
+  MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
+  gameEl.classList.add('davay-mode');
+  state.name1 = 'Парень';
+  state.currentPlayer = 1;
+  global.updateTurnUI();
+  global.updateLevelUI();
+  assert(turn.style.display !== 'none', 'метка хода должна снова показываться');
+  assert(turn.textContent === 'Ходит: Парень', `ожидалось «Ходит: Парень», получено «${turn.textContent}»`);
+  assert(title.style.display === 'none', 'заголовок снова скрыт — его роль вернулась к уровню');
+  MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
+});
+
 console.log('\n=== Симуляция пользовательских сценариев ===');
 
 test('Сценарий: запуск игры через goToGameSetup', () => {

@@ -2438,10 +2438,12 @@
   .card-rank-badge-wrap .card-rank-badge{
     box-shadow:0 2px 8px rgba(0,0,0,.3);
   }
-  /* Фанты (парные): метка показывает «💘 Фанты» вместо «Ходит: …» — крупнее
-     вдвое, как заголовок. Строку «До след. уровня» (#levelProgress) опускаем
-     ниже, чтобы не залезала под увеличенную метку. */
-  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .td-turn-label{font-size:28px;}
+  /* Фанты (парные): название режима («💘 Фанты» / «❓ Правда/Действие») — это
+     обычный заголовок игры .game-level-label, поэтому здесь никаких правок
+     шрифта не нужно: раньше метка хода раздувалась до font-size:28px, чтобы
+     сойти за заголовок, и выбивалась из общего стиля (26px, вес 800,
+     межбуквенный интервал). Строку «До след. уровня» (#levelProgress)
+     скрываем — в «Фантах» она показывается внутри карточки. */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
   /* В игре «Предложи партнеру» нет соревнования — скрываем счёт Парень/Девушка */
   #game.placeholder-mode #gameScoreRow{display:none;}
