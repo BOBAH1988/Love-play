@@ -701,6 +701,15 @@
   #game.video-mode .card-split-media, #game.davay-mode .card-split-media{
     border-radius:24px;
     background:#000;
+    /* Ширину задаём явно. Карточка видео получает класс card-empty, а он
+       ставит .card-inner{align-items:center} — по поперечной оси (ширине)
+       контейнер сжимается «по содержимому». Видео внутри лежит
+       position:absolute и в потоке не участвует, поэтому содержимого нет и
+       ширина схлопывалась в 0: чёрный прямоугольник при полностью рабочей
+       ссылке (проверено в Safari — loadedmetadata 1920x1080, playing).
+       align-self:stretch возвращает растяжение по ширине. */
+    align-self:stretch;
+    width:100%;
   }
   /* Полноэкранный режим карточки с видео: заполняем весь экран целиком —
      вертикально, если телефон вертикально, и горизонтально, если горизонтально.
@@ -1692,6 +1701,17 @@
   }
   .krokodil-score-row.two-player .krokodil-score-item.active{
     font-size:22px; padding:0; background:none; border-radius:0; color:#fff;
+  }
+  /* Карточка видео: содержимое (плеер) всегда растягивается на всю площадь.
+     Класс card-empty у неё остаётся ради базовых стилей карточки, но его
+     .card-inner{align-items:center} сжимал бы контейнер плеера по ширине —
+     видео лежит position:absolute, «содержимого» у контейнера нет, поэтому
+     ширина схлопывалась в 0 и был виден только чёрный фон. Возвращаем
+     stretch для режимов видео. */
+  #game.video-mode .card .card-inner,
+  #game.davay-mode .card .card-inner{
+    align-items:stretch;
+    justify-content:flex-start;
   }
   .card-empty .card-inner{align-items:center; justify-content:center;}
   .card-empty .card-icon{font-size:52px;}

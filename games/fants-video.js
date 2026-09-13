@@ -595,7 +595,11 @@ function renderVideoCard(card, level){
     return;
   }
   fadeSwapCard((el)=>{
-    el.className = 'card card-empty';
+    // Класс card-empty здесь НЕ ставим: он для пустых карточек-заглушек, а
+    // его правило .card-inner{align-items:center} сжимало контейнер плеера
+    // по ширине (видео лежит position:absolute и содержимого не даёт) —
+    // видео получало нулевой размер, и был виден только чёрный фон карточки.
+    el.className = 'card';
     el.style.borderTop = '';
     el.innerHTML = `
       <div class="card-inner">
@@ -667,7 +671,7 @@ async function goToVideoGame(){
   document.getElementById('davaySetup').classList.remove('active');
   document.getElementById('setup').classList.remove('active');
   document.getElementById('game').classList.add('active');
-  document.getElementById('game').classList.add('video-mode');
+  setGameMode('video-mode');
   document.getElementById('doneBtn').textContent = 'Следующее';
   document.getElementById('pauseBtn').textContent = 'Выход';
   updateTurnUI();
@@ -745,7 +749,7 @@ async function goToVideoFavoritesView(){
   document.getElementById('davaySetup').classList.remove('active');
   document.getElementById('setup').classList.remove('active');
   document.getElementById('game').classList.add('active');
-  document.getElementById('game').classList.add('video-mode');
+  setGameMode('video-mode');
   document.getElementById('doneBtn').textContent = 'Следующее';
   document.getElementById('pauseBtn').textContent = 'Выход';
   updateTurnUI();
@@ -781,7 +785,7 @@ function exitVideoGame(){
   document.getElementById('card').style.width = '';
   // Возвращаем кнопку "Пауза" на обычное место (конец второго ряда)
   document.querySelector('.row2').appendChild(document.getElementById('pauseBtn'));
-  document.getElementById('game').classList.remove('video-mode');
+  setGameMode(null);
   document.getElementById('doneBtn').textContent = '💕 Готово';
   document.getElementById('pauseBtn').textContent = 'Пауза';
   // «Видеорулетка» запускается кнопкой со страницы настройки «Давай попробуем»

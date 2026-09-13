@@ -767,7 +767,9 @@ function renderDavayCard(card, level){
     return;
   }
   fadeSwapCard((el)=>{
-    el.className = 'card card-empty';
+    // card-empty не ставим — его .card-inner{align-items:center} сжимал бы
+    // контейнер плеера по ширине и видео получило бы нулевой размер.
+    el.className = 'card';
     el.style.borderTop = '';
     el.innerHTML = `
       <div class="card-inner">
@@ -854,7 +856,7 @@ function goToDavaySetup(){
     davayHistoryPos = -1;
     saveState();
   }
-  document.getElementById('game').classList.remove('davay-mode');
+  setGameMode(null);
   goToGameSetup('davaySetup', null, ()=>{
     renderDavaySetupStarterGroup();
     renderDavaySetupLevels();
@@ -1119,7 +1121,7 @@ function goToDavayFavoritesView(){
   document.getElementById('davaySetup').classList.remove('active');
   document.getElementById('setup').classList.remove('active');
   document.getElementById('game').classList.add('active');
-  document.getElementById('game').classList.add('davay-mode');
+  setGameMode('davay-mode');
   document.getElementById('doneBtn').textContent = 'Следующее';
   // Просмотр избранного — это не партия, которую можно поставить на паузу,
   // поэтому кнопка сразу подписана "Выход" (обработчик см. ниже, у pauseBtn).
@@ -1164,7 +1166,7 @@ async function goToDavayGame(){
   document.getElementById('davaySetup').classList.remove('active');
   document.getElementById('setup').classList.remove('active');
   document.getElementById('game').classList.add('active');
-  document.getElementById('game').classList.add('davay-mode');
+  setGameMode('davay-mode');
   document.getElementById('doneBtn').textContent = 'Следующее';
   document.getElementById('pauseBtn').textContent = 'Пауза';
   updateTurnUI();
@@ -1185,6 +1187,13 @@ async function goToDavayGame(){
 // "Давай попробуем" (используется кнопкой "Выход" на экране итогов).
 function exitDavayGame(toDavaySetup){
   state.inProgress = false;
+  // Снимаем паузу и закрываем окно итогов: раньше pausedMode сбрасывался
+  // только косвенно (внутри goToDavaySetup и лишь когда он равен 'davay'),
+  // а модалка итогов оставалась висеть поверх следующего экрана.
+  state.pausedMode = null;
+  if(typeof hideModal === 'function') hideModal('davaySummaryModal');
+  const pauseModalEl = document.getElementById('pauseMenuModal');
+  if(pauseModalEl) pauseModalEl.classList.remove('show');
   saveState();
   if(document.fullscreenElement) document.exitFullscreen();
   davayFullscreenActive = false;
@@ -1201,7 +1210,7 @@ function exitDavayGame(toDavaySetup){
   document.getElementById('card').style.width = '';
   document.querySelector('.row2').appendChild(document.getElementById('pauseBtn'));
   document.getElementById('game').classList.remove('active');
-  document.getElementById('game').classList.remove('davay-mode');
+  setGameMode(null);
   document.getElementById('doneBtn').textContent = '💕 Готово';
   document.getElementById('pauseBtn').textContent = 'Пауза';
   if(toDavaySetup){
@@ -1228,7 +1237,12 @@ function pauseDavayGame(){
   davayNativeFullscreenActive = false;
   const video = document.getElementById('davayPlayer');
   if(video) video.pause();
+  if(typeof hideModal === 'function') hideModal('davaySummaryModal');
   document.querySelector('.row2').appendChild(document.getElementById('pauseBtn'));
+  // Класс режима снимаем: иначе после паузы «Фанты» или «Предложи партнёру»
+  // открывались на #game.davay-mode — с чужим оформлением, а предикаты
+  // isDavayMode() уводили кнопку «Выход» и стрелку «←» не в тот режим.
+  setGameMode(null);
   returnToSetupUI();
   showToast('Игра на паузе — прогресс сохранён');
 }
@@ -1240,7 +1254,7 @@ function resumeDavayGame(){
   document.querySelector('.row1').appendChild(document.getElementById('pauseBtn'));
   document.getElementById('setup').classList.remove('active');
   document.getElementById('game').classList.add('active');
-  document.getElementById('game').classList.add('davay-mode');
+  setGameMode('davay-mode');
   document.getElementById('doneBtn').textContent = 'Следующее';
   document.getElementById('pauseBtn').textContent = 'Пауза';
   updateTurnUI();
@@ -1303,7 +1317,7 @@ function goToPlaceholderGame(){
   saveState();
   document.getElementById('photoSetup').classList.remove('active');
   document.getElementById('game').classList.add('active');
-  document.getElementById('game').classList.add('placeholder-mode');
+  setGameMode('placeholder-mode');
   document.getElementById('game').classList.remove('photo-favview');
   document.getElementById('doneBtn').textContent = 'Следующая';
   document.getElementById('pauseBtn').textContent = 'Выход';
@@ -1375,7 +1389,7 @@ function goToPhotoFavoritesView(){
   saveState();
   document.getElementById('photoSetup').classList.remove('active');
   document.getElementById('game').classList.add('active');
-  document.getElementById('game').classList.add('placeholder-mode');
+  setGameMode('placeholder-mode');
   document.getElementById('game').classList.add('photo-favview');
   document.getElementById('pauseBtn').textContent = 'Выход';
   updateMuteBtn();
@@ -1402,7 +1416,7 @@ function exitPlaceholderGame(){
   const pauseModalEl = document.getElementById('pauseMenuModal');
   if(pauseModalEl) pauseModalEl.classList.remove('show');
   saveState();
-  document.getElementById('game').classList.remove('placeholder-mode');
+  setGameMode(null);
   document.getElementById('game').classList.remove('photo-favview');
   document.getElementById('doneBtn').textContent = '💕 Готово';
   document.getElementById('pauseBtn').textContent = 'Пауза';
