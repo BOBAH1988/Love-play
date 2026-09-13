@@ -3897,14 +3897,14 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
     showToast('Уровень не найден в списке Яндекс Диска');
     return;
   }
-  showToast(`Загрузка из ${levels.length > 1 ? levels.length + ' папок' : 'папки "' + levels[0].name + '"'}...`);
-    // Игровой уровень 1..4 (davaySelectedLevel 3..6 → gameLevel = id - 2):
-    // видео сохраняем под ним, иначе drawDavayCard их не найдёт.
-    const gameLevel = state.davaySelectedLevel - 2;
-    // distribute: каждый игровой уровень забирает свою долю из общего списка
-    const allGameLevels = [1,2,3,4];
-    const result = await loadYandexDiskLevel(gameLevel, '/', allGameLevels);
-    let addedTotal = result.added || 0, lastError = result.error || '';
+  showToast(`Загрузка видео...`);
+  // Игровой уровень 1..4 (davaySelectedLevel 3..6 → gameLevel = id - 2):
+  // видео сохраняем под ним, иначе drawDavayCard их не найдёт.
+  const gameLevel = state.davaySelectedLevel - 2;
+  // distribute: каждый игровой уровень забирает свою долю из общего списка
+  const allGameLevels = [1,2,3,4];
+  const result = await loadYandexDiskLevel(gameLevel, '/', allGameLevels);
+  let addedTotal = result.added || 0, lastError = result.error || '';
   if(lastError && addedTotal === 0){
     showToast('❌ ' + lastError);
   } else if(addedTotal > 0){
