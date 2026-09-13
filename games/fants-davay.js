@@ -486,12 +486,19 @@ async function refreshYandexCardHref(card){
   if(!card || !card.yandexPath) return false;
   try{
     const href = await fetchYandexDiskHref(card.yandexPath);
-    if(!href || href === card.video) return false;
+    if(!href) return false;
     const at = Date.now();
-    card.video = href;
+    // Адрес мог не измениться — это НЕ повод считать, что восстановить не
+    // удалось: Яндекс вправе отдать ту же ссылку, и она при этом рабочая.
+    // Раньше здесь возвращался false, и вызывающий код помечал такое видео
+    // «битым» и пропускал его, хотя файл в полном порядке. Именно поэтому
+    // в «битые» попадали рабочие ролики с Диска.
+    if(href !== card.video){
+      card.video = href;
+      applyFreshYandexHref(card.id, href, at);
+    }
     card.urlAt = at;
-    applyFreshYandexHref(card.id, href, at);
-    // Ту же строку обновляем в базе, чтобы свежий адрес пережил перезагрузку.
+    // Строку обновляем в базе в любом случае, чтобы адрес пережил перезагрузку.
     const row = importedDavayCards.find(c => c.id === card.id);
     if(row && row.dbId){
       await updateYandexRows([{ id: row.dbId, url: href, urlAt: at }]);
@@ -764,6 +771,10 @@ function setupDavayPlayerElement(video, card, level, reuse){
   // Антихотлинк Яндекса: запрос видео с чужим доменом в Referer получает 403,
   // без Referer — 206. Ставим политику на самом элементе тоже.
   try{ video.referrerPolicy = 'no-referrer'; }catch(err){}
+  // Каждый показ — новая попытка: снимаем флаг «ссылку уже обновляли», иначе
+  // право на восстановление тратилось один раз за партию, и со второго отказа
+  // ролик больше не чинился.
+  if(card) card.hrefRefreshed = false;
   video.muted = !davaySoundOn;
   video.loop = !state.davayAutoAdvance;
     if(reuse){
@@ -791,12 +802,16 @@ function setupDavayPlayerElement(video, card, level, reuse){
     // У видео с Яндекс Диска ссылка подписанная и со временем перестаёт
     // работать. Один раз пробуем получить свежую и перезапустить ролик;
     // если и это не помогло — показываем заглушку, как раньше.
+    const code = (video.error && video.error.code) || 0;
+    // Код 1 — прерванная загрузка (переключили ролик или ушли с экрана).
+    // Это не поломка: файл рабочий, чинить нечего и пугать игрока незачем.
+    if(code === 1) return;
     if(card.source === 'yandex' && !card.hrefRefreshed){
       card.hrefRefreshed = true;
       // Берём свежий адрес ИМЕННО ЭТОГО файла: один запрос вместо перебора
       // всей папки. Ссылки у Яндекса переподписываются, сохранённая начинает
       // отдавать 403, и <video> падает с ошибкой 4 (чёрный экран).
-      refreshYandexCardHref(card).then(ok=>{
+      refreshYandexCardHref(card).catch(()=>false).then(ok=>{
         if(ok && card.video){
           video.src = card.video;
           video.load();
@@ -1203,7 +1218,7 @@ function goToDavayFavoritesView(){
   updateLevelUI();
   updateMuteBtn();
   requestWakeLock();
-  ensureImportedDavayVideosLoaded().then(()=> refreshYandexLinks(true));
+  ensureImportedDavayVideosLoaded().then(()=> refreshYandexLinks(true)).catch(()=>{});
   updateDavayPlayerButtons();
   if(!state.davayFavoritesOnly){
     state.davayFavoritesOnly = true;
@@ -1247,7 +1262,9 @@ async function goToDavayGame(){
   updateMuteBtn();
   requestWakeLock();
   await ensureImportedDavayVideosLoaded();
-  refreshYandexLinks(true); // ссылки Яндекса живут минуты — обновляем при входе
+  // .catch обязателен: без него сбой запроса станет необработанным отказом
+  // промиса, а тот пишется в журнал ошибок и вытесняет настоящие исключения.
+  refreshYandexLinks(true).catch(()=>{}); // ссылки Яндекса живут минуты — обновляем при входе
   resetDavayQuiz();
   updateDavayPlayerButtons();
   updateDavayFavoritesBtn();

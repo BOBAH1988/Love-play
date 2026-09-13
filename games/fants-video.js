@@ -527,11 +527,20 @@ function playNextOwnVideo(level){
   return true;
 }
 
-function showVideoErrorFallback(card, level){
+function showVideoErrorFallback(card, level, errorCode){
   // Своё видео не открылось — запоминаем его как битое и показываем другое
   // СВОЁ. Демо-ролик здесь намеренно не используется: он остаётся только для
   // случая «своих видео нет вовсе».
-  markVideoBroken(card);
+  //
+  // Метку «битое» ставим НЕ на любую ошибку. Код 1 (MEDIA_ERR_ABORTED) —
+  // это прерванная загрузка: так бывает при быстром переключении роликов,
+  // когда браузер не успел докачать предыдущий, и при уходе с экрана. Файл
+  // при этом полностью рабочий, и помечать его битым нельзя — иначе рабочие
+  // видео с Диска постепенно выпадали бы из игры. Реальная недоступность
+  // источника — это код 4 (MEDIA_ERR_SRC_NOT_SUPPORTED); его и считаем
+  // признаком проблемы (код 2 — сеть, код 3 — не декодируется).
+  const realFailure = (errorCode === 0 || errorCode === 2 || errorCode === 3 || errorCode === 4);
+  if(realFailure) markVideoBroken(card);
   const hasOwn = getDavayCardsList().some(c=>c.level===level);
   if(hasOwn && typeof drawVideoCard === 'function'){
     // Если после исключения битых своих видео не осталось — playNextOwnVideo
@@ -553,6 +562,11 @@ function setupVideoPlayerElement(video, card, level, reuse){
   // без Referer — 206. Ставим политику и на элементе тоже (не только в теге и
   // <meta>): элемент может быть переиспользован, а свойство надёжнее атрибута.
   try{ video.referrerPolicy = 'no-referrer'; }catch(err){}
+  // Каждый показ ролика — новая попытка. Флаг «ссылку уже обновляли» снимаем:
+  // карточка живёт в каталоге и в истории, поэтому без сброса право на
+  // восстановление ссылки тратилось один раз за всю партию, и со второго
+  // отказа ролик уже не чинился — он молча пропускался как «битый».
+  if(card) card.hrefRefreshed = false;
   video.muted = !videoSoundOn;
   video.loop = !state.videoAutoAdvance;
   if(reuse){
@@ -599,7 +613,13 @@ function setupVideoPlayerElement(video, card, level, reuse){
     // сохранённый адрес начинает отдавать 403, и <video> падает с ошибкой 4
     // (MEDIA_ERR_SRC_NOT_SUPPORTED) — игрок видит чёрный экран. Берём свежий
     // адрес ИМЕННО ЭТОГО файла (один запрос вместо перебора всей папки) и
-    // перезапускаем ролик; если не вышло — демо/заглушка.
+    // перезапускаем ролик.
+    const code = (video.error && video.error.code) || 0;
+    // Прерванная загрузка (код 1) — НЕ повод что-то чинить: так браузер
+    // сообщает, что не стал докачивать ролик, который уже не показывается
+    // (быстрое переключение или уход с экрана). Файл рабочий, ссылку
+    // обновлять не нужно, и помечать его битым тем более.
+    if(code === 1) return;
     if(card.source === 'yandex' && !card.hrefRefreshed && typeof refreshYandexCardHref === 'function'){
       card.hrefRefreshed = true;
       refreshYandexCardHref(card).catch(()=>false).then(ok=>{
@@ -610,19 +630,19 @@ function setupVideoPlayerElement(video, card, level, reuse){
           if(p && typeof p.catch === 'function') p.catch(()=>{});
           return;
         }
-        showVideoErrorFallback(card, level);
-        // Показываем отчёт в штатном окне ошибки: оттуда он копируется
-        // кнопкой «Скопировать отчёт». Ссылку обновить не удалось — значит
-        // дело не в ней, и игроку нужно передать детали разработчику.
+        // Ссылку обновить не удалось — вот теперь показываем другое видео
+        // (showVideoErrorFallback пометит это битым, только если отказ
+        // настоящий, а не прерванная загрузка).
+        showVideoErrorFallback(card, level, code);
+        // Отчёт в штатном окне ошибки: оттуда он копируется кнопкой.
         if(typeof davayVideoDiagnostics === 'function'){
           davayVideoDiagnostics(video, card, 'Видеорулетка');
         }
       });
       return;
     }
-    // Ошибка не связана с Диском (локальный файл) либо повторная попытка
-    // уже была — показываем заглушку и всё равно даём отчёт.
-    showVideoErrorFallback(card, level);
+    // Повторная ошибка того же ролика либо локальный файл.
+    showVideoErrorFallback(card, level, code);
     if(card.source === 'yandex' && typeof davayVideoDiagnostics === 'function'){
       davayVideoDiagnostics(video, card, 'Видеорулетка');
     }
