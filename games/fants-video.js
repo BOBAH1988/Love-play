@@ -281,6 +281,13 @@ document.getElementById('videoFavoritesBtn').addEventListener('click', ()=>{
 // широких видео ширина остаётся на весь экран, чтобы высота не уменьшилась.
 // Вызывается и при загрузке видео, и при повороте экрана (см. ниже), чтобы
 // уже открытое видео корректно перестраивалось под новую ориентацию.
+// Подогнать карточку с видео под доступную область.
+// ВАЖНО: карточка растянута по высоте через flex:1 и обрезает содержимое
+// (overflow:hidden). Раньше здесь выставлялись width:auto + aspect-ratio от
+// размеров видео — при этом высота карточки получалась от ширины и могла
+// превысить доступную, а видео выдавливалось за нижнюю границу: игрок видел
+// чёрный прямоугольник карточки. Теперь ширину сужаем под портретное видео,
+// но так, чтобы высота при этом соотношении сторон точно помещалась.
 function fitCardVideoToArea(video, el){
   if(!video || !el || !(video.videoWidth && video.videoHeight)) return;
   const area = document.querySelector('.card-area');
@@ -288,12 +295,15 @@ function fitCardVideoToArea(video, el){
   const availH = area ? area.clientHeight : window.innerHeight;
   const videoRatio = video.videoWidth / video.videoHeight;
   const areaRatio = availW / (availH || 1);
+  el.style.aspectRatio = '';
+  el.style.maxHeight = '100%';
   if(videoRatio <= areaRatio){
-    el.style.width = 'auto';
-    el.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+    // Видео «уже» области: ширина, при которой высота ещё укладывается,
+    // равна availH * videoRatio.
+    const fitW = Math.round(Math.min(availW, (availH || availW) * videoRatio));
+    el.style.width = fitW > 0 ? (fitW + 'px') : '100%';
   } else {
     el.style.width = '100%';
-    el.style.aspectRatio = '';
   }
 }
 // true, только если сейчас реально открыт игровой экран в режиме
@@ -750,8 +760,7 @@ function exitVideoGame(){
   state.inProgress = false;
   // Снимаем «чужую» паузу. Без этого при выходе из видеорежима стрелкой «←»
   // игрок попадал в меню паузы «Фантов»: видео — режим внутри базовой парной
-  // игры (#game), и её pausedMode оставался выставленным. Выход из
-  // видеорежима должен вести в меню «Игры для пар 18+», а не в паузу.
+  // игры (#game), и её pausedMode оставался выставленным.
   if(typeof abandonPausedSession === 'function') abandonPausedSession('fanty');
   if(state.pausedMode) state.pausedMode = null;
   saveState();
@@ -775,7 +784,23 @@ function exitVideoGame(){
   document.getElementById('game').classList.remove('video-mode');
   document.getElementById('doneBtn').textContent = '💕 Готово';
   document.getElementById('pauseBtn').textContent = 'Пауза';
-  returnToSetupUI();
+  // «Видеорулетка» запускается кнопкой со страницы настройки «Давай попробуем»
+  // и делит с ней один каталог видео, поэтому выход — на шаг назад, в это же
+  // меню настройки (#davaySetup), а не в список «Игры для пар 18+». Раньше тут
+  // был returnToSetupUI(), который открывал #setup (хаб пар): выход
+  // «перепрыгивал» через уровень, из которого игру запустили.
+  // Экран настроек включаем сами: goToDavaySetup() заодно сбрасывает
+  // выбранные уровни и прокрутку — для обычного выхода это лишнее.
+  releaseWakeLockNow();
+  document.querySelectorAll('.screen.active').forEach(s=>s.classList.remove('active'));
+  const davaySetup = document.getElementById('davaySetup');
+  if(davaySetup) davaySetup.classList.add('active');
+  if(typeof updateDavaySetupStarterLabels === 'function') updateDavaySetupStarterLabels();
+  updateDavaySetupSoundBtn();
+  updateMuteBtn();
+  updateDavayFavoritesBtn();
+  updateResumeUI();
+  window.scrollTo(0, 0);
 }
 
 function isVideoMode(){
