@@ -5640,8 +5640,23 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       });
       if(setupEl2) setupEl2.classList.add('active');
       const mainId = screenIds.includes('game') ? 'game' : screenIds[0];
-      if(mainId.includes('fanty') || mainId === 'game') state.pausedMode = 'fanty';
-      else state.pausedMode = null;
+      // Экран #game принадлежит «Фантам», поэтому выход из него — это пауза
+      // «Фантов». Для остальных игр здесь оказываются только те, у которых
+      // паузы нет вовсе (Рулетка желаний, Секс-квест, Карта страсти,
+      // Виселица, Лимонадный ларёк — см. noPause в game-registry.js):
+      // игрок выходит из партии, а не ставит её на паузу.
+      if(mainId.includes('fanty') || mainId === 'game'){
+        state.pausedMode = 'fanty';
+      } else {
+        state.pausedMode = null;
+        // ВАЖНО: партия брошена — флаг inProgress тоже надо снять. Иначе он
+        // остаётся true, и в хабе блокируются настройки (updateSettingsLockUI
+        // помечает их .locked-settings): игрок не может сменить режим или
+        // уровни, хотя никакой игры не идёт. Здесь намеренно не вызываем
+        // *finish*-функции игр — они сохраняют итоги, а выход по «←» это
+        // прерывание партии, а не её честное завершение.
+        state.inProgress = false;
+      }
       saveState();
       // Останавливаем любые фоновые звуки и озвучку, чтобы не играли после выхода
       if(typeof stopAllSounds === 'function') stopAllSounds();

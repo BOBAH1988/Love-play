@@ -761,6 +761,29 @@ function checkGlobalHandlers() {
     'exitVideoGame не сбрасывает pausedMode — останется пауза «Фантов»'
   );
 
+  // Игры без паузы (noPause) выходят по «←» через общий fallback. Там нужно
+  // снимать и pausedMode, и inProgress: если оставить inProgress, в хабе
+  // блокируются настройки (updateSettingsLockUI), хотя никакой партии нет.
+  const fallback = core.slice(core.indexOf('// Fallback: для игр без dedicated pause-функции'));
+  // Ищем и «else», и сброс флага рядом друг с другом, без опоры на точное
+  // расстояние: между ними стоит поясняющий комментарий, и жёсткий лимит
+  // символов делал проверку ложной.
+  const hasElse = /\}else\s*\{|\}\s*else\s*\{/.test(fallback);
+  const hasReset = /inProgress\s*=\s*false/.test(fallback);
+  check(
+    'fallback снимает inProgress для игр без паузы',
+    hasElse && hasReset,
+    hasElse
+      ? 'в fallback нет сброса inProgress — в хабе заблокируются настройки'
+      : 'в fallback нет ветки else: игры без паузы получат pausedMode'
+  );
+  const noPauseModes = [...read('games/game-registry.js').matchAll(/mode:\s*'([^']+)'[^}]*?noPause:\s*true/g)].map((m) => m[1]);
+  check(
+    `игры без паузы помечены noPause (${noPauseModes.length})`,
+    noPauseModes.length >= 5,
+    `найдено ${noPauseModes.length}: ${noPauseModes.join(', ')}`
+  );
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
