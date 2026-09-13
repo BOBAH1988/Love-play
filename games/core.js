@@ -160,7 +160,11 @@ let state = {
   davayQuizActivePlayer:0, davayQuizQueue:[], davayQuizIndex:0, davayQuizAnswers:{},
   davayQuizP1Done:false, davayQuizP2Done:false, davayQuizPendingNext:0,
   davayStarter:'random', davaySelectedLevel:3, davaySoundOn:false,
-  yandexOAuthToken:'y0__wgBEOHdniMYz8NJIM2e74EZMNWPw_YIjRailZkVQKs6R-R7X9E4x-r3PWE', yandexPublicKey:'https://disk.yandex.ru/d/fv1y_t0ZQ3YASg',
+  // Ссылка на ПУБЛИЧНУЮ папку Яндекс Диска. Токена здесь нет и быть не должно:
+  // он личный, репозиторий публичный. Если токен нужен, он задаётся отдельно в
+  // файле yandex-token.js рядом с index.html — этот файл в .gitignore и в
+  // репозиторий не попадает (см. YANDEX_TOKEN в games/fants-davay.js).
+  yandexPublicKey:'https://disk.yandex.ru/d/fv1y_t0ZQ3YASg',
   pausedMode:null, lastSectionOnPause:null,
   // Правда или действие
   tdSelectedLevel:3, tdCurrentPlayer:1, tdScore1:0, tdScore2:0, tdUsed:{}, tdHidden:[],

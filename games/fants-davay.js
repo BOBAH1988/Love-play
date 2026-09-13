@@ -189,9 +189,11 @@ function migrateVideoDbIntoDavay(){
 migrateVideoDbIntoDavay();
 
 // ===== Интеграция с Яндекс Диском =====
-// Видео берутся из публичной папки на Яндекс Диске. Ссылку на папку игрок
-// задаёт в «⚙️ Настройки». OAuth-токен необязателен: публичная папка
-// открывается по одной публичной ссылке, токен нужен только для закрытых.
+// Видео берутся из ПУБЛИЧНОЙ папки Яндекс Диска: она открывается по одной
+// ссылке (YANDEX_DISK_PUBLIC_KEY ниже), авторизация не нужна. Личного токена
+// в коде нет и быть не должно — репозиторий публичный. Если токен всё-таки
+// нужен (закрытая папка), он задаётся в отдельном файле yandex-token.js,
+// который внесён в .gitignore и в репозиторий не попадает.
 //
 // Сами файлы не скачиваются — в папке ~170 роликов общим весом около 0,5 ГБ,
 // столько в IndexedDB не поместится. Вместо этого сохраняем прямую ссылку на
@@ -214,16 +216,27 @@ const YANDEX_VIDEO_RE = /\.(webm|mp4|m4v|mov|avi|mkv)$/i;
 const YANDEX_IMPORT_GAME_LEVEL = 1;
 let yandexDiskLoading = false;
 
+// Токен Яндекс Диска — ЛИЧНЫЕ ДАННЫЕ, в репозиторий не попадает.
+// Он может быть задан в файле yandex-token.js рядом с index.html (файл в
+// .gitignore): там `window.YANDEX_DISK_TOKEN = '…'`. Если файла нет, работаем
+// без токена — публичная папка читается по одной ссылке, авторизация не нужна.
+// Раньше токен был жёстко прописан в state (games/core.js) и уезжал в
+// публичный репозиторий — этого делать нельзя.
+function yandexDiskToken(){
+  const fromFile = (typeof window !== 'undefined' && window.YANDEX_DISK_TOKEN) ? window.YANDEX_DISK_TOKEN : '';
+  return String(fromFile || '').trim();
+}
+
 function davayYandexPublicKey(){
   return (state.yandexPublicKey || YANDEX_DISK_PUBLIC_KEY || '').trim();
 }
 
-// Запрос к API Диска. Токен подставляем, только если он задан; если Яндекс
-// его не принял (просрочен, нет прав), повторяем без токена — публичная папка
-// доступна и без авторизации. Раньше наличие токена было обязательным
-// условием кнопки, из-за чего загрузка не запускалась вовсе.
+// Запрос к API Диска. Читаем ТОЛЬКО публичную папку по ссылке: этого
+// достаточно, чтобы получить список файлов и ссылки на них. Токен, если он
+// задан в локальном файле, подставляем; если Яндекс его не принял — повторяем
+// без него, потому что публичная папка открыта и без авторизации.
 async function fetchYandexJson(url){
-  const token = (state.yandexOAuthToken || '').trim();
+  const token = yandexDiskToken();
   // referrerPolicy:'no-referrer' — у Яндекса антихотлинк: запрос с чужим
   // доменом в Referer получает 403, без него — 200/206.
   const base = { referrerPolicy: 'no-referrer' };
@@ -349,7 +362,7 @@ function updateYandexRows(updates){
 // кнопка рапортовала «всё уже загружено», а в игре был чёрный экран.
 async function importYandexVideosToLevel(level){
   if(yandexDiskLoading) return { added:0, level: level, error: 'Загрузка уже идёт' };
-  if(!davayYandexPublicKey()) return { added:0, level: level, error: 'Укажите ссылку на папку в ⚙️ Настройках' };
+  if(!davayYandexPublicKey()) return { added:0, level: level, error: 'Ссылка на папку Яндекс Диска не задана' };
   yandexDiskLoading = true;
   try{
     const items = await fetchYandexDiskFiles('/');
@@ -1009,7 +1022,7 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
   // «⚙️ Настроек») в игровой уровень 1 «Сближение». Другие уровни пока не
   // рассматриваем — весь импорт идёт в YANDEX_IMPORT_GAME_LEVEL.
   if(!davayYandexPublicKey()){
-    showToast('❌ Укажите ссылку на папку Яндекс Диска в ⚙️ Настройках');
+    showToast('❌ Ссылка на папку Яндекс Диска не задана');
     return;
   }
   const level = YANDEX_IMPORT_GAME_LEVEL;
@@ -1040,38 +1053,6 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
   }
   const note = result.unplayable ? `, .avi/.mkv пропущено: ${result.unplayable}` : '';
   showToast(`ℹ️ Обновлены ссылки у ${result.refreshed || 0} видео уровня «${levelName}»${note}`);
-});
-document.getElementById('davaySetupYandexSettingsBtn').addEventListener('click', ()=>{
-  // Открываем модалку настроек Яндекс Диска
-  document.getElementById('yandexTokenInput').value = state.yandexOAuthToken || '';
-  document.getElementById('yandexPublicKeyInput').value = state.yandexPublicKey || YANDEX_DISK_PUBLIC_KEY;
-  const status = document.getElementById('yandexSettingsStatus');
-  if(status){ status.textContent = ''; status.style.color = '#5c3a52'; }
-  document.getElementById('yandexSettingsModal').classList.add('show');
-});
-document.getElementById('yandexSettingsCloseBtn').addEventListener('click', ()=>{
-  document.getElementById('yandexSettingsModal').classList.remove('show');
-});
-document.getElementById('yandexSettingsSaveBtn').addEventListener('click', async ()=>{
-  state.yandexOAuthToken = document.getElementById('yandexTokenInput').value.trim();
-  state.yandexPublicKey = document.getElementById('yandexPublicKeyInput').value.trim();
-  saveState();
-  const status = document.getElementById('yandexSettingsStatus');
-  if(status){ status.textContent = '⏳ Проверяем папку…'; status.style.color = '#5c3a52'; }
-  try{
-    const items = await fetchYandexDiskFiles('/');
-    const videos = items.filter(i => i.type === 'file' && YANDEX_VIDEO_RE.test(i.name || ''));
-    if(status){
-      status.textContent = `✅ Папка доступна: видеофайлов ${videos.length} из ${items.length} объектов.`;
-      status.style.color = '#1b7f3b';
-    }
-    showToast('Настройки Яндекс Диска сохранены');
-  } catch(err){
-    if(status){
-      status.textContent = '❌ ' + (err.message || String(err)) + ' — проверьте ссылку на папку.';
-      status.style.color = '#c62828';
-    }
-  }
 });
 document.getElementById('yandexLinksCloseBtn').addEventListener('click', ()=>{
   document.getElementById('yandexLinksModal').classList.remove('show');

@@ -1272,6 +1272,64 @@ function report() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Секреты: личный OAuth-токен Яндекс Диска не должен попадать в репозиторий.
+// Репозиторий публичный (GitHub Pages), и токен там — утечка доступа к Диску.
+// Проверяем все файлы, которые реально уходят в git: игры, разметку, стили.
+// Токен допустим ТОЛЬКО в yandex-token.js — он внесён в .gitignore.
+// ─────────────────────────────────────────────────────────────────────────────
+function checkSecrets() {
+  group('Секреты');
+
+  const TOKEN_RE = /y0_[A-Za-z0-9_-]{30,}/;
+  const files = [
+    'index.html',
+    'sw.js',
+    ...fs.readdirSync(path.join(ROOT, 'games')).filter(f => f.endsWith('.js')).map(f => 'games/' + f),
+    ...fs.readdirSync(path.join(ROOT, 'cards')).filter(f => f.endsWith('.js')).map(f => 'cards/' + f),
+    'styles/app.css',
+  ];
+
+  const leaked = [];
+  files.forEach((rel) => {
+    let text = '';
+    try { text = fs.readFileSync(path.join(ROOT, rel), 'utf8'); } catch (_) { return; }
+    const m = text.match(TOKEN_RE);
+    if (m) leaked.push(rel + ' (' + m[0].slice(0, 12) + '…)');
+  });
+
+  check(
+    'OAuth-токен Яндекс Диска не попал в файлы репозитория',
+    leaked.length === 0,
+    'токен найден в: ' + leaked.join(', ') +
+      ' — личный токен хранится только в yandex-token.js (он в .gitignore)'
+  );
+
+  // Сам игнорируемый файл должен оставаться вне git.
+  const gi = read('.gitignore');
+  check(
+    'yandex-token.js внесён в .gitignore',
+    /^\s*yandex-token\.js\s*$/m.test(gi),
+    'без этого токен уедет в публичный репозиторий'
+  );
+
+  // Подключение в index.html должно быть необязательным: у остальных людей
+  // файла нет, и страница обязана грузиться без него.
+  const html = read('index.html');
+  check(
+    'локальный токен подключается как необязательный скрипт',
+    /<script src="yandex-token\.js"[^>]*onerror=/.test(html),
+    'без onerror отсутствие файла сломает загрузку страницы у других людей'
+  );
+
+  // Токена не должно быть и в state (там он лежал раньше и уезжал в git).
+  const core = readCore();
+  check(
+    'в state нет поля с OAuth-токеном',
+    !/yandexOAuthToken/.test(core),
+    'токен в состоянии сохранялся в localStorage и уходил в репозиторий'
+  );
+}
+
 function main() {
   const html = read('index.html');
   const { missingIds } = checkScripts(html);
@@ -1289,6 +1347,7 @@ function main() {
   checkSchemaVersioning();
   checkStats(html);
   checkGlobalHandlers(html);
+  checkSecrets();
   process.exit(report());
 }
 
