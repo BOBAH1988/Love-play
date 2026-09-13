@@ -196,7 +196,12 @@ migrateVideoDbIntoDavay();
 const YANDEX_DISK_PUBLIC_KEY = 'https://disk.yandex.ru/d/fv1y_t0ZQ3YASg';
 const YANDEX_DISK_API_BASE = 'https://cloud-api.yandex.net/v1/disk/public/resources';
 const YANDEX_DISK_DOWNLOAD_API = 'https://cloud-api.yandex.net/v1/disk/public/resources/download';
-const YANDEX_HREF_TTL = 12 * 60 * 60 * 1000; // ссылки обновляем раз в 12 часов
+// Ссылки на файлы Яндекс Диска переподписываются на стороне Яндекса, причём
+// id в адресе меняется при каждом запросе к API. Проверено: свежая ссылка
+// отдаёт 206, а сохранённая ранее — 403 (тогда <video> падает с ошибкой 4,
+// MEDIA_ERR_SRC_NOT_SUPPORTED, то есть чёрный экран). Поэтому «свежей» считаем
+// ссылку не старше 30 минут; перед показом ролика обновляем принудительно.
+const YANDEX_HREF_TTL = 30 * 60 * 1000;
 const YANDEX_VIDEO_RE = /\.(webm|mp4|m4v|mov|avi|mkv)$/i;
 // Игровой уровень, в который складываются видео с Диска. Пока размечен только
 // уровень 1 «Сближение» (папка «Level 1-1 …»); остальные уровни не трогаем.
@@ -428,12 +433,38 @@ function applyFreshYandexHref(cardId, href, at){
   if(typeof href !== 'string' || !href) return;
   collectLiveVideoCards().forEach(card=>{
     if(!card || String(card.id) !== String(cardId)) return;
+    if(card.video === href) return; // адрес тот же — попытку не возвращаем
     card.video = href;
     card.urlAt = at;
-    // Ссылка обновлена — разрешаем ещё одну попытку восстановления, если и
-    // новая ссылка когда-нибудь откажет.
+    // Ссылка реально сменилась — даём ещё одну попытку восстановления, если и
+    // новая когда-нибудь откажет. При неизменившемся адресе попытку НЕ
+    // возвращаем: иначе при устойчивой ошибке (err=4) цикл «ошибка →
+    // обновить → ошибка» повторялся бы бесконечно.
     card.hrefRefreshed = false;
   });
+}
+
+// Обновить ссылку ОДНОГО видео (по его пути в папке). Нужна в момент, когда
+// ролик не открылся: перебирать всю папку (172 файла) ради одного кадра
+// бессмысленно, а один запрос к API отвечает быстро. true — адрес обновлён.
+async function refreshYandexCardHref(card){
+  if(!card || !card.yandexPath) return false;
+  try{
+    const href = await fetchYandexDiskHref(card.yandexPath);
+    if(!href || href === card.video) return false;
+    const at = Date.now();
+    card.video = href;
+    card.urlAt = at;
+    applyFreshYandexHref(card.id, href, at);
+    // Ту же строку обновляем в базе, чтобы свежий адрес пережил перезагрузку.
+    const row = importedDavayCards.find(c => c.id === card.id);
+    if(row && row.dbId){
+      await updateYandexRows([{ id: row.dbId, url: href, urlAt: at }]);
+    }
+    return true;
+  }catch(err){
+    return false;
+  }
 }
 
 async function refreshYandexLinks(force){
@@ -729,8 +760,11 @@ function setupDavayPlayerElement(video, card, level, reuse){
     const code = (video.error && video.error.code) || 0;
     if(card.source === 'yandex' && !card.hrefRefreshed){
       card.hrefRefreshed = true;
-      refreshYandexLinks(true).then(res=>{
-        if(res && res.updated > 0 && card.video){
+      // Берём свежий адрес ИМЕННО ЭТОГО файла: один запрос вместо перебора
+      // всей папки. Ссылки у Яндекса переподписываются, сохранённая начинает
+      // отдавать 403, и <video> падает с ошибкой 4 (чёрный экран).
+      refreshYandexCardHref(card).then(ok=>{
+        if(ok && card.video){
           video.src = card.video;
           video.load();
           const p = video.play();
@@ -740,9 +774,8 @@ function setupDavayPlayerElement(video, card, level, reuse){
         // Причину пишем и в журнал ошибок (виден в приложении), и тостом:
         // без этого «чёрный экран» невозможно объяснить — ни кода ошибки,
         // ни адреса, который отказал.
-        const detail = `${card.name || card.id}: обновлено ссылок ${res ? res.updated : 0}, `
-                     + `ошибка медиа ${code}, url ${String(mediaEl).slice(0, 120)}`
-                     + (res && res.error ? `, API: ${res.error}` : '');
+        const detail = `${card.name || card.id}: свежая ссылка ${ok ? 'получена' : 'НЕ получена'}, `
+                     + `ошибка медиа ${code}, url ${String(mediaEl).slice(0, 120)}`;
         if(typeof logAppError === 'function'){
           logAppError({ message: 'Видео с Яндекс Диска не воспроизводится', detail: detail, at: new Date().toISOString() });
         }
@@ -1138,7 +1171,7 @@ function goToDavayFavoritesView(){
   updateLevelUI();
   updateMuteBtn();
   requestWakeLock();
-  ensureImportedDavayVideosLoaded().then(()=> refreshYandexLinks(false));
+  ensureImportedDavayVideosLoaded().then(()=> refreshYandexLinks(true));
   updateDavayPlayerButtons();
   if(!state.davayFavoritesOnly){
     state.davayFavoritesOnly = true;
@@ -1182,7 +1215,7 @@ async function goToDavayGame(){
   updateMuteBtn();
   requestWakeLock();
   await ensureImportedDavayVideosLoaded();
-  refreshYandexLinks(false); // подновляем подписанные ссылки, если они устарели
+  refreshYandexLinks(true); // ссылки Яндекса живут минуты — обновляем при входе
   resetDavayQuiz();
   updateDavayPlayerButtons();
   updateDavayFavoritesBtn();

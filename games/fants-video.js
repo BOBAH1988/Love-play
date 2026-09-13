@@ -536,17 +536,17 @@ function setupVideoPlayerElement(video, card, level, reuse){
     }
   }, {once:true});
   video.addEventListener('error', ()=>{
-    // Своё видео с Яндекс Диска живёт по подписанной ссылке, которая со
-    // временем перестаёт работать. Раньше на любую ошибку сразу подставлялся
-    // демо-ролик, и игрок видел «одно и то же демо» вместо своих видео.
-    // Сначала пробуем получить свежую ссылку и перезапустить ролик — и только
-    // если не вышло, показываем демо/заглушку.
+    // Своё видео с Яндекс Диска живёт по ссылке, которую Яндекс переподписывает:
+    // сохранённый адрес начинает отдавать 403, и <video> падает с ошибкой 4
+    // (MEDIA_ERR_SRC_NOT_SUPPORTED) — игрок видит чёрный экран. Берём свежий
+    // адрес ИМЕННО ЭТОГО файла (один запрос вместо перебора всей папки) и
+    // перезапускаем ролик; если не вышло — демо/заглушка.
     const mediaEl = video.currentSrc || video.src || '';
     const code = (video.error && video.error.code) || 0;
-    if(card.source === 'yandex' && !card.hrefRefreshed){
+    if(card.source === 'yandex' && !card.hrefRefreshed && typeof refreshYandexCardHref === 'function'){
       card.hrefRefreshed = true;
-      refreshYandexLinks(true).then(res=>{
-        if(res && res.updated > 0 && card.video && !videoNativeFullscreenActive){
+      refreshYandexCardHref(card).then(ok=>{
+        if(ok && card.video && !videoNativeFullscreenActive){
           video.src = card.video;
           video.load();
           const p = video.play();
@@ -555,9 +555,8 @@ function setupVideoPlayerElement(video, card, level, reuse){
         }
         // Причину пишем в журнал ошибок (виден в приложении): без него
         // «чёрный экран» невозможно объяснить — ни кода ошибки, ни адреса.
-        const detail = `${card.name || card.id}: обновлено ссылок ${res ? res.updated : 0}, `
-                     + `ошибка медиа ${code}, url ${String(mediaEl).slice(0, 120)}`
-                     + (res && res.error ? `, API: ${res.error}` : '');
+        const detail = `${card.name || card.id}: свежая ссылка ${ok ? 'получена' : 'НЕ получена'}, `
+                     + `ошибка медиа ${code}, url ${String(mediaEl).slice(0, 120)}`;
         if(typeof logAppError === 'function'){
           logAppError({ message: 'Видео с Яндекс Диска не воспроизводится', detail: detail, at: new Date().toISOString() });
         }
@@ -684,6 +683,12 @@ async function goToVideoGame(){
   updateVideoFavoritesBtn();
   requestWakeLock();
   await ensureImportedDavayVideosLoaded();
+  // Ссылки на файлы Яндекс Диска переподписываются: сохранённый адрес через
+  // некоторое время начинает отдавать 403, и <video> падает с ошибкой 4
+  // (MEDIA_ERR_SRC_NOT_SUPPORTED) — игрок видит чёрный экран. Раньше
+  // обновление было только в «Давай попробуем», а «Видеорулетка» рисовала
+  // карточку сразу со старым адресом. Обновляем ДО показа ролика.
+  await refreshYandexLinks(true).catch(()=>{});
   drawVideoCard(videoLevel);
 }
 
