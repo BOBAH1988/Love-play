@@ -3436,7 +3436,7 @@ const DAVAY_DISK_LEVELS = [
 // Получить список файлов в публичной папке/подпапке через API
 async function fetchYandexDiskFiles(path){
   const publicKey = state.yandexPublicKey || YANDEX_DISK_PUBLIC_KEY;
-  let url = `${YANDEX_DISK_API_BASE}?public_key=${encodeURIComponent(publicKey)}&path=${encodeURIComponent(path || '/')}&limit=200`;
+    let url = `${YANDEX_DISK_API_BASE}?public_key=${encodeURIComponent(publicKey)}&path=${encodeURIComponent(path || '/')}&limit=1000`;
   const headers = {};
   if(state.yandexOAuthToken){
     headers['Authorization'] = `OAuth ${state.yandexOAuthToken}`;
@@ -3471,17 +3471,17 @@ async function downloadYandexDiskFile(fileInfo, level){
   return { name:fileInfo.name, level:level };
 }
 
-// Загрузить все видео из папки уровня на Яндекс Диске
-// path — относительный путь внутри публичной папки, например '/Level 001 Ласки разогрев'
+// Загрузить видео из папки уровня на Яндекс Диске
+// Для публичной папки все видео находятся в корне (path="/")
 async function loadYandexDiskLevel(level, path){
   if(yandexDiskLoading) return { added:0, level:level, error: 'Загрузка уже идёт' };
   yandexDiskLoading = true;
-    try {
+  try {
     const items = await fetchYandexDiskFiles('/');
     
     if(items.length === 0){
       yandexDiskLoading = false;
-      return { added:0, level:level, error: 'Папка пуста или не найдена. Проверьте путь и права доступа.' };
+      return { added:0, level:level, error: 'Папка пуста или не найдена.' };
     }
     
     const videoItems = items.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
@@ -3493,8 +3493,8 @@ async function loadYandexDiskLevel(level, path){
       return { added:0, level:level, error: `В папке ${items.length} файл(ов) типа: ${allTypes}. Видео не найдены. Примеры: ${fileNames || 'пусто'}` };
     }
     
-        const results = await Promise.all(videoItems.map(i => downloadYandexDiskFile(i, level).catch(e => { 
-      return { error: e.message }; 
+    const results = await Promise.all(videoItems.map(i => downloadYandexDiskFile(i, level).catch(e => { 
+      return { error: e.message };
     })));
     const added = results.filter(r => r && !r.error).length;
     const errors = results.filter(r => r && r.error);
@@ -3709,8 +3709,8 @@ function davaySwipeNext(){
 function setupDavayPlayerElement(video, card, level, reuse){
   video.muted = !davaySoundOn;
   video.loop = !state.davayAutoAdvance;
-  if(reuse){
-    video.src = card.video;
+    if(reuse){
+    video.src = card.url || card.video;
     video.load();
   }
   const attemptPlay = ()=>{
@@ -3759,7 +3759,7 @@ function renderDavayCard(card, level){
     el.innerHTML = `
       <div class="card-inner">
         <div class="card-split-media" id="davayMedia">
-          <video src="${card.video}" id="davayPlayer" playsinline autoplay></video>
+                     <video src="${card.url || card.video}" id="davayPlayer" playsinline autoplay></video>
         </div>
       </div>
     `;
@@ -3868,7 +3868,7 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
     return;
   }
   showToast(`Загрузка из папки "${level.name}"...`);
-  const result = await loadYandexDiskLevel(level.id, level.path);
+    const result = await loadYandexDiskLevel(level.id, '/');
   if(result.error){
     showToast('❌ ' + result.error);
   } else if(result.added > 0){
