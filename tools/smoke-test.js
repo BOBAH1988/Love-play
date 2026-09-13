@@ -647,6 +647,86 @@ test('Сценарий: setGameMode снимает чужой режим экр�
   });
 });
 
+console.log('\n=== Геометрия закреплённой строки (название игры / метка хода) ===');
+
+// Этот сценарий считает координаты по фактическим правилам styles/app.css —
+// на этом месте проект ошибался уже трижды (см. README, «название игры»):
+//   1) top:0                       — заголовок под камерой;
+//   2) position:fixed              — заголовок разъезжается с кнопками;
+//   3) top:12px без safe-area      — то же, что (1): padding-top #app
+//      absolute-потомка НЕ сдвигает, поэтому safe-area надо прибавлять явно.
+// Проверяем не текст правила, а ЧИСЛА, которые из него следуют, в двух
+// режимах: обычный браузер (safe-area 0, #app padding-top 16px) и
+// установленная PWA на iPhone (safe-area 47px, padding-top равен ей же).
+test('Геометрия: название игры не уходит под камеру и не отрывается от кнопок', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  // Комментарии вырезаем: внутри правила тоже встречается текст
+  // «calc(12px + env(...))», и проверка читала бы пояснение вместо значения.
+  const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '');
+  const ruleBody = (sel) => {
+    const m = css.match(new RegExp(sel.replace(/[.$()#]/g, '\\$&') + '\\{([\\s\\S]*?)\\}'));
+    return m ? stripComments(m[1]) : '';
+  };
+
+  const num = (re, src, label) => {
+    const m = stripComments(src).match(re);
+    assert(!!m, `не найдено правило «${label}» в styles/app.css`);
+    return m ? parseFloat(m[1]) : NaN;
+  };
+
+  // Разбираем правила ровно в том виде, в котором их читает браузер.
+  const labelBody = ruleBody('.game-level-label');
+  const turnBody = ruleBody('.td-turn-label:first-child');
+  const progressBody = ruleBody('#game #levelProgress');
+
+  const fabTopBase = num(/top:\s*calc\((\d+px)\s*\+\s*env\(safe-area-inset-top[^)]*\)\s*\)/,
+    ruleBody('.fab-menu-btn'), 'top FAB-кнопки «☰»');
+  const labelTop = num(/top:\s*calc\((\d+px)\s*\+\s*env\(safe-area-inset-top[^)]*\)\s*\)/, labelBody,
+    'top названия игры (calc(12px + safe-area))');
+  const turnTop = num(/top:\s*calc\((\d+px)\s*\+\s*env\(safe-area-inset-top[^)]*\)\s*\)/, turnBody,
+    'top метки хода (calc(12px + safe-area))');
+  const labelH = num(/height:\s*(\d+)px/, labelBody, 'height названия игры');
+  const padMatch = css.match(/--screen-top-pad:\s*min\((\d+)px,\s*calc\((\d+)px\s*\+\s*env\(safe-area-inset-top/);
+  assert(!!padMatch, 'не найдена формула --screen-top-pad: min(56px, calc(40px + env(safe-area-inset-top)))');
+  const padMax = padMatch ? parseFloat(padMatch[1]) : NaN;  // для PWA
+  const padBase = padMatch ? parseFloat(padMatch[2]) : NaN; // для браузера (safe-area 0)
+
+  [0, 47].forEach((safe) => {
+    const appPad = Math.max(16, safe);            // padding-top #app
+    const screenPad = Math.min(padMax, padBase + safe); // отступ контента .screen
+    const labelTopPx = labelTop + safe;           // top отсчитывается от padding-края #app
+    const labelBottom = labelTopPx + labelH;
+    const contentTop = appPad + screenPad;        // верх контента в координатах экрана
+    const where = safe === 0 ? 'браузер (safe-area 0)' : `PWA iPhone (safe-area ${safe})`;
+
+    // 1. Название не должно залезать в зону камеры/статус-бара.
+    assert(labelTopPx >= Math.max(12, safe),
+      `${where}: название игры на ${labelTopPx}px от верха экрана — попадает в зону камеры`);
+    // 2. Название и метка хода — на одной линии (иначе строки «разъезжаются»).
+    assert(Math.abs(labelTopPx - (turnTop + safe)) < 0.01,
+      `${where}: название и метка хода на разной высоте: ${labelTopPx}px и ${turnTop + safe}px`);
+    // 3. Название стоит ровно на линии FAB-кнопок «←»/«☰».
+    assert(Math.abs(labelTopPx - (fabTopBase + safe)) < 0.01,
+      `${where}: название разошлось с кнопками: ${labelTopPx}px против ${fabTopBase + safe}px`);
+    // 4. Под названием — зазор 8px, а не пустая полоса (и не наложение).
+    assert(Math.abs(contentTop - labelBottom - 8) < 0.01,
+      `${where}: зазор под названием ${contentTop - labelBottom}px вместо 8px`);
+    // 5. Вторая строка верхней панели («До след. уровня», только в «Фантах»)
+    //    не наезжает на первую. У #levelProgress мелкий шрифт и своя высота
+    //    строки, поэтому требуем, чтобы её верх не заходил на название.
+    if (progressBody) {
+      const progressTop = num(/top:\s*calc\((\d+px)\s*\+\s*env\(safe-area-inset-top[^)]*\)\s*\+\s*(\d+)px/,
+        progressBody, 'top строки «До след. уровня»');
+      const progressOffset = num(/top:\s*calc\(\d+px\s*\+\s*env\(safe-area-inset-top[^)]*\)\s*\+\s*(\d+)px/,
+        progressBody, 'смещение строки «До след. уровня»');
+      assert(progressTop + safe + progressOffset > labelTopPx,
+        `${where}: строка «До след. уровня» начинается на ${progressTop + safe + progressOffset}px — не ниже названия (${labelTopPx}px)`);
+      assert(progressTop + safe + progressOffset <= labelBottom,
+        `${where}: строка «До след. уровня» (${progressTop + safe + progressOffset}px) ушла ниже названия (низ ${labelBottom}px) — вторая строка верхней панели оторвалась`);
+    }
+  });
+});
+
 console.log('\n=== Запуск тестов ===\n');
 
 tests.forEach(t => {
