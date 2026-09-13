@@ -96,6 +96,9 @@ function ensureImportedDavayVideosLoaded(){
         level: r.level || 1,
         video: src,
         id: 'imported-' + r.id,
+        dbId: r.id,
+        urlAt: r.urlAt || 0,
+        yandexPath: r.yandexPath || null,
         imported: true,
         source: hasUrl ? 'yandex' : 'local'
       };
@@ -145,130 +148,181 @@ function migrateVideoDbIntoDavay(){
 }
 migrateVideoDbIntoDavay();
 
-// ===== Интеграция с Яндекс Диск (прототип) =====
-// Загрузка видео с Яндекс Диск через API v1.
-// Публичная папка: https://disk.yandex.ru/d/fv1y_t0ZQ3YASg
-// Получаем список файлов и прямые ссылки на скачивание через API.
+// ===== Интеграция с Яндекс Диском =====
+// Видео берутся из публичной папки на Яндекс Диске. Ссылку на папку игрок
+// задаёт в «⚙️ Настройки». OAuth-токен необязателен: публичная папка
+// открывается по одной публичной ссылке, токен нужен только для закрытых.
+//
+// Сами файлы не скачиваются — в папке ~170 роликов общим весом около 0,5 ГБ,
+// столько в IndexedDB не поместится. Вместо этого сохраняем прямую ссылку на
+// файл (`file` из ответа API) и путь внутри папки. Путь храним, чтобы ссылку
+// можно было обновить: Яндекс подписывает её, и через какое-то время она
+// перестаёт открываться. Один запрос списка даёт свежие ссылки сразу на все
+// файлы, поэтому обновление стоит одного запроса на всю папку.
 const YANDEX_DISK_PUBLIC_KEY = 'https://disk.yandex.ru/d/fv1y_t0ZQ3YASg';
 const YANDEX_DISK_API_BASE = 'https://cloud-api.yandex.net/v1/disk/public/resources';
+const YANDEX_DISK_DOWNLOAD_API = 'https://cloud-api.yandex.net/v1/disk/public/resources/download';
+const YANDEX_HREF_TTL = 12 * 60 * 60 * 1000; // ссылки обновляем раз в 12 часов
+const YANDEX_VIDEO_RE = /\.(webm|mp4|m4v|mov|avi|mkv)$/i;
+// Игровой уровень, в который складываются видео с Диска. Пока размечен только
+// уровень 1 «Сближение» (папка «Level 1-1 …»); остальные уровни не трогаем.
+const YANDEX_IMPORT_GAME_LEVEL = 1;
 let yandexDiskLoading = false;
 
-// Папки на диске шире, чем 4 игровых уровня: несколько папок могут
-// привязываться к одному уровню (davaySetupLevel 3..6).
-// ЗАМЕЧАНИЕ (2026-09-20): папки переименованы/убраны владельцем — сейчас
-// корень публичной ссылки это плоский список из ~172 .webm без подпапок.
-// Поэтому грузим рекурсивно весь корень и делим видео по 4 игровым уровням
-// поровну (round-robin), вместо запросов к несуществующим path=/Level 00X.
-const DAVAY_DISK_LEVELS = [
-  {id:1, setupLevel:3, name:'Ласки разогрев', path:'/'},
-  {id:2, setupLevel:3, name:'Нежные прикосновения', path:'/'},
-  {id:3, setupLevel:4, name:'Разогрев', path:'/'},
-  {id:4, setupLevel:4, name:'Прелюдия', path:'/'},
-  {id:5, setupLevel:4, name:'Устная ласка', path:'/'},
-  {id:6, setupLevel:5, name:'Кунилингус', path:'/'},
-  {id:7, setupLevel:5, name:'Минет', path:'/'},
-  {id:8, setupLevel:5, name:'Классика', path:'/'},
-  {id:9, setupLevel:5, name:'Глубокое проникновение', path:'/'},
-  {id:10, setupLevel:5, name:'Позы сзади', path:'/'},
-  {id:11, setupLevel:6, name:'Наездница', path:'/'},
-  {id:12, setupLevel:6, name:'Анальные ласки', path:'/'},
-  {id:13, setupLevel:6, name:'Анальный секс', path:'/'},
-  {id:14, setupLevel:6, name:'Групповой', path:'/'},
-  {id:15, setupLevel:6, name:'БДСМ', path:'/'},
-  {id:16, setupLevel:6, name:'Фистинг', path:'/'},
-  {id:17, setupLevel:6, name:'Фетиш', path:'/'},
-  {id:18, setupLevel:6, name:'Игрушки', path:'/'},
-];
+function davayYandexPublicKey(){
+  return (state.yandexPublicKey || YANDEX_DISK_PUBLIC_KEY || '').trim();
+}
 
+// Запрос к API Диска. Токен подставляем, только если он задан; если Яндекс
+// его не принял (просрочен, нет прав), повторяем без токена — публичная папка
+// доступна и без авторизации. Раньше наличие токена было обязательным
+// условием кнопки, из-за чего загрузка не запускалась вовсе.
+async function fetchYandexJson(url){
+  const token = (state.yandexOAuthToken || '').trim();
+  let resp = await fetch(url, token ? { headers: { Authorization: 'OAuth ' + token } } : undefined);
+  if(!resp.ok && token && (resp.status === 401 || resp.status === 403)){
+    resp = await fetch(url);
+  }
+  if(!resp.ok) throw new Error('Яндекс Диск ответил ' + resp.status);
+  return resp.json();
+}
 
-// Получить список файлов в публичной папке/подпапке через API
+// Список файлов в публичной папке (path — путь внутри папки, '/' — корень)
 async function fetchYandexDiskFiles(path){
-  const publicKey = state.yandexPublicKey || YANDEX_DISK_PUBLIC_KEY;
-    let url = `${YANDEX_DISK_API_BASE}?public_key=${encodeURIComponent(publicKey)}&path=${encodeURIComponent(path || '/')}&limit=1000`;
-  const headers = {};
-  if(state.yandexOAuthToken){
-    headers['Authorization'] = `OAuth ${state.yandexOAuthToken}`;
-  }
-  const resp = await fetch(url, { headers });
-  if(!resp.ok){
-    throw new Error('Yandex API error: ' + resp.status);
-  }
-  const data = await resp.json();
-  return data._embedded ? data._embedded.items : [];
+  const url = `${YANDEX_DISK_API_BASE}?public_key=${encodeURIComponent(davayYandexPublicKey())}`
+            + `&path=${encodeURIComponent(path || '/')}&limit=1000`;
+  const data = await fetchYandexJson(url);
+  return data._embedded ? (data._embedded.items || []) : [];
 }
 
-// Сохранить прямую ссылку на видео в IndexedDB (без загрузки blob — обход CORS Яндекс Диска)
-async function saveDavayUrl(url, level, name){
-  return new Promise((resolve, reject)=>{
-    openDavayDB().then(db=>{
-      const tx = db.transaction(DAVAY_DB_STORE, 'readwrite');
-      const store = tx.objectStore(DAVAY_DB_STORE);
-      const entry = { name:name||'video', url:url, level:level, addedAt:Date.now() };
-      store.add(entry);
-      tx.oncomplete = ()=> resolve(entry);
-      tx.onerror = ()=> reject(tx.error);
-    }).catch(reject);
-  });
+// Свежая подписанная ссылка на один файл — запасной путь на случай, если в
+// списке файлов поля `file` не оказалось.
+async function fetchYandexDiskHref(path){
+  const url = `${YANDEX_DISK_DOWNLOAD_API}?public_key=${encodeURIComponent(davayYandexPublicKey())}`
+            + `&path=${encodeURIComponent(path)}`;
+  const data = await fetchYandexJson(url);
+  if(!data || !data.href) throw new Error('Яндекс не отдал ссылку на файл');
+  return data.href;
 }
 
-// Получить прямую ссылку на видео и сохранить в IndexedDB
-async function downloadYandexDiskFile(fileInfo, level){
-  const directLink = fileInfo.file;
-  if(!directLink) throw new Error('Нет ссылки на файл: ' + fileInfo.name);
-  await saveDavayUrl(directLink, level, fileInfo.name);
-  return { name:fileInfo.name, level:level };
+// Сохранить видео с Диска: новые строки добавляем, у старых (сохранённых
+// прошлой версией, без пути внутри папки) дописываем путь и свежую ссылку.
+// Делаем это одной транзакцией: файлов может быть больше сотни.
+function saveYandexRows(rows, updates){
+  const addedAt = Date.now();
+  return openDavayDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(DAVAY_DB_STORE, 'readwrite');
+    const store = tx.objectStore(DAVAY_DB_STORE);
+    rows.forEach(r => store.add(Object.assign({ addedAt: addedAt }, r)));
+    updates.forEach(u=>{
+      const req = store.get(u.id);
+      req.onsuccess = ()=>{
+        const row = req.result;
+        if(!row) return;
+        row.url = u.url;
+        row.urlAt = u.urlAt;
+        row.yandexPath = u.yandexPath;
+        row.publicKey = u.publicKey;
+        store.put(row);
+      };
+    });
+    tx.oncomplete = ()=> resolve(rows.length + updates.length);
+    tx.onerror = ()=> reject(tx.error || new Error('Не удалось сохранить видео'));
+    tx.onabort = ()=> reject(tx.error || new Error('Сохранение прервано'));
+  })).catch(()=> 0);
 }
 
-// ===== Загрузить видео с Яндекс Диска: рекурсивный обход корня публичной папки,
-// // видео делятся по 4 игровым уровням поровну (round-robin по алфавиту имён).
-// // gameLevels — массив игровых уровней 1..4 для распределения.
-async function loadYandexDiskLevel(level, path, gameLevels){
-  if(yandexDiskLoading) return { added:0, level:level, error: 'Загрузка уже идёт' };
+// Обновить прямые ссылки у уже сохранённых строк (по id строки в IndexedDB)
+function updateYandexRows(updates){
+  if(!updates.length) return Promise.resolve();
+  return openDavayDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(DAVAY_DB_STORE, 'readwrite');
+    const store = tx.objectStore(DAVAY_DB_STORE);
+    updates.forEach(u=>{
+      const req = store.get(u.id);
+      req.onsuccess = ()=>{
+        const row = req.result;
+        if(!row) return;
+        row.url = u.url;
+        row.urlAt = u.urlAt;
+        store.put(row);
+      };
+    });
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  })).catch(()=>{});
+}
+
+// Загрузить видео из публичной папки в игровой уровень (сейчас — 1 «Сближение»).
+// Повторное нажатие кнопки дублей не создаёт: файлы с тем же именем, у которых
+// уже есть путь внутри папки, пропускаются.
+async function importYandexVideosToLevel(level){
+  if(yandexDiskLoading) return { added:0, level: level, error: 'Загрузка уже идёт' };
+  if(!davayYandexPublicKey()) return { added:0, level: level, error: 'Укажите ссылку на папку в ⚙️ Настройках' };
   yandexDiskLoading = true;
-  try {
-    const items = await fetchYandexDiskFiles(path || '/');
-    // Рекурсивный обход подпапок отключён: грузим только файлы из корня.
-    // Папки игнорируем — раньше здесь был цикл по подпапкам и отладочные
-    // console.log, удалены при чистке.
-    let videoItems = items.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
-
-    if(videoItems.length === 0 && items.length === 0){
-      yandexDiskLoading = false;
-      return { added:0, level:level, error: 'Папка пуста или не найдена.' };
+  try{
+    const items = await fetchYandexDiskFiles('/');
+    if(!items.length) return { added:0, level: level, error: 'Папка пуста или ссылка неверна' };
+    const videos = items.filter(i => i.type === 'file' && YANDEX_VIDEO_RE.test(i.name || ''));
+    if(!videos.length){
+      return { added:0, level: level, error: `В папке ${items.length} объект(ов), видеофайлов нет` };
     }
-    
-    
-    if(videoItems.length === 0){
-      yandexDiskLoading = false;
-      const fileNames = items.slice(0, 10).map(i=>i.name).join(', ');
-      const allTypes = [...new Set(items.map(i=>i.type))].join(', ');
-      return { added:0, level:level, error: `В папке ${items.length} файл(ов) типа: ${allTypes}. Видео не найдены. Примеры: ${fileNames || 'пусто'}` };
+    const known = await loadAllDavayBlobs();
+    const byName = new Map(known.filter(r=>r.name).map(r=>[r.name, r]));
+    const publicKey = davayYandexPublicKey();
+    const now = Date.now();
+    const rows = [], updates = [];
+    let skipped = 0;
+    for(const item of videos){
+      let href = item.file;
+      if(!href){
+        try{ href = await fetchYandexDiskHref(item.path); }catch(e){ continue; }
+      }
+      const row = byName.get(item.name);
+      if(row && row.yandexPath){ skipped++; continue; }
+      if(row){
+        updates.push({ id: row.id, url: href, urlAt: now, yandexPath: item.path, publicKey: publicKey });
+      } else {
+        rows.push({ name: item.name, url: href, level: level, yandexPath: item.path, publicKey: publicKey, urlAt: now });
+      }
     }
-    
-    // Распределяем видео по уровням: текущий уровень забирает только свою долю (round-robin).
-    videoItems.sort((a,b)=> (a.name||'').localeCompare(b.name||''));
-    const allLevels = (gameLevels && gameLevels.length) ? gameLevels : [level];
-    const myIdx = allLevels.indexOf(level);
-    const myVideos = videoItems.filter((_, i)=> i % allLevels.length === (myIdx < 0 ? 0 : myIdx));
-    const results = await Promise.all(myVideos.map(i => downloadYandexDiskFile(i, level).catch(e => { 
-      return { error: e.message };
-    })));
-    const added = results.filter(r => r && !r.error).length;
-    const errors = results.filter(r => r && r.error);
-    
-    if(added > 0){
+    const saved = await saveYandexRows(rows, updates);
+    if(saved > 0){
       importedDavayVideosLoaded = false;
       await ensureImportedDavayVideosLoaded();
     }
-    
-    yandexDiskLoading = false;
-    if(added === 0 && errors.length > 0){
-      return { added:0, level:level, error: `Ошибка загрузки: ${errors[0].error}` };
-    }
-    return { added:added, level:level, total:videoItems.length };
+    return { added: saved, level: level, total: videos.length, skipped: skipped };
   } catch(err){
+    return { added:0, level: level, error: err.message || String(err) };
+  } finally {
     yandexDiskLoading = false;
-    return { added:0, level:level, error: err.message };
+  }
+}
+
+// Обновить подписанные ссылки, которым больше YANDEX_HREF_TTL. Один запрос
+// списка обновляет сразу все ссылки — ради этого и храним пути. force=true
+// обновляет принудительно (например, когда видео не открылось).
+async function refreshYandexLinks(force){
+  const cards = importedDavayCards.filter(c => c.source === 'yandex' && c.yandexPath && c.dbId);
+  if(!cards.length) return { updated:0 };
+  const need = cards.filter(c => force || !c.urlAt || Date.now() - c.urlAt > YANDEX_HREF_TTL);
+  if(!need.length) return { updated:0 };
+  try{
+    const items = await fetchYandexDiskFiles('/');
+    const byPath = new Map(items.filter(i => i.type === 'file' && i.file).map(i => [i.path, i.file]));
+    const now = Date.now();
+    const updates = [];
+    need.forEach(c=>{
+      const href = byPath.get(c.yandexPath);
+      if(!href) return;
+      c.video = href;
+      c.urlAt = now;
+      updates.push({ id: c.dbId, url: href, urlAt: now });
+    });
+    await updateYandexRows(updates);
+    return { updated: updates.length };
+  } catch(err){
+    return { updated:0, error: err.message || String(err) };
   }
 }
 // ===== Модалка выбора уровня для только что выбранных файлов =====
@@ -488,6 +542,24 @@ function setupDavayPlayerElement(video, card, level, reuse){
     }
   }, {once:true});
   video.addEventListener('error', ()=>{
+    // У видео с Яндекс Диска ссылка подписанная и со временем перестаёт
+    // работать. Один раз пробуем получить свежую и перезапустить ролик;
+    // если и это не помогло — показываем заглушку, как раньше.
+    if(card.source === 'yandex' && !card.hrefRefreshed){
+      card.hrefRefreshed = true;
+      refreshYandexLinks(true).then(res=>{
+        if(res && res.updated > 0 && card.video){
+          video.src = card.video;
+          video.load();
+          const p = video.play();
+          if(p && typeof p.catch === 'function') p.catch(()=>{});
+          return;
+        }
+        const media = document.getElementById('davayMedia');
+        if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+      });
+      return;
+    }
     const media = document.getElementById('davayMedia');
     if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
   }, {once:true});
@@ -614,50 +686,65 @@ document.getElementById('davaySetupImportBtn').addEventListener('click', ()=>{
   davayImportInputEl.click();
 });
 document.getElementById('davaySetupYandexBtn').addEventListener('click', async ()=>{
-  // Автоматическая загрузка видео с Яндекс Диска через API
-  if(!state.yandexOAuthToken){
-    showToast('❌ Нет OAuth-токена. Нажмите ⚙️ Настройки и введите токен');
+  // Кнопка «☁️ Яндекс Диск»: тянем видео из публичной папки (ссылка из
+  // «⚙️ Настроек») в игровой уровень 1 «Сближение». Другие уровни пока не
+  // рассматриваем — весь импорт идёт в YANDEX_IMPORT_GAME_LEVEL.
+  if(!davayYandexPublicKey()){
+    showToast('❌ Укажите ссылку на папку Яндекс Диска в ⚙️ Настройках');
     return;
   }
-  // Один игровой уровень (3..6) может объединять несколько папок на диске:
-  // загружаем все папки с setupLevel === текущий уровень.
-  const folders = DAVAY_DISK_LEVELS.filter(l => l.setupLevel === state.davaySelectedLevel);
-  const levels = folders.length ? folders : DAVAY_DISK_LEVELS.filter(l => l.id === state.davaySelectedLevel);
-  if(!levels.length){
-    showToast('Уровень не найден в списке Яндекс Диска');
+  const level = YANDEX_IMPORT_GAME_LEVEL;
+  const gameLevelId = level + 2;               // 1 → 🔥 Сближение (LEVELS id 3)
+  const levelName = (typeof LEVELS !== 'undefined' && LEVELS.find(l=>l.id === gameLevelId))
+    ? LEVELS.find(l=>l.id === gameLevelId).name : 'Сближение';
+  showToast('☁️ Загружаем список видео…');
+  const result = await importYandexVideosToLevel(level);
+  if(result.error && !result.added){
+    showToast('❌ ' + result.error);
     return;
   }
-  showToast(`Загрузка видео...`);
-  // Игровой уровень 1..4 (davaySelectedLevel 3..6 → gameLevel = id - 2):
-  // видео сохраняем под ним, иначе drawDavayCard их не найдёт.
-  const gameLevel = state.davaySelectedLevel - 2;
-  // distribute: каждый игровой уровень забирает свою долю из общего списка
-  const allGameLevels = [1,2,3,4];
-  const result = await loadYandexDiskLevel(gameLevel, '/', allGameLevels);
-  let addedTotal = result.added || 0, lastError = result.error || '';
-  if(lastError && addedTotal === 0){
-    showToast('❌ ' + lastError);
-  } else if(addedTotal > 0){
-    showToast(`✅ Загружено видео: ${addedTotal}`);
-  } else {
-    showToast('ℹ️ Видео не найдены или уже загружены');
+  if(result.added > 0){
+    if(state.davaySelectedLevel !== gameLevelId){
+      state.davaySelectedLevel = gameLevelId;
+      saveState();
+      renderDavaySetupLevels();
+    }
+    showToast(`✅ Загружено ${result.added} видео в уровень «${levelName}»`);
+    return;
   }
+  showToast(`ℹ️ Все видео с Диска уже в уровне «${levelName}» (${result.skipped || 0} шт.)`);
 });
 document.getElementById('davaySetupYandexSettingsBtn').addEventListener('click', ()=>{
   // Открываем модалку настроек Яндекс Диска
   document.getElementById('yandexTokenInput').value = state.yandexOAuthToken || '';
   document.getElementById('yandexPublicKeyInput').value = state.yandexPublicKey || YANDEX_DISK_PUBLIC_KEY;
+  const status = document.getElementById('yandexSettingsStatus');
+  if(status){ status.textContent = ''; status.style.color = '#5c3a52'; }
   document.getElementById('yandexSettingsModal').classList.add('show');
 });
 document.getElementById('yandexSettingsCloseBtn').addEventListener('click', ()=>{
   document.getElementById('yandexSettingsModal').classList.remove('show');
 });
-document.getElementById('yandexSettingsSaveBtn').addEventListener('click', ()=>{
+document.getElementById('yandexSettingsSaveBtn').addEventListener('click', async ()=>{
   state.yandexOAuthToken = document.getElementById('yandexTokenInput').value.trim();
   state.yandexPublicKey = document.getElementById('yandexPublicKeyInput').value.trim();
   saveState();
-  document.getElementById('yandexSettingsModal').classList.remove('show');
-  showToast('Настройки Яндекс Диска сохранены');
+  const status = document.getElementById('yandexSettingsStatus');
+  if(status){ status.textContent = '⏳ Проверяем папку…'; status.style.color = '#5c3a52'; }
+  try{
+    const items = await fetchYandexDiskFiles('/');
+    const videos = items.filter(i => i.type === 'file' && YANDEX_VIDEO_RE.test(i.name || ''));
+    if(status){
+      status.textContent = `✅ Папка доступна: видеофайлов ${videos.length} из ${items.length} объектов.`;
+      status.style.color = '#1b7f3b';
+    }
+    showToast('Настройки Яндекс Диска сохранены');
+  } catch(err){
+    if(status){
+      status.textContent = '❌ ' + (err.message || String(err)) + ' — проверьте ссылку на папку.';
+      status.style.color = '#c62828';
+    }
+  }
 });
 document.getElementById('yandexLinksCloseBtn').addEventListener('click', ()=>{
   document.getElementById('yandexLinksModal').classList.remove('show');
@@ -843,6 +930,7 @@ function goToDavayFavoritesView(){
   updateLevelUI();
   updateMuteBtn();
   requestWakeLock();
+  ensureImportedDavayVideosLoaded().then(()=> refreshYandexLinks(false));
   updateDavayPlayerButtons();
   if(!state.davayFavoritesOnly){
     state.davayFavoritesOnly = true;
@@ -886,6 +974,7 @@ async function goToDavayGame(){
   updateMuteBtn();
   requestWakeLock();
   await ensureImportedDavayVideosLoaded();
+  refreshYandexLinks(false); // подновляем подписанные ссылки, если они устарели
   resetDavayQuiz();
   updateDavayPlayerButtons();
   updateDavayFavoritesBtn();

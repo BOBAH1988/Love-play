@@ -74,7 +74,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260920x">
+<link rel="stylesheet" href="styles/app.css?v=20260921a">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -82,7 +82,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-21 · v217';
+  window.APP_BUILD = '2026-09-21 · v219';
 </script>
 </head>
 <body>
@@ -745,16 +745,17 @@
   <div class="modal-overlay" id="yandexSettingsModal">
     <div class="modal-card" style="max-width:520px;">
       <div class="modal-title">⚙️ Настройки Яндекс Диска<button type="button" class="modal-close-btn" id="yandexSettingsCloseBtn" aria-label="Закрыть">✕</button></div>
-      <div class="intro-text" style="margin-bottom:10px; color:#5c3a52;">Введите OAuth-токен для автоматической загрузки видео из папок Яндекс Диска.</div>
+      <div class="intro-text" style="margin-bottom:10px; color:#5c3a52;">Укажите публичную ссылку на папку с видео — по кнопке «☁️ Яндекс Диск» ролики из неё попадут в уровень 🔥 «Сближение». OAuth-токен нужен только для закрытой папки, для публичной его можно оставить пустым.</div>
       <div class="field" style="margin-top:10px;">
-        <label style="color:#d81b60;">OAuth-токен</label>
-        <input type="text" id="yandexTokenInput" style="width:100%; box-sizing:border-box; background:#f5e6f0 !important; color:#2b0f2e !important; border:1px solid rgba(43,15,46,.3); border-radius:8px; padding:10px; font-size:13px; caret-color:#ff5e8e;" placeholder="y0_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
-      </div>
-      <div class="field" style="margin-top:10px;">
-        <label style="color:#d81b60;">Публичный ключ папки</label>
+        <label style="color:#d81b60;">Ссылка на папку Яндекс Диска</label>
         <input type="text" id="yandexPublicKeyInput" style="width:100%; box-sizing:border-box; background:#f5e6f0 !important; color:#2b0f2e !important; border:1px solid rgba(43,15,46,.3); border-radius:8px; padding:10px; font-size:13px; caret-color:#ff5e8e;" value="https://disk.yandex.ru/d/fv1y_t0ZQ3YASg">
       </div>
-      <button type="button" class="btn btn-primary" id="yandexSettingsSaveBtn" style="margin-top:14px;">💾 Сохранить настройки</button>
+      <div class="field" style="margin-top:10px;">
+        <label style="color:#d81b60;">OAuth-токен (необязательно)</label>
+        <input type="text" id="yandexTokenInput" style="width:100%; box-sizing:border-box; background:#f5e6f0 !important; color:#2b0f2e !important; border:1px solid rgba(43,15,46,.3); border-radius:8px; padding:10px; font-size:13px; caret-color:#ff5e8e;" placeholder="y0_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
+      </div>
+      <div id="yandexSettingsStatus" style="margin-top:10px; font-size:13px; color:#5c3a52;"></div>
+      <button type="button" class="btn btn-primary" id="yandexSettingsSaveBtn" style="margin-top:14px;">💾 Сохранить и проверить</button>
     </div>
   </div>
 
@@ -3540,6 +3541,7 @@
       <ol class="modal-rules">
         <li>На странице настройки выберите, кто начинает первым — вручную или пусть решит случай, и уровень заданий: от 🔥 «Сближение» до 💫 «Фантазии».</li>
         <li>Если видео этого уровня ещё нет, нажмите «➕ Добавить видео» и загрузите ролики со своего телефона — они сохранятся именно в выбранный уровень.</li>
+        <li>Второй способ — «☁️ Яндекс Диск»: ролики из папки, ссылку на которую вы указали в «⚙️ Настройках», добавляются в уровень 🔥 «Сближение». Файлы не скачиваются в память телефона — приложение хранит ссылки и само обновляет их, когда Яндекс их переподписывает. Повторное нажатие кнопки копий не создаёт.</li>
         <li>Нажмите «Начнём» — если на выбранном уровне ещё нет ни одного видео, игра попросит сначала их добавить.</li>
         <li>Первый игрок отвечает на 10 видео: «Да», «Не сейчас» или «Нет». Шкала под именами показывает, сколько уже пройдено.</li>
         <li>Отвечайте честно и не подглядывайте — партнёр не видит ваши ответы, пока не закончат оба.</li>
@@ -4158,13 +4160,13 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260921a"></script>
+<script src="games/core.js?v=20260921b"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
-<script src="games/fants-video.js?v=20260921a"></script>
-<script src="games/fants-davay.js?v=20260921a"></script>
-<script src="games/fants-timer.js?v=20260921a"></script>
+<script src="games/fants-video.js?v=20260921b"></script>
+<script src="games/fants-davay.js?v=20260921b"></script>
+<script src="games/fants-timer.js?v=20260921b"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
