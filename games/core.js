@@ -3449,24 +3449,6 @@ async function fetchYandexDiskFiles(path){
   return data._embedded ? data._embedded.items : [];
 }
 
-// Получить прямую ссылку на скачивание файла
-async function fetchYandexDiskDownloadLink(fileInfo){
-  const publicKey = state.yandexPublicKey || YANDEX_DISK_PUBLIC_KEY;
-  // fileInfo.path может быть null для публичных файлов — используем fileInfo.name и path
-  const filePath = fileInfo.path || fileInfo.name;
-  let url = `${YANDEX_DISK_API_BASE}/download?public_key=${encodeURIComponent(publicKey)}&path=${encodeURIComponent(filePath)}`;
-  const headers = {};
-  if(state.yandexOAuthToken){
-    headers['Authorization'] = `OAuth ${state.yandexOAuthToken}`;
-  }
-  const resp = await fetch(url, { headers });
-  if(!resp.ok){
-    throw new Error('Yandex API download error: ' + resp.status);
-  }
-  const data = await resp.json();
-  return data.href;
-}
-
 // Сохранить прямую ссылку на видео в IndexedDB (без загрузки blob — обход CORS Яндекс Диска)
 async function saveDavayUrl(url, level, name){
   return new Promise((resolve, reject)=>{
@@ -3483,7 +3465,8 @@ async function saveDavayUrl(url, level, name){
 
 // Получить прямую ссылку на видео и сохранить в IndexedDB
 async function downloadYandexDiskFile(fileInfo, level){
-  const directLink = await fetchYandexDiskDownloadLink(fileInfo);
+  const directLink = fileInfo.file;
+  if(!directLink) throw new Error('Нет ссылки на файл: ' + fileInfo.name);
   await saveDavayUrl(directLink, level, fileInfo.name);
   return { name:fileInfo.name, level:level };
 }
@@ -3493,8 +3476,8 @@ async function downloadYandexDiskFile(fileInfo, level){
 async function loadYandexDiskLevel(level, path){
   if(yandexDiskLoading) return { added:0, level:level, error: 'Загрузка уже идёт' };
   yandexDiskLoading = true;
-  try {
-    const items = await fetchYandexDiskFiles(path);
+    try {
+    const items = await fetchYandexDiskFiles('/');
     
     if(items.length === 0){
       yandexDiskLoading = false;
