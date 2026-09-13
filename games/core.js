@@ -2946,13 +2946,71 @@ const MAX_ERROR_LOG = 20;
 const ERROR_REPEAT_WINDOW = 60000; // мс: как часто показывать окно повторно
 let lastErrorShownAt = 0;
 
+// Одинаковые ошибки, повторяющиеся подряд, схлопываем в одну запись со
+// счётчиком. Без этого журнал на 20 записей забивался одним и тем же
+// сообщением: например, недоступный файл видео даёт отказ на каждое
+// переключение, и настоящие исключения вытеснялись повторами. Ключ — текст
+// ошибки без времени; храним последние, чтобы не путать разные сбои.
+const ERROR_DEDUPE_WINDOW = 10 * 60 * 1000; // мс: окно схлопывания
+
+// Сбои, которые для приложения ожидаемы и не означают поломку: недоступный
+// или неподдержанный файл видео, прерванная загрузка медиа (пользователь
+// ушёл с экрана), отменённый запрос. Такие отказы промисов сыплются пачками
+// (на каждое переключение ролика), поэтому в журнал ошибок и в окно «что-то
+// пошло не так» они не попадают — у видео есть своя обработка с диагностикой.
+const EXPECTED_FAILURE_MARKERS = [
+  'MEDIA_ERR_SRC_NOT_SUPPORTED',
+  'MEDIA_ERR_DECODE',
+  'MEDIA_ERR_ABORTED',
+  'The play() request was interrupted',
+  'The operation was aborted',
+  'AbortError',
+  'NotSupportedError',
+  'Failed to load because no supported source was found',
+  'The element has no supported sources',
+  'A network error occurred',
+  'Load failed',
+  'NetworkError when attempting to fetch resource',
+];
+
+/** Ожидаемый ли это сбой (медиа/сеть) — тогда журнал и окно не трогаем. */
+function isExpectedMediaFailure(message){
+  const text = String(message || '');
+  if(!text) return false;
+  return EXPECTED_FAILURE_MARKERS.some(marker => text.indexOf(marker) >= 0);
+}
+
+/** Есть ли уже такая ошибка в журнале за последнее окно (тогда только счётчик). */
+function findRecentSameError(log, message){
+  for(let i = log.length - 1; i >= 0; i--){
+    const e = log[i];
+    if(!e || e.message !== message) continue;
+    const at = Date.parse(e.time);
+    if(isNaN(at)) return null;
+    if(Date.now() - at > ERROR_DEDUPE_WINDOW) return null;
+    return e;
+  }
+  return null;
+}
+
 /** Дописывает ошибку в журнал (в памяти и в localStorage). */
 function logAppError(info){
   try{
     const log = (() => {
       try{ return JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]'); }catch(_){ return []; }
     })();
-    log.push(info);
+    // Повтор той же ошибки не добавляем новой записью: увеличиваем счётчик и
+    // обновляем время. Иначе журнал (20 записей) заполнялся повторами одного
+    // сбоя, и по нему нельзя было понять, что происходило на самом деле.
+    const same = info && info.message ? findRecentSameError(log, info.message) : null;
+    if(same){
+      same.count = (same.count || 1) + 1;
+      same.time = info.time || new Date().toISOString();
+      if(info.source) same.source = info.source;
+      if(info.detail) same.detail = info.detail;
+    } else {
+      log.push(Object.assign({ count: 1 }, info));
+    }
     while(log.length > MAX_ERROR_LOG) log.shift();
     localStorage.setItem(ERROR_LOG_KEY, JSON.stringify(log));
   }catch(_){ /* переполнение или приватный режим — журнал не критичен */ }
@@ -2984,12 +3042,16 @@ function appEnvInfo(){
 
 /** Текст отчёта для копирования в буфер (или отправки разработчику). */
 function buildErrorReport(){
-  const log = getErrorLog().slice(0, 5);
+  // Записей больше, чем раньше (5): повторы теперь схлопываются в одну
+  // строку со счётчиком, поэтому в журнале лежат реально разные ошибки.
+  const log = getErrorLog().slice(0, 10);
   const lines = ['Ошибка в приложении «Давай играй»', '', appEnvInfo(), '', 'Последние ошибки:'];
   if(log.length === 0) lines.push('  (журнал пуст)');
   log.forEach((e, i) => {
-    lines.push(`  ${i + 1}) ${e.time}`);
+    const times = e.count > 1 ? `  (повторов: ${e.count})` : '';
+    lines.push(`  ${i + 1}) ${e.time}${times}`);
     lines.push(`     ${e.message}`);
+    if(e.detail) lines.push(`     детали: ${e.detail}`);
     if(e.source) lines.push(`     источник: ${e.source}`);
   });
   return lines.join('\n');
@@ -3083,6 +3145,14 @@ window.addEventListener('unhandledrejection', (ev)=>{
     source: (reason && reason.stack) ? String(reason.stack).split('\n')[1]?.trim() || '' : '',
   };
   try{ console.warn('[Love-play] unhandled rejection:', info.message); }catch(_){}
+  // Недоступный файл видео и отменённые запросы — ожидаемые ситуации, а не
+  // сбой приложения: у видео своя обработка ошибок, включая окно с
+  // диагностикой. В журнал их не пишем и окном не пугаем — иначе журнал на
+  // 20 записей забивался повторами и вытеснял настоящие исключения.
+  if(isExpectedMediaFailure(info.message)){
+    try{ console.warn('[Love-play] это ожидаемый сбой медиа — в журнал не пишем'); }catch(_){}
+    return;
+  }
   logAppError(info);
   showAppError(info.message, info.source);
 });
@@ -3128,6 +3198,22 @@ const __errCloseBtn = document.getElementById('appErrorCloseBtn');
 if(__errCloseBtn) __errCloseBtn.addEventListener('click', ()=>{
   __pendingErrorReport = null;
   hideAppError();
+});
+
+// Очистка журнала ошибок без полного сброса прогресса. Нужна, когда журнал
+// заполнен старыми записями (он рассчитан на 20 штук), а хочется увидеть
+// свежие: иначе новая ошибка вытесняет старую, и по отчёту трудно понять,
+// что происходит сейчас. Прогресс партий и настройки не трогаются.
+const __errClearLogBtn = document.getElementById('appErrorClearLogBtn');
+if(__errClearLogBtn) __errClearLogBtn.addEventListener('click', ()=>{
+  clearErrorLog();
+  const detailsEl = document.getElementById('appErrorDetails');
+  if(detailsEl){
+    detailsEl.textContent = 'Журнал ошибок очищен. Прогресс и настройки не тронуты.';
+    detailsEl.style.display = 'block';
+  }
+  __pendingErrorReport = null;
+  showToast('Журнал ошибок очищен');
 });
 
 // debounce(fn, ms) — обёртка: пропускает вызов fn, пока между нажатиями не
