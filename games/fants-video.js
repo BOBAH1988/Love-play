@@ -511,6 +511,8 @@ function setupVideoPlayerElement(video, card, level, reuse){
     // демо-ролик, и игрок видел «одно и то же демо» вместо своих видео.
     // Сначала пробуем получить свежую ссылку и перезапустить ролик — и только
     // если не вышло, показываем демо/заглушку.
+    const mediaEl = video.currentSrc || video.src || '';
+    const code = (video.error && video.error.code) || 0;
     if(card.source === 'yandex' && !card.hrefRefreshed){
       card.hrefRefreshed = true;
       refreshYandexLinks(true).then(res=>{
@@ -520,6 +522,14 @@ function setupVideoPlayerElement(video, card, level, reuse){
           const p = video.play();
           if(p && typeof p.catch === 'function') p.catch(()=>{});
           return;
+        }
+        // Причину пишем в журнал ошибок (виден в приложении): без него
+        // «чёрный экран» невозможно объяснить — ни кода ошибки, ни адреса.
+        const detail = `${card.name || card.id}: обновлено ссылок ${res ? res.updated : 0}, `
+                     + `ошибка медиа ${code}, url ${String(mediaEl).slice(0, 120)}`
+                     + (res && res.error ? `, API: ${res.error}` : '');
+        if(typeof logAppError === 'function'){
+          logAppError({ message: 'Видео с Яндекс Диска не воспроизводится', detail: detail, at: new Date().toISOString() });
         }
         showVideoErrorFallback(card, level);
       });

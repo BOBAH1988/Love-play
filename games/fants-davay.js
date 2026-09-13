@@ -259,6 +259,7 @@ function saveYandexRows(rows, updates){
         row.urlAt = u.urlAt;
         row.yandexPath = u.yandexPath;
         row.publicKey = u.publicKey;
+        if(u.level) row.level = u.level;
         store.put(row);
       };
     });
@@ -290,8 +291,11 @@ function updateYandexRows(updates){
 }
 
 // Загрузить видео из публичной папки в игровой уровень (сейчас — 1 «Сближение»).
-// Повторное нажатие кнопки дублей не создаёт: файлы с тем же именем, у которых
-// уже есть путь внутри папки, пропускаются.
+// Повторное нажатие кнопки дублей не создаёт: файлы с тем же именем не
+// добавляются второй раз, но их ссылки ВСЕГДА переписываются свежими.
+// Это принципиально: ссылка, сохранённая вчера, к сегодняшнему дню уже
+// недействительна, а раньше такие строки просто пропускались (skipped++) —
+// кнопка рапортовала «всё уже загружено», а в игре был чёрный экран.
 async function importYandexVideosToLevel(level){
   if(yandexDiskLoading) return { added:0, level: level, error: 'Загрузка уже идёт' };
   if(!davayYandexPublicKey()) return { added:0, level: level, error: 'Укажите ссылку на папку в ⚙️ Настройках' };
@@ -321,19 +325,25 @@ async function importYandexVideosToLevel(level){
         try{ href = await fetchYandexDiskHref(item.path); }catch(e){ continue; }
       }
       const row = byName.get(item.name);
-      if(row && row.yandexPath){ skipped++; continue; }
       if(row){
-        updates.push({ id: row.id, url: href, urlAt: now, yandexPath: item.path, publicKey: publicKey });
+        // Файл уже в каталоге — второй раз не добавляем, но ссылку, путь и
+        // уровень обновляем: старая ссылка к этому моменту уже могла умереть.
+        skipped++;
+        updates.push({ id: row.id, url: href, urlAt: now, yandexPath: item.path,
+                       publicKey: publicKey, level: level });
       } else {
         rows.push({ name: item.name, url: href, level: level, yandexPath: item.path, publicKey: publicKey, urlAt: now });
       }
     }
     const saved = await saveYandexRows(rows, updates);
+    // Перечитываем каталог из базы: у уже известных файлов ссылки обновились,
+    // в памяти остались бы прежние (мёртвые).
     if(saved > 0){
-      importedDavayVideosLoaded = false;
+      refreshDavayCatalogInMemory();
       await ensureImportedDavayVideosLoaded();
     }
-    return { added: saved, level: level, total: videos.length, skipped: skipped, unplayable: unplayable };
+    return { added: rows.length, refreshed: updates.length, level: level,
+             total: videos.length, skipped: skipped, unplayable: unplayable };
   } catch(err){
     return { added:0, level: level, error: err.message || String(err) };
   } finally {
@@ -613,6 +623,8 @@ function setupDavayPlayerElement(video, card, level, reuse){
     // У видео с Яндекс Диска ссылка подписанная и со временем перестаёт
     // работать. Один раз пробуем получить свежую и перезапустить ролик;
     // если и это не помогло — показываем заглушку, как раньше.
+    const mediaEl = video.currentSrc || video.src || '';
+    const code = (video.error && video.error.code) || 0;
     if(card.source === 'yandex' && !card.hrefRefreshed){
       card.hrefRefreshed = true;
       refreshYandexLinks(true).then(res=>{
@@ -623,9 +635,16 @@ function setupDavayPlayerElement(video, card, level, reuse){
           if(p && typeof p.catch === 'function') p.catch(()=>{});
           return;
         }
-        // Обновить ссылку не удалось — говорим прямо, а не показываем пустую
-        // карточку: раньше игрок видел только иконку и не понимал причины.
-        showToast('Видео с Яндекс Диска не открылось. Проверьте ссылку на папку в ⚙️ Настройках');
+        // Причину пишем и в журнал ошибок (виден в приложении), и тостом:
+        // без этого «чёрный экран» невозможно объяснить — ни кода ошибки,
+        // ни адреса, который отказал.
+        const detail = `${card.name || card.id}: обновлено ссылок ${res ? res.updated : 0}, `
+                     + `ошибка медиа ${code}, url ${String(mediaEl).slice(0, 120)}`
+                     + (res && res.error ? `, API: ${res.error}` : '');
+        if(typeof logAppError === 'function'){
+          logAppError({ message: 'Видео с Яндекс Диска не воспроизводится', detail: detail, at: new Date().toISOString() });
+        }
+        showToast('Видео с Яндекс Диска не открылось — причина записана в журнал ошибок');
         const media = document.getElementById('davayMedia');
         if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
       });
@@ -781,11 +800,11 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
       renderDavaySetupLevels();
     }
     const tail = result.unplayable ? ` (.avi/.mkv пропущено: ${result.unplayable})` : '';
-    showToast(`✅ Загружено ${result.added} видео в уровень «${levelName}»${tail}`);
+    showToast(`✅ Новых: ${result.added}. Ссылки обновлены у ${result.refreshed} видео — уровень «${levelName}»${tail}`);
     return;
   }
   const note = result.unplayable ? `, .avi/.mkv пропущено: ${result.unplayable}` : '';
-  showToast(`ℹ️ Все видео с Диска уже в уровне «${levelName}» (${result.skipped || 0} шт.${note})`);
+  showToast(`ℹ️ Обновлены ссылки у ${result.refreshed || 0} видео уровня «${levelName}»${note}`);
 });
 document.getElementById('davaySetupYandexSettingsBtn').addEventListener('click', ()=>{
   // Открываем модалку настроек Яндекс Диска
