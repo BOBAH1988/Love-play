@@ -74,7 +74,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260920v">
+<link rel="stylesheet" href="styles/app.css?v=20260920w">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (см. gameErrorGuard в core.js),
   // чтобы по сообщению игрока было понятно, на какой версии воспроизвелась
@@ -3421,6 +3421,15 @@
   </div>
 
   <div class="toast" id="toast"></div>
+  <!-- Плашка доступного обновления PWA: появляется при запуске, если Service
+       Worker нашёл новую версию (reg.waiting). Кнопка запускает то же жёсткое
+       обновление, что и «☰ → Обновить приложение» (hardUpdateApp). Отдельный
+       элемент, а не #toast: тот умеет только текст и сам гаснет по таймеру,
+       а здесь нужна кликабельная кнопка без автозакрытия. -->
+  <div class="update-toast" id="updateToast" hidden>
+    <span>Доступна новая версия 🎉</span>
+    <button type="button" id="updateToastBtn">Обновить</button>
+  </div>
 
   <!-- ===== ЭКРАН ОШИБКИ =====
        Показывается, если во время работы произошла непойманная ошибка
@@ -4213,7 +4222,38 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20260920a').catch(function (e) {
+        navigator.serviceWorker.register('./sw.js?v=20260920b').then(function (reg) {
+          // Мягкая проверка обновления при каждом запуске: reg.update() в фоне
+          // спрашивает сервер, есть ли новый sw.js. Если да — браузер ставит его
+          // в reg.waiting (старый воркер при этом НЕ трогаем: офлайн не ломается).
+          // Показываем плашку #updateToast с кнопкой — жёсткое обновление
+          // (hardUpdateApp) запускается только по нажатию игрока.
+          function showUpdateToastIfWaiting(){
+            var r = reg.waiting;
+            if(!r) return;
+            var toast = document.getElementById('updateToast');
+            if(toast) toast.hidden = false;
+          }
+          var btn = document.getElementById('updateToastBtn');
+          if(btn && !btn.__bound){
+            btn.__bound = true;
+            btn.addEventListener('click', function(){
+              if(typeof hardUpdateApp === 'function') hardUpdateApp();
+              else location.reload();
+            });
+          }
+          reg.addEventListener('updatefound', function(){
+            var nw = reg.installing;
+            if(!nw) return;
+            nw.addEventListener('statechange', function(){
+              if(nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateToastIfWaiting();
+            });
+          });
+          showUpdateToastIfWaiting();
+          if(navigator.onLine !== false){
+            reg.update().then(showUpdateToastIfWaiting).catch(function(){});
+          }
+        }).catch(function (e) {
           console.warn('Service Worker registration failed:', e);
         });
       });
