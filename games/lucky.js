@@ -485,11 +485,8 @@ function exitLuckyGame(){
   state.luckyCurrentTeamIndex = 0;
   state.luckyTeamTurnCount = [0,0];
   state.luckyPendingBonusText = '';
-  state.inProgress = false;
-  state.pausedMode = null;
-  saveState();
-  document.getElementById('luckyGame').classList.remove('active');
-  document.getElementById('luckySetup').classList.add('active');
+  exitGame('luckyGame', 'luckySetup');
+  showSetupView('companyView');
 }
 // "Случайно" — та же подсказка, что и suggestRandomBingoCell в "Секс-бинго":
 // подсвечивает контуром случайную ещё не отмеченную клетку общего поля,

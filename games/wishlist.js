@@ -296,6 +296,9 @@ function pauseWishlistGame(){
   saveState();
   document.getElementById('wishlistGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  // Раздел нужно открыть явно: без этого игрок возвращался в тот раздел
+  // хаба, который был открыт в прошлый раз (например, «Игры с детьми»).
+  showSetupView('twoPlayerView');
   updateResumeUI();
 }
 function resumeWishlistGame(){
@@ -357,13 +360,12 @@ document.getElementById('wishlistExitBtn').addEventListener('click', ()=>{
 });
 document.getElementById('closeWishlistSummaryBtn').addEventListener('click', ()=>{
   hideModal('wishlistSummaryModal');
-  document.getElementById('wishlistGame').classList.remove('active');
-  document.getElementById('wishlistSetup').classList.add('active');
   resetWishlistQuiz();
-  state.inProgress = false;
-  state.pausedMode = null;
-  saveState();
+  // Единый выход: экраны, пара флагов и возврат «откуда пришёл» (раньше экран
+  // переключался вручную и updateResumeUI() не вызывался вовсе).
+  exitGame('wishlistGame', 'wishlistSetup');
   renderWishlistSetupStarterGroup();
+  updateResumeUI();
 });
 (document.getElementById('wishlistSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('wishlistRulesModal'); });
 setupRulesModal('wishlistRulesModal', 'closeWishlistRulesBtn');

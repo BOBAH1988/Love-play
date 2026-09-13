@@ -170,10 +170,10 @@ function exitPartyFantsGame(){
   state.partyFantsCompleted = [];
   state.partyFantsSkipped = [];
   state.partyFantsCurrentPlayerIndex = 0;
-  state.inProgress = false;
-  state.pausedMode = null;
-  saveState();
-  updateResumeUI();
+  // Уходим с игрового экрана в меню настроек игры: раньше экран оставался
+  // активным, игрок «висел» на пустом поле без паузы и без кнопок.
+  exitGame('partyFantsGame', 'partyFantsSetup');
+  showSetupView('companyView');
 }
 document.getElementById('partyFantsSetupStartBtn').addEventListener('click', ()=>{
   playSuccessSound();

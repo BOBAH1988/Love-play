@@ -366,6 +366,10 @@ test('Сценарий: стрелка «←» в «Давай попробуе�
     assert(!called.includes('pauseGame'), 'не должна вызываться пауза «Фантов» (чужой экран)');
 
     // Просмотр избранного — не партия: выходим сразу, без паузы.
+    // ВАЖНО: pauseDavayGame() теперь снимает класс davay-mode (иначе чужой
+    // режим оставался на #game и ломал следующие игры), поэтому режим надо
+    // выставить заново — в реальности игрок в этот момент снова в игре.
+    getElById(stub, 'game').classList.add('davay-mode');
     state.davayFavoritesOnly = true;
     called.length = 0;
     pressBack();
@@ -547,6 +551,100 @@ test('Сценарий: завершение игры (finishGameBtn handler)', 
   } catch (e) {
     assert(false, `ошибка: ${e.message}`);
   }
+});
+
+
+console.log('\n=== Возврат «откуда пришёл» и режимы экрана #game ===');
+
+// Класс багов «выход ведёт не туда» закрывается единым механизмом: точка
+// входа запоминается в goToGame()/goToGameSetup(), а выход возвращается по
+// ней через exitGame(). Проверяем фактическое поведение, а не текст кода.
+test('Сценарий: выход из игры возвращает на её экран настройки', () => {
+  // Игрок: хаб → меню «Крокодила» → партия → «Выход».
+  global.goToKrokodilSetup();
+  const setupEl = getElById(stub, 'krokodilSetup');
+  assert(setupEl.classList.contains('active'), 'меню «Крокодила» должно открыться');
+
+  // Точка входа — именно меню настройки: игру игрок запускает с него.
+  assert(global.getEntryScreenState().id === 'krokodilSetup',
+    `точка входа должна быть krokodilSetup, получено ${global.getEntryScreenState().id}`);
+
+  global.goToKrokodilGame();
+  assert(getElById(stub, 'krokodilGame').classList.contains('active'),
+    'партия «Крокодила» должна начаться');
+  assert(global.getEntryScreenState().id === 'krokodilSetup',
+    'запуск партии не должен перезаписывать точку входа на саму игру');
+
+  // Заглушка DOM не умеет гасить экраны (querySelectorAll возвращает пустой
+  // список), поэтому «какой экран активен» здесь не проверить. Зато можно
+  // проверить сам механизм возврата: он обязан вернуть true и указать, куда
+  // именно вернул. Этого достаточно, чтобы поймать отключённый возврат.
+  // Подменяем сам returnToEntryScreen: он вызывается из exitGame как глобальная
+  // функция, поэтому перехват сработает и покажет, что возврат действительно
+  // запрошен (заглушка DOM не умеет гасить экраны, см. комментарий выше).
+  const asked = [];
+  const origReturn = global.returnToEntryScreen;
+  global.returnToEntryScreen = function () {
+    asked.push(global.getEntryScreenState().id);
+    return true;
+  };
+  try {
+    global.exitKrokodilGame();
+    assert(typeof origReturn === 'function', 'механизм возврата должен существовать');
+    assert(asked.includes('krokodilSetup'),
+      `выход должен запросить возврат в krokodilSetup, а запрошено: ${asked.join(', ') || 'ничего'}`);
+  } finally {
+    global.returnToEntryScreen = origReturn;
+  }
+});
+
+test('Сценарий: вход из хаба возвращает в хаб, а не в меню игры', () => {
+  // Обратный случай: плитка в хабе → партия → выход. Игрок не видел меню
+  // настройки игры, поэтому и возвращаться в него не должен.
+  const setupEl = getElById(stub, 'setup');
+  setupEl.classList.add('active');
+  global.rememberReturnScreen('setup', 'companyView');
+
+  global.goToKrokodilGame();
+  global.exitKrokodilGame();
+
+  assert(setupEl.classList.contains('active'), 'после выхода должен открыться хаб');
+  assert(global.getEntryScreenState().id === 'setup',
+    'точка входа должна остаться хабом');
+});
+
+test('Сценарий: exitGame сбрасывает пару флагов и закрывает окно паузы', () => {
+  // Правило AGENTS.md: pausedMode и inProgress сбрасываются вместе, иначе
+  // настройки в хабе остаются заблокированными, а окно паузы висит поверх.
+  state.inProgress = true;
+  state.pausedMode = 'fanty';
+  const modal = getElById(stub, 'pauseMenuModal');
+  modal.classList.add('show');
+
+  global.exitKidsXoGame();
+
+  assert(state.inProgress === false, 'inProgress должен сброситься');
+  assert(state.pausedMode === null, 'pausedMode должен сброситься');
+  assert(!modal.classList.contains('show'), 'окно паузы должно закрыться');
+});
+
+test('Сценарий: setGameMode снимает чужой режим экрана #game', () => {
+  // Раньше после паузы «Давай попробуем» класс davay-mode оставался на #game,
+  // и «Фанты» открывались с чужим оформлением и чужой логикой выхода.
+  const gameEl = getElById(stub, 'game');
+  MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
+
+  global.setGameMode('davay-mode');
+  assert(gameEl.classList.contains('davay-mode'), 'режим должен установиться');
+
+  global.setGameMode('video-mode');
+  assert(gameEl.classList.contains('video-mode'), 'новый режим должен установиться');
+  assert(!gameEl.classList.contains('davay-mode'), 'прежний режим должен сняться');
+
+  global.setGameMode(null);
+  MODE_CLASSES.forEach((c) => {
+    assert(!gameEl.classList.contains(c), `режим ${c} должен сняться`);
+  });
 });
 
 console.log('\n=== Запуск тестов ===\n');

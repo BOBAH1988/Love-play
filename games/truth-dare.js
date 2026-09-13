@@ -27,6 +27,9 @@ function renderTdSetupLevels(){
   });
 }
 function exitTdSetup(){
+  // #tdSetup — экран-сирота: плитки «Правда/Действие» в хабе нет, а у пар этот
+  // режим живёт на общем #game (переключатель в #fantySetup). Выход ведёт в
+  // раздел «Игры для пар 18+» — туда же, где живёт режим П/Д.
   document.getElementById('tdSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
   showSetupView('twoPlayerView');

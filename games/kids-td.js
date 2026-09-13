@@ -203,10 +203,8 @@ function exitKidsTdGame(){
   state.kidsTdSkipped = [];
   state.kidsTdCurrentPlayerIndex = 0;
   state.kidsTdCurrentType = null;
-  state.inProgress = false;
-  state.pausedMode = null;
-  saveState();
-  updateResumeUI();
+  exitGame('kidsTdGame', 'kidsTdSetup');
+  showSetupView('kidsView');
 }
 document.getElementById('kidsTdSetupStartBtn').addEventListener('click', ()=>{
   playSuccessSound();

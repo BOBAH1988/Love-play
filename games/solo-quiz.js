@@ -85,6 +85,8 @@ function goToSoloQuizSetup(){
 function exitSoloQuizSetup(){
   document.getElementById('soloQuizSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  // Раздел открываем явно — как в остальных играх раздела «Игры для одного».
+  showSetupView('soloView');
 }
 function stopSoloQuizInterval(){
   soloQuizIntervalId = stopInterval(soloQuizIntervalId);

@@ -77,7 +77,9 @@ function goToWhatToPlayGame(){
   requestWakeLock();
 }
 function exitWhatToPlayGame(){
+  // «Во что поиграть» — плитка в разделе «Игры с детьми» (kidsView).
   exitGame('whatToPlayGame', 'setup');
+  showSetupView('kidsView');
 }
 
 document.getElementById('whatToPlayNextBtn').addEventListener('click', ()=>{

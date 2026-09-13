@@ -605,6 +605,8 @@ function goToGameSetup(gameSetupId, targetView, beforeSwitch){
   // 1) гасим ВСЕ активные экраны (не только #setup: подменю вроде
   //    #kidsBoardGamesMenu и другие настройки тоже должны гаснуть), чтобы
   //    не оставалось «экрана, поделённого на 2 части» при наложении.
+  //    Точку входа запоминаем ДО гашения — по ней вернёт кнопка «Назад».
+  rememberReturnScreen(gameSetupId, targetView);
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   // 2) включаем нужный экран настроек
   const targetEl = document.getElementById(gameSetupId);
@@ -1006,6 +1008,10 @@ function goToGame(setupId, gameId, beforeSwitch){
   // экранов (включая #setup и подменю вроде #kidsBoardGamesMenu), затем
   // включаем только целевой игровой экран. setupId больше не нужен для
   // точечного снятия, но сигнатура сохранена ради совместимости.
+  // ВАЖНО: точку входа здесь НЕ перезаписываем. Игрок уже стоит на экране
+  // настройки игры, а сама игра — это то, куда он уходит; запоминать нужно
+  // именно покидаемый экран настройки (это сделал goToGameSetup). Иначе выход
+  // возвращал бы игрока в саму игру, из которой он только что вышел.
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   const game = document.getElementById(gameId);
   if(game) game.classList.add('active');
@@ -1045,8 +1051,26 @@ function exitGame(gameId, setupId){
   // остаться висеть подменю (например, после выхода из «Морского боя» у детей
   // оставался активным #kidsBoardGamesMenu) и экраны наложатся друг на друга.
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
-  const setup = document.getElementById(setupId || 'setup');
-  if(setup) setup.classList.add('active');
+  // Возврат «откуда пришёл»: если игрок запускал партию со своего экрана
+  // настройки, ведём его туда, а не в общий хаб #setup. Параметр setupId
+  // остаётся запасным путём для случаев, когда точку входа запомнить не
+  // удалось (например, прямой вызов без прохода через goToGame()).
+  // Партия прервана — снимаем ОБА связанных флага вместе (правило из
+  // AGENTS.md): забытый inProgress блокирует настройки в хабе, забытый
+  // pausedMode оставляет висеть чужое меню «Пауза». Раньше этим занималась
+  // каждая игра по отдельности, и в восьми из них сброс был пропущен.
+  state.inProgress = false;
+  state.pausedMode = null;
+  state.lastSectionOnPause = null;
+  saveState();
+  const pauseModalEl = document.getElementById('pauseMenuModal');
+  if(pauseModalEl) pauseModalEl.classList.remove('show');
+  const resumed = (typeof returnToEntryScreen === 'function') && returnToEntryScreen();
+  if(!resumed){
+    const setup = document.getElementById(setupId || 'setup');
+    if(setup) setup.classList.add('active');
+  }
+  if(typeof updateResumeUI === 'function') updateResumeUI();
   // Останавливаем все звуки (Web Audio API + SpeechSynthesis)
   stopAllSounds();
   // Статистика: партия прервана. Если игра вообще не начиналась (выход из
@@ -1939,8 +1963,8 @@ function resumeFantyGame(){
   updateResumeUI();
   document.getElementById('setup').classList.remove('active');
   document.getElementById('fantySetup').classList.remove('active');
-  document.getElementById('game').classList.remove('placeholder-mode');
-  document.getElementById('game').classList.remove('video-mode');
+  // Возврат в базовые «Фанты»: снимаем ЛЮБОЙ чужой режим экрана #game.
+  setGameMode(null);
   document.getElementById('game').classList.add('active');
   document.getElementById('doneBtn').textContent = '💕 Готово';
   document.getElementById('pauseBtn').textContent = 'Пауза';
@@ -1958,6 +1982,89 @@ function resumeFantyGame(){
 function isPlaceholderMode(){
   const el = document.getElementById('game');
   return !!(el && el.classList.contains('placeholder-mode'));
+}
+// Режимы экрана #game переключаются CSS-классами, и «свои» классы каждая
+// игра снимала сама, а «чужие» — забывала. Из-за этого после паузы «Давай
+// попробуем» базовые «Фанты» открывались с классом davay-mode: CSS рисовал
+// чужой режим, а предикаты isDavayMode()/isPlaceholderMode() уводили кнопку
+// «Выход» и стрелку «←» не туда. Теперь класс режима ставит ОДНА функция,
+// и она же гарантированно снимает два остальных.
+const GAME_MODE_CLASSES = ['video-mode','davay-mode','placeholder-mode'];
+function setGameMode(mode){
+  const el = document.getElementById('game');
+  if(!el) return;
+  GAME_MODE_CLASSES.forEach(cls=>{
+    if(cls !== mode) el.classList.remove(cls);
+  });
+  if(mode) el.classList.add(mode);
+}
+
+/* ============ ЕДИНЫЙ ВОЗВРАТ «ОТКУДА ПРИШЁЛ» ============
+ * Класс багов, который повторялся в проекте много раз: выход из игры вёл не
+ * туда, куда игрок пришёл. Игра запускается со СВОЕГО экрана настройки
+ * (#krokodilSetup), а выход выбрасывал в общий хаб #setup — игрок
+ * «перепрыгивал» через уровень. Или наоборот: игрок вошёл из хаба, а выход
+ * уводил на экран настройки, которого он не видел. Каждая игра решала это
+ * по-своему, поэтому возврат получался разным у разных игр и расходился ещё
+ * и между кнопкой «Выход» и стрелкой «←».
+ *
+ * Теперь точка входа запоминается в ОДНОМ месте — rememberReturnScreen(),
+ * которую вызывает goToGame()/goToGameSetup(), а выход просто возвращается по
+ * ней: returnToEntryScreen(). Никаких «догадок» вида «#game принадлежит
+ * Фантам, значит вернёмся в Фанты» здесь больше нет.
+ */
+// Объект, а не примитив: ссылка остаётся той же, поэтому состояние видно и
+// снаружи модуля (важно для тестов, которые читают точку входа напрямую).
+const entryScreenState = { id: null, view: null };
+
+/** Экраны настройки игр: для них «назад» = в тот раздел хаба, откуда пришли. */
+function isGameSetupScreen(id){
+  return typeof id === 'string' && /Setup$/.test(id) && !!document.getElementById(id);
+}
+/** Показать ровно один экран: гасим все .screen, включаем нужный. */
+function activateSingleScreen(id){
+  if(!id) return false;
+  const el = document.getElementById(id);
+  if(!el){ console.warn('activateSingleScreen: экран #' + id + ' не найден'); return false; }
+  document.querySelectorAll('.screen.active').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+  return true;
+}
+// Запомнить точку входа. view — раздел хаба (#setup), в котором был игрок:
+// он нужен, если возвращаться придётся в сам хаб (например из «Виселицы»).
+function rememberReturnScreen(id, view){
+  if(!id) return;
+  entryScreenState.id = id;
+  if(view) entryScreenState.view = view;
+}
+// Вернуться туда, откуда игрок пришёл. Если такой экран больше не существует —
+// показываем хаб и подсвечиваем раздел по текущей паузе, чтобы игрок не
+// оказался в случайном месте.
+// Копия точки входа (для диагностики и тестов): состояние — переменная модуля,
+// снаружи напрямую не видна, а знать, куда вернёт выход, бывает нужно.
+function getEntryScreenState(){
+  return { id: entryScreenState.id, view: entryScreenState.view };
+}
+function returnToEntryScreen(){
+  const entry = getEntryScreenState();
+  const saved = entry.id;
+  if(saved && activateSingleScreen(saved)){
+    const setup = document.getElementById('setup');
+    const wasInSetup = !!(setup && setup.classList.contains('active'));
+    if(!wasInSetup && isGameSetupScreen(saved) && typeof updateResumeUI === 'function'){
+      updateResumeUI();
+    }
+    if(typeof releaseWakeLockNow === 'function') releaseWakeLockNow();
+    return true;
+  }
+  if(typeof returnToSetupUI === 'function'){
+    returnToSetupUI();
+    const view = entry.view || (typeof getPausedGroup === 'function' && getPausedGroup() === 'two' ? 'twoPlayerView' : null);
+    if(view && typeof showSetupView === 'function') showSetupView(view);
+    return false;
+  }
+  return false;
 }
 function returnToSetupUI(){
   // Сначала убираем active со ВСЕХ экранов, затем активируем только #setup —
@@ -2027,9 +2134,29 @@ document.addEventListener('keydown', (e)=>{
   if(e.key !== 'ArrowLeft') return;
   const tag = (e.target && e.target.tagName) || '';
   if(tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+  // Ветки режимов экрана #game должны совпадать с кнопкой «←» в шапке
+  // (games/fants-timer.js) и с кнопкой «Пауза/Выход». Раньше здесь была
+  // только ветка видео: в «Давай попробуем» и «Предложи партнёру» клавиша
+  // проваливалась в общую паузу «Фантов» — игрок попадал в чужое меню, а
+  // «Продолжить игру» запускало не ту игру.
   if(typeof isVideoMode === 'function' && isVideoMode()){
     e.preventDefault();
     if(typeof exitVideoGame === 'function') exitVideoGame();
+    return;
+  }
+  if(typeof isPlaceholderMode === 'function' && isPlaceholderMode()){
+    e.preventDefault();
+    if(typeof exitPlaceholderGame === 'function') exitPlaceholderGame();
+    return;
+  }
+  if(typeof isDavayMode === 'function' && isDavayMode()){
+    e.preventDefault();
+    // Просмотр избранного — не партия: выходим полностью, как и кнопкой.
+    if(state.davayFavoritesOnly){
+      if(typeof exitDavayGame === 'function') exitDavayGame(true);
+    } else if(typeof pauseDavayGame === 'function'){
+      pauseDavayGame();
+    }
     return;
   }
   // Пауза имеет смысл только во время партии — вне игры стрелка не мешает.

@@ -192,8 +192,9 @@ function saveSoloMemoryScore(name, timeMs, level){
   saveState();
 }
 function goToSoloMemoryGame(){
-  document.getElementById('soloMemorySetup').classList.remove('active');
-  document.getElementById('soloMemoryGame').classList.add('active');
+  // Единый переход: гасит остальные экраны, снимает чужую паузу и запоминает
+  // точку входа (раньше экраны переключались вручную, в обход goToGame()).
+  goToGame(null, 'soloMemoryGame');
   const level = state.soloMemoryLevel || 1;
   state.soloMemoryDeck = generateSoloMemoryDeck(level);
   state.soloMemorySteps = 0;

@@ -1011,6 +1011,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   // По ней определяется, в какую группу возвращаться после паузы или
   // из экрана настроек.
   const SECTION_FOR_SCREEN = {
+    kidsBoardGamesMenu:'kidsView',
     fantySetup:'twoPlayerView', game:'twoPlayerView',
     photoSetup:'twoPlayerView', photoGame:'twoPlayerView',
     ideasGame:'twoPlayerView',
@@ -1064,6 +1065,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   // Экраны настроек (не запущенной партии) — для них "Назад" возвращает в
   // группу БЕЗ открытия меню паузы.
   const SETUP_ONLY_SCREENS = new Set([
+    'kidsBoardGamesMenu',
     'fantySetup','photoSetup','bingoSetup','timerSetup','truthDareSetup','tdSetup',
     'quizSetup','wishlistSetup','desireSetup','znayuSetup','sexQuestSetup','shopSetup',
     'passionMapSetup','passionMapSummary','passionMapHistory',

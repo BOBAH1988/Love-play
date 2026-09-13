@@ -529,6 +529,134 @@ function checkPauseResetOnStart() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 8в. Навигация при выходе из игры
+//     Класс багов «выход ведёт не туда»: выход перепрыгивал уровень настройки,
+//     уводил в чужой раздел хаба, оставлял игровой экран активным или не
+//     сбрасывал пару inProgress/pausedMode.
+// ─────────────────────────────────────────────────────────────────────────────
+function checkExitNavigation() {
+  group('Навигация при выходе');
+
+  // 1. Единый механизм возврата «откуда пришёл» должен быть подключён, а не
+  //    лежать мёртвым кодом (именно так и было: функцию написали, но не звали).
+  const core = read('games/core.js');
+  const exitGameSrc = (core.match(/function exitGame\s*\([^)]*\)\s*\{[\s\S]*?\n\}/) || [''])[0];
+  check(
+    'exitGame() возвращает по запомненной точке входа',
+    /returnToEntryScreen\s*\(/.test(exitGameSrc),
+    'exitGame() не вызывает returnToEntryScreen() — механизм возврата не подключён'
+  );
+  check(
+    'exitGame() сбрасывает пару inProgress/pausedMode',
+    /state\.inProgress\s*=\s*false/.test(exitGameSrc) && /state\.pausedMode\s*=\s*null/.test(exitGameSrc),
+    'exitGame() не сбрасывает оба флага вместе (залипший inProgress блокирует настройки)'
+  );
+  check(
+    'goToGame() и goToGameSetup() запоминают точку входа',
+    /rememberReturnScreen\s*\(/.test(core) &&
+      (core.match(/rememberReturnScreen\s*\(/g) || []).length >= 3,
+    'точка входа запоминается не во всех переходах (нужны goToGame и goToGameSetup)'
+  );
+
+  // 2. Режимы экрана #game переключаются CSS-классами. Если класс ставится и
+  //    снимается вручную по месту, «чужой» режим остаётся висеть и уводит
+  //    кнопку «Выход»/стрелку «←» не туда. Единственный писатель — setGameMode().
+  const gamesDir = path.join(ROOT, 'games');
+  const manualModeWriters = [];
+  for (const f of fs.readdirSync(gamesDir)) {
+    const src = read(path.join('games', f));
+    const hits = [...src.matchAll(/classList\.(?:add|remove)\(\s*'(video-mode|davay-mode|placeholder-mode)'/g)];
+    if (hits.length) manualModeWriters.push(`${f} (${hits.map((h) => h[1]).join(', ')})`);
+  }
+  check(
+    'классы режимов #game меняет только setGameMode()',
+    manualModeWriters.length === 0,
+    `пишут напрямую: ${manualModeWriters.join('; ')}`
+  );
+  check(
+    'setGameMode() снимает остальные режимы',
+    /GAME_MODE_CLASSES/.test(core) && /cls !== mode/.test(core),
+    'setGameMode() не снимает чужие классы режимов'
+  );
+
+  // 3. Стрелка «←» на клавиатуре должна повторять ветки кнопки «Выход»
+  //    (games/fants-timer.js). Раньше она знала только видеорежим, и
+  //    «Давай попробуем»/«Предложи партнёру» проваливались в паузу «Фантов».
+  const keydown = (core.match(/addEventListener\('keydown'[\s\S]*?\n\}\);/) || [''])[0];
+  check(
+    'клавиатурная «←» знает все режимы #game',
+    ['isVideoMode', 'isPlaceholderMode', 'isDavayMode'].every((fn) => keydown.includes(fn)),
+    'в обработчике keydown нет веток placeholder/davay — игрок попадёт в паузу «Фантов»'
+  );
+
+  // 4. Экраны, известные навигации: подменю настольных игр детей не было ни в
+  //    SETUP_ONLY_SCREENS, ни в SECTION_FOR_SCREEN — «←» выбрасывала оттуда
+  //    в «Игры для пар 18+».
+  const timer = read('games/fants-timer.js');
+  check(
+    'подменю настольных игр известно навигации',
+    /kidsBoardGamesMenu/.test(timer),
+    '#kidsBoardGamesMenu не описан в SECTION_FOR_SCREEN/SETUP_ONLY_SCREENS'
+  );
+
+  // 5. Кнопки «Пауза»/«Выход», объявленные в разметке, обязаны иметь
+  //    обработчик: мёртвая кнопка выглядит как сломанная игра (так было
+  //    у #kidsSaperPauseBtn в «Сапёре»).
+  const html = read('index.html');
+  // Кнопку могут подключать и напрямую по id, и через переменную:
+  //   const btn = document.getElementById('x'); if(btn) btn.addEventListener(...)
+  // поэтому ищем оба способа, иначе проверка даёт ложные срабатывания.
+  // Кнопку могут подключать напрямую по id, через переменную или через
+  // querySelector — важно лишь, что id вообще встречается в коде рядом с
+  // подпиской. Достаточно «id упомянут в подписке»: точную привязку к
+  // обработчику проверяет статический анализ write/read, а здесь цель —
+  // поймать кнопку, о которой код вообще не знает (мёртвую).
+  const wired = new Set();
+  for (const f of fs.readdirSync(gamesDir)) {
+    const src = read(path.join('games', f));
+    for (const m of src.matchAll(/getElementById\('([A-Za-z0-9_]+)'\)/g)) wired.add(m[1]);
+    for (const m of src.matchAll(/querySelector(?:All)?\(['"][^'"]*#([A-Za-z0-9_]+)/g)) wired.add(m[1]);
+  }
+  const deadButtons = [];
+  for (const m of html.matchAll(/<button[^>]*id="([A-Za-z0-9_]+)"[^>]*>([^<]*)</g)) {
+    const [, id, label] = m;
+    if (!/Пауза|Выход|Назад|←/.test(label)) continue;
+    // globalBackBtn обрабатывается через переменную backBtn в fants-timer.js
+    if (id === 'globalBackBtn') continue;
+    if (!wired.has(id)) deadButtons.push(`${id} («${label.trim()}»)`);
+  }
+  // Ни одна функция выхода не должна переключать экраны вручную в обход
+  // exitGame(): именно из-за этого выход в каждой игре вёл по-своему и
+  // «перепрыгивал» уровень настройки. Исключения — режимы экрана #game
+  // (Фанты/видео/davay/placeholder): у них своя логика, они возвращаются
+  // в конкретное меню и в exitGame не ходят.
+  const bypass = [];
+  for (const f of fs.readdirSync(gamesDir)) {
+    const src = read(path.join('games', f));
+    const fnRe = /^function (exit[A-Za-z]*Game)\s*\([^)]*\)\s*\{[\s\S]*?\n\}/gm;
+    let m;
+    while ((m = fnRe.exec(src))) {
+      const [body, name] = [m[0], m[1]];
+      if (f === 'fants-davay.js' || f === 'fants-video.js') continue;
+      const switchesManually =
+        /classList\.add\('active'\)/.test(body) && !/exitGame\s*\(/.test(body);
+      if (switchesManually) bypass.push(`${f}:${name}`);
+    }
+  }
+  check(
+    'выходы не переключают экраны в обход exitGame()',
+    bypass.length === 0,
+    `переключают вручную: ${bypass.join(', ')}`
+  );
+
+  check(
+    'у каждой кнопки «Пауза»/«Выход» есть обработчик',
+    deadButtons.length === 0,
+    `без обработчика: ${deadButtons.join(', ')}`
+  );
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 9. Стили
@@ -1140,6 +1268,7 @@ function main() {
   checkDocs();
   checkRegistry();
   checkPauseResetOnStart();
+  checkExitNavigation();
   checkStyles(html);
   checkErrorGuard(html);
   checkSchemaVersioning();

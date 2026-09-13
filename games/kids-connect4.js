@@ -188,11 +188,9 @@ function exitKidsC4Game(){
   state.kidsC4ScoreR = 0;
   state.kidsC4ScoreY = 0;
   state.kidsC4Draws = 0;
-  state.kidsC4RoundOver = false;
-  state.inProgress = false;
-  state.pausedMode = null;
-  saveState();
-  updateResumeUI();
+  // Уходим с игрового экрана (см. такую же правку в «Четыре в ряд» для одного).
+  exitGame('kidsC4Game', 'kidsC4Setup');
+  showSetupView('kidsView');
 }
 
 function pauseKidsC4Game(){

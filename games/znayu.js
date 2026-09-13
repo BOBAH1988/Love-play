@@ -381,13 +381,11 @@ document.getElementById('znayuExitBtn').addEventListener('click', ()=>{
 });
 document.getElementById('closeZnayuSummaryBtn').addEventListener('click', ()=>{
   hideModal('znayuSummaryModal');
-  document.getElementById('znayuGame').classList.remove('active');
-  document.getElementById('znayuSetup').classList.add('active');
   resetZnayuQuiz();
-  state.inProgress = false;
-  state.pausedMode = null;
-  saveState();
+  // Единый выход (см. такую же правку в «Твоих желаниях»).
+  exitGame('znayuGame', 'znayuSetup');
   renderZnayuSetupStarterGroup();
+  updateResumeUI();
 });
 // Пауза: вернуться в главное меню, не сбрасывая прогресс опроса — можно
 // продолжить позже через общий блок "Продолжить игру" / "Закончить игру".
@@ -404,6 +402,7 @@ function pauseZnayuGame(){
   saveState();
   document.getElementById('znayuGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
   updateResumeUI();
 }
 function resumeZnayuGame(){

@@ -611,6 +611,12 @@ function finishPartyRouletteGame(){
 /* ============ ВХОД ============ */
 let rouletteInited = false;
 function goToPartyRouletteGame(){
+  // Если партия уже стоит на паузе — это не новый заход, а продолжение:
+  // раньше повторное нажатие плитки в хабе обнуляло балансы и ставки.
+  if(state.pausedMode === 'partyRoulette'){
+    resumePartyRouletteGame();
+    return;
+  }
   // Новый заход в игру = новая партия: сбрасываем балансы и ставки
   ensureRouletteBalances(true);
   // Режим «Свое поле» всегда начинается заново с экрана рулетки

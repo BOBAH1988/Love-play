@@ -407,7 +407,13 @@ function exitSexQuestSummary(){
   stopAllSounds();
   document.getElementById('sexQuestSummary').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-  showSetupView('soloView');
+  // «Секс-квест» — игра для пар (group:'two', плитка #gameSexQuestBtn в
+  // twoPlayerView). Раньше выход открывал раздел «Игры для одного».
+  showSetupView('twoPlayerView');
+  state.inProgress = false;
+  state.pausedMode = null;
+  saveState();
+  updateResumeUI();
 }
 document.getElementById('sexQuestSummaryExitBtn').addEventListener('click', ()=>{ exitSexQuestSummary(); });
 

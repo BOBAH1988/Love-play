@@ -332,12 +332,12 @@ function goToTimerGame(){
 function exitTimerGame(){
   stopMtInterval();
   stopAllSounds();
-  state.timerScore1 = 0; state.timerScore2 = 0;
-  state.timerCompletedCount = 0; state.timerSkippedCount = 0;
-  state.timerLevelUpCounts = {1:0, 2:0};
-  state.timerPendingLevelUp = false;
+  // Счёт СОХРАНЯЕМ: сюда приходит и «Закончить игру» из меню паузы, и закрытие
+  // окна итогов — обнуление стирало уже показанный результат. Новый заход всё
+  // равно начинает с чистого счёта (см. goToTimerGame).
   state.inProgress = false;
   state.pausedMode = null;
+  state.lastSectionOnPause = null;
   saveState();
   exitGame('timerGame', 'setup');
   updateResumeUI();
@@ -353,6 +353,7 @@ function pauseTimerGame(){
   saveState();
   document.getElementById('timerGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
   updateResumeUI();
 }
 function resumeTimerGame(){

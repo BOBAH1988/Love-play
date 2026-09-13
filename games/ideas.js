@@ -56,8 +56,11 @@ function goToIdeasGame(){
   requestWakeLock();
 }
 function exitIdeasGame(){
+  // Вход в игру — плитка «Ответы на вопросы» в разделе «Игры для пар 18+»
+  // (#gameIdeasBtn, core.js). Раньше выход отправлял в companyView, то есть
+  // в чужой раздел хаба.
   exitGame('ideasGame', 'setup');
-  showSetupView('companyView');
+  showSetupView('twoPlayerView');
 }
 
 document.getElementById('ideasNextBtn').addEventListener('click', ()=>{

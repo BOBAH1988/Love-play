@@ -196,10 +196,10 @@ function exitPartyTdGame(){
   state.partyTdSkipped = [];
   state.partyTdCurrentPlayerIndex = 0;
   state.partyTdCurrentType = null;
-  state.inProgress = false;
-  state.pausedMode = null;
-  saveState();
-  updateResumeUI();
+  // Уходим с игрового экрана в меню настроек игры (см. такую же правку в
+  // «Фантах» для компании): без этого экран оставался активным.
+  exitGame('partyTdGame', 'partyTdSetup');
+  showSetupView('companyView');
 }
 document.getElementById('partyTdSetupStartBtn').addEventListener('click', ()=>{
   playSuccessSound();

@@ -392,11 +392,8 @@ function exitKrokodilGame(){
   state.krokodilSkipCounts = [];
   state.krokodilTurnsPlayed = 0;
   state.krokodilCurrentPlayerIndex = 0;
-  state.inProgress = false;
-  state.pausedMode = null;
-  saveState();
-  document.getElementById('krokodilGame').classList.remove('active');
-  document.getElementById('krokodilSetup').classList.add('active');
+  // Единый выход: экраны, пара флагов и возврат «откуда пришёл» — в exitGame().
+  exitGame('krokodilGame', 'krokodilSetup');
 }
 // Пауза: вернуться в главное меню, не сбрасывая счёт и игроков — можно
 // продолжить позже через общий блок "Продолжить игру" / "Закончить игру".

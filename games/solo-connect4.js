@@ -74,6 +74,7 @@ function goToSoloC4Setup(){
 function exitSoloC4Setup(){
   document.getElementById('soloC4Setup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
 }
 function updateSoloC4ScoreUI(){
   const el = document.getElementById('soloC4ScoreRow');
@@ -218,11 +219,9 @@ function exitSoloC4Game(){
   state.soloC4ScorePlayer = 0;
   state.soloC4ScoreBot = 0;
   state.soloC4Draws = 0;
-  state.soloC4RoundOver = false;
-  state.inProgress = false;
-  state.pausedMode = null;
-  saveState();
-  updateResumeUI();
+  // Уходим с игрового экрана: без этого игрок оставался на уже очищенном поле.
+  exitGame('soloC4Game', 'soloC4Setup');
+  showSetupView('soloView');
 }
 
 // Пауза: вернуться в меню, не сбрасывая поле и счёт — можно продолжить позже

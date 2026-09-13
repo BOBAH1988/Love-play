@@ -90,6 +90,7 @@ function goToSoloXoSetup(){
 function exitSoloXoSetup(){
   document.getElementById('soloXoSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('soloView');
 }
 function renderSoloXoSizeGroup(){
   const size = state.soloXoBoardSize || 3;

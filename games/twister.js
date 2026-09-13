@@ -160,7 +160,10 @@ function exitTwisterGame(){
     setTimeout(()=>speechSynthesis.cancel(), 50);
   }
   stopAllSounds();
+  // Вход — плитка «Твистер» в разделе «Игры для компании» (#gameTwisterBtn).
+  // Без явного showSetupView оставался раздел от прошлого захода.
   exitGame('twisterGame', 'setup');
+  showSetupView('companyView');
 }
 
 document.getElementById('twisterPauseBtn').addEventListener('click', (e)=>{
