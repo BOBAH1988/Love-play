@@ -3411,26 +3411,29 @@ let yandexDiskLoading = false;
 
 // Папки на диске шире, чем 4 игровых уровня: несколько папок могут
 // привязываться к одному уровню (davaySetupLevel 3..6).
-// Пути — относительно корня публичной папки fv1y_t0ZQ3YASg
+// ЗАМЕЧАНИЕ (2026-09-20): папки переименованы/убраны владельцем — сейчас
+// корень публичной ссылки это плоский список из ~172 .webm без подпапок.
+// Поэтому грузим рекурсивно весь корень и делим видео по 4 игровым уровням
+// поровну (round-robin), вместо запросов к несуществующим path=/Level 00X.
 const DAVAY_DISK_LEVELS = [
-  {id:1, setupLevel:3, name:'Ласки разогрев', path:'/Level 001 Ласки разогрев'},
-  {id:2, setupLevel:3, name:'Нежные прикосновения', path:'/Level 002 Нежные прикосновения'},
-  {id:3, setupLevel:4, name:'Разогрев', path:'/Level 003 Разогрев'},
-  {id:4, setupLevel:4, name:'Прелюдия', path:'/Level 004 Прелюдия'},
-  {id:5, setupLevel:4, name:'Устная ласка', path:'/Level 005 Устная ласка'},
-  {id:6, setupLevel:5, name:'Кунилингус', path:'/Level 006 Кунилингус'},
-  {id:7, setupLevel:5, name:'Минет', path:'/Level 007 Минет'},
-  {id:8, setupLevel:5, name:'Классика', path:'/Level 008 Классика'},
-  {id:9, setupLevel:5, name:'Глубокое проникновение', path:'/Level 009 Глубокое проникновение'},
-  {id:10, setupLevel:5, name:'Позы сзади', path:'/Level 010 Позы сзади'},
-  {id:11, setupLevel:6, name:'Наездница', path:'/Level 011 Наездница'},
-  {id:12, setupLevel:6, name:'Анальные ласки', path:'/Level 012 Анальные ласки'},
-  {id:13, setupLevel:6, name:'Анальный секс', path:'/Level 013 Анальный секс'},
-  {id:14, setupLevel:6, name:'Групповой', path:'/Level 014 Групповой'},
-  {id:15, setupLevel:6, name:'БДСМ', path:'/Level 015 БДСМ'},
-  {id:16, setupLevel:6, name:'Фистинг', path:'/Level 016 Фистинг'},
-  {id:17, setupLevel:6, name:'Фетиш', path:'/Level 017 Фетиш'},
-  {id:18, setupLevel:6, name:'Игрушки', path:'/Level 018 Игрушки'},
+  {id:1, setupLevel:3, name:'Ласки разогрев', path:'/'},
+  {id:2, setupLevel:3, name:'Нежные прикосновения', path:'/'},
+  {id:3, setupLevel:4, name:'Разогрев', path:'/'},
+  {id:4, setupLevel:4, name:'Прелюдия', path:'/'},
+  {id:5, setupLevel:4, name:'Устная ласка', path:'/'},
+  {id:6, setupLevel:5, name:'Кунилингус', path:'/'},
+  {id:7, setupLevel:5, name:'Минет', path:'/'},
+  {id:8, setupLevel:5, name:'Классика', path:'/'},
+  {id:9, setupLevel:5, name:'Глубокое проникновение', path:'/'},
+  {id:10, setupLevel:5, name:'Позы сзади', path:'/'},
+  {id:11, setupLevel:6, name:'Наездница', path:'/'},
+  {id:12, setupLevel:6, name:'Анальные ласки', path:'/'},
+  {id:13, setupLevel:6, name:'Анальный секс', path:'/'},
+  {id:14, setupLevel:6, name:'Групповой', path:'/'},
+  {id:15, setupLevel:6, name:'БДСМ', path:'/'},
+  {id:16, setupLevel:6, name:'Фистинг', path:'/'},
+  {id:17, setupLevel:6, name:'Фетиш', path:'/'},
+  {id:18, setupLevel:6, name:'Игрушки', path:'/'},
 ];
 
 
@@ -3472,20 +3475,28 @@ async function downloadYandexDiskFile(fileInfo, level){
   return { name:fileInfo.name, level:level };
 }
 
-// Загрузить видео из папки уровня на Яндекс Диске
-// Для публичной папки все видео находятся в корне (path="/")
-async function loadYandexDiskLevel(level, path){
+// Загрузить видео с Яндекс Диска: рекурсивный обход корня публичной папки,
+// видео делятся по 4 игровым уровням поровну (round-robin по алфавиту имён).
+// gameLevels — массив игровых уровней 1..4 для распределения.
+async function loadYandexDiskLevel(level, path, gameLevels){
   if(yandexDiskLoading) return { added:0, level:level, error: 'Загрузка уже идёт' };
   yandexDiskLoading = true;
   try {
     const items = await fetchYandexDiskFiles(path || '/');
+    const dirs = items.filter(i => i.type === 'dir');
+    let videoItems = items.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
+    // Рекурсия в подпапки (если появятся снова): собираем все видео.
+    for(const d of dirs){
+      const sub = await fetchYandexDiskFiles(d.path || ('/' + d.name)).catch(()=>[]);
+      const subVideos = sub.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
+      videoItems = videoItems.concat(subVideos);
+    }
     
-    if(items.length === 0){
+    if(videoItems.length === 0 && items.length === 0){
       yandexDiskLoading = false;
       return { added:0, level:level, error: 'Папка пуста или не найдена.' };
     }
     
-    const videoItems = items.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
     
     if(videoItems.length === 0){
       yandexDiskLoading = false;
@@ -3494,7 +3505,12 @@ async function loadYandexDiskLevel(level, path){
       return { added:0, level:level, error: `В папке ${items.length} файл(ов) типа: ${allTypes}. Видео не найдены. Примеры: ${fileNames || 'пусто'}` };
     }
     
-    const results = await Promise.all(videoItems.map(i => downloadYandexDiskFile(i, level).catch(e => { 
+    // Распределяем видео по уровням: текущий уровень забирает только свою долю (round-robin).
+    videoItems.sort((a,b)=> (a.name||'').localeCompare(b.name||''));
+    const allLevels = (gameLevels && gameLevels.length) ? gameLevels : [level];
+    const myIdx = allLevels.indexOf(level);
+    const myVideos = videoItems.filter((_, i)=> i % allLevels.length === (myIdx < 0 ? 0 : myIdx));
+    const results = await Promise.all(myVideos.map(i => downloadYandexDiskFile(i, level).catch(e => { 
       return { error: e.message };
     })));
     const added = results.filter(r => r && !r.error).length;
@@ -3875,12 +3891,10 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
     // Игровой уровень 1..4 (davaySelectedLevel 3..6 → gameLevel = id - 2):
     // видео сохраняем под ним, иначе drawDavayCard их не найдёт.
     const gameLevel = state.davaySelectedLevel - 2;
-    let addedTotal = 0, lastError = '';
-    for(const level of levels){
-      const result = await loadYandexDiskLevel(gameLevel, level.path);
-      if(result.error){ lastError = result.error; }
-      else { addedTotal += result.added || 0; }
-    }
+    // distribute: каждый игровой уровень забирает свою долю из общего списка
+    const allGameLevels = [1,2,3,4];
+    const result = await loadYandexDiskLevel(gameLevel, '/', allGameLevels);
+    let addedTotal = result.added || 0, lastError = result.error || '';
   if(lastError && addedTotal === 0){
     showToast('❌ ' + lastError);
   } else if(addedTotal > 0){
