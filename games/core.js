@@ -3259,6 +3259,12 @@ async function goToVideoFavoritesView(){
 
 function exitVideoGame(){
   state.inProgress = false;
+  // Снимаем «чужую» паузу. Без этого при выходе из видеорежима стрелкой «←»
+  // игрок попадал в меню паузы «Фантов»: видео — режим внутри базовой парной
+  // игры (#game), и её pausedMode оставался выставленным. Выход из
+  // видеорежима должен вести в меню «Игры для пар 18+», а не в паузу.
+  if(typeof abandonPausedSession === 'function') abandonPausedSession('fanty');
+  if(state.pausedMode) state.pausedMode = null;
   saveState();
   if(document.fullscreenElement) document.exitFullscreen();
   videoFullscreenActive = false;
@@ -5543,6 +5549,16 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     if(typeof isPlaceholderMode === 'function' && isPlaceholderMode()
       && typeof exitPlaceholderGame === 'function'){
       exitPlaceholderGame();
+      return;
+    }
+
+    // Видеорулетка («Давай попробуем»): стрелка «←» выходит из видеорежима
+    // прямо в меню игры, без промежуточного меню паузы — как и просили.
+    // Проверка идёт ДО общей логики паузы, иначе срабатывала ветка «Фантов»
+    // и игрок попадал в их паузу.
+    if(typeof isVideoMode === 'function' && isVideoMode()
+      && typeof exitVideoGame === 'function'){
+      exitVideoGame();
       return;
     }
 

@@ -745,6 +745,22 @@ function checkGlobalHandlers() {
   // (стиль неактивности): если пропадёт одно, поведение станет непонятным.
   check('класс locked-settings навешивается', /locked-settings/.test(core), 'нет classList.toggle("locked-settings")');
   check('стиль locked-settings есть в CSS', /locked-settings/.test(read('styles/app.css')), 'нет правила .locked-settings');
+
+  // Видеорулетка — режим ВНУТРИ базовой парной игры (#game). Если стрелка «←»
+  // не обрабатывает его отдельно, срабатывает общая логика паузы «Фантов» и
+  // игрок вместо меню попадает в их паузу. Баг уже случался дважды.
+  const backHandler = core.slice(core.indexOf("backBtn.addEventListener('click'"));
+  check(
+    'выход из видеорежима обработан в кнопке «←»',
+    /isVideoMode\(\)[\s\S]{0,200}?exitVideoGame\(\)/.test(backHandler),
+    'нет ветки: стрелка «←» в видеорежиме уйдёт в паузу «Фантов»'
+  );
+  check(
+    'exitVideoGame снимает паузу',
+    /function exitVideoGame\(\)[\s\S]{0,600}?pausedMode\s*=\s*null/.test(core),
+    'exitVideoGame не сбрасывает pausedMode — останется пауза «Фантов»'
+  );
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
