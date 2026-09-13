@@ -108,6 +108,12 @@ function createDomStub(html, { trackHandlers = false } = {}) {
   global.addEventListener = () => {};
   global.removeEventListener = () => {};
   global.dispatchEvent = () => true;
+  // Прокрутка: обработчик кнопки «Назад» вызывает window.scrollTo после
+  // возврата в меню. Без заглушки такой сценарий падал в тестах с
+  // «window.scrollTo is not a function», и падение маскировало настоящую
+  // причину — проверка не доходила до своих утверждений.
+  global.scrollTo = () => {};
+  global.scrollBy = () => {};
 
   global.document = {
     // Ключевой момент: неизвестный id → null, как в браузере.

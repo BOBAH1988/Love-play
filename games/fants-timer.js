@@ -1156,6 +1156,24 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       return;
     }
 
+    // «Давай попробуем» (обычный режим): нижний ряд с кнопками «Пауза»/«Выход»
+    // убран — выход выполняет стрелка «←». Раньше этой ветки не было, и режим
+    // проваливался в общую логику: экран #game в реестре принадлежит «Фантам»,
+    // поэтому пауза сохранялась как «фанты» — игрок попадал в чужое меню
+    // «Пауза — 💘 Фанты», а прогресс «Давай попробуем» не восстанавливался.
+    // Ветка обязана идти ДО общей логики — как ветка видеорежима выше и как
+    // убранный «Предложи партнёру» рядом.
+    // В просмотре избранного партии нет вовсе, поэтому выходим сразу в меню
+    // игры; в обычной партии сохраняем прогресс паузой «Давай попробуем».
+    if(typeof isDavayMode === 'function' && isDavayMode()){
+      if(state.davayFavoritesOnly && typeof exitDavayGame === 'function'){
+        exitDavayGame(true);
+      } else if(typeof pauseDavayGame === 'function'){
+        pauseDavayGame();
+      }
+      return;
+    }
+
     const setup = document.getElementById('setup');
     const homeView = document.getElementById('homeView');
     const isSetupActive = setup && setup.classList.contains('active');

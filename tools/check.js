@@ -726,6 +726,51 @@ function checkStyles(html) {
   check('базовые «Фанты» не потеряли строку счёта',
     !new RegExp(`#game\\s+#gameScoreRow\\s*\\{[^}]*display:\\s*none`).test(css),
     'счёт скрыт для всего #game — в «Фантах» он нужен');
+  // Кнопки «Пауза»/«Выход» в «Видеорулетке» и «Давай попробуем» убраны — их
+  // заменяет стрелка «←» в шапке. Кнопка живёт в списке селекторов через
+  // запятую, поэтому проверяем правило целиком, а не подстроку.
+  const pauseHidden = (mode) => {
+    const re = /([^{}]*#pauseBtn[^{}]*)\{([^}]*)\}/g;
+    let m;
+    while ((m = re.exec(css))) {
+      if (m[1].includes(`#game.${mode}`) && /display:\s*none/.test(m[2])) return true;
+    }
+    return false;
+  };
+  check('кнопка «Пауза»/«Выход» скрыта в «Видеорулетке»', pauseHidden('video-mode'),
+    'кнопка осталась — в видеорежиме её заменяет стрелка «←»');
+  check('кнопка «Пауза» скрыта в «Давай попробуем»', pauseHidden('davay-mode'),
+    'кнопка осталась — выход/пауза работает по стрелке «←»');
+  // Стрелка «←» обязана сама разбирать davay-режим: без этой ветки режим
+  // проваливался в общую логику паузы, а экран #game принадлежит «Фантам» —
+  // игрок попадал в чужое меню паузы, и прогресс партии не сохранялся.
+  //
+  // ВАЖНО: искать по всему файлу нельзя. Те же имена (isDavayMode,
+  // pauseDavayGame, davayFavoritesOnly) есть и в обработчике кнопки
+  // «Пауза»/«Выход», поэтому поиск по файлу находил бы их и считал проверку
+  // пройденной даже после удаления ветки из обработчика стрелки. Берём тело
+  // именно обработчика стрелки — от регистрации backBtn до конца колбэка.
+  const timerSrc = read('games/fants-timer.js');
+  const backStart = timerSrc.indexOf("backBtn.addEventListener('click'");
+  const backEnd = timerSrc.indexOf('getActiveGameScreenIds()', backStart);
+  const backBody = (backStart > -1 && backEnd > backStart)
+    ? timerSrc.slice(backStart, backEnd)
+    : '';
+  check('обработчик стрелки «←» найден в fants-timer.js', backBody.length > 0,
+    'не найден backBtn.addEventListener или общая логика паузы');
+  check('стрелка «←» обрабатывает режим «Давай попробуем» отдельной веткой',
+    /isDavayMode\(\)/.test(backBody) && /pauseDavayGame/.test(backBody),
+    'нет ветки isDavayMode() → pauseDavayGame: игрок попадёт в паузу «Фантов»');
+  check('«←» в избранном «Давай попробуем» выходит, а не ставит на паузу',
+    /davayFavoritesOnly[\s\S]{0,200}?exitDavayGame/.test(backBody),
+    'просмотр избранного не выходит по стрелке «←»');
+  // Ветка должна стоять в обработчике ДО общей логики паузы: иначе сработает
+  // чужая пауза «Фантов». backBody обрезан по началу общей логики, поэтому
+  // наличие вызова внутри него и означает «до».
+  check('ветка «Давай попробуем» идёт до общей логики паузы',
+    /pauseDavayGame/.test(backBody)
+      && backBody.indexOf('pauseDavayGame') < backBody.length,
+    'ветка стоит после общей логики — сработает чужая пауза «Фантов»');
   // Название игры должно быть оформлено общим стилем .game-level-label, а не
   // имитацией через .td-turn-label с подогнанным шрифтом: в «Фантах» название
   // режима так и рисовали (font-size:28px вместо 26px + вес 800 + интервал),

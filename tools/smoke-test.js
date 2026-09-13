@@ -314,6 +314,77 @@ test('Сценарий: счёт «Парень/Девушка» скрыт то
     'шкала прогресса «Давай попробуем» не должна скрываться');
 });
 
+test('Сценарий: кнопки «Пауза»/«Выход» скрыты в «Видеорулетке» и «Давай попробуем»', () => {
+  // Их заменяет стрелка «←» в шапке. Проверяем по CSS-тексту — сам dom-stub
+  // каскад и рендер не эмулирует.
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  // Селектор может быть списком через запятую
+  // («#game.video-mode #pauseBtn, #game.davay-mode #pauseBtn{display:none}»),
+  // поэтому ищем правило, где в селекторе есть нужная комбинация, и смотрим
+  // display именно этого правила.
+  const hidden = (mode) => {
+    const re = /([^{}]*#pauseBtn[^{}]*)\{([^}]*)\}/g;
+    let m;
+    while ((m = re.exec(css))) {
+      if (!m[1].includes(`#game.${mode}`)) continue;
+      if (/display:\s*none/.test(m[2])) return true;
+    }
+    return false;
+  };
+  assert(hidden('video-mode'), 'в «Видеорулетке» кнопка «Выход» должна быть скрыта');
+  assert(hidden('davay-mode'), 'в «Давай попробуем» кнопка «Пауза» должна быть скрыта');
+  // «Фанты» уже полагаются на стрелку «←» — их правило не должно пропасть.
+  assert(/#game:not\(\.video-mode\):not\(\.davay-mode\):not\(\.placeholder-mode\) #pauseBtn\{display:none;\}/.test(css),
+    'в «Фантах» кнопка «Пауза» тоже должна остаться скрытой');
+});
+
+test('Сценарий: стрелка «←» в «Давай попробуем» ставит на паузу именно эту игру', () => {
+  // Кнопку «Пауза» убрали, значит «←» обязана обрабатывать davay-режим сама.
+  // Раньше такой ветки не было, и режим проваливался в общую логику: экран
+  // #game принадлежит «Фантам», поэтому игрок попадал в чужое меню паузы,
+  // а прогресс «Давай попробуем» не сохранялся.
+  const called = [];
+  const originals = {};
+  ['pauseDavayGame', 'exitDavayGame', 'pauseGame', 'exitVideoGame'].forEach((fn) => {
+    if (typeof global[fn] === 'function') {
+      originals[fn] = global[fn];
+      global[fn] = function (...args) { called.push(fn); return originals[fn].apply(this, args); };
+    }
+  });
+  const pressBack = () => {
+    const back = getElById(stub, 'globalBackBtn');
+    for (const { handler } of back._getHandlers().get('click')) handler({});
+  };
+  try {
+    // Обычная партия «Давай попробуем» → пауза этой игры, не «Фантов».
+    asFantyScreen();
+    getElById(stub, 'game').classList.add('davay-mode');
+    state.davayFavoritesOnly = false;
+    called.length = 0;
+    pressBack();
+    assert(called.includes('pauseDavayGame'), `ожидался pauseDavayGame, вызвано: ${called.join(', ') || 'ничего'}`);
+    assert(!called.includes('pauseGame'), 'не должна вызываться пауза «Фантов» (чужой экран)');
+
+    // Просмотр избранного — не партия: выходим сразу, без паузы.
+    state.davayFavoritesOnly = true;
+    called.length = 0;
+    pressBack();
+    assert(called.includes('exitDavayGame'), `в избранном ожидался exitDavayGame, вызвано: ${called.join(', ') || 'ничего'}`);
+    assert(!called.includes('pauseDavayGame'), 'избранное не ставится на паузу');
+
+    // Видеорулетка не должна сломаться: своя ветка выхода.
+    MODE_CLASSES.forEach((c) => getElById(stub, 'game').classList.remove(c));
+    getElById(stub, 'game').classList.add('video-mode');
+    called.length = 0;
+    pressBack();
+    assert(called.includes('exitVideoGame'), `в видеорежиме ожидался exitVideoGame, вызвано: ${called.join(', ') || 'ничего'}`);
+  } finally {
+    Object.keys(originals).forEach((fn) => { global[fn] = originals[fn]; });
+    MODE_CLASSES.forEach((c) => getElById(stub, 'game').classList.remove(c));
+    state.davayFavoritesOnly = false;
+  }
+});
+
 test('Сценарий: «Видеорулетка» показывает своё название', () => {
   // Экран #game обслуживает четыре игры, и каждая должна называться своим
   // именем — иначе игрок не понимает, в какой игре находится.
