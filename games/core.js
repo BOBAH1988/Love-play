@@ -3484,25 +3484,11 @@ async function loadYandexDiskLevel(level, path, gameLevels){
   yandexDiskLoading = true;
   try {
     const items = await fetchYandexDiskFiles(path || '/');
-    const dirs = items.filter(i => i.type === 'dir');
-    // ВАЛИДАЦИЯ: показываем, что рекурсивный обход отключён
-    if (dirs.length > 0) {
-      console.log(`Внимание: в папке ${dirs.length} подпапок, но рекурсивный обход отключён — грузятся только файлы из корня.`);
-    }
-    
+    // Рекурсивный обход подпапок отключён: грузим только файлы из корня.
+    // Папки игнорируем — раньше здесь был цикл по подпапкам и отладочные
+    // console.log, удалены при чистке.
     let videoItems = items.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
-    
-    // РЕКУРСИВНЫЙ ОБХОД ОТКЛЮЧЁН: удаляем цикл по подпапкам
-    // if (dirs.length > 0) {
-    //   console.log(`Внимание: найдено ${dirs.length} подпапок, но рекурсивный обход отключён — грузятся только файлы из корня.`);
-    // }
-    // 
-    // for(const d of dirs){
-    //   const sub = await fetchYandexDiskFiles(d.path || ('/' + d.name)).catch(()=>[]);
-    //   const subVideos = sub.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
-    //   videoItems = videoItems.concat(subVideos);
-    // }
-    
+
     if(videoItems.length === 0 && items.length === 0){
       yandexDiskLoading = false;
       return { added:0, level:level, error: 'Папка пуста или не найдена.' };
