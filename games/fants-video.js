@@ -445,6 +445,20 @@ function videoSwipeNext(){
   }
 }
 
+// Показать демо/заглушку, когда своё видео действительно не проигрывается.
+function showVideoErrorFallback(card, level){
+  const fallback = getFallbackVideoCard();
+  // Если сломался не сам образец — показываем вместо него образец из
+  // cards_video.js. Если сломался и он тоже — тогда уже просто иконка,
+  // чтобы не зациклиться.
+  if(fallback && card.video !== fallback.video){
+    renderVideoCard(fallback, level);
+    return;
+  }
+  const media = document.getElementById('videoMedia');
+  if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+}
+
 // Общая настройка <video> для "Видеорулетки" — вынесена отдельно от
 // renderVideoCard, чтобы можно было применить её и к УЖЕ существующему
 // элементу (reuse=true), а не только к только что вставленному через
@@ -492,16 +506,26 @@ function setupVideoPlayerElement(video, card, level, reuse){
     }
   }, {once:true});
   video.addEventListener('error', ()=>{
-    const fallback = getFallbackVideoCard();
-    // Если сломался не сам образец — показываем вместо него образец из
-    // cards_video.js. Если сломался и он тоже — тогда уже просто иконка,
-    // чтобы не зациклиться.
-    if(fallback && card.video !== fallback.video){
-      renderVideoCard(fallback, level);
+    // Своё видео с Яндекс Диска живёт по подписанной ссылке, которая со
+    // временем перестаёт работать. Раньше на любую ошибку сразу подставлялся
+    // демо-ролик, и игрок видел «одно и то же демо» вместо своих видео.
+    // Сначала пробуем получить свежую ссылку и перезапустить ролик — и только
+    // если не вышло, показываем демо/заглушку.
+    if(card.source === 'yandex' && !card.hrefRefreshed){
+      card.hrefRefreshed = true;
+      refreshYandexLinks(true).then(res=>{
+        if(res && res.updated > 0 && card.video && !videoNativeFullscreenActive){
+          video.src = card.video;
+          video.load();
+          const p = video.play();
+          if(p && typeof p.catch === 'function') p.catch(()=>{});
+          return;
+        }
+        showVideoErrorFallback(card, level);
+      });
       return;
     }
-    const media = document.getElementById('videoMedia');
-    if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+    showVideoErrorFallback(card, level);
   }, {once:true});
   video.addEventListener('ended', ()=>{
     if(state.videoAutoAdvance) drawVideoCard(videoLevel);

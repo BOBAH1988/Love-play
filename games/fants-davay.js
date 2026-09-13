@@ -44,6 +44,9 @@ const DAVAY_DB_STORE = 'davayVideos';
 let davayDBPromise = null;
 let importedDavayCards = [];
 let importedDavayVideosLoaded = false;
+// Отметка state.videoResetAt, при которой каталог был прочитан из базы: если
+// она отстала от текущей, каталог устарел (игрок сбросил весь прогресс).
+let importedDavayCatalogLoadedAt = 0;
 
 function openDavayDB(){
   if(davayDBPromise) return davayDBPromise;
@@ -86,9 +89,32 @@ function clearAllDavayBlobs(){
     tx.onerror = ()=> reject(tx.error);
   })).catch(()=>{});
 }
+// Забыть загруженный каталог видео, не трогая саму базу. Нужно после «Сбросить
+// весь прогресс»: база чистится, но её список приложение держит ещё и в
+// памяти — без забытья игрок видел свои прежние ролики, пока не перезагрузит
+// страницу. Блоб-ссылки локальных видео освобождаем, чтобы не копить мусор.
+function refreshDavayCatalogInMemory(){
+  importedDavayCards.forEach(c=>{
+    if(c.source === 'local' && c.video && c.video.indexOf('blob:') === 0){
+      try{ URL.revokeObjectURL(c.video); }catch(err){}
+    }
+  });
+  importedDavayCards = [];
+  importedDavayVideosLoaded = false;
+  importedDavayCatalogLoadedAt = 0;
+}
+// Загружен ли каталог уже после последнего сброса. «Сбросить весь прогресс» —
+// это единственное место, где каталог меняется в обход импорта, поэтому
+// отметка videoResetAt в localStorage для игры — единственный источник правды:
+// её нельзя пропустить из-за незавершённой асинхронной операции.
+function davayCatalogIsStale(){
+  return (state.videoResetAt || 0) > (importedDavayCatalogLoadedAt || 0);
+}
 function ensureImportedDavayVideosLoaded(){
+  if(davayCatalogIsStale()) refreshDavayCatalogInMemory();
   if(importedDavayVideosLoaded) return Promise.resolve();
   return loadAllDavayBlobs().then(rows => {
+    const resetAt = state.videoResetAt || 0;
     importedDavayCards = rows.map(r => {
       const hasUrl = !!r.url;
       const src = hasUrl ? r.url : URL.createObjectURL(r.blob);
@@ -103,9 +129,11 @@ function ensureImportedDavayVideosLoaded(){
         source: hasUrl ? 'yandex' : 'local'
       };
     });
+    importedDavayCatalogLoadedAt = resetAt;
     importedDavayVideosLoaded = true;
   }).catch(()=>{
     importedDavayCards = [];
+    importedDavayCatalogLoadedAt = state.videoResetAt || 0;
     importedDavayVideosLoaded = true;
   });
 }
@@ -205,6 +233,14 @@ async function fetchYandexDiskHref(path){
   return data.href;
 }
 
+// Форматы, которые <video> в мобильных браузерах стабильно не проигрывает
+// (особенно iOS): .avi и .mkv. Из папки их лучше не брать — в игре они дадут
+// чёрный экран, поэтому пропускаем их при импорте и сообщаем об этом в отчёте.
+const YANDEX_SKIP_EXT_RE = /\.(avi|mkv)$/i;
+function isPlayableVideoItem(item){
+  return !YANDEX_SKIP_EXT_RE.test(item.name || '');
+}
+
 // Сохранить видео с Диска: новые строки добавляем, у старых (сохранённых
 // прошлой версией, без пути внутри папки) дописываем путь и свежую ссылку.
 // Делаем это одной транзакцией: файлов может быть больше сотни.
@@ -263,9 +299,15 @@ async function importYandexVideosToLevel(level){
   try{
     const items = await fetchYandexDiskFiles('/');
     if(!items.length) return { added:0, level: level, error: 'Папка пуста или ссылка неверна' };
-    const videos = items.filter(i => i.type === 'file' && YANDEX_VIDEO_RE.test(i.name || ''));
-    if(!videos.length){
+    const allVideos = items.filter(i => i.type === 'file' && YANDEX_VIDEO_RE.test(i.name || ''));
+    const videos = allVideos.filter(isPlayableVideoItem);
+    const unplayable = allVideos.length - videos.length;
+    if(!videos.length && !unplayable){
       return { added:0, level: level, error: `В папке ${items.length} объект(ов), видеофайлов нет` };
+    }
+    if(!videos.length){
+      return { added:0, level: level, unplayable: unplayable,
+               error: `Все ${unplayable} видео в формате .avi/.mkv — браузер их не проигрывает` };
     }
     const known = await loadAllDavayBlobs();
     const byName = new Map(known.filter(r=>r.name).map(r=>[r.name, r]));
@@ -291,7 +333,7 @@ async function importYandexVideosToLevel(level){
       importedDavayVideosLoaded = false;
       await ensureImportedDavayVideosLoaded();
     }
-    return { added: saved, level: level, total: videos.length, skipped: skipped };
+    return { added: saved, level: level, total: videos.length, skipped: skipped, unplayable: unplayable };
   } catch(err){
     return { added:0, level: level, error: err.message || String(err) };
   } finally {
@@ -315,6 +357,10 @@ async function refreshYandexLinks(force){
     need.forEach(c=>{
       const href = byPath.get(c.yandexPath);
       if(!href) return;
+      // Свежая ссылка — это, по сути, другое видео для игрока (раньше оно не
+      // открывалось), поэтому снимаем отметку «показано» в обеих играх: иначе
+      // ролик не вернётся в пул до полного круга колоды.
+      forgetDavayVideoAsShown(c.id);
       c.video = href;
       c.urlAt = now;
       updates.push({ id: c.dbId, url: href, urlAt: now });
@@ -324,6 +370,28 @@ async function refreshYandexLinks(force){
   } catch(err){
     return { updated:0, error: err.message || String(err) };
   }
+}
+
+// Убрать отметки «это видео уже показывали» по всем играм, которые берут видео
+// из общего каталога («Давай попробуем» и «Видеорулетка» — у каждой свой набор).
+function forgetDavayVideoAsShown(cardId){
+  if(!cardId) return;
+  const stamp = function(storage){
+    if(!storage || typeof storage !== 'object') return false;
+    let touched = false;
+    Object.keys(storage).forEach((lvl)=>{
+      const list = storage[lvl];
+      if(Array.isArray(list) && list.indexOf(cardId) >= 0){
+        storage[lvl] = list.filter(id => id !== cardId);
+        touched = true;
+      }
+    });
+    return touched;
+  };
+  let touched = false;
+  if(stamp(state.davayUsed)) touched = true;
+  if(stamp(state.videoUsed)) touched = true;
+  if(touched) saveState();
 }
 // ===== Модалка выбора уровня для только что выбранных файлов =====
 let pendingDavayImportFiles = [];
@@ -555,6 +623,9 @@ function setupDavayPlayerElement(video, card, level, reuse){
           if(p && typeof p.catch === 'function') p.catch(()=>{});
           return;
         }
+        // Обновить ссылку не удалось — говорим прямо, а не показываем пустую
+        // карточку: раньше игрок видел только иконку и не понимал причины.
+        showToast('Видео с Яндекс Диска не открылось. Проверьте ссылку на папку в ⚙️ Настройках');
         const media = document.getElementById('davayMedia');
         if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
       });
@@ -709,10 +780,12 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
       saveState();
       renderDavaySetupLevels();
     }
-    showToast(`✅ Загружено ${result.added} видео в уровень «${levelName}»`);
+    const tail = result.unplayable ? ` (.avi/.mkv пропущено: ${result.unplayable})` : '';
+    showToast(`✅ Загружено ${result.added} видео в уровень «${levelName}»${tail}`);
     return;
   }
-  showToast(`ℹ️ Все видео с Диска уже в уровне «${levelName}» (${result.skipped || 0} шт.)`);
+  const note = result.unplayable ? `, .avi/.mkv пропущено: ${result.unplayable}` : '';
+  showToast(`ℹ️ Все видео с Диска уже в уровне «${levelName}» (${result.skipped || 0} шт.${note})`);
 });
 document.getElementById('davaySetupYandexSettingsBtn').addEventListener('click', ()=>{
   // Открываем модалку настроек Яндекс Диска
