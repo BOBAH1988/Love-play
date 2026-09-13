@@ -670,11 +670,41 @@ function checkStyles(html) {
     'режим «Правда/Действие» не выводится как название игры'
   );
   // updateLevelUI вызывается после updateTurnUI и раньше безусловно гасил
-  // заголовок — название режима «Фантов» из-за этого пропадало.
+  // заголовок — название игры из-за этого пропадало.
   check(
-    'updateLevelUI не гасит заголовок «Фантов»',
-    /isFantyGameScreen\(\)/.test(core) && /levelLabel && !isFantyGameScreen\(\)/.test(core),
-    'заголовок «Фантов» гасится безусловно — название режима пропадёт'
+    'updateLevelUI не гасит заголовок игрового экрана',
+    /gameScreenHasTitle\(\)/.test(core) && /levelLabel && !gameScreenHasTitle\(\)/.test(core),
+    'заголовок гасится безусловно — название игры пропадёт'
+  );
+  // Экран #game обслуживает четыре игры, и у каждой должно быть своё название
+  // в общем заголовке: раньше режимы видео/davay заголовок просто скрывали,
+  // и игрок не видел, в какой из двух игр находится.
+  // Проверяем именно ВОЗВРАТ названия из gameScreenTitle(): текст в
+  // комментарии или в разметке не должен засчитываться за рабочую логику.
+  const titleFn = core.match(/function gameScreenTitle\(\)\{([\s\S]*?)\n\}/);
+  check('gameScreenTitle() возвращает название «Видеорулетки»',
+    !!titleFn && /video-mode'\)\)\s*return\s*'🎥 Видеорулетка'/.test(titleFn[1]),
+    'в gameScreenTitle() нет return «🎥 Видеорулетка» — в видеорежиме название не покажется'
+  );
+  check('gameScreenTitle() возвращает название «Давай попробуем»',
+    !!titleFn && /davay-mode'\)\)\s*return\s*'🎬 Давай попробуем'/.test(titleFn[1]),
+    'в gameScreenTitle() нет return «🎬 Давай попробуем»'
+  );
+  check('gameScreenTitle() возвращает названия «Фантов»',
+    !!titleFn && /💘 Фанты/.test(titleFn[1]) && /❓ Правда\/Действие/.test(titleFn[1]),
+    'gameScreenTitle() не различает режимы «Фантов»'
+  );
+  check(
+    'заголовок экрана #game выбирается по режиму одним местом',
+    /function gameScreenTitle\(\)/.test(core),
+    'нет gameScreenTitle() — логика заголовков снова разъедется по функциям'
+  );
+  // «Предложи партнёру» (placeholder) использует тот же .game-level-label для
+  // уровня — название игры не должно его подменять.
+  check(
+    'название игры не подменяет уровень в «Предложи партнёру»',
+    /placeholder-mode'\)\)?\s*return null/.test(core),
+    'placeholder-режим не исключён из gameScreenTitle() — уровень пропадёт'
   );
 
 }

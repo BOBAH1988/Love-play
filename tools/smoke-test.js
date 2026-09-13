@@ -297,21 +297,75 @@ test('Сценарий: updateLevelUI не гасит заголовок «Фа�
   assert(title.style.display !== 'none', 'updateLevelUI не должен скрывать заголовок «Фантов»');
 });
 
-test('Сценарий: в видеорежиме #game заголовок по-прежнему скрыт', () => {
-  // Видеорулетка и «Давай попробуем» используют #game, но название игры там
-  // не показывается — регресс в этих режимах недопустим.
+test('Сценарий: «Видеорулетка» показывает своё название', () => {
+  // Экран #game обслуживает четыре игры, и каждая должна называться своим
+  // именем — иначе игрок не понимает, в какой игре находится.
   const gameEl = getElById(stub, 'game');
   const title = getElById(stub, 'gameLevelLabel');
-  const turn = getElById(stub, 'gameTurnLabel');
 
   asFantyScreen();
   gameEl.classList.add('video-mode');
   state.name1 = 'Парень';
   global.updateTurnUI();
   global.updateLevelUI();
-  assert(turn.style.display !== 'none', 'в видеорежиме метка хода должна быть видна');
-  assert(turn.textContent.startsWith('Ходит:'), `ожидалась метка хода, получено «${turn.textContent}»`);
-  assert(title.style.display === 'none', 'в видеорежиме заголовок игры должен быть скрыт');
+  assert(title.textContent === '🎥 Видеорулетка',
+    `ожидалось «🎥 Видеорулетка», получено «${title.textContent}»`);
+  assert(title.style.display !== 'none', 'заголовок «Видеорулетки» должен быть виден');
+  MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
+});
+
+test('Сценарий: «Давай попробуем» показывает своё название', () => {
+  const gameEl = getElById(stub, 'game');
+  const title = getElById(stub, 'gameLevelLabel');
+
+  asFantyScreen();
+  gameEl.classList.add('davay-mode');
+  state.name1 = 'Парень';
+  global.updateTurnUI();
+  global.updateLevelUI();
+  assert(title.textContent === '🎬 Давай попробуем',
+    `ожидалось «🎬 Давай попробуем», получено «${title.textContent}»`);
+  assert(title.style.display !== 'none', 'заголовок «Давай попробуем» должен быть виден');
+  MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
+});
+
+test('Сценарий: «Предложи партнёру» по-прежнему показывает уровень, а не название игры', () => {
+  // В placeholder-режиме .game-level-label занят уровнем («🔥 Сближение»),
+  // его заполняет updateLevelUI — название игры сюда подставлять нельзя.
+  const gameEl = getElById(stub, 'game');
+  const title = getElById(stub, 'gameLevelLabel');
+
+  asFantyScreen();
+  gameEl.classList.add('placeholder-mode');
+  const before = title.textContent;
+  global.updateTurnUI();
+  assert(title.textContent === before,
+    'название игры не должно подменять уровень в режиме «Предложи партнёру»');
+  MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
+});
+
+test('Сценарий: названия режимов не смешиваются при переключении', () => {
+  // Каждый вход в режим должен заново выставлять СВОЙ заголовок: раньше
+  // заголовок просто скрывался, и при переходе между играми мог остаться
+  // текст предыдущего режима.
+  const gameEl = getElById(stub, 'game');
+  const title = getElById(stub, 'gameLevelLabel');
+
+  const titleFor = (mode) => {
+    asFantyScreen();
+    if (mode) gameEl.classList.add(mode);
+    global.updateTurnUI();
+    global.updateLevelUI();
+    return title.textContent;
+  };
+  const fanty = titleFor(null);
+  const video = titleFor('video-mode');
+  const davay = titleFor('davay-mode');
+  const back = titleFor(null);
+  assert(fanty === '💘 Фанты', `Фанты: «${fanty}»`);
+  assert(video === '🎥 Видеорулетка', `Видеорулетка: «${video}»`);
+  assert(davay === '🎬 Давай попробуем', `Давай попробуем: «${davay}»`);
+  assert(back === '💘 Фанты', `возврат в Фанты: «${back}»`);
   MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
 });
 
@@ -327,7 +381,7 @@ test('Сценарий: метка хода возвращается после 
   global.updateTurnUI();
   assert(turn.style.display === 'none', 'исходно метка хода скрыта');
 
-  // Выходим из «Фантов» в режим «Давай попробуем» (свой заголовок не ставит).
+  // Выходим из «Фантов» в режим «Давай попробуем» — у него своё название.
   MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
   gameEl.classList.add('davay-mode');
   state.name1 = 'Парень';
@@ -336,7 +390,8 @@ test('Сценарий: метка хода возвращается после 
   global.updateLevelUI();
   assert(turn.style.display !== 'none', 'метка хода должна снова показываться');
   assert(turn.textContent === 'Ходит: Парень', `ожидалось «Ходит: Парень», получено «${turn.textContent}»`);
-  assert(title.style.display === 'none', 'заголовок снова скрыт — его роль вернулась к уровню');
+  assert(title.textContent === '🎬 Давай попробуем',
+    `заголовок должен смениться на название режима, получено «${title.textContent}»`);
   MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
 });
 

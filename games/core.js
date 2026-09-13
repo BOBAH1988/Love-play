@@ -1234,6 +1234,12 @@ document.getElementById('gameQuizBtn').addEventListener('click', ()=>{
   goToQuizSetup();
 });
 document.getElementById('gameIdeasBtn').addEventListener('click', ()=>{
+  // Как и у «Рулетки желаний» (см. ниже): «Ответы на вопросы» — игра без
+  // паузы. Запуск должен снимать возможную паузу «Фантов»/«Давай попробуем»,
+  // иначе она остаётся висеть и после выхода игрок попадает в чужое меню
+  // «Пауза — 💘 Фанты».
+  state.pausedMode = null;
+  state.inProgress = false;
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToIdeasGame();
@@ -2098,27 +2104,23 @@ function updateResumeUI(){
 function updateTurnUI(){
   document.getElementById('score1').textContent = `${state.name1}: ${state.score1}`;
   document.getElementById('score2').textContent = `${state.name2}: ${state.score2}`;
-  // turn-label между FAB-кнопками (единая система для всех игр).
-  // «Фанты» (общий #game без видео/davay/placeholder режимов) — исключение:
-  // название режима («💘 Фанты» / «Правда/Действие») показываем в штатном
-  // заголовке игры (.game-level-label), как во всех остальных играх, а не в
-  // метке хода. Раньше текст подставлялся в .td-turn-label и там же
-  // подгонялся шрифт (font-size:28px) — получалась копия заголовка мимо
-  // общих стилей: другой размер, без жирности и межбуквенного интервала.
-  // Чей ход — видно на самой карточке задания.
-  const isFantyGame = isFantyGameScreen();
+  // Заголовок экрана #game и метка хода.
+  // Экран #game обслуживает четыре игры (см. gameScreenTitle): название игры
+  // всегда идёт в штатный заголовок .game-level-label, как и на остальных
+  // экранах. Метку хода «Ходит: …» показываем только там, где она несёт
+  // смысл: в «Фантах» ход виден на карточке задания, поэтому метка скрыта,
+  // чтобы не дублировать заголовок.
   const titleLabel = document.getElementById('gameLevelLabel');
   const turnLabel = document.getElementById('gameTurnLabel');
-  if(isFantyGame){
-    if(titleLabel){
-      titleLabel.textContent = state.gameType === 'td' ? '❓ Правда/Действие' : '💘 Фанты';
-      titleLabel.style.display = 'block';
-    }
-    // Метка хода в «Фантах» не нужна — режим уже виден в заголовке.
-    if(turnLabel) turnLabel.style.display = 'none';
-  } else {
-    if(turnLabel){
-      turnLabel.style.display = '';
+  const title = gameScreenTitle();
+  if(titleLabel && gameScreenHasTitle()){
+    titleLabel.textContent = title || '';
+    titleLabel.style.display = 'block';
+  }
+  if(turnLabel){
+    const showTurn = !isFantyGameScreen();
+    turnLabel.style.display = showTurn ? '' : 'none';
+    if(showTurn){
       const currentName = state.currentPlayer === 1 ? state.name1 : state.name2;
       turnLabel.textContent = 'Ходит: ' + currentName;
     }
@@ -2180,6 +2182,32 @@ function isFantyGameScreen(){
     && !el.classList.contains('placeholder-mode'));
 }
 
+// Заголовок для экрана #game по текущему режиму.
+// Экран #game один, но обслуживает четыре разных игры, и у каждой должно быть
+// своё название в штатном заголовке (.game-level-label):
+//   Фанты        — «💘 Фанты» / «❓ Правда/Действие» (по state.gameType)
+//   Видеорулетка — «🎥 Видеорулетка»
+//   Давай попробуем — «🎬 Давай попробуем»
+//   Предложи партнёру (placeholder) — заголовок заполняет updateLevelUI уровнем
+// Возвращает null, если заголовок этим режимом не управляется.
+// Раньше здесь была «размазана» та же логика: режимы видео/davay просто
+// скрывали заголовок, и игрок не видел, в какой из двух игр он находится.
+function gameScreenTitle(){
+  const el = document.getElementById('game');
+  if(!el) return null;
+  if(el.classList.contains('video-mode')) return '🎥 Видеорулетка';
+  if(el.classList.contains('davay-mode')) return '🎬 Давай попробуем';
+  if(el.classList.contains('placeholder-mode')) return null; // уровнем заведует updateLevelUI
+  return state.gameType === 'td' ? '❓ Правда/Действие' : '💘 Фанты';
+}
+
+// Заголовок нужен всем режимам #game, кроме placeholder («Предложи партнёру»),
+// где .game-level-label показывает уровень и заполняется в updateLevelUI.
+function gameScreenHasTitle(){
+  const el = document.getElementById('game');
+  return !!(el && !el.classList.contains('placeholder-mode'));
+}
+
 function updateLevelUI(){
   const btn = document.getElementById('levelUpBtn');
   const levelLabel = document.getElementById('gameLevelLabel');
@@ -2197,10 +2225,11 @@ function updateLevelUI(){
     }
     return;
   }
-  // В «Фантах» заголовок занят названием режима (см. updateTurnUI) — не гасим
-  // его здесь, иначе название пропадёт: updateLevelUI вызывается после
-  // updateTurnUI и раньше безусловно ставил display:none.
-  if(levelLabel && !isFantyGameScreen()) levelLabel.style.display = 'none';
+  // Заголовок #game заполняет updateTurnUI (название игры для Фантов,
+  // Видеорулетки и «Давай попробуем»). Гасим его здесь только в тех режимах,
+  // где заголовок не нужен вовсе — иначе название пропадёт: updateLevelUI
+  // вызывается ПОСЛЕ updateTurnUI и раньше безусловно ставил display:none.
+  if(levelLabel && !gameScreenHasTitle()) levelLabel.style.display = 'none';
   if(isVideoMode() || isDavayMode()){
     btn.disabled = false;
     btn.textContent = 'Сложнее';
