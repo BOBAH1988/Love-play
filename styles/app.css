@@ -5,6 +5,15 @@
     --accent:#ff5e8e;
     --gold:#ffd27a;
     --btn-height:52px;
+    /* Отступ сверху для контента игровых экранов, у которых первая строка
+       (название игры или метка хода) закреплена на уровне FAB-кнопок «←»/«☰».
+       Закреплённая строка: top = 12px от padding-края #app, высота 36px →
+       её низ на appPad + 48. Контент .screen начинается на appPad + этот
+       отступ, значит 56px даёт ровно 8px зазора под названием — и в браузере,
+       и в PWA (appPad = max(16px, env(safe-area-inset-top)) в обоих случаях
+       учитывается одинаково, а safe-area в top закреплённой строки НЕ
+       добавляется — иначе она считалась бы дважды). */
+    --screen-top-pad:56px;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
   input, textarea{-webkit-user-select:text; user-select:text; -webkit-touch-callout:default;}
@@ -2362,17 +2371,26 @@
   /* .td-score-row убран — теперь используется krokodil-score-row.two-player */
   .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd;}
   /* Закреплённое название игры на игровом экране.
-     ВАЖНО: заголовок стоит на ОДНОМ уровне с FAB-кнопками «←» и «☰», а не
-     выше них. Раньше было top:0 — в установленной PWA (iPhone) заголовок
-     уходил под Dynamic Island и перекрывался модулем камеры, а на Android
-     залезал под строку статуса. Кнопки позиционируются как
-     calc(12px + env(safe-area-inset-top)), высота 36px, поэтому заголовок
-     выравниваем по той же линии и не даём тексту залезать на кнопки
-     боковыми отступами. safe-area-inset-top при обычном открытии в браузере
-     равен 0 — там поведение не меняется. */
+     Заголовок стоит на ОДНОЙ линии с меткой хода и FAB-кнопками «←»/«☰».
+     Раньше было top:0 — в установленной PWA (iPhone) заголовок уходил под
+     Dynamic Island и перекрывался модулем камеры, а на Android залезал под
+     строку статуса.
+     ВАЖНО про систему координат: заголовок позиционируем absolute, а НЕ fixed.
+     Метка хода (.td-turn-label) и FAB-кнопки на мобильном тоже absolute — их
+     отсчитывает #app, у которого уже есть padding-top:
+     max(16px, env(safe-area-inset-top)). Отсюда же и отступ экрана
+     (--screen-top-pad) — тогда «низ заголовка» и «верх контента» сходятся
+     ровно. Прежний position:fixed привязывался к вьюпорту и не знал про
+     padding #app: в обычном браузере заголовок стоял на 16px выше кнопок, а
+     в PWA — на safe-area (47px) выше них, и под названием игры оставалась
+     заметная пустая полоса. safe-area при открытии в браузере равна 0. */
   .game-level-label{
-    position:fixed;
-    top:calc(12px + env(safe-area-inset-top, 0px));
+    position:absolute;
+    /* Только 12px: отсчёт идёт от padding-края #app, а safe-area уже учтена
+       в padding-top самого #app (max(16px, env(safe-area-inset-top))).
+       Прибавлять здесь env(safe-area-inset-top) нельзя — получалось двойное
+       вычитание и лишняя полоса под названием игры. */
+    top:12px;
     left:0; right:0; z-index:1100;
     height:36px; display:flex; align-items:center; justify-content:center;
     text-align:center; font-size:26px; font-weight:800;
@@ -2389,23 +2407,24 @@
   @media (max-width:400px){
     .game-level-label{ font-size:21px; padding:0 52px; }
   }
-  /* Desktop: #app — колонка max-width 480px по центру, а FAB-кнопки внутри
-     неё позиционируются как absolute от её краёв. Заголовок объявлен
-     position:fixed и без правки растянулся бы на всю ширину окна: текст
-     оказался бы по центру экрана, а не по центру приложения, и не совпал
-     бы с кнопками. Привязываем его к той же колонке. */
+  /* Desktop: FAB-кнопки внутри колонки #app тоже absolute (top:12px от её
+     краёв). Заголовок уже absolute и шириной с #app, но на широком экране
+     #app — колонка max-width:480px по центру, поэтому ограничиваем и
+     заголовок, иначе он растянулся бы на всю ширину окна и текст оказался
+     бы по центру экрана, а не приложения. */
   @media (min-width:640px){
     .game-level-label{
-      position:absolute; top:12px;
+      top:12px;
       left:50%; right:auto;
       width:100%; max-width:480px;
       transform:translateX(-50%);
     }
   }
   /* Экран с закреплённым названием: сдвигаем контент ниже линии FAB-кнопок
-     и заголовка (12px отступ + 36px высота + 8px зазор) с учётом safe-area. */
+     и заголовка (12px отступ + 36px высота + 8px зазор). Отступ берём из
+     --screen-top-pad, чтобы он совпадал с остальными игровыми экранами. */
   .screen:has(> .game-level-label):not(#game):not(#ideasGame):not(#znayuGame):not(#memesGame):not(#kidsMemesGame):not(#partyNeverGame):not(#twisterGame):not(#whatToPlayGame){
-    padding-top:calc(56px + env(safe-area-inset-top, 0px));
+    padding-top:var(--screen-top-pad);
   }
   .card-rank-badge{
     display:block; background:var(--accent); color:#2b0f2e; flex-shrink:0;
@@ -2532,29 +2551,35 @@
      (flash «Карточка 1 из 25», сапёр, счастливый билет, морской бой — идут под
      h1.title) остаются в потоке на своём месте. */
   .td-turn-label:first-child{
-    position:absolute; top:calc(12px + env(safe-area-inset-top));
+    position:absolute; top:12px;
     left:50%; transform:translateX(-50%);
     z-index:10; margin:0; white-space:nowrap;
     max-width:calc(100% - 112px);
   }
   /* Фанты (парная игра): строка «До след. уровня» — второй строкой верхней панели,
      прямо под плавающей меткой хода «Ходит: …» (top метки 12px + строка ~17px + зазор).
+     Отсчёт тот же, что у метки: от padding-края #app, поэтому safe-area здесь не
+     добавляем — она уже в padding самого #app.
      Только экран #game: на других экранах .level-progress нет. Скрытия в video/davay/
      placeholder-режимах (#game.… #levelProgress{display:none}) специфичнее и работают. */
   #game #levelProgress{
     position:absolute;
-    top:calc(12px + env(safe-area-inset-top) + 22px);
+    top:calc(12px + 22px);
     left:50%; transform:translateX(-50%);
     z-index:10; margin:0; white-space:nowrap;
     max-width:calc(100% - 112px);
   }
   /* Mobile: фиксированные FAB-кнопки парят сверху — нужны отступы,
-     чтобы имена/контент не налезали на кнопки. ~50px (высота кнопки 36 + safe area 12). */
+     чтобы имена/контент не налезали на кнопки. Отступ = --screen-top-pad
+     (линия 12px + 36px кнопок + зазор, минус padding-top самого #app).
+     Раньше здесь стояли «на глаз» 50/56px без вычета отступа #app: в браузере
+     это давало лишние 16px, а в установленной PWA safe-area считалась дважды,
+     и под названием игры появлялась заметная пустая полоса. */
   .screen:has(> .krokodil-score-row){
-    padding-top: 50px;
+    padding-top: var(--screen-top-pad);
   }
   .screen:has(> .td-turn-label):not(:has(> .krokodil-score-row)){
-    padding-top: 50px;
+    padding-top: var(--screen-top-pad);
   }
   /* Экраны игр без верхней строки (turn-label/score-row): первым элементом
      у них идёт широкое поле на всю ширину (карточка, ряд кнопок игроков,
@@ -2565,7 +2590,7 @@
   #ideasGame, #whatToPlayGame, #kidsMemesGame, #memesGame,
   #partyNeverGame, #twisterGame, #sexQuestGame,
   #wishlistGame, #znayuGame, #passionMapGame{
-    padding-top: 50px;
+    padding-top: var(--screen-top-pad);
   }
   /* Хаб #setup: каждый его вид (главный, «Игры для пар/компании/детей»…)
      начинается с центрированного h1.title вплотную к верху, а паузные
@@ -2602,24 +2627,24 @@
       flex:1 1 auto; text-align:center;
     }
     .screen:has(> .td-turn-label){
-      padding-top: 48px;
+      padding-top: var(--screen-top-pad);
     }
-    /* На desktop FAB-кнопки absolute, а #app уже имеет padding ~16px,
-       поэтому дополнительный padding-top нужен меньше */
+    /* На desktop FAB-кнопки absolute, но и #app имеет свой padding-top,
+       поэтому действует та же переменная — один отступ на все ширины. */
     .screen:has(> .krokodil-score-row){
-      padding-top: 56px;
+      padding-top: var(--screen-top-pad);
     }
     /* Экраны без верхней строки (см. мобильное правило выше):
        на desktop FAB-кнопки absolute с top:12px (зона 12–48px) */
     #ideasGame, #whatToPlayGame, #kidsMemesGame, #memesGame,
     #partyNeverGame, #twisterGame, #sexQuestGame,
     #wishlistGame, #znayuGame, #passionMapGame{
-      padding-top: 48px;
+      padding-top: var(--screen-top-pad);
     }
     /* Хаб #setup — как на мобильном: FAB-кнопки absolute с top:12px
-       (зона 12–48px), а #app даёт только 16px сверху. */
+       (зона 12–48px), а #app даёт свой padding-top сверху. */
     #setup{
-      padding-top: 48px;
+      padding-top: var(--screen-top-pad);
     }
   }
   #kidsXoTurnLabel, #soloXoTurnLabel, #kidsC4TurnLabel{ font-size:28px; font-weight:900; }

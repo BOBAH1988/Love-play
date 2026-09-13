@@ -567,15 +567,34 @@ function checkStyles(html) {
   // Название игры закреплено на одном уровне с FAB-кнопками «←» и «☰».
   // Раньше стояло top:0 — в PWA на iPhone заголовок уходил под Dynamic
   // Island (модуль камеры), на Android — под строку статуса.
+  //
+  // Система координат (здесь уже дважды ошибались, поэтому проверяем явно):
+  // заголовок absolute внутри #app, у которого padding-top =
+  // max(16px, env(safe-area-inset-top)). Значит его top отсчитывается от
+  // padding-края #app, где safe-area УЖЕ учтена. Поэтому:
+  //   • position:fixed — ошибка: заголовок уедет относительно кнопок
+  //     (в браузере на 16px, в PWA на safe-area), под названием появится полоса;
+  //   • top:calc(12px + env(safe-area-inset-top)) — ошибка: safe-area
+  //     посчитается дважды, полоса станет ещё больше.
   const css = read('styles/app.css');
   const labelRule = css.match(/\.game-level-label\{([\s\S]*?)\}/);
   check('правило .game-level-label есть в CSS', !!labelRule, 'не найдено');
   if (labelRule) {
     const body = labelRule[1];
     check(
-      'заголовок учитывает safe-area-inset-top',
-      /top:\s*calc\([^)]*env\(safe-area-inset-top/.test(body),
-      'top без env(safe-area-inset-top) — в PWA уедет под Dynamic Island'
+      'заголовок в системе координат #app (position:absolute, не fixed)',
+      /position:\s*absolute/.test(body),
+      'position:fixed — top считается от вьюпорта, заголовок разъедется с кнопками и контентом'
+    );
+    check(
+      'safe-area не считается дважды в top заголовка',
+      !/top:[^;]*env\(safe-area-inset-top/.test(body),
+      'env(safe-area-inset-top) в top: она уже в padding-top #app — двойной отступ'
+    );
+    check(
+      'top заголовка — 12px (линия FAB-кнопок)',
+      /top:\s*12px\s*;/.test(body),
+      'top должен быть ровно 12px'
     );
     check(
       'заголовок не прижат к самому верху (top:0)',
@@ -597,6 +616,36 @@ function checkStyles(html) {
     'заголовок выровнен по колонке #app на desktop',
     /@media \(min-width:\s*640px\)\{[\s\S]{0,400}?\.game-level-label/.test(css),
     'нет desktop-правила — текст сместится относительно кнопок'
+  );
+  // Метка хода (.td-turn-label) стоит в той же верхней полосе и в той же
+  // системе координат — иначе название игры и ход окажутся на разной высоте.
+  const turnRule = css.match(/\.td-turn-label:first-child\{([\s\S]*?)\}/);
+  check('правило .td-turn-label:first-child есть в CSS', !!turnRule, 'не найдено');
+  if (turnRule) {
+    check(
+      'метка хода в системе координат #app (position:absolute, top:12px)',
+      /position:\s*absolute/.test(turnRule[1]) && /top:\s*12px\s*;/.test(turnRule[1]),
+      'метка хода должна быть absolute с top:12px — как название игры и кнопки'
+    );
+    check(
+      'safe-area не считается дважды в top метки хода',
+      !/top:[^;]*env\(safe-area-inset-top/.test(turnRule[1]),
+      'env(safe-area-inset-top) в top: она уже в padding-top #app'
+    );
+  }
+  // Отступ контента игровых экранов задан одной переменной от верха #app,
+  // а не подогнанными вручную 48/50/56px — из-за них и появлялась пустая
+  // полоса под названием игры.
+  check(
+    'отступ игровых экранов задан переменной --screen-top-pad',
+    /--screen-top-pad:\s*56px\s*;/.test(css),
+    'нет --screen-top-pad:56px — отступы снова разъедутся с названием'
+  );
+  const padHardcode = css.match(/\.screen[^{]*\{[^}]*padding-top:\s*(?:48|50)px/);
+  check(
+    'в отступах экранов нет захардкоженных 48/50px',
+    !padHardcode,
+    `найден padding-top ${padHardcode ? padHardcode[0].match(/(\d+)px/)[1] : '?'}px вместо var(--screen-top-pad)`
   );
 
 }
