@@ -887,12 +887,18 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
     showToast('❌ ' + result.error);
     return;
   }
+  // Уровень переключаем ВСЕГДА, а не только когда появились новые видео.
+  // Видео с Диска лежат в уровне «Сближение», и если игрок до этого выбрал
+  // другой уровень, игра искала бы видео не там: импорт отчитывался об
+  // успехе, а в игре был пустой экран. При повторном нажатии (added === 0,
+  // ссылки лишь обновляются) прежний код уровень не трогал — отсюда
+  // «видео добавлены, но ничего нет».
+  if(state.davaySelectedLevel !== gameLevelId){
+    state.davaySelectedLevel = gameLevelId;
+    saveState();
+    renderDavaySetupLevels();
+  }
   if(result.added > 0){
-    if(state.davaySelectedLevel !== gameLevelId){
-      state.davaySelectedLevel = gameLevelId;
-      saveState();
-      renderDavaySetupLevels();
-    }
     const tail = result.unplayable ? ` (.avi/.mkv пропущено: ${result.unplayable})` : '';
     showToast(`✅ Новых: ${result.added}. Ссылки обновлены у ${result.refreshed} видео — уровень «${levelName}»${tail}`);
     return;

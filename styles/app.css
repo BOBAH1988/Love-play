@@ -1955,7 +1955,17 @@
   #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active{
     background:rgba(255,255,255,.35); border-color:rgba(255,255,255,.5);
   }
-  .card-split-media video{width:100%; height:100%; object-fit:cover; display:block;}
+  /* Видео растягиваем абсолютным позиционированием, а НЕ height:100%.
+     Причина: .card-split-media — flex-элемент без собственной height (её
+     задаёт flex:1), а `height:100%` у ребёнка flex-контейнера в Safari
+     считается от неопределённой высоты и даёт 0 — видео не видно, остаётся
+     только чёрный фон карточки (background:#000) при полностью рабочей
+     ссылке и без события error. Родитель уже position:relative, поэтому
+     inset:0 даёт точные размеры и в Safari, и в Chrome. */
+  .card-split-media video{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; display:block;
+  }
 
   .card-timer{
     display:flex; flex-direction:column; align-items:center; gap:8px;
