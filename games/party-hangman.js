@@ -144,7 +144,7 @@ function partyHangmanDrawWord(){
 }
 
 function goToPartyHangmanGame(){
-  goToGame('setup', 'partyHangmanGame');
+  goToGame(null, 'partyHangmanGame');
   state.inProgress = true;
   saveState();
   updatePartyHangmanScoreUI();
@@ -165,11 +165,9 @@ function exitPartyHangmanGame(){
 // Функции pause/resume оставлены: их вызывает общий каркас (core.js) при
 // нажатии «Продолжить игру» на главном экране для старых сохранений.
 function resumePartyHangmanGame(){
-  state.pausedMode = null;
+  goToGame(null, 'partyHangmanGame');
+  state.inProgress = true;
   saveState();
-  updateResumeUI();
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('partyHangmanGame').classList.add('active');
   updatePartyHangmanScoreUI();
   renderPartyHangmanWord();
   renderPartyHangmanFigure();

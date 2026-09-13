@@ -420,9 +420,9 @@ function resumePassionMapGame(){
   if(d.waitText) passionMapLastOutcomeText = d.waitText;
   if(d.waitIcon) passionMapLastOutcomeIcon = d.waitIcon;
   saveState();
-  updateResumeUI();
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('passionMapGame').classList.add('active');
+  // Единый переход на игровой экран: goToGame() гасит остальные экраны,
+  // снимает паузу и обновляет блок «Продолжить игру» в хабе.
+  goToGame(null, 'passionMapGame');
   updatePassionMapProgress();
   updateMuteBtn();
   requestWakeLock();

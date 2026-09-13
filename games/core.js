@@ -1009,6 +1009,28 @@ function goToGame(setupId, gameId, beforeSwitch){
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   const game = document.getElementById(gameId);
   if(game) game.classList.add('active');
+  // Чужую паузу снимаем ЗДЕСЬ, а не в каждом обработчике меню по отдельности.
+  // Раньше сброс pausedMode/inProgress был «размазан» по кнопкам хаба: где-то
+  // его продублировали (gameWrBtn), где-то забыли (gameIdeasBtn) — и после
+  // запуска игры без паузы поверх паузы «Фантов» игрок при выходе попадал в
+  // чужое меню «Пауза — 💘 Фанты» с заблокированными настройками. Все запуски
+  // партий идут через эту функцию, поэтому здесь сброс гарантирован.
+  // При этом:
+  //   * своя пауза (pausedMode совпадает с режимом этой игры) сохраняется —
+  //     иначе ломается «Продолжить игру» из хаба для игр без resume-ветки;
+  //   * игры, которые не ходят сюда (Экран #game: «Фанты», видеорежимы),
+  //     по-прежнему сбрасывают паузу сами — у них своя логика экрана.
+  let ownMode = null;
+  try{
+    const g = (typeof gameByScreen === 'function') ? gameByScreen(gameId) : null;
+    ownMode = g ? g.mode : null;
+  }catch(e){ /* реестр не должен ломать переход */ }
+  if(state.pausedMode && state.pausedMode !== ownMode) state.pausedMode = null;
+  if(!state.inProgress) state.inProgress = true;
+  const pauseModalEl = document.getElementById('pauseMenuModal');
+  if(pauseModalEl && pauseModalEl.classList.contains('show')) pauseModalEl.classList.remove('show');
+  if(typeof updateResumeUI === 'function') updateResumeUI();
+  if(typeof updateSettingsLockUI === 'function') updateSettingsLockUI();
   // Статистика: отмечаем начало партии. Ключ игры берём из реестра по
   // экрану — так счётчик не зависит от того, кто вызвал переход.
   try{
@@ -1234,12 +1256,8 @@ document.getElementById('gameQuizBtn').addEventListener('click', ()=>{
   goToQuizSetup();
 });
 document.getElementById('gameIdeasBtn').addEventListener('click', ()=>{
-  // Как и у «Рулетки желаний» (см. ниже): «Ответы на вопросы» — игра без
-  // паузы. Запуск должен снимать возможную паузу «Фантов»/«Давай попробуем»,
-  // иначе она остаётся висеть и после выхода игрок попадает в чужое меню
-  // «Пауза — 💘 Фанты».
-  state.pausedMode = null;
-  state.inProgress = false;
+  // Сброс чужой паузы делает сам goToGame() — здесь только проверка
+  // «сначала завершите прошлую партию» и переход.
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToIdeasGame();

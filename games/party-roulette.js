@@ -585,8 +585,9 @@ function rouletteAllBalancesZero(){
 function resumePartyRouletteGame(){
   const pauseModal = document.getElementById('pauseMenuModal');
   if(pauseModal) pauseModal.classList.remove('show');
-  state.pausedMode = null;
-  goToGame('setup', 'partyRouletteGame');
+  // Сброс pausedMode делает goToGame(): режим тот же, поэтому своя пауза
+  // снимается, а чужая (если осталась от другой игры) не зависает.
+  goToGame(null, 'partyRouletteGame');
   // Продолжение паузы: НЕ сбрасываем балансы/ставки, только гарантируем структуру
   ensureRouletteBalances(false);
   renderRouletteBadges();
@@ -624,7 +625,7 @@ function goToPartyRouletteGame(){
   // Сразу фиксируем сброс в localStorage, чтобы после перезагрузки страницы
   // (жёсткой в т.ч.) не вернулись ставки/баланс прошлой партии.
   saveState();
-  goToGame('setup', 'partyRouletteGame');
+  goToGame(null, 'partyRouletteGame');
   // Колесо перестраиваем при каждом входе — схopyет и случай, когда PWA
   // отдал старый JS без SVG (функция сама не дублирует сектора).
   buildRouletteWheel();

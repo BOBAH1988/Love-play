@@ -297,6 +297,23 @@ test('Сценарий: updateLevelUI не гасит заголовок «Фа�
   assert(title.style.display !== 'none', 'updateLevelUI не должен скрывать заголовок «Фантов»');
 });
 
+test('Сценарий: счёт «Парень/Девушка» скрыт только там, где нет соревнования', () => {
+  // Строка «Парень: 0 / Девушка: 0» — от базовых «Фантов». В «Видеорулетке»
+  // конкуренции нет (ролики смотрят вместе, очки только обнуляются), поэтому
+  // CSS скрывает её именно в этом режиме. Проверяем по CSS-тексту: сам
+  // dom-stub браузерный рендер и каскад не эмулирует.
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  const hiddenInVideo = /#game\.video-mode\s+#gameScoreRow\s*\{[^}]*display:\s*none/.test(css);
+  const hiddenForAllGame = /#game\s+#gameScoreRow\s*\{[^}]*display:\s*none/.test(css);
+  assert(hiddenInVideo, 'в «Видеорулетке» строка счёта должна быть скрыта');
+  assert(!hiddenForAllGame, 'в «Фантах» строка счёта должна остаться');
+  // Свои имена игроков и шкала «Давай попробуем» не должны пострадать.
+  assert(!/#game\.davay-mode\s+#davayPlayerRow\s*\{[^}]*display:\s*none/.test(css),
+    'имена игроков «Давай попробуем» не должны скрываться');
+  assert(!/#game\.davay-mode\s+#davayProgressRow\s*\{[^}]*display:\s*none/.test(css),
+    'шкала прогресса «Давай попробуем» не должна скрываться');
+});
+
 test('Сценарий: «Видеорулетка» показывает своё название', () => {
   // Экран #game обслуживает четыре игры, и каждая должна называться своим
   // именем — иначе игрок не понимает, в какой игре находится.

@@ -892,6 +892,12 @@ document.getElementById('davaySetupExitBtn').addEventListener('click', ()=>{
 // меню: не даёт молча бросить паузу другой игры (бинго/ПоД).
 document.getElementById('davaySetupVideoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
+  // «Видеорулетка» — режим внутри экрана #game и в реестре игр её нет, так что
+  // goToGame() её не «прикрывает»: снимаем чужую паузу сами, иначе после
+  // выхода по «←» игрок попадёт в чужое меню паузы «Фантов».
+  state.pausedMode = null;
+  saveState();
+  if(typeof updateResumeUI === 'function') updateResumeUI();
   playSuccessSound();
   goToVideoGame();
 });

@@ -423,9 +423,9 @@ function resumeSexQuestGame(){
   if(d.waitText) sexQuestLastOutcomeText = d.waitText;
   if(d.waitIcon) sexQuestLastOutcomeIcon = d.waitIcon;
   saveState();
-  updateResumeUI();
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('sexQuestGame').classList.add('active');
+  // Единый переход на игровой экран: goToGame() гасит остальные экраны,
+  // снимает паузу и обновляет блок «Продолжить игру» в хабе.
+  goToGame(null, 'sexQuestGame');
   updateSexQuestProgress();
   updateMuteBtn();
   requestWakeLock();

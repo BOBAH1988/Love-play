@@ -70,7 +70,7 @@ function drawWhatToPlayCard(){
 
 function goToWhatToPlayGame(){
   state.whatToPlayFavView = false;
-  goToGame('setup', 'whatToPlayGame');
+  goToGame(null, 'whatToPlayGame');
   updateWhatToPlayFavViewBtn();
   drawWhatToPlayCard();
   updateMuteBtn();

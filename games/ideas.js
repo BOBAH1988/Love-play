@@ -50,7 +50,7 @@ function drawIdeaCard(){
 }
 
 function goToIdeasGame(){
-  goToGame('setup', 'ideasGame');
+  goToGame(null, 'ideasGame');
   drawIdeaCard();
   updateMuteBtn();
   requestWakeLock();

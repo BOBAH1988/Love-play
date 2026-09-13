@@ -456,6 +456,62 @@ function checkRegistry() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 8б. Сброс чужой паузы при запуске партии
+//     Раньше сброс pausedMode/inProgress был «размазан» по кнопкам хаба:
+//     где-то продублирован, где-то забыт — и игрок после выхода попадал в
+//     чужое меню «Пауза — Фанты». Теперь это делает единая goToGame().
+// ─────────────────────────────────────────────────────────────────────────────
+function checkPauseResetOnStart() {
+  group('Сброс чужой паузы');
+  const core = read('games/core.js');
+  const goToGameMatch = core.match(/function goToGame\s*\([^)]*\)\s*\{[\s\S]*?\n\}/);
+  const goToGame = goToGameMatch ? goToGameMatch[0] : '';
+
+  check('goToGame() найдена в core.js', goToGame.length > 0, 'функция не найдена');
+  check(
+    'goToGame() снимает чужую паузу',
+    /g\.mode/.test(goToGame) && /pausedMode\s*!==\s*ownMode/.test(goToGame),
+    'в goToGame() нет сброса pausedMode для чужой игры'
+  );
+  check(
+    'goToGame() выставляет inProgress',
+    /state\.inProgress\s*=\s*true/.test(goToGame),
+    'goToGame() не поднимает inProgress — настройки в хабе останутся заблокированными'
+  );
+  check(
+    'goToGame() обновляет блок «Продолжить игру»',
+    /updateResumeUI\s*\(/.test(goToGame),
+    'goToGame() не вызывает updateResumeUI() — меню паузы может остаться на экране'
+  );
+
+  // Запуск игры через goToGame() не должен передавать 'setup' как setupId:
+  // goToGame() гасит все экраны сам, а этот параметр вводил в заблуждение и
+  // прятал ошибки вроде «настройки остались активными вместе с игрой».
+  const gamesDir = path.join(ROOT, 'games');
+  const setupArgs = [];
+  for (const f of fs.readdirSync(gamesDir)) {
+    const src = read(path.join('games', f));
+    const hits = [...src.matchAll(/goToGame\(\s*'setup'/g)];
+    if (hits.length) setupArgs.push(`${f} (${hits.length})`);
+  }
+  check(
+    'goToGame() вызывается без устаревшего setupId',
+    setupArgs.length === 0,
+    `передают 'setup': ${setupArgs.join(', ')}`
+  );
+
+  // «Видеорулетка» — режим внутри #game и в реестре её нет, поэтому goToGame()
+  // её не прикрывает: запуск обязан снять чужую паузу сам.
+  const davay = read('games/fants-davay.js');
+  const videoBtn = davay.match(/davaySetupVideoBtn'\)\.addEventListener[\s\S]*?\n\}\);/);
+  check(
+    'запуск «Видеорулетки» снимает чужую паузу',
+    !!videoBtn && /pausedMode\s*=\s*null/.test(videoBtn[0]),
+    'кнопка «🎥 Видеорулетка» не сбрасывает pausedMode'
+  );
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 9. Стили
@@ -647,6 +703,29 @@ function checkStyles(html) {
     !padHardcode,
     `найден padding-top ${padHardcode ? padHardcode[0].match(/(\d+)px/)[1] : '?'}px вместо var(--screen-top-pad)`
   );
+  // Строка счёта «Парень: 0 / Девушка: 0» — от базовых «Фантов». В режимах,
+  // где соревнования нет, она висеть не должна: в «Видеорулетке» игроки
+  // смотрят ролики вместе (очки только обнуляются), в «Предложи партнёру»
+  // счёта нет вовсе.
+  const scoreHidden = (mode) =>
+    new RegExp(`#game\\.${mode}\\s+#gameScoreRow\\s*\\{[^}]*display:\\s*none`).test(css);
+  check('счёт скрыт в «Видеорулетке» (нет соревнования)', scoreHidden('video-mode'),
+    'строка «Парень: 0 / Девушка: 0» останется висеть в видеорежиме');
+  check('счёт скрыт в «Предложи партнёру»', scoreHidden('placeholder-mode'),
+    'счёт не должен показываться в «Предложи партнёру»');
+  // В «Давай попробуем» счёт тоже не ведётся, но там свои имена игроков и
+  // шкала прогресса — проверяем, что их не скрыли заодно.
+  const rowHidden = (sel) =>
+    new RegExp(`${sel}\\s*\\{[^}]*display:\\s*none`).test(css);
+  check('в «Давай попробуем» свои имена игроков сохранены',
+    !new RegExp(`#game\\.davay-mode\\s+#davayPlayerRow\\s*\\{[^}]*display:\\s*none`).test(css),
+    '#davayPlayerRow скрыт — игроки не увидят, чей ход');
+  check('в «Давай попробуем» шкала прогресса сохранена',
+    !new RegExp(`#game\\.davay-mode\\s+#davayProgressRow\\s*\\{[^}]*display:\\s*none`).test(css),
+    '#davayProgressRow скрыт — пропадёт прогресс партии');
+  check('базовые «Фанты» не потеряли строку счёта',
+    !new RegExp(`#game\\s+#gameScoreRow\\s*\\{[^}]*display:\\s*none`).test(css),
+    'счёт скрыт для всего #game — в «Фантах» он нужен');
   // Название игры должно быть оформлено общим стилем .game-level-label, а не
   // имитацией через .td-turn-label с подогнанным шрифтом: в «Фантах» название
   // режима так и рисовали (font-size:28px вместо 26px + вес 800 + интервал),
@@ -978,6 +1057,7 @@ function main() {
   checkDomRefs(html, missingIds);
   checkDocs();
   checkRegistry();
+  checkPauseResetOnStart();
   checkStyles(html);
   checkErrorGuard(html);
   checkSchemaVersioning();
