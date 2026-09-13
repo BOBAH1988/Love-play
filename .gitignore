@@ -19,6 +19,8 @@ secrets.json
 .DS_Store
 Thumbs.db
 
-# Временные файлы
+# Временные файлы и посторонние заметки (не часть игры)
 .tmp-*
 *.log
+DSH-*.md
+*.local.md
