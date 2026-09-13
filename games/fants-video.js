@@ -112,6 +112,22 @@ let videoLevel = 1;
 let currentVideoCard = null;
 let videoHistory = []; // для свайпов влево/вправо между уже показанными видео
 let videoHistoryPos = -1;
+// Отдаём свои «живые» карточки общему коду (см. collectLiveVideoCards в
+// fants-davay.js): при обновлении ссылок на Яндекс Диске они должны получить
+// свежий адрес, иначе показанное видео останется с мёртвой ссылкой и плеер
+// покажет чёрный экран.
+videoCollectLiveCards = function(){
+  const out = [];
+  if(currentVideoCard) out.push(currentVideoCard);
+  videoHistory.forEach(c=>{ if(c && out.indexOf(c) < 0) out.push(c); });
+  return out;
+};
+videoReplaceLiveCard = function(cardId, fresh){
+  if(!fresh) return;
+  const swap = function(c){ return c && String(c.id) === String(cardId) ? fresh : c; };
+  if(currentVideoCard) currentVideoCard = swap(currentVideoCard);
+  videoHistory = videoHistory.map(swap);
+};
 let videoSoundOn = false;
 function updateVideoMuteBtn(){
   const btn = document.getElementById('videoMuteBtn');

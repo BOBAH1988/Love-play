@@ -115,7 +115,7 @@ function ensureImportedDavayVideosLoaded(){
   if(importedDavayVideosLoaded) return Promise.resolve();
   return loadAllDavayBlobs().then(rows => {
     const resetAt = state.videoResetAt || 0;
-    importedDavayCards = rows.map(r => {
+    const fresh = rows.map(r => {
       const hasUrl = !!r.url;
       const src = hasUrl ? r.url : URL.createObjectURL(r.blob);
       return {
@@ -129,6 +129,12 @@ function ensureImportedDavayVideosLoaded(){
         source: hasUrl ? 'yandex' : 'local'
       };
     });
+    // Карточки, которые игра уже держит в работе (текущая и история), — это
+    // ОТДЕЛЬНЫЕ объекты. После перечитывания каталога они указывали бы на
+    // устаревшие объекты со старыми ссылками, поэтому подменяем их свежими
+    // по id (хуки каждой игры знают про свои переменные).
+    fresh.forEach(c => replaceLiveVideoCard(c.id, c));
+    importedDavayCards = fresh;
     importedDavayCatalogLoadedAt = resetAt;
     importedDavayVideosLoaded = true;
   }).catch(()=>{
@@ -263,10 +269,36 @@ function saveYandexRows(rows, updates){
         store.put(row);
       };
     });
-    tx.oncomplete = ()=> resolve(rows.length + updates.length);
+    tx.oncomplete = ()=>{
+      // Ссылки уже лежат в базе, но игра работает с объектами В ПАМЯТИ:
+      // каталог и карточки текущей партии нужно обновить здесь же, иначе на
+      // экране останется прежний (мёртвый) адрес.
+      applyYandexUpdatesInMemory(updates);
+      resolve(rows.length + updates.length);
+    };
     tx.onerror = ()=> reject(tx.error || new Error('Не удалось сохранить видео'));
     tx.onabort = ()=> reject(tx.error || new Error('Сохранение прервано'));
   })).catch(()=> 0);
+}
+
+// Разложить свежие ссылки по объектам в памяти: каталог плюс карточки, которые
+// игра уже держит (текущая и истории обеих игр).
+function applyYandexUpdatesInMemory(updates){
+  if(!updates || !updates.length) return;
+  const byId = new Map();
+  importedDavayCards.forEach(c=>{ if(c && c.id) byId.set(String(c.id), c); });
+  updates.forEach(u=>{
+    if(!u || !u.url) return;
+    const cardId = 'imported-' + u.id;
+    const card = byId.get(cardId);
+    if(card){
+      card.video = u.url;
+      card.urlAt = u.urlAt || Date.now();
+      if(u.yandexPath) card.yandexPath = u.yandexPath;
+      card.hrefRefreshed = false;
+    }
+    applyFreshYandexHref(cardId, u.url, u.urlAt || Date.now());
+  });
 }
 
 // Обновить прямые ссылки у уже сохранённых строк (по id строки в IndexedDB)
@@ -336,9 +368,13 @@ async function importYandexVideosToLevel(level){
       }
     }
     const saved = await saveYandexRows(rows, updates);
-    // Перечитываем каталог из базы: у уже известных файлов ссылки обновились,
-    // в памяти остались бы прежние (мёртвые).
-    if(saved > 0){
+    // Каталог перечитываем ТОЛЬКО когда в базе появились новые строки.
+    // Для уже загруженных видео ссылки обновлены на месте — тем же объектам,
+    // что лежат в importedDavayCards; полное перечитывание создало бы новые
+    // объекты и разорвало связь с карточками, которые игра держит в
+    // currentVideoCard/videoHistory и в истории «Давай попробуем», — на экране
+    // осталась бы прежняя мёртвая ссылка.
+    if(rows.length > 0){
       refreshDavayCatalogInMemory();
       await ensureImportedDavayVideosLoaded();
     }
@@ -354,6 +390,47 @@ async function importYandexVideosToLevel(level){
 // Обновить подписанные ссылки, которым больше YANDEX_HREF_TTL. Один запрос
 // списка обновляет сразу все ссылки — ради этого и храним пути. force=true
 // обновляет принудительно (например, когда видео не открылось).
+// Обновить подписанные ссылки, которым больше YANDEX_HREF_TTL. Один запрос
+// списка обновляет сразу все ссылки — ради этого и храним пути. force=true
+// обновляет принудительно (например, когда видео не открылось).
+//
+// ВАЖНО: обновлять только `importedDavayCards` недостаточно. Карточки, которые
+// игра уже взяла в работу, живут ОТДЕЛЬНЫМИ объектами: `currentVideoCard` и
+// `videoHistory` («Видеорулетка»), `currentDavayCard` и `davayHistory` («Давай
+// попробуем»). Они хранят собственную копию поля `video`, и после обновления
+// каталога там оставалась прежняя мёртвая ссылка — плеер показывал чёрный
+// экран, а повторно обновить её уже не получалось: флаг `hrefRefreshed` к тому
+// моменту выставлен. Поэтому ссылку переписываем и в этих объектах — по id.
+//
+// Переменные живут в РАЗНЫХ файлах (currentVideoCard/videoHistory — в
+// fants-video.js, currentDavayCard/davayHistory — здесь), и `let` из одного
+// файла не виден в другом. Поэтому каждая игра сама отдаёт свои карточки через
+// хуки, которые заполняются рядом со своими переменными.
+let davayCollectLiveCards = null;
+let davayReplaceLiveCard = null;
+function collectLiveVideoCards(){
+  let out = [];
+  if(typeof davayCollectLiveCards === 'function') out = out.concat(davayCollectLiveCards() || []);
+  if(typeof videoCollectLiveCards === 'function') out = out.concat(videoCollectLiveCards() || []);
+  return out;
+}
+function replaceLiveVideoCard(cardId, fresh){
+  if(typeof davayReplaceLiveCard === 'function') davayReplaceLiveCard(cardId, fresh);
+  if(typeof videoReplaceLiveCard === 'function') videoReplaceLiveCard(cardId, fresh);
+}
+
+function applyFreshYandexHref(cardId, href, at){
+  if(typeof href !== 'string' || !href) return;
+  collectLiveVideoCards().forEach(card=>{
+    if(!card || String(card.id) !== String(cardId)) return;
+    card.video = href;
+    card.urlAt = at;
+    // Ссылка обновлена — разрешаем ещё одну попытку восстановления, если и
+    // новая ссылка когда-нибудь откажет.
+    card.hrefRefreshed = false;
+  });
+}
+
 async function refreshYandexLinks(force){
   const cards = importedDavayCards.filter(c => c.source === 'yandex' && c.yandexPath && c.dbId);
   if(!cards.length) return { updated:0 };
@@ -373,6 +450,8 @@ async function refreshYandexLinks(force){
       forgetDavayVideoAsShown(c.id);
       c.video = href;
       c.urlAt = now;
+      // Тот же id может быть сейчас на экране или в истории — обновляем и там.
+      applyFreshYandexHref(c.id, href, now);
       updates.push({ id: c.dbId, url: href, urlAt: now });
     });
     await updateYandexRows(updates);
@@ -442,6 +521,21 @@ let davayLevel = 1;
 let currentDavayCard = null;
 let davayHistory = []; // для свайпов влево/вправо между уже показанными видео
 let davayHistoryPos = -1;
+// Отдаём свои «живые» карточки общему коду (см. collectLiveVideoCards):
+// обновление ссылок на Яндекс Диске должно переписать их все, иначе на экране
+// и в истории останутся мёртвые адреса.
+davayCollectLiveCards = function(){
+  const out = [];
+  if(currentDavayCard) out.push(currentDavayCard);
+  davayHistory.forEach(c=>{ if(c && out.indexOf(c) < 0) out.push(c); });
+  return out;
+};
+davayReplaceLiveCard = function(cardId, fresh){
+  if(!fresh) return;
+  const swap = function(c){ return c && String(c.id) === String(cardId) ? fresh : c; };
+  if(currentDavayCard) currentDavayCard = swap(currentDavayCard);
+  davayHistory = davayHistory.map(swap);
+};
 let davaySoundOn = false;
 function updateDavayMuteBtn(){
   const btn = document.getElementById('davayMuteBtn');
