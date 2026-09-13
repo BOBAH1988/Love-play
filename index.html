@@ -716,6 +716,27 @@
     </div>
   </section>
 
+  <!-- ===== МОДАЛКА: ЗАГРУЗКА ВИДЕО С ЯНДЕКС ДИСКА (ПРЯМЫЕ ССЫЛКИ) ===== -->
+  <div class="modal-overlay" id="yandexLinksModal">
+    <div class="modal-card" style="max-width:520px;">
+      <div class="modal-title">☁️ Прямые ссылки на видео<button type="button" class="modal-close-btn" id="yandexLinksCloseBtn" aria-label="Закрыть">✕</button></div>
+      <div class="intro-text" style="margin-bottom:10px;">Вставьте прямые ссылки на видеофайлы (по одной на строку). Поддерживаются только ссылки с CORS-заголовками.</div>
+      <textarea id="yandexLinksInput" rows="6" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:10px; font-size:13px;" placeholder="https://example.com/video1.mp4&#10;https://example.com/video2.mp4"></textarea>
+      <div class="field" style="margin-top:10px;">
+        <label>Уровень</label>
+        <select id="yandexLinksLevelSelect" style="width:100%; background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:8px;">
+          <option value="1">Уровень 1 — Ласки разогрев</option>
+          <option value="2">Уровень 2</option>
+          <option value="3">Уровень 3</option>
+          <option value="4">Уровень 4</option>
+          <option value="5">Уровень 5</option>
+          <option value="6">Уровень 6</option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-primary" id="yandexLinksImportBtn" style="margin-top:14px;">⬇️ Загрузить видео</button>
+    </div>
+  </div>
+
   <!-- ===== ПОЗЫ ЛЮБВИ: НАСТРОЙКА ИГРЫ ===== -->
   <!-- 📍 логика: games/core.js -->
   <section id="photoSetup" class="screen">

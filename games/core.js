@@ -3800,15 +3800,41 @@ function exitDavaySetup(){
 document.getElementById('davaySetupImportBtn').addEventListener('click', ()=>{
   davayImportInputEl.click();
 });
-document.getElementById('davaySetupYandexBtn').addEventListener('click', async ()=>{
-  // Прототип: загружаем видео из папки "Level 001 Ласки разогрев" для уровня "Разогрев" (level=2)
-  const level = 2; // Разогрев (id=4, level=id-2)
-  showToast('Загрузка с Яндекс Диска...');
-  const result = await loadYandexDiskLevel(level, '/Level 001 Ласки разогрев');
-  if(result.added > 0){
-    showToast(`Загружено ${result.added} видео`);
+document.getElementById('davaySetupYandexBtn').addEventListener('click', ()=>{
+  // Открываем модалку для ввода прямых ссылок на видеофайлы
+  document.getElementById('yandexLinksModal').classList.add('show');
+});
+document.getElementById('yandexLinksCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('yandexLinksModal').classList.remove('show');
+});
+document.getElementById('yandexLinksImportBtn').addEventListener('click', async ()=>{
+  const textarea = document.getElementById('yandexLinksInput');
+  const urls = textarea.value.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  if(urls.length === 0){
+    showToast('Введите хотя бы одну ссылку');
+    return;
+  }
+  const level = parseInt(document.getElementById('yandexLinksLevelSelect').value, 10);
+  document.getElementById('yandexLinksModal').classList.remove('show');
+  showToast(`Загрузка ${urls.length} файлов...`);
+  let added = 0;
+  for(const url of urls){
+    try{
+      const resp = await fetch(url, { mode:'cors' });
+      if(!resp.ok) continue;
+      const blob = await resp.blob();
+      const filename = url.split('/').pop().split('?')[0] || 'video.webm';
+      const file = new File([blob], filename, { type:blob.type || 'video/webm' });
+      await saveDavayBlob(file, level);
+      added++;
+    }catch(e){}
+  }
+  if(added > 0){
+    importedDavayVideosLoaded = false;
+    ensureImportedDavayVideosLoaded();
+    showToast(`Загружено ${added} видео`);
   } else {
-    showToast('Видео не найдены или уже загружены');
+    showToast('Не удалось загрузить файлы. Проверьте ссылки и CORS.');
   }
 });
 document.getElementById('davaySetupStartBtn').addEventListener('click', async ()=>{
