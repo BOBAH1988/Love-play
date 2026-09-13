@@ -1977,14 +1977,37 @@ function updateSettingsLockUI(){
     if(el) el.style.display = locked ? 'none' : '';
   });
 }
-// Клик по заблокированным во время паузы настройкам — подсказка вместо тишины
+// Клик по заблокированным во время паузы настройкам — подсказка вместо тишины.
+// ВАЖНО: этот обработчик был случайно УДАЛЁН при правке клавиши «стрелка влево»
+// (коммит f410151): на его место встал обработчик keydown. Из-за этого клик по
+// заблокированному полю перестал что-либо объяснять — игрок видел, что поле
+// неактивно (CSS .locked-settings с cursor:not-allowed), но не понимал почему.
+document.addEventListener('click', (e)=>{
+  const lockedEl = e.target.closest('.locked-settings');
+  if(lockedEl){
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    showToast('Завершите игру, чтобы изменить настройки', 2000);
+  }
+}, true);
+
+// Стрелка «влево» — как системная кнопка «Назад» на телефоне: в видеорежиме
+// выходим из него, в остальных случаях уходим на паузу. Обработчик висит на
+// document, поэтому не срабатывает, когда фокус в поле ввода (там стрелка
+// двигает курсор).
 document.addEventListener('keydown', (e)=>{
-  if(e.key === 'ArrowLeft'){
-    if(isVideoMode()){
-      e.preventDefault();
-      exitVideoGame();
-      return;
-    }
+  if(e.key !== 'ArrowLeft') return;
+  const tag = (e.target && e.target.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+  if(typeof isVideoMode === 'function' && isVideoMode()){
+    e.preventDefault();
+    if(typeof exitVideoGame === 'function') exitVideoGame();
+    return;
+  }
+  // Пауза имеет смысл только во время партии — вне игры стрелка не мешает.
+  if(state.inProgress){
+    e.preventDefault();
     pauseGame();
   }
 });

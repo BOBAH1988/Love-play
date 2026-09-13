@@ -664,6 +664,38 @@ function checkStats(html) {
   check('обработчик экрана есть', /function\s+renderStatsScreen\s*\(/.test(core), 'нет renderStatsScreen');
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. Глобальные обработчики
+// ─────────────────────────────────────────────────────────────────────────────
+function checkGlobalHandlers() {
+  group('Глобальные обработчики');
+  const core = read('games/core.js');
+
+  // Эти обработчики ловят события на уровне всего документа. Их случайное
+  // удаление не даёт ошибки в консоли — просто пропадает поведение.
+  // Реальный случай: правя клавишу «стрелка влево», ИИ удалил обработчик
+  // клика по заблокированным настройкам (коммит f410151) — игрок перестал
+  // получать подсказку, почему поле неактивно.
+  const REQUIRED = [
+    [/document\.addEventListener\('click'[\s\S]{0,400}?locked-settings/, 'подсказка при клике по заблокированным настройкам'],
+    [/document\.addEventListener\('keydown'[\s\S]{0,300}?ArrowLeft/, 'клавиша «влево» = назад/пауза'],
+    [/window\.addEventListener\('error'/, 'перехват ошибок'],
+    [/window\.addEventListener\('unhandledrejection'/, 'перехват отказов промисов'],
+  ];
+  const missing = REQUIRED.filter(([re]) => !re.test(core)).map(([, name]) => name);
+  check(
+    `ключевые глобальные обработчики на месте (${REQUIRED.length})`,
+    missing.length === 0,
+    `отсутствуют: ${missing.join(', ')}`
+  );
+
+  // Класс locked-settings должен быть и в коде (навешивается), и в CSS
+  // (стиль неактивности): если пропадёт одно, поведение станет непонятным.
+  check('класс locked-settings навешивается', /locked-settings/.test(core), 'нет classList.toggle("locked-settings")');
+  check('стиль locked-settings есть в CSS', /locked-settings/.test(read('styles/app.css')), 'нет правила .locked-settings');
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Отчёт
 // ─────────────────────────────────────────────────────────────────────────────
@@ -712,6 +744,7 @@ function main() {
   checkErrorGuard(html);
   checkSchemaVersioning();
   checkStats(html);
+  checkGlobalHandlers();
   process.exit(report());
 }
 
