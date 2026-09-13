@@ -1,0 +1,735 @@
+// fants-video.js — вынесено из games/core.js при разделении монолита.
+//
+// Зачем: core.js вырос до 6700 строк, и чтение его целиком для правки одной
+// функции стоило 100+ тыс. токенов контекста. Теперь каждая тема — отдельный
+// файл, и правка читает 700–1700 строк вместо 6700.
+//
+// Порядок подключения сохранён как в исходном core.js: функции объявляются
+// в глобальной области и вызывают друг друга по имени, поэтому файлы должны
+// грузиться после core.js и до init.js.
+
+/* ============ ВИДЕОРУЛЕТКА (видео из корневой папки проекта, см. cards_video.js) ============ */
+// Прямая потоковая загрузка видео с Яндекс.Диска не работает: сервер Яндекса
+// не разрешает браузеру читать видео с чужого домена (нет CORS-заголовков ни
+// у списка файлов, ни у самих видео) — это ограничение на стороне Яндекса,
+// обойти его без собственного сервера-прокси нельзя. Поэтому видео снова
+// берутся только локально, из корневой папки проекта.
+
+// Видео-заглушка на случай, если для уровня нет видео или файл не воспроизвёлся —
+// используем образец из cards_video.js (первую запись), а не пустую иконку.
+function getFallbackVideoCard(){
+  if(typeof VIDEO_CARDS !== 'undefined' && Array.isArray(VIDEO_CARDS) && VIDEO_CARDS.length > 0){
+    return VIDEO_CARDS[0];
+  }
+  return null;
+}
+// Когда в общем каталоге ("Давай попробуем") нет ни одного видео нужного
+// уровня, вместо пустой заглушки-иконки включаем демо-видео (demo.webm,
+// первая запись VIDEO_CARDS) — так "Видеорулетка" не выглядит сломанной.
+// announceEmpty=true показывает тост-подсказку "Добавьте видео" — только при
+// явном действии игрока (свайп/«Следующее»/«Горячее»), не при первом входе
+// в игру и не при автопереключении по окончании ролика, чтобы не спамить.
+function playFallbackVideoCard(level, announceEmpty){
+  const fallback = getFallbackVideoCard();
+  if(!fallback){ renderVideoPlaceholderCard(); return true; }
+  if(announceEmpty){
+    showToast('Своих видео пока нет — включили демо. Добавьте видео на странице «Давай попробуем»');
+  }
+  currentVideoCard = fallback;
+  saveState();
+  videoHistory.push(fallback);
+  videoHistoryPos = videoHistory.length - 1;
+  renderVideoCard(fallback, level);
+  return true;
+}
+// Заглушка: показывается, если видео нет
+// Заглушка: показывается, если для этого уровня в общем каталоге ("Давай
+// попробуем") ещё нет видео. Видеорулетка своей отдельной колоды-образца
+// больше не показывает (getFallbackVideoCard используется только при ошибке
+// воспроизведения конкретного файла, см. renderVideoCard) — так поведение
+// совпадает с "Давай попробуем", у которой то же самое пустое состояние.
+function renderVideoPlaceholderCard(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  fadeSwapCard((card)=>{
+    card.className = 'card card-empty';
+    card.style.borderTop = '';
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">Видео пока нет — добавьте их на странице «Давай попробуем» кнопкой «➕ Добавить видео»</div></div>`;
+  });
+}
+
+function videoCardId(c){
+  return c && (c.id || c.video);
+}
+
+// ===== Видео для "Видеорулетки" =====
+// У "Видеорулетки" больше нет своей кнопки "Добавить видео" — она использует
+// тот же общий каталог, что и "Давай попробуем" (getDavayCardsList() ниже, в
+// разделе давай-попробуем-видео). Здесь остаётся только доступ к её СТАРОМУ,
+// теперь архивному хранилищу IndexedDB (LovePlayVideoDB) — он нужен только
+// для одноразового переноса ранее добавленных видео в общий каталог (см.
+// migrateVideoDbIntoDavay ниже) и для "Сбросить прогресс".
+const VIDEO_DB_NAME = 'LovePlayVideoDB';
+const VIDEO_DB_STORE = 'videos';
+let videoDBPromise = null;
+
+function openVideoDB(){
+  if(videoDBPromise) return videoDBPromise;
+  videoDBPromise = new Promise((resolve, reject)=>{
+    if(!('indexedDB' in window)){ reject(new Error('IndexedDB не поддерживается')); return; }
+    const req = indexedDB.open(VIDEO_DB_NAME, 1);
+    req.onupgradeneeded = ()=>{
+      const db = req.result;
+      if(!db.objectStoreNames.contains(VIDEO_DB_STORE)){
+        db.createObjectStore(VIDEO_DB_STORE, {keyPath:'id', autoIncrement:true});
+      }
+    };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+  return videoDBPromise;
+}
+function loadAllVideoBlobs(){
+  return openVideoDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(VIDEO_DB_STORE, 'readonly');
+    const req = tx.objectStore(VIDEO_DB_STORE).getAll();
+    req.onsuccess = ()=> resolve(req.result || []);
+    req.onerror = ()=> reject(req.error);
+  }));
+}
+function clearAllVideoBlobs(){
+  return openVideoDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(VIDEO_DB_STORE, 'readwrite');
+    tx.objectStore(VIDEO_DB_STORE).clear();
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  })).catch(()=>{});
+}
+
+const VIDEO_MAX_LEVEL = 4;
+let videoLevel = 1;
+let currentVideoCard = null;
+let videoHistory = []; // для свайпов влево/вправо между уже показанными видео
+let videoHistoryPos = -1;
+let videoSoundOn = false;
+function updateVideoMuteBtn(){
+  const btn = document.getElementById('videoMuteBtn');
+  if(!btn) return;
+  btn.textContent = videoSoundOn ? '🔊' : '🔇';
+  btn.setAttribute('aria-label', videoSoundOn ? 'Выключить звук видео' : 'Включить звук видео');
+}
+function setVideoSoundOn(on){
+  videoSoundOn = on;
+  state.videoSoundOn = on;
+  saveState();
+  const video = document.getElementById('videoPlayer');
+  if(video) video.muted = !videoSoundOn;
+  updateVideoMuteBtn();
+}
+document.getElementById('videoMuteBtn').addEventListener('click', ()=>{
+  setVideoSoundOn(!videoSoundOn);
+});
+
+function updateVideoLoopBtn(){
+  const btn = document.getElementById('videoLoopBtn');
+  if(!btn) return;
+  btn.classList.toggle('active', !!state.videoAutoAdvance);
+  btn.setAttribute('aria-label', state.videoAutoAdvance
+    ? 'Выключить автопереключение на следующее видео'
+    : 'Включить автопереключение на следующее видео');
+}
+document.getElementById('videoLoopBtn').addEventListener('click', ()=>{
+  state.videoAutoAdvance = !state.videoAutoAdvance;
+  saveState();
+  updateVideoLoopBtn();
+  const video = document.getElementById('videoPlayer');
+  if(video) video.loop = !state.videoAutoAdvance;
+  showToast(state.videoAutoAdvance
+    ? 'Автопереключение включено 🔁'
+    : 'Видео будет повторяться само');
+});
+
+// Флаги "мы сейчас в полноэкранном режиме видео" — чтобы при переходе на
+// следующее/предыдущее видео (свайп или кнопка) снова включать полный экран
+// автоматически, а не только для одного ролика.
+let videoFullscreenActive = false; // обычный Fullscreen API (карточка целиком)
+let videoNativeFullscreenActive = false; // нативный полноэкранный режим iOS (только видео)
+const isIOSDevice = /iP(hone|ad|od)/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+document.addEventListener('fullscreenchange', ()=>{
+  videoFullscreenActive = !!document.fullscreenElement;
+  davayFullscreenActive = !!document.fullscreenElement;
+});
+document.addEventListener('webkitfullscreenchange', ()=>{
+  videoFullscreenActive = !!document.webkitFullscreenElement;
+  davayFullscreenActive = !!document.webkitFullscreenElement;
+});
+
+// Общий вход/выход из полноэкранного режима для видео в "Видеорулетке" и
+// "Давай попробуем" — используется и ручной кнопкой ⛶, и авто-переключением
+// при повороте экрана (см. handleOrientationFullscreen ниже).
+function getActiveGameVideoEl(){
+  return document.getElementById('videoPlayer') || document.getElementById('davayPlayer');
+}
+function isCardFullscreenActive(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement
+    || videoNativeFullscreenActive || davayNativeFullscreenActive);
+}
+function enterCardFullscreen(){
+  const videoEl = document.getElementById('videoPlayer');
+  const davayEl = document.getElementById('davayPlayer');
+  const video = videoEl || davayEl;
+  const cardEl = document.getElementById('card');
+  if(!video || !cardEl || isCardFullscreenActive()) return;
+  // На iPhone/iPad свайпы во время полного экрана работать не будут — это
+  // системный полноэкранный плеер видео, страница туда "не достаёт" жестами.
+  // На остальных устройствах разворачиваем всю карточку (не только видео),
+  // тогда свайпы продолжают работать и полный экран сохраняется при
+  // переключении на следующее/предыдущее видео.
+  if(isIOSDevice && video.webkitEnterFullscreen){
+    try{
+      video.webkitEnterFullscreen();
+      if(videoEl) videoNativeFullscreenActive = true;
+      if(davayEl) davayNativeFullscreenActive = true;
+      return;
+    } catch(err){ /* падаем ниже на стандартный способ */ }
+  }
+  try{
+    if(cardEl.requestFullscreen){
+      const result = cardEl.requestFullscreen();
+      if(result && typeof result.catch === 'function'){
+        result.catch(()=>{
+          if(cardEl.webkitRequestFullscreen) cardEl.webkitRequestFullscreen();
+        });
+      }
+      return;
+    }
+    if(cardEl.webkitRequestFullscreen){
+      cardEl.webkitRequestFullscreen();
+    }
+  } catch(err){ /* полный экран недоступен — просто остаёмся в обычном виде */ }
+}
+function exitCardFullscreen(){
+  try{
+    if(document.fullscreenElement && document.exitFullscreen){
+      document.exitFullscreen();
+    } else if(document.webkitFullscreenElement && document.webkitExitFullscreen){
+      document.webkitExitFullscreen();
+    }
+  } catch(err){}
+  const video = getActiveGameVideoEl();
+  if(isIOSDevice && video && video.webkitDisplayingFullscreen && video.webkitExitFullscreen){
+    try{ video.webkitExitFullscreen(); } catch(err){}
+  }
+}
+function toggleVideoFullscreen(){
+  if(isCardFullscreenActive()){
+    exitCardFullscreen();
+    return;
+  }
+  const video = document.getElementById('videoPlayer');
+  const cardEl = document.getElementById('card');
+  if(!video || !cardEl) return;
+  if(!(isIOSDevice && video.webkitEnterFullscreen) && !cardEl.requestFullscreen && !cardEl.webkitRequestFullscreen){
+    showToast('Полный экран не поддерживается на этом устройстве');
+    return;
+  }
+  enterCardFullscreen();
+}
+document.getElementById('videoFullscreenBtn').addEventListener('click', toggleVideoFullscreen);
+
+function updateVideoFavoritesBtn(){
+  const btn = document.getElementById('videoFavoritesBtn');
+  if(!btn) return;
+  btn.classList.toggle('active', !!state.videoFavoritesOnly);
+  btn.setAttribute('aria-label', state.videoFavoritesOnly ? 'Показывать все видео' : 'Только избранное');
+}
+document.getElementById('videoFavoritesBtn').addEventListener('click', ()=>{
+  if(!state.videoFavoritesOnly && (state.videoLiked||[]).length===0){
+    playErrorSound();
+    showToast('Сначала добавьте видео в избранное сердечком 🤍');
+    return;
+  }
+  state.videoFavoritesOnly = !state.videoFavoritesOnly;
+  saveState();
+  updateVideoFavoritesBtn();
+  showToast(state.videoFavoritesOnly ? 'Показываю только избранное ⭐' : 'Показываю все видео');
+  drawVideoCard(videoLevel || 1);
+});
+
+// Подгоняет ширину/aspect-ratio карточки под текущее видео и доступную
+// область (.card-area). Высота карточки всегда занимает всё доступное
+// место; ширину сужаем только если видео "уже" области (портретное) — для
+// широких видео ширина остаётся на весь экран, чтобы высота не уменьшилась.
+// Вызывается и при загрузке видео, и при повороте экрана (см. ниже), чтобы
+// уже открытое видео корректно перестраивалось под новую ориентацию.
+function fitCardVideoToArea(video, el){
+  if(!video || !el || !(video.videoWidth && video.videoHeight)) return;
+  const area = document.querySelector('.card-area');
+  const availW = area ? area.clientWidth : window.innerWidth;
+  const availH = area ? area.clientHeight : window.innerHeight;
+  const videoRatio = video.videoWidth / video.videoHeight;
+  const areaRatio = availW / (availH || 1);
+  if(videoRatio <= areaRatio){
+    el.style.width = 'auto';
+    el.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+  } else {
+    el.style.width = '100%';
+    el.style.aspectRatio = '';
+  }
+}
+// true, только если сейчас реально открыт игровой экран в режиме
+// "Видеорулетка" или "Давай попробуем" — на всех остальных страницах
+// (главное меню, Фанты, Предложи партнеру, новые мини-игры и т.д.)
+// поворот экрана ни на что не влияет.
+function isActiveVideoOrDavayMode(){
+  const gameEl = document.getElementById('game');
+  return !!(gameEl && gameEl.classList.contains('active')
+    && (gameEl.classList.contains('video-mode') || gameEl.classList.contains('davay-mode')));
+}
+// Принудительная вертикальная ориентация везде, кроме "Видеорулетки" и
+// "Давай попробуем". Раньше это делалось визуальным разворотом #app на 90°
+// через CSS transform — от него то и дело оставались белые полосы и
+// заметный глазу "щелчок" при повороте (см. комментарий у #rotateStub в
+// стилях). Вместо трансформации просто показываем заглушку с просьбой
+// повернуть телефон обратно поверх всего — никаких трансформаций и
+// пересчётов размеров, а значит и нечему давать сбой.
+function updateForcedPortraitLock(){
+  const html = document.documentElement;
+  const stub = document.getElementById('rotateStub');
+  let isLandscape = false;
+  try{ isLandscape = window.matchMedia('(orientation: landscape)').matches; }catch(e){}
+  // orientation:landscape срабатывает просто от широкого окна, а не только от
+  // реального поворота телефона — на десктопе обычное окно браузера почти
+  // всегда "landscape", и без этой проверки заглушка показывалась бы прямо
+  // при открытии в браузере на компьютере. Поэтому включаем её только на
+  // устройствах с сенсорным (неточным) вводом — там же, где вообще бывает
+  // физический поворот экрана.
+  let isTouchDevice = false;
+  try{ isTouchDevice = window.matchMedia('(pointer: coarse)').matches; }catch(e){}
+  const isActiveMedia = isActiveVideoOrDavayMode();
+  const shouldLock = isLandscape && isTouchDevice && !isActiveMedia;
+  // В "Видеорулетке"/"Давай попробуем" поворот на бок не блокируется — экран
+  // остаётся горизонтальным, чтобы видео заняло максимум места. Но обычная
+  // медиа-настройка #app (колонка максимум 480px по центру, для комфортного
+  // вида на компьютере) в этом случае тоже срабатывает от одной лишь ширины
+  // окна и сжимает приложение в узкую рамку прямо посреди широкого
+  // горизонтального экрана телефона. Отдельным классом снимаем это
+  // ограничение именно на время активного видео-режима в ландшафте.
+  html.classList.toggle('video-landscape-fill', isLandscape && isTouchDevice && isActiveMedia);
+  if(stub) stub.classList.toggle('show', shouldLock);
+}
+window.addEventListener('orientationchange', updateForcedPortraitLock);
+window.addEventListener('resize', updateForcedPortraitLock);
+if(window.visualViewport) window.visualViewport.addEventListener('resize', updateForcedPortraitLock);
+// #game — общий экран для Фантов/Видеорулетки/"Давай попробуем": входы и
+// выходы из видео-режимов всегда меняют его класс, поэтому достаточно
+// следить за атрибутом class именно этого экрана, чтобы блокировка
+// включалась/выключалась сразу при переходе между играми, а не только по
+// факту физического поворота.
+(function watchGameModeForPortraitLock(){
+  const gameEl = document.getElementById('game');
+  if(gameEl && window.MutationObserver){
+    new MutationObserver(updateForcedPortraitLock).observe(gameEl, {attributes:true, attributeFilter:['class']});
+  }
+  updateForcedPortraitLock();
+})();
+// При повороте телефона пересчитываем размер уже открытого видео в
+// "Видеорулетке"/"Давай попробуем" под новую ориентацию экрана.
+function refitCurrentCardVideo(){
+  if(!isActiveVideoOrDavayMode()) return;
+  const el = document.getElementById('card');
+  if(!el) return;
+  const video = document.getElementById('videoPlayer') || document.getElementById('davayPlayer');
+  if(video) fitCardVideoToArea(video, el);
+}
+// Поворот в горизонтальное положение — видео разворачивается на весь экран;
+// поворот обратно в вертикальное — полноэкранный режим снимается сам.
+function handleOrientationFullscreen(){
+  if(!isActiveVideoOrDavayMode()) return;
+  const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+  if(isLandscape){
+    enterCardFullscreen();
+  } else {
+    exitCardFullscreen();
+  }
+}
+window.addEventListener('orientationchange', ()=>{
+  setTimeout(()=>{
+    refitCurrentCardVideo();
+    handleOrientationFullscreen();
+  }, 250);
+});
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', refitCurrentCardVideo);
+} else {
+  window.addEventListener('resize', refitCurrentCardVideo);
+}
+
+function updateVideoLevelBtn(){
+  const btn = document.getElementById('videoLevelUpBtn');
+  if(!btn) return;
+  btn.disabled = videoLevel >= VIDEO_MAX_LEVEL;
+}
+function drawVideoCard(level, announceEmpty){
+  videoLevel = level;
+  updateVideoLevelBtn();
+  const hidden = state.videoHidden || [];
+  const liked = state.videoLiked || [];
+  // Видео берутся из общего каталога "Давай попробуем" — своей отдельной
+  // колоды у "Видеорулетки" больше нет.
+  let all = getDavayCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
+  if(state.videoFavoritesOnly){
+    all = all.filter(c=>liked.includes(videoCardId(c)));
+  }
+  if(all.length===0){
+    currentVideoCard = null;
+    if(state.videoFavoritesOnly){
+      showToast('В избранном пока нет видео');
+      state.videoFavoritesOnly = false;
+      saveState();
+      updateVideoFavoritesBtn();
+      all = getDavayCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
+      if(all.length===0){ return playFallbackVideoCard(level, announceEmpty); }
+    } else {
+      return playFallbackVideoCard(level, announceEmpty);
+    }
+  }
+  if(!state.videoUsed) state.videoUsed = {};
+  let used = state.videoUsed[level] || [];
+  let pool = all.filter(c=>!used.includes(videoCardId(c)));
+  if(pool.length===0){
+    pool = all;
+    used = [];
+    showToast('Видео этого уровня показаны заново 🔀');
+  }
+  const card = pool[Math.floor(Math.random()*pool.length)];
+  used.push(videoCardId(card));
+  state.videoUsed[level] = used;
+  currentVideoCard = card;
+  saveState();
+  // Новое видео всегда дописывается в конец истории (ничего не теряем,
+  // даже если до этого свайпали назад) — так свайп влево всегда может
+  // довести обратно до самого первого показанного видео.
+  videoHistory.push(card);
+  videoHistoryPos = videoHistory.length - 1;
+  renderVideoCard(card, level);
+  return false;
+}
+
+// Показать видео из истории (свайпы влево/вправо), не трогая "показанные"/избранное
+function renderVideoCardFromHistory(pos){
+  if(pos < 0 || pos >= videoHistory.length) return;
+  videoHistoryPos = pos;
+  currentVideoCard = videoHistory[pos];
+  renderVideoCard(currentVideoCard, videoLevel);
+}
+
+function videoSwipePrev(){
+  // Бесконечная прокрутка: если в истории раньше некуда — просто показываем
+  // новое случайное видео, а не упираемся в сообщение "это первое видео".
+  if(videoHistoryPos <= 0){
+    drawVideoCard(videoLevel, true);
+    return;
+  }
+  renderVideoCardFromHistory(videoHistoryPos - 1);
+}
+
+function videoSwipeNext(){
+  if(videoHistoryPos < videoHistory.length - 1){
+    renderVideoCardFromHistory(videoHistoryPos + 1);
+  } else {
+    drawVideoCard(videoLevel, true);
+  }
+}
+
+// Общая настройка <video> для "Видеорулетки" — вынесена отдельно от
+// renderVideoCard, чтобы можно было применить её и к УЖЕ существующему
+// элементу (reuse=true), а не только к только что вставленному через
+// innerHTML (reuse=false). См. причину в renderVideoCard ниже.
+function setupVideoPlayerElement(video, card, level, reuse){
+  video.muted = !videoSoundOn;
+  video.loop = !state.videoAutoAdvance;
+  if(reuse){
+    // Меняем src у уже существующего элемента вместо пересоздания — именно
+    // это позволяет iOS не закрывать нативный полноэкранный плеер.
+    video.src = card.video;
+    video.load();
+  }
+  // Атрибут autoplay сам по себе не всегда срабатывает для видео,
+  // вставленного динамически (особенно при быстрых свайпах подряд) —
+  // из-за этого видео иногда "зависало" на первом кадре и не играло, а
+  // проблема тянулась и на все следующие карточки. Запускаем воспроизведение
+  // явно и, если браузер отклонил первую попытку, пробуем ещё раз.
+  const attemptPlay = ()=>{
+    const p = video.play();
+    if(p && typeof p.catch === 'function'){
+      p.catch(()=>{ setTimeout(()=>{ video.play().catch(()=>{}); }, 150); });
+    }
+  };
+  attemptPlay();
+  const cardEl = document.getElementById('card');
+  // {once:true} — при reuse=true эти слушатели навешиваются заново на каждую
+  // смену видео на одном и том же элементе; без once они бы копились один
+  // поверх другого при каждом переключении.
+  video.addEventListener('loadedmetadata', ()=>{
+    // Высота карточки всегда занимает всё доступное место. Ширину сужаем
+    // под видео, только если оно "уже" доступной области (портретное) —
+    // тогда по бокам не остаётся пустого места. Если видео горизонтальное
+    // и шире экрана, ширину карточки не трогаем (остаётся на весь экран),
+    // чтобы высота не уменьшилась — такое видео просто обрежется по бокам.
+    fitCardVideoToArea(video, cardEl);
+    // iOS: если предыдущее видео смотрели в полном экране — открываем
+    // следующее тоже сразу в полном экране (обычный <video> без этого
+    // каждый раз сбрасывается в обычный режим). Вызывать это нужно именно
+    // после loadedmetadata — сразу после вставки нового <video> в DOM
+    // (readyState ещё 0) webkitEnterFullscreen молча не срабатывает, и
+    // видео при автопереключении/повторе показывалось уже не на весь экран.
+    if(videoNativeFullscreenActive && video.webkitEnterFullscreen && !video.webkitDisplayingFullscreen){
+      try{ video.webkitEnterFullscreen(); } catch(err){}
+    }
+  }, {once:true});
+  video.addEventListener('error', ()=>{
+    const fallback = getFallbackVideoCard();
+    // Если сломался не сам образец — показываем вместо него образец из
+    // cards_video.js. Если сломался и он тоже — тогда уже просто иконка,
+    // чтобы не зациклиться.
+    if(fallback && card.video !== fallback.video){
+      renderVideoCard(fallback, level);
+      return;
+    }
+    const media = document.getElementById('videoMedia');
+    if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+  }, {once:true});
+  video.addEventListener('ended', ()=>{
+    if(state.videoAutoAdvance) drawVideoCard(videoLevel);
+  }, {once:true});
+  if(!reuse){
+    video.addEventListener('webkitendfullscreen', ()=>{ videoNativeFullscreenActive = false; });
+  }
+}
+function renderVideoCard(card, level){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCard = null;
+  // Пока видео открыто в НАТИВНОМ полноэкранном режиме iOS
+  // (webkitEnterFullscreen), обычная пересборка карточки (fadeSwapCard)
+  // полностью уничтожает и создаёт заново <video> через innerHTML — а
+  // системный полноэкранный плеер iOS привязан именно к этому DOM-узлу.
+  // Когда узел исчезает, iOS принудительно и ЗАМЕТНО закрывает полный
+  // экран, и следующее видео открывалось уже не сразу в полном экране, а с
+  // видимым "миганием" обратно на карточку с кнопками управления. Пока мы
+  // в полном экране, вместо пересборки карточки просто меняем src у уже
+  // существующего <video> — iOS продолжает показывать тот же системный
+  // плеер без выхода из полного экрана, и видео идут одно за другим уже в
+  // развёрнутом виде.
+  const existingVideo = document.getElementById('videoPlayer');
+  if(videoNativeFullscreenActive && existingVideo){
+    setupVideoPlayerElement(existingVideo, card, level, true);
+    updateVideoMuteBtn();
+    updateVideoLoopBtn();
+    updateVideoFavoritesBtn();
+    updateFavoriteBtn();
+    return;
+  }
+  fadeSwapCard((el)=>{
+    el.className = 'card card-empty';
+    el.style.borderTop = '';
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-split-media" id="videoMedia">
+          <video src="${card.video}" id="videoPlayer" playsinline autoplay></video>
+        </div>
+      </div>
+    `;
+    const video = document.getElementById('videoPlayer');
+    if(video) setupVideoPlayerElement(video, card, level, false);
+    updateVideoMuteBtn();
+    updateVideoLoopBtn();
+    updateVideoFavoritesBtn();
+  });
+  updateFavoriteBtn();
+}
+
+async function goToVideoGame(){
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('kidsMemory');
+  abandonPausedSession('kidsTd');
+  abandonPausedSession('kidsC4');
+  abandonPausedSession('fanty');
+  abandonPausedSession('quiz');
+  abandonPausedSession('partyQuiz');
+  abandonPausedSession('kidsQuiz');
+  abandonPausedSession('soloBs');
+  abandonPausedSession('soloC4');
+  abandonPausedSession('shop');
+  abandonPausedSession('kidsSaper');
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
+  state.currentPlayer = pickStartingPlayer();
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.inProgress = true;
+  videoLevel = 1;
+  state.videoUsed = {};
+  state.videoHidden = [];
+  // Новая партия — всегда все видео, а не режим "только избранное" (иначе
+  // после захода в избранное через сердечко на davaySetup игра застревала
+  // бы в этом фильтре). Аналогично сделано для "Давай попробуем".
+  state.videoFavoritesOnly = false;
+  videoHistory = [];
+  videoHistoryPos = -1;
+  saveState();
+  document.querySelector('.controls').classList.remove('video-extra-open');
+  // В "Видеорулетке" кнопка "Выход" всегда на виду — переносим её в верхний
+  // ряд, после сердечка (в других режимах она остаётся в обычном месте).
+  document.querySelector('.row1').appendChild(document.getElementById('pauseBtn'));
+  // Запуск идёт с экрана настройки "Давай попробуем" — его тоже нужно скрыть,
+  // иначе "Видеорулетка" открывается поверх/вместе с меню настроек, а не как
+  // отдельная полноценная страница (как #setup у обычных игр).
+  document.getElementById('davaySetup').classList.remove('active');
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('game').classList.add('video-mode');
+  document.getElementById('doneBtn').textContent = 'Следующее';
+  document.getElementById('pauseBtn').textContent = 'Выход';
+  updateTurnUI();
+  updateLevelUI();
+  updateMuteBtn();
+  updateVideoFavoritesBtn();
+  requestWakeLock();
+  await ensureImportedDavayVideosLoaded();
+  drawVideoCard(videoLevel);
+}
+
+// Уровень, с которого нужно начать просмотр избранного видео из "Видеорулетки" —
+// первый уровень, где реально есть хоть одно понравившееся видео. Если просто
+// стартовать с уровня 1, drawVideoCard() при пустом уровне сам сбросит фильтр
+// "только избранное" и покажет случайное НЕ понравившееся видео — не то, что
+// ожидает пользователь, нажимая на кнопку с сердечком.
+function pickVideoFavoritesStartLevel(){
+  const liked = state.videoLiked || [];
+  const hidden = state.videoHidden || [];
+  for(let lvl=1; lvl<=VIDEO_MAX_LEVEL; lvl++){
+    const has = getDavayCardsList().some(c=>c.level===lvl && !hidden.includes(videoCardId(c)) && liked.includes(videoCardId(c)));
+    if(has) return lvl;
+  }
+  return 1;
+}
+// Быстрый переход в "Видеорулетку" сразу с фильтром "только избранное" — по
+// кнопке с сердечком рядом с "🎥 Видеорулетка" на странице настройки "Давай
+// попробуем". Хранится это избранное в state.videoLiked — отдельно от
+// избранного "Давай попробуем" (state.davayLiked), т.к. лайки ставятся по
+// каждой игре отдельно, хотя видео и берутся из одного каталога.
+async function goToVideoFavoritesView(){
+  abandonPausedSession('davay');
+  abandonPausedSession('td');
+  abandonPausedSession('bingo');
+  abandonPausedSession('krokodil');
+  abandonPausedSession('wishlist');
+  abandonPausedSession('znayu');
+  abandonPausedSession('timer');
+  abandonPausedSession('partyFants');
+  abandonPausedSession('partyTd');
+  abandonPausedSession('famZnayu');
+  abandonPausedSession('lucky');
+  abandonPausedSession('kidsMemory');
+  abandonPausedSession('kidsTd');
+  abandonPausedSession('kidsC4');
+  abandonPausedSession('fanty');
+  abandonPausedSession('quiz');
+  abandonPausedSession('partyQuiz');
+  abandonPausedSession('kidsQuiz');
+  abandonPausedSession('soloBs');
+  abandonPausedSession('soloC4');
+  abandonPausedSession('shop');
+  abandonPausedSession('kidsSaper');
+  const n1raw = document.getElementById('name1').value.trim();
+  const n2raw = document.getElementById('name2').value.trim();
+  state.name1 = n1raw || 'Парень';
+  state.name2 = n2raw || 'Девушка';
+  state.currentPlayer = pickStartingPlayer();
+  state.score1 = 0; state.score2 = 0;
+  state.autoMilestone = 0;
+  state.turnsPlayed = 0; state.turnsAtLastLevelUp = 0;
+  state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
+  state.completedCount = 0; state.skippedCount = 0;
+  state.inProgress = true;
+  await ensureImportedDavayVideosLoaded();
+  videoLevel = pickVideoFavoritesStartLevel();
+  state.videoUsed = {};
+  state.videoHidden = [];
+  state.videoFavoritesOnly = true;
+  videoHistory = [];
+  videoHistoryPos = -1;
+  saveState();
+  document.querySelector('.controls').classList.remove('video-extra-open');
+  document.querySelector('.row1').appendChild(document.getElementById('pauseBtn'));
+  document.getElementById('davaySetup').classList.remove('active');
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  document.getElementById('game').classList.add('video-mode');
+  document.getElementById('doneBtn').textContent = 'Следующее';
+  document.getElementById('pauseBtn').textContent = 'Выход';
+  updateTurnUI();
+  updateLevelUI();
+  updateMuteBtn();
+  updateVideoFavoritesBtn();
+  requestWakeLock();
+  drawVideoCard(videoLevel);
+}
+
+function exitVideoGame(){
+  state.inProgress = false;
+  // Снимаем «чужую» паузу. Без этого при выходе из видеорежима стрелкой «←»
+  // игрок попадал в меню паузы «Фантов»: видео — режим внутри базовой парной
+  // игры (#game), и её pausedMode оставался выставленным. Выход из
+  // видеорежима должен вести в меню «Игры для пар 18+», а не в паузу.
+  if(typeof abandonPausedSession === 'function') abandonPausedSession('fanty');
+  if(state.pausedMode) state.pausedMode = null;
+  saveState();
+  if(document.fullscreenElement) document.exitFullscreen();
+  videoFullscreenActive = false;
+  videoNativeFullscreenActive = false;
+  // Останавливаем видео полностью, иначе оно продолжает играть в фоне после выхода
+  const video = document.getElementById('videoPlayer');
+  if(video){
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  }
+  currentVideoCard = null;
+  // Сбрасываем подогнанные под видео размеры карточки, чтобы они не остались
+  // висеть в других режимах игры
+  document.getElementById('card').style.aspectRatio = '';
+  document.getElementById('card').style.width = '';
+  // Возвращаем кнопку "Пауза" на обычное место (конец второго ряда)
+  document.querySelector('.row2').appendChild(document.getElementById('pauseBtn'));
+  document.getElementById('game').classList.remove('video-mode');
+  document.getElementById('doneBtn').textContent = '💕 Готово';
+  document.getElementById('pauseBtn').textContent = 'Пауза';
+  returnToSetupUI();
+}
+
+function isVideoMode(){
+  const el = document.getElementById('game');
+  return !!(el && el.classList.contains('video-mode'));
+}
+

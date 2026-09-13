@@ -50,6 +50,20 @@ function check(name, ok, detail) {
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const exists = (rel) => fs.existsSync(path.join(ROOT, rel));
 
+/**
+ * Исходный код логики приложения: core.js вместе с частями, вынесенными при
+ * разделении монолита (fants-*.js). Проверки, которые ищут функцию по всему
+ * ядру, должны смотреть во все эти файлы, иначе после разделения они дают
+ * ложные срабатывания — функция просто лежит в другом файле.
+ */
+function readCore() {
+  const parts = ['games/core.js'];
+  for (const f of fs.readdirSync(path.join(ROOT, 'games'))) {
+    if (/^fants-.*\.js$/.test(f)) parts.push('games/' + f);
+  }
+  return parts.map(read).join('\n');
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Загрузка скриптов
 // ─────────────────────────────────────────────────────────────────────────────
@@ -593,7 +607,7 @@ function checkStyles(html) {
 // ─────────────────────────────────────────────────────────────────────────────
 function checkErrorGuard(html) {
   group('Защита от ошибок');
-  const core = read('games/core.js');
+  const core = readCore();
 
   // Приложение должно показывать понятный экран, а не «залипать» молча.
   const handlers = [
@@ -629,7 +643,7 @@ function checkErrorGuard(html) {
 // ─────────────────────────────────────────────────────────────────────────────
 function checkSchemaVersioning() {
   group('Версии сохранений');
-  const core = read('games/core.js');
+  const core = readCore();
 
   // Без версии схемы невозможно безопасно менять структуру state: у игроков
   // останутся сохранения старого формата, и они сломаются молча.
@@ -699,7 +713,7 @@ function checkStats(html) {
   check('данные вне state', !/\bstate\./.test(statsCode), 'модуль трогает state игрока');
 
   // Точки сбора: без них счётчик останется пустым.
-  const core = read('games/core.js');
+  const core = readCore();
   const init = read('games/init.js');
   check('старт партии учитывается', /AppStats\.gameStart/.test(core), 'goToGame не отмечает старт');
   check('завершение партии учитывается', /AppStats\.gameFinish/.test(core), 'finishGameBtn не отмечает завершение');
@@ -719,9 +733,9 @@ function checkStats(html) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 13. Глобальные обработчики
 // ─────────────────────────────────────────────────────────────────────────────
-function checkGlobalHandlers() {
+function checkGlobalHandlers(html) {
   group('Глобальные обработчики');
-  const core = read('games/core.js');
+  const core = readCore();
 
   // Эти обработчики ловят события на уровне всего документа. Их случайное
   // удаление не даёт ошибки в консоли — просто пропадает поведение.
@@ -770,6 +784,32 @@ function checkGlobalHandlers() {
   // символов делал проверку ложной.
   const hasElse = /\}else\s*\{|\}\s*else\s*\{/.test(fallback);
   const hasReset = /inProgress\s*=\s*false/.test(fallback);
+
+  // core.js разделён на модули. Проверяем, что все вынесенные части
+  // подключены: забытый скрипт в index.html даст ReferenceError в рантайме,
+  // причём только при входе в конкретную игру — это дорого искать.
+  const fantsParts = fs.readdirSync(path.join(ROOT, 'games')).filter((f) => /^fants-.*\.js$/.test(f));
+  const unwired = fantsParts.filter((f) => !html.includes(`games/${f}`));
+  check(
+    `части core.js подключены (${fantsParts.length})`,
+    unwired.length === 0,
+    `не подключены в index.html: ${unwired.join(', ')}`
+  );
+  // Порядок: части идут после core.js (он объявляет state/утилиты) и до
+  // game-registry.js (реестр опирается на функции паузы из этих файлов).
+  const order = [...html.matchAll(/<script src="(games\/[^"?]+)/g)].map((m) => m[1]);
+  const iCore = order.indexOf('games/core.js');
+  const iReg = order.indexOf('games/game-registry.js');
+  const badOrder = fantsParts.filter((f) => {
+    const i = order.indexOf('games/' + f);
+    return i < iCore || (iReg >= 0 && i > iReg);
+  });
+  check(
+    'части core.js идут после core.js и до реестра',
+    badOrder.length === 0,
+    `нарушен порядок: ${badOrder.join(', ')}`
+  );
+
   check(
     'fallback снимает inProgress для игр без паузы',
     hasElse && hasReset,
@@ -834,7 +874,7 @@ function main() {
   checkErrorGuard(html);
   checkSchemaVersioning();
   checkStats(html);
-  checkGlobalHandlers();
+  checkGlobalHandlers(html);
   process.exit(report());
 }
 
