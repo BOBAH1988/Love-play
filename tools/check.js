@@ -550,6 +550,41 @@ function checkStyles(html) {
     'при старте вызывается getRegistrations().unregister() — офлайн перестанет работать'
   );
 
+  // Название игры закреплено на одном уровне с FAB-кнопками «←» и «☰».
+  // Раньше стояло top:0 — в PWA на iPhone заголовок уходил под Dynamic
+  // Island (модуль камеры), на Android — под строку статуса.
+  const css = read('styles/app.css');
+  const labelRule = css.match(/\.game-level-label\{([\s\S]*?)\}/);
+  check('правило .game-level-label есть в CSS', !!labelRule, 'не найдено');
+  if (labelRule) {
+    const body = labelRule[1];
+    check(
+      'заголовок учитывает safe-area-inset-top',
+      /top:\s*calc\([^)]*env\(safe-area-inset-top/.test(body),
+      'top без env(safe-area-inset-top) — в PWA уедет под Dynamic Island'
+    );
+    check(
+      'заголовок не прижат к самому верху (top:0)',
+      !/top:\s*0\s*;/.test(body),
+      'top:0 — перекроется модулем камеры на iPhone'
+    );
+    // Боковые отступы должны быть не меньше, чем кнопка (12px) + её ширина
+    // (36px) + зазор, иначе текст налезет на «←» или «☰».
+    const padMatch = body.match(/padding:\s*0\s+(\d+)px/);
+    check(
+      'боковые отступы не дают тексту налезть на кнопки',
+      !!padMatch && Number(padMatch[1]) >= 50,
+      `padding ${padMatch ? padMatch[1] : '?'}px — нужно ≥50px (кнопка занимает 48px)`
+    );
+  }
+  // На desktop заголовок привязан к колонке #app (max-width 480px), иначе
+  // текст окажется по центру окна, а не по центру приложения.
+  check(
+    'заголовок выровнен по колонке #app на desktop',
+    /@media \(min-width:\s*640px\)\{[\s\S]{0,400}?\.game-level-label/.test(css),
+    'нет desktop-правила — текст сместится относительно кнопок'
+  );
+
 }
 
 

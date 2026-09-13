@@ -2361,17 +2361,52 @@
   /* ---- Правда или действие ---- */
   /* .td-score-row убран — теперь используется krokodil-score-row.two-player */
   .td-turn-label{text-align:center; font-size:14px; color:#e8c9dd;}
+  /* Закреплённое название игры на игровом экране.
+     ВАЖНО: заголовок стоит на ОДНОМ уровне с FAB-кнопками «←» и «☰», а не
+     выше них. Раньше было top:0 — в установленной PWA (iPhone) заголовок
+     уходил под Dynamic Island и перекрывался модулем камеры, а на Android
+     залезал под строку статуса. Кнопки позиционируются как
+     calc(12px + env(safe-area-inset-top)), высота 36px, поэтому заголовок
+     выравниваем по той же линии и не даём тексту залезать на кнопки
+     боковыми отступами. safe-area-inset-top при обычном открытии в браузере
+     равен 0 — там поведение не меняется. */
   .game-level-label{
-    position:fixed; top:0; left:0; right:0; z-index:1100;
+    position:fixed;
+    top:calc(12px + env(safe-area-inset-top, 0px));
+    left:0; right:0; z-index:1100;
+    height:36px; display:flex; align-items:center; justify-content:center;
     text-align:center; font-size:26px; font-weight:800;
-    color:#fff; padding:12px 16px 8px;
+    color:#fff; padding:0 56px;
     letter-spacing:.5px; line-height:1.2;
-    background:linear-gradient(180deg, rgba(43,15,46,.95) 0%, rgba(43,15,46,0) 100%);
     pointer-events:none;
+    /* Длинные названия («Ответы на вопросы») не переносим на вторую строку —
+       она вылезла бы за пределы фиксированной высоты и наехала на карточку.
+       Вместо этого ужимаем текст, чтобы он остался в одну строку. */
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
-  /* Экран с закреплённым ярлыком: сдвигаем первый блок (строка хода/счёта)
-     вниз, чтобы ярлык его не перекрывал. */
-  .screen:has(> .game-level-label):not(#game):not(#ideasGame):not(#znayuGame):not(#memesGame):not(#kidsMemesGame):not(#partyNeverGame):not(#twisterGame):not(#whatToPlayGame){ padding-top:56px; }
+  /* На узких экранах ужимаем название: при 26px длинные заголовки подходят
+     к границе доступной ширины между кнопками «←» и «☰». */
+  @media (max-width:400px){
+    .game-level-label{ font-size:21px; padding:0 52px; }
+  }
+  /* Desktop: #app — колонка max-width 480px по центру, а FAB-кнопки внутри
+     неё позиционируются как absolute от её краёв. Заголовок объявлен
+     position:fixed и без правки растянулся бы на всю ширину окна: текст
+     оказался бы по центру экрана, а не по центру приложения, и не совпал
+     бы с кнопками. Привязываем его к той же колонке. */
+  @media (min-width:640px){
+    .game-level-label{
+      position:absolute; top:12px;
+      left:50%; right:auto;
+      width:100%; max-width:480px;
+      transform:translateX(-50%);
+    }
+  }
+  /* Экран с закреплённым названием: сдвигаем контент ниже линии FAB-кнопок
+     и заголовка (12px отступ + 36px высота + 8px зазор) с учётом safe-area. */
+  .screen:has(> .game-level-label):not(#game):not(#ideasGame):not(#znayuGame):not(#memesGame):not(#kidsMemesGame):not(#partyNeverGame):not(#twisterGame):not(#whatToPlayGame){
+    padding-top:calc(56px + env(safe-area-inset-top, 0px));
+  }
   .card-rank-badge{
     display:block; background:var(--accent); color:#2b0f2e; flex-shrink:0;
     border-radius:12px; padding:4px 14px; font-size:19px; font-weight:900;
