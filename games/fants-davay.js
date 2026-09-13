@@ -213,9 +213,14 @@ function davayYandexPublicKey(){
 // условием кнопки, из-за чего загрузка не запускалась вовсе.
 async function fetchYandexJson(url){
   const token = (state.yandexOAuthToken || '').trim();
-  let resp = await fetch(url, token ? { headers: { Authorization: 'OAuth ' + token } } : undefined);
+  // referrerPolicy:'no-referrer' — у Яндекса антихотлинк: запрос с чужим
+  // доменом в Referer получает 403, без него — 200/206.
+  const base = { referrerPolicy: 'no-referrer' };
+  let resp = await fetch(url, token
+    ? Object.assign({ headers: { Authorization: 'OAuth ' + token } }, base)
+    : base);
   if(!resp.ok && token && (resp.status === 401 || resp.status === 403)){
-    resp = await fetch(url);
+    resp = await fetch(url, base);
   }
   if(!resp.ok) throw new Error('Яндекс Диск ответил ' + resp.status);
   return resp.json();
@@ -690,6 +695,9 @@ function davaySwipeNext(){
 // innerHTML, чтобы iOS не закрывала полный экран с видимым "миганием"
 // обратно на карточку с кнопками.
 function setupDavayPlayerElement(video, card, level, reuse){
+  // Антихотлинк Яндекса: запрос видео с чужим доменом в Referer получает 403,
+  // без Referer — 206. Ставим политику на самом элементе тоже.
+  try{ video.referrerPolicy = 'no-referrer'; }catch(err){}
   video.muted = !davaySoundOn;
   video.loop = !state.davayAutoAdvance;
     if(reuse){
@@ -704,38 +712,6 @@ function setupDavayPlayerElement(video, card, level, reuse){
   };
   attemptPlay();
   const cardEl = document.getElementById('card');
-  // ВРЕМЕННАЯ ДИАГНОСТИКА (убрать после отладки) — см. fants-video.js.
-  (function(){
-    const diag = function(tag){
-      try{
-        const el = video;
-        const media = document.getElementById('davayMedia');
-        const r = el ? el.getBoundingClientRect() : null;
-        const m = media ? media.getBoundingClientRect() : null;
-        let box = document.getElementById('vidDiagBox');
-        if(!box){
-          box = document.createElement('div');
-          box.id = 'vidDiagBox';
-          box.style.cssText = 'position:fixed;left:4px;right:4px;bottom:4px;z-index:99999;background:rgba(0,0,0,.88);color:#0f0;font:10px monospace;padding:6px;border-radius:6px;white-space:pre-wrap;line-height:1.35;pointer-events:none';
-          document.body.appendChild(box);
-        }
-        box.textContent = '[VID davay ' + tag + '] '
-          + 'video=' + (r ? Math.round(r.width)+'x'+Math.round(r.height) : 'нет') + ' '
-          + 'media=' + (m ? Math.round(m.width)+'x'+Math.round(m.height) : 'нет') + '\n'
-          + 'кадр=' + (el ? el.videoWidth+'x'+el.videoHeight : '-')
-          + ' ready=' + (el ? el.readyState : '-')
-          + ' paused=' + (el ? el.paused : '-')
-          + ' err=' + (el && el.error ? el.error.code : '0') + '\n'
-          + String(card && (card.url || card.video)).slice(0, 80);
-      }catch(e){}
-    };
-    if(video){
-      video.addEventListener('loadedmetadata', function(){ diag('loadedmetadata'); });
-      video.addEventListener('playing', function(){ diag('playing'); });
-      video.addEventListener('error', function(){ diag('ERROR'); });
-      setTimeout(function(){ diag('+3s'); }, 3000);
-    }
-  })();
   video.addEventListener('loadedmetadata', ()=>{
     fitCardVideoToArea(video, cardEl);
     // См. аналогичный комментарий в renderVideoCard — вызывать нужно
@@ -806,7 +782,7 @@ function renderDavayCard(card, level){
     el.innerHTML = `
       <div class="card-inner">
         <div class="card-split-media" id="davayMedia">
-                     <video src="${card.url || card.video}" id="davayPlayer" playsinline autoplay></video>
+                     <video src="${card.url || card.video}" id="davayPlayer" playsinline autoplay referrerpolicy="no-referrer"></video>
         </div>
       </div>
     `;
@@ -988,7 +964,7 @@ document.getElementById('yandexLinksImportBtn').addEventListener('click', async 
   let added = 0;
   for(const url of urls){
     try{
-      const resp = await fetch(url, { mode:'cors' });
+      const resp = await fetch(url, { mode:'cors', referrerPolicy:'no-referrer' });
       if(!resp.ok) continue;
       const blob = await resp.blob();
       const filename = url.split('/').pop().split('?')[0] || 'video.webm';
