@@ -3475,22 +3475,32 @@ async function downloadYandexDiskFile(fileInfo, level){
   return { name:fileInfo.name, level:level };
 }
 
-// Загрузить видео с Яндекс Диска: рекурсивный обход корня публичной папки,
-// видео делятся по 4 игровым уровням поровну (round-robin по алфавиту имён).
-// gameLevels — массив игровых уровней 1..4 для распределения.
+// ===== Загрузить видео с Яндекс Диска: рекурсивный обход корня публичной папки,
+// // видео делятся по 4 игровым уровням поровну (round-robin по алфавиту имён).
+// // gameLevels — массив игровых уровней 1..4 для распределения.
 async function loadYandexDiskLevel(level, path, gameLevels){
   if(yandexDiskLoading) return { added:0, level:level, error: 'Загрузка уже идёт' };
   yandexDiskLoading = true;
   try {
     const items = await fetchYandexDiskFiles(path || '/');
     const dirs = items.filter(i => i.type === 'dir');
-    let videoItems = items.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
-    // Рекурсия в подпапки (если появятся снова): собираем все видео.
-    for(const d of dirs){
-      const sub = await fetchYandexDiskFiles(d.path || ('/' + d.name)).catch(()=>[]);
-      const subVideos = sub.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
-      videoItems = videoItems.concat(subVideos);
+    // ВАЛИДАЦИЯ: показываем, что рекурсивный обход отключён
+    if (dirs.length > 0) {
+      console.log(`Внимание: в папке ${dirs.length} подпапок, но рекурсивный обход отключён — грузятся только файлы из корня.`);
     }
+    
+    let videoItems = items.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
+    
+    // РЕКУРСИВНЫЙ ОБХОД ОТКЛЮЧЁН: удаляем цикл по подпапкам
+    // if (dirs.length > 0) {
+    //   console.log(`Внимание: найдено ${dirs.length} подпапок, но рекурсивный обход отключён — грузятся только файлы из корня.`);
+    // }
+    // 
+    // for(const d of dirs){
+    //   const sub = await fetchYandexDiskFiles(d.path || ('/' + d.name)).catch(()=>[]);
+    //   const subVideos = sub.filter(i => i.type === 'file' && /\.(webm|mp4|mov|avi)$/i.test(i.name));
+    //   videoItems = videoItems.concat(subVideos);
+    // }
     
     if(videoItems.length === 0 && items.length === 0){
       yandexDiskLoading = false;
