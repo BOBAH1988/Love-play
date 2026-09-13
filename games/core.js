@@ -1978,15 +1978,16 @@ function updateSettingsLockUI(){
   });
 }
 // Клик по заблокированным во время паузы настройкам — подсказка вместо тишины
-document.addEventListener('click', (e)=>{
-  const lockedEl = e.target.closest('.locked-settings');
-  if(lockedEl){
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    showToast('Завершите игру, чтобы изменить настройки', 2000);
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'ArrowLeft'){
+    if(isVideoMode()){
+      e.preventDefault();
+      exitVideoGame();
+      return;
+    }
+    pauseGame();
   }
-}, true);
+});
 // Группа, к которой относится игра на паузе (для видимости списков игр и
 // выбора блока при возобновлении). Единый источник истины: сюда включены ВСЕ
 // pausedMode. Возвращает 'party' | 'kids' | 'solo' | 'business' | 'two' | null.
