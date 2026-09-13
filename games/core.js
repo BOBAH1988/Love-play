@@ -1997,6 +1997,26 @@ function isPlaceholderMode(){
 // «Выход» и стрелку «←» не туда. Теперь класс режима ставит ОДНА функция,
 // и она же гарантированно снимает два остальных.
 const GAME_MODE_CLASSES = ['video-mode','davay-mode','placeholder-mode'];
+// Карточка #card лежит в разметке общей для четырёх игр и при первой загрузке
+// страницы показывает нейтральное «Загрузка задания…» с иконкой игральной
+// карты 🃏. В играх с видео это неверно: игрок видит чужую иконку, пока
+// подтягивается каталог из IndexedDB (и вообще при каждом входе, потому что
+// разметка не перерисовывается между заходами). Поэтому при включении режима
+// сразу подставляем иконку и текст этой игры. У «Давай попробуем» и
+// «Видеорулетки» иконка одна — 🎬, как в меню, заголовке и реестре игр
+// (menuTitle), а не 🃏.
+const GAME_MODE_LOADING_CARD = {
+  'davay-mode': { icon: '🎬', text: 'Загрузка видео…' },
+  'video-mode': { icon: '🎬', text: 'Загрузка видео…' },
+};
+function paintGameModeLoadingCard(mode){
+  const info = GAME_MODE_LOADING_CARD[mode];
+  if(!info) return;
+  const icon = document.getElementById('cardLoadingIcon');
+  const text = document.getElementById('cardLoadingText');
+  if(icon) icon.textContent = info.icon;
+  if(text) text.textContent = info.text;
+}
 function setGameMode(mode){
   const el = document.getElementById('game');
   if(!el) return;
@@ -2004,6 +2024,7 @@ function setGameMode(mode){
     if(cls !== mode) el.classList.remove(cls);
   });
   if(mode) el.classList.add(mode);
+  paintGameModeLoadingCard(mode);
 }
 
 /* ============ ЕДИНЫЙ ВОЗВРАТ «ОТКУДА ПРИШЁЛ» ============

@@ -445,6 +445,32 @@ test('Сценарий: «Давай попробуем» показывает �
   MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
 });
 
+test('Сценарий: при входе в игру с видео карточка получает иконку игры, а не 🃏', () => {
+  // #card лежит в разметке общей для четырёх игр и до старта показывает
+  // нейтральное «Загрузка задания…» с игральной картой 🃏. Пока каталог видео
+  // читается из IndexedDB, игрок видел именно её — чужой символ. Режим игры
+  // ставит setGameMode(), он же обязан подменить иконку и текст.
+  const icon = getElById(stub, 'cardLoadingIcon');
+  const text = getElById(stub, 'cardLoadingText');
+  assert(icon && text, 'в разметке #card нет #cardLoadingIcon/#cardLoadingText');
+
+  global.setGameMode('davay-mode');
+  assert(icon.textContent === '🎬',
+    `в «Давай попробуем» ожидалась иконка игры 🎬, получено «${icon.textContent}»`);
+  assert(text.textContent === 'Загрузка видео…',
+    `ожидался текст «Загрузка видео…», получено «${text.textContent}»`);
+
+  global.setGameMode('video-mode');
+  assert(icon.textContent === '🎬',
+    `в «Видеорулетке» ожидалась иконка игры 🎬, получено «${icon.textContent}»`);
+
+  // Обычные «Фанты» — игра на карточках, у них свой символ и своя разметка.
+  global.setGameMode(null);
+  const card = getElById(stub, 'card');
+  assert(!card.classList.contains('davay-mode'), 'режим должен сниматься вместе с иконкой');
+  MODE_CLASSES.forEach((c) => getElById(stub, 'game').classList.remove(c));
+});
+
 test('Сценарий: уровни «Давай попробуем» — шесть штук с названиями', () => {
   // Уровни игры переехали из общего LEVELS в свой список DAVAY_LEVELS, а номер
   // уровня игрока стал совпадать с номером уровня видео.

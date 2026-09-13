@@ -1006,6 +1006,36 @@ function checkStyles(html) {
   // над карточкой с нулями. Имена игроков и шкала прогресса остаются.
   check('счёт скрыт в «Давай попробуем»', scoreHidden('davay-mode'),
     'строка «Парень: 0 / Девушка: 0» снова висит в «Давай попробуем»');
+  // Карточка-заглушка («нет видео уровня») должна стоять по центру карты.
+  // Раньше её выравнивание перебивало правило карточки видео:
+  // «#game.davay-mode .card .card-inner{align-items:stretch}» специфичнее
+  // «.card-empty .card-inner», поэтому иконка и текст прижимались к левому
+  // верхнему углу. Растяжение обязано остаться у карточки с плеером.
+  {
+    const stretchRule = css.search(
+      /#game\.(?:video|davay)-mode \.card:not\(\.card-empty\) \.card-inner/);
+    check('выравнивание карточки видео ограничено карточкой с плеером',
+      stretchRule >= 0,
+      'правило align-items:stretch бьёт по всем .card-inner подряд — заглушка не центрируется');
+    const empties = [...css.matchAll(/([^{}]*\.card-empty[^{}]*\.card-inner[^{}]*)\{([^}]*)\}/g)];
+    check('заглушка .card-empty выравнивается по центру',
+      empties.some((m) => /align-items:\s*center/.test(m[2]) && /justify-content:\s*center/.test(m[2])),
+      'нет правила с align-items:center для .card-empty .card-inner');
+  }
+  // Иконка заглушки «Давай попробуем» — символ игры (🎬, как в меню, заголовке
+  // и menuTitle), а не игральная карта 🃏, и вдвое крупнее обычной пустой
+  // карточки: 52px → 104px.
+  {
+    const src = read('games/fants-davay.js');
+    check('заглушка «Давай попробуем» использует иконку игры 🎬',
+      /card-inner"><div class="card-icon">🎬<\/div>/.test(src),
+      'в заглушке осталась/вернулась чужая иконка вместо 🎬');
+    const bigIcon = /#game\.davay-mode \.card-empty \.card-icon\{[^}]*font-size:\s*104px/.test(css);
+    const baseIcon = /\.card-empty \.card-icon\{[^}]*font-size:\s*52px/.test(css);
+    check('иконка заглушки «Давай попробуем» вдвое крупнее обычной',
+      bigIcon && baseIcon,
+      `крупная иконка: ${bigIcon}, базовая 52px: ${baseIcon} — ожидалось 104px против 52px`);
+  }
   // Плашки уровней в «Давай попробуем» ниже на 30% (56 → 39px): шесть
   // уровней прежнего размера выдавливали кнопки запуска за экран.
   check('плашки уровней «Давай попробуем» ниже общего размера',

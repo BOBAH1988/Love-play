@@ -1730,16 +1730,35 @@
      .card-inner{align-items:center} сжимал бы контейнер плеера по ширине —
      видео лежит position:absolute, «содержимого» у контейнера нет, поэтому
      ширина схлопывалась в 0 и был виден только чёрный фон. Возвращаем
-     stretch для режимов видео. */
-  #game.video-mode .card .card-inner,
-  #game.davay-mode .card .card-inner{
+     stretch для режимов видео.
+     ВАЖНО: растяжение нужно ТОЛЬКО карточке с плеером, но не заглушке
+     («Пока нет видео этого уровня…»): раньше правило стояло как
+     «#game.davay-mode .card .card-inner» и было специфичнее .card-empty
+     .card-inner ниже, поэтому заглушка прижималась к левому верхнему углу
+     вместо центра карты.
+     Различаем карточки по классу самой карточки, а не по вложенности:
+     renderDavayCard()/renderVideoCard() ставят ровно `card`, а заглушки —
+     `card card-empty`. Селектор-потомок здесь не подошёл бы: .card-inner —
+     РОДИТЕЛЬ .card-split-media, а не наоборот (проверено по разметке обеих
+     карточек), так что «.card-split-media > .card-inner» не совпал бы никогда
+     и молча потерял бы растяжение плеера. */
+  #game.video-mode .card:not(.card-empty) .card-inner,
+  #game.davay-mode .card:not(.card-empty) .card-inner{
     align-items:stretch;
     justify-content:flex-start;
   }
   .card-empty .card-inner{align-items:center; justify-content:center;}
   .card-empty .card-icon{font-size:52px;}
+  /* Заглушка «Давай попробуем» (нет видео уровня / избранное пусто): иконка —
+     символ самой игры (🎬, как в заголовке и меню), а не игральная карта 🃏,
+     и вдвое крупнее обычной пустой карточки (52 → 104px). */
+  #game.davay-mode .card-empty .card-icon{font-size:104px; margin-bottom:14px; line-height:1;}
   .card-empty .card-text{font-size:16px; color:#7a5a72; font-weight:600;}
-  /* Карточка "Передайте телефон" — крупнее и светлее, чем обычный плейсхолдер */
+  /* Карточка "Передайте телефон" — крупнее и светлее, чем обычный плейсхолдер.
+     Иконка у неё своя (💞), и увеличение вдвое к ней не относится: это карточка
+     передачи хода, а не пустое состояние игры, поэтому возвращаем ей обычный
+     размер .card-empty. Класс davay-handoff висит на #game, а не на #card. */
+  #game.davay-mode.davay-handoff #card .card-icon{font-size:52px; margin-bottom:10px;}
   .card-empty .card-text.davay-handoff-text{
     font-size:22px; color:var(--accent); font-weight:800;
   }
