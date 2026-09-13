@@ -1428,7 +1428,9 @@ document.getElementById('davayLevelUpBtn').addEventListener('click', ()=>{
   if(davayLevel < DAVAY_MAX_LEVEL){
     playLevelUpSound();
     drawDavayCard(davayLevel + 1);
-    showToast(`Уровень повышен: ${davayLevel}`);
+    // Уровни теперь называются («Ласки», «Ртом», «Экзотика»…), поэтому в тосте
+    // показываем и номер, и название — раньше было просто «Уровень повышен: 2».
+    showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`);
   } else {
     showToast('Это максимальный уровень 🔥');
   }

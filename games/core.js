@@ -159,7 +159,10 @@ let state = {
   davayFavYes:[], davayFavLater:[], davayFavNo:[],
   davayQuizActivePlayer:0, davayQuizQueue:[], davayQuizIndex:0, davayQuizAnswers:{},
   davayQuizP1Done:false, davayQuizP2Done:false, davayQuizPendingNext:0,
-  davayStarter:'random', davaySelectedLevel:3, davaySoundOn:false,
+  // Уровень «Давай попробуем» = номер уровня видео (см. DAVAY_LEVELS в
+  // fants-davay.js): 1..6. Раньше здесь лежал id общего LEVELS (3), из
+  // которого игра вычитала двойку; читается через davaySelectedLevel().
+  davayStarter:'random', davaySelectedLevel:1, davaySoundOn:false,
   // Ссылка на ПУБЛИЧНУЮ папку Яндекс Диска. Токена здесь нет и быть не должно:
   // он личный, репозиторий публичный. Если токен нужен, он задаётся отдельно в
   // файле yandex-token.js рядом с index.html — этот файл в .gitignore и в
@@ -1646,7 +1649,7 @@ function performFullReset(){
   state.davayQuizPendingNext = 0;
   document.getElementById('game').classList.remove('davay-handoff');
   state.davayStarter = 'random';
-  state.davaySelectedLevel = 3;
+  state.davaySelectedLevel = 1;
   if(state.pausedMode === 'davay'){
     state.pausedMode = null;
     state.inProgress = false;

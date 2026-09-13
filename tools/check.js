@@ -944,10 +944,113 @@ function checkStyles(html) {
       !/Откровенно 18\+/.test(quizLevels[1]),
       '«18+» вернулось в название уровня — игра и так помечена 18+');
   }
-  // Одноимённые уровни других игр не должны быть задеты этой правкой.
-  check('у «Давай попробуем» уровень «Откровенно 18+» сохранён',
-    /Откровенно 18\+/.test(read('index.html')),
-    'в «Давай попробуем» название уровня пропало — правка задела чужую игру');
+  // «Давай попробуем» перешла на свой список уровней (было 4, стало 6) и
+  // перестала брать их из общего LEVELS, которым живут «Фанты». Проверяем в
+  // источнике данных: раньше здесь искали строку «Откровенно 18+» по всему
+  // index.html — теперь её нет ни в разметке, ни в правилах игры.
+  const davaySrc = read('games/fants-davay.js');
+  const davayLevelsBlock = davaySrc.match(/const DAVAY_LEVELS = \[([\s\S]*?)\];/);
+  check('у «Давай попробуем» свой список уровней DAVAY_LEVELS',
+    !!davayLevelsBlock,
+    'нет DAVAY_LEVELS — уровни снова берутся из общего LEVELS');
+  if(davayLevelsBlock){
+    const names = [...davayLevelsBlock[1].matchAll(/name:'([^']+)'/g)].map((m) => m[1]);
+    const expected = ['Ласки', 'Близость', 'Ртом', 'Игрушки', 'Сзади', 'Экзотика'];
+    check('в «Давай попробуем» ровно 6 уровней', names.length === 6,
+      `найдено ${names.length}: ${names.join(', ')}`);
+    check('названия уровней «Давай попробуем» совпадают с задуманными',
+      expected.every((n, i) => names[i] === n),
+      `получено: ${names.join(', ')}`);
+    const ids = [...davayLevelsBlock[1].matchAll(/id:(\d+)/g)].map((m) => Number(m[1]));
+    check('уровни «Давай попробуем» пронумерованы 1..6',
+      ids.join(',') === '1,2,3,4,5,6',
+      `получено: ${ids.join(',')}`);
+  }
+  // Раньше уровень игрока хранился как id общего LEVELS (3..6), а уровень
+  // видео считался как «id - 2». Теперь это одно и то же число: если вернуть
+  // вычитание, игра будет искать видео не в том уровне.
+  check('уровень «Давай попробуем» больше не пересчитывается через «-2»',
+    !/davaySelectedLevel[^\n]*-\s*2/.test(davaySrc),
+    'вернулся пересчёт «state.davaySelectedLevel - 2» — уровни игрока и видео разойдутся');
+  check('потолок уровней «Давай попробуем» берётся из DAVAY_LEVELS',
+    /const DAVAY_MAX_LEVEL = DAVAY_LEVEL_MAX;/.test(davaySrc),
+    'DAVAY_MAX_LEVEL снова захардкожен — кнопка «Горячее» упрётся в старое число');
+  // Кнопки в модалках импорта — те же шесть уровней с теми же названиями.
+  const davayHtml = read('index.html');
+  const choices = [...davayHtml.matchAll(/davay-level-choice" data-level="(\d)">([^<]+)</g)]
+    .map((m) => m[2].trim());
+  check('в модалке импорта видео 6 кнопок уровней', choices.length === 6,
+    `найдено кнопок: ${choices.length}`);
+  check('кнопки уровней названы словами, а не цифрами',
+    choices.every((c) => /[А-Яа-я]/.test(c)),
+    `получено: ${choices.join(', ')}`);
+  // Номера кнопок в разметке обязаны совпадать с id уровней в DAVAY_LEVELS.
+  // Это защита от расхождения номеров: уровни были перенумерованы, и
+  // незамеченная кнопка со старым номером молча клала бы видео в чужой
+  // уровень (а при номере вне списка — вообще в несуществующий, и «Начнём»
+  // требовала бы добавить видео).
+  const choiceIds = [...davayHtml.matchAll(/davay-level-choice" data-level="(\d+)">([^<]+)</g)]
+    .map((m) => ({ id: Number(m[1]), label: m[2].trim() }));
+  const levelById = new Map();
+  (davayLevelsBlock ? davayLevelsBlock[1] : '').replace(
+    /\{id:(\d+),\s*name:'([^']+)'/g,
+    (_, id, lname) => { levelById.set(Number(id), lname); return ''; }
+  );
+  check('номера кнопок импорта совпадают с уровнями DAVAY_LEVELS',
+    choiceIds.length > 0 && choiceIds.every((c) => levelById.get(c.id) !== undefined),
+    `кнопки: ${choiceIds.map((c) => c.id).join(',')} | уровни: ${[...levelById.keys()].join(',')}`);
+  check('подписи кнопок импорта совпадают с названиями уровней',
+    choiceIds.every((c) => c.label.includes(levelById.get(c.id))),
+    choiceIds.map((c) => `${c.id}: «${c.label}» ≠ «${levelById.get(c.id)}»`).join('; '));
+  // Счёт «Парень: 0 / Девушка: 0» в «Давай попробуем» не ведётся — он висел
+  // над карточкой с нулями. Имена игроков и шкала прогресса остаются.
+  check('счёт скрыт в «Давай попробуем»', scoreHidden('davay-mode'),
+    'строка «Парень: 0 / Девушка: 0» снова висит в «Давай попробуем»');
+  // Плашки уровней в «Давай попробуем» ниже на 30% (56 → 39px): шесть
+  // уровней прежнего размера выдавливали кнопки запуска за экран.
+  check('плашки уровней «Давай попробуем» ниже общего размера',
+    /#davaySetup \.level-toggle\{[^}]*min-height:\s*39px/.test(css),
+    'нет правила #davaySetup .level-toggle — высота плашек не уменьшена');
+  check('размер плашек «Фантов» и «Предложи партнёру» не тронут',
+    !/^[^#\n]*\.level-toggle\{[^}]*min-height:\s*39px/m.test(css.replace(/#davaySetup[^{]*\{[^}]*\}/g, '')),
+    'высота уменьшена для всех .level-toggle — пострадали другие игры');
+  // Высоту плашки задаёт не только min-height: если содержимое выше, плашка
+  // растягивается по нему. При старых шрифтах она оставалась 42px — минус 26%
+  // вместо заявленных 30%. Считаем высоту по фактическим правилам CSS, чтобы
+  // «-30%» нельзя было потерять незаметно при правке шрифтов.
+  const declNum = (block, prop) => {
+    const m = new RegExp(prop + ':\\s*([\\d.]+)px').exec(block);
+    return m ? parseFloat(m[1]) : null;
+  };
+  const ruleFor = (selector) => {
+    const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s*');
+    const m = new RegExp(esc + '\\s*\\{([^}]*)\\}').exec(css);
+    return m ? m[1] : '';
+  };
+  const baseName = ruleFor('.level-toggle .lname');
+  const baseDesc = ruleFor('.level-toggle .ldesc');
+  const baseTile = ruleFor('.level-toggle');
+  const davayTile = ruleFor('#davaySetup .level-toggle');
+  const davayName = ruleFor('#davaySetup .level-toggle .lname');
+  const davayDesc = ruleFor('#davaySetup .level-toggle .ldesc');
+  // Высота = max(min-height, содержимое), где содержимое — две строки текста,
+  // отступ между ними и вертикальные padding. line-height в проекте задан не
+  // везде, для незаданного берём браузерные 1.2.
+  const tileHeight = (tile, lname, ldesc) => {
+    const padY = declNum(tile, 'padding') !== null ? declNum(tile, 'padding') : 8;
+    const minH = declNum(tile, 'min-height') || 0;
+    const nameH = declNum(lname, 'font-size') * (declNum(lname, 'line-height') || 1.2);
+    const descH = declNum(ldesc, 'font-size') * (declNum(ldesc, 'line-height') || 1.3);
+    const gap = declNum(ldesc, 'margin-top') || 0;
+    return Math.max(minH, nameH + gap + descH + padY * 2);
+  };
+  const baseH = tileHeight(baseTile, baseName, baseDesc);
+  const davayH = tileHeight(davayTile, davayName, davayDesc);
+  check('высота плашек «Давай попробуем» действительно на 30% меньше',
+    baseH > 0 && davayH <= baseH * 0.7 + 0.5,
+    `базовая ${baseH.toFixed(1)}px (padding ${declNum(baseTile, 'padding')}px), ` +
+    `в «Давай попробуем» ${davayH.toFixed(1)}px (padding ${declNum(davayTile, 'padding')}px) — ` +
+    `снижение ${(((baseH - davayH) / baseH) * 100).toFixed(1)}%, ожидалось ≥30%`);
   check('в «Рулетке желаний» уровень «Откровенно 18+» сохранён',
     /Откровенно 18\+/.test(read('games/wish-roulette.js')),
     'в «Рулетке желаний» название уровня пропало');

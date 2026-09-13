@@ -445,6 +445,65 @@ test('Сценарий: «Давай попробуем» показывает �
   MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
 });
 
+test('Сценарий: уровни «Давай попробуем» — шесть штук с названиями', () => {
+  // Уровни игры переехали из общего LEVELS в свой список DAVAY_LEVELS, а номер
+  // уровня игрока стал совпадать с номером уровня видео.
+  //
+  // ВАЖНО про доступ: global видит только var/function-объявления. `const`
+  // (DAVAY_LEVELS, DAVAY_MAX_LEVEL) и сам state живут в лексической области
+  // скрипта — их не достать ни через global, ни через window, только через
+  // eval в том же контексте (проверено: global.DAVAY_MAX_LEVEL === undefined,
+  // а eval('DAVAY_MAX_LEVEL') === 6).
+  const max = eval('typeof DAVAY_MAX_LEVEL === "number" ? DAVAY_MAX_LEVEL : 0');
+  const info = global.davayLevelInfo;
+  assert(typeof info === 'function', 'davayLevelInfo должна быть доступна');
+  assert(max === 6, `потолок уровней должен быть 6, получено ${max}`);
+  const names = [];
+  for (let id = 1; id <= max; id++) names.push(info(id).name);
+  assert(names.join(',') === 'Ласки,Близость,Ртом,Игрушки,Сзади,Экзотика',
+    `не те уровни: ${names.join(', ')}`);
+  // Функция обязана вернуть осмысленный уровень даже на мусоре: с чужим
+  // номером drawDavayCard() не найдёт видео и покажет пустой экран.
+  const fallback = info(999);
+  assert(fallback && fallback.id === 1,
+    `неизвестный уровень должен давать первый, получено ${JSON.stringify(fallback)}`);
+});
+
+test('Сценарий: уровни «Давай попробуем» 1..6 читаются без искажений', () => {
+  const selected = global.davaySelectedLevel;
+  const max = eval('DAVAY_MAX_LEVEL');
+  const savedPrev = eval('state.davaySelectedLevel');
+  // Значение сейва подставляем через eval: state объявлен через `const` в
+  // скрипте, снаружи доступен только так (см. комментарий в тесте выше).
+  const withSaved = (value) => {
+    global.__davaySavedProbe = value;
+    eval('state.davaySelectedLevel = __davaySavedProbe');
+    return selected();
+  };
+  try {
+    // Главное свойство: любой из шести уровней возвращается тем же самым.
+    // Здесь ловится соблазнительная «миграция старых сейвов» через «-2»:
+    // с ней плашка «Игрушки» (4) мгновенно превращалась в «Близость» (2), а
+    // уровни 4..6 становились недостижимыми — выбрать их было невозможно.
+    for (let id = 1; id <= max; id++) {
+      const got = withSaved(id);
+      assert(got === id, `уровень ${id} должен читаться как ${id}, получено ${got}`);
+    }
+    // Мусор и значения вне диапазона не должны ронять игру, но обязаны попасть
+    // в СУЩЕСТВУЮЩИЙ уровень: drawDavayCard() с чужим номером не нашёл бы видео
+    // и показал пустой экран.
+    [undefined, null, 'abc', 0, 99, -3].forEach((saved) => {
+      const got = withSaved(saved);
+      assert(got >= 1 && got <= max,
+        `значение ${JSON.stringify(saved)} дало несуществующий уровень ${got}`);
+    });
+  } finally {
+    global.__davaySavedProbe = savedPrev;
+    eval('state.davaySelectedLevel = __davaySavedProbe');
+    delete global.__davaySavedProbe;
+  }
+});
+
 test('Сценарий: «Предложи партнёру» по-прежнему показывает уровень, а не название игры', () => {
   // В placeholder-режиме .game-level-label занят уровнем («🔥 Сближение»),
   // его заполняет updateLevelUI — название игры сюда подставлять нельзя.

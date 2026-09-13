@@ -212,7 +212,7 @@ const YANDEX_DISK_DOWNLOAD_API = 'https://cloud-api.yandex.net/v1/disk/public/re
 const YANDEX_HREF_TTL = 30 * 60 * 1000;
 const YANDEX_VIDEO_RE = /\.(webm|mp4|m4v|mov|avi|mkv)$/i;
 // Игровой уровень, в который складываются видео с Диска. Пока размечен только
-// уровень 1 «Сближение» (папка «Level 1-1 …»); остальные уровни не трогаем.
+// уровень 1 «Ласки» (папка «Level 1-1 …»); остальные уровни не трогаем.
 const YANDEX_IMPORT_GAME_LEVEL = 1;
 let yandexDiskLoading = false;
 
@@ -354,7 +354,7 @@ function updateYandexRows(updates){
   })).catch(()=>{});
 }
 
-// Загрузить видео из публичной папки в игровой уровень (сейчас — 1 «Сближение»).
+// Загрузить видео из публичной папки в игровой уровень (сейчас — 1 «Ласки»).
 // Повторное нажатие кнопки дублей не создаёт: файлы с тем же именем не
 // добавляются второй раз, но их ссылки ВСЕГДА переписываются свежими.
 // Это принципиально: ссылка, сохранённая вчера, к сегодняшнему дню уже
@@ -652,7 +652,54 @@ document.querySelectorAll('.davay-level-choice').forEach(btn=>{
   });
 });
 
-const DAVAY_MAX_LEVEL = 4;
+// Свой набор из ШЕСТИ уровней (не трогает общий LEVELS, которым пользуются
+// "Фанты" и остальные игры): id 1..6, потому что имя игры на уровне нигде не
+// показывается, а номер нужен только для сортировки видео в базе.
+// ВАЖНО: номер уровня игрока (state.davaySelectedLevel) теперь СОВПАДАЕТ с
+// номером уровня видео (card.level). До этой правки в state лежал id из
+// общего LEVELS (3..6), а из него вычиталась двойка: state.davaySelectedLevel
+// - 2 = уровень видео. Из-за этого «1» означала «Сближение», а кнопки в
+// модалке импорта были подписаны цифрами без названий.
+const DAVAY_LEVELS = [
+  {id:1, name:'Ласки', desc:'Прикосновения и нежность', icon:'🤲'},
+  {id:2, name:'Близость', desc:'Ближе друг к другу', icon:'💞'},
+  {id:3, name:'Ртом', desc:'Оральные ласки', icon:'👄'},
+  {id:4, name:'Игрушки', desc:'Секс-игрушки в деле', icon:'🧸'},
+  {id:5, name:'Сзади', desc:'Позы со спины', icon:'🔄'},
+  {id:6, name:'Экзотика', desc:'Необычные сценарии', icon:'💫'},
+];
+const DAVAY_LEVEL_IDS = DAVAY_LEVELS.map(l=>l.id);
+const DAVAY_LEVEL_MIN = DAVAY_LEVEL_IDS[0];
+const DAVAY_LEVEL_MAX = DAVAY_LEVEL_IDS[DAVAY_LEVEL_IDS.length - 1];
+// Верхний игровой уровень «Давай попробуем» — из этого же списка. Раньше здесь
+// стояла константа 4: уровни брались из общего LEVELS, и добавление шестого
+// уровня в одном месте не поднимало потолок в другом — кнопка «Горячее»
+// упиралась в прежний максимум.
+const DAVAY_MAX_LEVEL = DAVAY_LEVEL_MAX;
+function davayLevelInfo(id){
+  return DAVAY_LEVELS.find(l=>l.id === id) || DAVAY_LEVELS[0];
+}
+// Привести номер уровня к существующему 1..6.
+//
+// Без этого drawDavayCard() с чужим номером не находит видео и показывает
+// пустой экран «нет видео» на ровном месте.
+//
+// ВАЖНО, почему здесь нет пересчёта старых сейвов. Раньше уровень игрока
+// хранился как id общего LEVELS (3..6), и соблазн перевести их «-2» велик —
+// но отличить старый сейв от нового по этому полю НЕЛЬЗЯ: оба хранят просто
+// число, и «4» одинаково означает «Разогрев» (старый формат) и «Игрушки»
+// (новый). Любой пересчёт ломает одну из версий: с «-2» недостижимыми
+// становились уровни 4..6 — плашка «Игрушки» мгновенно превращалась в
+// «Близость», и выбрать её было невозможно.
+//
+// Поэтому выбран такой компромисс: значение читается как есть, а последствие
+// для старого сейва мягкое — у игрока, выбравшего «Разогрев» (4), откроется
+// «Игрушки». Видео при этом не теряются: они лежат по уровням, а не по
+// названиям.
+function normalizeDavayLevel(v){
+  const n = parseInt(v, 10);
+  return (isFinite(n) && n >= DAVAY_LEVEL_MIN && n <= DAVAY_LEVEL_MAX) ? n : DAVAY_LEVEL_MIN;
+}
 let davayLevel = 1;
 let currentDavayCard = null;
 let davayHistory = []; // для свайпов влево/вправо между уже показанными видео
@@ -932,18 +979,23 @@ function renderDavayCard(card, level){
   updateFavoriteBtn();
 }
 
-// ===== Экран настройки "Давай попробуем" (Первым начинает + Уровни заданий) =====
-// LEVELS id 3..6 ("Сближение","Разогрев","Откровенно 18+","Фантазии") — эти же
-// уровни используются для сортировки добавленных видео (davayLevel = id - 2).
-const DAVAY_SETUP_LEVEL_IDS = [3,4,5,6];
+function davaySelectedLevel(){
+  return normalizeDavayLevel(state.davaySelectedLevel);
+}
+function setDavaySelectedLevel(level){
+  const n = normalizeDavayLevel(level);
+  state.davaySelectedLevel = n;
+  return n;
+}
 
 function renderDavaySetupLevels(){
   const wrap = document.getElementById('davaySetupLevels');
   if(!wrap) return;
   wrap.innerHTML = '';
-  LEVELS.filter(l=>DAVAY_SETUP_LEVEL_IDS.includes(l.id)).forEach(l=>{
+  const selected = davaySelectedLevel();
+  DAVAY_LEVELS.forEach(l=>{
     const div = document.createElement('div');
-    div.className = 'level-toggle' + (state.davaySelectedLevel === l.id ? ' on' : '');
+    div.className = 'level-toggle' + (selected === l.id ? ' on' : '');
     div.dataset.id = l.id;
     div.innerHTML = `
       <div class="lname">${l.icon} ${l.name}</div>
@@ -951,7 +1003,7 @@ function renderDavaySetupLevels(){
       <div class="level-check"></div>
     `;
     div.addEventListener('click', ()=>{
-      state.davaySelectedLevel = l.id;
+      setDavaySelectedLevel(l.id);
       saveState();
       renderDavaySetupLevels();
     });
@@ -1019,16 +1071,16 @@ document.getElementById('davaySetupImportBtn').addEventListener('click', ()=>{
 });
 document.getElementById('davaySetupYandexBtn').addEventListener('click', async ()=>{
   // Кнопка «☁️ Яндекс Диск»: тянем видео из публичной папки (ссылка из
-  // «⚙️ Настроек») в игровой уровень 1 «Сближение». Другие уровни пока не
+  // «⚙️ Настроек») в игровой уровень 1 «Ласки». Другие уровни пока не
   // рассматриваем — весь импорт идёт в YANDEX_IMPORT_GAME_LEVEL.
   if(!davayYandexPublicKey()){
     showToast('❌ Ссылка на папку Яндекс Диска не задана');
     return;
   }
   const level = YANDEX_IMPORT_GAME_LEVEL;
-  const gameLevelId = level + 2;               // 1 → 🔥 Сближение (LEVELS id 3)
-  const levelName = (typeof LEVELS !== 'undefined' && LEVELS.find(l=>l.id === gameLevelId))
-    ? LEVELS.find(l=>l.id === gameLevelId).name : 'Сближение';
+  // Уровень игрока и уровень видео теперь одно и то же число (см. DAVAY_LEVELS),
+  // поэтому пересчёта «id - 2» здесь больше нет.
+  const levelName = davayLevelInfo(level).name;
   showToast('☁️ Загружаем список видео…');
   const result = await importYandexVideosToLevel(level);
   if(result.error && !result.added){
@@ -1036,13 +1088,13 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
     return;
   }
   // Уровень переключаем ВСЕГДА, а не только когда появились новые видео.
-  // Видео с Диска лежат в уровне «Сближение», и если игрок до этого выбрал
+  // Видео с Диска лежат в уровне «Ласки», и если игрок до этого выбрал
   // другой уровень, игра искала бы видео не там: импорт отчитывался об
   // успехе, а в игре был пустой экран. При повторном нажатии (added === 0,
   // ссылки лишь обновляются) прежний код уровень не трогал — отсюда
   // «видео добавлены, но ничего нет».
-  if(state.davaySelectedLevel !== gameLevelId){
-    state.davaySelectedLevel = gameLevelId;
+  if(davaySelectedLevel() !== level){
+    setDavaySelectedLevel(level);
     saveState();
     renderDavaySetupLevels();
   }
@@ -1089,7 +1141,7 @@ document.getElementById('yandexLinksImportBtn').addEventListener('click', async 
 });
 document.getElementById('davaySetupStartBtn').addEventListener('click', async ()=>{
   await ensureImportedDavayVideosLoaded();
-  const level = (state.davaySelectedLevel || 3) - 2;
+  const level = davaySelectedLevel();
   const hasVideos = getDavayCardsList().some(c=>c.level===level);
   if(!hasVideos){
     playErrorSound();
@@ -1227,7 +1279,7 @@ function goToDavayFavoritesView(){
   abandonPausedSession('shop');
   state.pausedMode = null;
   state.inProgress = true;
-  davayLevel = (state.davaySelectedLevel || 3) - 2;
+  davayLevel = davaySelectedLevel();
   davayHistory = [];
   davayHistoryPos = -1;
   saveState();
@@ -1267,7 +1319,7 @@ async function goToDavayGame(){
   state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = true;
-  davayLevel = (state.davaySelectedLevel || 3) - 2;
+  davayLevel = davaySelectedLevel();
   state.davayUsed = {};
   state.davayHidden = [];
   davayHistory = [];

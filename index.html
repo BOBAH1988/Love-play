@@ -81,7 +81,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260921s">
+<link rel="stylesheet" href="styles/app.css?v=20260921t">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -89,7 +89,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-21 · v238';
+  window.APP_BUILD = '2026-09-21 · v239';
 </script>
 </head>
 <body>
@@ -735,12 +735,12 @@
       <div class="field" style="margin-top:10px;">
         <label>Уровень</label>
         <select id="yandexLinksLevelSelect" style="width:100%; background:rgba(43,15,46,.06); color:#2b0f2e; border:1px solid rgba(43,15,46,.2); border-radius:8px; padding:8px;">
-          <option value="1">Уровень 1 — Ласки разогрев</option>
-          <option value="2">Уровень 2</option>
-          <option value="3">Уровень 3</option>
-          <option value="4">Уровень 4</option>
-          <option value="5">Уровень 5</option>
-          <option value="6">Уровень 6</option>
+          <option value="1">Уровень 1 — 🤲 Ласки</option>
+          <option value="2">Уровень 2 — 💞 Близость</option>
+          <option value="3">Уровень 3 — 👄 Ртом</option>
+          <option value="4">Уровень 4 — 🧸 Игрушки</option>
+          <option value="5">Уровень 5 — 🔄 Сзади</option>
+          <option value="6">Уровень 6 — 💫 Экзотика</option>
         </select>
       </div>
       <button type="button" class="btn btn-primary" id="yandexLinksImportBtn" style="margin-top:14px;">⬇️ Загрузить видео</button>
@@ -3536,9 +3536,9 @@
       <div class="modal-title">🎬 Правила игры «Давай попробуем»</div>
       <div class="intro-text">Игра проверяет, насколько ваши желания совпадают — каждый отвечает честно и наедине с экраном, а видит результат только то, что понравилось обоим.</div>
       <ol class="modal-rules">
-        <li>На странице настройки выберите, кто начинает первым — вручную или пусть решит случай, и уровень заданий: от 🔥 «Сближение» до 💫 «Фантазии».</li>
+        <li>На странице настройки выберите, кто начинает первым — вручную или пусть решит случай, и уровень заданий: 🤲 «Ласки», 💞 «Близость», 👄 «Ртом», 🧸 «Игрушки», 🔄 «Сзади» или 💫 «Экзотика».</li>
         <li>Если видео этого уровня ещё нет, нажмите «➕ Добавить видео» и загрузите ролики со своего телефона — они сохранятся именно в выбранный уровень.</li>
-        <li>Второй способ — «☁️ Яндекс Диск»: ролики берутся из публичной папки на Яндекс Диске и добавляются в уровень 🔥 «Сближение». Файлы не скачиваются в память телефона — приложение хранит ссылки и само обновляет их, когда Яндекс их переподписывает. Повторное нажатие кнопки копий не создаёт; ролики в формате .avi/.mkv пропускаются — браузер их не проигрывает.</li>
+        <li>Второй способ — «☁️ Яндекс Диск»: ролики берутся из публичной папки на Яндекс Диске и добавляются в уровень 🤲 «Ласки». Файлы не скачиваются в память телефона — приложение хранит ссылки и само обновляет их, когда Яндекс их переподписывает. Повторное нажатие кнопки копий не создаёт; ролики в формате .avi/.mkv пропускаются — браузер их не проигрывает.</li>
         <li>Кнопка «🗑️ Сбросить весь прогресс» удаляет и все добавленные видео (и с телефона, и с Яндекс Диска) — после неё каталог начинается с нуля.</li>
         <li>Нажмите «Начнём» — если на выбранном уровне ещё нет ни одного видео, игра попросит сначала их добавить.</li>
         <li>Первый игрок отвечает на 10 видео: «Да», «Не сейчас» или «Нет». Шкала под именами показывает, сколько уже пройдено.</li>
@@ -4110,10 +4110,12 @@
       <div class="modal-title">Уровень для новых видео</div>
       <div class="intro-text" id="davayLevelModalCount" style="text-align:center; margin-bottom:14px;"></div>
       <div class="video-level-grid">
-        <button type="button" class="btn btn-secondary davay-level-choice" data-level="1">🔥 Сближение</button>
-        <button type="button" class="btn btn-secondary davay-level-choice" data-level="2">💋 Разогрев</button>
-        <button type="button" class="btn btn-secondary davay-level-choice" data-level="3">🌶️ Откровенно 18+</button>
-        <button type="button" class="btn btn-secondary davay-level-choice" data-level="4">💫 Фантазии</button>
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="1">🤲 Ласки</button>
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="2">💞 Близость</button>
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="3">👄 Ртом</button>
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="4">🧸 Игрушки</button>
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="5">🔄 Сзади</button>
+        <button type="button" class="btn btn-secondary davay-level-choice" data-level="6">💫 Экзотика</button>
       </div>
       <button class="btn btn-secondary" id="cancelDavayLevelBtn" style="margin-top:12px;">Отмена</button>
     </div>
@@ -4158,7 +4160,7 @@
 <script src="cards/cards_kids_saper.js?v=20260829k"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260829g"></script>
-<script src="games/core.js?v=20260921s"></script>
+<script src="games/core.js?v=20260921t"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -4168,8 +4170,8 @@
      как публичную. Скрипт необязательный — ошибку загрузки глушим, иначе
      отсутствие файла ломало бы загрузку страницы у других людей. -->
 <script src="yandex-token.js" onerror="void 0"></script>
-<script src="games/fants-davay.js?v=20260921s"></script>
-<script src="games/fants-timer.js?v=20260921j"></script>
+<script src="games/fants-davay.js?v=20260921t"></script>
+<script src="games/fants-timer.js?v=20260921t"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
