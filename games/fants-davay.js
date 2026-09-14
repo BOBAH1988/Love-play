@@ -195,13 +195,22 @@ migrateVideoDbIntoDavay();
 // браузер, доступно посетителю, а личный OAuth-токен открывает доступ ко всему
 // диску, а не только к этой папке. Закрытая папка потребовала бы бэкенда.
 //
-// Сами файлы не скачиваются — в папке ~170 роликов общим весом около 0,5 ГБ,
-// столько в IndexedDB не поместится. Вместо этого сохраняем прямую ссылку на
-// файл (`file` из ответа API) и путь внутри папки. Путь храним, чтобы ссылку
-// можно было обновить: Яндекс подписывает её, и через какое-то время она
-// перестаёт открываться. Один запрос списка даёт свежие ссылки сразу на все
-// файлы, поэтому обновление стоит одного запроса на всю папку.
-const YANDEX_DISK_PUBLIC_KEY = 'https://disk.yandex.ru/d/fv1y_t0ZQ3YASg';
+// Сами файлы не скачиваются — в папках уровней ~1600 роликов общим весом
+// около 5 ГБ, столько в IndexedDB не поместится. Вместо этого сохраняем
+// прямую ссылку на файл (`file` из ответа API) и путь внутри папки. Путь
+// храним, чтобы ссылку можно было обновить: Яндекс подписывает её, и через
+// какое-то время она перестаёт открываться. Один запрос списка даёт свежие
+// ссылки сразу на все файлы папки.
+//
+// Структура публичной папки («Видео для игры»): внутри только папки уровней
+// «Level N-M <описание>» — например «Level 1-1 Ласки разогрев». Первое число
+// (N) — номер игрового уровня 1..6, второе (M) — подуровень, который пока не
+// разделяем. Файлы в корне и папки не по формату игнорируются.
+const YANDEX_DISK_PUBLIC_KEY = 'https://disk.yandex.ru/d/uv6GUxruxjpkzQ';
+// Прежняя ссылка на папку: она лежала в state.yandexPublicKey у игроков,
+// которые нажимали «Обновить видеофайлы» раньше. Старая папка больше не
+// используется — подменяем сохранённый ключ на новый (см. davayYandexPublicKey).
+const YANDEX_DISK_PUBLIC_KEY_OLD = 'https://disk.yandex.ru/d/fv1y_t0ZQ3YASg';
 const YANDEX_DISK_API_BASE = 'https://cloud-api.yandex.net/v1/disk/public/resources';
 const YANDEX_DISK_DOWNLOAD_API = 'https://cloud-api.yandex.net/v1/disk/public/resources/download';
 // Ссылки на файлы Яндекс Диска переподписываются на стороне Яндекса, причём
@@ -211,13 +220,24 @@ const YANDEX_DISK_DOWNLOAD_API = 'https://cloud-api.yandex.net/v1/disk/public/re
 // ссылку не старше 30 минут; перед показом ролика обновляем принудительно.
 const YANDEX_HREF_TTL = 30 * 60 * 1000;
 const YANDEX_VIDEO_RE = /\.(webm|mp4|m4v|mov|avi|mkv)$/i;
-// Игровой уровень, в который складываются видео с Диска. Пока размечен только
-// уровень 1 «Ласки» (папка «Level 1-1 …»); остальные уровни не трогаем.
-const YANDEX_IMPORT_GAME_LEVEL = 1;
+// Имя папки уровня на Диске: «Level 1-1 Ласки разогрев». Первое число —
+// игровой уровень 1..6, подуровень «-1» пока не используем (см.
+// yandexLevelFromFolderName).
+const YANDEX_LEVEL_FOLDER_RE = /^Level\s+(\d+)/i;
 let yandexDiskLoading = false;
 
 function davayYandexPublicKey(){
-  return (state.yandexPublicKey || YANDEX_DISK_PUBLIC_KEY || '').trim();
+  const stored = String(state.yandexPublicKey || '').trim();
+  const key = (stored && stored !== YANDEX_DISK_PUBLIC_KEY_OLD)
+    ? stored : YANDEX_DISK_PUBLIC_KEY;
+  // Старый ключ из прежней папки подменяем молча: он лежал в state с прошлых
+  // нажатий кнопки, папка по нему больше не используется. Вместе с ключом
+  // «поедут» и ссылки — их обновит синхронизация по новым путям.
+  if(stored !== key){
+    state.yandexPublicKey = key;
+    saveState();
+  }
+  return key;
 }
 
 // Запрос к API Диска. Читаем ТОЛЬКО публичную папку по ссылке: этого
@@ -248,6 +268,44 @@ async function fetchYandexDiskHref(path){
   const data = await fetchYandexJson(url);
   if(!data || !data.href) throw new Error('Яндекс не отдал ссылку на файл');
   return data.href;
+}
+
+// Номер игрового уровня по имени папки на Диске: «Level 1-1 Ласки разогрев»
+// → 1, «Level 6-2 На троих» → 6. Папка не по формату — 0 (игнорируем).
+function yandexLevelFromFolderName(name){
+  const m = YANDEX_LEVEL_FOLDER_RE.exec(String(name || '').trim());
+  if(!m) return 0;
+  const n = parseInt(m[1], 10);
+  return (n >= DAVAY_LEVEL_MIN && n <= DAVAY_LEVEL_MAX) ? n : 0;
+}
+
+// Папки уровней в корне публичной папки: [{level, path, name}]. Файлы в корне
+// и папки не по формату игнорируются — смотрим только «Level N-M …».
+async function fetchYandexLevelFolders(){
+  const items = await fetchYandexDiskFiles('/');
+  const folders = [];
+  items.forEach(i=>{
+    if(i.type !== 'dir') return;
+    const level = yandexLevelFromFolderName(i.name);
+    if(level) folders.push({ level: level, path: i.path, name: i.name });
+  });
+  folders.sort((a,b)=> String(a.path).localeCompare(String(b.path)));
+  return folders;
+}
+
+// Все видеофайлы из папок уровней одним плоским списком — для обновления
+// ссылок (refreshYandexLinks и восстановление отдельного ролика). Публичный
+// API не умеет рекурсивный список, поэтому запрос идёт по каждой папке;
+// папок немного (19), и пускать их параллельно быстрее, чем последовательно.
+async function fetchYandexLevelFiles(){
+  const folders = await fetchYandexLevelFolders();
+  const out = [];
+  await Promise.all(folders.map(folder =>
+    fetchYandexDiskFiles(folder.path)
+      .then(items => { items.forEach(i => { if(i.type === 'file' && i.file) out.push(i); }); })
+      .catch(()=>{})
+  ));
+  return out;
 }
 
 // Форматы, которые <video> в мобильных браузерах стабильно не проигрывает
@@ -336,66 +394,101 @@ function updateYandexRows(updates){
   })).catch(()=>{});
 }
 
-// Загрузить видео из публичной папки в игровой уровень (сейчас — 1 «Ласки»).
-// Повторное нажатие кнопки дублей не создаёт: файлы с тем же именем не
-// добавляются второй раз, но их ссылки ВСЕГДА переписываются свежими.
-// Это принципиально: ссылка, сохранённая вчера, к сегодняшнему дню уже
-// недействительна, а раньше такие строки просто пропускались (skipped++) —
-// кнопка рапортовала «всё уже загружено», а в игре был чёрный экран.
-async function importYandexVideosToLevel(level){
-  if(yandexDiskLoading) return { added:0, level: level, error: 'Загрузка уже идёт' };
-  if(!davayYandexPublicKey()) return { added:0, level: level, error: 'Ссылка на папку Яндекс Диска не задана' };
+// Удалить записи Диска, которых больше нет в папках (другая ссылка на папку,
+// ролик переименован или удалён). Такие строки не оживут никогда — обновление
+// ссылок ищет файл в папке, поэтому оставлять их значит копить в пуле уровня
+// карточки, которые всегда дают чёрный экран.
+function removeYandexRows(ids){
+  if(!ids || !ids.length) return Promise.resolve(0);
+  return openDavayDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(DAVAY_DB_STORE, 'readwrite');
+    const store = tx.objectStore(DAVAY_DB_STORE);
+    ids.forEach(id=>{
+      const req = store.get(id);
+      req.onsuccess = ()=>{ if(req.result) store.delete(id); };
+    });
+    tx.oncomplete = ()=> resolve(ids.length);
+    tx.onerror = ()=> reject(tx.error);
+  })).catch(()=> 0);
+}
+
+// Синхронизировать каталог с публичной папкой: видео из папки «Level N-M …»
+// попадают в игровой уровень N (подуровень пока не используем). Повторное
+// нажатие кнопки дублей не создаёт: файлы с тем же именем не добавляются
+// второй раз, но их ссылки ВСЕГДА переписываются свежими. Это принципиально:
+// ссылка, сохранённая вчера, к сегодняшнему дню уже недействительна, а раньше
+// такие строки просто пропускались (skipped++) — кнопка рапортовала «всё уже
+// загружено», а в игре был чёрный экран. Записи, которых в папках больше нет,
+// удаляются (removeYandexRows) — мёртвые ссылки никогда не обновятся.
+async function importYandexVideos(){
+  if(yandexDiskLoading) return { added:0, error:'Загрузка уже идёт' };
+  if(!davayYandexPublicKey()) return { added:0, error:'Ссылка на папку Яндекс Диска не задана' };
   yandexDiskLoading = true;
   try{
-    const items = await fetchYandexDiskFiles('/');
-    if(!items.length) return { added:0, level: level, error: 'Папка пуста или ссылка неверна' };
-    const allVideos = items.filter(i => i.type === 'file' && YANDEX_VIDEO_RE.test(i.name || ''));
-    const videos = allVideos.filter(isPlayableVideoItem);
-    const unplayable = allVideos.length - videos.length;
-    if(!videos.length && !unplayable){
-      return { added:0, level: level, error: `В папке ${items.length} объект(ов), видеофайлов нет` };
-    }
-    if(!videos.length){
-      return { added:0, level: level, unplayable: unplayable,
-               error: `Все ${unplayable} видео в формате .avi/.mkv — браузер их не проигрывает` };
+    const folders = await fetchYandexLevelFolders();
+    if(!folders.length){
+      return { added:0, error:'Не найдены папки уровней «Level N-M …» (файлы в корне игнорируются)' };
     }
     const known = await loadAllDavayBlobs();
-    const byName = new Map(known.filter(r=>r.name).map(r=>[r.name, r]));
+    const byName = new Map();
+    known.forEach(r=>{ if(r.name && !byName.has(r.name)) byName.set(r.name, r); });
     const publicKey = davayYandexPublicKey();
     const now = Date.now();
     const rows = [], updates = [];
-    let skipped = 0;
-    for(const item of videos){
-      let href = item.file;
-      if(!href){
-        try{ href = await fetchYandexDiskHref(item.path); }catch(e){ continue; }
-      }
-      const row = byName.get(item.name);
-      if(row){
-        // Файл уже в каталоге — второй раз не добавляем, но ссылку, путь и
-        // уровень обновляем: старая ссылка к этому моменту уже могла умереть.
-        skipped++;
-        updates.push({ id: row.id, url: href, urlAt: now, yandexPath: item.path,
-                       publicKey: publicKey, level: level });
-      } else {
-        rows.push({ name: item.name, url: href, level: level, yandexPath: item.path, publicKey: publicKey, urlAt: now });
+    // Пути, которые есть в папках СЕЙЧАС, — по ним отличаем устаревшие записи.
+    const currentPaths = new Set();
+    const seenNames = new Set();
+    let skipped = 0, unplayable = 0;
+    for(const folder of folders){
+      let items = [];
+      try{ items = await fetchYandexDiskFiles(folder.path); }catch(e){ continue; }
+      for(const item of items){
+        if(item.type !== 'file' || !YANDEX_VIDEO_RE.test(item.name || '')) continue;
+        if(!isPlayableVideoItem(item)){ unplayable++; continue; }
+        currentPaths.add(item.path);
+        // Одно и то же имя в двух папках не должно дать дубль в каталоге.
+        if(seenNames.has(item.name)) continue;
+        seenNames.add(item.name);
+        let href = item.file;
+        if(!href){
+          try{ href = await fetchYandexDiskHref(item.path); }catch(e){ continue; }
+        }
+        const row = byName.get(item.name);
+        if(row){
+          // Файл уже в каталоге — второй раз не добавляем, но ссылку, путь и
+          // уровень обновляем: старая ссылка к этому моменту уже могла умереть.
+          skipped++;
+          updates.push({ id: row.id, url: href, urlAt: now, yandexPath: item.path,
+                         publicKey: publicKey, level: folder.level });
+        } else {
+          rows.push({ name: item.name, url: href, level: folder.level,
+                      yandexPath: item.path, publicKey: publicKey, urlAt: now });
+        }
       }
     }
+    if(!rows.length && !updates.length){
+      return { added:0, unplayable: unplayable,
+               error: 'В папках уровней видеофайлов нет' };
+    }
     const saved = await saveYandexRows(rows, updates);
-    // Каталог перечитываем ТОЛЬКО когда в базе появились новые строки.
-    // Для уже загруженных видео ссылки обновлены на месте — тем же объектам,
-    // что лежат в importedDavayCards; полное перечитывание создало бы новые
-    // объекты и разорвало связь с карточками, которые игра держит в
-    // currentVideoCard/videoHistory и в истории «Давай попробуем», — на экране
-    // осталась бы прежняя мёртвая ссылка.
-    if(rows.length > 0){
+    // Устаревшие записи Диска: их пути (и имена) не встречаются в папках.
+    // Свои видео игрока (blob) фильтр не трогает.
+    const stale = known.filter(r =>
+      r.url && !r.blob && r.yandexPath && !currentPaths.has(r.yandexPath)
+      && !(r.name && seenNames.has(r.name)));
+    if(stale.length) await removeYandexRows(stale.map(r=>r.id));
+    // Каталог перечитываем, когда появились новые строки ИЛИ удалены старые —
+    // только так удалённые исчезнут из игры и пула «показанных». При обновлении
+    // одних лишь ссылок перечитывание не нужно: saveYandexRows обновила те же
+    // объекты в памяти, что держит игра (currentDavayCard/davayHistory).
+    if(rows.length > 0 || stale.length > 0){
       refreshDavayCatalogInMemory();
       await ensureImportedDavayVideosLoaded();
     }
-    return { added: rows.length, refreshed: updates.length, level: level,
-             total: videos.length, skipped: skipped, unplayable: unplayable };
+    return { added: rows.length, refreshed: updates.length,
+             removed: stale.length, skipped: skipped, unplayable: unplayable };
   } catch(err){
-    return { added:0, level: level, error: err.message || String(err) };
+    return { added:0, error: err.message || String(err) };
   } finally {
     yandexDiskLoading = false;
   }
@@ -484,15 +577,16 @@ function davayVideoDiagnostics(video, card, gameName){
 }
 
 // Обновить ссылку ОДНОГО видео. Нужна в момент, когда ролик не открылся:
-// перебирать всю папку (172 файла) ради одного кадра бессмысленно, а один
-// запрос к API отвечает быстро. true — свежий адрес получен.
+// перебирать всю папку ради одного кадра бессмысленно, а один запрос к API
+// отвечает быстро. true — свежий адрес получен.
 //
 // Путь внутри папки (yandexPath) есть не у всех записей: видео, добавленные
 // ДО того, как приложение начало его сохранять, лежат в базе только с именем
 // файла. Раньше такие карточки молча выпадали из восстановления (ранний
 // return), и их ссылки не обновлялись никогда — ролик показывал чёрный экран
 // с ошибкой 4, хотя файл на Диске рабочий. Поэтому если пути нет, ищем файл
-// по имени в списке папки и запоминаем найденный путь.
+// по имени в папках уровней (файлы в корне не рассматриваем) и запоминаем
+// найденный путь.
 async function refreshYandexCardHref(card){
   if(!card) return false;
   try{
@@ -503,8 +597,8 @@ async function refreshYandexCardHref(card){
     if(path){
       href = await fetchYandexDiskHref(path);
     } else if(card.name){
-      const items = await fetchYandexDiskFiles('/');
-      const found = items.filter(i => i.type === 'file' && i.name === card.name)[0];
+      const files = await fetchYandexLevelFiles();
+      const found = files.filter(i => i.name === card.name)[0];
       if(found){
         path = found.path;
         href = found.file || await fetchYandexDiskHref(found.path);
@@ -536,18 +630,16 @@ async function refreshYandexCardHref(card){
 }
 
 async function refreshYandexLinks(force){
-  // Берём все видео с Диска. Путь внутри папки есть не у всех: записи,
-  // добавленные до того, как приложение начало его сохранять, содержат только
-  // имя файла — раньше они молча выпадали из обновления (фильтр по
-  // c.yandexPath), и их ссылки не обновлялись никогда. Такие записи ниже
-  // сопоставляем с папкой по имени.
+  // Берём все видео с Диска из папок уровней (файлы в корне не рассматриваем).
+  // Путь внутри папки есть не у всех записей: добавленные до того, как
+  // приложение начало его сохранять, содержат только имя файла — такие записи
+  // ниже сопоставляем с папками по имени.
   const cards = importedDavayCards.filter(c => c.source === 'yandex' && c.dbId);
   if(!cards.length) return { updated:0 };
   const need = cards.filter(c => force || !c.urlAt || Date.now() - c.urlAt > YANDEX_HREF_TTL);
   if(!need.length) return { updated:0 };
   try{
-    const items = await fetchYandexDiskFiles('/');
-    const files = items.filter(i => i.type === 'file' && i.file);
+    const files = await fetchYandexLevelFiles();
     const byPath = new Map(files.map(i => [i.path, i.file]));
     const byName = new Map(files.map(i => [i.name, i]));
     const now = Date.now();
@@ -1052,42 +1144,28 @@ document.getElementById('davaySetupImportBtn').addEventListener('click', ()=>{
   davayImportInputEl.click();
 });
 document.getElementById('davaySetupYandexBtn').addEventListener('click', async ()=>{
-  // Кнопка «Обновить видеофайлы» (раньше «☁️ Яндекс Диск»): тянем видео из
-  // публичной папки (ссылка из «⚙️ Настроек») в игровой уровень 1 «Ласки».
-  // Другие уровни пока не рассматриваем — весь импорт идёт в
-  // YANDEX_IMPORT_GAME_LEVEL.
+  // Кнопка «Обновить видеофайлы» (раньше «☁️ Яндекс Диск»): синхронизируем
+  // каталог с публичной папкой. Папки «Level N-M …» раскладываются по
+  // игровым уровням 1..6 (N — номер уровня; подуровень M пока не используем),
+  // файлы в корне и папки не по формату игнорируются.
   if(!davayYandexPublicKey()){
     showToast('❌ Ссылка на папку Яндекс Диска не задана');
     return;
   }
-  const level = YANDEX_IMPORT_GAME_LEVEL;
-  // Уровень игрока и уровень видео теперь одно и то же число (см. DAVAY_LEVELS),
-  // поэтому пересчёта «id - 2» здесь больше нет.
-  const levelName = davayLevelInfo(level).name;
-  showToast('☁️ Загружаем список видео…');
-  const result = await importYandexVideosToLevel(level);
+  showToast('☁️ Синхронизируем видео с Яндекс Диска…');
+  const result = await importYandexVideos();
   if(result.error && !result.added){
     showToast('❌ ' + result.error);
     return;
   }
-  // Уровень переключаем ВСЕГДА, а не только когда появились новые видео.
-  // Видео с Диска лежат в уровне «Ласки», и если игрок до этого выбрал
-  // другой уровень, игра искала бы видео не там: импорт отчитывался об
-  // успехе, а в игре был пустой экран. При повторном нажатии (added === 0,
-  // ссылки лишь обновляются) прежний код уровень не трогал — отсюда
-  // «видео добавлены, но ничего нет».
-  if(davaySelectedLevel() !== level){
-    setDavaySelectedLevel(level);
-    saveState();
-    renderDavaySetupLevels();
-  }
+  const tail = result.unplayable ? ` (.avi/.mkv пропущено: ${result.unplayable})` : '';
+  const removed = result.removed ? `, удалено устаревших: ${result.removed}` : '';
   if(result.added > 0){
-    const tail = result.unplayable ? ` (.avi/.mkv пропущено: ${result.unplayable})` : '';
-    showToast(`✅ Новых: ${result.added}. Ссылки обновлены у ${result.refreshed} видео — уровень «${levelName}»${tail}`);
+    showToast(`✅ Новых: ${result.added}. Ссылки обновлены у ${result.refreshed} видео — уровни 1–6${removed}${tail}`);
     return;
   }
   const note = result.unplayable ? `, .avi/.mkv пропущено: ${result.unplayable}` : '';
-  showToast(`ℹ️ Обновлены ссылки у ${result.refreshed || 0} видео уровня «${levelName}»${note}`);
+  showToast(`ℹ️ Обновлены ссылки у ${result.refreshed || 0} видео — уровни 1–6${removed}${note}`);
 });
 document.getElementById('yandexLinksCloseBtn').addEventListener('click', ()=>{
   document.getElementById('yandexLinksModal').classList.remove('show');

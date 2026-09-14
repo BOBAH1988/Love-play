@@ -1039,6 +1039,24 @@ function checkStyles(html) {
   check('потолок уровней «Давай попробуем» берётся из DAVAY_LEVELS',
     /const DAVAY_MAX_LEVEL = DAVAY_LEVEL_MAX;/.test(davaySrc),
     'DAVAY_MAX_LEVEL снова захардкожен — кнопка «Горячее» упрётся в старое число');
+  // «Обновить видеофайлы» синхронизирует каталог с папками «Level N-M …»:
+  // название папки разбирается на номер уровня (1..6). Раньше весь импорт шёл
+  // в один уровень 1 через YANDEX_IMPORT_GAME_LEVEL — если это вернётся,
+  // папки уровней снова будут игнорироваться.
+  check('импорт с Диска идёт по папкам уровней, а не в один уровень',
+    davaySrc.includes('const YANDEX_LEVEL_FOLDER_RE = /^Level\\s+(\\d+)/i;')
+      && davaySrc.includes('function yandexLevelFromFolderName(name)')
+      && davaySrc.includes('async function importYandexVideos()')
+      && !davaySrc.includes('YANDEX_IMPORT_GAME_LEVEL'),
+    'импорт снова сводится к одному уровню — папки «Level N-M …» игнорируются');
+  // Обновление подписанных ссылок должно искать файлы в папках уровней:
+  // выборка из корня папки не находит ролики из подпапок, и те дают чёрный экран.
+  // fetchYandexLevelFiles используется в двух местах: восстановление одного
+  // ролика (refreshYandexCardHref) и массовое обновление (refreshYandexLinks).
+  const levelFilesUses = (davaySrc.match(/await fetchYandexLevelFiles\(\);/g) || []).length;
+  check('обновление ссылок Диска читает папки уровней',
+    levelFilesUses >= 2,
+    `fetchYandexLevelFiles используется ${levelFilesUses} раз(а), нужно в обоих обновлениях ссылок`);
   // Кнопки в модалках импорта — те же шесть уровней с теми же названиями.
   const davayHtml = read('index.html');
   const choices = [...davayHtml.matchAll(/davay-level-choice" data-level="(\d)">([^<]+)</g)]
