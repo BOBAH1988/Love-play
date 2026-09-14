@@ -665,7 +665,7 @@ const DAVAY_LEVELS = [
   {id:2, name:'Близость', desc:'Ближе друг к другу', icon:'💞'},
   {id:3, name:'Ртом', desc:'Оральные ласки', icon:'👄'},
   {id:4, name:'Игрушки', desc:'Секс-игрушки в деле', icon:'🧸'},
-  {id:5, name:'Сзади', desc:'Позы со спины', icon:'🔄'},
+  {id:5, name:'Сзади', desc:'Сзади еще ближе', icon:'🔄'},
   {id:6, name:'Экзотика', desc:'Необычные сценарии', icon:'💫'},
 ];
 const DAVAY_LEVEL_IDS = DAVAY_LEVELS.map(l=>l.id);
