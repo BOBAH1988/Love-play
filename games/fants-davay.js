@@ -1182,9 +1182,11 @@ document.getElementById('davaySetupVideoFavBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToVideoFavoritesView();
 });
-document.getElementById('davaySetupFavoritesBtn').addEventListener('click', ()=>{
-  goToDavayFavoritesView();
-});
+// Кнопки «❤️ Избранное» на странице настройки больше нет: она открывала тот же
+// просмотр, что и «❤️ Смотреть совпавшие видео» на экране итогов
+// (#davaySummaryFavBtn в games/fants-timer.js), но вела туда из настройки, где
+// партия ещё не начата. Просмотр избранного остался на итогах — там он уместен,
+// потому что избранное появляется именно по итогам партии.
 
 // ===== Экран настройки "Предложи партнеру" (выбор уровня) =====
 // Свой набор уровней (не трогает общий LEVELS, которым пользуются "Фанты").
@@ -1248,63 +1250,6 @@ document.getElementById('photoSetupStartBtn').addEventListener('click', ()=>{
   goToPlaceholderGame();
 });
 
-// Просмотр избранных видео (совпавшие "Да" из прошлых раундов) прямо со
-// страницы настройки, без прохождения квиза заново.
-function goToDavayFavoritesView(){
-  if(!(state.davayLiked && state.davayLiked.length)){
-    playErrorSound();
-    showToast('Пока нет избранных видео — сначала пройдите игру');
-    return;
-  }
-  abandonPausedSession('davay');
-  abandonPausedSession('td');
-  abandonPausedSession('bingo');
-  abandonPausedSession('krokodil');
-  abandonPausedSession('wishlist');
-  abandonPausedSession('znayu');
-  abandonPausedSession('timer');
-  abandonPausedSession('partyFants');
-  abandonPausedSession('partyTd');
-  abandonPausedSession('famZnayu');
-  abandonPausedSession('lucky');
-  abandonPausedSession('kidsMemory');
-  abandonPausedSession('kidsTd');
-  abandonPausedSession('kidsC4');
-  abandonPausedSession('fanty');
-  abandonPausedSession('quiz');
-  abandonPausedSession('partyQuiz');
-  abandonPausedSession('kidsQuiz');
-  abandonPausedSession('soloBs');
-  abandonPausedSession('soloC4');
-  abandonPausedSession('shop');
-  state.pausedMode = null;
-  state.inProgress = true;
-  davayLevel = davaySelectedLevel();
-  davayHistory = [];
-  davayHistoryPos = -1;
-  saveState();
-  document.querySelector('.row1').appendChild(document.getElementById('pauseBtn'));
-  document.getElementById('davaySetup').classList.remove('active');
-  document.getElementById('setup').classList.remove('active');
-  document.getElementById('game').classList.add('active');
-  setGameMode('davay-mode');
-  document.getElementById('doneBtn').textContent = 'Следующее';
-  // Просмотр избранного — это не партия, которую можно поставить на паузу,
-  // поэтому кнопка сразу подписана "Выход" (обработчик см. ниже, у pauseBtn).
-  document.getElementById('pauseBtn').textContent = 'Выход';
-  updateTurnUI();
-  updateLevelUI();
-  updateMuteBtn();
-  requestWakeLock();
-  ensureImportedDavayVideosLoaded().then(()=> refreshYandexLinks(true)).catch(()=>{});
-  updateDavayPlayerButtons();
-  if(!state.davayFavoritesOnly){
-    state.davayFavoritesOnly = true;
-    saveState();
-  }
-  updateDavayFavoritesBtn();
-  showDavayFavoriteAt(0);
-}
 
 async function goToDavayGame(){
   state.pausedMode = null;

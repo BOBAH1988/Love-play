@@ -148,14 +148,23 @@ function checkMarkup(html) {
   for (const [id, why] of [
     ['menuUpdateBtn', 'обновление показывает плашка #updateToast'],
     ['menuReportBtn', 'отчёт об ошибке копируется с экрана ошибки'],
+    ['davaySetupFavoritesBtn', 'просмотр избранного открывается с итогов партии'],
   ]) {
     const inHtml = new RegExp(`id="${id}"`).test(html);
     const inJs = fs.readdirSync(path.join(ROOT, 'games'))
       .filter((f) => f.endsWith('.js'))
       .some((f) => new RegExp(`getElementById\\('${id}'\\)`).test(read(path.join('games', f))));
-    check(`дублирующего пункта меню #${id} нет`, !inHtml && !inJs,
+    check(`удалённого дубля #${id} нет`, !inHtml && !inJs,
       `${inHtml ? 'остался в разметке' : ''}${inHtml && inJs ? ' и ' : ''}${inJs ? 'остался обработчик в games/*.js' : ''} — ${why}`);
   }
+
+  // Убрав дублирующий вход, легко снести и саму возможность: проверяем, что
+  // просмотр избранного «Давай попробуем» по-прежнему открывается с экрана
+  // итогов — там он и уместен, избранное появляется по итогам партии.
+  check('просмотр избранного «Давай попробуем» доступен с итогов',
+    /id="davaySummaryFavBtn"/.test(html) &&
+      /getElementById\('davaySummaryFavBtn'\)[\s\S]{0,200}addEventListener/.test(read('games/fants-timer.js')),
+    'кнопка «Смотреть совпавшие видео» на итогах пропала или не обработана — избранное стало недостижимым');
 
   // Плашка обновления обязана закрываться крестиком: без него единственным
   // способом убрать её было обновиться, то есть согласиться на то, от чего
