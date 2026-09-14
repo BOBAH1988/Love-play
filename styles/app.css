@@ -155,7 +155,7 @@
   @media (orientation:landscape) and (max-height:600px){
     #game.video-mode .card, #game.davay-mode .card{margin-top:6px;}
     #game.davay-mode .davay-player-row{margin-bottom:6px;}
-    #game.davay-mode .davay-player-row .btn{padding:8px;}
+    #game.davay-mode .davay-player-row .btn{padding:0 8px;}
     #game.davay-mode .davay-progress-row{margin-bottom:6px;}
     #game.video-mode .controls, #game.davay-mode .controls{gap:5px; margin-top:6px;}
     #game.video-mode .controls .btn, #game.davay-mode .controls .btn{height:36px; font-size:13px;}
@@ -1933,6 +1933,14 @@
   .davay-player-row .btn{
     flex:1; opacity:.45; background:rgba(255,255,255,.08);
     pointer-events:none; cursor:default;
+    /* Блоки «Парень»/«Девушка» — только индикатор того, кто отвечает, поэтому
+       им не нужна высота обычной кнопки действия. Базовая кнопка — 52.4px
+       (padding 15px ×2 + текст 17px + борта 2px); здешние 34px дают 36px с
+       бортами, то есть −31% (в запасе от требуемых 30%: 36px против 36.7px).
+       Высота задана явно, а не через padding: иначе содержимое распирало бы
+       плашку и процент не соблюдался (та же ловушка была с уровнями «Давай
+       попробуем» — там помогли и отступы, и line-height). */
+    height:34px; min-height:0; padding:0 10px; font-size:15px; line-height:1;
   }
   .davay-player-row .btn.active{
     opacity:1; background:linear-gradient(135deg,#ff9a5e,#ff6b8b); color:#3a1208;

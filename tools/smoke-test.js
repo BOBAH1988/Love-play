@@ -713,6 +713,53 @@ test('Сценарий: exitGame сбрасывает пару флагов и �
   assert(!modal.classList.contains('show'), 'окно паузы должно закрыться');
 });
 
+test('Сценарий: «Закончить игру» в «Давай попробуем» ведёт в её настройки', () => {
+  // Баг: кнопка «Закончить игру» в меню паузы вызывала abandonPausedSession,
+  // который только снимает паузу и НЕ трогает экраны. Игрок после завершения
+  // оказывался в хабе «Игры для двоих» вместо настроек «Давай попробуем» —
+  // то есть делал шаг назад вместо ожидаемого возврата к настройке партии.
+  // Проверяем фактическое поведение: обработчик #finishGameBtn должен позвать
+  // exitDavayGame(true), а не молча снять паузу.
+  const finishBtn = getElById(stub, 'finishGameBtn');
+  assert(finishBtn && typeof finishBtn.click === 'function',
+    'кнопка #finishGameBtn должна существовать в заглушке DOM');
+
+  state.pausedMode = 'davay';
+  state.inProgress = true;
+
+  const calls = [];
+  const origExit = global.exitDavayGame;
+  global.exitDavayGame = function (toSetup) { calls.push(toSetup); };
+  try {
+    finishBtn.click();
+    assert(calls.length === 1,
+      `#finishGameBtn должен один раз позвать exitDavayGame, вызовов: ${calls.length}`);
+    assert(calls[0] === true,
+      'exitDavayGame нужно звать с true — иначе игрок попадёт в хаб, а не в настройки');
+  } finally {
+    global.exitDavayGame = origExit;
+  }
+});
+
+test('Сценарий: exitDavayGame(true) открывает настройки «Давай попробуем»', () => {
+  // Вторая половина той же цепочки: сам выход обязан закончиться на
+  // #davaySetup. Проверяем, что функция действительно зовёт goToDavaySetup,
+  // а не returnToSetupUI (хаб).
+  const called = [];
+  const origGo = global.goToDavaySetup;
+  global.goToDavaySetup = function () { called.push('davaySetup'); };
+  try {
+    global.exitDavayGame(true);
+    assert(called.length === 1,
+      `exitDavayGame(true) должен позвать goToDavaySetup, вызовов: ${called.length}`);
+  } finally {
+    global.goToDavaySetup = origGo;
+  }
+  // Пара связанных флагов сбрасывается вместе (правило AGENTS.md).
+  assert(state.inProgress === false, 'inProgress должен сброситься');
+  assert(state.pausedMode === null, 'pausedMode должен сброситься');
+});
+
 test('Сценарий: setGameMode снимает чужой режим экрана #game', () => {
   // Раньше после паузы «Давай попробуем» класс davay-mode оставался на #game,
   // и «Фанты» открывались с чужим оформлением и чужой логикой выхода.

@@ -592,12 +592,20 @@ document.getElementById('finishGameBtn').addEventListener('click', ()=>{
   }
 
   // «Давай попробуем» — завершение без сводки: снимаем паузу и выходим.
+  // Выходим ИМЕННО в настройку этой игры (exitDavayGame(true) → #davaySetup),
+  // а не в общий хаб: раньше здесь стоял abandonPausedSession('davay'), который
+  // только снимал паузу и НЕ трогал экраны — игрок после «Закончить игру»
+  // оказывался в меню «Игры для двоих» и должен был заново искать игру в
+  // списке. Это и был «шаг назад» вместо ожидаемого шага в настройки.
   if(mode === 'davay'){
+    if(typeof exitDavayGame === 'function'){ exitDavayGame(true); return; }
+    // Запасной путь, если по какой-то причине функция недоступна: снимаем
+    // оба связанных флага вместе (правило из AGENTS.md) и идём в настройки.
     state.inProgress = false;
     abandonPausedSession('davay');
     saveState();
     updateResumeUI();
-    showToast('Игра завершена');
+    goToDavaySetup();
     return;
   }
 

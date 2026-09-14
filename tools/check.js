@@ -1052,9 +1052,12 @@ function checkStyles(html) {
     const m = new RegExp(prop + ':\\s*([\\d.]+)px').exec(block);
     return m ? parseFloat(m[1]) : null;
   };
-  const ruleFor = (selector) => {
+  // anchor=true требует, чтобы селектор начинал правило, а не был хвостом
+  // другого: «.btn» без привязки совпадает внутри «.btn-square»/«.btn-pause».
+  const ruleFor = (selector, anchor) => {
     const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s*');
-    const m = new RegExp(esc + '\\s*\\{([^}]*)\\}').exec(css);
+    const prefix = anchor ? '(?:^|[\\s,}])' : '';
+    const m = new RegExp(prefix + esc + '\\s*\\{([^}]*)\\}').exec(css);
     return m ? m[1] : '';
   };
   const baseName = ruleFor('.level-toggle .lname');
@@ -1081,6 +1084,40 @@ function checkStyles(html) {
     `базовая ${baseH.toFixed(1)}px (padding ${declNum(baseTile, 'padding')}px), ` +
     `в «Давай попробуем» ${davayH.toFixed(1)}px (padding ${declNum(davayTile, 'padding')}px) — ` +
     `снижение ${(((baseH - davayH) / baseH) * 100).toFixed(1)}%, ожидалось ≥30%`);
+  // Блоки «Парень»/«Девушка» над карточкой в «Давай попробуем» — ниже обычной
+  // кнопки на 30%. Они только показывают, кто отвечает, а высоту базовой
+  // кнопки (padding 15px ×2 + 17px текста ≈ 51px) тратили зря. Как и с
+  // плашками уровней, высоту мало объявить — содержимое может распирать
+  // плашку, поэтому считаем её по фактическим правилам CSS.
+  // Базовую .btn ищем как САМОСТОЯТЕЛЬНОЕ правило (строка начинается с «.btn{»),
+  // а не как хвост составного селектора: иначе первым находится
+  // «#addCardModal .btn{...}» и сравнение идёт с чужой кнопкой. Смотрим CSS без
+  // @media-блоков — там те же селекторы переопределены для узкой ориентации.
+  const cssNoMedia = css.replace(/@media[^{]*\{(?:[^{}]*\{[^}]*\})*[^}]*\}/g, '');
+  const davayPlayerBtn = (/(?:^|\n)\s*\.davay-player-row\s+\.btn\s*\{([^}]*)\}/.exec(cssNoMedia) || ['', ''])[1];
+  const baseBtn = (/(?:^|\n)\s*\.btn\s*\{([^}]*)\}/.exec(cssNoMedia) || ['', ''])[1];
+  const boxHeight = (block, text) => {
+    const explicit = declNum(block, 'height');
+    if (explicit !== null) {
+      // Явная height + борта: содержимое уже не распирает (line-height:1).
+      return explicit + 2;
+    }
+    const padY = declNum(block, 'padding') || 0;
+    const font = declNum(block, 'font-size') || 0;
+    const lh = declNum(block, 'line-height') || 1.2;
+    return Math.max(padY * 2 + font * lh, declNum(block, 'min-height') || 0) + 2;
+  };
+  const baseBtnH = baseBtn ? boxHeight(baseBtn) : 0;
+  const davayPlayerH = davayPlayerBtn ? boxHeight(davayPlayerBtn) : 0;
+  check('блоки «Парень»/«Девушка» ниже обычной кнопки на 30%',
+    baseBtnH > 0 && davayPlayerH > 0 && davayPlayerH <= baseBtnH * 0.7 + 0.5,
+    davayPlayerBtn
+      ? `обычная кнопка ${baseBtnH.toFixed(1)}px, блок игрока ${davayPlayerH.toFixed(1)}px — ` +
+        `снижение ${(((baseBtnH - davayPlayerH) / baseBtnH) * 100).toFixed(1)}%, ожидалось ≥30%`
+      : 'нет правила .davay-player-row .btn — высота блоков игроков не уменьшена');
+  check('уменьшение не задело обычные кнопки игры',
+    baseBtn ? /font-size:17px/.test(baseBtn) : false,
+    'базовая .btn изменилась — правка блоков игроков не должна трогать остальные кнопки');
   check('в «Рулетке желаний» уровень «Откровенно 18+» сохранён',
     /Откровенно 18\+/.test(read('games/wish-roulette.js')),
     'в «Рулетке желаний» название уровня пропало');
