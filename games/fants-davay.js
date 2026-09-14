@@ -1070,9 +1070,10 @@ document.getElementById('davaySetupImportBtn').addEventListener('click', ()=>{
   davayImportInputEl.click();
 });
 document.getElementById('davaySetupYandexBtn').addEventListener('click', async ()=>{
-  // Кнопка «☁️ Яндекс Диск»: тянем видео из публичной папки (ссылка из
-  // «⚙️ Настроек») в игровой уровень 1 «Ласки». Другие уровни пока не
-  // рассматриваем — весь импорт идёт в YANDEX_IMPORT_GAME_LEVEL.
+  // Кнопка «Обновить видеофайлы» (раньше «☁️ Яндекс Диск»): тянем видео из
+  // публичной папки (ссылка из «⚙️ Настроек») в игровой уровень 1 «Ласки».
+  // Другие уровни пока не рассматриваем — весь импорт идёт в
+  // YANDEX_IMPORT_GAME_LEVEL.
   if(!davayYandexPublicKey()){
     showToast('❌ Ссылка на папку Яндекс Диска не задана');
     return;
