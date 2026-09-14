@@ -782,12 +782,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     closeMenu();
     document.getElementById('importDataInput').click();
   });
-  document.getElementById('menuUpdateBtn').addEventListener('click', ()=>{
-    closeMenu();
-    // Общая логика жёсткого обновления (см. hardUpdateApp выше) — та же,
-    // что у служебной кнопки #updateAppBtn.
-    hardUpdateApp();
-  });
   document.getElementById('menuInstallBtn').addEventListener('click', ()=>{
     closeMenu();
     // Используем общую логику: если есть системный диалог установки (PWA) —
@@ -800,35 +794,16 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       performFullReset();
     }
   });
-  // «Сообщить о проблеме» — копирует отчёт (версия, браузер, журнал ошибок).
-  // Журнал заполняется автоматически при любой непойманной ошибке, поэтому
-  // игроку достаточно нажать кнопку и вставить текст в сообщение.
-  const __reportBtn = document.getElementById('menuReportBtn');
-  if(__reportBtn) __reportBtn.addEventListener('click', async ()=>{
-    closeMenu();
-    const log = getErrorLog();
-    const report = buildErrorReport();
-    let copied = false;
-    try{
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        await navigator.clipboard.writeText(report);
-        copied = true;
-      }
-    }catch(_){}
-    if(!copied){
-      // Фолбэк: показываем текст на экране ошибки, чтобы скопировать вручную.
-      const modal = document.getElementById('appErrorModal');
-      const detailsEl = document.getElementById('appErrorDetails');
-      const textEl = document.getElementById('appErrorText');
-      if(textEl) textEl.textContent = 'Отчёт ниже — выделите и скопируйте.';
-      if(detailsEl){ detailsEl.textContent = report; detailsEl.style.display = 'block'; }
-      if(modal) modal.classList.add('show');
-      return;
-    }
-    showToast(log.length
-      ? `Отчёт скопирован (ошибок в журнале: ${log.length})`
-      : 'Отчёт скопирован — ошибок в журнале нет');
-  });
+  // Пунктов «🔄 Обновить приложение» и «🐞 Сообщить о проблеме» в меню больше
+  // нет — они дублировали автоматику, и обработчики убраны вместе с ними.
+  // Обновление: при старте Service Worker сам находит новую версию и
+  // показывает плашку #updateToast с кнопкой «Обновить» и крестиком
+  // (см. блок регистрации в index.html) — принудительное обновление
+  // по-прежнему доступно через hardUpdateApp().
+  // Отчёт об ошибке: экран ошибки (#appErrorModal) открывается сам при любой
+  // непойманной ошибке, и в нём уже есть «📋 Скопировать отчёт для
+  // разработчика» (#appErrorReportBtn) плюс кнопка «Продолжить как есть».
+  // Оставлять в меню копию того же действия было незачем.
 
   /* ===== Статистика (меню → «📊 Статистика») =====
      Данные считает games/stats.js и хранит отдельным ключом localStorage.

@@ -138,6 +138,35 @@ function checkMarkup(html) {
   const allIds = [...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]);
   const dupes = [...new Set(allIds.filter((id, i) => allIds.indexOf(id) !== i))];
   check('нет дублирующихся id', dupes.length === 0, `дубли: ${dupes.join(', ')}`);
+
+  // Меню «☰» не должно возвращать пункты, дублирующие автоматику.
+  // «Обновить приложение» повторял плашку #updateToast, которую Service Worker
+  // показывает сам; «Сообщить о проблеме» повторял кнопку на экране ошибки,
+  // который открывается сам при сбое. Проверяем и разметку, и то, что по
+  // удалённым id не осталось обработчиков — иначе код падал бы на
+  // addEventListener у несуществующего элемента.
+  for (const [id, why] of [
+    ['menuUpdateBtn', 'обновление показывает плашка #updateToast'],
+    ['menuReportBtn', 'отчёт об ошибке копируется с экрана ошибки'],
+  ]) {
+    const inHtml = new RegExp(`id="${id}"`).test(html);
+    const inJs = fs.readdirSync(path.join(ROOT, 'games'))
+      .filter((f) => f.endsWith('.js'))
+      .some((f) => new RegExp(`getElementById\\('${id}'\\)`).test(read(path.join('games', f))));
+    check(`дублирующего пункта меню #${id} нет`, !inHtml && !inJs,
+      `${inHtml ? 'остался в разметке' : ''}${inHtml && inJs ? ' и ' : ''}${inJs ? 'остался обработчик в games/*.js' : ''} — ${why}`);
+  }
+
+  // Плашка обновления обязана закрываться крестиком: без него единственным
+  // способом убрать её было обновиться, то есть согласиться на то, от чего
+  // игрок отказывается.
+  check('у плашки обновления есть крестик закрытия',
+    /id="updateToastCloseBtn"/.test(html),
+    'нет #updateToastCloseBtn — плашку нельзя закрыть без обновления');
+  check('крестик плашки обновления обработан',
+    /getElementById\('updateToastCloseBtn'\)/.test(html) &&
+      /updateToastCloseBtn'\)[\s\S]{0,400}addEventListener/.test(html),
+    'крестик есть в разметке, но обработчик закрытия не подключён');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
