@@ -439,9 +439,14 @@ async function importYandexVideos(){
     const currentPaths = new Set();
     const seenNames = new Set();
     let skipped = 0, unplayable = 0;
-    for(const folder of folders){
-      let items = [];
-      try{ items = await fetchYandexDiskFiles(folder.path); }catch(e){ continue; }
+    // Папки уровней читаем ПАРАЛЛЕЛЬНО: 19 последовательных запросов к API
+    // делали синхронизацию заметно долгой, а запросы не зависят друг от друга.
+    const folderItems = await Promise.all(folders.map(folder =>
+      fetchYandexDiskFiles(folder.path)
+        .then(items => ({ folder: folder, items: items || [] }))
+        .catch(() => ({ folder: folder, items: [] }))
+    ));
+    for(const { folder, items } of folderItems){
       for(const item of items){
         if(item.type !== 'file' || !YANDEX_VIDEO_RE.test(item.name || '')) continue;
         if(!isPlayableVideoItem(item)){ unplayable++; continue; }
@@ -940,6 +945,18 @@ function davaySwipeNext(){
   }
 }
 
+// Оверлей «Загрузка видео…» на карточке плеера «Давай попробуем» — та же
+// защита от чёрного прямоугольника, что и в «Видеорулетке» (см. комментарий
+// у showVideoCardLoading в fants-video.js): пока ролик буферизует, игрок
+// видит подпись, а не пустой экран. Прячем на playing.
+function showDavayCardLoading(){
+  const el = document.getElementById('davayLoading');
+  if(el) el.style.display = '';
+}
+function hideDavayCardLoading(){
+  const el = document.getElementById('davayLoading');
+  if(el) el.style.display = 'none';
+}
 // См. аналогичный комментарий у setupVideoPlayerElement/renderVideoCard —
 // та же логика для "Давай попробуем": пока видео открыто в нативном
 // полноэкранном режиме iOS, при переключении на следующее видео меняем src у
@@ -960,6 +977,8 @@ function setupDavayPlayerElement(video, card, level, reuse){
     video.src = card.url || card.video;
     video.load();
   }
+  // Ролик грузится — показываем «Загрузка видео…» поверх чёрного прямоугольника.
+  showDavayCardLoading();
   const attemptPlay = ()=>{
     const p = video.play();
     if(p && typeof p.catch === 'function'){
@@ -1010,9 +1029,10 @@ function setupDavayPlayerElement(video, card, level, reuse){
     if(card.source === 'yandex') davayVideoDiagnostics(video, card, 'Давай попробуем');
   }, {once:true});
   // Видео пошло — закрываем окно диагностики от прошлой ошибки, чтобы оно
-  // не перекрывало рабочий ролик.
+  // не перекрывало рабочий ролик. Оверлей «Загрузка видео…» тоже прячем.
   video.addEventListener('playing', ()=>{
     if(typeof hideAppError === 'function') hideAppError();
+    hideDavayCardLoading();
   }, {once:true});
   video.addEventListener('ended', ()=>{
     if(state.davayAutoAdvance) drawDavayCard(davayLevel);
@@ -1042,6 +1062,7 @@ function renderDavayCard(card, level){
       <div class="card-inner">
         <div class="card-split-media" id="davayMedia">
                      <video src="${card.url || card.video}" id="davayPlayer" playsinline autoplay referrerpolicy="no-referrer"></video>
+          <div class="video-loading" id="davayLoading"><span class="video-loading-icon">🎬</span><span class="video-loading-text">Загрузка видео…</span></div>
         </div>
       </div>
     `;
@@ -1148,11 +1169,21 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
   // каталог с публичной папкой. Папки «Level N-M …» раскладываются по
   // игровым уровням 1..6 (N — номер уровня; подуровень M пока не используем),
   // файлы в корне и папки не по формату игнорируются.
+  if(yandexDiskLoading){
+    // Синхронизация уже идёт — не гасим её тост «Синхронизируем…» и не
+    // запускаем вторую параллельную (importYandexVideos и так вернёт «Загрузка
+    // уже идёт», но его тост ошибки заменил бы живой индикатор).
+    return;
+  }
   if(!davayYandexPublicKey()){
     showToast('❌ Ссылка на папку Яндекс Диска не задана');
     return;
   }
-  showToast('☁️ Синхронизируем видео с Яндекс Диска…');
+  // duration=0 — тост «не гаснет», пока синхронизация не закончится; результат
+  // (успех или ошибка ниже) придёт ему на смену. Раньше «Синхронизируем…»
+  // исчезал через 1.8 с, а синхронизация шла ещё десятки секунд — игрок видел
+  // пустой экран настроек и не понимал, что работа идёт.
+  showToast('☁️ Синхронизируем видео с Яндекс Диска…', 0);
   const result = await importYandexVideos();
   if(result.error && !result.added){
     showToast('❌ ' + result.error);
@@ -1161,11 +1192,11 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
   const tail = result.unplayable ? ` (.avi/.mkv пропущено: ${result.unplayable})` : '';
   const removed = result.removed ? `, удалено устаревших: ${result.removed}` : '';
   if(result.added > 0){
-    showToast(`✅ Новых: ${result.added}. Ссылки обновлены у ${result.refreshed} видео — уровни 1–6${removed}${tail}`);
+    showToast(`✅ Синхронизация выполнена. Новых: ${result.added}. Ссылки обновлены у ${result.refreshed} видео — уровни 1–6${removed}${tail}`);
     return;
   }
   const note = result.unplayable ? `, .avi/.mkv пропущено: ${result.unplayable}` : '';
-  showToast(`ℹ️ Обновлены ссылки у ${result.refreshed || 0} видео — уровни 1–6${removed}${note}`);
+  showToast(`✅ Синхронизация выполнена. Обновлены ссылки у ${result.refreshed || 0} видео — уровни 1–6${removed}${note}`);
 });
 document.getElementById('yandexLinksCloseBtn').addEventListener('click', ()=>{
   document.getElementById('yandexLinksModal').classList.remove('show');

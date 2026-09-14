@@ -891,6 +891,11 @@ function showToast(msg, duration){
   t.innerHTML = msg.replace(/\n/g, '<br>');
   t.classList.add('show');
   clearTimeout(showToast._tm);
+  // duration === 0 — «не гаснуть»: тост держится до следующего showToast.
+  // Нужно для длинных операций (синхронизация с Яндекс Диском), когда игрок
+  // должен видеть «идёт работа», а не пустой экран: «Синхронизируем…» висит,
+  // пока результат (успех/ошибка) не придёт ему на смену.
+  if(duration === 0) return;
   showToast._tm = setTimeout(()=>t.classList.remove('show'), duration || 1800);
 }
 /* Коррекция позиции подсказки [data-tt], чтобы не вылезала за края экрана. */

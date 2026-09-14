@@ -553,6 +553,19 @@ function showVideoErrorFallback(card, level, errorCode){
   if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
 }
 
+// Оверлей «Загрузка видео…» на карточке плеера. Первый старт ролика — самый
+// долгий (браузер открывает новое соединение с CDN Яндекса и качает первые
+// байты), и без подписи игрок видел только чёрный прямоугольник, пока <video>
+// буферизует, — и мог выйти, решив что приложение сломано. Оверлей показываем
+// при каждой смене ролика и прячем, как только плеер реально пошёл (playing).
+function showVideoCardLoading(){
+  const el = document.getElementById('videoLoading');
+  if(el) el.style.display = '';
+}
+function hideVideoCardLoading(){
+  const el = document.getElementById('videoLoading');
+  if(el) el.style.display = 'none';
+}
 // Общая настройка <video> для "Видеорулетки" — вынесена отдельно от
 // renderVideoCard, чтобы можно было применить её и к УЖЕ существующему
 // элементу (reuse=true), а не только к только что вставленному через
@@ -575,6 +588,8 @@ function setupVideoPlayerElement(video, card, level, reuse){
     video.src = card.video;
     video.load();
   }
+  // Ролик грузится — показываем «Загрузка видео…» поверх чёрного прямоугольника.
+  showVideoCardLoading();
   // Атрибут autoplay сам по себе не всегда срабатывает для видео,
   // вставленного динамически (особенно при быстрых свайпах подряд) —
   // из-за этого видео иногда "зависало" на первом кадре и не играло, а
@@ -649,9 +664,10 @@ function setupVideoPlayerElement(video, card, level, reuse){
   }, {once:true});
   // Видео пошло — окно диагностики (если было открыто после прошлой ошибки)
   // закрываем сами: игрок уже видит рабочий ролик, отчёт ему больше не нужен
-  // и только перекрывал бы картинку.
+  // и только перекрывал бы картинку. Оверлей «Загрузка видео…» тоже прячем.
   video.addEventListener('playing', ()=>{
     if(typeof hideAppError === 'function') hideAppError();
+    hideVideoCardLoading();
   }, {once:true});
   video.addEventListener('ended', ()=>{
     if(state.videoAutoAdvance) drawVideoCard(videoLevel);
@@ -695,6 +711,7 @@ function renderVideoCard(card, level){
       <div class="card-inner">
         <div class="card-split-media" id="videoMedia">
           <video src="${card.video}" id="videoPlayer" playsinline autoplay referrerpolicy="no-referrer"></video>
+          <div class="video-loading" id="videoLoading"><span class="video-loading-icon">🎬</span><span class="video-loading-text">Загрузка видео…</span></div>
         </div>
       </div>
     `;

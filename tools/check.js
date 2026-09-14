@@ -1057,6 +1057,29 @@ function checkStyles(html) {
   check('обновление ссылок Диска читает папки уровней',
     levelFilesUses >= 2,
     `fetchYandexLevelFiles используется ${levelFilesUses} раз(а), нужно в обоих обновлениях ссылок`);
+  // Синхронизация читает папки уровней параллельно (Promise.all) — последовательные
+  // 19 запросов делали её заметно долгой, и игрок ждал «Синхронизируем…» десятки секунд.
+  check('синхронизация читает папки Диска параллельно',
+    /const folderItems = await Promise\.all\(folders\.map/.test(davaySrc),
+    'чтение папок снова последовательное — синхронизация медленная');
+  // Оверлей «Загрузка видео…» на карточке плеера обеих видео-игр прячется на playing.
+  const videoSrc2 = read('games/fants-video.js');
+  const davaySrc2 = read('games/fants-davay.js');
+  check('«Видеорулетка» показывает оверлей загрузки видео',
+    videoSrc2.includes('id="videoLoading"') && videoSrc2.includes('hideVideoCardLoading()'),
+    'на карточке «Видеорулетки» нет оверлея «Загрузка видео…»');
+  check('«Давай попробуем» показывает оверлей загрузки видео',
+    davaySrc2.includes('id="davayLoading"') && davaySrc2.includes('hideDavayCardLoading()'),
+    'на карточке «Давай попробуем» нет оверлея «Загрузка видео…»');
+  // Тост синхронизации не гаснет, пока работа идёт: showToast поддерживает
+  // duration === 0 (держится до следующего showToast), а обработчик им пользуется.
+  const coreSrc = read('games/core.js');
+  check('showToast умеет не гаснуть (duration === 0)',
+    /if\(duration === 0\) return;/.test(coreSrc),
+    'showToast не поддерживает постоянный тост — «Синхронизируем…» снова исчезает');
+  check('тост синхронизации не гаснет до результата',
+    /showToast\('☁️ Синхронизируем видео с Яндекс Диска…', 0\);/.test(davaySrc2),
+    '«Синхронизируем…» показывается без постоянного режима и исчезает раньше времени');
   // Кнопки в модалках импорта — те же шесть уровней с теми же названиями.
   const davayHtml = read('index.html');
   const choices = [...davayHtml.matchAll(/davay-level-choice" data-level="(\d)">([^<]+)</g)]
