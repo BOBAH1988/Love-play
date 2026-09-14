@@ -190,10 +190,10 @@ migrateVideoDbIntoDavay();
 
 // ===== Интеграция с Яндекс Диском =====
 // Видео берутся из ПУБЛИЧНОЙ папки Яндекс Диска: она открывается по одной
-// ссылке (YANDEX_DISK_PUBLIC_KEY ниже), авторизация не нужна. Личного токена
-// в коде нет и быть не должно — репозиторий публичный. Если токен всё-таки
-// нужен (закрытая папка), он задаётся в отдельном файле yandex-token.js,
-// который внесён в .gitignore и в репозиторий не попадает.
+// ссылке (YANDEX_DISK_PUBLIC_KEY ниже), авторизация не нужна. Никакого токена
+// в приложении нет и быть не может: код статический, всё, что попало в
+// браузер, доступно посетителю, а личный OAuth-токен открывает доступ ко всему
+// диску, а не только к этой папке. Закрытая папка потребовала бы бэкенда.
 //
 // Сами файлы не скачиваются — в папке ~170 роликов общим весом около 0,5 ГБ,
 // столько в IndexedDB не поместится. Вместо этого сохраняем прямую ссылку на
@@ -216,36 +216,18 @@ const YANDEX_VIDEO_RE = /\.(webm|mp4|m4v|mov|avi|mkv)$/i;
 const YANDEX_IMPORT_GAME_LEVEL = 1;
 let yandexDiskLoading = false;
 
-// Токен Яндекс Диска — ЛИЧНЫЕ ДАННЫЕ, в репозиторий не попадает.
-// Он может быть задан в файле yandex-token.js рядом с index.html (файл в
-// .gitignore): там `window.YANDEX_DISK_TOKEN = '…'`. Если файла нет, работаем
-// без токена — публичная папка читается по одной ссылке, авторизация не нужна.
-// Раньше токен был жёстко прописан в state (games/core.js) и уезжал в
-// публичный репозиторий — этого делать нельзя.
-function yandexDiskToken(){
-  const fromFile = (typeof window !== 'undefined' && window.YANDEX_DISK_TOKEN) ? window.YANDEX_DISK_TOKEN : '';
-  return String(fromFile || '').trim();
-}
-
 function davayYandexPublicKey(){
   return (state.yandexPublicKey || YANDEX_DISK_PUBLIC_KEY || '').trim();
 }
 
 // Запрос к API Диска. Читаем ТОЛЬКО публичную папку по ссылке: этого
-// достаточно, чтобы получить список файлов и ссылки на них. Токен, если он
-// задан в локальном файле, подставляем; если Яндекс его не принял — повторяем
-// без него, потому что публичная папка открыта и без авторизации.
+// достаточно, чтобы получить список файлов и ссылки на них. Заголовка
+// авторизации здесь нет намеренно — ни один запрос не должен уходить с
+// личным токеном (см. комментарий к интеграции выше).
 async function fetchYandexJson(url){
-  const token = yandexDiskToken();
   // referrerPolicy:'no-referrer' — у Яндекса антихотлинк: запрос с чужим
   // доменом в Referer получает 403, без него — 200/206.
-  const base = { referrerPolicy: 'no-referrer' };
-  let resp = await fetch(url, token
-    ? Object.assign({ headers: { Authorization: 'OAuth ' + token } }, base)
-    : base);
-  if(!resp.ok && token && (resp.status === 401 || resp.status === 403)){
-    resp = await fetch(url, base);
-  }
+  const resp = await fetch(url, { referrerPolicy: 'no-referrer' });
   if(!resp.ok) throw new Error('Яндекс Диск ответил ' + resp.status);
   return resp.json();
 }

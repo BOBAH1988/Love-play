@@ -164,9 +164,8 @@ let state = {
   // которого игра вычитала двойку; читается через davaySelectedLevel().
   davayStarter:'random', davaySelectedLevel:1, davaySoundOn:false,
   // Ссылка на ПУБЛИЧНУЮ папку Яндекс Диска. Токена здесь нет и быть не должно:
-  // он личный, репозиторий публичный. Если токен нужен, он задаётся отдельно в
-  // файле yandex-token.js рядом с index.html — этот файл в .gitignore и в
-  // репозиторий не попадает (см. YANDEX_TOKEN в games/fants-davay.js).
+  // он личный и открывает весь диск, а код статический — любой секрет в
+  // браузере виден посетителю. Папка читается по одной ссылке без авторизации.
   yandexPublicKey:'https://disk.yandex.ru/d/fv1y_t0ZQ3YASg',
   pausedMode:null, lastSectionOnPause:null,
   // Правда или действие
