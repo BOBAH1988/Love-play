@@ -2158,16 +2158,22 @@
   /* Плашка доступного обновления PWA (#updateToast): как и .toast живёт у
      верха экрана выше модалок (z-index 600), но это отдельный элемент —
      с кнопкой и без автозакрытия ([hidden] вместо .show). */
+  /* Плашка обновления в два этажа: текст сверху, под ним ряд с кнопкой
+     «Обновить» и крестиком. Раньше текст стоял в одну строку слева от кнопки
+     — на узком экране всё сжималось и выглядело неопрятно. */
   .update-toast{
     position:fixed; left:50%; top:calc(16px + env(safe-area-inset-top, 0px) + 3vh);
     transform:translate(-50%,0);
-    display:flex; align-items:center; gap:12px;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
     max-width:80vw;
     background:rgba(0,0,0,.85); color:#fff; padding:14px 22px; border-radius:16px;
     font-size:17px; font-weight:700; text-align:center; z-index:600;
     white-space:normal;
   }
   .update-toast[hidden]{display:none;}
+  .update-toast-actions{
+    display:flex; align-items:center; gap:10px;
+  }
   .update-toast button{
     background:var(--accent, #ffd166); color:#2b0f2e; border:none; border-radius:12px;
     padding:8px 16px; font-size:15px; font-weight:800; cursor:pointer; white-space:nowrap;
