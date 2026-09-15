@@ -81,7 +81,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260924b">
+<link rel="stylesheet" href="styles/app.css?v=20260924c">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -89,7 +89,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-23 · v251';
+  window.APP_BUILD = '2026-09-23 · v252';
 </script>
 </head>
 <body>
@@ -797,9 +797,15 @@
         <button class="btn btn-primary" id="doneBtn">💕 Готово</button>
         <button type="button" class="btn btn-secondary btn-square" id="photoRandomToggleBtn" aria-label="Случайный порядок">🔀</button>
         <button class="btn btn-secondary" id="skipBtn">🚫 Отказ</button>
-        <button type="button" class="btn btn-secondary" id="videoLevelUpBtn" aria-label="Повысить уровень видео">Горячее</button>
-        <button type="button" class="btn btn-secondary" id="davayLevelUpBtn" aria-label="Повысить уровень">Горячее</button>
-        <button type="button" class="btn btn-secondary" id="davayNextBtn" aria-label="Повысить уровень">⬆️ Повысить</button>
+        <div class="video-level-row" id="videoLevelRow">
+          <button type="button" class="btn btn-secondary" id="videoLevelUpBtn" aria-label="Повысить уровень видео">Горячее</button>
+          <button type="button" class="btn btn-secondary" id="videoNextBtn" aria-label="Повысить уровень">Повысить уровень</button>
+        </div>
+        <div class="davay-level-row" id="davayLevelRow">
+          <button type="button" class="btn btn-secondary" id="davayLevelUpBtn" aria-label="Повысить уровень">Горячее</button>
+          <button type="button" class="btn btn-secondary" id="davayNextBtn" aria-label="Повысить уровень">Повысить уровень</button>
+          <button type="button" class="btn btn-secondary btn-square" id="davayMuteBtn" aria-label="Включить звук видео">🔇</button>
+        </div>
         <div class="davay-repeat-label" id="davayRepeatLabel">Готовы повторить?</div>
         <button type="button" class="btn btn-secondary" id="davayYesBtn">Да</button>
         <button type="button" class="btn btn-secondary" id="davayLaterBtn">Не сейчас</button>
@@ -811,7 +817,6 @@
         <button type="button" class="btn btn-secondary btn-square" id="favoriteBtn" aria-label="В избранное">☆</button>
         <button type="button" class="btn btn-secondary" id="photoFavPrevBtn">◀ Предыдущее</button>
         <button type="button" class="btn btn-secondary" id="photoFavNextBtn">Следующее ▶</button>
-        <button type="button" class="btn btn-secondary btn-square" id="davayMuteBtn" aria-label="Включить звук видео">🔇</button>
       </div>
       <div class="video-extra-toggle" id="videoExtraToggle">Дополнительно <span class="video-extra-arrow">▾</span></div>
       <div class="row2">
@@ -3546,7 +3551,7 @@
         <li>Второй способ — «Обновить видеофайлы»: ролики берутся из публичной папки на Яндекс Диске, где они разложены по папкам «Level N-M …» — папки уровня N попадают в игровой уровень N, второй номер — подуровень внутри уровня (по ним шагает кнопка «Горячее», см. ниже). Файлы в корне папки и папки не по формату игнорируются. Видео не скачиваются в память телефона — приложение хранит ссылки и само обновляет их, когда Яндекс их переподписывает. Повторное нажатие кнопки копий не создаёт; ролики в формате .avi/.mkv пропускаются — браузер их не проигрывает.</li>
         <li>Кнопка «🗑️ Сбросить весь прогресс» удаляет и все добавленные видео (и с телефона, и с Яндекс Диска) — после неё каталог начинается с нуля.</li>
         <li>Нажмите «Начнём» — если на выбранном уровне ещё нет ни одного видео, игра попросит сначала их добавить.</li>
-        <li>В ряду с ответами есть кнопки «Горячее» и «⬆️ Повысить» — работают между раундами (посреди опроса из 10 видео уровень сменить нельзя). «Горячее» открывает следующую папку Яндекс Диска внутри уровня: «Level 1-1 Ласки разогрев» → «Level 1-2 Ласки легкие», а когда своих папок в уровне больше нет — следующий уровень («Level 2-1 Близость»). «⬆️ Повысить» всегда прыгает на следующий уровень целиком: с «Level 1-1» сразу на «Level 2-1», подуровни пропускает.</li>
+        <li>В ряду с ответами есть кнопки «Горячее» и «Повысить уровень» — работают между раундами (посреди опроса из 10 видео уровень сменить нельзя). «Горячее» открывает следующую папку Яндекс Диска внутри уровня: «Level 1-1 Ласки разогрев» → «Level 1-2 Ласки легкие», а когда своих папок в уровне больше нет — следующий уровень («Level 2-1 Близость»). «Повысить уровень» всегда прыгает на следующий уровень целиком: с «Level 1-1» сразу на «Level 2-1», подуровни пропускает.</li>
         <li>Первый игрок отвечает на 10 видео: «Да», «Не сейчас» или «Нет». Шкала под именами показывает, сколько уже пройдено.</li>
         <li>Отвечайте честно и не подглядывайте — партнёр не видит ваши ответы, пока не закончат оба.</li>
         <li>Когда первый игрок ответит на все 10, появится карточка «Передайте телефон» — второй игрок нажимает «Начать» и отвечает на те же 10 видео в том же порядке.</li>
@@ -4170,9 +4175,9 @@
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
-<script src="games/fants-video.js?v=20260924a"></script>
-<script src="games/fants-davay.js?v=20260924a"></script>
-<script src="games/fants-timer.js?v=20260924a"></script>
+<script src="games/fants-video.js?v=20260924b"></script>
+<script src="games/fants-davay.js?v=20260924b"></script>
+<script src="games/fants-timer.js?v=20260924b"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->

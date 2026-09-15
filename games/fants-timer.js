@@ -1411,6 +1411,19 @@ document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
     showToast(`Уровень повышен: ${next}`);
   }
 });
+// «Повысить уровень» в «Видеорулетке»: всегда строго на следующий уровень,
+// подуровни пропускает — парная к «Горячему» кнопка (в «Давай попробуем» та же
+// логика у davayNextBtn).
+document.getElementById('videoNextBtn').addEventListener('click', ()=>{
+  if(videoLevel >= VIDEO_MAX_LEVEL){
+    playErrorSound();
+    showToast('Это максимальный уровень 🔥');
+    return;
+  }
+  playLevelUpSound();
+  if(!switchVideoLevel(videoLevel + 1, 0)) return;
+  showToast(`Уровень повышен: ${videoLevel}`);
+});
 // Кнопки уровней «Давай попробуем»: «Горячее» шагает по папкам Яндекса внутри
 // уровня, «⬆️ Повысить» — всегда строго на следующий уровень (Level 1-1 →
 // Level 2-1), подуровни пропускает. Посреди раунда уровень не меняется —

@@ -1202,7 +1202,7 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
   // (успех или ошибка ниже) придёт ему на смену. Раньше «Синхронизируем…»
   // исчезал через 1.8 с, а синхронизация шла ещё десятки секунд — игрок видел
   // пустой экран настроек и не понимал, что работа идёт.
-  showToast('☁️ Синхронизируем видео с Яндекс Диска…', 0);
+  showToast('☁️ Синхронизируем файлы с облака…', 0);
   const result = await importYandexVideos();
   if(result.error && !result.added){
     showToast('❌ ' + result.error);

@@ -1078,7 +1078,7 @@ function checkStyles(html) {
     /if\(duration === 0\) return;/.test(coreSrc),
     'showToast не поддерживает постоянный тост — «Синхронизируем…» снова исчезает');
   check('тост синхронизации не гаснет до результата',
-    /showToast\('☁️ Синхронизируем видео с Яндекс Диска…', 0\);/.test(davaySrc2),
+    /showToast\('☁️ Синхронизируем файлы с облака…', 0\);/.test(davaySrc2),
     '«Синхронизируем…» показывается без постоянного режима и исчезает раньше времени');
   // Кнопки в модалках импорта — те же шесть уровней с теми же названиями.
   const davayHtml = read('index.html');
@@ -1125,10 +1125,12 @@ function checkStyles(html) {
       && /davayQuizActivePlayer !== 0/.test(coreSrc)
       && /davayQuizPendingNext !== 0/.test(coreSrc),
     'switchVideoLevel пропал или не блокирует смену уровня посреди раунда квиза');
-  check('кнопка «⬆️ Повысить» есть в разметке и обрабатывается',
+  check('кнопки «Повысить уровень» есть в разметке и обрабатываются',
     davayHtml.includes('id="davayNextBtn"')
-      && davayTimerSrc.includes("getElementById('davayNextBtn')"),
-    'кнопка davayNextBtn отсутствует в разметке или без обработчика');
+      && davayTimerSrc.includes("getElementById('davayNextBtn')")
+      && davayHtml.includes('id="videoNextBtn"')
+      && davayTimerSrc.includes("getElementById('videoNextBtn')"),
+    'кнопка «Повысить уровень» отсутствует в разметке или без обработчика');
   check('«Горячее» и «⬆️ Повысить» видны в «Давай попробуем»',
     /#game\.davay-mode #doneBtn\{display:none;\}/.test(css)
       && /#game\.davay-mode #davayNextBtn\{/.test(css)

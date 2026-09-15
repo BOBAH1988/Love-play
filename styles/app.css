@@ -1900,10 +1900,12 @@
   #videoLevelUpBtn, #davayLevelUpBtn{display:none;}
   #game.video-mode #videoLevelUpBtn{display:flex;}
   #game.davay-mode #davayLevelUpBtn{display:flex;}
-  /* В "Видеорулетке" два ряда: сверху "Следующее" + лайк, снизу — "Смотреть
-     избранное" + звук/автопереключение/дизлайк/поделиться/выход. Нижний ряд
-     скрыт по умолчанию и раскрывается кнопкой "Дополнительно". В "Давай
-     попробуем" такого блока нет — все кнопки сразу в одном ряду. */
+  /* «Видеорулетка»: строка 1 — «Следующее» + ☆ лайк + ⭐ смотреть избранное +
+     «Выход»; строка 2 (.video-level-row) — «Горячее» + «Повысить уровень».
+     Обёртка с flex-basis:100% гарантированно занимает отдельную строку
+     независимо от ширины экрана. Нижний блок «Дополнительно» скрыт по
+     умолчанию и раскрывается кнопкой. В «Давай попробуем» такого блока нет —
+     все кнопки сразу в одних строках. */
   #game.video-mode .controls, #game.davay-mode .controls{flex-direction:row; flex-wrap:wrap; align-items:stretch; gap:6px;}
   #game.video-mode .row1, #game.davay-mode .row1{display:contents;}
   #game.video-mode .row2{display:none;}
@@ -1912,28 +1914,38 @@
   #game.video-mode .controls .btn, #game.davay-mode .controls .btn{height:44px;}
   .video-extra-toggle{display:none;}
   #game.video-mode .video-extra-toggle#videoExtraToggle{
-    display:flex; order:5; flex-basis:100%; align-items:center; justify-content:center; gap:6px;
+    display:flex; order:6; flex-basis:100%; align-items:center; justify-content:center;
     text-align:center; font-size:12px; font-weight:700; color:#cba0bf;
     text-transform:uppercase; letter-spacing:.5px; cursor:pointer; padding:4px 0;
   }
   .video-extra-toggle .video-extra-arrow{display:inline-block; font-size:10px; transition:transform .2s ease;}
   .controls.video-extra-open .video-extra-toggle .video-extra-arrow{transform:rotate(180deg);}
   #game.video-mode #doneBtn{order:1; flex:1; min-width:0; font-size:14px; padding:0 8px;}
-  #game.video-mode #videoLevelUpBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:13px;}
+  #game.video-mode #favoriteBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
+  #game.video-mode #videoFavoritesBtn{order:3; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
+  #game.video-mode #pauseBtn{order:4; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
+  /* Строка уровней «Видеорулетки»: «Горячее» + «Повысить уровень» — поровну. */
+  .video-level-row{display:none;}
+  #game.video-mode .video-level-row{display:flex; order:5; flex-basis:100%; gap:6px;}
+  .video-level-row .btn{flex:1; min-width:0; font-size:13px; padding:0 6px;}
   /* В "Давай попробуем" вместо "Следующее" — заголовок и три кнопки ответов;
      "Избранное" (сердечко) хранит видео, на которые оба игрока независимо
      ответили "Да". */
   #game.davay-mode #doneBtn{display:none;}
-  /* Кнопки уровней в "Давай попробуем" — в том же ряду после "Нет":
-     "Горячее" — следующая папка Яндекса внутри уровня ("Level 1-1 …" →
-     "Level 1-2 …"), а когда своих папок в уровне больше нет — следующий
-     уровень; "⬆️ Повысить" — всегда строго следующий уровень
-     ("Level 1-1" → "Level 2-1"), подуровни пропускает. */
-  #game.davay-mode #davayLevelUpBtn{order:5;}
-  #davayNextBtn{display:none;}
-  #game.davay-mode #davayNextBtn{
-    display:flex; order:6; flex:1; min-width:0; font-size:13px; padding:0 6px;
+  /* Вторая строка уровней: «Горячее» + «Повысить уровень» + звук. Обёртка с
+     flex-basis:100% занимает отдельную строку после «Да / Не сейчас / Нет» —
+     раньше кнопки переносились по одной, в зависимости от ширины экрана. */
+  .davay-level-row{display:none;}
+  #game.davay-mode .davay-level-row{display:flex; order:5; flex-basis:100%; gap:6px;}
+  #davayLevelUpBtn, #davayNextBtn{display:none;}
+  #game.davay-mode #davayLevelUpBtn, #game.davay-mode #davayNextBtn{
+    display:flex; flex:1; min-width:0; font-size:13px; padding:0 6px;
   }
+  /* «Повысить уровень» шире «Горячего»: текст длиннее, а переносить его на
+     вторую строчку внутри кнопки не хочется. */
+  #game.davay-mode #davayNextBtn{flex:1.4;}
+  /* Кнопка звука — в той же строке уровней, фиксированной ширины. */
+  #game.davay-mode #davayMuteBtn{flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   /* Ряд с именами игроков над карточкой: кто сейчас отвечает — выбор игрока
      сделан заранее на странице настройки, кнопки тут только для отображения. */
   .davay-player-row{display:none;}
@@ -2022,12 +2034,7 @@
   #game.davay-mode.davay-favview .davay-progress-row{
     display:none;
   }
-  #game.video-mode #favoriteBtn{order:3; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
-  #game.video-mode #pauseBtn{order:4; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
   #game.davay-mode #pauseBtn{order:6; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
-  /* Кнопка звука — сразу рядом с "Пауза", без блока "Дополнительно" */
-  #game.davay-mode #davayMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #videoFavoritesBtn{order:6; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
   #game.video-mode #videoMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #videoLoopBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #videoFullscreenBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
