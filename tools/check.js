@@ -1008,6 +1008,29 @@ function checkStyles(html) {
   check('в fants-timer.js нет дублей звуковых функций',
     !/function (playSuccessSound|playErrorSound|playTimerAlarm|getAudioCtx)\s*\(/.test(timerSrc),
     'звуковые функции определяются в двух местах — рассинхрон неизбежен');
+  // Единый звук видео: кнопка «Звук» на настройке «Давай попробуем» и кнопки
+  // 🔊 в обеих играх обязаны писать одну настройку. Раньше
+  // state.videoSoundOn жил отдельно — включённый на настройке звук не
+  // действовал на «Видеорулетку», и его включали второй раз в самой игре.
+  const sndDavay = read('games/fants-davay.js');
+  const sndVideo = read('games/fants-video.js');
+  check('общий переключатель звука видео определён в core.js',
+    sndCore.includes('function setSharedVideoSound'),
+    'setSharedVideoSound пропал — у игр снова раздельные настройки звука');
+  check('обе видео-игры меняют звук через общий переключатель',
+    /setSharedVideoSound\(/.test(sndDavay) && /setSharedVideoSound\(/.test(sndVideo),
+    'setDavaySoundOn/setVideoSoundOn снова пишут только своё поле — кнопка «Звук» не действует на вторую игру');
+  check('старые сейвы нормализуются к единому звуку при загрузке',
+    /state\.videoSoundOn\s*=\s*state\.davaySoundOn/.test(sndCore),
+    'в loadState исчезла нормализация videoSoundOn к davaySoundOn');
+  check('общий переключатель пишет state и обе модульные переменные',
+    /state\.videoSoundOn\s*=\s*!!on/.test(sndCore)
+      && /davaySoundOn\s*=\s*!!on/.test(sndCore)
+      && /videoSoundOn\s*=\s*!!on/.test(sndCore),
+    'setSharedVideoSound пишет не всё — кнопки 🔊 и рендер увидят устаревший звук');
+  check('игры не пишут звук напрямую, только через общий переключатель',
+    !/davaySoundOn\s*=\s*!!on/.test(sndDavay) && !/videoSoundOn\s*=\s*!!on/.test(sndVideo),
+    'в играх снова прямая запись звука — настройка разъедется между играми');
   // Название уровня «Викторины» (пары): игра и так помечена 18+, поэтому
   // приписка в названии уровня лишняя и не влезала в строку.
   const quizCards = read('cards/cards_quiz.js');

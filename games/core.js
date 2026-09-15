@@ -431,6 +431,14 @@ function loadState(){
       // устаревший дефолт поверх уже мигрированного значения.
       const migrationsApplied = applyMigrations(s);
       state = Object.assign(state, s);
+      // Единый звук видео (см. setSharedVideoSound): старые сейвы могли
+      // хранить разные значения в davaySoundOn/videoSoundOn. Master —
+      // davaySoundOn: именно его показывает кнопка «Звук» на странице
+      // настройки, и игрок ожидает, что звук после включения там работает
+      // в обеих играх.
+      if(state.videoSoundOn !== state.davaySoundOn){
+        state.videoSoundOn = state.davaySoundOn;
+      }
       if(migrationsApplied > 0) saveState(); // фиксируем, чтобы не повторять
       // Миграция старых сейвов: flashAutoSpeak раньше был false по умолчанию,
       // из-за этого после обновления он оставался выключенным у существующих
@@ -3655,6 +3663,36 @@ document.getElementById('addCardModal').addEventListener('click', (e)=>{
 // звуках (например, быстрые свайпы подряд) более старый подход мог "тихо" не срабатывать.
 let sharedAudioCtx = null;
 const activeOscillators = [];
+/* ===== Единый звук видео для обеих видео-игр =====
+ * Кнопка «Звук» на странице настройки «Давай попробуем» и кнопки 🔊 внутри
+ * «Давай попробуем» и «Видеорулетки» управляют ОДНОЙ настройкой. Раньше
+ * state.davaySoundOn и state.videoSoundOn жили отдельно: включённый на
+ * настройке звук не действовал на «Видеорулетку» — его приходилось включать
+ * второй раз кнопкой 🔊 в самой игре. Функция живёт в core.js, потому что
+ * оба сеттера (setDavaySoundOn/setVideoSoundOn) определены в разных файлах;
+ * вызывается она по клику, когда все скрипты уже загружены, а кнопки
+ * обновляет через typeof-проверки (на момент определения core.js их ещё нет). */
+function setSharedVideoSound(on){
+  // ЕДИНАЯ точка записи звука видео для обеих игр: кнопка «Звук» на странице
+  // настройки «Давай попробуем» и кнопки 🔊 в самих играх пишут только сюда.
+  // Пишем ОБА поля state (старые сейвы нормализует loadState), ОБЕ модульные
+  // переменные (их читают кнопки 🔊, кнопка «Звук» на настройке и рендер
+  // карточек при выставлении video.muted), гасим/включаем оба плеера и
+  // обновляем обе кнопки. Присвоение let-переменных из fants-video.js/
+  // fants-davay.js допустимо: глобальные lexical-связывания общие для всех
+  // скриптов, а вызов возможен только после полной загрузки страницы.
+  state.davaySoundOn = !!on;
+  state.videoSoundOn = !!on;
+  davaySoundOn = !!on;
+  videoSoundOn = !!on;
+  saveState();
+  const davayVideo = document.getElementById('davayPlayer');
+  if(davayVideo) davayVideo.muted = !on;
+  const videoEl = document.getElementById('videoPlayer');
+  if(videoEl) videoEl.muted = !on;
+  if(typeof updateDavayMuteBtn === 'function') updateDavayMuteBtn();
+  if(typeof updateVideoMuteBtn === 'function') updateVideoMuteBtn();
+}
 function getAudioCtx(){
   try{
     if(!sharedAudioCtx){

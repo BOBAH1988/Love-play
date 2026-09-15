@@ -145,12 +145,9 @@ function updateVideoMuteBtn(){
   btn.setAttribute('aria-label', videoSoundOn ? 'Выключить звук видео' : 'Включить звук видео');
 }
 function setVideoSoundOn(on){
-  videoSoundOn = on;
-  state.videoSoundOn = on;
-  saveState();
-  const video = document.getElementById('videoPlayer');
-  if(video) video.muted = !videoSoundOn;
-  updateVideoMuteBtn();
+  // Вся работа — в общем переключателе (core.js): 🔊 «Видеорулетки» меняет
+  // звук сразу в обеих видео-играх и подпись кнопки «Звук» на настройке.
+  setSharedVideoSound(on);
 }
 document.getElementById('videoMuteBtn').addEventListener('click', ()=>{
   setVideoSoundOn(!videoSoundOn);

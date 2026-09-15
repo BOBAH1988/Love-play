@@ -902,12 +902,9 @@ function updateDavaySetupSoundBtn(){
   btn.setAttribute('aria-label', davaySoundOn ? 'Выключить звук видео' : 'Включить звук видео');
 }
 function setDavaySoundOn(on){
-  davaySoundOn = on;
-  state.davaySoundOn = on;
-  saveState();
-  const video = document.getElementById('davayPlayer');
-  if(video) video.muted = !davaySoundOn;
-  updateDavayMuteBtn();
+  // Вся работа — в общем переключателе (core.js): кнопка «Звук» на настройке
+  // и 🔊 в игре меняют звук сразу в обеих видео-играх.
+  setSharedVideoSound(on);
 }
 document.getElementById('davayMuteBtn').addEventListener('click', ()=>{
   setDavaySoundOn(!davaySoundOn);
