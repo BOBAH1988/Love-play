@@ -2118,6 +2118,12 @@ function switchVideoLevel(level, sub){
 }
 
 function setGameMode(mode){
+  // Любая смена режима — это выход/пауза/вход в игру: гасим видео карточки,
+  // чтобы ничто не продолжало играть в фоне (см. stopCardVideos). В момент
+  // входа в video/davay-mode карточка ещё не нарисована, так что потерять
+  // нечего; при выходе через эту точку проходят ВСЕ пути (кнопки, стрелка,
+  // «Закончить игру» из реестра).
+  stopCardVideos();
   const el = document.getElementById('game');
   if(!el) return;
   GAME_MODE_CLASSES.forEach(cls=>{
@@ -2648,10 +2654,31 @@ function fitTextToContainer(containerEl, textEl, fullText){
 }
 
 let cardTransitionLocked = false; // защита от двойного тапа на время анимации смены карточки
+// Полная остановка всех видео внутри игровой карточки #card. Плееры создаются
+// динамически внутри карточки (renderVideoCard/renderDavayCard), и любая
+// перезапись её innerHTML — карточка «Передайте телефон», заглушка, фолбэк
+// ошибки, следующее видео — ОТРЫВАЕТ играющий <video> от DOM. Оторванный
+// элемент продолжает играть со звуком в фоне, а getElementById его уже не
+// находит — остановить нечем (пользователь слышал звук видео, уже войдя в
+// другую игру). Поэтому останавливаем видео ДО перезаписи, пока оно ещё в DOM.
+// Вызывается в fadeSwapCard (любая смена карточки) и в setGameMode (любой
+// выход/пауза/вход в режим — через неё проходят все пути выхода обеих игр).
+function stopCardVideos(){
+  document.querySelectorAll('#card video').forEach(v=>{
+    try{ v.pause(); }catch(err){}
+    try{
+      v.removeAttribute('src');
+      v.load(); // сбросить буфер и прервать загрузку/воспроизведение
+    }catch(err){}
+  });
+}
 function fadeSwapCard(paintFn){
   const el = document.getElementById('card');
   const inner = el.querySelector('.card-inner');
   const doPaint = ()=>{
+    // Старое видео ещё в DOM — гасим его до перезаписи innerHTML, иначе оно
+    // уедет в фон играющим (см. комментарий у stopCardVideos).
+    stopCardVideos();
     paintFn(el); // задаёт className карточки и innerHTML, обёрнутый в .card-inner
     const newInner = el.querySelector('.card-inner');
     if(newInner){

@@ -569,7 +569,12 @@ function showVideoErrorFallback(card, level, errorCode){
     return;
   }
   const media = document.getElementById('videoMedia');
-  if(media) media.innerHTML = '<div class="card-icon">🎬</div>';
+  if(media){
+    // Внутри media лежит сам <video>: перезапись innerHTML оторвала бы его от
+    // DOM играющим (см. stopCardVideos в core.js) — сначала останавливаем.
+    stopCardVideos();
+    media.innerHTML = '<div class="card-icon">🎬</div>';
+  }
 }
 
 // Оверлей «Загрузка видео…» на карточке плеера. Первый старт ролика — самый

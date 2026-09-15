@@ -1157,6 +1157,19 @@ function checkStyles(html) {
     /else if\(davaySubLevel > 0\)/.test(davaySrc2)
       && /else if\(videoSubLevel > 0\)/.test(videoSrc2),
     'отбор карточек по подуровню пропал из draw-функций');
+  // Видео карточки обязано гаснуть ДО перезаписи innerHTML: плееры создаются
+  // внутри карточки, и любая её смена (карточка «Передайте телефон», заглушка,
+  // фолбэк ошибки, следующее видео) отрывает играющий <video> от DOM — он
+  // продолжает играть со звуком в фоне, а getElementById его уже не находит.
+  const coreSrcAll = read('games/core.js');
+  check('видео карточки останавливается до перезаписи innerHTML',
+    /function stopCardVideos\(\)/.test(coreSrcAll)
+      && /stopCardVideos\(\);\s*\n\s*paintFn\(el\);/.test(coreSrcAll)
+      && /stopCardVideos\(\);\s*\n\s*const el = document\.getElementById\('game'\)/.test(coreSrcAll),
+    'stopCardVideos пропал из core.js или не вызывается при смене карточки/режима');
+  check('фолбэк ошибки видео гасит плеер перед перезаписью media',
+    videoSrc2.includes('stopCardVideos();'),
+    'showVideoErrorFallback снова перезаписывает media без остановки видео');
   // Окно прогресса синхронизации: блокирует интерфейс на время «Обновить
   // видеофайлы» — тост гас через пару секунд, а работа шла в фоне, и игрок
   // не понимал, готово ли облако.
