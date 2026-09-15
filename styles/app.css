@@ -2195,6 +2195,20 @@
     font-size:15px; line-height:1; flex:0 0 32px;
   }
 
+  /* Окно прогресса синхронизации видео (#davaySyncModal): крутящийся диск и
+     строка «Папок: N из M». Пришло на смену тосту — тост исчезал через пару
+     секунд, а синхронизация шла в фоне, и игрок не видел, что работа идёт. */
+  .davay-sync-spinner{
+    width:46px; height:46px; margin:2px auto 12px; border-radius:50%;
+    border:4px solid rgba(255,255,255,.18); border-top-color:var(--accent, #ff9a5e);
+    animation:davay-sync-spin .9s linear infinite;
+  }
+  @keyframes davay-sync-spin{ to{ transform:rotate(360deg); } }
+  .davay-sync-progress{
+    text-align:center; font-size:14px; color:#cba0bf; margin-top:6px;
+    min-height:18px;
+  }
+
   /* Единое меню паузы теперь отдельное модальное окно (#pauseMenuModal,
      см. .modal-overlay/.modal-card) по центру экрана — .resume-row как
      блок внутри страницы настроек больше не используется, но сами кнопки

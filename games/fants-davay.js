@@ -420,16 +420,86 @@ function removeYandexRows(ids){
 // такие строки просто пропускались (skipped++) — кнопка рапортовала «всё уже
 // загружено», а в игре был чёрный экран. Записи, которых в папках больше нет,
 // удаляются (removeYandexRows) — мёртвые ссылки никогда не обновятся.
+// Строка прогресса в окне синхронизации (#davaySyncProgress). Окна может не
+// быть (импорт вызывают и не кнопкой) — тогда просто ничего не обновляем.
+function davaySyncProgress(text){
+  const el = document.getElementById('davaySyncProgress');
+  if(el) el.textContent = text;
+}
+
 async function importYandexVideos(){
   if(yandexDiskLoading) return { added:0, error:'Загрузка уже идёт' };
   if(!davayYandexPublicKey()) return { added:0, error:'Ссылка на папку Яндекс Диска не задана' };
   yandexDiskLoading = true;
   try{
-    const folders = await fetchYandexLevelFolders();
+    davaySyncProgress('Читаем облако…');
+    // Кэш путей папок уровней с прошлой синхронизации (state.yandexFolderPaths):
+    // список папок меняется редко, поэтому при повторном нажатии запросы к
+    // папкам уходят ОДНОВРЕМЕННО с запросом корня. Раньше папки ждали корень,
+    // и два быстрых запроса по ~2 с складывались в ~4 с чистой задержки.
+    const cachedPaths = Array.isArray(state.yandexFolderPaths)
+      ? state.yandexFolderPaths.filter(p => typeof p === 'string' && p && p !== '/')
+      : [];
+    const rootPromise = fetchYandexDiskFiles('/');
+    const cachedPromises = cachedPaths.map(path =>
+      fetchYandexDiskFiles(path)
+        .then(items => ({ path: path, items: items || [] }))
+        .catch(() => ({ path: path, items: [], failed: true }))
+    );
+    // Каталог из базы (нужен для дедупликации по имени) читаем параллельно
+    // с сетью — на ~1600 записей это тоже заметное время.
+    const knownPromise = loadAllDavayBlobs();
+    const rootItems = await rootPromise;
+    const folders = [];
+    rootItems.forEach(i=>{
+      if(i.type !== 'dir') return;
+      const level = yandexLevelFromFolderName(i.name);
+      if(level) folders.push({ level: level, path: i.path, name: i.name });
+    });
+    folders.sort((a,b)=> String(a.path).localeCompare(String(b.path)));
     if(!folders.length){
       return { added:0, error:'Не найдены папки уровней «Level N-M …» (файлы в корне игнорируются)' };
     }
-    const known = await loadAllDavayBlobs();
+    // Свежий список путей — кэш для следующего раза.
+    state.yandexFolderPaths = folders.map(f=>f.path);
+    saveState();
+    const levelByPath = new Map(folders.map(f=>[f.path, f.level]));
+    let doneCount = 0;
+    const bump = ()=>{
+      doneCount++;
+      davaySyncProgress(`Папок: ${doneCount} из ${folders.length}`);
+    };
+    // Папки уровней читаем ПАРАЛЛЕЛЬНО: запросы не зависят друг от друга,
+    // а 19 последовательных делали синхронизацию заметно долгой.
+    const realPaths = new Set(folders.map(f=>f.path));
+    const folderItems = [];
+    let fetchFailures = 0;
+    await Promise.all(cachedPromises.map(p => p.then(r => {
+      // Папка могла исчезнуть с прошлого раза (переименовали/удалили) — её
+      // ответ не нужен: устаревшие записи вычистит сравнение с корнем ниже.
+      // Сбой чтения — другое: такой папке нельзя «прощать» видео.
+      if(r.failed) fetchFailures++;
+      else if(realPaths.has(r.path)){
+        folderItems.push({ folder: { level: levelByPath.get(r.path), path: r.path, name: '' }, items: r.items });
+      }
+      // Счётчик прогресса — только по нужным папкам: иначе устаревший путь
+      // из кэша показывал бы «Папок: 20 из 19».
+      if(realPaths.has(r.path)) bump();
+    })));
+    // Папки, которых не было в кэше (первая синхронизация или новые на Диске),
+    // догоняем отдельным параллельным раундом.
+    const missing = folders.filter(f => cachedPaths.indexOf(f.path) < 0);
+    await Promise.all(missing.map(folder =>
+      fetchYandexDiskFiles(folder.path)
+        .then(items => ({ folder: folder, items: items || [] }))
+        .catch(() => ({ folder: folder, items: [], failed: true }))
+        .then(r => {
+          if(r.failed) fetchFailures++;
+          folderItems.push(r);
+          bump();
+        })
+    ));
+    const known = await knownPromise;
     const byName = new Map();
     known.forEach(r=>{ if(r.name && !byName.has(r.name)) byName.set(r.name, r); });
     const publicKey = davayYandexPublicKey();
@@ -439,13 +509,6 @@ async function importYandexVideos(){
     const currentPaths = new Set();
     const seenNames = new Set();
     let skipped = 0, unplayable = 0;
-    // Папки уровней читаем ПАРАЛЛЕЛЬНО: 19 последовательных запросов к API
-    // делали синхронизацию заметно долгой, а запросы не зависят друг от друга.
-    const folderItems = await Promise.all(folders.map(folder =>
-      fetchYandexDiskFiles(folder.path)
-        .then(items => ({ folder: folder, items: items || [] }))
-        .catch(() => ({ folder: folder, items: [] }))
-    ));
     for(const { folder, items } of folderItems){
       for(const item of items){
         if(item.type !== 'file' || !YANDEX_VIDEO_RE.test(item.name || '')) continue;
@@ -473,7 +536,9 @@ async function importYandexVideos(){
     }
     if(!rows.length && !updates.length){
       return { added:0, unplayable: unplayable,
-               error: 'В папках уровней видеофайлов нет' };
+               error: fetchFailures
+                 ? 'Часть папок облака не прочиталась — попробуйте ещё раз'
+                 : 'В папках уровней видеофайлов нет' };
     }
     const saved = await saveYandexRows(rows, updates);
     // Устаревшие записи Диска: их пути (и имена) не встречаются в папках.
@@ -481,17 +546,23 @@ async function importYandexVideos(){
     const stale = known.filter(r =>
       r.url && !r.blob && r.yandexPath && !currentPaths.has(r.yandexPath)
       && !(r.name && seenNames.has(r.name)));
-    if(stale.length) await removeYandexRows(stale.map(r=>r.id));
+    // Удалять устаревшее можно только когда ВСЕ папки прочитались: сетевой
+    // сбой на одной папке иначе выглядел бы как «папка опустела», и записи
+    // (вместе с привязкой избранного по id) удалялись бы из-за случайного
+    // сбоя сети. Откладываем чистку до успешной синхронизации.
+    const staleRemoved = stale.length > 0 && fetchFailures === 0;
+    if(staleRemoved) await removeYandexRows(stale.map(r=>r.id));
     // Каталог перечитываем, когда появились новые строки ИЛИ удалены старые —
     // только так удалённые исчезнут из игры и пула «показанных». При обновлении
     // одних лишь ссылок перечитывание не нужно: saveYandexRows обновила те же
     // объекты в памяти, что держит игра (currentDavayCard/davayHistory).
-    if(rows.length > 0 || stale.length > 0){
+    if(rows.length > 0 || staleRemoved){
       refreshDavayCatalogInMemory();
       await ensureImportedDavayVideosLoaded();
     }
     return { added: rows.length, refreshed: updates.length,
-             removed: stale.length, skipped: skipped, unplayable: unplayable };
+             removed: staleRemoved ? stale.length : 0, skipped: skipped,
+             unplayable: unplayable, fetchFailures: fetchFailures };
   } catch(err){
     return { added:0, error: err.message || String(err) };
   } finally {
@@ -499,9 +570,6 @@ async function importYandexVideos(){
   }
 }
 
-// Обновить подписанные ссылки, которым больше YANDEX_HREF_TTL. Один запрос
-// списка обновляет сразу все ссылки — ради этого и храним пути. force=true
-// обновляет принудительно (например, когда видео не открылось).
 // Обновить подписанные ссылки, которым больше YANDEX_HREF_TTL. Один запрос
 // списка обновляет сразу все ссылки — ради этого и храним пути. force=true
 // обновляет принудительно (например, когда видео не открылось).
@@ -1194,38 +1262,39 @@ document.getElementById('davaySetupImportBtn').addEventListener('click', ()=>{
   davayImportInputEl.click();
 });
 document.getElementById('davaySetupYandexBtn').addEventListener('click', async ()=>{
-  // Кнопка «Обновить видеофайлы» (раньше «☁️ Яндекс Диск»): синхронизируем
-  // каталог с публичной папкой. Папки «Level N-M …» раскладываются по
-  // игровым уровням 1..6 (N — номер уровня; подуровень M пока не используем),
-  // файлы в корне и папки не по формату игнорируются.
+  // Кнопка «Обновить видеофайлы»: синхронизируем каталог с публичной папкой.
+  // Папки «Level N-M …» раскладываются по игровым уровням 1..6 (N — номер
+  // уровня, M — подуровень), файлы в корне и папки не по формату игнорируются.
   if(yandexDiskLoading){
-    // Синхронизация уже идёт — не гасим её тост «Синхронизируем…» и не
-    // запускаем вторую параллельную (importYandexVideos и так вернёт «Загрузка
-    // уже идёт», но его тост ошибки заменил бы живой индикатор).
+    // Синхронизация уже идёт: окно прогресса открыто и закроется само.
     return;
   }
   if(!davayYandexPublicKey()){
     showToast('❌ Ссылка на папку Яндекс Диска не задана');
     return;
   }
-  // duration=0 — тост «не гаснет», пока синхронизация не закончится; результат
-  // (успех или ошибка ниже) придёт ему на смену. Раньше «Синхронизируем…»
-  // исчезал через 1.8 с, а синхронизация шла ещё десятки секунд — игрок видел
-  // пустой экран настроек и не понимал, что работа идёт.
-  showToast('☁️ Синхронизируем файлы с облака…', 0);
+  // Окно прогресса вместо тоста: тост исчезал через пару секунд, а работа шла
+  // в фоне — игрок не понимал, готово ли облако, и жаловался, что «кнопки
+  // плохо срабатывают». Модалка перекрывает интерфейс, крутит диск и считает
+  // папки; закрывается сама по завершении (успех или ошибка — ниже).
+  const syncModal = document.getElementById('davaySyncModal');
+  if(syncModal) syncModal.classList.add('show');
+  davaySyncProgress('Подготовка…');
   const result = await importYandexVideos();
+  if(syncModal) syncModal.classList.remove('show');
   if(result.error && !result.added){
     showToast('❌ ' + result.error);
     return;
   }
   const tail = result.unplayable ? ` (.avi/.mkv пропущено: ${result.unplayable})` : '';
   const removed = result.removed ? `, удалено устаревших: ${result.removed}` : '';
+  const partial = result.fetchFailures ? ' (часть папок не прочиталась — нажмите ещё раз)' : '';
   if(result.added > 0){
-    showToast(`✅ Синхронизация выполнена. Новых: ${result.added}. Ссылки обновлены у ${result.refreshed} видео — уровни 1–6${removed}${tail}`);
+    showToast(`✅ Синхронизация выполнена. Новых: ${result.added}. Ссылки обновлены у ${result.refreshed} видео — уровни 1–6${removed}${tail}${partial}`);
     return;
   }
   const note = result.unplayable ? `, .avi/.mkv пропущено: ${result.unplayable}` : '';
-  showToast(`✅ Синхронизация выполнена. Обновлены ссылки у ${result.refreshed || 0} видео — уровни 1–6${removed}${note}`);
+  showToast(`✅ Синхронизация выполнена. Обновлены ссылки у ${result.refreshed || 0} видео — уровни 1–6${removed}${note}${partial}`);
 });
 document.getElementById('yandexLinksCloseBtn').addEventListener('click', ()=>{
   document.getElementById('yandexLinksModal').classList.remove('show');

@@ -1057,10 +1057,12 @@ function checkStyles(html) {
   check('обновление ссылок Диска читает папки уровней',
     levelFilesUses >= 2,
     `fetchYandexLevelFiles используется ${levelFilesUses} раз(а), нужно в обоих обновлениях ссылок`);
-  // Синхронизация читает папки уровней параллельно (Promise.all) — последовательные
-  // 19 запросов делали её заметно долгой, и игрок ждал «Синхронизируем…» десятки секунд.
+  // Синхронизация читает папки уровней параллельно в два раунда (Promise.all):
+  // кэшированные с прошлого раза — одновременно с запросом корня, новые —
+  // догоняющим раундом. Последовательные 19 запросов делали её заметно долгой.
   check('синхронизация читает папки Диска параллельно',
-    /const folderItems = await Promise\.all\(folders\.map/.test(davaySrc),
+    /await Promise\.all\(cachedPromises\.map/.test(davaySrc)
+      && /await Promise\.all\(missing\.map/.test(davaySrc),
     'чтение папок снова последовательное — синхронизация медленная');
   // Оверлей «Загрузка видео…» на карточке плеера обеих видео-игр прячется на playing.
   const videoSrc2 = read('games/fants-video.js');
@@ -1077,9 +1079,11 @@ function checkStyles(html) {
   check('showToast умеет не гаснуть (duration === 0)',
     /if\(duration === 0\) return;/.test(coreSrc),
     'showToast не поддерживает постоянный тост — «Синхронизируем…» снова исчезает');
-  check('тост синхронизации не гаснет до результата',
-    /showToast\('☁️ Синхронизируем файлы с облака…', 0\);/.test(davaySrc2),
-    '«Синхронизируем…» показывается без постоянного режима и исчезает раньше времени');
+  check('окно синхронизации открыто до результата и закрыто после',
+    /syncModal\.classList\.add\('show'\)/.test(davaySrc2)
+      && /syncModal\.classList\.remove\('show'\)/.test(davaySrc2)
+      && /await importYandexVideos\(\)/.test(davaySrc2),
+    'синхронизация снова идёт в фоне без видимого окна');
   // Кнопки в модалках импорта — те же шесть уровней с теми же названиями.
   const davayHtml = read('index.html');
   const choices = [...davayHtml.matchAll(/davay-level-choice" data-level="(\d)">([^<]+)</g)]
@@ -1140,6 +1144,21 @@ function checkStyles(html) {
     /else if\(davaySubLevel > 0\)/.test(davaySrc2)
       && /else if\(videoSubLevel > 0\)/.test(videoSrc2),
     'отбор карточек по подуровню пропал из draw-функций');
+  // Окно прогресса синхронизации: блокирует интерфейс на время «Обновить
+  // видеофайлы» — тост гас через пару секунд, а работа шла в фоне, и игрок
+  // не понимал, готово ли облако.
+  check('окно прогресса синхронизации есть в разметке и управляется кодом',
+    davayHtml.includes('id="davaySyncModal"')
+      && davayHtml.includes('id="davaySyncProgress"')
+      && davaySrc2.includes("getElementById('davaySyncModal')")
+      && davaySrc2.includes('davaySyncProgress('),
+    'модалка прогресса или управление ей потерялись');
+  check('у окна синхронизации есть спиннер в стилях',
+    css.includes('.davay-sync-spinner') && css.includes('@keyframes davay-sync-spin'),
+    'спиннер окна синхронизации исчез из CSS');
+  check('сбой чтения папки не удаляет видео из каталога',
+    davaySrc2.includes('staleRemoved = stale.length > 0 && fetchFailures === 0'),
+    'устаревшие записи снова удаляются без проверки сбоев чтения папок');
   // Счёт «Парень: 0 / Девушка: 0» в «Давай попробуем» не ведётся — он висел
   // над карточкой с нулями. Имена игроков и шкала прогресса остаются.
   check('счёт скрыт в «Давай попробуем»', scoreHidden('davay-mode'),

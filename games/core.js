@@ -168,6 +168,10 @@ let state = {
   // браузере виден посетителю. Папка читается по одной ссылке без авторизации.
   // Внутри папки — папки уровней «Level N-M …», см. fants-davay.js.
   yandexPublicKey:'https://disk.yandex.ru/d/uv6GUxruxjpkzQ',
+  // Кэш путей папок уровней «Level N-M …» с прошлой синхронизации: список
+  // папок меняется редко, поэтому при повторном «Обновить видеофайлы» запросы
+  // к папкам уходят одновременно с запросом корня — без его ожидания.
+  yandexFolderPaths:[],
   pausedMode:null, lastSectionOnPause:null,
   // Правда или действие
   tdSelectedLevel:3, tdCurrentPlayer:1, tdScore1:0, tdScore2:0, tdUsed:{}, tdHidden:[],
