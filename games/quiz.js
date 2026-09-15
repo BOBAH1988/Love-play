@@ -429,10 +429,11 @@ function pauseQuizGame(){
   stopQuizInterval();
   stopQuizSpeech();
   state.pausedMode = 'quiz';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   document.getElementById('quizGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
-    showSetupView('twoPlayerView');
+  showSetupView('twoPlayerView');
   updateResumeUI();
 }
 function resumeQuizGame(){

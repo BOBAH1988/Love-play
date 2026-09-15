@@ -1519,6 +1519,7 @@ function isDavayMode(){
 // через «Закончить игру».
 function pauseDavayGame(){
   state.pausedMode = 'davay';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   if(document.fullscreenElement) document.exitFullscreen();
   davayFullscreenActive = false;

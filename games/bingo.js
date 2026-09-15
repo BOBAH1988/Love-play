@@ -363,6 +363,7 @@ function goToBingoGame(){
 // позже через общий блок "Продолжить игру" / "Закончить игру".
 function pauseBingoGame(){
   state.pausedMode = 'bingo';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   document.getElementById('bingoGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');

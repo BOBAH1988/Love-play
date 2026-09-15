@@ -571,6 +571,7 @@ function showRouletteResults(){
 }
 function pauseGamePartyRoulette(){
   state.pausedMode = 'partyRoulette';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   const pauseModal = document.getElementById('pauseMenuModal');
   if(pauseModal) pauseModal.classList.add('show');

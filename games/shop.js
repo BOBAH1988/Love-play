@@ -298,6 +298,7 @@ function pauseShopGame(){
     saleTotal: shopSaleTotal,
     cashGiven: shopCashGiven
   };
+  state.lastPauseView = getCurrentSetupView();
   state.pausedMode = 'shop';
   saveState();
   document.getElementById('shopGame').classList.remove('active');

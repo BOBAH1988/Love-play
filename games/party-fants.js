@@ -121,6 +121,7 @@ function goToPartyFantsGame(){
 // продолжить позже через общий блок "Продолжить игру" / "Закончить игру".
 function pausePartyFantsGame(){
   state.pausedMode = 'partyFants';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   document.getElementById('partyFantsGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');

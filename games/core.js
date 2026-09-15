@@ -172,7 +172,7 @@ let state = {
   // папок меняется редко, поэтому при повторном «Обновить видеофайлы» запросы
   // к папкам уходят одновременно с запросом корня — без его ожидания.
   yandexFolderPaths:[],
-  pausedMode:null, lastSectionOnPause:null,
+  pausedMode:null, lastSectionOnPause:null, lastPauseView:null,
   // Правда или действие
   tdSelectedLevel:3, tdCurrentPlayer:1, tdScore1:0, tdScore2:0, tdUsed:{}, tdHidden:[],
   tdCompletedCount:0, tdSkippedCount:0,
@@ -2164,6 +2164,15 @@ function activateSingleScreen(id){
   window.scrollTo(0, 0);
   return true;
 }
+// Текущий активный раздел настроек (homeView/twoPlayerView/kidsView и т.д.) —
+// нужно для корректного возврата после паузы, когда точка входа не сохранена.
+function getCurrentSetupView(){
+  for(const id of SETUP_VIEW_IDS){
+    const el = document.getElementById(id);
+    if(el && el.classList.contains('section-open')) return id;
+  }
+  return null;
+}
 // Запомнить точку входа. view — раздел хаба (#setup), в котором был игрок:
 // он нужен, если возвращаться придётся в сам хаб (например из «Виселицы»).
 function rememberReturnScreen(id, view){
@@ -2193,7 +2202,7 @@ function returnToEntryScreen(){
   }
   if(typeof returnToSetupUI === 'function'){
     returnToSetupUI();
-    const view = entry.view || (typeof getPausedGroup === 'function' && getPausedGroup() === 'two' ? 'twoPlayerView' : null);
+    const view = entry.view || state.lastPauseView;
     if(view && typeof showSetupView === 'function') showSetupView(view);
     return false;
   }
@@ -2216,6 +2225,7 @@ function returnToSetupUI(){
 // Пауза: выйти в настройки, не сбрасывая счёт и прогресс — можно продолжить позже
 function pauseGame(){
   state.pausedMode = 'fanty';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   returnToSetupUI();
 }

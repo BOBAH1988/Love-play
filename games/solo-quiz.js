@@ -265,6 +265,7 @@ function pauseSoloQuizGame(){
   stopSoloQuizSpeech();
   if(soloQuizAdvanceTimerId){ clearTimeout(soloQuizAdvanceTimerId); soloQuizAdvanceTimerId = null; }
   state.pausedMode = 'soloQuiz';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   document.getElementById('soloQuizGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');

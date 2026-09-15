@@ -428,6 +428,7 @@ function goToLuckyGame(){
 // продолжить позже через общий блок "Продолжить игру" / "Закончить игру".
 function pauseLuckyGame(){
   state.pausedMode = 'lucky';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   document.getElementById('luckyGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');

@@ -381,6 +381,7 @@ function goToKidsSaperGame(){
 }
 function pauseKidsSaperGame(){
   state.pausedMode = 'kidsSaper';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   document.getElementById('kidsSaperGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');

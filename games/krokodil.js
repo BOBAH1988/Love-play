@@ -400,6 +400,7 @@ function exitKrokodilGame(){
 function pauseKrokodilGame(){
   stopKrInterval();
   state.pausedMode = 'krokodil';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   document.getElementById('krokodilGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');

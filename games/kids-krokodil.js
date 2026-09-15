@@ -82,6 +82,7 @@ function exitKidsKrokodilSetup(){
 function pauseKidsKrokodilGame(){
   stopKkrInterval();
   state.pausedMode = 'kidsKrokodil';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   document.getElementById('kidsKrokodilGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');

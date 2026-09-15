@@ -226,6 +226,7 @@ function pauseKidsMemoryGame(){
   kidsMemoryFlipped = [];
   kidsMemoryBusy = false;
   state.pausedMode = 'kidsMemory';
+  state.lastPauseView = getCurrentSetupView();
   saveState();
   document.getElementById('kidsMemoryGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
