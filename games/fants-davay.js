@@ -826,19 +826,6 @@ const DAVAY_MAX_LEVEL = DAVAY_LEVEL_MAX;
 function davayLevelInfo(id){
   return DAVAY_LEVELS.find(l=>l.id === id) || DAVAY_LEVELS[0];
 }
-// Описание папки Яндекса для уровня и подуровня — из путей уже импортированных
-// карточек («disk:/Level 1-2 Ласки легкие/…» → «Ласки легкие»). Отдельное поле
-// в базе не нужно: имя папки всегда читается из yandexPath.
-function davayLevelFolderInfo(level, sub){
-  let desc = null;
-  importedDavayCards.forEach(c=>{
-    if(c.level === level && davayCardSubLevel(c) === sub){
-      const d = davayFolderDescFromPath(c.yandexPath);
-      if(d) desc = d;
-    }
-  });
-  return desc;
-}
 // Привести номер уровня к существующему 1..6.
 //
 // Без этого drawDavayCard() с чужим номером не находит видео и показывает

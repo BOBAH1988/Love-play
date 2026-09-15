@@ -2056,15 +2056,6 @@ function davaySubLevelFromPath(path){
 function davayCardSubLevel(card){
   return davaySubLevelFromPath(card && card.yandexPath);
 }
-// Описание папки из её имени на Диске: всё, что после «Level N-M ».
-// 'disk:/Level 1-2 Ласки легкие/f.webm' → 'Ласки легкие'.
-function davayFolderDescFromPath(path){
-  if(!path) return null;
-  const seg = String(path).split('/').find(s=>/^Level\s+\d+/i.test(s || ''));
-  if(!seg) return null;
-  const m = /^Level\s+\d+(?:-\d+)?\s+(.+)$/i.exec(seg.trim());
-  return m ? m[1].trim() : null;
-}
 // Следующий подуровень с видео ВЫШЕ текущего в этом же уровне (0 — своих
 // папок выше нет). Каталог один на обе игры, поэтому функция общая; текущий
 // подуровень передаётся явно, потому что в момент вызова он ещё старый.

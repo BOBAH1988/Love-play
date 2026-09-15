@@ -1169,8 +1169,7 @@ document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
   playLevelUpSound();
   if(sub){
     if(!switchVideoLevel(videoLevel, sub)) return;
-    const desc = davayLevelFolderInfo(videoLevel, sub);
-    showToast(desc ? `Горячее: Level ${videoLevel}-${sub} — ${desc}` : `Горячее: Level ${videoLevel}-${sub}`);
+    showToast(`Горячее: Level ${videoLevel}-${sub}`);
   } else {
     const next = videoLevel + 1;
     if(!switchVideoLevel(next, 1)) return;
@@ -1206,8 +1205,7 @@ document.getElementById('davayLevelUpBtn').addEventListener('click', ()=>{
   if(sub){
     const r = switchVideoLevel(davayLevel, sub);
     if(!r) return;
-    const desc = davayLevelFolderInfo(davayLevel, sub);
-    showToast((desc ? `Горячее: Level ${davayLevel}-${sub} — ${desc}` : `Горячее: Level ${davayLevel}-${sub}`)
+    showToast(`Горячее: Level ${davayLevel}-${sub}`
       + (r.restarted ? '. Раунд начат заново' : ''));
   } else {
     const r = switchVideoLevel(davayLevel + 1, 1);
