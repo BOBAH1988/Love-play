@@ -1749,6 +1749,13 @@
   }
   .card-empty .card-inner{align-items:center; justify-content:center;}
   .card-empty .card-icon{font-size:52px;}
+  /* Заглушка «Загрузка видео…» при входе в видео-игру: её содержимое лежит в
+     #card напрямую (без .card-inner), а базовый .card прижимает детей кверху
+     (justify-content:flex-start). Центрируем, чтобы индикатор стоял там же,
+     где оверлей «Загрузка видео…» на карточке плеера: одна точка ожидания
+     вместо двух одинаковых надписей в разных местах экрана. */
+  #game.video-mode .card.card-empty, #game.davay-mode .card.card-empty{justify-content:center;}
+  #game.video-mode .card.card-empty > .card-icon{margin-bottom:14px;}
   /* Заглушка «Давай попробуем» (нет видео уровня / избранное пусто): иконка —
      символ самой игры (🎬, как в заголовке и меню), а не игральная карта 🃏,
      и вдвое крупнее обычной пустой карточки (52 → 104px). */
