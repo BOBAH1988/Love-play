@@ -793,9 +793,12 @@ function normalizeDavayLevel(v){
   return (isFinite(n) && n >= DAVAY_LEVEL_MIN && n <= DAVAY_LEVEL_MAX) ? n : DAVAY_LEVEL_MIN;
 }
 let davayLevel = 1;
-// Подуровень «Горячее» (0 — базовый): играть ролики папки «Level N-M …».
-// Сбрасывается при старте новой партии; в просмотре избранного не применяется.
-let davaySubLevel = 0;
+// Подуровень «Горячее». Базовое состояние — 1: игра играет ролики папки
+// «Level N-1 …» выбранного в «Уровнях заданий» уровня, а не все папки уровня
+// вперемешку. «Горячее» шагает дальше (Level 1-2 …), «Повысить уровень»
+// ведёт на следующий уровень. Сбрасывается при старте новой партии; в
+// просмотре избранного не применяется.
+let davaySubLevel = 1;
 let currentDavayCard = null;
 let davayHistory = []; // для свайпов влево/вправо между уже показанными видео
 let davayHistoryPos = -1;
@@ -890,9 +893,12 @@ document.getElementById('davayFavPrevBtn').addEventListener('click', ()=>{
 });
 
 function updateDavayLevelBtn(){
+  // Кнопку «Горячее» не блокируем на максимальном уровне: внутри уровня
+  // могут быть ещё папки подуровней (Level 6-2 …), и шагать по ним можно.
+  // Если идти дальше некуда — обработчик сам покажет тост.
   const btn = document.getElementById('davayLevelUpBtn');
   if(!btn) return;
-  btn.disabled = davayLevel >= DAVAY_MAX_LEVEL;
+  btn.disabled = false;
 }
 function drawDavayCard(level){
   davayLevel = level;
@@ -903,8 +909,12 @@ function drawDavayCard(level){
   if(state.davayFavoritesOnly){
     all = all.filter(c=>liked.includes(davayCardId(c)));
   } else if(davaySubLevel > 0){
-    // «Горячее»: показываем ролики только из папки «Level N-M …» этого уровня.
-    all = all.filter(c=>davayCardSubLevel(c)===davaySubLevel);
+    // Играем только папку выбранного подуровня («Level N-1 …», см. davaySubLevel).
+    // Фолбэк: если роликов с таким подуровнем нет (например, все видео — свои,
+    // добавленные с телефона без папки на Диске), играем весь уровень, а не
+    // показываем «нет видео».
+    const subOnly = all.filter(c=>davayCardSubLevel(c)===davaySubLevel);
+    if(subOnly.length) all = subOnly;
   }
   if(all.length===0){
     currentDavayCard = null;
@@ -1380,7 +1390,7 @@ async function goToDavayGame(){
   state.davayHidden = [];
   davayHistory = [];
   davayHistoryPos = -1;
-  davaySubLevel = 0;
+  davaySubLevel = 1;
   // Новая партия — всегда обычный квиз, а не режим "просмотр избранного"
   // (иначе после однажды открытого избранного игра застревала бы в нём).
   state.davayFavoritesOnly = false;

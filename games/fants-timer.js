@@ -1392,7 +1392,7 @@ document.getElementById('ageGateMinorBtn').addEventListener('click', ()=>{
 applyKidsModeRestrictions();
 // «Горячее» в «Видеорулетке»: следующая папка Яндекса внутри уровня
 // («Level 1-1 …» → «Level 1-2 …»), а когда своих папок в уровне больше нет —
-// следующий уровень (прежнее поведение кнопки).
+// следующий уровень.
 document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
   const sub = nextDavaySubLevel(videoLevel, videoSubLevel);
   if(!sub && videoLevel >= VIDEO_MAX_LEVEL){
@@ -1407,13 +1407,13 @@ document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
     showToast(desc ? `Горячее: Level ${videoLevel}-${sub} — ${desc}` : `Горячее: Level ${videoLevel}-${sub}`);
   } else {
     const next = videoLevel + 1;
-    if(!switchVideoLevel(next, 0)) return;
+    if(!switchVideoLevel(next, 1)) return;
     showToast(`Уровень повышен: ${next}`);
   }
 });
-// «Повысить уровень» в «Видеорулетке»: всегда строго на следующий уровень,
-// подуровни пропускает — парная к «Горячему» кнопка (в «Давай попробуем» та же
-// логика у davayNextBtn).
+// «Повысить уровень» в «Видеорулетке»: всегда строго на следующий уровень
+// (Level 1-1 → Level 2-1), подуровни пропускает — парная к «Горячему» кнопка
+// (в «Давай попробуем» та же логика у davayNextBtn).
 document.getElementById('videoNextBtn').addEventListener('click', ()=>{
   if(videoLevel >= VIDEO_MAX_LEVEL){
     playErrorSound();
@@ -1421,11 +1421,11 @@ document.getElementById('videoNextBtn').addEventListener('click', ()=>{
     return;
   }
   playLevelUpSound();
-  if(!switchVideoLevel(videoLevel + 1, 0)) return;
+  if(!switchVideoLevel(videoLevel + 1, 1)) return;
   showToast(`Уровень повышен: ${videoLevel}`);
 });
 // Кнопки уровней «Давай попробуем»: «Горячее» шагает по папкам Яндекса внутри
-// уровня, «⬆️ Повысить» — всегда строго на следующий уровень (Level 1-1 →
+// уровня, «Повысить уровень» — всегда строго на следующий уровень (Level 1-1 →
 // Level 2-1), подуровни пропускает. Посреди раунда уровень не меняется —
 // это проверяет switchVideoLevel (см. core.js).
 document.getElementById('davayLevelUpBtn').addEventListener('click', ()=>{
@@ -1441,7 +1441,7 @@ document.getElementById('davayLevelUpBtn').addEventListener('click', ()=>{
     const desc = davayLevelFolderInfo(davayLevel, sub);
     showToast(desc ? `Горячее: Level ${davayLevel}-${sub} — ${desc}` : `Горячее: Level ${davayLevel}-${sub}`);
   } else {
-    if(!switchVideoLevel(davayLevel + 1, 0)) return;
+    if(!switchVideoLevel(davayLevel + 1, 1)) return;
     showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`);
   }
 });
@@ -1452,7 +1452,7 @@ document.getElementById('davayNextBtn').addEventListener('click', ()=>{
     return;
   }
   playLevelUpSound();
-  if(!switchVideoLevel(davayLevel + 1, 0)) return;
+  if(!switchVideoLevel(davayLevel + 1, 1)) return;
   showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`);
 });
 // "Готовы повторить?" — игра на двоих: сначала выбирается, кто отвечает
@@ -1465,7 +1465,13 @@ function getDavayQuizPool(){
   const seen = new Set();
   const pool = [];
   const hidden = state.davayHidden || [];
-  getDavayCardsList().filter(c=>c.level===davayLevel && !hidden.includes(davayCardId(c))).forEach(c=>{
+  let poolAll = getDavayCardsList().filter(c=>c.level===davayLevel && !hidden.includes(davayCardId(c)));
+  // Подуровень всегда 1: очередь квиза собирается из папки «Level N-1 …»
+  // выбранного уровня. Фолбэк — если роликов с таким подуровнем нет (свои
+  // видео с телефона не имеют папки), играем весь уровень.
+  const subPool = poolAll.filter(c=>davayCardSubLevel(c)===davaySubLevel);
+  if(subPool.length) poolAll = subPool;
+  poolAll.forEach(c=>{
     const id = davayCardId(c);
     if(seen.has(id)) return;
     seen.add(id);

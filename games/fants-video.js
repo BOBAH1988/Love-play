@@ -112,9 +112,12 @@ function clearAllVideoBlobs(){
 // «Видеорулетке» упиралась в несуществующий максимум. Уровней в каталоге 6.
 const VIDEO_MAX_LEVEL = 6;
 let videoLevel = 1;
-// Подуровень «Горячее» (0 — базовый): играть ролики папки «Level N-M …».
-// Сбрасывается при старте новой партии; в просмотре избранного не применяется.
-let videoSubLevel = 0;
+// Подуровень «Горячее». Базовое состояние — 1: игра играет ролики папки
+// «Level N-1 …» уровня из «Уровней заданий» (state.davaySelectedLevel), а не
+// все папки уровня вперемешку. «Горячее» шагает дальше (Level 1-2 …),
+// «Повысить уровень» ведёт на следующий уровень. В просмотре избранного
+// не применяется.
+let videoSubLevel = 1;
 let currentVideoCard = null;
 let videoHistory = []; // для свайпов влево/вправо между уже показанными видео
 let videoHistoryPos = -1;
@@ -401,9 +404,12 @@ if(window.visualViewport){
 }
 
 function updateVideoLevelBtn(){
+  // Кнопку «Горячее» не блокируем на максимальном уровне: внутри уровня
+  // могут быть ещё папки подуровней (Level 6-2 …), и шагать по ним можно.
+  // Если идти дальше некуда — обработчик сам покажет тост.
   const btn = document.getElementById('videoLevelUpBtn');
   if(!btn) return;
-  btn.disabled = videoLevel >= VIDEO_MAX_LEVEL;
+  btn.disabled = false;
 }
 function drawVideoCard(level, announceEmpty){
   videoLevel = level;
@@ -416,8 +422,12 @@ function drawVideoCard(level, announceEmpty){
   if(state.videoFavoritesOnly){
     all = all.filter(c=>liked.includes(videoCardId(c)));
   } else if(videoSubLevel > 0){
-    // «Горячее»: показываем ролики только из папки «Level N-M …» этого уровня.
-    all = all.filter(c=>davayCardSubLevel(c)===videoSubLevel);
+    // Играем только папку выбранного подуровня («Level N-1 …», см. videoSubLevel).
+    // Фолбэк: если роликов с таким подуровнем нет (например, все видео — свои,
+    // добавленные с телефона без папки на Диске), играем весь уровень, а не
+    // показываем «нет видео»/демо.
+    const subOnly = all.filter(c=>davayCardSubLevel(c)===videoSubLevel);
+    if(subOnly.length) all = subOnly;
   }
   if(all.length===0){
     currentVideoCard = null;
@@ -767,8 +777,12 @@ async function goToVideoGame(){
   state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = true;
-  videoLevel = 1;
-  videoSubLevel = 0;
+  // Стартуем с уровня, выбранного в «Уровнях заданий» страницы «Давай
+  // попробуем» (тот же, что и у самой игры), а не с первого по умолчанию —
+  // раньше видеорулетка всегда начинала с уровня 1, и выбранное в настройках
+  // игнорировалось.
+  videoLevel = davaySelectedLevel();
+  videoSubLevel = 1;
   state.videoUsed = {};
   state.videoHidden = [];
   // Новая партия — начинаем с чистого листа: список «битых» роликов сбрасываем,
@@ -865,7 +879,7 @@ async function goToVideoFavoritesView(){
   state.inProgress = true;
   await ensureImportedDavayVideosLoaded();
   videoLevel = pickVideoFavoritesStartLevel();
-  videoSubLevel = 0;
+  videoSubLevel = 1;
   state.videoUsed = {};
   state.videoHidden = [];
   state.videoFavoritesOnly = true;
