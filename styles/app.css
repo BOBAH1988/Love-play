@@ -1920,10 +1920,20 @@
   .controls.video-extra-open .video-extra-toggle .video-extra-arrow{transform:rotate(180deg);}
   #game.video-mode #doneBtn{order:1; flex:1; min-width:0; font-size:14px; padding:0 8px;}
   #game.video-mode #videoLevelUpBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:13px;}
-  /* В "Давай попробуем" вместо "Следующее"/"Горячее" — заголовок и три кнопки,
-     "Выход" стоит рядом с этими тремя кнопками, "Избранное" (сердечко) теперь
-     хранит видео, на которые оба игрока независимо ответили "Да". */
-  #game.davay-mode #doneBtn, #game.davay-mode #davayLevelUpBtn{display:none;}
+  /* В "Давай попробуем" вместо "Следующее" — заголовок и три кнопки ответов;
+     "Избранное" (сердечко) хранит видео, на которые оба игрока независимо
+     ответили "Да". */
+  #game.davay-mode #doneBtn{display:none;}
+  /* Кнопки уровней в "Давай попробуем" — в том же ряду после "Нет":
+     "Горячее" — следующая папка Яндекса внутри уровня ("Level 1-1 …" →
+     "Level 1-2 …"), а когда своих папок в уровне больше нет — следующий
+     уровень; "⬆️ Повысить" — всегда строго следующий уровень
+     ("Level 1-1" → "Level 2-1"), подуровни пропускает. */
+  #game.davay-mode #davayLevelUpBtn{order:5;}
+  #davayNextBtn{display:none;}
+  #game.davay-mode #davayNextBtn{
+    display:flex; order:6; flex:1; min-width:0; font-size:13px; padding:0 6px;
+  }
   /* Ряд с именами игроков над карточкой: кто сейчас отвечает — выбор игрока
      сделан заранее на странице настройки, кнопки тут только для отображения. */
   .davay-player-row{display:none;}

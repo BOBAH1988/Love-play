@@ -1390,33 +1390,57 @@ document.getElementById('ageGateMinorBtn').addEventListener('click', ()=>{
   titleEl.addEventListener('pointercancel', clearPressTimer);
 })();
 applyKidsModeRestrictions();
+// «Горячее» в «Видеорулетке»: следующая папка Яндекса внутри уровня
+// («Level 1-1 …» → «Level 1-2 …»), а когда своих папок в уровне больше нет —
+// следующий уровень (прежнее поведение кнопки).
 document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
-  if(videoLevel < VIDEO_MAX_LEVEL){
-    playLevelUpSound();
-    const newLevel = videoLevel + 1;
-    // announceEmpty=false здесь — свою подсказку "Добавьте видео" покажем
-    // сами ниже, чтобы она не перекрывалась тостом "Уровень повышен"
-    // (общий #toast может показывать только одно сообщение одновременно).
-    const usedFallback = drawVideoCard(newLevel, false);
-    if(usedFallback){
-      showToast(`Уровень повышен: ${newLevel} — своих видео здесь нет, показываем демо. Добавьте видео на странице «Давай попробуем»`);
-    } else {
-      showToast(`Уровень повышен: ${newLevel}`);
-    }
-  } else {
+  const sub = nextDavaySubLevel(videoLevel, videoSubLevel);
+  if(!sub && videoLevel >= VIDEO_MAX_LEVEL){
+    playErrorSound();
     showToast('Это максимальный уровень 🔥');
+    return;
+  }
+  playLevelUpSound();
+  if(sub){
+    if(!switchVideoLevel(videoLevel, sub)) return;
+    const desc = davayLevelFolderInfo(videoLevel, sub);
+    showToast(desc ? `Горячее: Level ${videoLevel}-${sub} — ${desc}` : `Горячее: Level ${videoLevel}-${sub}`);
+  } else {
+    const next = videoLevel + 1;
+    if(!switchVideoLevel(next, 0)) return;
+    showToast(`Уровень повышен: ${next}`);
   }
 });
+// Кнопки уровней «Давай попробуем»: «Горячее» шагает по папкам Яндекса внутри
+// уровня, «⬆️ Повысить» — всегда строго на следующий уровень (Level 1-1 →
+// Level 2-1), подуровни пропускает. Посреди раунда уровень не меняется —
+// это проверяет switchVideoLevel (см. core.js).
 document.getElementById('davayLevelUpBtn').addEventListener('click', ()=>{
-  if(davayLevel < DAVAY_MAX_LEVEL){
-    playLevelUpSound();
-    drawDavayCard(davayLevel + 1);
-    // Уровни теперь называются («Ласки», «Ртом», «Экзотика»…), поэтому в тосте
-    // показываем и номер, и название — раньше было просто «Уровень повышен: 2».
-    showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`);
-  } else {
+  const sub = nextDavaySubLevel(davayLevel, davaySubLevel);
+  if(!sub && davayLevel >= DAVAY_MAX_LEVEL){
+    playErrorSound();
     showToast('Это максимальный уровень 🔥');
+    return;
   }
+  playLevelUpSound();
+  if(sub){
+    if(!switchVideoLevel(davayLevel, sub)) return;
+    const desc = davayLevelFolderInfo(davayLevel, sub);
+    showToast(desc ? `Горячее: Level ${davayLevel}-${sub} — ${desc}` : `Горячее: Level ${davayLevel}-${sub}`);
+  } else {
+    if(!switchVideoLevel(davayLevel + 1, 0)) return;
+    showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`);
+  }
+});
+document.getElementById('davayNextBtn').addEventListener('click', ()=>{
+  if(davayLevel >= DAVAY_MAX_LEVEL){
+    playErrorSound();
+    showToast('Это максимальный уровень 🔥');
+    return;
+  }
+  playLevelUpSound();
+  if(!switchVideoLevel(davayLevel + 1, 0)) return;
+  showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`);
 });
 // "Готовы повторить?" — игра на двоих: сначала выбирается, кто отвечает
 // первым, ему показывают 10 разных видео, на каждое — Да/Не сейчас/Нет.

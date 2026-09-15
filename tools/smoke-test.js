@@ -530,6 +530,27 @@ test('Сценарий: уровни «Давай попробуем» 1..6 чи
   }
 });
 
+test('Сценарий: подуровень папки «Level N-M …» читается из yandexPath', () => {
+  // «Горячее» шагает по папкам Яндекса внутри уровня: подуровень — второй
+  // номер в имени папки, он же второй сегмент yandexPath. Ошибка парсинга
+  // уводила бы кнопку «Горячее» не в ту папку или прятала бы все видео уровня.
+  if (typeof global.davaySubLevelFromPath !== 'function') {
+    assert(false, 'davaySubLevelFromPath недоступна глобально');
+    return;
+  }
+  const sub = global.davaySubLevelFromPath;
+  assert(sub('disk:/Level 1-2 Ласки легкие/f.webm') === 2, 'путь «Level 1-2 …» должен давать подуровень 2');
+  assert(sub('disk:/Level 3-1 Близость/f.mp4') === 1, 'путь «Level 3-1 …» должен давать подуровень 1');
+  assert(sub('disk:/Level 6-2 На троих/f.webm') === 2, 'путь «Level 6-2 …» должен давать подуровень 2');
+  assert(sub(null) === 0 && sub('') === 0, 'пустой путь должен давать базовый подуровень 0');
+  assert(sub('disk:/Новая папка/f.webm') === 0, 'путь без «Level N-M …» должен давать 0');
+  assert(sub('disk:/Level 1-1 Ласки разогрев/f.webm') === 1, 'путь «Level 1-1 …» должен давать подуровень 1');
+  if (typeof global.davayFolderDescFromPath === 'function') {
+    const desc = global.davayFolderDescFromPath('disk:/Level 1-2 Ласки легкие/f.webm');
+    assert(desc === 'Ласки легкие', `описание папки потерялось: ${JSON.stringify(desc)}`);
+  }
+});
+
 test('Сценарий: «Предложи партнёру» по-прежнему показывает уровень, а не название игры', () => {
   // В placeholder-режиме .game-level-label занят уровнем («🔥 Сближение»),
   // его заполняет updateLevelUI — название игры сюда подставлять нельзя.

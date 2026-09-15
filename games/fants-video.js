@@ -109,6 +109,9 @@ function clearAllVideoBlobs(){
 
 const VIDEO_MAX_LEVEL = 4;
 let videoLevel = 1;
+// Подуровень «Горячее» (0 — базовый): играть ролики папки «Level N-M …».
+// Сбрасывается при старте новой партии; в просмотре избранного не применяется.
+let videoSubLevel = 0;
 let currentVideoCard = null;
 let videoHistory = []; // для свайпов влево/вправо между уже показанными видео
 let videoHistoryPos = -1;
@@ -409,6 +412,9 @@ function drawVideoCard(level, announceEmpty){
   let all = getDavayCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
   if(state.videoFavoritesOnly){
     all = all.filter(c=>liked.includes(videoCardId(c)));
+  } else if(videoSubLevel > 0){
+    // «Горячее»: показываем ролики только из папки «Level N-M …» этого уровня.
+    all = all.filter(c=>davayCardSubLevel(c)===videoSubLevel);
   }
   if(all.length===0){
     currentVideoCard = null;
@@ -759,6 +765,7 @@ async function goToVideoGame(){
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = true;
   videoLevel = 1;
+  videoSubLevel = 0;
   state.videoUsed = {};
   state.videoHidden = [];
   // Новая партия — начинаем с чистого листа: список «битых» роликов сбрасываем,
@@ -855,6 +862,7 @@ async function goToVideoFavoritesView(){
   state.inProgress = true;
   await ensureImportedDavayVideosLoaded();
   videoLevel = pickVideoFavoritesStartLevel();
+  videoSubLevel = 0;
   state.videoUsed = {};
   state.videoHidden = [];
   state.videoFavoritesOnly = true;

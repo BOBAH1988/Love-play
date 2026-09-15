@@ -1107,6 +1107,37 @@ function checkStyles(html) {
   check('подписи кнопок импорта совпадают с названиями уровней',
     choiceIds.every((c) => c.label.includes(levelById.get(c.id))),
     choiceIds.map((c) => `${c.id}: «${c.label}» ≠ «${levelById.get(c.id)}»`).join('; '));
+  // Подуровни папок «Level N-M …» стали играбельными: «Горячее» шагает по
+  // папкам внутри уровня («Level 1-1 …» → «Level 1-2 …»), а когда своих папок
+  // больше нет — на следующий уровень; «⬆️ Повысить» ведёт сразу на следующий
+  // уровень. Проверяем связку: разбор подуровня в core.js, обработчики в
+  // fants-timer.js, кнопка в разметке, показ кнопок в davay-mode и фильтрация
+  // карточек в обеих видео-играх.
+  const davayTimerSrc = read('games/fants-timer.js');
+  check('подуровень папки разбирается из yandexPath',
+    coreSrc.includes('function davaySubLevelFromPath(path)')
+      && coreSrc.includes('function davayCardSubLevel(card)')
+      && coreSrc.includes('function nextDavaySubLevel(level, currentSub)'),
+    'хелперы подуровней пропали из core.js — «Горячее» не найдёт следующую папку');
+  check('смена уровня/подуровня идёт через switchVideoLevel',
+    coreSrc.includes('function switchVideoLevel(level, sub)')
+      && davayTimerSrc.includes('switchVideoLevel(')
+      && /davayQuizActivePlayer !== 0/.test(coreSrc)
+      && /davayQuizPendingNext !== 0/.test(coreSrc),
+    'switchVideoLevel пропал или не блокирует смену уровня посреди раунда квиза');
+  check('кнопка «⬆️ Повысить» есть в разметке и обрабатывается',
+    davayHtml.includes('id="davayNextBtn"')
+      && davayTimerSrc.includes("getElementById('davayNextBtn')"),
+    'кнопка davayNextBtn отсутствует в разметке или без обработчика');
+  check('«Горячее» и «⬆️ Повысить» видны в «Давай попробуем»',
+    /#game\.davay-mode #doneBtn\{display:none;\}/.test(css)
+      && /#game\.davay-mode #davayNextBtn\{/.test(css)
+      && !/#game\.davay-mode #davayLevelUpBtn\{display:none/.test(css),
+    'CSS снова прячет «Горячее»/«Повысить» в davay-mode');
+  check('под уровень фильтруют обе видео-игры',
+    /else if\(davaySubLevel > 0\)/.test(davaySrc2)
+      && /else if\(videoSubLevel > 0\)/.test(videoSrc2),
+    'отбор карточек по подуровню пропал из draw-функций');
   // Счёт «Парень: 0 / Девушка: 0» в «Давай попробуем» не ведётся — он висел
   // над карточкой с нулями. Имена игроков и шкала прогресса остаются.
   check('счёт скрыт в «Давай попробуем»', scoreHidden('davay-mode'),

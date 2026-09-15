@@ -758,6 +758,19 @@ const DAVAY_MAX_LEVEL = DAVAY_LEVEL_MAX;
 function davayLevelInfo(id){
   return DAVAY_LEVELS.find(l=>l.id === id) || DAVAY_LEVELS[0];
 }
+// Описание папки Яндекса для уровня и подуровня — из путей уже импортированных
+// карточек («disk:/Level 1-2 Ласки легкие/…» → «Ласки легкие»). Отдельное поле
+// в базе не нужно: имя папки всегда читается из yandexPath.
+function davayLevelFolderInfo(level, sub){
+  let desc = null;
+  importedDavayCards.forEach(c=>{
+    if(c.level === level && davayCardSubLevel(c) === sub){
+      const d = davayFolderDescFromPath(c.yandexPath);
+      if(d) desc = d;
+    }
+  });
+  return desc;
+}
 // Привести номер уровня к существующему 1..6.
 //
 // Без этого drawDavayCard() с чужим номером не находит видео и показывает
@@ -780,6 +793,9 @@ function normalizeDavayLevel(v){
   return (isFinite(n) && n >= DAVAY_LEVEL_MIN && n <= DAVAY_LEVEL_MAX) ? n : DAVAY_LEVEL_MIN;
 }
 let davayLevel = 1;
+// Подуровень «Горячее» (0 — базовый): играть ролики папки «Level N-M …».
+// Сбрасывается при старте новой партии; в просмотре избранного не применяется.
+let davaySubLevel = 0;
 let currentDavayCard = null;
 let davayHistory = []; // для свайпов влево/вправо между уже показанными видео
 let davayHistoryPos = -1;
@@ -886,6 +902,9 @@ function drawDavayCard(level){
   let all = getDavayCardsList().filter(c=>c.level===level && !hidden.includes(davayCardId(c)));
   if(state.davayFavoritesOnly){
     all = all.filter(c=>liked.includes(davayCardId(c)));
+  } else if(davaySubLevel > 0){
+    // «Горячее»: показываем ролики только из папки «Level N-M …» этого уровня.
+    all = all.filter(c=>davayCardSubLevel(c)===davaySubLevel);
   }
   if(all.length===0){
     currentDavayCard = null;
@@ -1361,6 +1380,7 @@ async function goToDavayGame(){
   state.davayHidden = [];
   davayHistory = [];
   davayHistoryPos = -1;
+  davaySubLevel = 0;
   // Новая партия — всегда обычный квиз, а не режим "просмотр избранного"
   // (иначе после однажды открытого избранного игра застревала бы в нём).
   state.davayFavoritesOnly = false;

@@ -2024,6 +2024,87 @@ function paintGameModeLoadingCard(mode){
   if(icon) icon.textContent = info.icon;
   if(text) text.textContent = info.text;
 }
+/* ============ ПОДУРОВНИ ПАПОК ЯНДЕКС-ДИСКА («Level N-M …») ============
+ * Папки на Диске называются «Level 1-1 Ласки разогрев», «Level 1-2 Ласки
+ * легкие»…: первое число — игровой уровень (1..6), второе — подуровень.
+ * По умолчанию обе видео-игры играют подуровни вперемешку (как раньше), а
+ * кнопка «Горячее» шагает по ним по порядку: Level 1-1 → Level 1-2 → …, а
+ * когда своих папок в уровне больше нет — на следующий уровень (Level 2-1).
+ * Хелперы живут в core.js, потому что нужны обеим играм: «Видеорулетке»
+ * (fants-video.js) и «Давай попробуем» (fants-davay.js). */
+// Под уровень из yandexPath записи: 'disk:/Level 1-2 Ласки легкие/f.webm' → 2.
+// Путь хранится у всех роликов Яндекса (см. importYandexVideos в fants-davay.js),
+// у своих видео с телефона пути нет — они считаются подуровнем 0 (базовым).
+function davaySubLevelFromPath(path){
+  if(!path) return 0;
+  const m = String(path).match(/\/Level\s+\d+-(\d+)(?:\s|\/|$)/i);
+  return m ? (parseInt(m[1], 10) || 0) : 0;
+}
+// Подуровень конкретной карточки каталога.
+function davayCardSubLevel(card){
+  return davaySubLevelFromPath(card && card.yandexPath);
+}
+// Описание папки из её имени на Диске: всё, что после «Level N-M ».
+// 'disk:/Level 1-2 Ласки легкие/f.webm' → 'Ласки легкие'.
+function davayFolderDescFromPath(path){
+  if(!path) return null;
+  const seg = String(path).split('/').find(s=>/^Level\s+\d+/i.test(s || ''));
+  if(!seg) return null;
+  const m = /^Level\s+\d+(?:-\d+)?\s+(.+)$/i.exec(seg.trim());
+  return m ? m[1].trim() : null;
+}
+// Следующий подуровень с видео ВЫШЕ текущего в этом же уровне (0 — своих
+// папок выше нет). Каталог один на обе игры, поэтому функция общая; текущий
+// подуровень передаётся явно, потому что в момент вызова он ещё старый.
+function nextDavaySubLevel(level, currentSub){
+  let best = 0;
+  getDavayCardsList().forEach(c=>{
+    if(c.level !== level) return;
+    const s = davayCardSubLevel(c);
+    if(s > currentSub && (best === 0 || s < best)) best = s;
+  });
+  return best;
+}
+// Сменить уровень/подуровень активной видео-игры. Посреди раунда «Давай
+// попробуем» (вопросы или карточка «Передайте телефон») уровень менять
+// нельзя: очередь из 10 видео строится под уровень, и смена разорвала бы
+// связь между ответами и карточками. Возвращает true, если переход сделан.
+function switchVideoLevel(level, sub){
+  let n = parseInt(level, 10); if(!isFinite(n) || n < 1) n = 1;
+  let s = parseInt(sub, 10); if(!isFinite(s) || s < 0) s = 0;
+  if(typeof isDavayMode === 'function' && isDavayMode()){
+    const quizBusy = (state.davayQuizActivePlayer !== 0) || (state.davayQuizPendingNext !== 0);
+    if(quizBusy){
+      playErrorSound();
+      showToast('Сначала закончите раунд — уровень меняется между раундами');
+      return false;
+    }
+    davayLevel = normalizeDavayLevel(n);
+    davaySubLevel = s;
+    davayHistory = []; davayHistoryPos = -1; davayFavIndex = -1;
+    saveState();
+    updateDavayLevelBtn();
+    if(state.davayFavoritesOnly){
+      // Просмотр избранного — свой список (по уровню, без подуровня).
+      showDavayFavoriteAt(0);
+    } else {
+      drawDavayCard(davayLevel);
+    }
+    return true;
+  }
+  if(typeof isVideoMode === 'function' && isVideoMode()){
+    const max = (typeof VIDEO_MAX_LEVEL === 'number') ? VIDEO_MAX_LEVEL : 6;
+    videoLevel = Math.min(Math.max(n, 1), max);
+    videoSubLevel = s;
+    videoHistory = []; videoHistoryPos = -1;
+    saveState();
+    updateVideoLevelBtn();
+    drawVideoCard(videoLevel, true);
+    return true;
+  }
+  return false;
+}
+
 function setGameMode(mode){
   const el = document.getElementById('game');
   if(!el) return;
