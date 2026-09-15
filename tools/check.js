@@ -995,6 +995,19 @@ function checkStyles(html) {
     /pauseDavayGame/.test(backBody)
       && backBody.indexOf('pauseDavayGame') < backBody.length,
     'ветка стоит после общей логики — сработает чужая пауза «Фантов»');
+  // Звуковой движок должен жить в core.js (грузится ПЕРВЫМ): его функции
+  // вызываются по клику из всех файлов, и когда поздний fants-timer.js не
+  // выполнился (сбой загрузки при смене кэша Service Worker), каждый клик
+  // давал ReferenceError: playSuccessSound is not defined (журнал 2026-09-15).
+  const sndCore = read('games/core.js');
+  check('звуковой движок определён в core.js, а не в позднем файле',
+    sndCore.includes('function playSuccessSound')
+      && sndCore.includes('function playErrorSound')
+      && sndCore.includes('function getAudioCtx'),
+    'звуковые функции снова определились в позднем файле — при сбое его загрузки клики дадут ReferenceError');
+  check('в fants-timer.js нет дублей звуковых функций',
+    !/function (playSuccessSound|playErrorSound|playTimerAlarm|getAudioCtx)\s*\(/.test(timerSrc),
+    'звуковые функции определяются в двух местах — рассинхрон неизбежен');
   // Название уровня «Викторины» (пары): игра и так помечена 18+, поэтому
   // приписка в названии уровня лишняя и не влезала в строку.
   const quizCards = read('cards/cards_quiz.js');

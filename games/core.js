@@ -3615,3 +3615,244 @@ document.getElementById('addCardModal').addEventListener('click', (e)=>{
   }, {passive:true});
 })();
 
+
+/* ============ ЗВУКОВОЙ ДВИЖОК ============
+ * Живёт здесь, а не в fants-timer.js: core.js грузится ПЕРВЫМ, а вызовы
+ * playSuccessSound/playErrorSound разбросаны по всем файлам и срабатывают по
+ * клику. Когда fants-timer.js не выполнился (сбой загрузки при смене кэша
+ * Service Worker), каждый клик по кнопке давал ReferenceError. Звуковые
+ * функции обязаны определяться в самом раннем файле приложения.
+ */
+// Один общий AudioContext на всё приложение вместо нового на каждый звук —
+// iOS Safari ограничивает число одновременно живых AudioContext, и при частых
+// звуках (например, быстрые свайпы подряд) более старый подход мог "тихо" не срабатывать.
+let sharedAudioCtx = null;
+const activeOscillators = [];
+function getAudioCtx(){
+  try{
+    if(!sharedAudioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      sharedAudioCtx = new Ctx();
+    }
+    if(sharedAudioCtx.state === 'suspended'){
+      sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  }catch(e){ return null; }
+}
+function stopAllSounds(){
+  // Останавливаем все активные осцилляторы (Web Audio API)
+  while(activeOscillators.length){
+    const osc = activeOscillators.pop();
+    try{ osc.stop(); }catch(e){}
+  }
+  // Останавливаем речь (SpeechSynthesis) — дважды для надёжности в Chrome
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    setTimeout(()=>speechSynthesis.cancel(), 50);
+  }
+}
+
+function playTimerAlarm(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const beepTimes = [0, 0.22, 0.44];
+    beepTimes.forEach(t=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.18);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.2);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([150,80,150,80,150]);
+}
+
+function playSuccessSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const notes = [523.25, 659.25]; // приятный восходящий перезвон (до — ми)
+    notes.forEach((freq, i)=>{
+      const t = i*0.09;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.4);
+      activeOscillators.push(osc);
+      osc.onended = ()=>{ const idx = activeOscillators.indexOf(osc); if(idx!==-1) activeOscillators.splice(idx,1); };
+    });
+  }catch(e){}
+}
+
+function playLevelUpSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // до-ми-соль-до, торжествующее трезвучие
+    notes.forEach((freq, i)=>{
+      const t = i*0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.45);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.5);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([60,40,60,40,120]);
+}
+
+function playBingoVictorySound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // до-ми-соль-до-ми — яркая победная фанфара за линии/финал бинго
+    notes.forEach((freq, i)=>{
+      const t = i*0.09;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.55);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([100,50,100,50,200]);
+}
+
+function playFailSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.35);
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.42);
+  }catch(e){}
+}
+
+function playNeutralSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 440;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+  }catch(e){}
+}
+
+// Восходящий «вжух» при старте вращения рулетки — эффект раскрутки колеса
+function playSpinStartSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(760, ctx.currentTime + 0.45);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.55);
+  }catch(e){}
+}
+
+function playErrorSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const beepTimes = [0, 0.14];
+    beepTimes.forEach(t=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 180;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.13);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([80,60,80]);
+}
+
+// Короткий "удар" для попадания в Морском бою — намеренно резче и короче
+// playSuccessSound (квадратная волна вместо синусоиды, нисходящий тон), чтобы
+// не путаться с общим "успехом" остальных игр приложения.
+function playHitSound(){
+  if(state.muted) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(220, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.18);
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate(40);
+}
