@@ -1426,8 +1426,9 @@ document.getElementById('videoNextBtn').addEventListener('click', ()=>{
 });
 // Кнопки уровней «Давай попробуем»: «Горячее» шагает по папкам Яндекса внутри
 // уровня, «Повысить уровень» — всегда строго на следующий уровень (Level 1-1 →
-// Level 2-1), подуровни пропускает. Посреди раунда уровень не меняется —
-// это проверяет switchVideoLevel (см. core.js).
+// Level 2-1), подуровни пропускает. Нажатие посреди раунда не блокируется:
+// раунд начинается заново на выбранном уровне (restartDavayRoundAtLevel) —
+// очередь из 10 привязана к уровню, «докрутить» её нельзя.
 document.getElementById('davayLevelUpBtn').addEventListener('click', ()=>{
   const sub = nextDavaySubLevel(davayLevel, davaySubLevel);
   if(!sub && davayLevel >= DAVAY_MAX_LEVEL){
@@ -1437,12 +1438,16 @@ document.getElementById('davayLevelUpBtn').addEventListener('click', ()=>{
   }
   playLevelUpSound();
   if(sub){
-    if(!switchVideoLevel(davayLevel, sub)) return;
+    const r = switchVideoLevel(davayLevel, sub);
+    if(!r) return;
     const desc = davayLevelFolderInfo(davayLevel, sub);
-    showToast(desc ? `Горячее: Level ${davayLevel}-${sub} — ${desc}` : `Горячее: Level ${davayLevel}-${sub}`);
+    showToast((desc ? `Горячее: Level ${davayLevel}-${sub} — ${desc}` : `Горячее: Level ${davayLevel}-${sub}`)
+      + (r.restarted ? '. Раунд начат заново' : ''));
   } else {
-    if(!switchVideoLevel(davayLevel + 1, 1)) return;
-    showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`);
+    const r = switchVideoLevel(davayLevel + 1, 1);
+    if(!r) return;
+    showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`
+      + (r.restarted ? '. Раунд начат заново' : ''));
   }
 });
 document.getElementById('davayNextBtn').addEventListener('click', ()=>{
@@ -1452,8 +1457,10 @@ document.getElementById('davayNextBtn').addEventListener('click', ()=>{
     return;
   }
   playLevelUpSound();
-  if(!switchVideoLevel(davayLevel + 1, 1)) return;
-  showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`);
+  const r = switchVideoLevel(davayLevel + 1, 1);
+  if(!r) return;
+  showToast(`Уровень повышен: ${davayLevel} — ${davayLevelInfo(davayLevel).name}`
+    + (r.restarted ? '. Раунд начат заново' : ''));
 });
 // "Готовы повторить?" — игра на двоих: сначала выбирается, кто отвечает
 // первым, ему показывают 10 разных видео, на каждое — Да/Не сейчас/Нет.
@@ -1481,6 +1488,37 @@ function getDavayQuizPool(){
 }
 function davayQuizCardById(id){
   return getDavayCardsList().find(c=>davayCardId(c)===id) || null;
+}
+// Смена уровня/подуровня кнопками «Горячее»/«Повысить уровень» ПОСРЕДИ раунда.
+// Очередь из 10 видео привязана к уровню: сравнение ответов игроков требует,
+// чтобы оба видели одни и те же ролики, — «докрутить» новый уровень в идущую
+// очередь нельзя. Поэтому раунд начинается заново на выбранном уровне: ответы,
+// данные до переключения (включая уже отвеченную первым игроком часть),
+// сбрасываются, первым отвечает стартовый игрок из настройки «Первым начинает».
+// Если на новом уровне (подуровне) видео нет — уровень не меняется и раунд
+// продолжается: иначе игра осталась бы без активного игрока и карточки.
+function restartDavayRoundAtLevel(level, sub){
+  const n = normalizeDavayLevel(level);
+  const s = Math.max(0, parseInt(sub, 10) || 0);
+  const prevLevel = davayLevel, prevSub = davaySubLevel;
+  davayLevel = n;
+  davaySubLevel = s;
+  if(getDavayQuizPool().length === 0){
+    davayLevel = prevLevel;
+    davaySubLevel = prevSub;
+    playErrorSound();
+    showToast(`На уровне ${n} видео нет — раунд продолжается`);
+    return false;
+  }
+  davayHistory = [];
+  davayHistoryPos = -1;
+  davayFavIndex = -1;
+  resetDavayQuiz();
+  updateDavayLevelBtn();
+  updateDavayPlayerButtons();
+  updateDavayFavoritesBtn();
+  startDavayQuizPlayer(pickStartingPlayerValue(state.davayStarter));
+  return true;
 }
 function updateDavayPlayerButtons(){
   const p1 = document.getElementById('davayPlayer1Btn');

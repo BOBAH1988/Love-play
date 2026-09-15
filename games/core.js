@@ -2079,6 +2079,14 @@ function switchVideoLevel(level, sub){
   if(typeof isDavayMode === 'function' && isDavayMode()){
     const quizBusy = (state.davayQuizActivePlayer !== 0) || (state.davayQuizPendingNext !== 0);
     if(quizBusy){
+      // Раунд «Готовы повторить?» идёт: очередь из 10 видео собрана из уровня,
+      // на котором игра началась, а сравнение ответов игроков требует, чтобы
+      // ОБА видели одни и те же ролики — «докрутить» новый уровень в идущую
+      // очередь нельзя. Вместо отказа раунд начинается заново на выбранном
+      // уровне (см. restartDavayRoundAtLevel в fants-timer.js).
+      if(typeof restartDavayRoundAtLevel === 'function'){
+        return restartDavayRoundAtLevel(n, s) ? { restarted: true } : false;
+      }
       playErrorSound();
       showToast('Сначала закончите раунд — уровень меняется между раундами');
       return false;
