@@ -9,6 +9,11 @@
      локальной сети), поэтому запрещаем браузеру отправлять Referer для всего
      документа — это правило наследуют и <video>, и fetch. -->
 <meta name="referrer" content="no-referrer">
+<!-- Страница полностью тёмная: без color-scheme WebKit считает базовый цвет
+     WKWebView белым, и на iOS 27 в standalone его «стеклянная» статус-зона
+     подмешивает белый поверх тёмного фона (размытый светлый стык вверху).
+     dark делает базу тёмной ещё до первой отрисовки страницы. -->
+<meta name="color-scheme" content="dark">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -42,10 +47,26 @@
     // напрямую инлайновым стилем через JS — это гарантированно перекрывает
     // любые CSS-каскадные накладки.
     function forceBg(){
-      var bg = 'linear-gradient(160deg,#2b0f2e,#4a1240 55%, #1a0a20)';
+      // ВАЖНО: только лонгхенды. Шорткат el.style.background = 'linear-gradient(...)'
+      // сбрасывает background-size в auto и, как инлайн-стиль, ПЕРЕБИВАЕТ
+      // media-запрос app.css (background-size:100% 300vh) — из-за этого фикс
+      // белой полосы вверху (v262) не работал. backgroundColor = #2b0f2e (= --bg1,
+      // верх градиента): любой участок, который страница не закрасила (подложка
+      // WKWebView, системная статус-зона iOS 27), получает цвет верха градиента —
+      // шва и «размытого стыка» нет.
+      var color = '#2b0f2e';
+      var image = 'linear-gradient(160deg,#2b0f2e,#4a1240 55%, #1a0a20)';
       try{
-        document.documentElement.style.background = bg;
-        if(document.body) document.body.style.background = bg;
+        var roots = [document.documentElement, document.body];
+        for(var i = 0; i < roots.length; i++){
+          var el = roots[i];
+          if(!el) continue;
+          el.style.backgroundColor = color;
+          el.style.backgroundImage = image;
+          el.style.backgroundSize = '100% 300vh';
+          el.style.backgroundRepeat = 'no-repeat';
+          el.style.backgroundPosition = '0 0';
+        }
       }catch(e){}
     }
     forceBg();
@@ -81,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260927a">
+<link rel="stylesheet" href="styles/app.css?v=20260927b">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -89,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-27 · v262';
+  window.APP_BUILD = '2026-09-27 · v263';
 </script>
 </head>
 <body>

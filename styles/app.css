@@ -1,6 +1,11 @@
   :root{
     --bg1:#2b0f2e;
     --bg2:#4a1240;
+    /* Страница целиком тёмная: тёмные UA-дефолты форм и, главное, тёмная база
+       WKWebView — без этого iOS 27 в standalone подмешивает белую системную
+       подложку в статус-зону (размытый светлый стык вверху). Дублирует
+       <meta name="color-scheme" content="dark"> в index.html. */
+    color-scheme:dark;
     --card-bg:#fff;
     --accent:#ff5e8e;
     --gold:#ffd27a;
@@ -123,6 +128,7 @@
      Разбор симметричной проблемы снизу — в README, кейс «Белая полоса внизу». */
   @media (display-mode: standalone){
     html, body{
+      background-color:var(--bg1);
       background-repeat:no-repeat;
       background-size:100% 300vh;
       background-position:0 0;
