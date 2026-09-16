@@ -487,8 +487,11 @@ document.getElementById('sexQuestStartPlayBtn').addEventListener('click', ()=>{
 function updateSexQuestHistoryBtn(){
   const btn = document.getElementById('sexQuestHistoryBtn');
   if(!btn) return;
-  const has = !!(state.sexQuestChecklists && state.sexQuestChecklists.length);
-  btn.disabled = !has;
+  // Кнопка «Пройденные задания» всегда активна: при пустой истории экран
+  // показывает сообщение «Пока нет сохранённых чек-листов — пройдите игру
+  // хотя бы раз». Раньше кнопка гасла без сохранённых партий, и пустое
+  // состояние было недостижимо с главного входа.
+  btn.disabled = false;
 }
 function formatSexQuestDate(ts){
   const d = new Date(ts);
@@ -558,7 +561,7 @@ document.getElementById('sexQuestHistoryList').addEventListener('click', (e)=>{
 function exitSexQuestHistory(){
   document.getElementById('sexQuestHistory').classList.remove('active');
   document.getElementById('sexQuestSetup').classList.add('active');
-  updateSexQuestHistoryBtn(); // после удалений кнопка «Пройденные задания» может стать неактивной
+  updateSexQuestHistoryBtn(); // кнопка остаётся активной; пустая история покажет подсказку
 }
 document.getElementById('sexQuestHistoryBtn').addEventListener('click', ()=>{ goToSexQuestHistory(); });
 document.getElementById('sexQuestHistoryExitBtn').addEventListener('click', ()=>{ exitSexQuestHistory(); });
