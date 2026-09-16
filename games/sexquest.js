@@ -267,7 +267,7 @@ function renderSexQuestIntroCard(){
       <div class="card-inner">
         <div class="card-header">
           <div class="card-turn">
-            <div class="card-turn-label">Желание · уровень ${sexQuestCurrentWish.level}/10</div>
+            <div class="card-turn-label">Желание</div>
             <div class="card-turn-name">${sexQuestCurrentWish.title}</div>
           </div>
         </div>
