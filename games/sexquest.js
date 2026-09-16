@@ -536,10 +536,11 @@ function goToSexQuestHistory(){
   if(checklists.length === 0){
     wrap.innerHTML = '<div class="card-text sexquest-history-empty">Пока нет сохранённых чек-листов<br>пройдите игру хотя бы раз.</div>';
   } else {
-    wrap.innerHTML = checklists.map((cl, idx)=>`
+    // «Согласны на:» — общий заголовок один на весь экран (не у каждой
+    // записи): при двух и более партиях он раньше дублировался.
+    wrap.innerHTML = '<div class="sexquest-history-lead">Согласны на:</div>' + checklists.map((cl, idx)=>`
       <div class="sexquest-history-entry">
         <div class="sexquest-history-date">${formatSexQuestDate(cl.date)} · счёт ${cl.score} 🏆</div>
-        <div class="sexquest-history-lead">Согласны на:</div>
         <ul class="sexquest-history-items">
           ${cl.items.map((item, itemIdx)=>`
             <li>
