@@ -10,29 +10,11 @@
 //         мягкому. «Плавный» — в обратном порядке: первый вопрос самый
 //         мягкий (обсудить идею и выбрать стоп-слово), дальше уровни всё
 //         смелее (см. sexQuestStepDisplayIndex).
-//         «Плавный»: Да — выполняете уровень и переходите к следующему,
-//         более смелому; Да на самом смелом уровне — желание выполнено
-//         полностью (+3 очка). Нет — желание завершается и идём к следующему:
-//         если уровни уже выполнялись — засчитывается облегчённо (+1),
-//         если нет — откладывается (SEXQUEST_SOFT_EXIT_TEXT).
-//         «Смелый»: Да — облегчённая версия (+1 очко), переход к следующему
-//         желанию; Нет — следующий, более мягкий шаг; Нет на всех шагах —
-//         откладывается.
-// Цель — реализовать желания друг друга мягким, постепенным подходом от
-// смелого предложения до самого простого и безопасного варианта, без
-// давления и дискомфорта.
-//
-// После того как все желания в партии пройдены, результат сохраняется в
-// state.sexQuestChecklists — это и есть "чек-лист" для избранного/истории:
-// по каждому желанию, с которым взаимодействовали (то есть Да сразу,
-// Да на каком-то шаге квеста или отложено), фиксируется список пройденных
-// шагов вплоть до того, на котором ответили "Да" (или все шаги, если
-// отложили) — так партнёр, открыв чек-лист в следующий раз, сразу видит,
-// на чём остановились в прошлый раз, и с чего продолжать.
+//         «Плавный»: Да — следующий уровень; Нет — следующее желание.
+//         «Смелый»: Да — сохраняем принятый вопрос; Нет — более мягкий шаг.
+// В чек-лист попадают только согласованные вопросы, без очков и статусов.
 
 const SEXQUEST_SOFT_EXIT_TEXT = 'Без проблем. Откладываем это желание — комфорт и доверие важнее. Переходим дальше.';
-const SEXQUEST_MAX_SCORE_PER_LIGHT = 1;
-const SEXQUEST_MAX_SCORE_PER_DIRECT = 3;
 
 let sexQuestCurrentWish = null;
 let sexQuestCurrentStepIndex = -1; // -1 = показано описание, 0+ = уровень квеста
@@ -244,8 +226,7 @@ function buildSexQuestQueue(){
 function startSexQuestGame(){
   state.sexQuestQueue = buildSexQuestQueue();
   state.sexQuestIndex = 0;
-  state.sexQuestScore = 0;
-  state.sexQuestResults = []; // {wishId, title, outcome:'direct'|'light'|'deferred', steps:[question,...], agreedStep:number|null}
+  state.sexQuestResults = []; // Согласованные вопросы, без оценок.
   state.sexQuestPaused = null;
   state.inProgress = true;
   saveState();
@@ -368,26 +349,22 @@ function renderSexQuestOutcome(text, icon){
   document.getElementById('sexQuestGame').classList.remove('sexquest-intro');
 }
 
-function recordSexQuestResult(outcome, agreedCount){
-  // «Плавный» сохраняет цепочку в порядке показа; «Смелый» — только вопрос
-  // согласия. agreedCount: число пройденных уровней в «Плавном», позиция
-  // согласия (с единицы) в «Смелом». Режим хранится в самой записи истории.
+function recordSexQuestResult(agreedCount){
+  // Сохраняем только согласованные вопросы, без оценок и статусов.
+  if(agreedCount <= 0) return;
   const total = sexQuestCurrentWish.quest.length;
   const smooth = state.sexQuestPlayMode === 'smooth';
   const displayOrder = [];
   for(let i = 0; i < total; i++) displayOrder.push(smooth ? total - 1 - i : i);
-  const performed = outcome === 'deferred' ? 0 : agreedCount;
-  const shown = outcome === 'deferred' ? total : performed;
   const steps = smooth
-    ? displayOrder.slice(0, shown).map(real=>sexQuestCurrentWish.quest[real].question)
-    : (performed > 0 ? [sexQuestCurrentWish.quest[performed - 1].question] : []);
+    ? displayOrder.slice(0, agreedCount).map(real=>sexQuestCurrentWish.quest[real].question)
+    : [sexQuestCurrentWish.quest[agreedCount - 1].question];
   state.sexQuestResults.push({
     wishId: sexQuestCurrentWish.id,
     title: sexQuestCurrentWish.title,
-    outcome, // 'direct' | 'light' | 'deferred'
     steps,
     playMode: smooth ? 'smooth' : 'fast',
-    agreedStep: outcome === 'deferred' ? null : (smooth ? performed - 1 : 0),
+    agreedStep: smooth ? agreedCount - 1 : 0,
   });
 }
 
@@ -407,7 +384,7 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
   const total = sexQuestCurrentWish.quest.length;
   if(state.sexQuestPlayMode === 'smooth'){
     // «Плавный»: «Да» — выполняем уровень и переходим к следующему, более
-    // смелому. На самом смелом уровне — желание выполнено полностью (+3).
+    // смелому. На последнем уровне сохраняем ответы.
     sexQuestAgreedCount++;
     if(sexQuestCurrentStepIndex < total - 1){
       sexQuestCurrentStepIndex++;
@@ -416,20 +393,19 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
       return;
     }
     const step = sexQuestCurrentWish.quest[sexQuestStepDisplayIndex(sexQuestCurrentStepIndex)];
-    state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_DIRECT;
-    recordSexQuestResult('direct', sexQuestAgreedCount);
+    recordSexQuestResult(sexQuestAgreedCount);
     saveState();
     sexQuestAwaitingNext = true;
-    renderSexQuestOutcome(step.yesAction + '<br><br>Желание выполнено полностью — все уровни пройдены!', '✅');
+    renderSexQuestOutcome(step.yesAction, '✅');
     return;
   }
-  // «Смелый»: «Да» на любом шаге — облегчённая версия желания (+1).
+  // «Смелый»: сохраняем вопрос, на котором получено согласие.
   const step = sexQuestCurrentWish.quest[sexQuestStepDisplayIndex(sexQuestCurrentStepIndex)];
-  state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_LIGHT;
-  recordSexQuestResult('light', sexQuestCurrentStepIndex + 1);
+
+  recordSexQuestResult(sexQuestCurrentStepIndex + 1);
   saveState();
   sexQuestAwaitingNext = true;
-  renderSexQuestOutcome(step.yesAction + '<br><br>Желание засчитано облегчённой версией.', '💞');
+  renderSexQuestOutcome(step.yesAction, '💞');
 });
 
 document.getElementById('sexQuestNoBtn').addEventListener('click', ()=>{
@@ -446,16 +422,15 @@ document.getElementById('sexQuestNoBtn').addEventListener('click', ()=>{
   const total = sexQuestCurrentWish.quest.length;
   if(state.sexQuestPlayMode === 'smooth'){
     // «Плавный»: «Нет» завершает желание и ведёт к следующему заданию.
-    // Если уровни уже выполнялись — засчитываем пройденное (облегчённо,
-    // +1 очко), если ни одного — откладываем без давления.
+    // Если согласия уже были — сохраняем ответы; иначе идём дальше без записи.
     if(sexQuestAgreedCount > 0){
-      state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_LIGHT;
-      recordSexQuestResult('light', sexQuestAgreedCount);
+
+      recordSexQuestResult(sexQuestAgreedCount);
       saveState();
       sexQuestAwaitingNext = true;
-      renderSexQuestOutcome('Желание выполнено до уровня ' + sexQuestAgreedCount + ' из ' + total + '.<br><br>Засчитано облегчённой версией.', '💞');
+      renderSexQuestOutcome('Ваши ответы сохранены в этой партии. Переходим дальше.', '💞');
     } else {
-      recordSexQuestResult('deferred', 0);
+      recordSexQuestResult(0);
       saveState();
       sexQuestAwaitingNext = true;
       renderSexQuestOutcome(SEXQUEST_SOFT_EXIT_TEXT, '🤍');
@@ -469,7 +444,7 @@ document.getElementById('sexQuestNoBtn').addEventListener('click', ()=>{
     return;
   }
   // "Нет" на последнем шаге — мягкий выход, без давления.
-  recordSexQuestResult('deferred', 0);
+  recordSexQuestResult(0);
   saveState();
   sexQuestAwaitingNext = true;
   renderSexQuestOutcome(SEXQUEST_SOFT_EXIT_TEXT, '🤍');
@@ -484,11 +459,10 @@ function advanceSexQuestWish(){
 function finishSexQuestGame(){
   const checklist = {
     date: Date.now(),
-    score: state.sexQuestScore,
     items: state.sexQuestResults,
   };
   if(!state.sexQuestChecklists) state.sexQuestChecklists = [];
-  state.sexQuestChecklists.unshift(checklist);
+  if(checklist.items.length) state.sexQuestChecklists.unshift(checklist);
   state.inProgress = false;
   saveState();
   document.getElementById('sexQuestGame').classList.remove('active');
@@ -496,18 +470,12 @@ function finishSexQuestGame(){
   renderSexQuestSummary(checklist);
 }
 
-function sexQuestOutcomeLabel(outcome){
-  if(outcome === 'direct') return '✅ Выполнено полностью';
-  if(outcome === 'light') return '💞 Выполнено облегчённо';
-  return '🤍 Отложено';
-}
-
 function renderSexQuestSummary(checklist){
   const list = document.getElementById('sexQuestSummaryList');
   list.innerHTML = checklist.items.map(item=>`
     <li>
       <div class="sexquest-summary-title">${item.title}</div>
-      <div class="sexquest-summary-outcome">${sexQuestOutcomeLabel(item.outcome)}</div>
+      ${renderSexQuestHistorySteps(item)}
     </li>
   `).join('');
 }
@@ -630,7 +598,6 @@ function goToSexQuestHistory(){
               <div class="sexquest-item-row">
                 <div class="sexquest-item-main">
                   <div class="sexquest-summary-title">${item.title}</div>
-                  <div class="sexquest-summary-outcome">${sexQuestOutcomeLabel(item.outcome)}</div>
                   ${renderSexQuestHistorySteps(item)}
                 </div>
                 <button type="button" class="sexquest-item-del" data-cl="${idx}" data-item="${itemIdx}" aria-label="Удалить задание из пройденных">✕</button>
@@ -645,18 +612,12 @@ function goToSexQuestHistory(){
   document.getElementById('sexQuestHistory').classList.add('active');
 }
 // Удаление одного сохранённого задания из чек-листа истории (по красному
-// крестику в "Пройденных"). Счёт чек-листа пересчитывается по оставшимся
-// пунктам; если пунктов не осталось — чек-лист удаляется целиком.
+// крестику в "Пройденных"). Если ответов не осталось — чек-лист удаляется целиком.
 function deleteSexQuestHistoryItem(clIdx, itemIdx){
   const cl = (state.sexQuestChecklists || [])[clIdx];
   if(!cl || !Array.isArray(cl.items) || !cl.items[itemIdx]) return;
   playErrorSound();
   cl.items.splice(itemIdx, 1);
-  cl.score = cl.items.reduce((sum,item)=>{
-    if(item.outcome === 'direct') return sum + 3;
-    if(item.outcome === 'light') return sum + SEXQUEST_MAX_SCORE_PER_LIGHT;
-    return sum;
-  }, 0);
   let removedWholeChecklist = false;
   if(cl.items.length === 0){
     state.sexQuestChecklists.splice(clIdx, 1);

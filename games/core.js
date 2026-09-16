@@ -270,10 +270,10 @@ let state = {
   kidsQuizAutoSpeak:false,
   // Идеи для вас (без уровней — единая колода из 100 карточек)
   ideasUsed:[],
-  // Секс-квест — очередь желаний текущей партии, счёт и результаты по
+  // Секс-квест — очередь желаний текущей партии и ответы по
   // каждому желанию; sexQuestChecklists — история завершённых партий
   // ("чек-листы" в избранном, см. games/sexquest.js).
-  sexQuestQueue:[], sexQuestIndex:0, sexQuestScore:0, sexQuestResults:[], sexQuestChecklists:[],
+  sexQuestQueue:[], sexQuestIndex:0, sexQuestResults:[], sexQuestChecklists:[],
   // Настройки партии: сколько желаний играть (1/5/10/'all') и режим выбора —
   // 'random' (случайно из всего пула) или 'manual' (отмечены вручную в
   // sexQuestManualIds, см. модалку выбора вопросов в games/sexquest.js).
@@ -1733,7 +1733,6 @@ function performFullReset(){
   // Секс-квест
   state.sexQuestQueue = [];
   state.sexQuestIndex = 0;
-  state.sexQuestScore = 0;
   state.sexQuestResults = [];
   state.sexQuestChecklists = [];
   // Карта страсти (независимая копия квеста)
