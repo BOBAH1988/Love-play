@@ -2408,6 +2408,8 @@
   .sexquest-summary-title{ font-size:14px; font-weight:800; color:#fff; }
   .sexquest-summary-outcome{ font-size:13px; color:rgba(255,255,255,.7); margin-top:2px; }
   .sexquest-history-wrap{ display:flex; flex-direction:column; gap:14px; margin:14px 0; max-height:60vh; overflow-y:auto; }
+  /* Пустая история «Пройденных заданий» — сообщение из двух строк по центру. */
+  .sexquest-history-empty{ text-align:center; }
   .sexquest-history-entry{
     background:rgba(255,255,255,.08); border-radius:14px; padding:12px 14px;
   }

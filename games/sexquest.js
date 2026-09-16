@@ -502,7 +502,7 @@ function goToSexQuestHistory(){
   const wrap = document.getElementById('sexQuestHistoryList');
   const checklists = state.sexQuestChecklists || [];
   if(checklists.length === 0){
-    wrap.innerHTML = '<div class="card-text">Пока нет сохранённых чек-листов<br>пройдите игру хотя бы раз.</div>';
+    wrap.innerHTML = '<div class="card-text sexquest-history-empty">Пока нет сохранённых чек-листов<br>пройдите игру хотя бы раз.</div>';
   } else {
     wrap.innerHTML = checklists.map((cl, idx)=>`
       <div class="sexquest-history-entry">
