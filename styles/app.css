@@ -2426,6 +2426,11 @@
      Те же классы-алиасы (.match-item-*) используются в списках "Совпадения"
      ("Твои желания", "Тайные ответы") — стиль один на все три места. */
   .sexquest-item-row, .match-item-row{ display:flex; align-items:flex-start; gap:10px; }
+  /* В «Пройденных заданиях» список скроллится (max-height:60vh) — iOS рисует
+     полосу прокрутки ПОВЕРХ контента у правого края. Отступ справа сдвигает
+     крестик влево, чтобы он не перекрывался полосой. Другие списки с теми же
+     классами («Совпадения», итоги) не скроллятся — их не трогаем. */
+  #sexQuestHistoryList .sexquest-item-row{ padding-right:12px; }
   .sexquest-item-main, .match-item-main{ flex:1; min-width:0; }
   .sexquest-item-del, .match-item-del{
     flex:0 0 auto; width:26px; height:26px; border-radius:50%;
