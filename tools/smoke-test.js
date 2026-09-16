@@ -1018,6 +1018,16 @@ test('Стрелка: игры без паузы возвращаются на �
 });
 
 
+test('Пройди квест: итоги и игровой экран без счёта', () => {
+  assert(!/id="sexQuest(?:ScoreLabel|SummaryScore)"/.test(html), 'счётчики удалены из разметки');
+  updateSexQuestProgress();
+  renderSexQuestSummary({ items: [], score: 3 });
+  assert(document.getElementById('sexQuestSummaryList').innerHTML === '', 'старые итоги со счётом открываются без ошибок');
+  const source = fs.readFileSync(path.join(ROOT, 'games/sexquest.js'), 'utf8');
+  assert(!source.split('\n').some(line => line.includes('renderSexQuestOutcome(') && /очк/.test(line)),
+    'сообщения результатов не показывают начисление очков');
+});
+
 console.log('\n=== Запуск тестов ===\n');
 
 tests.forEach(t => {

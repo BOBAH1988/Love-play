@@ -260,8 +260,6 @@ function showCurrentSexQuestWish(){
 function updateSexQuestProgress(){
   const el = document.getElementById('sexQuestProgressLabel');
   if(el) el.textContent = `${state.sexQuestIndex + 1} / ${state.sexQuestQueue.length}`;
-  const scoreEl = document.getElementById('sexQuestScoreLabel');
-  if(scoreEl) scoreEl.textContent = `${state.sexQuestScore} 🏆`;
 }
 
 function renderSexQuestIntroCard(){
@@ -405,7 +403,7 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
     recordSexQuestResult('direct', sexQuestAgreedCount);
     saveState();
     sexQuestAwaitingNext = true;
-    renderSexQuestOutcome(step.yesAction + '<br><br>Желание выполнено полностью — все уровни пройдены! +' + SEXQUEST_MAX_SCORE_PER_DIRECT + ' очка.', '✅');
+    renderSexQuestOutcome(step.yesAction + '<br><br>Желание выполнено полностью — все уровни пройдены!', '✅');
     return;
   }
   // «Смелый»: «Да» на любом шаге — облегчённая версия желания (+1).
@@ -414,7 +412,7 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
   recordSexQuestResult('light', sexQuestCurrentStepIndex + 1);
   saveState();
   sexQuestAwaitingNext = true;
-  renderSexQuestOutcome(step.yesAction + '<br><br>Желание засчитано облегчённой версией, +1 очко.', '💞');
+  renderSexQuestOutcome(step.yesAction + '<br><br>Желание засчитано облегчённой версией.', '💞');
 });
 
 document.getElementById('sexQuestNoBtn').addEventListener('click', ()=>{
@@ -438,7 +436,7 @@ document.getElementById('sexQuestNoBtn').addEventListener('click', ()=>{
       recordSexQuestResult('light', sexQuestAgreedCount);
       saveState();
       sexQuestAwaitingNext = true;
-      renderSexQuestOutcome('Желание выполнено до уровня ' + sexQuestAgreedCount + ' из ' + total + '.<br><br>Засчитано облегчённой версией, +' + SEXQUEST_MAX_SCORE_PER_LIGHT + ' очко.', '💞');
+      renderSexQuestOutcome('Желание выполнено до уровня ' + sexQuestAgreedCount + ' из ' + total + '.<br><br>Засчитано облегчённой версией.', '💞');
     } else {
       recordSexQuestResult('deferred', 0);
       saveState();
@@ -488,7 +486,6 @@ function sexQuestOutcomeLabel(outcome){
 }
 
 function renderSexQuestSummary(checklist){
-  document.getElementById('sexQuestSummaryScore').textContent = `Счёт: ${checklist.score} 🏆`;
   const list = document.getElementById('sexQuestSummaryList');
   list.innerHTML = checklist.items.map(item=>`
     <li>
