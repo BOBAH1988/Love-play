@@ -107,7 +107,8 @@ document.querySelectorAll('#sexQuestModeGroup .starter-btn[data-value="random"]'
 });
 
 // «Режимы игры»: порядок заданий в партии. 'smooth' (по умолчанию) — в
-// обратном порядке колоды, от простого к смелому; 'fast' — как было, случайно.
+// обратном порядке колоды, от простого к смелому; 'fast' («Смелый») — по
+// порядку колоды, от смелого к простому.
 function renderSexQuestPlayModeGroup(){
   if(state.sexQuestPlayMode !== 'smooth' && state.sexQuestPlayMode !== 'fast'){ state.sexQuestPlayMode = 'smooth'; saveState(); }
   document.querySelectorAll('#sexQuestPlayModeGroup .starter-btn').forEach(btn=>{
@@ -182,15 +183,6 @@ document.getElementById('sexQuestSetupExitBtn').addEventListener('click', ()=>{ 
 setupRulesModal('sexQuestRulesModal', 'closeSexQuestRulesBtn');
 
 
-function shuffleIds(ids){
-  const arr = ids.slice();
-  for(let i = arr.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
 function buildSexQuestQueue(){
   if(state.sexQuestPlayMode === 'smooth'){
     // «Плавный» (по умолчанию): без перемешивания — задания идут в обратном
@@ -206,10 +198,11 @@ function buildSexQuestQueue(){
     const count = state.sexQuestCount === 'all' ? pool.length : Math.min(state.sexQuestCount, pool.length);
     return pool.slice(-count).reverse(); // последние (самые простые) — вперёд
   }
-  // «Смелый» (бывший «Быстрый», ключ в сохранениях — 'fast'): игра как была —
-  // случайный перемешанный порядок.
+  // «Смелый» (ключ в сохранениях — 'fast'): задания по порядку колоды — от
+  // самых смелых («Анальный секс») к самым простым («Только руками»).
   if(state.sexQuestMode === 'manual' && state.sexQuestManualIds && state.sexQuestManualIds.length){
-    return shuffleIds(state.sexQuestManualIds);
+    const deckIndex = id => getSexQuestWishes().findIndex(w=>w.id===id);
+    return state.sexQuestManualIds.slice().sort((a,b)=>deckIndex(a)-deckIndex(b));
   }
   const allIds = getSexQuestWishes().map(w=>w.id);
   const excluded = state.sexQuestExcluded || [];
@@ -218,7 +211,7 @@ function buildSexQuestQueue(){
   let pool = allIds.filter(id => !excluded.includes(id));
   if(pool.length === 0) pool = allIds;
   const count = state.sexQuestCount === 'all' ? pool.length : Math.min(state.sexQuestCount, pool.length);
-  return shuffleIds(pool).slice(0, count);
+  return pool.slice(0, count); // первые по порядку колоды — самые смелые
 }
 
 function startSexQuestGame(){
