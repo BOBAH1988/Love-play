@@ -5,17 +5,19 @@
 // Механика: каждое желание показывается в два этапа.
 //   Этап 1 — карточка знакомства: title + text желания, кнопки «▶ Начать»
 //         (включает вопрос) и «Выход». Кнопки «Да/Нет» здесь скрыты.
-//   Этап 2 — вопросы квеста quest[]: порядок зависит от режима игры.
+//   Этап 2 — уровни квеста quest[]: порядок зависит от режима игры.
 //         «Смелый» — по колоде: от самого смелого шага (quest[0]) к самому
 //         мягкому. «Плавный» — в обратном порядке: первый вопрос самый
-//         мягкий (обсудить идею и выбрать стоп-слово), «Нет» ведёт к более
-//         смелым шагам (см. sexQuestStepDisplayIndex).
-//         На каждом шаге — свой вопрос «Да/Нет»:
-//           Да — желание засчитывается облегчённой версией (+1 очко),
-//                показывается текст yesAction как итог, переход к следующему желанию.
-//           Нет — переход к следующему, более мягкому шагу квеста.
-//         Если "Нет" на всех шагах — желание откладывается без давления
-//         (SEXQUEST_SOFT_EXIT_TEXT), переход к следующему желанию.
+//         мягкий (обсудить идею и выбрать стоп-слово), дальше уровни всё
+//         смелее (см. sexQuestStepDisplayIndex).
+//         «Плавный»: Да — выполняете уровень и переходите к следующему,
+//         более смелому; Да на самом смелом уровне — желание выполнено
+//         полностью (+3 очка). Нет — желание завершается и идём к следующему:
+//         если уровни уже выполнялись — засчитывается облегчённо (+1),
+//         если нет — откладывается (SEXQUEST_SOFT_EXIT_TEXT).
+//         «Смелый»: Да — облегчённая версия (+1 очко), переход к следующему
+//         желанию; Нет — следующий, более мягкий шаг; Нет на всех шагах —
+//         откладывается.
 // Цель — реализовать желания друг друга мягким, постепенным подходом от
 // смелого предложения до самого простого и безопасного варианта, без
 // давления и дискомфорта.
@@ -30,9 +32,13 @@
 
 const SEXQUEST_SOFT_EXIT_TEXT = 'Без проблем. Откладываем это желание — комфорт и доверие важнее. Переходим дальше.';
 const SEXQUEST_MAX_SCORE_PER_LIGHT = 1;
+const SEXQUEST_MAX_SCORE_PER_DIRECT = 3;
 
 let sexQuestCurrentWish = null;
-let sexQuestCurrentStepIndex = -1; // -1 = показываем главный вопрос "Выполнить сейчас?", 0+ = шаг квеста
+let sexQuestCurrentStepIndex = -1; // -1 = показано описание, 0+ = уровень квеста
+// Сколько уровней текущего желания уже выполнили («Да» в «Плавном»).
+// Сбрасывается на каждом новом желании (showCurrentSexQuestWish).
+let sexQuestAgreedCount = 0;
 // Последний показанный итог шага (для восстановления после паузы, когда
 // кнопка «Да» превращается в «Дальше»).
 let sexQuestLastOutcomeText = '';
@@ -247,6 +253,7 @@ function showCurrentSexQuestWish(){
   if(!wish){ finishSexQuestGame(); return; }
   sexQuestCurrentWish = wish;
   sexQuestCurrentStepIndex = -1; // -1 = показано описание, вопрос квеста ещё не начат
+  sexQuestAgreedCount = 0; // новое желание — выполненные уровни обнуляем
   renderSexQuestIntroCard();
 }
 
@@ -304,7 +311,7 @@ function renderSexQuestStep(){
       <div class="card-inner">
         <div class="card-header">
           <div class="card-turn">
-            <div class="card-turn-label">Мягкий шаг ${sexQuestCurrentStepIndex + 1} из ${sexQuestCurrentWish.quest.length}</div>
+            <div class="card-turn-label">Уровень ${sexQuestCurrentStepIndex + 1} из ${sexQuestCurrentWish.quest.length}</div>
             <div class="card-turn-name">${sexQuestCurrentWish.title}</div>
           </div>
         </div>
@@ -346,24 +353,26 @@ function renderSexQuestOutcome(text, icon){
   document.getElementById('sexQuestGame').classList.remove('sexquest-intro');
 }
 
-function recordSexQuestResult(outcome, agreedReal){
+function recordSexQuestResult(outcome, agreedCount){
   // Шаги в историю сохраняем в том порядке, в котором их видел игрок:
-  // в «Плавном» цепочка показывается в обратном порядке (от самого мягкого
-  // шага к самому смелому), в «Смелом» — как в колоде. agreedReal —
-  // реальный индекс шага в quest[]; в историю пишем позицию в порядке
+  // в «Плавном» цепочка идёт от самого мягкого уровня к самому смелому,
+  // в «Смелом» — как в колоде. agreedCount — сколько уровней выполнили
+  // («Да» на столько шагов подряд от начала показа); для «deferred» — 0.
+  // В историю пишем позицию последнего выполненного уровня в порядке
   // показа (agreedStep), чтобы подсветка шага в «Пройденных» совпадала.
   const total = sexQuestCurrentWish.quest.length;
   const smooth = state.sexQuestPlayMode === 'smooth';
   const displayOrder = [];
   for(let i = 0; i < total; i++) displayOrder.push(smooth ? total - 1 - i : i);
-  const shown = agreedReal !== null ? (smooth ? total - agreedReal : agreedReal + 1) : total;
+  const performed = outcome === 'deferred' ? 0 : agreedCount;
+  const shown = outcome === 'deferred' ? total : performed;
   const steps = displayOrder.slice(0, shown).map(real=>sexQuestCurrentWish.quest[real].question);
   state.sexQuestResults.push({
     wishId: sexQuestCurrentWish.id,
     title: sexQuestCurrentWish.title,
     outcome, // 'direct' | 'light' | 'deferred'
     steps,
-    agreedStep: agreedReal !== null ? (smooth ? total - 1 - agreedReal : agreedReal) : null,
+    agreedStep: outcome === 'deferred' ? null : performed - 1,
   });
 }
 
@@ -380,10 +389,29 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
   // знакомства она скрыта, а stepIndex там = -1).
   if(sexQuestCurrentStepIndex < 0) return;
   if(!sexQuestCurrentWish) return;
-  // "Да" на вопросе квеста — облегчённая версия желания.
+  const total = sexQuestCurrentWish.quest.length;
+  if(state.sexQuestPlayMode === 'smooth'){
+    // «Плавный»: «Да» — выполняем уровень и переходим к следующему, более
+    // смелому. На самом смелом уровне — желание выполнено полностью (+3).
+    sexQuestAgreedCount++;
+    if(sexQuestCurrentStepIndex < total - 1){
+      sexQuestCurrentStepIndex++;
+      saveState();
+      renderSexQuestStep();
+      return;
+    }
+    const step = sexQuestCurrentWish.quest[sexQuestStepDisplayIndex(sexQuestCurrentStepIndex)];
+    state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_DIRECT;
+    recordSexQuestResult('direct', sexQuestAgreedCount);
+    saveState();
+    sexQuestAwaitingNext = true;
+    renderSexQuestOutcome(step.yesAction + '<br><br>Желание выполнено полностью — все уровни пройдены! +' + SEXQUEST_MAX_SCORE_PER_DIRECT + ' очка.', '✅');
+    return;
+  }
+  // «Смелый»: «Да» на любом шаге — облегчённая версия желания (+1).
   const step = sexQuestCurrentWish.quest[sexQuestStepDisplayIndex(sexQuestCurrentStepIndex)];
   state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_LIGHT;
-  recordSexQuestResult('light', sexQuestCurrentStepIndex);
+  recordSexQuestResult('light', sexQuestCurrentStepIndex + 1);
   saveState();
   sexQuestAwaitingNext = true;
   renderSexQuestOutcome(step.yesAction + '<br><br>Желание засчитано облегчённой версией, +1 очко.', '💞');
@@ -400,13 +428,33 @@ document.getElementById('sexQuestNoBtn').addEventListener('click', ()=>{
   }
   playNeutralSound();
   if(!sexQuestCurrentWish) return;
-  if(sexQuestCurrentStepIndex < sexQuestCurrentWish.quest.length - 1){
+  const total = sexQuestCurrentWish.quest.length;
+  if(state.sexQuestPlayMode === 'smooth'){
+    // «Плавный»: «Нет» завершает желание и ведёт к следующему заданию.
+    // Если уровни уже выполнялись — засчитываем пройденное (облегчённо,
+    // +1 очко), если ни одного — откладываем без давления.
+    if(sexQuestAgreedCount > 0){
+      state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_LIGHT;
+      recordSexQuestResult('light', sexQuestAgreedCount);
+      saveState();
+      sexQuestAwaitingNext = true;
+      renderSexQuestOutcome('Желание выполнено до уровня ' + sexQuestAgreedCount + ' из ' + total + '.<br><br>Засчитано облегчённой версией, +' + SEXQUEST_MAX_SCORE_PER_LIGHT + ' очко.', '💞');
+    } else {
+      recordSexQuestResult('deferred', 0);
+      saveState();
+      sexQuestAwaitingNext = true;
+      renderSexQuestOutcome(SEXQUEST_SOFT_EXIT_TEXT, '🤍');
+    }
+    return;
+  }
+  // «Смелый»: «Нет» ведёт к следующему, более мягкому шагу.
+  if(sexQuestCurrentStepIndex < total - 1){
     sexQuestCurrentStepIndex++;
     renderSexQuestStep();
     return;
   }
   // "Нет" на последнем шаге — мягкий выход, без давления.
-  recordSexQuestResult('deferred', null);
+  recordSexQuestResult('deferred', 0);
   saveState();
   sexQuestAwaitingNext = true;
   renderSexQuestOutcome(SEXQUEST_SOFT_EXIT_TEXT, '🤍');
