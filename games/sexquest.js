@@ -504,6 +504,7 @@ function goToSexQuestHistory(){
     wrap.innerHTML = checklists.map((cl, idx)=>`
       <div class="sexquest-history-entry">
         <div class="sexquest-history-date">${formatSexQuestDate(cl.date)} · счёт ${cl.score} 🏆</div>
+        <div class="sexquest-history-lead">Согласны на:</div>
         <ul class="sexquest-history-items">
           ${cl.items.map((item, itemIdx)=>`
             <li>

@@ -2410,6 +2410,9 @@
     background:rgba(255,255,255,.08); border-radius:14px; padding:12px 14px;
   }
   .sexquest-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+  /* Общий заголовок заданий в записи истории («Пройденные») — над списком
+     названий заданий партии. */
+  .sexquest-history-lead{ font-size:14px; font-weight:800; color:#fff; margin:2px 0 8px; }
   .sexquest-history-items{ list-style:none; display:flex; flex-direction:column; gap:10px; }
   .sexquest-history-items > li + li{ border-top:1px solid rgba(255,255,255,.14); padding-top:10px; }
   .sexquest-history-steps{ margin:6px 0 0; padding-left:18px; font-size:12px; color:rgba(255,255,255,.6); line-height:1.5; }
