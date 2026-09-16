@@ -525,23 +525,19 @@ function updateSexQuestHistoryBtn(){
   // состояние было недостижимо с главного входа.
   btn.disabled = false;
 }
-function formatSexQuestDate(ts){
-  const d = new Date(ts);
-  const pad = n => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 function goToSexQuestHistory(){
   const wrap = document.getElementById('sexQuestHistoryList');
   const checklists = state.sexQuestChecklists || [];
   if(checklists.length === 0){
     wrap.innerHTML = '<div class="card-text sexquest-history-empty">Пока нет сохранённых чек-листов<br>пройдите игру хотя бы раз.</div>';
   } else {
-    // «Согласны на:» — общий заголовок один на весь экран (не у каждой
-    // записи): при двух и более партиях он раньше дублировался.
-    wrap.innerHTML = '<div class="sexquest-history-lead">Согласны на:</div>' + checklists.map((cl, idx)=>`
-      <div class="sexquest-history-entry">
-        <div class="sexquest-history-date">${formatSexQuestDate(cl.date)} · счёт ${cl.score} 🏆</div>
-        <ul class="sexquest-history-items">
+    // «Согласны на:» — один заголовок, под ним плоский общий список заданий
+    // из ВСЕХ сохранённых партий: блоки партий (дата · счёт) не выводятся,
+    // у пользователя один общий список вместо отдельных «окон» на каждую
+    // партию. data-cl/data-item сохраняют индексы исходных массивов, чтобы
+    // удаление крестиком продолжало работать.
+    wrap.innerHTML = '<div class="sexquest-history-lead">Согласны на:</div><ul class="sexquest-history-items">' +
+      checklists.map((cl, idx)=>`
           ${cl.items.map((item, itemIdx)=>`
             <li>
               <div class="sexquest-item-row">
@@ -554,9 +550,8 @@ function goToSexQuestHistory(){
               </div>
             </li>
           `).join('')}
-        </ul>
-      </div>
-    `).join('');
+      `).join('') +
+      '</ul>';
   }
   document.getElementById('setup').classList.remove('active');
   document.getElementById('sexQuestSetup').classList.remove('active');
