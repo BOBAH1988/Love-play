@@ -1066,6 +1066,56 @@ test('Пройди квест: для ручного старта нужен п�
   }
 });
 
+// «Пройденные задания»: в «Смелом» сохраняется только принятый вопрос —
+// одна строка без номера; в «Плавном» и в старых записях формат прежний.
+test('sexQuest: история — «Смелый» хранит одну строку согласия, «Плавный» — прежний формат', () => {
+  const wishes = [{ id: 1, title: 'Тестовое желание', level: 10, text: 'о', quest: [
+    { question: 'Смелый вопрос 1', yesAction: 'Y1' },
+    { question: 'Смелый вопрос 2', yesAction: 'Y2' },
+    { question: 'Смелый вопрос 3', yesAction: 'Y3' },
+  ] }];
+  const savedMode = state.sexQuestPlayMode;
+  const savedResults = state.sexQuestResults;
+  const savedCurrent = sexQuestCurrentWish;
+  const savedChecklists = state.sexQuestChecklists;
+  try {
+    state.sexQuestResults = [];
+    // «Смелый»: согласие на 2-м уровне — сохраняется один вопрос, agreedStep=0.
+    state.sexQuestPlayMode = 'fast';
+    sexQuestCurrentWish = wishes[0];
+    recordSexQuestResult('light', 2);
+    const fastItem = state.sexQuestResults[state.sexQuestResults.length - 1];
+    assert(fastItem.steps.length === 1 && fastItem.steps[0] === 'Смелый вопрос 2', '«Смелый»: сохранён только принятый вопрос');
+    assert(fastItem.agreedStep === 0 && fastItem.playMode === 'fast', '«Смелый»: agreedStep=0 и режим записан');
+    const fastHtml = renderSexQuestHistorySteps(fastItem);
+    assert(fastHtml.indexOf('sexquest-history-bold-answer') >= 0, '«Смелый»: ответ выводится розовой строкой');
+    assert(fastHtml.indexOf('<ol') < 0 && fastHtml.indexOf('<li') < 0, '«Смелый»: без нумерованного списка');
+    // «Смелый» без согласия — строк ответа нет.
+    recordSexQuestResult('deferred', 0);
+    const fastDeferred = state.sexQuestResults[state.sexQuestResults.length - 1];
+    assert(fastDeferred.steps.length === 0, '«Смелый» «Отложено» — без строки ответа');
+    assert(renderSexQuestHistorySteps(fastDeferred) === '', '«Смелый» «Отложено» — пустой вывод');
+    // «Плавный»: цепочка с подсветкой последнего выполненного уровня.
+    state.sexQuestPlayMode = 'smooth';
+    recordSexQuestResult('light', 2);
+    const smoothItem = state.sexQuestResults[state.sexQuestResults.length - 1];
+    assert(smoothItem.steps.length === 2 && smoothItem.agreedStep === 1 && smoothItem.playMode === 'smooth', '«Плавный»: цепочка шагов и подсветка сохраняются');
+    assert(renderSexQuestHistorySteps(smoothItem).indexOf('sexquest-step-agreed') >= 0, '«Плавный»: вывод с выделением шага');
+    // Старая запись без playMode — прежний нумерованный список.
+    const legacy = { outcome: 'light', steps: ['Старый шаг 1', 'Старый шаг 2'], agreedStep: 1 };
+    const legacyHtml = renderSexQuestHistorySteps(legacy);
+    assert(legacyHtml.indexOf('sexquest-history-steps') >= 0 && legacyHtml.indexOf('sexquest-step-agreed') >= 0, 'Старые записи без режима отображаются как раньше');
+    state.sexQuestChecklists = JSON.parse(JSON.stringify([{ items: [fastItem] }]));
+    goToSexQuestHistory();
+    const historyHtml = document.getElementById('sexQuestHistoryList').innerHTML;
+    assert(historyHtml.includes('sexquest-history-bold-answer') && historyHtml.includes('Смелый вопрос 2') && !historyHtml.includes('<ol'), 'Страница истории выводит сохранённый ответ без нумерации');
+  } finally {
+    state.sexQuestChecklists = savedChecklists;
+    state.sexQuestResults = savedResults;
+    sexQuestCurrentWish = savedCurrent;
+    state.sexQuestPlayMode = savedMode;
+  }
+});
 
 console.log('\n=== Запуск тестов ===\n');
 

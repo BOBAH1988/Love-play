@@ -369,25 +369,25 @@ function renderSexQuestOutcome(text, icon){
 }
 
 function recordSexQuestResult(outcome, agreedCount){
-  // Шаги в историю сохраняем в том порядке, в котором их видел игрок:
-  // в «Плавном» цепочка идёт от самого мягкого уровня к самому смелому,
-  // в «Смелом» — как в колоде. agreedCount — сколько уровней выполнили
-  // («Да» на столько шагов подряд от начала показа); для «deferred» — 0.
-  // В историю пишем позицию последнего выполненного уровня в порядке
-  // показа (agreedStep), чтобы подсветка шага в «Пройденных» совпадала.
+  // «Плавный» сохраняет цепочку в порядке показа; «Смелый» — только вопрос
+  // согласия. agreedCount: число пройденных уровней в «Плавном», позиция
+  // согласия (с единицы) в «Смелом». Режим хранится в самой записи истории.
   const total = sexQuestCurrentWish.quest.length;
   const smooth = state.sexQuestPlayMode === 'smooth';
   const displayOrder = [];
   for(let i = 0; i < total; i++) displayOrder.push(smooth ? total - 1 - i : i);
   const performed = outcome === 'deferred' ? 0 : agreedCount;
   const shown = outcome === 'deferred' ? total : performed;
-  const steps = displayOrder.slice(0, shown).map(real=>sexQuestCurrentWish.quest[real].question);
+  const steps = smooth
+    ? displayOrder.slice(0, shown).map(real=>sexQuestCurrentWish.quest[real].question)
+    : (performed > 0 ? [sexQuestCurrentWish.quest[performed - 1].question] : []);
   state.sexQuestResults.push({
     wishId: sexQuestCurrentWish.id,
     title: sexQuestCurrentWish.title,
     outcome, // 'direct' | 'light' | 'deferred'
     steps,
-    agreedStep: outcome === 'deferred' ? null : performed - 1,
+    playMode: smooth ? 'smooth' : 'fast',
+    agreedStep: outcome === 'deferred' ? null : (smooth ? performed - 1 : 0),
   });
 }
 
@@ -604,6 +604,15 @@ function updateSexQuestHistoryBtn(){
   // состояние было недостижимо с главного входа.
   btn.disabled = false;
 }
+function renderSexQuestHistorySteps(item){
+  if(!item.steps || !item.steps.length) return '';
+  if(item.playMode === 'fast'){
+    const agreed = Number.isInteger(item.agreedStep) ? item.steps[item.agreedStep] : null;
+    return agreed ? `<div class="sexquest-history-bold-answer">${agreed}</div>` : '';
+  }
+  // Старые записи без режима не переопределяем по текущим настройкам игры.
+  return `<ol class="sexquest-history-steps">${item.steps.map((s,i)=>`<li${item.agreedStep===i ? ' class="sexquest-step-agreed"' : ''}>${s}</li>`).join('')}</ol>`;
+}
 function goToSexQuestHistory(){
   const wrap = document.getElementById('sexQuestHistoryList');
   const checklists = state.sexQuestChecklists || [];
@@ -622,7 +631,7 @@ function goToSexQuestHistory(){
                 <div class="sexquest-item-main">
                   <div class="sexquest-summary-title">${item.title}</div>
                   <div class="sexquest-summary-outcome">${sexQuestOutcomeLabel(item.outcome)}</div>
-                  ${item.steps && item.steps.length ? `<ol class="sexquest-history-steps">${item.steps.map((s,i)=>`<li${item.agreedStep===i ? ' class="sexquest-step-agreed"' : ''}>${s}</li>`).join('')}</ol>` : ''}
+                  ${renderSexQuestHistorySteps(item)}
                 </div>
                 <button type="button" class="sexquest-item-del" data-cl="${idx}" data-item="${itemIdx}" aria-label="Удалить задание из пройденных">✕</button>
               </div>
