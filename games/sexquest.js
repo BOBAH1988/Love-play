@@ -502,8 +502,13 @@ function finishPausedSexQuestGame(){
   state.sexQuestPaused = null;
   state.inProgress = false;
   state.pausedMode = null;
-  document.getElementById('sexQuestGame').classList.remove('active');
-  document.getElementById('sexQuestSetup').classList.add('active');
+  // Выход из игры — в меню настройки «Пройди квест». Используем тот же
+  // путь, что и выход с «Итогов» (goToSexQuestSetup → goToGameSetup):
+  // он сам гасит ВСЕ активные экраны (не только игровой), включает
+  // #sexQuestSetup и запоминает точку возврата для навигации «Назад».
+  // Раньше здесь было ручное переключение экранов, из-за которого возврат
+  // после «Выход» работал иначе, чем после «Итогов».
+  goToSexQuestSetup();
   saveState();
   updateResumeUI();
   showToast('Игра завершена');
