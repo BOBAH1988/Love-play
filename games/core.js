@@ -37,7 +37,7 @@ const STORAGE_KEY = 'couple-game-state-v1';
  * Старые шаги не удаляйте: у кого-то сохранение может быть с версии 1,
  * и ему нужно пройти весь путь по порядку.
  */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 // Таблица миграций: ключ — номер версии, значение — функция (state) => void.
 // Версия 1 — стартовая: сюда вошли все проверки, которые раньше лежали
 // подряд в loadState() (поля сапёра и «Счастливого билета», имена игроков
@@ -108,6 +108,19 @@ MIGRATIONS[1] = function(s){
       return out;
     });
   }
+};
+/**
+ * Версия 2: новые настройки по умолчанию «Пройди квеста» — количество 5,
+ * выбор «Случайно», режим «Плавный». Применяется один раз к уже
+ * установленным приложениям: их сейвы хранят старые значения (в том числе
+ * оставшиеся с тестов), и без миграции новые дефолты до них бы не дошли.
+ * Осознанный выбор пользователей этими значениями перезаписывается —
+ * так задумано (запрос владельца, 2026-09-27).
+ */
+MIGRATIONS[2] = function(s){
+  s.sexQuestCount = 5;
+  s.sexQuestMode = 'random';
+  s.sexQuestPlayMode = 'smooth';
 };
 // Дефолтные имена игроков «Игр для компании» — порядковые: «Первый», «Второй», …
 // до «Десятый» (список ограничен 10). Используется renderPartyPlayers() в
@@ -267,7 +280,7 @@ let state = {
   // sexQuestPlayMode — порядок заданий: 'smooth' (по умолчанию) — в обратном
   // порядке колоды, от самого простого к самому смелому; 'fast' — случайно,
   // как было раньше.
-  sexQuestCount:1, sexQuestMode:'random', sexQuestManualIds:[], sexQuestPlayMode:'smooth',
+  sexQuestCount:5, sexQuestMode:'random', sexQuestManualIds:[], sexQuestPlayMode:'smooth',
   // Желания, исключённые крестиком из чек-листа — не участвуют в случайной
   // выдаче (но по-прежнему доступны для ручного выбора, см. sexquest.js).
   sexQuestExcluded:[],
@@ -1610,7 +1623,7 @@ function performFullReset(){
    state.kidsQuizAutoSpeak = false;
    state.soloQuizSelectedLevel = 1;
    state.soloQuizAutoSpeak = false;
-   state.sexQuestCount = 1;
+   state.sexQuestCount = 5;
    state.sexQuestMode = 'random';
    state.sexQuestPlayMode = 'smooth';
    state.sexQuestManualIds = [];

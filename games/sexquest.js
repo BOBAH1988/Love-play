@@ -56,7 +56,7 @@ function goToSexQuestSetup(){
 }
 
 function renderSexQuestCountGroup(){
-  if(!SEXQUEST_COUNT_VALUES.includes(String(state.sexQuestCount))){ state.sexQuestCount = 1; saveState(); }
+  if(!SEXQUEST_COUNT_VALUES.includes(String(state.sexQuestCount))){ state.sexQuestCount = 5; saveState(); }
   document.querySelectorAll('#sexQuestCountGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', btn.dataset.value === String(state.sexQuestCount));
   });
