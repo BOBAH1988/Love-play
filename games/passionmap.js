@@ -402,8 +402,12 @@ function renderPassionMapSummary(checklist){
 
 function exitPassionMapSummary(){
   stopAllSounds();
-  document.getElementById('passionMapSummary').classList.remove('active');
-  document.getElementById('setup').classList.add('active');
+  // «Карта страсти» — игра для пар: возвращаемся в хаб «Игры для двоих».
+  // Идём через returnToSetupUI(), а не переключаем экраны вручную: он гасит
+  // ВСЕ активные экраны и только потом включает #setup. Раньше здесь гасился
+  // лишь экран итогов, и если игрок пришёл из игры через «Продолжить игру»
+  // (хаб уже активен) или с настроек, игрок видел «экран из двух частей».
+  returnToSetupUI();
   showSetupView('twoPlayerView');
 }
 document.getElementById('passionMapSummaryExitBtn').addEventListener('click', ()=>{ exitPassionMapSummary(); });
@@ -444,8 +448,12 @@ function finishPausedPassionMapGame(){
   state.passionMapPaused = null;
   state.inProgress = false;
   state.pausedMode = null;
-  document.getElementById('passionMapGame').classList.remove('active');
-  document.getElementById('passionMapSetup').classList.add('active');
+  // Выход из партии — в меню настройки «Карты страсти» (так записано в реестре
+  // игр: «паузы нет, выход ведёт сразу в меню настройки»). Идём единым путём
+  // goToPassionMapSetup → goToGameSetup: он гасит ВСЕ активные экраны.
+  // Раньше экраны переключались вручную, и активным оставался хаб «Игры для
+  // двоих» — после выхода игрок видел список игр, а не настройки игры.
+  goToPassionMapSetup();
   saveState();
   updateResumeUI();
   showToast('Игра завершена');

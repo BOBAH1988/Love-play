@@ -781,6 +781,91 @@ test('Сценарий: exitDavayGame(true) открывает настройк�
   assert(state.pausedMode === null, 'pausedMode должен сброситься');
 });
 
+test('Сценарий: выход из «Пройди квеста» идёт в настройки игры, а не в хаб', () => {
+  // Баг (сборки до v286): finishPausedSexQuestGame гасила ТОЛЬКО игровой экран
+  // и включала #sexQuestSetup вручную — не через goToGameSetup. Экран #setup
+  // (хаб «Игры для двоих») при этом оставался активным, и игрок после выхода
+  // видел не настройки игры, а список игр для двоих. Особенно заметно после
+  // «Продолжить игру» из хаба и после «Закончить игру» в меню паузы.
+  // Проверяем фактическое поведение: выход обязан идти единым путём
+  // goToGameSetup('sexQuestSetup') — он гасит ВСЕ активные экраны.
+  const called = [];
+  const origGo = global.goToGameSetup;
+  global.goToGameSetup = function (id) { called.push(id); };
+  try {
+    global.finishPausedSexQuestGame();
+    assert(called.length === 1,
+      `выход должен позвать goToGameSetup один раз, вызовов: ${called.length}`);
+    assert(called[0] === 'sexQuestSetup',
+      `выход должен вести в sexQuestSetup, а не в «${called[0]}»`);
+  } finally {
+    global.goToGameSetup = origGo;
+  }
+  // Пара связанных флагов сбрасывается вместе (правило AGENTS.md).
+  assert(state.inProgress === false, 'inProgress должен сброситься');
+  assert(state.pausedMode === null, 'pausedMode должен сброситься');
+});
+
+test('Сценарий: «В меню» с итогов «Пройди квеста» ведёт в настройки игры', () => {
+  // Вторая ветка того же бага: «В меню» с экрана итогов раньше открывала хаб
+  // «Игры для двоих». Теперь и она идёт через goToGameSetup('sexQuestSetup').
+  const called = [];
+  const origGo = global.goToGameSetup;
+  global.goToGameSetup = function (id) { called.push(id); };
+  try {
+    global.exitSexQuestSummary();
+    assert(called.length === 1,
+      `«В меню» с итогов должен позвать goToGameSetup один раз, вызовов: ${called.length}`);
+    assert(called[0] === 'sexQuestSetup',
+      `«В меню» с итогов должен вести в sexQuestSetup, а не в «${called[0]}»`);
+  } finally {
+    global.goToGameSetup = origGo;
+  }
+});
+
+test('Сценарий: выход из «Карты страсти» идёт в настройки игры, а не в хаб', () => {
+  // Тот же баг «размазанной» логики выхода, что у «Пройди квеста» (до v288):
+  // finishPausedPassionMapGame гасила ТОЛЬКО игровой экран и включала
+  // #passionMapSetup вручную. Если #setup (хаб «Игры для двоих») оставался
+  // активным — например, после «Продолжить игру» из хаба — игрок вместо
+  // настроек игры видел список игр для двоих. Теперь выход идёт единым путём
+  // goToPassionMapSetup → goToGameSetup, который гасит ВСЕ активные экраны.
+  const called = [];
+  const origGo = global.goToGameSetup;
+  global.goToGameSetup = function (id) { called.push(id); };
+  try {
+    global.finishPausedPassionMapGame();
+    assert(called.length === 1,
+      `выход должен позвать goToGameSetup один раз, вызовов: ${called.length}`);
+    assert(called[0] === 'passionMapSetup',
+      `выход должен вести в passionMapSetup, а не в «${called[0]}»`);
+  } finally {
+    global.goToGameSetup = origGo;
+  }
+  assert(state.inProgress === false, 'inProgress должен сброситься');
+  assert(state.pausedMode === null, 'pausedMode должен сброситься');
+});
+
+test('Сценарий: возврат из «Карты страсти» идёт единым путём returnToSetupUI', () => {
+  // exitPassionMapSummary возвращает в хаб «Игры для двоих» через
+  // returnToSetupUI() — он снимает active со ВСЕХ экранов и включает только
+  // #setup. Раньше здесь гасился лишь #passionMapSummary и включался #setup
+  // вручную: при заходе из игры/настроек оставался «экран, поделённый на
+  // 2 части», а вместо хаба показывался список игр.
+  // Проверяем именно делегирование: если кто-то вернёт ручное переключение
+  // экранов, тест упадёт. Само гашение всех экранов проверяется в браузере —
+  // заглушка dom-stub не реализует querySelectorAll('.screen.active').
+  let calls = 0;
+  const orig = global.returnToSetupUI;
+  global.returnToSetupUI = function () { calls += 1; };
+  try {
+    global.exitPassionMapSummary();
+  } finally {
+    global.returnToSetupUI = orig;
+  }
+  assert(calls === 1, `returnToSetupUI должен быть позван один раз, вызовов: ${calls}`);
+});
+
 test('Сценарий: setGameMode снимает чужой режим экрана #game', () => {
   // Раньше после паузы «Давай попробуем» класс davay-mode оставался на #game,
   // и «Фанты» открывались с чужим оформлением и чужой логикой выхода.
