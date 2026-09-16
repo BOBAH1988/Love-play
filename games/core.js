@@ -264,7 +264,10 @@ let state = {
   // Настройки партии: сколько желаний играть (1/5/10/'all') и режим выбора —
   // 'random' (случайно из всего пула) или 'manual' (отмечены вручную в
   // sexQuestManualIds, см. модалку выбора вопросов в games/sexquest.js).
-  sexQuestCount:1, sexQuestMode:'random', sexQuestManualIds:[],
+  // sexQuestPlayMode — порядок заданий: 'smooth' (по умолчанию) — в обратном
+  // порядке колоды, от самого простого к самому смелому; 'fast' — случайно,
+  // как было раньше.
+  sexQuestCount:1, sexQuestMode:'random', sexQuestManualIds:[], sexQuestPlayMode:'smooth',
   // Желания, исключённые крестиком из чек-листа — не участвуют в случайной
   // выдаче (но по-прежнему доступны для ручного выбора, см. sexquest.js).
   sexQuestExcluded:[],
@@ -1609,6 +1612,7 @@ function performFullReset(){
    state.soloQuizAutoSpeak = false;
    state.sexQuestCount = 1;
    state.sexQuestMode = 'random';
+   state.sexQuestPlayMode = 'smooth';
    state.sexQuestManualIds = [];
    state.sexQuestExcluded = [];
    state.passionMapCount = 1;

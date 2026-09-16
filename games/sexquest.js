@@ -51,6 +51,7 @@ function goToSexQuestSetup(){
     updateSexQuestHistoryBtn();
     renderSexQuestCountGroup();
     renderSexQuestModeGroup();
+    renderSexQuestPlayModeGroup();
   });
 }
 
@@ -102,6 +103,22 @@ document.querySelectorAll('#sexQuestModeGroup .starter-btn[data-value="random"]'
     state.sexQuestMode = 'random';
     saveState();
     renderSexQuestModeGroup();
+  });
+});
+
+// «Режимы игры»: порядок заданий в партии. 'smooth' (по умолчанию) — в
+// обратном порядке колоды, от простого к смелому; 'fast' — как было, случайно.
+function renderSexQuestPlayModeGroup(){
+  if(state.sexQuestPlayMode !== 'smooth' && state.sexQuestPlayMode !== 'fast'){ state.sexQuestPlayMode = 'smooth'; saveState(); }
+  document.querySelectorAll('#sexQuestPlayModeGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === state.sexQuestPlayMode);
+  });
+}
+document.querySelectorAll('#sexQuestPlayModeGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.sexQuestPlayMode = btn.dataset.value;
+    saveState();
+    renderSexQuestPlayModeGroup();
   });
 });
 
@@ -175,6 +192,21 @@ function shuffleIds(ids){
 }
 
 function buildSexQuestQueue(){
+  if(state.sexQuestPlayMode === 'smooth'){
+    // «Плавный» (по умолчанию): без перемешивания — задания идут в обратном
+    // порядке колоды, от самого простого («Только руками») к самому смелому.
+    if(state.sexQuestMode === 'manual' && state.sexQuestManualIds && state.sexQuestManualIds.length){
+      const deckIndex = id => getSexQuestWishes().findIndex(w=>w.id===id);
+      return state.sexQuestManualIds.slice().sort((a,b)=>deckIndex(b)-deckIndex(a));
+    }
+    const allIds = getSexQuestWishes().map(w=>w.id);
+    const excluded = state.sexQuestExcluded || [];
+    let pool = allIds.filter(id => !excluded.includes(id));
+    if(pool.length === 0) pool = allIds;
+    const count = state.sexQuestCount === 'all' ? pool.length : Math.min(state.sexQuestCount, pool.length);
+    return pool.slice(-count).reverse(); // последние (самые простые) — вперёд
+  }
+  // «Быстрый»: игра как была — случайный перемешанный порядок.
   if(state.sexQuestMode === 'manual' && state.sexQuestManualIds && state.sexQuestManualIds.length){
     return shuffleIds(state.sexQuestManualIds);
   }
