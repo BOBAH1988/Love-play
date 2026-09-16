@@ -558,7 +558,7 @@ document.getElementById('sexQuestHistoryList').addEventListener('click', (e)=>{
 function exitSexQuestHistory(){
   document.getElementById('sexQuestHistory').classList.remove('active');
   document.getElementById('sexQuestSetup').classList.add('active');
-  updateSexQuestHistoryBtn(); // после удалений кнопка «✅ Пройденные» может стать неактивной
+  updateSexQuestHistoryBtn(); // после удалений кнопка «Пройденные» может стать неактивной
 }
 document.getElementById('sexQuestHistoryBtn').addEventListener('click', ()=>{ goToSexQuestHistory(); });
 document.getElementById('sexQuestHistoryExitBtn').addEventListener('click', ()=>{ exitSexQuestHistory(); });
