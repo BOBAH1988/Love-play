@@ -3185,6 +3185,36 @@
   .wishlist-setup-actions-row #wishlistHistoryBtn, .wishlist-setup-actions-row #znayuHistoryBtn{flex:1;}
   .wishlist-setup-actions-row #wishlistSetupExitBtn, .wishlist-setup-actions-row #znayuSetupExitBtn{flex:0 0 auto; width:auto; padding:0 16px; white-space:nowrap;}
 
+  /* Единая линия названий экранов и кнопок навигации. На телефоне все
+     закреплены относительно viewport, а не прокручиваемого .screen.
+     На desktop — относительно колонки #app, как сами FAB-кнопки. */
+  .screen > h1.title,
+  #setup > .field-collapsible > h1.title,
+  .screen > .game-level-label{
+    position:fixed;
+    top:calc(12px + env(safe-area-inset-top, 0px));
+    left:56px; right:56px;
+    width:auto; max-width:none; height:36px;
+    margin:0; padding:0; transform:none;
+    display:flex; align-items:center; justify-content:center;
+    line-height:1.2; text-align:center;
+    white-space:nowrap; overflow:hidden;
+    font-size:clamp(16px, 4.8vw, 26px);
+    pointer-events:none;
+  }
+  .screen > h1.title,
+  #setup > .field-collapsible > h1.title{ z-index:140; }
+  /* Заголовок вынесен из потока: содержимое начинается под шапкой. */
+  #app > .screen:has(> h1.title),
+  #app > #setup{ padding-top:var(--screen-top-pad); }
+  @media (min-width:640px){
+    .screen > h1.title,
+    #setup > .field-collapsible > h1.title,
+    .screen > .game-level-label{
+      position:absolute; top:12px;
+    }
+  }
+
   /* ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== */
   .fab-menu-btn{
     position:fixed;
