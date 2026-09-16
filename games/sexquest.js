@@ -206,7 +206,8 @@ function buildSexQuestQueue(){
     const count = state.sexQuestCount === 'all' ? pool.length : Math.min(state.sexQuestCount, pool.length);
     return pool.slice(-count).reverse(); // последние (самые простые) — вперёд
   }
-  // «Быстрый»: игра как была — случайный перемешанный порядок.
+  // «Смелый» (бывший «Быстрый», ключ в сохранениях — 'fast'): игра как была —
+  // случайный перемешанный порядок.
   if(state.sexQuestMode === 'manual' && state.sexQuestManualIds && state.sexQuestManualIds.length){
     return shuffleIds(state.sexQuestManualIds);
   }
