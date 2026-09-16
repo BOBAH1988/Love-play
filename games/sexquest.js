@@ -437,11 +437,13 @@ function renderSexQuestSummary(checklist){
 
 function exitSexQuestSummary(){
   stopAllSounds();
-  document.getElementById('sexQuestSummary').classList.remove('active');
+  // Выход с «Итогов» — в меню настройки «Пройди квест» (#sexQuestSetup),
+  // а не в общий хаб. Сначала активируем точку входа #setup (раздел «для
+  // двоих»): goToGameSetup запомнит её как экран для кнопки «Назад»,
+  // будто мы пришли в настройки из хаба, а не с «Итогов».
   document.getElementById('setup').classList.add('active');
-  // «Секс-квест» — игра для пар (group:'two', плитка #gameSexQuestBtn в
-  // twoPlayerView). Раньше выход открывал раздел «Игры для одного».
   showSetupView('twoPlayerView');
+  goToSexQuestSetup();
   state.inProgress = false;
   state.pausedMode = null;
   saveState();
