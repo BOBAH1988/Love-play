@@ -5,7 +5,11 @@
 // Механика: каждое желание показывается в два этапа.
 //   Этап 1 — карточка знакомства: title + text желания, кнопки «▶ Начать»
 //         (включает вопрос) и «Выход». Кнопки «Да/Нет» здесь скрыты.
-//   Этап 2 — вопросы квеста quest[] (по очереди, начиная с первого):
+//   Этап 2 — вопросы квеста quest[]: порядок зависит от режима игры.
+//         «Смелый» — по колоде: от самого смелого шага (quest[0]) к самому
+//         мягкому. «Плавный» — в обратном порядке: первый вопрос самый
+//         мягкий (обсудить идею и выбрать стоп-слово), «Нет» ведёт к более
+//         смелым шагам (см. sexQuestStepDisplayIndex).
 //         На каждом шаге — свой вопрос «Да/Нет»:
 //           Да — желание засчитывается облегчённой версией (+1 очко),
 //                показывается текст yesAction как итог, переход к следующему желанию.
@@ -281,10 +285,19 @@ function renderSexQuestIntroCard(){
   document.getElementById('sexQuestGame').classList.add('sexquest-intro');
 }
 
+// Отображаемый индекс шага квеста. В «Смелом» шаги идут по колоде
+// (quest[0] — самый смелый), в «Плавном» — в обратном порядке: первый
+// показанный вопрос самый мягкий (обсуждение и стоп-слово), «Нет» ведёт
+// к более смелым шагам. realIndex — индекс в массиве quest[] желания.
+function sexQuestStepDisplayIndex(realIndex){
+  if(!sexQuestCurrentWish || state.sexQuestPlayMode !== 'smooth') return realIndex;
+  return sexQuestCurrentWish.quest.length - 1 - realIndex;
+}
+
 function renderSexQuestStep(){
   if(!sexQuestCurrentWish) return;
   updateSexQuestProgress();
-  const step = sexQuestCurrentWish.quest[sexQuestCurrentStepIndex];
+  const step = sexQuestCurrentWish.quest[sexQuestStepDisplayIndex(sexQuestCurrentStepIndex)];
   fadeSwapEl('sexQuestCard', (el)=>{
     el.className = 'card';
     el.innerHTML = `
@@ -333,16 +346,24 @@ function renderSexQuestOutcome(text, icon){
   document.getElementById('sexQuestGame').classList.remove('sexquest-intro');
 }
 
-function recordSexQuestResult(outcome, agreedStep){
-  const steps = sexQuestCurrentWish.quest
-    .slice(0, agreedStep !== null ? agreedStep + 1 : sexQuestCurrentWish.quest.length)
-    .map(s=>s.question);
+function recordSexQuestResult(outcome, agreedReal){
+  // Шаги в историю сохраняем в том порядке, в котором их видел игрок:
+  // в «Плавном» цепочка показывается в обратном порядке (от самого мягкого
+  // шага к самому смелому), в «Смелом» — как в колоде. agreedReal —
+  // реальный индекс шага в quest[]; в историю пишем позицию в порядке
+  // показа (agreedStep), чтобы подсветка шага в «Пройденных» совпадала.
+  const total = sexQuestCurrentWish.quest.length;
+  const smooth = state.sexQuestPlayMode === 'smooth';
+  const displayOrder = [];
+  for(let i = 0; i < total; i++) displayOrder.push(smooth ? total - 1 - i : i);
+  const shown = agreedReal !== null ? (smooth ? total - agreedReal : agreedReal + 1) : total;
+  const steps = displayOrder.slice(0, shown).map(real=>sexQuestCurrentWish.quest[real].question);
   state.sexQuestResults.push({
     wishId: sexQuestCurrentWish.id,
     title: sexQuestCurrentWish.title,
     outcome, // 'direct' | 'light' | 'deferred'
     steps,
-    agreedStep,
+    agreedStep: agreedReal !== null ? (smooth ? total - 1 - agreedReal : agreedReal) : null,
   });
 }
 
@@ -360,7 +381,7 @@ document.getElementById('sexQuestYesBtn').addEventListener('click', ()=>{
   if(sexQuestCurrentStepIndex < 0) return;
   if(!sexQuestCurrentWish) return;
   // "Да" на вопросе квеста — облегчённая версия желания.
-  const step = sexQuestCurrentWish.quest[sexQuestCurrentStepIndex];
+  const step = sexQuestCurrentWish.quest[sexQuestStepDisplayIndex(sexQuestCurrentStepIndex)];
   state.sexQuestScore += SEXQUEST_MAX_SCORE_PER_LIGHT;
   recordSexQuestResult('light', sexQuestCurrentStepIndex);
   saveState();
