@@ -1028,6 +1028,45 @@ test('Пройди квест: итоги и игровой экран без с
     'сообщения результатов не показывают начисление очков');
 });
 
+test('Пройди квест: для ручного старта нужен полный набор вопросов', () => {
+  const saved = { count: state.sexQuestCount, mode: state.sexQuestMode, ids: state.sexQuestManualIds };
+  const ids = getSexQuestWishes().slice(0, 5).map(w => w.id);
+  const button = document.getElementById('sexQuestStartBtn');
+  const hint = document.getElementById('sexQuestStartHint');
+  try {
+    state.sexQuestCount = 5;
+    state.sexQuestMode = 'manual';
+    state.sexQuestManualIds = ids.slice(0, 1);
+    renderSexQuestModeGroup();
+    assert(button.disabled && !hint.hidden, 'один из пяти: старт заблокирован');
+    assert(hint.innerHTML === 'Добавьте 4 вопроса<br>или поменяйте режим', 'подсказка в две строки с точным количеством');
+    state.sexQuestManualIds = ids.slice(0, 4);
+    renderSexQuestPickList();
+    assert(button.disabled && hint.innerHTML.includes('Добавьте 1 вопрос<br>'), 'после выбора подсказка обновляется');
+    state.sexQuestManualIds = ids;
+    renderSexQuestPickList();
+    assert(!button.disabled && hint.hidden, 'полный набор разрешает старт');
+    state.sexQuestManualIds = [];
+    renderSexQuestPickList();
+    assert(button.disabled && hint.innerHTML.includes('Добавьте 5 вопросов<br>'), 'пустой набор блокирует старт');
+    state.sexQuestMode = 'random';
+    renderSexQuestModeGroup();
+    assert(!button.disabled && hint.hidden, 'случайный режим не требует ручного набора');
+    state.sexQuestMode = 'manual';
+    state.sexQuestManualIds = ids.slice(0, 1);
+    state.sexQuestCount = 1;
+    renderSexQuestCountGroup();
+    renderSexQuestModeGroup();
+    assert(!button.disabled && hint.hidden, 'уменьшение количества разрешает старт');
+  } finally {
+    state.sexQuestCount = saved.count;
+    state.sexQuestMode = saved.mode;
+    state.sexQuestManualIds = saved.ids;
+    updateSexQuestStartAvailability();
+  }
+});
+
+
 console.log('\n=== Запуск тестов ===\n');
 
 tests.forEach(t => {

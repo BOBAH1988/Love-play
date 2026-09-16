@@ -56,6 +56,21 @@ function sexQuestResolvedCount(){
   return Math.min(state.sexQuestCount, total);
 }
 
+// Единая проверка ручного набора: обновляет кнопку и подсказку, защищает старт.
+function updateSexQuestStartAvailability(){
+  const selected = new Set(state.sexQuestManualIds || []);
+  const count = getSexQuestWishes().filter(wish => selected.has(wish.id)).length;
+  const missing = state.sexQuestMode === 'manual' ? Math.max(0, sexQuestResolvedCount() - count) : 0;
+  document.getElementById('sexQuestStartBtn').disabled = missing > 0;
+  const hint = document.getElementById('sexQuestStartHint');
+  hint.hidden = missing === 0;
+  const word = missing % 10 === 1 && missing % 100 !== 11 ? 'вопрос' :
+    (missing % 10 >= 2 && missing % 10 <= 4 && (missing % 100 < 12 || missing % 100 > 14) ? 'вопроса' : 'вопросов');
+  hint.innerHTML = missing ? `Добавьте ${missing} ${word}<br>или поменяйте режим` : '';
+  return missing === 0;
+}
+
+
 function goToSexQuestSetup(){
   goToGameSetup('sexQuestSetup', null, ()=>{
     updateSexQuestHistoryBtn();
@@ -96,6 +111,7 @@ function renderSexQuestModeGroup(){
   document.querySelectorAll('#sexQuestModeGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', btn.dataset.value === state.sexQuestMode);
   });
+  updateSexQuestStartAvailability();
 }
 document.getElementById('sexQuestPickBtn').addEventListener('click', ()=>{
   if(state.sexQuestCount === 'all'){
@@ -134,6 +150,7 @@ document.querySelectorAll('#sexQuestPlayModeGroup .starter-btn').forEach(btn=>{
 });
 
 function renderSexQuestPickList(){
+  updateSexQuestStartAvailability();
   const wrap = document.getElementById('sexQuestPickList');
   if(!wrap) return;
   const limit = sexQuestResolvedCount();
@@ -560,12 +577,7 @@ function finishPausedSexQuestGame(){
 }
 
 document.getElementById('sexQuestStartBtn').addEventListener('click', ()=>{
-  if(state.sexQuestMode === 'manual' && (!state.sexQuestManualIds || !state.sexQuestManualIds.length)){
-    showToast('Выберите хотя бы одно желание');
-    renderSexQuestPickList();
-    showModal('sexQuestPickModal');
-    return;
-  }
+  if(!updateSexQuestStartAvailability()) return;
   playSuccessSound();
   startSexQuestGame();
 });
