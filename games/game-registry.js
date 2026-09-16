@@ -29,6 +29,7 @@
 //               Так «Крокодил» не гоняет игрока через окно итогов с нулями.
 //   isEmpty   — функция «партия пустая?» для игр с exitSummary
 //   finishEmpty — что вызвать, если партия пустая (обычно простой выход)
+//   back      — выход по общей стрелке без паузы и без сохранения итогов
 //   noPause   — true, если у игры нет паузы: выход ведёт прямо в меню
 //   inlineFinish — завершение обрабатывается в core.js отдельным кодом
 //               (а не вызовом функции игры): у «Фантов» это общее окно итогов,
@@ -101,18 +102,18 @@ window.GAME_REGISTRY = [
   {
     // Паузы нет: по решению владельца ✕ завершает партию и ведёт в настройку.
     mode: 'wishRoulette', title: '«Рулетка желаний»', group: 'two', noPause: true, menuTitle: '🎡 Рулетка желаний',
-    resume: 'resumeWrGame', finish: 'finishWrGame',
+    resume: 'resumeWrGame', finish: 'finishWrGame', back: 'closeWrSpinModal',
     screens: ['wrGame'],
   },
   // Паузы нет: выход ведёт сразу в меню настройки игры.
   {
     mode: 'sexQuest', title: '«Секс-квест»', group: 'two', noPause: true, menuTitle: '💘 Секс-квест',
-    resume: 'resumeSexQuestGame', finish: 'finishPausedSexQuestGame',
+    resume: 'resumeSexQuestGame', finish: 'finishPausedSexQuestGame', back: 'finishPausedSexQuestGame',
     screens: ['sexQuestGame'],
   },
   {
     mode: 'passionMap', title: '«Карта страсти»', group: 'two', noPause: true, menuTitle: '🎀 Карта страсти',
-    resume: 'resumePassionMapGame', finish: 'finishPausedPassionMapGame',
+    resume: 'resumePassionMapGame', finish: 'finishPausedPassionMapGame', back: 'finishPausedPassionMapGame',
     screens: ['passionMapGame'],
   },
 
@@ -154,7 +155,7 @@ window.GAME_REGISTRY = [
   // Паузы нет: партия короткая, сохраняется только общий счёт.
   {
     mode: 'partyHangman', title: '«Виселица»', group: 'party', noPause: true, menuTitle: '🪢 Виселица',
-    resume: 'resumePartyHangmanGame', finish: 'finishPartyHangmanGame',
+    resume: 'resumePartyHangmanGame', finish: 'finishPartyHangmanGame', back: 'exitPartyHangmanGame',
     screens: ['partyHangmanGame'],
   },
 
@@ -210,7 +211,7 @@ window.GAME_REGISTRY = [
   },
   {
     mode: 'businessLemonade', title: '«Лимонадный ларёк»', group: 'business', noPause: true, menuTitle: '🍋 Лимонадный ларёк',
-    resume: 'resumeBusinessLemonadeGame', finish: 'finishBusinessLemonadeGame',
+    resume: 'resumeBusinessLemonadeGame', finish: 'finishBusinessLemonadeGame', back: 'exitBusinessLemonadeGame',
     screens: ['businessLemonadeGame'],
   },
 ];

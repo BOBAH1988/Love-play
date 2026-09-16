@@ -965,6 +965,59 @@ test('Геометрия: название игры не уходит под к�
   });
 });
 
+test('Стрелка: игры без паузы возвращаются на предыдущий экран', () => {
+  const screenIds = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => m[1]);
+  const screens = screenIds.map(id => document.getElementById(id));
+  const originalQuery = document.querySelectorAll;
+  const originalSingleQuery = document.querySelector;
+  const activeBefore = screens.filter(el => el.classList.contains('active'));
+  const cases = [
+    ['sexQuestGame', 'sexQuestSetup'],
+    ['passionMapGame', 'passionMapSetup'],
+    ['partyHangmanGame', 'setup'],
+    ['businessLemonadeGame', 'businessLemonadeSetup'],
+  ];
+  const clearScreens = () => screens.forEach(el => el.classList.remove('active'));
+  const activeScreens = () => screens.filter(el => el.classList.contains('active'));
+  document.querySelectorAll = function(selector){
+    if(selector === '.screen.active') return activeScreens();
+    if(selector === '.screen') return screens;
+    return originalQuery.call(this, selector);
+  };
+  document.querySelector = function(selector){
+    if(selector === '.screen.active') return activeScreens()[0] || null;
+    return originalSingleQuery.call(this, selector);
+  };
+  try {
+    asFantyScreen();
+    ['globalMenuModal', 'rulesHubModal', 'summaryModal', 'pauseMenuModal'].forEach(id => {
+      const modal = document.getElementById(id);
+      if(modal) modal.classList.remove('show');
+    });
+    for(const [gameId, targetId] of cases){
+      clearScreens();
+      rememberReturnScreen(targetId, targetId === 'setup' ? 'soloView' : 'twoPlayerView');
+      document.getElementById(gameId).classList.add('active');
+      state.inProgress = true;
+      state.pausedMode = null;
+      const history = JSON.stringify(state.sexQuestChecklists);
+      const back = document.getElementById('globalBackBtn');
+      for(const { handler } of back._getHandlers().get('click')) handler({});
+      assert(activeScreens().map(el => el.id).join(',') === targetId,
+        `${gameId}: стрелка должна открыть только ${targetId}, открыто ${activeScreens().map(el => el.id)}`);
+      assert(!state.inProgress && state.pausedMode === null, `${gameId}: флаги партии сняты`);
+      assert(!document.getElementById('pauseMenuModal').classList.contains('show'), `${gameId}: без паузы`);
+      assert(JSON.stringify(state.sexQuestChecklists) === history, 'Прерывание не сохраняет чек-лист');
+    }
+  } finally {
+    clearScreens();
+    activeBefore.forEach(el => el.classList.add('active'));
+    document.querySelectorAll = originalQuery;
+    document.querySelector = originalSingleQuery;
+  }
+});
+
+
 console.log('\n=== Запуск тестов ===\n');
 
 tests.forEach(t => {

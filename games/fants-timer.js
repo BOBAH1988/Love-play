@@ -971,6 +971,20 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       state.lastSectionOnPause = sectionId;
       saveState();
     }
+    // Игры без паузы: тот же выход, что у кнопки внутри игры, а не хаб.
+    for(const sid of screenIds){
+      const g = gameByScreen(sid);
+      if(g && g.noPause && g.back && typeof window[g.back] === 'function'){
+        window[g.back]();
+        state.inProgress = false;
+        state.pausedMode = null;
+        state.lastSectionOnPause = null;
+        saveState();
+        updateResumeUI();
+        window.scrollTo(0, 0);
+        return;
+      }
+    }
     // Пауза из игры: функция берётся из реестра игр по id игрового экрана
     // (game-registry.js). Раньше здесь был отдельный список PAUSE_MAP из 40
     // строк, дублировавший те же имена — два источника расходились.
