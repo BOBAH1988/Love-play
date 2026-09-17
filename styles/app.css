@@ -968,6 +968,47 @@
     display:inline-flex; align-items:center; justify-content:center;
     width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.25); font-size:11px; line-height:1;
   }
+  /* Компактная компоновка только «Магазина». Высота берётся от #app,
+     без JS-замеров и изменений базового viewport-каркаса iOS/PWA.
+     Длинные списки прокручиваются внутри; на очень низком экране — весь экран. */
+  #shopGame{ min-height:0; gap:6px; }
+  #shopGame > div{ flex-shrink:0; }
+  #shopGame .btn{ min-height:40px; height:auto; padding:7px 8px; font-size:13px; }
+  #shopGame .timer-actions-row{ margin-top:6px; gap:6px; }
+  #shopGame .timer-actions-top, #shopGame .timer-actions-bottom{ gap:6px; min-width:0; }
+  #shopGame > .timer-actions-row{ flex-direction:row; margin-top:auto; padding-top:0; }
+  #shopGame > .timer-actions-row > .timer-actions-top{ flex:1; }
+  #shopGame > .timer-actions-row > .timer-actions-bottom{ flex:0 0 auto; margin-left:auto; }
+  #shopGame .shop-cart-panel, #shopGame .shop-money-panel{ padding:8px; margin-top:0; }
+  #shopGame .shop-cart-panel{ margin-top:6px; display:grid; grid-template-columns:1fr auto; gap:4px 8px; align-items:center; }
+  #shopGame .shop-cart-title{ margin:0; font-size:13px; }
+  #shopGame #shopCartTotal{ grid-column:2; grid-row:1; margin:0; font-size:14px; }
+  #shopGame #shopCartList{ grid-column:1 / -1; max-height:clamp(36px, 8vh, 80px); overflow-y:auto; margin:0; }
+  #shopGame #shopGoToPayBtn{ grid-column:1 / -1; }
+  #shopGame .shop-cart-list{ gap:2px; font-size:13px; line-height:1.25; }
+  #shopGame .shop-register-card{ padding:8px 10px; margin:0; border-radius:16px; }
+  #shopGame #shopSaleList{ margin:0; }
+  #shopGame .shop-register-card .shop-cart-total{ margin:2px 0 0; font-size:14px; }
+  #shopGame .shop-cash-given{ margin-top:2px; font-size:14px; }
+  #shopGame .shop-showcase-grid{ gap:4px; margin:0; }
+  #shopGame .shop-showcase-item{ min-height:64px; padding:3px 2px; }
+  #shopGame .shop-showcase-icon{ font-size:22px; }
+  #shopGame .shop-hint-toggle{ min-height:32px; padding:4px 10px; margin-bottom:2px; }
+  #shopGame .shop-money-sum{ font-size:24px; margin-bottom:4px; }
+  #shopGame .shop-money-group{ margin-bottom:6px; }
+  #shopGame .shop-money-group-label{ margin-bottom:4px; }
+  #shopGame .shop-money-row{ gap:6px; }
+  #shopGame .shop-money-coin{ width:44px; height:44px; }
+  #shopGame .shop-money-bill{ min-width:0; flex:1; height:40px; padding:0 3px; font-size:12px; }
+  #shopGame .shop-money-selected{ max-height:64px; overflow-y:auto; gap:4px; margin:6px 0; }
+  #shopGame .shop-money-chip{ min-height:32px; }
+  @media (max-height:700px){
+    #shopGame .shop-showcase-item{ min-height:56px; gap:1px; padding:2px; }
+    #shopGame .shop-showcase-icon{ font-size:18px; }
+    #shopGame .shop-showcase-name{ line-height:1.1; }
+    #shopGame #shopCartList{ max-height:36px; }
+    #shopGame .shop-money-selected{ max-height:36px; }
+  }
   /* Лимонадный ларёк (бизнес) — партия без фиксированного числа дней:
      утро (погода/событие/апгрейды) → место → закупка → приготовление
      напитков → цена → итоги дня. Игра продолжается, пока не накоплена

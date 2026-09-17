@@ -159,7 +159,7 @@ function updateShopBackBtn(){
   if(!btn) return;
   const panel = document.getElementById('shopMoneyPanel');
   const panelOpen = !!(panel && panel.style.display !== 'none');
-  btn.style.display = (shopStage === 'paying' && panelOpen) ? '' : 'none';
+  btn.style.display = (shopStage === 'paying' && shopMoneyMode === 'pay' && panelOpen) ? '' : 'none';
 }
 document.getElementById('shopMoneyClearBtn').addEventListener('click', ()=>{
   shopMoneySelected = [];
