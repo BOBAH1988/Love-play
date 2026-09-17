@@ -18,6 +18,7 @@ let shopShowcaseSelected = []; // индексы выбранных товаро
 let shopMoneySelected = [];
 let shopMoneyTarget = 0;
 let shopMoneyMode = 'pay'; // 'pay' (Покупатель) | 'change' (Продавец)
+let shopHintVisible = false; // подсказка «Нужно отдать сдачу: …» скрыта, пока не нажмут «💡 Подсказка»
 let shopSaleItems = [];
 let shopSaleTotal = 0;
 let shopCashGiven = 0;
@@ -113,6 +114,7 @@ function openShopMoneyPanel(target, mode){
   shopMoneyTarget = target;
   shopMoneyMode = mode;
   shopMoneySelected = [];
+  shopHintVisible = false; // новая оплата/продажа — подсказка снова скрыта
   const label = document.getElementById('shopMoneyTargetLabel');
   if(label){
     label.textContent = mode === 'pay'
@@ -121,8 +123,30 @@ function openShopMoneyPanel(target, mode){
   }
   renderShopMoneyGrid();
   renderShopMoneySelected();
+  applyShopHint();
   document.getElementById('shopMoneyPanel').style.display = '';
 }
+// Кнопка над строкой сдачи: в режиме продавца скрывает/показывает сумму,
+// чтобы ребёнок сначала посчитал сам. В режиме покупателя не нужна — сумма
+// и так видна в корзине.
+function applyShopHint(){
+  const label = document.getElementById('shopMoneyTargetLabel');
+  const btn = document.getElementById('shopHintToggleBtn');
+  if(!label || !btn) return;
+  if(shopMoneyMode !== 'change'){
+    label.style.display = '';
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = '';
+  btn.textContent = shopHintVisible ? '🙈 Скрыть подсказку' : '💡 Подсказка';
+  label.style.display = shopHintVisible ? '' : 'none';
+}
+document.getElementById('shopHintToggleBtn').addEventListener('click', ()=>{
+  shopHintVisible = !shopHintVisible;
+  playNeutralSound();
+  applyShopHint();
+});
 function closeShopMoneyPanel(){
   document.getElementById('shopMoneyPanel').style.display = 'none';
 }
@@ -323,6 +347,7 @@ function pauseShopGame(){
     moneyTarget: shopMoneyTarget,
     moneyMode: shopMoneyMode,
     moneyPanelOpen: !!(panel && panel.style.display !== 'none'),
+    hintVisible: shopHintVisible,
     saleItems: shopSaleItems.slice(),
     saleTotal: shopSaleTotal,
     cashGiven: shopCashGiven
@@ -379,6 +404,10 @@ function resumeShopGame(){
     openShopMoneyPanel(shopMoneyTarget, shopMoneyMode);
     shopMoneySelected = Array.isArray(d.moneySelected) ? d.moneySelected : [];
     renderShopMoneySelected();
+    // Восстанавливаем состояние подсказки ровно как было на паузе
+    // (openShopMoneyPanel сбрасывает его в «скрыто»).
+    shopHintVisible = !!d.hintVisible;
+    applyShopHint();
   }
   updateMuteBtn();
   requestWakeLock();

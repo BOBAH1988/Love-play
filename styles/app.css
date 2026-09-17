@@ -932,6 +932,13 @@
     border-radius:16px; padding:16px; margin-top:12px;
   }
   .shop-money-target{ font-weight:700; margin-bottom:2px; font-size:14px; color:#e8c9dd; }
+  .shop-hint-toggle{
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,210,122,.15); color:#ffd27a;
+    border:1px solid rgba(255,210,122,.45); border-radius:16px;
+    padding:6px 14px; margin-bottom:8px; font-size:13px; font-weight:800; cursor:pointer;
+  }
+  .shop-hint-toggle:active{ transform:scale(.95); }
   .shop-money-sum{ font-size:28px; font-weight:900; margin-bottom:14px; color:#ffd27a; text-shadow:0 2px 8px rgba(0,0,0,.3); }
   .shop-money-group{ margin-bottom:12px; }
   .shop-money-group-label{
