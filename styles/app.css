@@ -998,6 +998,8 @@
   #shopGame .shop-money-group{ margin-bottom:6px; }
   #shopGame .shop-money-group-label{ margin-bottom:4px; }
   #shopGame .shop-money-row{ gap:6px; }
+  #shopGame .shop-money-row-bill{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); }
+  #shopGame .shop-money-row-coin{ flex-wrap:nowrap; }
   #shopGame .shop-money-coin{ width:44px; height:44px; }
   #shopGame .shop-money-bill{ min-width:0; flex:1; height:40px; padding:0 3px; font-size:12px; }
   #shopGame .shop-money-selected{ max-height:64px; overflow-y:auto; gap:4px; margin:6px 0; }
@@ -1006,7 +1008,9 @@
     #shopGame .shop-showcase-item{ min-height:56px; gap:1px; padding:2px; }
     #shopGame .shop-showcase-icon{ font-size:18px; }
     #shopGame .shop-showcase-name{ line-height:1.1; }
-    #shopGame #shopCartList{ max-height:36px; }
+    #shopGame #shopCartList, #shopGame #shopSaleList{ max-height:36px; overflow-y:auto; }
+    #shopGame .shop-money-panel{ padding-top:6px; }
+    #shopGame .shop-money-group{ margin-bottom:0; }
     #shopGame .shop-money-selected{ max-height:36px; }
   }
   /* Лимонадный ларёк (бизнес) — партия без фиксированного числа дней:

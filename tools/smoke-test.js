@@ -1253,6 +1253,29 @@ test('Сапёр: партия завершается при 5 линиях', ()
   }
 });
 
+test('Магазин: порядок денег и купюра 2000 ₽', () => {
+  const originalCreate = document.createElement;
+  const buttons = [];
+  document.createElement = function(tag){
+    const el = originalCreate.call(document, tag);
+    if(tag === 'button'){
+      el.addEventListener = (type, handler) => { if(type === 'click') el.testClick = handler; };
+      buttons.push(el);
+    }
+    return el;
+  };
+  try {
+    openShopMoneyPanel(2000, 'pay');
+    assert(buttons.map(b=>b.textContent).join(',') === '1 ₽,2 ₽,5 ₽,10 ₽,50 ₽,100 ₽,200 ₽,500 ₽,1000 ₽,2000 ₽', 'номиналы идут по возрастанию');
+    const bill = buttons[9];
+    bill.testClick();
+    assert(getElById(stub, 'shopMoneySum').textContent === '2000 ₽', 'новая купюра добавляет 2000 ₽');
+  } finally {
+    document.createElement = originalCreate;
+    closeShopMoneyPanel();
+  }
+});
+
 test('Магазин: скрытая подсказка сохраняется между покупателями и после загрузки', () => {
   const savedState = JSON.stringify(state);
   const savedStorage = localStorage.getItem(STORAGE_KEY);

@@ -73,7 +73,7 @@ function renderShopMoneyGrid(){
     labelEl.textContent = g.label;
     groupEl.appendChild(labelEl);
     const rowEl = document.createElement('div');
-    rowEl.className = 'shop-money-row';
+    rowEl.className = 'shop-money-row shop-money-row-' + g.type;
     items.forEach(m=>{
       const btn = document.createElement('button');
       btn.type = 'button';

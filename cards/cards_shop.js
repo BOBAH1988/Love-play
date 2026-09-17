@@ -77,4 +77,5 @@ const SHOP_MONEY = [
   { value: 200, type: 'bill' },
   { value: 500, type: 'bill' },
   { value: 1000, type: 'bill' },
+  { value: 2000, type: 'bill' },
 ];
