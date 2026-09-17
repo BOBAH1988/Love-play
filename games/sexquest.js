@@ -190,6 +190,7 @@ function exitSexQuestSetup(){
 document.getElementById('sexQuestSetupExitBtn').addEventListener('click', ()=>{ exitSexQuestSetup(); });
 (document.getElementById('sexQuestSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('sexQuestRulesModal'); });
 setupRulesModal('sexQuestRulesModal', 'closeSexQuestRulesBtn');
+(document.getElementById('sexQuestHistoryRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('sexQuestRulesModal'); });
 
 
 function buildSexQuestQueue(){
