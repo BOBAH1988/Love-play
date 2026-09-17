@@ -18,7 +18,7 @@ let shopShowcaseSelected = []; // индексы выбранных товаро
 let shopMoneySelected = [];
 let shopMoneyTarget = 0;
 let shopMoneyMode = 'pay'; // 'pay' (Покупатель) | 'change' (Продавец)
-let shopHintVisible = false; // подсказка «Нужно отдать сдачу: …» скрыта, пока не нажмут «💡 Подсказка»
+let shopHintVisible = true; // подсказка «Нужно отдать сдачу: …» видна сразу, кнопка её скрывает/возвращает
 let shopSaleItems = [];
 let shopSaleTotal = 0;
 let shopCashGiven = 0;
@@ -114,7 +114,7 @@ function openShopMoneyPanel(target, mode){
   shopMoneyTarget = target;
   shopMoneyMode = mode;
   shopMoneySelected = [];
-  shopHintVisible = false; // новая оплата/продажа — подсказка снова скрыта
+  shopHintVisible = true; // новая оплата/продажа — подсказка снова видна
   const label = document.getElementById('shopMoneyTargetLabel');
   if(label){
     label.textContent = mode === 'pay'
