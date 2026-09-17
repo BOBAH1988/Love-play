@@ -136,7 +136,6 @@ function openShopMoneyPanel(target, mode){
   renderShopMoneySelected();
   applyShopHint();
   document.getElementById('shopMoneyPanel').style.display = '';
-  updateShopBackBtn();
 }
 // Кнопка над строкой сдачи: в режиме продавца скрывает/показывает сумму,
 // чтобы ребёнок сначала посчитал сам. В режиме покупателя не нужна — сумма
@@ -162,16 +161,6 @@ document.getElementById('shopHintToggleBtn').addEventListener('click', ()=>{
 });
 function closeShopMoneyPanel(){
   document.getElementById('shopMoneyPanel').style.display = 'none';
-  updateShopBackBtn();
-}
-// «← Назад к покупкам» нужна только на экране оплаты: витрина скрыта, лоток
-// открыт в режиме оплаты. На витрине и в режиме продавца кнопки нет.
-function updateShopBackBtn(){
-  const btn = document.getElementById('shopBackToShoppingBtn');
-  if(!btn) return;
-  const panel = document.getElementById('shopMoneyPanel');
-  const panelOpen = !!(panel && panel.style.display !== 'none');
-  btn.style.display = (shopStage === 'paying' && shopMoneyMode === 'pay' && panelOpen) ? '' : 'none';
 }
 document.getElementById('shopMoneyClearBtn').addEventListener('click', ()=>{
   shopMoneySelected = [];
@@ -282,11 +271,6 @@ document.getElementById('shopGoToPayBtn').addEventListener('click', ()=>{
   document.getElementById('shopBuyerShopping').style.display = 'none';
   openShopMoneyPanel(shopCartTotal(), 'pay');
 });
-document.getElementById('shopBackToShoppingBtn').addEventListener('click', ()=>{
-  shopStage = 'shopping';
-  closeShopMoneyPanel();
-  document.getElementById('shopBuyerShopping').style.display = '';
-});
 
 /* ============ РЕЖИМ "ПРОДАВЕЦ" ============ */
 // Сколько наличных даёт покупатель: случайная купюра не меньше суммы покупки
@@ -327,7 +311,6 @@ function goToShopGame(){
   const mode = state.shopMode || 'buyer';
   document.getElementById('shopBuyerShopping').style.display = mode === 'buyer' ? '' : 'none';
   document.getElementById('shopSellerPanel').style.display = mode === 'seller' ? '' : 'none';
-  document.getElementById('shopBackToShoppingBtn').style.display = 'none';
   document.getElementById('shopNextSaleBtn').style.display = mode === 'seller' ? '' : 'none';
   if(mode === 'buyer'){
     shopCart = [];
@@ -405,7 +388,6 @@ function resumeShopGame(){
   const mode = d.mode || state.shopMode || 'buyer';
   document.getElementById('shopBuyerShopping').style.display = mode === 'buyer' ? '' : 'none';
   document.getElementById('shopSellerPanel').style.display = mode === 'seller' ? '' : 'none';
-  document.getElementById('shopBackToShoppingBtn').style.display = 'none';
   document.getElementById('shopNextSaleBtn').style.display = mode === 'seller' ? '' : 'none';
 
   if(mode === 'buyer'){
