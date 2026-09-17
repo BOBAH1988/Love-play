@@ -1255,18 +1255,34 @@ test('Сапёр: партия завершается при 5 линиях', ()
 
 test('Магазин: порядок денег и купюра 2000 ₽', () => {
   const originalCreate = document.createElement;
-  const buttons = [];
+  const seq = []; // все созданные элементы в порядке создания
   document.createElement = function(tag){
     const el = originalCreate.call(document, tag);
     if(tag === 'button'){
       el.addEventListener = (type, handler) => { if(type === 'click') el.testClick = handler; };
-      buttons.push(el);
     }
+    el._isButton = tag === 'button';
+    seq.push(el);
     return el;
   };
   try {
     openShopMoneyPanel(2000, 'pay');
+    const buttons = seq.filter(e=>e._isButton);
     assert(buttons.map(b=>b.textContent).join(',') === '1 ₽,2 ₽,5 ₽,10 ₽,50 ₽,100 ₽,200 ₽,500 ₽,1000 ₽,2000 ₽', 'номиналы идут по возрастанию');
+    // 4 строки: монеты (4 кнопки), затем купюры по 2 (50+100, 200+500, 1000+2000)
+    const rows = seq.filter(e=>!e._isButton && typeof e.className === 'string' && e.className.includes('shop-money-row'));
+    assert(rows.length === 4, 'денежная сетка состоит из 4 строк, получено ' + rows.length);
+    const perRow = rows.map(row => {
+      const idx = seq.indexOf(row);
+      let count = 0;
+      for(let i = idx + 1; i < seq.length; i++){
+        if(!seq[i]._isButton && typeof seq[i].className === 'string' && seq[i].className.includes('shop-money-row')) break;
+        if(seq[i]._isButton) count++;
+      }
+      return { coin: row.className.includes('shop-money-row-coin'), count };
+    });
+    assert(JSON.stringify(perRow) === JSON.stringify([{coin:true,count:4},{coin:false,count:2},{coin:false,count:2},{coin:false,count:2}]),
+      'строки: монеты (4), затем купюры по 2 — получено ' + JSON.stringify(perRow));
     const bill = buttons[9];
     bill.testClick();
     assert(getElById(stub, 'shopMoneySum').textContent === '2000 ₽', 'новая купюра добавляет 2000 ₽');

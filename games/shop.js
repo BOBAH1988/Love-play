@@ -60,8 +60,8 @@ function renderShopMoneyGrid(){
   wrap.innerHTML = '';
   const list = (typeof SHOP_MONEY !== 'undefined' && Array.isArray(SHOP_MONEY)) ? SHOP_MONEY : [];
   const groups = [
-    { type: 'coin', label: 'Монеты' },
-    { type: 'bill', label: 'Купюры' }
+    { type: 'coin', label: 'Монеты', perRow: 0 },
+    { type: 'bill', label: 'Купюры', perRow: 2 }
   ];
   groups.forEach(g=>{
     const items = list.filter(m=>m.type === g.type);
@@ -72,20 +72,31 @@ function renderShopMoneyGrid(){
     labelEl.className = 'shop-money-group-label';
     labelEl.textContent = g.label;
     groupEl.appendChild(labelEl);
-    const rowEl = document.createElement('div');
-    rowEl.className = 'shop-money-row shop-money-row-' + g.type;
-    items.forEach(m=>{
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'shop-money-btn shop-money-' + m.type;
-      btn.textContent = formatRub(m.value);
-      btn.addEventListener('click', ()=>{
-        shopMoneySelected.push(m.value);
-        renderShopMoneySelected();
+    // Купюры разбиваются на строки по perRow штук (50+100, 200+500, 1000+2000);
+    // 0 — всё в одну строку (монеты).
+    const rows = g.perRow > 0
+      ? items.reduce((acc, m, idx)=>{
+          if(idx % g.perRow === 0) acc.push([]);
+          acc[acc.length - 1].push(m);
+          return acc;
+        }, [])
+      : [items];
+    rows.forEach(rowItems=>{
+      const rowEl = document.createElement('div');
+      rowEl.className = 'shop-money-row shop-money-row-' + g.type;
+      rowItems.forEach(m=>{
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'shop-money-btn shop-money-' + m.type;
+        btn.textContent = formatRub(m.value);
+        btn.addEventListener('click', ()=>{
+          shopMoneySelected.push(m.value);
+          renderShopMoneySelected();
+        });
+        rowEl.appendChild(btn);
       });
-      rowEl.appendChild(btn);
+      groupEl.appendChild(rowEl);
     });
-    groupEl.appendChild(rowEl);
     wrap.appendChild(groupEl);
   });
 }
