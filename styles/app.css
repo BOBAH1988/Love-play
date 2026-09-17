@@ -907,6 +907,26 @@
   .shop-register-card .card-icon{ font-size:48px; }
   .shop-register-card .shop-cart-list{ text-align:left; width:100%; }
   .shop-cash-given{ font-weight:800; margin-top:10px; font-size:16px; color:#ffd27a; }
+  /* Витрина магазина: 6 товаров-кнопок (2×3). Тап — выбрать/снять выбор,
+     «В корзину» добавляет выбранное и рисует новую витрину. */
+  .shop-showcase-title{ font-weight:800; margin-bottom:8px; }
+  .shop-showcase-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:6px;
+  }
+  .shop-showcase-item{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px; padding:10px 4px 8px; border-radius:14px;
+    background:linear-gradient(160deg, #5ecf93, #23784f 55%, var(--bg2));
+    border:2px solid rgba(255,255,255,.25); color:#fff; text-align:center;
+    cursor:pointer; min-height:86px;
+  }
+  .shop-showcase-item:active{ transform:scale(.94); }
+  .shop-showcase-item-selected{
+    border-color:#ffd27a; box-shadow:0 0 0 3px rgba(255,210,122,.45), inset 0 0 12px rgba(255,210,122,.25);
+  }
+  .shop-showcase-icon{ font-size:30px; line-height:1.15; }
+  .shop-showcase-name{ font-size:11px; font-weight:700; line-height:1.15; }
+  .shop-showcase-price{ font-size:13px; font-weight:900; color:#ffd27a; }
   .shop-money-panel{
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
     border-radius:16px; padding:16px; margin-top:12px;
@@ -1419,13 +1439,12 @@
      переиспользует компонент вопрос/ответы (.znayu-answers) — он рассчитан
      на светлый фон (тёмные полупрозрачные кнопки поверх карточки), поэтому
      для неё — светлый мятный оттенок того же зелёного тона вместо тёмного. */
-  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #flashCard, #whatToPlayCard, #shopProductCard, .shop-register-card{
+  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #flashCard, #whatToPlayCard, .shop-register-card{
     background:linear-gradient(160deg, #5ecf93, #23784f 55%, var(--bg2));
     color:#fff;
   }
   #kidsTdCard .card-text, #kidsKrokodilCard .card-text, #kidsMemesCard .card-text,
-  #whatToPlayCard .card-text, #whatToPlayCard .card-split-title,
-  #shopProductCard .card-text, #shopProductCard .card-split-title{
+  #whatToPlayCard .card-text, #whatToPlayCard .card-split-title{
     color:#fff;
   }
   .shop-register-card .shop-cart-list, .shop-register-card .shop-cart-total{ color:#fff; }

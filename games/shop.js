@@ -11,10 +11,10 @@
 // сохраняется при паузе через общий блок «Продолжить игру» / «Закончить
 // игру» — см. функции pauseShopGame/resumeShopGame/finishShopGame ниже.
 
-let shopCurrentProduct = null;
-let shopUsedProducts = [];
 let shopCart = [];
 let shopStage = 'shopping'; // 'shopping' | 'paying' — только для режима "Покупатель"
+let shopShowcase = []; // витрина: 6 товаров, показанных покупателю
+let shopShowcaseSelected = []; // индексы выбранных товаров в shopShowcase
 let shopMoneySelected = [];
 let shopMoneyTarget = 0;
 let shopMoneyMode = 'pay'; // 'pay' (Покупатель) | 'change' (Продавец)
@@ -168,32 +168,61 @@ function renderShopCart(){
   if(payBtn) payBtn.disabled = shopCart.length === 0;
 }
 function shopDrawProduct(){
+  // Витрина: 6 случайных товаров без повторов на экране. Уже показанные
+  // товары могут выпасть снова — колода большая, отслеживать их не нужно.
   const all = getShopProductsList();
-  if(all.length === 0){ shopCurrentProduct = null; return; }
-  let pool = all.filter(p=>!shopUsedProducts.includes(p.name));
-  if(pool.length === 0){
-    pool = all;
-    shopUsedProducts = [];
+  const pool = all.slice();
+  shopShowcase = [];
+  shopShowcaseSelected = [];
+  const count = Math.min(6, pool.length);
+  for(let i=0;i<count;i++){
+    const idx = Math.floor(Math.random()*pool.length);
+    shopShowcase.push(pool.splice(idx,1)[0]);
   }
-  const card = pool[Math.floor(Math.random()*pool.length)];
-  shopUsedProducts.push(card.name);
-  shopCurrentProduct = card;
-  fadeSwapEl('shopProductCard', (el)=>{
-    el.innerHTML = `
-      <div class="card-inner">
-        <div class="card-body">
-          <div class="card-icon" style="font-size:64px;">${card.icon}</div>
-          <div class="card-split-title">${card.name}</div>
-          <div class="card-text">${formatRub(card.price)}</div>
-        </div>
-      </div>
+  shopRenderShowcase();
+}
+function shopRenderShowcase(){
+  const grid = document.getElementById('shopShowcaseGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  shopShowcase.forEach((p, i)=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'shop-showcase-item' + (shopShowcaseSelected.includes(i) ? ' shop-showcase-item-selected' : '');
+    btn.innerHTML = `
+      <div class="shop-showcase-icon">${p.icon}</div>
+      <div class="shop-showcase-name">${p.name}</div>
+      <div class="shop-showcase-price">${formatRub(p.price)}</div>
     `;
+    btn.addEventListener('click', ()=>{
+      const pos = shopShowcaseSelected.indexOf(i);
+      if(pos >= 0) shopShowcaseSelected.splice(pos, 1);
+      else shopShowcaseSelected.push(i);
+      btn.classList.toggle('shop-showcase-item-selected', shopShowcaseSelected.includes(i));
+      playNeutralSound();
+      updateShopAddBtnLabel();
+    });
+    grid.appendChild(btn);
   });
+  updateShopAddBtnLabel();
+}
+function updateShopAddBtnLabel(){
+  const btn = document.getElementById('shopAddToCartBtn');
+  if(!btn) return;
+  const sel = shopShowcaseSelected.length;
+  btn.textContent = sel > 0
+    ? `🛒 В корзину (${sel})`
+    : '🛒 В корзину';
+  btn.disabled = sel === 0;
 }
 document.getElementById('shopAddToCartBtn').addEventListener('click', ()=>{
-  if(!shopCurrentProduct) return;
+  if(shopShowcaseSelected.length === 0) return;
   playSuccessSound();
-  shopCart.push(shopCurrentProduct);
+  // Все выбранные товары — в корзину, затем новая витрина.
+  shopShowcaseSelected
+    .sort((a,b)=>a-b)
+    .forEach(i=>{ shopCart.push(shopShowcase[i]); });
+  shopShowcaseSelected = [];
   renderShopCart();
   shopDrawProduct();
 });
@@ -255,7 +284,7 @@ function goToShopGame(){
   document.getElementById('shopNextSaleBtn').style.display = mode === 'seller' ? '' : 'none';
   if(mode === 'buyer'){
     shopCart = [];
-    shopUsedProducts = [];
+    shopShowcaseSelected = [];
     shopStage = 'shopping';
     closeShopMoneyPanel();
     renderShopCart();
@@ -286,8 +315,8 @@ function pauseShopGame(){
   const panel = document.getElementById('shopMoneyPanel');
   state.shopPaused = {
     mode: state.shopMode || 'buyer',
-    currentProduct: shopCurrentProduct,
-    usedProducts: shopUsedProducts.slice(),
+    showcase: shopShowcase.slice(),
+    showcaseSelected: shopShowcaseSelected.slice(),
     cart: shopCart.slice(),
     stage: shopStage,
     moneySelected: shopMoneySelected.slice(),
@@ -311,8 +340,8 @@ function pauseShopGame(){
 function resumeShopGame(){
   state.pausedMode = null;
   const d = state.shopPaused || {};
-  shopCurrentProduct = d.currentProduct || null;
-  shopUsedProducts = Array.isArray(d.usedProducts) ? d.usedProducts : [];
+  shopShowcase = Array.isArray(d.showcase) ? d.showcase : [];
+  shopShowcaseSelected = Array.isArray(d.showcaseSelected) ? d.showcaseSelected : [];
   shopCart = Array.isArray(d.cart) ? d.cart : [];
   shopStage = d.stage || 'shopping';
   shopMoneySelected = Array.isArray(d.moneySelected) ? d.moneySelected : [];
@@ -335,19 +364,9 @@ function resumeShopGame(){
   if(mode === 'buyer'){
     if(shopStage === 'paying') document.getElementById('shopBuyerShopping').style.display = 'none';
     renderShopCart();
-    if(shopCurrentProduct){
-      fadeSwapEl('shopProductCard', (el)=>{
-        el.innerHTML = `
-          <div class="card-inner">
-            <div class="card-body">
-              <div class="card-icon" style="font-size:64px;">${shopCurrentProduct.icon}</div>
-              <div class="card-split-title">${shopCurrentProduct.name}</div>
-              <div class="card-text">${formatRub(shopCurrentProduct.price)}</div>
-            </div>
-          </div>
-        `;
-      });
-    }
+    // Витрина: восстановленная с паузы (с выбором) или новая, если пустая.
+    if(shopShowcase.length > 0) shopRenderShowcase();
+    else shopDrawProduct();
   } else {
     const list = document.getElementById('shopSaleList');
     if(list) list.innerHTML = shopSaleItems.map(c=>`<li>${c.icon} ${c.name} — ${formatRub(c.price)}</li>`).join('');
