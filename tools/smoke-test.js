@@ -1124,6 +1124,57 @@ test('sexQuest: история — «Смелый» хранит одну стр
   }
 });
 
+// Сапёр: финальные задания в сводке. Регресс: ручная правка cards_kids_saper.js
+// удалила KIDS_SAPER_FINAL и сменила уровень бонусов на 4, из-за чего блоки
+// «бонус победителю» и «форфейт проигравшему» в сводке никогда не показывались.
+test('Сапёр: бонус победителю и финальное задание проигравшему реально выдаются', () => {
+  assert(typeof KIDS_SAPER_FINAL !== 'undefined' && Array.isArray(KIDS_SAPER_FINAL) && KIDS_SAPER_FINAL.length > 0,
+    'KIDS_SAPER_FINAL должен существовать и быть непустым');
+  assert(typeof pickKidsSaperFinalTask === 'function' && pickKidsSaperFinalTask() !== null,
+    'pickKidsSaperFinalTask() должен возвращать задание');
+  assert(getKidsSaperBonusList(4).length > 0, 'бонусы уровня 4 должны существовать');
+  // Прогоняем showKidsSaperSummaryModal на победе без ничьей: оба блока должны появиться.
+  const saved = { players: state.partyPlayers, grid: state.kidsSaperGrid, checked: state.kidsSaperChecked,
+    completed: state.kidsSaperCompleted, lines: state.kidsSaperWonLines, level: state.kidsSaperLevel,
+    finished: state.kidsSaperFinished, esc2: state.kidsSaperEscalatedTo2, esc3: state.kidsSaperEscalatedTo3 };
+  try {
+    state.partyPlayers = ['Команда 1', 'Команда 2'];
+    state.kidsSaperCompleted = [10, 5];
+    state.kidsSaperWonLines = [0, 1, 2, 3, 4];
+    state.kidsSaperChecked = new Array(25).fill(false);
+    state.kidsSaperChecked[0] = true;
+    state.kidsSaperGrid = new Array(25).fill({text:'x', green:false});
+    state.kidsSaperLevel = 3;
+    state.kidsSaperFinished = false;
+    state.kidsSaperEscalatedTo2 = true;
+    state.kidsSaperEscalatedTo3 = true;
+    showKidsSaperSummaryModal();
+    const bonus = document.getElementById('kidsSaperSummaryBonusText');
+    const final = document.getElementById('kidsSaperSummaryFinalTaskText');
+    assert(bonus && bonus.style.display === 'block' && bonus.textContent.includes('Бонусное задание'),
+      'бонус победителю должен показываться (display:block): ' + (bonus && bonus.style.display));
+    assert(final && final.style.display === 'block' && final.textContent.includes('Финальное задание'),
+      'финальное задание проигравшему должно показываться (display:block): ' + (final && final.style.display));
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+// Сапёр: партия завершается после 5 собранных линий (как в Бинго), а не только при всех 25 клетках.
+test('Сапёр: партия завершается при 5 линиях', () => {
+  const saved = { checked: state.kidsSaperChecked, lines: state.kidsSaperWonLines, finished: state.kidsSaperFinished, inProgress: state.inProgress };
+  try {
+    state.kidsSaperChecked = new Array(25).fill(true);
+    state.kidsSaperWonLines = [0, 1, 2, 3, 4];
+    state.kidsSaperFinished = false;
+    state.inProgress = true;
+    checkKidsSaperGameFinished();
+    assert(state.kidsSaperFinished === true, 'партия должна завершиться при 5 линиях');
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
 console.log('\n=== Запуск тестов ===\n');
 
 tests.forEach(t => {

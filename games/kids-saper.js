@@ -240,8 +240,12 @@ function showKidsSaperBonus(level){
 }
 function checkKidsSaperGameFinished(){
   if(state.kidsSaperFinished) return;
+  // Как в Бинго (checkBingoGameFinished): партия завершается, как только
+  // собрано 5 любых линий, либо отмечены все 25 клеток (подстраховка —
+  // все 25 без 5 линий собрать невозможно).
+  const total = (state.kidsSaperWonLines || []).length;
   const allChecked = state.kidsSaperChecked.length === 25 && state.kidsSaperChecked.every(Boolean);
-  if(allChecked){
+  if(total >= 5 || allChecked){
     state.kidsSaperFinished = true;
     state.inProgress = false;
     saveState();
@@ -271,7 +275,8 @@ function showKidsSaperSummaryModal(){
   const loserName = (!isTie && ranking.length === 2) ? ranking[1].n : null;
   const bonusEl = document.getElementById('kidsSaperSummaryBonusText');
   if(bonusEl){
-    const bonusTask = winnerName ? pickKidsSaperBonus(3) : null;
+    // Финальный приз — уровень 4 бонусов (как в Бинго: pickBingoBonus(4)).
+    const bonusTask = winnerName ? pickKidsSaperBonus(4) : null;
     if(bonusTask){
       addKidsSaperBonusToChecklist(bonusTask.text);
       renderKidsSaperBonusChecklist();
