@@ -324,7 +324,7 @@ let state = {
   partyHangmanWord:'', partyHangmanGuessed:[], partyHangmanWrong:0,
   partyHangmanUsedWords:[], partyHangmanWins:0, partyHangmanLosses:0,
   // Магазин (дети)
-  shopMode:'buyer',
+  shopMode:'buyer', shopHintVisible:true,
   // Рулетка (компания) — баланс по игрокам, сохраняется между заходами
   rouletteBalances:[], rouletteCurrentPlayerIndex:0,
   // Викторина (один) — использует тот же банк вопросов, что и Викторина
@@ -1648,6 +1648,7 @@ function performFullReset(){
    state.flashTimeScore = 0;
    state.flashTimeErrors = 0;
    state.shopMode = 'buyer';
+   state.shopHintVisible = true;
    state.kidsTdCompleted = [];
    state.kidsTdSkipped = [];
    state.kidsTdCurrentPlayerIndex = 0;

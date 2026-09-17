@@ -18,7 +18,6 @@ let shopShowcaseSelected = []; // индексы выбранных товаро
 let shopMoneySelected = [];
 let shopMoneyTarget = 0;
 let shopMoneyMode = 'pay'; // 'pay' (Покупатель) | 'change' (Продавец)
-let shopHintVisible = true; // подсказка «Нужно отдать сдачу: …» видна сразу, кнопка её скрывает/возвращает
 let shopSaleItems = [];
 let shopSaleTotal = 0;
 let shopCashGiven = 0;
@@ -114,7 +113,8 @@ function openShopMoneyPanel(target, mode){
   shopMoneyTarget = target;
   shopMoneyMode = mode;
   shopMoneySelected = [];
-  shopHintVisible = true; // новая оплата/продажа — подсказка снова видна
+  // Выбор «скрыть подсказку» сохраняется между покупателями и между
+  // сессиями (state.shopHintVisible, дефолт в core.js) — не сбрасываем.
   const label = document.getElementById('shopMoneyTargetLabel');
   if(label){
     label.textContent = mode === 'pay'
@@ -140,11 +140,12 @@ function applyShopHint(){
     return;
   }
   btn.style.display = '';
-  btn.textContent = shopHintVisible ? '🙈 Скрыть подсказку' : '💡 Подсказка';
-  label.style.display = shopHintVisible ? '' : 'none';
+  btn.textContent = state.shopHintVisible ? '🙈 Скрыть подсказку' : '💡 Подсказка';
+  label.style.display = state.shopHintVisible ? '' : 'none';
 }
 document.getElementById('shopHintToggleBtn').addEventListener('click', ()=>{
-  shopHintVisible = !shopHintVisible;
+  state.shopHintVisible = !state.shopHintVisible;
+  saveState();
   playNeutralSound();
   applyShopHint();
 });
@@ -358,7 +359,6 @@ function pauseShopGame(){
     moneyTarget: shopMoneyTarget,
     moneyMode: shopMoneyMode,
     moneyPanelOpen: !!(panel && panel.style.display !== 'none'),
-    hintVisible: shopHintVisible,
     saleItems: shopSaleItems.slice(),
     saleTotal: shopSaleTotal,
     cashGiven: shopCashGiven
@@ -415,10 +415,7 @@ function resumeShopGame(){
     openShopMoneyPanel(shopMoneyTarget, shopMoneyMode);
     shopMoneySelected = Array.isArray(d.moneySelected) ? d.moneySelected : [];
     renderShopMoneySelected();
-    // Восстанавливаем состояние подсказки ровно как было на паузе
-    // (openShopMoneyPanel сбрасывает его в «скрыто»).
-    shopHintVisible = !!d.hintVisible;
-    applyShopHint();
+    // Настройку подсказки берём из state, а не из устаревшего снимка паузы.
   }
   updateMuteBtn();
   requestWakeLock();

@@ -1183,6 +1183,44 @@ test('Сапёр: партия завершается при 5 линиях', ()
   }
 });
 
+test('Магазин: скрытая подсказка сохраняется между покупателями и после загрузки', () => {
+  const savedState = JSON.stringify(state);
+  const savedStorage = localStorage.getItem(STORAGE_KEY);
+  const toggle = () => {
+    for (const { handler } of getElById(stub, 'shopHintToggleBtn')._getHandlers().get('click')) handler({});
+  };
+  const visible = () => getElById(stub, 'shopMoneyTargetLabel').style.display !== 'none';
+  try {
+    state.shopMode = 'seller';
+    state.shopHintVisible = true;
+    goToShopGame();
+    assert(visible(), 'по умолчанию подсказка видна');
+    toggle();
+    assert(!visible(), 'кнопка скрывает подсказку');
+    for (const { handler } of getElById(stub, 'shopNextSaleBtn')._getHandlers().get('click')) handler({});
+    assert(!visible(), 'следующий покупатель не открывает подсказку');
+    pauseShopGame();
+    resumeShopGame();
+    assert(!visible(), 'после паузы подсказка скрыта');
+    assert(JSON.parse(localStorage.getItem(STORAGE_KEY)).shopHintVisible === false, 'выбор записан в хранилище');
+    state.shopHintVisible = true;
+    loadState();
+    openShopMoneyPanel(100, 'change');
+    assert(state.shopHintVisible === false && !visible(), 'загрузка восстанавливает скрытую подсказку');
+    openShopMoneyPanel(100, 'pay');
+    assert(visible(), 'сумма оплаты покупателя видна независимо от подсказки');
+    openShopMoneyPanel(100, 'change');
+    toggle();
+    openShopMoneyPanel(200, 'change');
+    assert(visible(), 'включённая подсказка также запоминается');
+  } finally {
+    Object.assign(state, JSON.parse(savedState));
+    if (savedStorage === null) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, savedStorage);
+  }
+});
+
+
 console.log('\n=== Запуск тестов ===\n');
 
 tests.forEach(t => {
