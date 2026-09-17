@@ -774,6 +774,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     desireSetup:'twoPlayerView', desireGame:'twoPlayerView',
     znayuSetup:'twoPlayerView', znayuGame:'twoPlayerView',
     sexQuestSetup:'twoPlayerView', sexQuestGame:'twoPlayerView',
+    sexQuestSummary:'twoPlayerView', sexQuestHistory:'twoPlayerView',
     passionMapSetup:'twoPlayerView', passionMapGame:'twoPlayerView',
     passionMapSummary:'twoPlayerView', passionMapHistory:'twoPlayerView',
     shopSetup:'businessView', shopGame:'businessView', videoGame:'twoPlayerView',
@@ -816,7 +817,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   const SETUP_ONLY_SCREENS = new Set([
     'kidsBoardGamesMenu',
     'fantySetup','photoSetup','bingoSetup','timerSetup','truthDareSetup','tdSetup',
-    'quizSetup','wishlistSetup','desireSetup','znayuSetup','sexQuestSetup','shopSetup',
+    'quizSetup','wishlistSetup','desireSetup','znayuSetup','sexQuestSetup',
+    'sexQuestSummary','sexQuestHistory','shopSetup',
     'passionMapSetup','passionMapSummary','passionMapHistory',
     'davaySetup','ideasGame','wrSetup',
     'partyFantsSetup','partyTdSetup','partyQuizSetup','krokodilSetup','twisterSetup',
@@ -844,6 +846,33 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     if(sid.includes('What') || sid.includes('whatToPlay')) return 'soloView';
     return 'twoPlayerView';
   }
+  // Вложенные экраны игры (история, итоги): стрелка «←» — это «шаг назад»,
+  // как штатная кнопка выхода этого экрана («Назад»/«В меню»), а не прыжок
+  // в группу хаба через generic-фолбэк. Карта содержит ИМЯ функции выхода:
+  // вызываем её, чтобы не дублировать логику переключения экранов
+  // (та же причина «размазанной» логики, что чинилась в v286/v288).
+  // Глобальный хук для клавиатурной «←» (core.js): там своя ветка keydown,
+  // которая раньше знала только режимы #game.
+  const PARENT_BACK = {
+    'sexQuestHistory':'exitSexQuestHistory',
+    'sexQuestSummary':'exitSexQuestSummary',
+    'passionMapHistory':'exitPassionMapHistory',
+    'passionMapSummary':'exitPassionMapSummary',
+    'sexQuestSetup':'exitSexQuestSetup',
+    'passionMapSetup':'exitPassionMapSetup',
+  };
+  window.handleNestedBack = function(activeIds){
+    const ids = activeIds || getActiveGameScreenIds();
+    for(const sid of ids){
+      const backFn = PARENT_BACK[sid];
+      if(backFn && typeof window[backFn] === 'function'){
+        window[backFn]();
+        if(typeof window.scrollTo === 'function') window.scrollTo(0, 0);
+        return true;
+      }
+    }
+    return false;
+  };
   function returnToGroup(sectionId){
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     const setup = document.getElementById('setup');
@@ -959,6 +988,15 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     // 4. Определяем активный экран(ы)
     const screenIds = getActiveGameScreenIds();
     if(screenIds.length === 0) return;
+    // Вложенные экраны (история, итоги): «←» — это «шаг назад» в настройки
+    // игры, а не в группу хаба. Вызываем штатную функцию выхода экрана (ту
+    // же, что у кнопки «Назад»/«В меню»), чтобы не дублировать логику
+    // переключения экранов (та же причина «размазанной» логики, v286/v288).
+    // Ветка идёт ДО onlySetupScreen: эти экраны входят в SETUP_ONLY_SCREENS
+    // (партии нет, пауза не нужна), но generic-фолбэк ниже вернул бы в хаб.
+    // Единая точка — window.handleNestedBack (ею же пользуется клавиатурная
+    // «←» в core.js, там своя ветка keydown вне этого обработчика).
+    if(typeof window.handleNestedBack === 'function' && window.handleNestedBack(screenIds)) return;
     const onlySetupScreen = screenIds.every(sid => SETUP_ONLY_SCREENS.has(sid));
     if(onlySetupScreen){
       const sectionId = sectionForScreenId(screenIds[0]);

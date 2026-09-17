@@ -996,6 +996,7 @@ test('Стрелка: игры без паузы возвращаются на �
     });
     for(const [gameId, targetId] of cases){
       clearScreens();
+      if(typeof restoreParentScreenId === 'function') restoreParentScreenId();
       rememberReturnScreen(targetId, targetId === 'setup' ? 'soloView' : 'twoPlayerView');
       document.getElementById(gameId).classList.add('active');
       state.inProgress = true;

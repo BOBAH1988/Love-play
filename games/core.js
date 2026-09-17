@@ -2293,6 +2293,16 @@ document.addEventListener('keydown', (e)=>{
   if(e.key !== 'ArrowLeft') return;
   const tag = (e.target && e.target.tagName) || '';
   if(tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+  // Вложенные экраны (история, итоги «Пройди квеста»/«Карты страсти»):
+  // клавиатурная «←» — тоже «шаг назад» в настройки игры, а не в хаб.
+  // Единая точка с кнопкой «←» в шапке — window.handleNestedBack
+  // (games/fants-timer.js): там карта PARENT_BACK вызывает штатную функцию
+  // выхода экрана. Ветка идёт ПЕРВОЙ: на этих экранах партии нет
+  // (inProgress=false), и без неё клавиша просто ничего бы не делала.
+  if(typeof window.handleNestedBack === 'function' && window.handleNestedBack()){
+    e.preventDefault();
+    return;
+  }
   // Ветки режимов экрана #game должны совпадать с кнопкой «←» в шапке
   // (games/fants-timer.js) и с кнопкой «Пауза/Выход». Раньше здесь была
   // только ветка видео: в «Давай попробуем» и «Предложи партнёру» клавиша

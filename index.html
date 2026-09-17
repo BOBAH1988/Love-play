@@ -961,7 +961,7 @@
   <section id="sexQuestSummary" class="screen">
     <h1 class="title">🧩 Пройди квест: итоги</h1>
     <div class="intro-text">Согласованные ответы завершённой партии сохраняются — их можно открыть позже на странице настройки игры, кнопка «Пройденные задания».</div>
-    <div class="summary-stats" style="text-align:left;">
+    <div class="summary-stats">
       <ul class="sexquest-summary-list" id="sexQuestSummaryList"></ul>
     </div>
     <button class="btn btn-primary" id="sexQuestSummaryExitBtn" style="margin-top:10px;">В меню</button>
@@ -972,7 +972,8 @@
   <section id="sexQuestHistory" class="screen">
     <h1 class="title">Пройденные задания</h1>
     <div class="subtitle">История прошлых партий<br>видно, на чём остановились в прошлый раз</div>
-    <div class="sexquest-history-wrap" id="sexQuestHistoryList"></div>
+    <div class="sexquest-history-wrap" id="sexQuestHistoryList"><ul><li class="keep-prev"><div></div></li></ul></div>
+    <button class="btn btn-secondary" id="sexQuestHistoryRulesBtn" style="margin-top:10px;">📖 Правила</button>
     <button class="btn btn-secondary" id="sexQuestHistoryExitBtn" style="margin-top:10px;">Назад</button>
   </section>
 

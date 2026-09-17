@@ -611,8 +611,7 @@ function goToSexQuestHistory(){
   document.getElementById('sexQuestSetup').classList.remove('active');
   document.getElementById('sexQuestHistory').classList.add('active');
 }
-// Удаление одного сохранённого задания из чек-листа истории (по красному
-// крестику в "Пройденных"). Если ответов не осталось — чек-лист удаляется целиком.
+// Удаление одного сохранённого задания из чек-листа истории.
 function deleteSexQuestHistoryItem(clIdx, itemIdx){
   const cl = (state.sexQuestChecklists || [])[clIdx];
   if(!cl || !Array.isArray(cl.items) || !cl.items[itemIdx]) return;
@@ -622,19 +621,16 @@ function deleteSexQuestHistoryItem(clIdx, itemIdx){
     state.sexQuestChecklists.splice(clIdx, 1);
   }
   saveState();
-  goToSexQuestHistory(); // перерисовываем список с учётом удаления
+  goToSexQuestHistory();
 }
-// Один делегированный обработчик на весь список — работает для всех
-// крестиков, включая появившиеся после перерисовки.
+// Делегирование сохраняет обработчик после перерисовки списка.
 document.getElementById('sexQuestHistoryList').addEventListener('click', (e)=>{
   const btn = e.target.closest('.sexquest-item-del');
   if(!btn) return;
   deleteSexQuestHistoryItem(parseInt(btn.dataset.cl, 10), parseInt(btn.dataset.item, 10));
 });
 function exitSexQuestHistory(){
-  document.getElementById('sexQuestHistory').classList.remove('active');
-  document.getElementById('sexQuestSetup').classList.add('active');
-  updateSexQuestHistoryBtn(); // кнопка остаётся активной; пустая история покажет подсказку
+  goToSexQuestSetup();
 }
 document.getElementById('sexQuestHistoryBtn').addEventListener('click', ()=>{ goToSexQuestHistory(); });
 document.getElementById('sexQuestHistoryExitBtn').addEventListener('click', ()=>{ exitSexQuestHistory(); });

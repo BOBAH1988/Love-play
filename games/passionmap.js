@@ -495,6 +495,9 @@ function formatPassionMapDate(ts){
   return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 function goToPassionMapHistory(){
+  // Контекст возврата фиксируем на настройки — «←» из истории должна делать
+  // шаг назад в меню настройки игры, а не уходить в общий список игр.
+  setParentScreenId('passionMapSetup');
   const wrap = document.getElementById('passionMapHistoryList');
   const checklists = state.passionMapChecklists || [];
   if(checklists.length === 0){

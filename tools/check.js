@@ -1625,6 +1625,54 @@ function checkGlobalHandlers(html) {
     `найдено ${noPauseModes.length}: ${noPauseModes.join(', ')}`
   );
 
+  // Вложенные экраны игр без паузы (история, итоги): стрелка «←» и кнопка
+  // «Назад»/«В меню» должны возвращать на шаг назад — в настройки игры,
+  // а НЕ в хаб. Раньше каждый такой экран включал #setup вручную и не
+  // снимал его .active — из-за этого после «Продолжить игру» из хаба
+  // игрок видел «экран из двух частей» (хаб + настройки). Три раза
+  // правили, каждый раз убирая ручное переключение в пользу вызова её
+  // функции выхода (PARENT_BACK в fants-timer.js). Чтобы баг не
+  // вернулся четвёртый: проверяем, что карта PARENT_BACK есть и что
+  // каждый экран из неё:
+  //   • есть в SETUP_ONLY_SCREENS (иначе «←» уйдёт в generic-fallback → хаб);
+  //   • имеет функцию выхода, которую он ссылается.
+  const timerSrcLocal = read('games/fants-timer.js');
+  const allJsLocal = fs.readdirSync(path.join(ROOT, 'games'))
+    .map((f) => read(path.join('games', f))).join('\n');
+  const parentBackMatch = timerSrcLocal.match(/const PARENT_BACK\s*=\s*\{([\s\S]*?)\n\s*\};/);
+  check('карта PARENT_BACK для вложенных экранов объявлена', !!parentBackMatch,
+    'в fants-timer.js нет PARENT_BACK — «←» из истории/итогов уйдёт в хаб');
+  if (parentBackMatch) {
+    const parentBackBody = parentBackMatch[1];
+    // Извлекаем пары «экран: функция». Функция может быть строкой или именованной.
+    const backPairs = [...parentBackBody.matchAll(/'([A-Za-z][\w]*)':\s*'([A-Za-z][\w]*)'/g)]
+      .map((m) => ({ screen: m[1], fn: m[2] }));
+    // Жёстко: эти 4 экрана обязаны быть в карте. Если кто-то уберёт — тест падает.
+    const requiredScreens = ['sexQuestHistory', 'sexQuestSummary', 'passionMapHistory', 'passionMapSummary', 'sexQuestSetup', 'passionMapSetup'];
+    for (const sid of requiredScreens) {
+      const entry = backPairs.find((p) => p.screen === sid);
+      check(`PARENT_BACK содержит ${sid}`, !!entry, `экран ${sid} не в карте PARENT_BACK`);
+      if (entry) {
+        // Функция выхода должна существовать в коде игры.
+        check(`PARENT_BACK[${sid}] → ${entry.fn} существует`,
+          new RegExp(`function\\s+${entry.fn}\\s*\\(`).test(allJsLocal),
+          `функция ${entry.fn} не найдена — «←» из ${sid} ничего не вызовет`);
+      }
+    }
+    // Каждый экран из PARENT_BACK обязан быть в SETUP_ONLY_SCREENS: иначе
+    // generic-fallback (который идёт в блок «игры без паузы») может перехватить
+    // «←» и открыть хаб. Проверка идёт через наличие id как есть.
+    const setupOnlyBlock = timerSrcLocal.slice(
+      timerSrcLocal.indexOf('const SETUP_ONLY_SCREENS'),
+      timerSrcLocal.indexOf('function returnToGroup')
+    );
+    for (const sid of requiredScreens) {
+      check(`${sid} в SETUP_ONLY_SCREENS`,
+        RegExp(`'${sid}'`).test(setupOnlyBlock),
+        `экран не в списке SETUP_ONLY_SCREENS — «←» может уйти в generic-fallback → хаб`);
+    }
+  }
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

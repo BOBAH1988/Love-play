@@ -385,6 +385,7 @@ function finishBingoGame(){
   state.pausedMode = null;
   saveState();
   updateResumeUI();
+  returnToSetupUI();
 }
 // Итоги при выходе через паузу (партия прервана, не завершена честно) —
 // показываются перед сбросом, чтобы был виден прогресс: сколько заданий
