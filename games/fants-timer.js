@@ -644,7 +644,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   const RULES_HUB = [
     { icon:'💕', name:'Игры для пар 18+', games:[
       ['🎯','Викторина','quizRulesModal'],
-      ['💬','Ответы на вопросы','ideasRulesModal'],
+      ['💬','Вопросы про это','ideasRulesModal'],
       ['💘','Фанты','rulesModal'],
       ['❓','Правда/Действие','tdRulesModal'],
       ['💑','Тайные ответы','znayuRulesModal'],
