@@ -389,6 +389,41 @@ test('Сценарий: стрелка «←» в «Давай попробуе�
   }
 });
 
+test('Сценарий: викторина для двоих — игрок подсвечен сверху без подписи на карточке', () => {
+  const row = getElById(stub, 'quizScoreRow');
+  const card = getElById(stub, 'quizCard');
+  const originalAppend = row.appendChild;
+  const originalFade = global.fadeSwapEl;
+  const saved = {};
+  ['quizQueue', 'quizIndex', 'quizCurrentPlayerIndex', 'autoSpeak'].forEach(key => { saved[key] = state[key]; });
+  let players = [];
+  try {
+    row.appendChild = el => players.push(el);
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.quizQueue = [{ q: 'Проверочный вопрос', a: ['1', '2', '3', '4'] }];
+    state.quizIndex = 0;
+    state.autoSpeak = false;
+    [0, 1].forEach(idx => {
+      state.quizCurrentPlayerIndex = idx;
+      [showQuizHandoffCard, showQuizQuestion].forEach(render => {
+        players = [];
+        render();
+        stopQuizInterval();
+        assert(!/Отвечает|quizTurnLabel/.test(card.innerHTML), 'на карточке не должно быть подписи отвечающего');
+        assert(players.length === 2 && players[idx].className.endsWith(' active') &&
+          !players[1 - idx].className.endsWith(' active'), 'должен подсвечиваться только текущий игрок');
+        assert(card.innerHTML.includes(render === showQuizQuestion ? 'Проверочный вопрос' : 'Передайте телефон'),
+          'содержимое карточки должно сохраниться');
+      });
+    });
+  } finally {
+    stopQuizInterval();
+    row.appendChild = originalAppend;
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 test('Сценарий: уровень «Викторины» (пары) называется «Откровенно» без «18+»', () => {
   // Имя уровня берётся из QUIZ_LEVELS в cards_quiz.js и рисуется в
   // renderQuizSetupLevels() (games/quiz.js). Игра для двоих и так помечена

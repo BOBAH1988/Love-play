@@ -2391,15 +2391,6 @@
     font-size:19px; font-weight:700; line-height:1.35; text-align:center;
     padding:0 4px; margin-bottom:4px;
   }
-  /* Викторина (пары): строка «Отвечает: …» перенесена с экрана внутрь карточки —
-     первый ребёнок .card-inner над .card-body с вопросом. fadeSwapEl полностью
-     перерисовывает innerHTML карточки, поэтому метка вписана в шаблоны
-     games/quiz.js (вопрос и «Передайте телефон»), id #quizTurnLabel сохранён —
-     updateQuizScoreUI по-прежнему обновляет её текст. */
-  .quiz-turn-in-card{
-    font-size:21.6px; font-weight:700; letter-spacing:.4px;
-    color:#ffd166; text-align:center; margin-bottom:10px; flex-shrink:0;
-  }
   .znayu-answers{display:flex; flex-direction:column; gap:10px; width:100%; margin-top:14px;}
   /* Кнопки ответов лежат прямо на белой карточке — обычный .btn-secondary
      (белый текст на полупрозрачно-белом фоне) рассчитан на тёмный фон
