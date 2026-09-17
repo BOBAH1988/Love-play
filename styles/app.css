@@ -994,7 +994,8 @@
   #shopGame .shop-showcase-item{ min-height:64px; padding:3px 2px; }
   #shopGame .shop-showcase-icon{ font-size:22px; }
   #shopGame .shop-hint-toggle{ min-height:32px; padding:4px 10px; margin-bottom:2px; }
-  #shopGame .shop-money-sum{ font-size:24px; margin-bottom:4px; }
+  #shopGame .shop-money-sum{ font-size:24px; margin-bottom:4px; text-align:center; }
+  #shopGame .shop-money-group:first-child > .shop-money-group-label{ text-align:center; }
   #shopGame .shop-money-group{ margin-bottom:6px; }
   #shopGame .shop-money-group-label{ margin-bottom:4px; }
   #shopGame .shop-money-row{ gap:6px; }
