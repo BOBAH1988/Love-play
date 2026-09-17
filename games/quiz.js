@@ -312,7 +312,8 @@ function speakQuizCard(){
   const item = state.quizQueue && state.quizQueue[state.quizIndex];
   if(!item || !('speechSynthesis' in window)) return;
   const synth = window.speechSynthesis;
-  const text = typeof stripQuotesForSpeech === 'function' ? stripQuotesForSpeech(item.q) : item.q;
+  const content = [item.q, ...quizCurrentOptions.map((option, index)=>`Вариант ${index + 1}: ${option.text}`)].join('. ');
+  const text = typeof stripQuotesForSpeech === 'function' ? stripQuotesForSpeech(content) : content;
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ru-RU';
   utter.rate = 0.95;

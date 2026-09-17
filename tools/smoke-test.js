@@ -424,6 +424,41 @@ test('Сценарий: викторина для двоих — игрок по
   }
 });
 
+test('Сценарий: викторина озвучивает вопрос и варианты в порядке кнопок', () => {
+  const saved = {};
+  ['quizQueue', 'quizIndex', 'autoSpeak'].forEach(key => { saved[key] = state[key]; });
+  const originalUtterance = global.SpeechSynthesisUtterance;
+  const originalSynth = window.speechSynthesis;
+  const originalFade = global.fadeSwapEl;
+  const spoken = [];
+  try {
+    global.SpeechSynthesisUtterance = function(text) { this.text = text; };
+    window.speechSynthesis = { speaking:false, pending:false, getVoices:()=>[], cancel(){}, speak(utter){ spoken.push(utter.text); } };
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.quizQueue = [{ q:'Какой цвет?', a:['Красный', 'Синий', 'Белый', 'Зелёный'] }];
+    state.quizIndex = 0;
+    state.autoSpeak = true;
+    showQuizQuestion();
+    stopQuizInterval();
+    const buttons = [...getElById(stub, 'quizCard').innerHTML.matchAll(/data-idx="\d+">([^<]+)<\/button>/g)].map(match => match[1]);
+    assert(buttons.length === 4, 'должны отображаться четыре варианта');
+    const expected = ['Какой цвет?', ...buttons.map((text, i) => `Вариант ${i + 1}: ${text}`)].join('. ');
+    assert(spoken.length === 1 && spoken[0] === expected, 'автоозвучка должна читать вопрос и все варианты в экранном порядке');
+    state.autoSpeak = false;
+    showQuizQuestion();
+    stopQuizInterval();
+    assert(spoken.length === 1, 'при выключенной автоозвучке речь не запускается');
+    speakQuizCard();
+    assert(spoken.length === 2 && spoken[1].includes('Вариант 4:'), 'ручное чтение также включает варианты');
+  } finally {
+    stopQuizInterval();
+    global.SpeechSynthesisUtterance = originalUtterance;
+    window.speechSynthesis = originalSynth;
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 test('Сценарий: уровень «Викторины» (пары) называется «Откровенно» без «18+»', () => {
   // Имя уровня берётся из QUIZ_LEVELS в cards_quiz.js и рисуется в
   // renderQuizSetupLevels() (games/quiz.js). Игра для двоих и так помечена
