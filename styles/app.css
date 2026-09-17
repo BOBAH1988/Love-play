@@ -1000,7 +1000,7 @@
   #shopGame .shop-money-row{ gap:6px; }
   #shopGame .shop-money-row-bill{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
   #shopGame .shop-money-row-bill + .shop-money-row-bill{ margin-top:8px; }
-  #shopGame .shop-money-row-coin{ flex-wrap:nowrap; }
+  #shopGame .shop-money-row-coin{ flex-wrap:nowrap; justify-content:center; }
   #shopGame .shop-money-coin{ width:44px; height:44px; }
   #shopGame .shop-money-bill{ min-width:0; flex:1; height:40px; padding:0 3px; font-size:12px; }
   #shopGame .shop-money-selected{ max-height:64px; overflow-y:auto; gap:4px; margin:6px 0; }
