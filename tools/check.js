@@ -1846,6 +1846,31 @@ function checkKidsQuizCards() {
   );
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// 18. Данные «Викторины» (соло + компания)
+// ────────────────────────────────────────────────────────────────────────────
+/**
+ * Колода «Викторины» (cards_party_quiz.js) изначально содержала ~321
+ * вычислительный пример («Сколько будет 7×8?», «Чему равно 24×22?») — под
+ * таймером 10–20 секунд это устный счёт, а не эрудиция. Примеры заменены
+ * содержательными вопросами; проверки не дают им вернуться.
+ */
+function checkPartyQuizCards() {
+  group('Данные «Викторины» (соло + компания)');
+  const src = read('cards/cards_party_quiz.js');
+  const cards = [...src.matchAll(/\{level:(\d), q:'((?:[^'\\]|\\.)*)', a:\[([^\]]*)\]\}/g)]
+    .map(m => ({ level: Number(m[1]), q: m[2], a: [...m[3].matchAll(/'((?:[^'\\]|\\.)*)'/g)].map(x => x[1]) }));
+  check('колода соло/компании содержит 626 карточек', cards.length === 626);
+  check('уровни соло/компании: 176/150/150/150',
+    [1, 2, 3, 4].map(l => cards.filter(c => c.level === l).length).join('/') === '176/150/150/150');
+  check('в соло/компании нет вычислительных примеров',
+    !cards.some(c => /^(Сколько будет|Чему равно)|×|÷|% от |разделить на | в степени \d|\d\s*[+*/^]\s*\d/.test(c.q)));
+  check('в соло/компании по 4 разных непустых ответа',
+    cards.every(c => c.a.length === 4 && c.a.every(a => a.trim()) && new Set(c.a).size === 4));
+  check('в соло/компании нет одинаковых вопросов',
+    new Set(cards.map(c => c.q.toLowerCase())).size === cards.length);
+}
+
 function main() {
   const html = read('index.html');
   const { missingIds } = checkScripts(html);
@@ -1857,6 +1882,7 @@ function main() {
   checkDocs();
   checkRegistry();
   checkKidsQuizCards();
+  checkPartyQuizCards();
   checkPauseResetOnStart();
   checkExitNavigation();
   checkStyles(html);
