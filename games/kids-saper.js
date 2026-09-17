@@ -270,28 +270,15 @@ function showKidsSaperSummaryModal(){
   const introEl = document.getElementById('kidsSaperSummaryIntro');
   if(introEl) introEl.textContent = `Уровень: ${info ? info.icon + ' ' + info.name : ''} · Линий собрано: ${total} из 10` + (allChecked ? ' · Отмечены все 25 клеток!' : '');
   document.getElementById('kidsSaperSummaryList').innerHTML = listHtml;
-  const isTie = ranking.length === 2 && ranking[0].score === ranking[1].score;
-  const winnerName = (!isTie && ranking.length === 2) ? ranking[0].n : null;
-  const loserName = (!isTie && ranking.length === 2) ? ranking[1].n : null;
-  const bonusEl = document.getElementById('kidsSaperSummaryBonusText');
-  if(bonusEl){
-    // Финальный приз — уровень 4 бонусов (как в Бинго: pickBingoBonus(4)).
-    const bonusTask = winnerName ? pickKidsSaperBonus(4) : null;
-    if(bonusTask){
-      addKidsSaperBonusToChecklist(bonusTask.text);
-      renderKidsSaperBonusChecklist();
-      bonusEl.textContent = `🏆 Бонусное задание команде «${winnerName}»: ` + bonusTask.text;
-      bonusEl.style.display = 'block';
-    } else {
-      bonusEl.textContent = '';
-      bonusEl.style.display = 'none';
-    }
-  }
   const finalTaskEl = document.getElementById('kidsSaperSummaryFinalTaskText');
   if(finalTaskEl){
-    const finalTask = (!isTie && loserName) ? pickKidsSaperFinalTask() : null;
+    // Одно общее финальное задание: выполняют все вместе, без деления на
+    // команды (по просьбе владельца — игра семейная, соревнование только в счёте).
+    const finalTask = pickKidsSaperFinalTask();
     if(finalTask){
-      finalTaskEl.textContent = `😅 Финальное задание команде «${loserName}»: ` + finalTask.text;
+      addKidsSaperBonusToChecklist(finalTask.text);
+      renderKidsSaperBonusChecklist();
+      finalTaskEl.textContent = '😅 Финальное задание (выполняют все вместе): ' + finalTask.text;
       finalTaskEl.style.display = 'block';
     } else {
       finalTaskEl.textContent = '';
@@ -302,8 +289,11 @@ function showKidsSaperSummaryModal(){
   showModal('kidsSaperSummaryModal');
 }
 function pickKidsSaperFinalTask(){
-  if(typeof KIDS_SAPER_FINAL === 'undefined' || !Array.isArray(KIDS_SAPER_FINAL) || KIDS_SAPER_FINAL.length === 0) return null;
-  return KIDS_SAPER_FINAL[Math.floor(Math.random()*KIDS_SAPER_FINAL.length)];
+  if(typeof KIDS_SAPER_FINAL !== 'undefined' && Array.isArray(KIDS_SAPER_FINAL) && KIDS_SAPER_FINAL.length > 0){
+    return KIDS_SAPER_FINAL[Math.floor(Math.random()*KIDS_SAPER_FINAL.length)];
+  }
+  // Резерв: призы уровня 4 (бывший бонус победителю) — если финальные не заданы.
+  return pickKidsSaperBonus(4);
 }
 function kidsSaperEnsureLuckyCell(){
   const grid = state.kidsSaperGrid || [];

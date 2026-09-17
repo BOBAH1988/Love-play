@@ -1124,19 +1124,22 @@ test('sexQuest: история — «Смелый» хранит одну стр
   }
 });
 
-// Сапёр: финальные задания в сводке. Регресс: ручная правка cards_kids_saper.js
-// удалила KIDS_SAPER_FINAL и сменила уровень бонусов на 4, из-за чего блоки
-// «бонус победителю» и «форфейт проигравшему» в сводке никогда не показывались.
-test('Сапёр: бонус победителю и финальное задание проигравшему реально выдаются', () => {
+// Сапёр: финальные задания в сводке. Регресс 1: ручная правка cards_kids_saper.js
+// удалила KIDS_SAPER_FINAL и сменила уровень бонусов на 4, из-за чего блоки в
+// сводке никогда не показывались. Регресс 2 (текущее поведение): в конце партии
+// должно быть ОДНО общее финальное задание (выполняют все вместе), а не два
+// адресных («бонус победителю» + «форфейт проигравшему»).
+test('Сапёр: одно общее финальное задание в сводке, без деления по командам', () => {
   assert(typeof KIDS_SAPER_FINAL !== 'undefined' && Array.isArray(KIDS_SAPER_FINAL) && KIDS_SAPER_FINAL.length > 0,
     'KIDS_SAPER_FINAL должен существовать и быть непустым');
   assert(typeof pickKidsSaperFinalTask === 'function' && pickKidsSaperFinalTask() !== null,
     'pickKidsSaperFinalTask() должен возвращать задание');
-  assert(getKidsSaperBonusList(4).length > 0, 'бонусы уровня 4 должны существовать');
-  // Прогоняем showKidsSaperSummaryModal на победе без ничьей: оба блока должны появиться.
+  assert(getKidsSaperBonusList(4).length > 0, 'бонусы уровня 4 (резерв финальных) должны существовать');
+  // Прогоняем showKidsSaperSummaryModal: общий финал должен появиться.
   const saved = { players: state.partyPlayers, grid: state.kidsSaperGrid, checked: state.kidsSaperChecked,
     completed: state.kidsSaperCompleted, lines: state.kidsSaperWonLines, level: state.kidsSaperLevel,
-    finished: state.kidsSaperFinished, esc2: state.kidsSaperEscalatedTo2, esc3: state.kidsSaperEscalatedTo3 };
+    finished: state.kidsSaperFinished, esc2: state.kidsSaperEscalatedTo2, esc3: state.kidsSaperEscalatedTo3,
+    checklist: state.kidsSaperBonusChecklist, usedBonus: state.kidsSaperUsedBonus };
   try {
     state.partyPlayers = ['Команда 1', 'Команда 2'];
     state.kidsSaperCompleted = [10, 5];
@@ -1148,13 +1151,18 @@ test('Сапёр: бонус победителю и финальное зада
     state.kidsSaperFinished = false;
     state.kidsSaperEscalatedTo2 = true;
     state.kidsSaperEscalatedTo3 = true;
+    state.kidsSaperBonusChecklist = [];
+    state.kidsSaperUsedBonus = [];
     showKidsSaperSummaryModal();
     const bonus = document.getElementById('kidsSaperSummaryBonusText');
     const final = document.getElementById('kidsSaperSummaryFinalTaskText');
-    assert(bonus && bonus.style.display === 'block' && bonus.textContent.includes('Бонусное задание'),
-      'бонус победителю должен показываться (display:block): ' + (bonus && bonus.style.display));
+    assert(!bonus, 'блока «бонус победителю» в сводке больше не должно быть');
     assert(final && final.style.display === 'block' && final.textContent.includes('Финальное задание'),
-      'финальное задание проигравшему должно показываться (display:block): ' + (final && final.style.display));
+      'общее финальное задание должно показываться (display:block): ' + (final && final.style.display));
+    assert(final && !final.textContent.includes('команде'),
+      'финальное задание должно быть общим, без адресата «команде …»: ' + (final && final.textContent));
+    assert(Array.isArray(state.kidsSaperBonusChecklist) && state.kidsSaperBonusChecklist.length > 0,
+      'финальное задание должно попасть в чек-лист «Задания после игры»');
   } finally {
     Object.assign(state, saved);
   }

@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-28 · v301';
+  window.APP_BUILD = '2026-09-28 · v302';
 </script>
 </head>
 <body>
@@ -1367,7 +1367,7 @@
       <button type="button" class="btn btn-secondary btn-pause" id="kidsSaperPauseBtn">Пауза</button>
     </div>
     <div class="bingo-bonus-checklist-block" id="kidsSaperBonusChecklistBlock" style="display:none;">
-      <div class="bingo-bonus-checklist-title">🎁 Бонусные задания</div>
+      <div class="bingo-bonus-checklist-title">📌 Задания после игры</div>
       <ul class="bingo-bonus-checklist" id="kidsSaperBonusChecklistList"></ul>
     </div>
   </section>
@@ -1388,7 +1388,6 @@
       <div class="modal-title" id="kidsSaperSummaryTitle">🎫 Карта пройдена!</div>
       <div class="intro-text" id="kidsSaperSummaryIntro"></div>
       <div class="krokodil-summary-list" id="kidsSaperSummaryList"></div>
-      <div class="intro-text" id="kidsSaperSummaryBonusText" style="margin-top:10px; font-weight:700; display:none;"></div>
       <div class="intro-text" id="kidsSaperSummaryFinalTaskText" style="margin-top:10px; font-weight:700; display:none;"></div>
       <button class="btn btn-primary" id="closeKidsSaperSummaryBtn">Завершить игру</button>
     </div>
@@ -3850,7 +3849,7 @@
         <li>Команды ходят по очереди: откройте любую закрытую клетку — она отметится как выполненная. Зелёная клетка — «Вам повезло, пропустите ход!» (появляется если включить «Скрыть задания»).</li>
         <li>Линия собирается, когда все 5 клеток в ряду отмечены. Всего 10 линий. Собрано 5 линий или все 25 клеток — партия завершается.</li>
         <li>При повышении уровня все ещё не открытые клетки заменяются новыми заданиями. Отмеченные клетки остаются как подтверждение выполнения.</li>
-        <li>🏆 Победившая команда (больше отмеченных клеток) получает бонусное задание в чек-лист «🎁 Бонусные задания». Проигравшая — финальное задание-форфейт.</li>
+        <li>В конце партии — одно общее финальное задание: выполняют все вместе, победитель и проигравший не выделяются. Задание попадает в чек-лист «📌 Задания после игры» на экране игры — можно отметить, когда выполните.</li>
         <li>🙈 «Скрыть задания» — клетки скрыты до нажатия, одна случайная клетка становится зелёной (пропуск хода). 🎲 «Случайно» подскажет клетку.</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsSaperRulesBtn">Понятно</button>
@@ -4206,7 +4205,7 @@
 <script src="cards/cards_kids_krokodil.js?v=20260911a"></script>
 <script src="cards/cards_kids_memes.js?v=20260911a"></script>
 <script src="cards/cards_flash.js?v=20260829k"></script>
-<script src="cards/cards_kids_saper.js?v=20260922a"></script>
+<script src="cards/cards_kids_saper.js?v=20260928c"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260928a"></script>
 <script src="games/core.js?v=20260927c"></script>
@@ -4253,7 +4252,7 @@
 <script src="games/kids-memes.js?v=20260913b"></script>
 <script src="games/kids-flash.js?v=20260830u"></script>
 <script src="games/kids-flash-time.js?v=20260918a"></script>
-<script src="games/kids-saper.js?v=20260922a"></script>
+<script src="games/kids-saper.js?v=20260928c"></script>
 <script src="games/kids-td.js?v=20260921j"></script>
 <script src="games/quiz.js?v=20260925f"></script>
 <script src="games/party-quiz.js?v=20260913a"></script>
