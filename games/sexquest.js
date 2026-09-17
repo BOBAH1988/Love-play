@@ -618,13 +618,10 @@ function deleteSexQuestHistoryItem(clIdx, itemIdx){
   if(!cl || !Array.isArray(cl.items) || !cl.items[itemIdx]) return;
   playErrorSound();
   cl.items.splice(itemIdx, 1);
-  let removedWholeChecklist = false;
   if(cl.items.length === 0){
     state.sexQuestChecklists.splice(clIdx, 1);
-    removedWholeChecklist = true;
   }
   saveState();
-  showToast(removedWholeChecklist ? 'Чек-лист пуст и удалён' : 'Задание удалено из пройденных 🗑️');
   goToSexQuestHistory(); // перерисовываем список с учётом удаления
 }
 // Один делегированный обработчик на весь список — работает для всех
