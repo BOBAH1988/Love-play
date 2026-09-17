@@ -907,7 +907,7 @@
   .shop-register-card .card-icon{ font-size:48px; }
   .shop-register-card .shop-cart-list{ text-align:left; width:100%; }
   .shop-cash-given{ font-weight:800; margin-top:10px; font-size:16px; color:#ffd27a; }
-  /* Витрина магазина: 12 товаров-кнопок (4×3). Тап — выбрать/снять выбор,
+  /* Витрина магазина: 16 товаров-кнопок (4×4). Тап — выбрать/снять выбор,
      «В корзину» добавляет выбранное и рисует новую витрину. */
   .shop-showcase-title{ font-weight:800; margin-bottom:8px; }
   .shop-showcase-grid{

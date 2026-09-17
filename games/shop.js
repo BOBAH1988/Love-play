@@ -203,13 +203,13 @@ function renderShopCart(){
   if(payBtn) payBtn.disabled = shopCart.length === 0;
 }
 function shopDrawProduct(){
-  // Витрина: 12 случайных товаров (сетка 4×3) без повторов на экране. Уже
+  // Витрина: 16 случайных товаров (сетка 4×4) без повторов на экране. Уже
   // показанные товары могут выпасть снова — колода большая, отслеживать их не нужно.
   const all = getShopProductsList();
   const pool = all.slice();
   shopShowcase = [];
   shopShowcaseSelected = [];
-  const count = Math.min(12, pool.length);
+  const count = Math.min(16, pool.length);
   for(let i=0;i<count;i++){
     const idx = Math.floor(Math.random()*pool.length);
     shopShowcase.push(pool.splice(idx,1)[0]);
