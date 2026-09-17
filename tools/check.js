@@ -1788,6 +1788,64 @@ function checkSecrets() {
   );
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// 17. Данные детской «Викторины»
+// ────────────────────────────────────────────────────────────────────────────
+/**
+ * Колода детской викторины собиралась автоматически и наполовину состояла из
+ * вычислительных примеров («Сколько будет 7×8?», «Чему равно 4 в степени 3?»).
+ * С таймером 10–20 секунд это устный счёт, а не эрудиция, поэтому примеры
+ * заменены вопросами по школьной программе. Проверки следят, чтобы примеры
+ * не вернулись, а сами варианты ответов остались валидными.
+ */
+function checkKidsQuizCards() {
+  group('Данные детской «Викторины»');
+  const src = read('cards/cards_kids_quiz.js');
+  const cards = [...src.matchAll(/\{level:(\d), q:'((?:[^'\\]|\\.)*)', a:\[([^\]]*)\]\}/g)]
+    .map((m) => ({
+      level: Number(m[1]),
+      q: m[2],
+      a: [...m[3].matchAll(/'((?:[^'\\]|\\.)*)'/g)].map((x) => x[1]),
+    }));
+
+  check('карточки детской «Викторины» разобраны', cards.length > 0, 'KIDS_QUIZ_CARDS не читается');
+
+  const byLevel = [1, 2, 3, 4].map((l) => cards.filter((c) => c.level === l).length);
+  check(
+    'в детской «Викторине» по 150 вопросов на каждый из 4 уровней',
+    byLevel.every((n) => n === 150),
+    `получено по уровням: ${byLevel.join(' / ')}`
+  );
+
+  const calc = cards.filter((c) =>
+    /^Сколько будет \d/.test(c.q) || /^Чему равно /.test(c.q) || /% от /.test(c.q) || /разделить на /.test(c.q));
+  check(
+    'в детской «Викторине» нет вычислительных примеров',
+    calc.length === 0,
+    `примеров: ${calc.length}${calc[0] ? ' — например «' + calc[0].q + '»' : ''}`
+  );
+
+  const badOptions = cards.filter((c) => c.a.length !== 4 || new Set([c.q, ...c.a]).size !== 5);
+  check(
+    'в каждой карточке детской «Викторины» 4 разных варианта ответа',
+    badOptions.length === 0,
+    `битых карточек: ${badOptions.length}`
+  );
+
+  const seen = new Set();
+  const dupes = [];
+  cards.forEach((c) => {
+    const key = c.q.toLowerCase();
+    if (seen.has(key)) dupes.push(c.q);
+    seen.add(key);
+  });
+  check(
+    'вопросы детской «Викторины» не повторяются',
+    dupes.length === 0,
+    `дублей: ${dupes.length}${dupes.length ? ' — ' + dupes.slice(0, 3).join('; ') : ''}`
+  );
+}
+
 function main() {
   const html = read('index.html');
   const { missingIds } = checkScripts(html);
@@ -1798,6 +1856,7 @@ function main() {
   checkDomRefs(html, missingIds);
   checkDocs();
   checkRegistry();
+  checkKidsQuizCards();
   checkPauseResetOnStart();
   checkExitNavigation();
   checkStyles(html);
