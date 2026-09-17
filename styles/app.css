@@ -909,7 +909,6 @@
   .shop-cash-given{ font-weight:800; margin-top:10px; font-size:16px; color:#ffd27a; }
   /* Витрина магазина: 16 товаров-кнопок (4×4). Тап — выбрать/снять выбор,
      «В корзину» добавляет выбранное и рисует новую витрину. */
-  .shop-showcase-title{ font-weight:800; margin-bottom:8px; }
   .shop-showcase-grid{
     display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:6px;
   }
