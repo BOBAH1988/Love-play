@@ -283,10 +283,22 @@ function pickShopCashGiven(total){
 }
 function shopNewSale(){
   const all = getShopProductsList();
-  const count = 2 + Math.floor(Math.random()*3); // 2-4 товара
+  // 5-10 товаров в чеке: список длиннее, но ограничен суммой, которую реально
+  // оплатить одной купюрой из кассы (иначе сдачу не отсчитать). Раньше было
+  // 2-4 — список казался пустым, а чек не напоминал настоящий.
+  const maxBudget = Math.max.apply(null,
+    (typeof SHOP_MONEY !== 'undefined' ? SHOP_MONEY : []).map(m=>m.value).concat([2000]));
+  let total = 0;
   const items = [];
-  for(let i=0;i<count;i++){
-    items.push(all[Math.floor(Math.random()*all.length)]);
+  const minCount = 5, maxCount = 10;
+  const tries = 60;
+  for(let i=0;i<tries && items.length<maxCount;i++){
+    const cand = all[Math.floor(Math.random()*all.length)];
+    // Пересчитываем лимит: останавливаемся, когда следующий товар уже
+    // не влезает в бюджет, но в чеке не меньше minCount позиций.
+    if(items.length >= minCount && total + cand.price > maxBudget) continue;
+    items.push(cand);
+    total += cand.price;
   }
   shopSaleItems = items;
   shopSaleTotal = items.reduce((a,c)=>a+c.price, 0);
