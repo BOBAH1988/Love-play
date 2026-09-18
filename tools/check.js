@@ -760,8 +760,21 @@ function checkStyles(html) {
   // при stale-while-revalidate устройство отдаёт старый CSS и правки
   // внешнего вида не видны — этот баг уже ловили на игровых скриптах.
   const sw = read('sw.js');
-  const cssIsFresh = /startsWith\('\/styles\/'\)/.test(sw);
-  check('SW грузит стили network-first', cssIsFresh, "в sw.js нет ветки для '/styles/'");
+  const cssIsFresh = /startsWith\(ROOT \+ 'styles\/'\)/.test(sw);
+  check('SW грузит стили network-first', cssIsFresh, "в sw.js нет ветки для ROOT + 'styles/'");
+  // Белый экран офлайн: активация воркера раньше удаляла ВСЕ кэши — после
+  // обновления у игрока вычищался прогретый офлайн-кэш, и без интернета
+  // приложение стартовало пустым. Плюс respondWith(undefined) при отсутствии
+  // файла в кэше ронял загрузку скрипта. Оба регресса зафиксированы здесь.
+  check('SW не удаляет текущий кэш при активации',
+    /if \(name !== CACHE_NAME\) await caches\.delete\(name\)/.test(sw),
+    'в activate нет защиты текущего CACHE_NAME');
+  check('SW предкэширует игры и стили из index.html',
+    /cards\|games\|styles/.test(sw),
+    'collectAssetUrls не собирает games/* и styles/*');
+  check('офлайн-заглушка вместо пустого ответа',
+    /function offlineResponse\(\)/.test(sw) && /cached \|\| offlineResponse\(\)/.test(sw),
+    'в sw.js нет fallback-заглушки offlineResponse');
   // Навигационные маркеры: перед каждой секцией стоит комментарий с путём
   // к файлу логики. Это позволяет найти код игры, не читая весь index.html
   // (файл на 4000+ строк). Проверяем, что маркер не врёт.
