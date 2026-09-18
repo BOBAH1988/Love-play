@@ -15,10 +15,10 @@
 // Цели накопления (выбираются на стартовом экране): партия продолжается,
 // пока суммарная чистая прибыль не достигнет выбранной суммы.
 const BIZ_GOALS = [
-  { sum: 500,  name: 'кино',         icon: '🎬' },
-  { sum: 1000, name: 'кафе',         icon: '☕' },
-  { sum: 2500, name: 'аттракционы',  icon: '🎡' },
-  { sum: 5000, name: 'подарок',      icon: '🎁' },
+  { sum: 1000,  name: 'поход в кафе',  icon: '☕' },
+  { sum: 2500,  name: 'аттракционы',   icon: '🎡' },
+  { sum: 5000,  name: 'ролики',        icon: '🛼' },
+  { sum: 10000, name: 'велосипед',     icon: '🚲' },
 ];
 const BIZ_START_CAPITAL = 200;
 const BIZ_SUGAR_PER_CUP = 2;
@@ -194,10 +194,19 @@ function bizSpend(amount){
    return { fromReserve, fromCapital };
 }
 function bizGoalInfo(){
-  const goal = state.businessLemonadeGoal || 1000;
-  const name = state.businessLemonadeGoalName || 'кафе';
-  const item = BIZ_GOALS.find(g => g.sum === goal) || BIZ_GOALS[1];
-  return { goal, name, icon: item.icon };
+  let goal = state.businessLemonadeGoal || 1000;
+  let item = BIZ_GOALS.find(g => g.sum === goal);
+  if(!item){
+    // Сохранение со старой/удалённой целью (например, «500 на кино») —
+    // мягко переносим на первую цель текущего списка, иначе прогресс-бар
+    // и условие победы разъедутся.
+    item = BIZ_GOALS[0];
+    state.businessLemonadeGoal = item.sum;
+    state.businessLemonadeGoalName = item.name;
+  }
+  // Имя и иконка берутся из списка, а не из state — переименование целей
+  // не оставляет в старых сохранениях устаревших подписей.
+  return { goal, name: item.name, icon: item.icon };
 }
 function bizGoalReached(){
   return bizTotalNet() >= (state.businessLemonadeGoal || 1000);

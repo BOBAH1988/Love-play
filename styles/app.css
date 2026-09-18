@@ -500,6 +500,9 @@
   /* Темы «Флеш карт» — 2 кнопки в ряд (оборачиваются на 3-й/4-й). */
   .starter-group-2{flex-wrap:wrap;}
   .starter-group-2 .starter-btn{flex:1 1 calc(50% - 6px); max-width:calc(50% - 6px);}
+  /* Цели накопления «Лимонадного ларька» — строго одна кнопка в строке. */
+  .starter-group-1{flex-direction:column;}
+  .starter-group-1 .starter-btn{width:100%; max-width:none; flex:none;}
   .starter-btn{
     flex:1; padding:9px 8px; border-radius:14px;
     border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);

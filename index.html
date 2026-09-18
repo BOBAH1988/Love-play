@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260929c">
+<link rel="stylesheet" href="styles/app.css?v=20260929d">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-29 · v335';
+        window.APP_BUILD = '2026-09-29 · v336';
 </script>
 </head>
 <body>
@@ -1571,11 +1571,11 @@
 
     <div class="field">
       <label>Хочу накопить на:</label>
-      <div class="starter-group timer-duration-group starter-group-2" id="bizGoalGroup">
-        <button type="button" class="starter-btn mode-btn" data-sum="500" data-name="кино">🎬 500 ₽ на кино</button>
-        <button type="button" class="starter-btn mode-btn on" data-sum="1000" data-name="кафе">☕ 1000 ₽ на кафе</button>
+      <div class="starter-group starter-group-1" id="bizGoalGroup">
+        <button type="button" class="starter-btn mode-btn" data-sum="1000" data-name="поход в кафе">☕ 1000 ₽ на поход в кафе</button>
         <button type="button" class="starter-btn mode-btn" data-sum="2500" data-name="аттракционы">🎡 2500 ₽ на аттракционы</button>
-        <button type="button" class="starter-btn mode-btn" data-sum="5000" data-name="подарок">🎁 5000 ₽ на подарок</button>
+        <button type="button" class="starter-btn mode-btn" data-sum="5000" data-name="ролики">🛼 5000 ₽ на ролики</button>
+        <button type="button" class="starter-btn mode-btn" data-sum="10000" data-name="велосипед">🚲 10000 ₽ на велосипед</button>
       </div>
     </div>
 
@@ -4214,7 +4214,7 @@
 <script src="cards/cards_kids_saper.js?v=20260929c"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260928p"></script>
-<script src="games/core.js?v=20260929c"></script>
+<script src="games/core.js?v=20260929d"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -4236,7 +4236,7 @@
 <script src="games/shop.js?v=20260929b"></script>
 <script src="games/business-observer.js?v=20260830w"></script>
 <script src="games/party-roulette.js?v=20260925f"></script>
-<script src="games/business-lemonade.js?v=20260918a"></script>
+<script src="games/business-lemonade.js?v=20260929d"></script>
 <script src="games/kids-xo.js?v=20260913a"></script>
 <script src="games/kids-battleship.js?v=20260913a"></script>
 <script src="games/kids-connect4.js?v=20260921j"></script>
