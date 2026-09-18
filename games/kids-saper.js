@@ -1,5 +1,5 @@
 // games/kids-saper.js — Игра "Сапёр" (дети): механика «Счастливого билета»
-// с карточками заданий из KIDS_SAPER_ITEMS/KIDS_SAPER_BONUS.
+// с карточками заданий из KIDS_SAPER_ITEMS и финальным заданием из KIDS_SAPER_FINAL.
 // Загружается через <script src="games/kids-saper.js"></script> в index.html.
 const KIDS_SAPER_LINES = [
   [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
@@ -14,22 +14,6 @@ function getKidsSaperLevelById(id){
 function getKidsSaperItemsList(level){
   if(typeof KIDS_SAPER_ITEMS === 'undefined' || !Array.isArray(KIDS_SAPER_ITEMS)) return [];
   return KIDS_SAPER_ITEMS.filter(i=>i.level===level);
-}
-function getKidsSaperBonusList(level){
-  if(typeof KIDS_SAPER_BONUS === 'undefined' || !Array.isArray(KIDS_SAPER_BONUS)) return [];
-  return KIDS_SAPER_BONUS.filter(i=>i.level===level);
-}
-function pickKidsSaperBonus(level){
-  const list = getKidsSaperBonusList(level);
-  if(!state.kidsSaperUsedBonus) state.kidsSaperUsedBonus = [];
-  let available = list.filter(b=>!state.kidsSaperUsedBonus.includes(b.text));
-  if(available.length === 0){
-    state.kidsSaperUsedBonus = [];
-    available = list;
-  }
-  const bonus = available.length ? available[Math.floor(Math.random()*available.length)] : null;
-  if(bonus) state.kidsSaperUsedBonus.push(bonus.text);
-  return bonus;
 }
 function addKidsSaperBonusToChecklist(text){
   if(!text) return;
@@ -292,8 +276,7 @@ function pickKidsSaperFinalTask(){
   if(typeof KIDS_SAPER_FINAL !== 'undefined' && Array.isArray(KIDS_SAPER_FINAL) && KIDS_SAPER_FINAL.length > 0){
     return KIDS_SAPER_FINAL[Math.floor(Math.random()*KIDS_SAPER_FINAL.length)];
   }
-  // Резерв: призы уровня 4 (бывший бонус победителю) — если финальные не заданы.
-  return pickKidsSaperBonus(4);
+  return null;
 }
 function kidsSaperEnsureLuckyCell(){
   const grid = state.kidsSaperGrid || [];
@@ -364,7 +347,6 @@ function goToKidsSaperGame(){
   state.kidsSaperFinished = false;
   state.kidsSaperCurrentTeamIndex = Math.floor(Math.random() * 2);
   state.kidsSaperTeamTurnCount = [0,0];
-  state.kidsSaperUsedBonus = [];
   state.inProgress = true;
   saveState();
   document.getElementById('kidsSaperSetup').classList.remove('active');

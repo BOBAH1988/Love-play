@@ -1195,21 +1195,22 @@ test('sexQuest: история — «Смелый» хранит одну стр
 });
 
 // Сапёр: финальные задания в сводке. Регресс 1: ручная правка cards_kids_saper.js
-// удалила KIDS_SAPER_FINAL и сменила уровень бонусов на 4, из-за чего блоки в
-// сводке никогда не показывались. Регресс 2 (текущее поведение): в конце партии
-// должно быть ОДНО общее финальное задание (выполняют все вместе), а не два
-// адресных («бонус победителю» + «форфейт проигравшему»).
+// удалила KIDS_SAPER_FINAL, из-за чего блок финального задания в сводке не
+// показывался. Регресс 2 (текущее поведение): в конце партии должно быть ОДНО
+// общее финальное задание — выполняют все игроки вместе как хорошее завершение
+// вечера; промежуточных бонусных заданий в игре нет.
 test('Сапёр: одно общее финальное задание в сводке, без деления по командам', () => {
   assert(typeof KIDS_SAPER_FINAL !== 'undefined' && Array.isArray(KIDS_SAPER_FINAL) && KIDS_SAPER_FINAL.length > 0,
     'KIDS_SAPER_FINAL должен существовать и быть непустым');
   assert(typeof pickKidsSaperFinalTask === 'function' && pickKidsSaperFinalTask() !== null,
     'pickKidsSaperFinalTask() должен возвращать задание');
-  assert(getKidsSaperBonusList(4).length > 0, 'бонусы уровня 4 (резерв финальных) должны существовать');
+  assert(typeof KIDS_SAPER_BONUS === 'undefined' && typeof getKidsSaperBonusList === 'undefined' && typeof pickKidsSaperBonus === 'undefined',
+    'бонусные пулы и функции (KIDS_SAPER_BONUS/getKidsSaperBonusList/pickKidsSaperBonus) должны быть удалены');
   // Прогоняем showKidsSaperSummaryModal: общий финал должен появиться.
   const saved = { players: state.partyPlayers, grid: state.kidsSaperGrid, checked: state.kidsSaperChecked,
     completed: state.kidsSaperCompleted, lines: state.kidsSaperWonLines, level: state.kidsSaperLevel,
     finished: state.kidsSaperFinished, esc2: state.kidsSaperEscalatedTo2, esc3: state.kidsSaperEscalatedTo3,
-    checklist: state.kidsSaperBonusChecklist, usedBonus: state.kidsSaperUsedBonus };
+    checklist: state.kidsSaperBonusChecklist };
   try {
     state.partyPlayers = ['Команда 1', 'Команда 2'];
     state.kidsSaperCompleted = [10, 5];
@@ -1222,7 +1223,6 @@ test('Сапёр: одно общее финальное задание в св�
     state.kidsSaperEscalatedTo2 = true;
     state.kidsSaperEscalatedTo3 = true;
     state.kidsSaperBonusChecklist = [];
-    state.kidsSaperUsedBonus = [];
     showKidsSaperSummaryModal();
     const bonus = document.getElementById('kidsSaperSummaryBonusText');
     const final = document.getElementById('kidsSaperSummaryFinalTaskText');

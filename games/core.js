@@ -321,7 +321,6 @@ let state = {
   // флажки, победа/поражение). kidsSaperWonLines/kidsSaperEscalated* — устарели,
   // оставлены для обратной совместимости со старыми сохранениями.
   kidsSaperGrid:[], kidsSaperChecked:[], kidsSaperFlags:[], kidsSaperWonLines:[],
-  kidsSaperUsedBonus:[],
   kidsSaperCurrentLevel:1, kidsSaperEscalatedTo2:false, kidsSaperEscalatedTo3:false,
   kidsSaperFinished:false, kidsSaperBonusChecklist:[], kidsSaperTasksHidden:true,
   // Виселица (компания) — без уровней, общий счёт побед/поражений
@@ -1770,7 +1769,7 @@ function performFullReset(){
   // Сапёр (дети)
   state.kidsSaperGrid = []; state.kidsSaperChecked = []; state.kidsSaperFlags = [];
   state.kidsSaperWonLines = [];
-  state.kidsSaperUsedBonus = []; state.kidsSaperCurrentLevel = 1;
+  state.kidsSaperCurrentLevel = 1;
   state.kidsSaperEscalatedTo2 = false; state.kidsSaperEscalatedTo3 = false;
   state.kidsSaperFinished = false; state.kidsSaperBonusChecklist = [];
   state.kidsSaperTasksHidden = true;

@@ -49,7 +49,7 @@ if(state.inProgress){
   // страницы: всё заново.
   state.kidsSaperGrid = []; state.kidsSaperChecked = []; state.kidsSaperFlags = [];
   state.kidsSaperWonLines = [];
-  state.kidsSaperUsedBonus = []; state.kidsSaperCurrentLevel = 1;
+  state.kidsSaperCurrentLevel = 1;
   state.kidsSaperEscalatedTo2 = false; state.kidsSaperEscalatedTo3 = false;
   state.kidsSaperFinished = false; state.kidsSaperBonusChecklist = [];
   state.kidsSaperTasksHidden = true;
