@@ -253,7 +253,7 @@ let state = {
   luckyTeamTurnCount:[0,0],
   luckyLevel:1, luckyGrid:[], luckyChecked:[], luckyCurrentTeamIndex:0,
   luckyCompleted:[], luckyWonLines:[], luckyEscalatedTo2:false, luckyEscalatedTo3:false,
-  luckyFinished:false, luckyUsed:{}, luckyUsedBonus:[], luckyPendingBonusText:'', luckyBonusChecklist:[],
+  luckyFinished:false, luckyUsed:{},
   luckyTasksHidden:true, luckyRevealed:[],
   // Викторина (пары) — каждый игрок отвечает на все свои вопросы подряд
   // (quizQuestionCount штук), затем передаёт телефон следующему; см. games/quiz.js.
@@ -1828,7 +1828,6 @@ function performFullReset(){
   state.luckyGrid = []; state.luckyChecked = []; state.luckyCurrentTeamIndex = 0;
   state.luckyCompleted = []; state.luckyWonLines = []; state.luckyLevel = 1;
   state.luckyEscalatedTo2 = false; state.luckyEscalatedTo3 = false; state.luckyFinished = false;
-  state.luckyUsedBonus = []; state.luckyPendingBonusText = ''; state.luckyBonusChecklist = [];
   state.luckyTasksHidden = true; state.luckyRevealed = [];
   // Викторина (пары/компания/дети)
   state.quizUsed = {}; state.quizQueue = []; state.quizIndex = 0; state.quizCurrentPlayerIndex = 0;

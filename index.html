@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-28 · v325';
+  window.APP_BUILD = '2026-09-28 · v326';
 </script>
 </head>
 <body>
@@ -2782,18 +2782,17 @@
       <div class="modal-title" id="luckySummaryTitle">🎫 Карта пройдена!</div>
       <div class="intro-text" id="luckySummaryIntro"></div>
       <div class="krokodil-summary-list" id="luckySummaryList"></div>
-      <div class="intro-text" id="luckySummaryBonusText" style="margin-top:10px; font-weight:700; display:none;"></div>
       <div class="intro-text" id="luckySummaryFinalTaskText" style="margin-top:10px; font-weight:700; display:none;"></div>
       <button class="btn btn-primary" id="closeLuckySummaryBtn">Завершить игру</button>
     </div>
   </div>
 
-  <!-- ===== СЧАСТЛИВЫЙ БИЛЕТ: БОНУС МОДАЛ ===== -->
-  <div class="modal-overlay" id="luckyBonusModal">
+  <!-- ===== СЧАСТЛИВЫЙ БИЛЕТ: ПОВЫШЕНИЕ УРОВНЯ ===== -->
+  <div class="modal-overlay" id="luckyLevelUpModal">
     <div class="modal-card">
-      <div class="intro-text" id="luckyBonusIntro"></div>
-      <div class="intro-text" id="luckyBonusText"></div>
-      <button class="btn btn-primary" id="luckyBonusAcceptBtn">Принять</button>
+      <div class="intro-text" id="luckyLevelUpIntro"></div>
+      <div class="intro-text" id="luckyLevelUpText"></div>
+      <button class="btn btn-primary" id="luckyLevelUpAcceptBtn">Принять</button>
     </div>
   </div>
 
@@ -3916,9 +3915,9 @@
         <li>На своём ходу команда выбирает любую свободную клетку на общем поле — исполнитель сразу выполняет задание для своего партнёра, клетка отмечается за команду.</li>
         <li>Не готовы выполнять ни одно из заданий прямо сейчас? «🚫 Пропустить ход» передаст очередь другой команде без отметки.</li>
         <li>«🎲 Случайно» подсветит контуром случайную ещё не отмеченную клетку — подсказка, что сделать дальше. Подсветка снимается следующим касанием экрана.</li>
-        <li>Как только на поле собирается целая линия (ряд или столбец — всего их 10), уровень автоматически повышается — сначала после 1-й линии, потом после 3-й. Уже отмеченные клетки не меняются, обновляются только пустые. Во время партии бонусные задания не выдаются.</li>
+        <li>Как только на поле собирается целая линия (ряд или столбец — всего их 10), уровень автоматически повышается — сначала после 1-й линии, потом после 3-й. Уже отмеченные клетки не меняются, обновляются только пустые. Промежуточных заданий за собранную линию нет — только аплодисменты.</li>
         <li>Уровни идут по нарастающей: 💗 «Нежно» → 😏 «Игриво» → 🔥 «Дерзко». Чем выше уровень, тем откровеннее и смелее задания — разрешены поцелуи и касания любых мест тела, включая без одежды, но без прямого секса и без обнажения гениталий.</li>
-        <li>Партия завершается сама, как только собрано 5 линий или отмечены все 25 клеток — побеждает команда, отметившая больше клеток. Победившая команда получает бонусное задание на двоих (добавляется в блок «🎁 Бонусные задания» под картой — он никуда не пропадает после игры, выполнили — нажмите на текст, он зачеркнётся, «✕» удаляет пункт). Проигравшую команду (если ничьей нет) ждёт самое горячее задание игры — финальный форфейт перед всей компанией.</li>
+        <li>Партия завершается сама, как только собрано 5 линий или отмечены все 25 клеток — побеждает команда, отметившая больше клеток. После основной игры — только одно финальное задание: его выполняет проигравшая команда (если ничьей нет) перед всей компанией. Победившая команда отдельного задания не получает.</li>
         <li>«Пауза» сохранит поле и очередь — на главном экране появится «Продолжить игру» или «Закончить игру» (без показа итогов, только для незавершённой партии).</li>
       </ol>
       <button class="btn btn-primary" id="closeLuckyRulesBtn">Понятно</button>
@@ -4191,7 +4190,7 @@
 <script src="cards/cards_party_fants.js?v=20260829g"></script>
 <script src="cards/cards_party_td.js?v=20260829g"></script>
 <script src="cards/cards_fam_znayu.js?v=20260912a"></script>
-<script src="cards/cards_lucky.js?v=20260829g"></script>
+<script src="cards/cards_lucky.js?v=20260928x"></script>
 <script src="cards/cards_kids_memory.js?v=20260829g"></script>
 <script src="cards/cards_kids_td.js?v=20260829g"></script>
 <script src="cards/cards_quiz.js?v=20260921a"></script>
@@ -4207,7 +4206,7 @@
 <script src="cards/cards_kids_saper.js?v=20260928c"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260928p"></script>
-<script src="games/core.js?v=20260928m"></script>
+<script src="games/core.js?v=20260928x"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -4245,7 +4244,7 @@
 <script src="games/party-fants.js?v=20260925f"></script>
 <script src="games/party-td.js?v=20260921j"></script>
 <script src="games/fam-znayu.js?v=20260913a"></script>
-<script src="games/lucky.js?v=20260925f"></script>
+<script src="games/lucky.js?v=20260928x"></script>
 <script src="games/kids-memory.js?v=20260925f"></script>
 <script src="games/kids-krokodil.js?v=20260925f"></script>
 <script src="games/kids-memes.js?v=20260913b"></script>

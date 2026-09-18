@@ -274,10 +274,6 @@ function advanceLuckyStage(){
 // всё ещё включён, для нового уровня сразу подбирается своя свежая
 // счастливая клетка (luckyEnsureLuckyCell ниже): одна штука на каждом
 // уровне, а не одна на всю партию.
-function renderLuckyBonusChecklist(){
-  // Заглушка: в "Счастливом билете" нет чек-листа бонусов (есть только в "Секс-бинго").
-  // Функция вызывается для единообразия API с renderBingoBonusChecklist.
-}
 function escalateLuckyTo(nextLevel){
   const pool = shuffle(getLuckyTasksList(nextLevel));
   const usedTexts = new Set(state.luckyGrid);
@@ -295,13 +291,12 @@ function escalateLuckyTo(nextLevel){
   state.luckyLevel = nextLevel;
   if(state.luckyTasksHidden) luckyEnsureLuckyCell();
   renderLuckyGrid();
-  showLuckyBonus(nextLevel);
+  showLuckyLevelUp(nextLevel);
 }
-// Окно повышения уровня — праздничное и чисто информационное: бонусное
-// задание здесь больше не выдаётся ни разу за игру (ни после 1-й, ни после
-// 3-й линии) — оно достаётся только победившей команде после финальной
-// победы, в итоговом окне партии (см. showLuckySummaryModal).
-function showLuckyBonus(level){
+// Окно повышения уровня — праздничное и чисто информационное: промежуточных
+// заданий здесь нет, только одно финальное задание проигравшей команде
+// после окончания партии (см. showLuckySummaryModal).
+function showLuckyLevelUp(level){
   playLevelUpSound();
   const info = luckyLevelInfo(level);
   // Ход ещё не передан следующей команде (передача — после этой функции, в
@@ -309,11 +304,11 @@ function showLuckyBonus(level){
   // только что собрала линию.
   ensureLuckyTeams();
   const teamName = (state.luckyTeams[state.luckyCurrentTeamIndex || 0] || {}).name || luckyDefaultTeamName(state.luckyCurrentTeamIndex || 0);
-  const introEl = document.getElementById('luckyBonusIntro');
+  const introEl = document.getElementById('luckyLevelUpIntro');
   if(introEl) introEl.textContent = `🏆 Линия собрана командой «${teamName}»! Уровень повышен: ${info.icon} ${info.name}`;
-  const textEl = document.getElementById('luckyBonusText');
+  const textEl = document.getElementById('luckyLevelUpText');
   if(textEl) textEl.textContent = 'Поздравьте друг друга аплодисментами!';
-  showModal('luckyBonusModal');
+  showModal('luckyLevelUpModal');
 }
 // Партия завершается сама, как только собрано 5 любых линий или отмечены
 // все 25 клеток — точно как checkBingoGameFinished в "Секс-бинго".
@@ -330,7 +325,7 @@ function checkLuckyGameFinished(){
   }
 }
 function showLuckySummaryModal(){
-  hideModal('luckyBonusModal');
+  hideModal('luckyLevelUpModal');
   ensureLuckyTeams();
   const teams = state.luckyTeams;
   const completed = state.luckyCompleted || [];
@@ -358,19 +353,11 @@ function showLuckySummaryModal(){
   const isTie = ranking.length === 2 && ranking[0].score === ranking[1].score;
   const winnerName = (!isTie && ranking.length === 2) ? ranking[0].n : null;
   const loserName = (!isTie && ranking.length === 2) ? ranking[1].n : null;
-  // Бонусное задание больше не выдаётся во время партии (ни после 1-й, ни
-  // после 3-й линии) — оно достаётся только победившей команде один раз,
-  // здесь, после финальной победы. При ничьей никто его не получает.
-  // Как и раньше, бонус попадает в накопительный чек-лист «🎁 Бонусные
-  // задания» под картой.
-  const bonusEl = document.getElementById('luckySummaryBonusText');
-  if(bonusEl){
-    bonusEl.textContent = '';
-    bonusEl.style.display = 'none';
-  }
-  // Финальное задание проигравшей команде (меньше отмеченных клеток) —
-  // весёлый форфейт перед компанией. При ничьей (оба счёта равны)
-  // проигравшего нет — задание не показываем.
+  // Промежуточных заданий в игре нет — только одно финальное задание
+  // проигравшей команде (меньше отмеченных клеток), весёлый форфейт перед
+  // компанией. При ничьей (оба счёта равны) проигравшего нет — задание
+  // не показываем. Победившая команда отдельного задания не получает —
+  // только сам факт победы.
   const finalTaskEl = document.getElementById('luckySummaryFinalTaskText');
   if(finalTaskEl){
     const finalTask = (!isTie && loserName) ? pickLuckyFinalTask() : null;
@@ -422,7 +409,6 @@ function goToLuckyGame(){
   renderLuckyGrid();
   updateLuckyHideTasksBtn();
   updateLuckyRandomBtn();
-  renderLuckyBonusChecklist();
 }
 // Пауза: вернуться в главное меню, не сбрасывая поле и очередь — можно
 // продолжить позже через общий блок "Продолжить игру" / "Закончить игру".
@@ -443,7 +429,6 @@ function resumeLuckyGame(){
   document.getElementById('luckyGame').classList.add('active');
   renderLuckyGrid();
   updateLuckyHideTasksBtn();
-  renderLuckyBonusChecklist();
 }
 // Вызывается из общего "Закончить игру" на главном экране, пока игра стоит
 // на паузе — полный сброс без показа итогов (как finishKrokodilGame в
@@ -462,7 +447,6 @@ function finishLuckyGame(){
   state.luckyFinished = false;
   state.luckyCurrentTeamIndex = 0;
   state.luckyTeamTurnCount = [0,0];
-  state.luckyPendingBonusText = '';
   state.inProgress = false;
   state.pausedMode = null;
   saveState();
@@ -485,7 +469,6 @@ function exitLuckyGame(){
   state.luckyFinished = false;
   state.luckyCurrentTeamIndex = 0;
   state.luckyTeamTurnCount = [0,0];
-  state.luckyPendingBonusText = '';
   exitGame('luckyGame', 'luckySetup');
   showSetupView('companyView');
 }
@@ -591,9 +574,9 @@ document.getElementById('luckyExitBtn').addEventListener('click', ()=>{
   pauseLuckyGame();
   showToast('Игра на паузе — прогресс сохранён');
 });
-document.getElementById('luckyBonusAcceptBtn').addEventListener('click', ()=>{
+document.getElementById('luckyLevelUpAcceptBtn').addEventListener('click', ()=>{
   playSuccessSound();
-  hideModal('luckyBonusModal');
+  hideModal('luckyLevelUpModal');
 });
 document.getElementById('closeLuckySummaryBtn').addEventListener('click', ()=>{ exitLuckyGame(); });
 (document.getElementById('luckySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('luckyRulesModal'); });

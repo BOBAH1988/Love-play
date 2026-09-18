@@ -1253,6 +1253,107 @@ test('Сапёр: партия завершается при 5 линиях', ()
   }
 });
 
+// Счастливый билет: партия идёт по клеткам поля, промежуточных заданий нет —
+// только одно финальное задание проигравшей команде после окончания партии
+// (см. showLuckySummaryModal). Регресс: удалённые остатки бонусной механики
+// (LUCKY_BONUS, showLuckyBonus, чек-лист бонусов) не должны возвращаться.
+test('Счастливый билет: только финальное задание проигравшей, без промежуточных', () => {
+  assert(typeof LUCKY_TASKS !== 'undefined' && LUCKY_TASKS.filter(t=>t.level===1).length === 50
+      && LUCKY_TASKS.filter(t=>t.level===2).length === 50 && LUCKY_TASKS.filter(t=>t.level===3).length === 50,
+    'колода клеток: по 50 заданий на уровень');
+  assert(typeof LUCKY_BONUS === 'undefined', 'промежуточных заданий LUCKY_BONUS быть не должно');
+  assert(typeof showLuckyBonus === 'undefined' && typeof renderLuckyBonusChecklist === 'undefined',
+    'функций промежуточных бонусов быть не должно (есть showLuckyLevelUp)');
+  assert(typeof showLuckyLevelUp === 'function', 'окно повышения уровня showLuckyLevelUp должно существовать');
+  assert(typeof pickLuckyFinalTask === 'function' && pickLuckyFinalTask() !== null,
+    'pickLuckyFinalTask() должен возвращать задание');
+  // Прогоняем showLuckySummaryModal: финал — только проигравшей, победителю — ничего.
+  const saved = { teams: state.luckyTeams, grid: state.luckyGrid, checked: state.luckyChecked,
+    completed: state.luckyCompleted, lines: state.luckyWonLines, level: state.luckyLevel,
+    finished: state.luckyFinished, esc2: state.luckyEscalatedTo2, esc3: state.luckyEscalatedTo3,
+    turn: state.luckyCurrentTeamIndex, turns: state.luckyTeamTurnCount };
+  try {
+    state.luckyTeams = [{name:'Альфа', m:'Парень', f:'Девушка'}, {name:'Бета', m:'Парень', f:'Девушка'}];
+    state.luckyCompleted = [10, 5];
+    state.luckyWonLines = [0, 1, 2, 3, 4];
+    state.luckyChecked = new Array(25).fill(true);
+    state.luckyGrid = new Array(25).fill('x');
+    state.luckyLevel = 3;
+    state.luckyFinished = false;
+    state.luckyEscalatedTo2 = true;
+    state.luckyEscalatedTo3 = true;
+    state.luckyCurrentTeamIndex = 0;
+    state.luckyTeamTurnCount = [5, 5];
+    showLuckySummaryModal();
+    const final = document.getElementById('luckySummaryFinalTaskText');
+    assert(final && final.style.display === 'block' && final.textContent.includes('Финальное задание'),
+      'финальное задание должно показываться (display:block): ' + (final && final.style.display));
+    assert(final && final.textContent.includes('«Бета»'),
+      'финальное задание адресовано проигравшей команде «Бета»: ' + (final && final.textContent));
+    assert(!document.getElementById('luckySummaryBonusText'),
+      'блока промежуточного бонуса в сводке быть не должно');
+    // Ничья: проигравшего нет — финал не показываем.
+    state.luckyCompleted = [7, 7];
+    state.luckyFinished = false;
+    showLuckySummaryModal();
+    const finalTie = document.getElementById('luckySummaryFinalTaskText');
+    assert(finalTie && finalTie.style.display === 'none',
+      'при ничьей финальное задание не показывается');
+  } finally {
+    Object.assign(state, { luckyTeams: saved.teams, luckyGrid: saved.grid, luckyChecked: saved.checked,
+      luckyCompleted: saved.completed, luckyWonLines: saved.lines, luckyLevel: saved.level,
+      luckyFinished: saved.finished, luckyEscalatedTo2: saved.esc2, luckyEscalatedTo3: saved.esc3,
+      luckyCurrentTeamIndex: saved.turn, luckyTeamTurnCount: saved.turns });
+  }
+});
+
+// Счастливый билет: полный цикл партии — старт, ходы, повышение уровня, финал.
+test('Счастливый билет: полный цикл партии без ошибок', () => {
+  const savedState = JSON.stringify(state);
+  const savedStorage = localStorage.getItem(STORAGE_KEY);
+  try {
+    state.luckyTeams = [{name:'Альфа', m:'Он', f:'Она'}, {name:'Бета', m:'Он', f:'Она'}];
+    goToLuckyGame();
+    assert(Array.isArray(state.luckyGrid) && state.luckyGrid.length === 25, 'поле 5×5 создано');
+    assert(state.luckyChecked.length === 25 && state.luckyChecked.every(v=>v===false), 'все клетки неотмечены');
+    clickLuckyCell(0);
+    assert(state.luckyChecked[0] === true, 'клетка отмечается по клику');
+    // Собираем первую линию вручную → повышение уровня без промежуточных заданий.
+    state.luckyChecked = new Array(25).fill(false);
+    [0, 1, 2, 3].forEach(i=>{ state.luckyChecked[i] = true; });
+    state.luckyWonLines = [];
+    state.luckyEscalatedTo2 = false;
+    state.luckyEscalatedTo3 = false;
+    state.luckyFinished = false;
+    clickLuckyCell(4);
+    assert(state.luckyLevel === 2, 'после 1-й линии уровень повышен до 2');
+    assert(document.getElementById('luckyLevelUpModal').classList.contains('show'),
+      'показано окно повышения уровня');
+    hideModal('luckyLevelUpModal');
+    // Пауза и продолжение.
+    pauseLuckyGame();
+    assert(state.pausedMode === 'lucky', 'пауза запоминает режим lucky');
+    resumeLuckyGame();
+    assert(state.pausedMode === null, 'продолжение снимает паузу');
+    // Финал: 5 линий → сводка с финальным заданием проигравшей.
+    state.luckyWonLines = [0, 1, 2, 3, 4];
+    state.luckyChecked = new Array(25).fill(true);
+    state.luckyFinished = false;
+    state.luckyCompleted = [15, 10];
+    checkLuckyGameFinished();
+    assert(state.luckyFinished === true, 'партия завершена при 5 линиях');
+    assert(document.getElementById('luckySummaryModal').classList.contains('show'),
+      'показано окно итогов');
+    const final = document.getElementById('luckySummaryFinalTaskText');
+    assert(final && final.style.display === 'block', 'в итогах есть финальное задание');
+    hideModal('luckySummaryModal');
+  } finally {
+    Object.assign(state, JSON.parse(savedState));
+    if (savedStorage === null) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, savedStorage);
+  }
+});
+
 test('Магазин: порядок денег и купюра 2000 ₽', () => {
   const originalCreate = document.createElement;
   const seq = []; // все созданные элементы в порядке создания
