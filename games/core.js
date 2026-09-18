@@ -58,9 +58,12 @@ MIGRATIONS[1] = function(s){
   if(s.kidsSaperCurrentTeamIndex === undefined) s.kidsSaperCurrentTeamIndex = 0;
   if(!s.kidsSaperTeamTurnCount) s.kidsSaperTeamTurnCount = [0,0];
   if(!s.kidsSaperCompleted) s.kidsSaperCompleted = [];
-  if(s.luckyLevel === undefined) s.luckyLevel = 1;
+    if(s.luckyLevel === undefined) s.luckyLevel = 1;
   if(s.luckyCurrentTeamIndex === undefined) s.luckyCurrentTeamIndex = 0;
   if(!s.luckyTeamTurnCount) s.luckyTeamTurnCount = [0,0];
+  // luckyLinesToWin добавлен позже — мигрируем для старых сэвов и защищаем
+  // от некорректных значений (допустимы только 3, 4 или 5).
+  if(typeof s.luckyLinesToWin !== 'number' || ![3,4,5].includes(s.luckyLinesToWin)){ s.luckyLinesToWin = 5; }
   if(s.lastSectionOnPause === undefined) s.lastSectionOnPause = null;
 
   // «Игры для компании»: прежние «Игрок 1/2/...» → порядковые
@@ -255,6 +258,7 @@ let state = {
   luckyCompleted:[], luckyWonLines:[], luckyEscalatedTo2:false, luckyEscalatedTo3:false,
   luckyFinished:false, luckyUsed:{},
   luckyTasksHidden:true, luckyRevealed:[],
+  luckyLinesToWin:5,
   // Викторина (пары) — каждый игрок отвечает на все свои вопросы подряд
   // (quizQuestionCount штук), затем передаёт телефон следующему; см. games/quiz.js.
   quizSelectedLevel:1, quizAnswerSeconds:15, quizQuestionCount:5, quizUsed:{},
@@ -1827,8 +1831,9 @@ function performFullReset(){
   state.luckyTeamTurnCount = [0,0];
   state.luckyGrid = []; state.luckyChecked = []; state.luckyCurrentTeamIndex = 0;
   state.luckyCompleted = []; state.luckyWonLines = []; state.luckyLevel = 1;
-  state.luckyEscalatedTo2 = false; state.luckyEscalatedTo3 = false; state.luckyFinished = false;
+    state.luckyEscalatedTo2 = false; state.luckyEscalatedTo3 = false; state.luckyFinished = false;
   state.luckyTasksHidden = true; state.luckyRevealed = [];
+  state.luckyLinesToWin = 5;
   // Викторина (пары/компания/дети)
   state.quizUsed = {}; state.quizQueue = []; state.quizIndex = 0; state.quizCurrentPlayerIndex = 0;
   state.quizCorrect = []; state.quizTimeMs = [];

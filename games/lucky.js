@@ -103,9 +103,25 @@ function renderLuckyTeams(){
     wrap.appendChild(block);
   });
 }
+function renderLuckyLinesToWinGroup(){
+  const vals = [3,4,5];
+  if(!vals.includes(state.luckyLinesToWin)){ state.luckyLinesToWin = 5; saveState(); }
+  document.querySelectorAll('#luckyLinesToWinGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === state.luckyLinesToWin);
+  });
+}
+document.querySelectorAll('#luckyLinesToWinGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    playSuccessSound();
+    state.luckyLinesToWin = parseInt(btn.dataset.value, 10);
+    saveState();
+    renderLuckyLinesToWinGroup();
+  });
+});
 function goToLuckySetup(){
   goToGameSetup('luckySetup', null, ()=>{
     renderLuckyTeams();
+    renderLuckyLinesToWinGroup();
   });
 }
 function exitLuckySetup(){
@@ -316,7 +332,7 @@ function checkLuckyGameFinished(){
   if(state.luckyFinished) return;
   const total = state.luckyWonLines.length;
   const allChecked = state.luckyChecked.length === 25 && state.luckyChecked.every(Boolean);
-  if(total >= 5 || allChecked){
+    if(total >= (state.luckyLinesToWin || 5) || allChecked){
     state.luckyFinished = true;
     state.inProgress = false;
     saveState();
