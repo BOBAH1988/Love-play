@@ -219,7 +219,10 @@ function exitKidsXoGame(){
 }
 document.getElementById('kidsXoSetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToKidsXoGame(); });
 document.getElementById('kidsXoSetupExitBtn').addEventListener('click', ()=>{ exitKidsXoSetup(); });
-document.getElementById('kidsXoExitBtn').addEventListener('click', ()=>{ showKidsXoSummaryModal(); });
+document.getElementById('kidsXoExitBtn').addEventListener('click', ()=>{
+  showKidsXoSummaryModal();
+  try{ if(window.AppStats) window.AppStats.gameFinish('kidsXo'); }catch(e){}
+});
 document.getElementById('closeKidsXoSummaryBtn').addEventListener('click', ()=>{
   hideModal('kidsXoSummaryModal');
   exitKidsXoGame();

@@ -245,7 +245,10 @@ function exitSoloXoGame(){
 }
 document.getElementById('soloXoSetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToSoloXoGame(); });
 document.getElementById('soloXoSetupExitBtn').addEventListener('click', ()=>{ exitSoloXoSetup(); });
-document.getElementById('soloXoExitBtn').addEventListener('click', ()=>{ showSoloXoSummaryModal(); });
+document.getElementById('soloXoExitBtn').addEventListener('click', ()=>{
+  showSoloXoSummaryModal();
+  try{ if(window.AppStats) window.AppStats.gameFinish('soloXo'); }catch(e){}
+});
 document.getElementById('closeSoloXoSummaryBtn').addEventListener('click', ()=>{
   hideModal('soloXoSummaryModal');
   exitSoloXoGame();

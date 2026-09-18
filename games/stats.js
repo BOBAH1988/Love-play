@@ -48,6 +48,7 @@
       totalGames: 0,
       games: {},
       exits: { setup: 0, midgame: 0 },
+      deviceCount: 0,
       lastOpenAt: new Date().toISOString(),
     };
   }
@@ -125,6 +126,7 @@
     g.games[mode].started++;
     g.games[mode].lastAt = new Date().toISOString();
     g.totalGames++;
+    statsRegisterDevice();
     saveStats();
     currentSession = { mode, at: Date.now() };
   }
@@ -162,6 +164,39 @@
     currentSession = null;
   }
 
+  /** Количество устройств, на которых уже открывалось приложение (по первому сеансу). */
+  function statsDeviceCount() {
+    const g = loadStats();
+    return g.deviceCount || 0;
+  }
+
+  /** Увеличивает счётчик устройств, если это первый сеанс на этом устройстве. */
+  function statsRegisterDevice() {
+    if (!statsEnabled()) return;
+    const g = loadStats();
+    if (!g.deviceId) {
+      g.deviceId = statsDeviceFingerprint();
+      g.deviceCount = (g.deviceCount || 0) + 1;
+      saveStats();
+    }
+  }
+
+  /** Отпечаток устройства: стабильный идентификатор, не переживает очистку cookies. */
+  function statsDeviceFingerprint() {
+    try {
+      let h = '';
+      if (navigator.platform) h += navigator.platform;
+      if (navigator.language) h += '|' + navigator.language;
+      if (navigator.hardwareConcurrency) h += '|' + navigator.hardwareConcurrency;
+      if (!h) h = Math.random().toString(36).slice(2);
+      let c = 0;
+      for (let i = 0; i < h.length; i++) c = ((c << 5) - c) + h.charCodeAt(i);
+      return (c >>> 0).toString(36);
+    } catch (e) {
+      return 'u1';
+    }
+  }
+
   /** Очищает статистику (кнопка «Очистить» на экране статистики). */
   function clearStats() {
     statsCache = emptyStats();
@@ -186,11 +221,14 @@
     }).sort((a, b) => b.started - a.started);
 
     const totalMs = Object.keys(g.games).reduce((sum, k) => sum + (g.games[k].totalMs || 0), 0);
+    const finishedGames = Object.keys(g.games).reduce((sum, k) => sum + (g.games[k].finished || 0), 0);
     return {
       enabled: g.enabled,
       firstSeen: g.firstSeen,
       days: g.days.length,
       totalGames: g.totalGames,
+      finishedGames,
+      devices: g.deviceCount || 0,
       games: rows,
       exits: g.exits,
       totalMs,
@@ -235,5 +273,7 @@
     setEnabled: setStatsEnabled,
     formatDuration,
     exportText: statsExportText,
+    deviceCount: statsDeviceCount,
+    registerDevice: statsRegisterDevice,
   };
 })();
