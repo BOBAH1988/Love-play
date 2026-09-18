@@ -503,6 +503,8 @@
   /* Цели накопления «Лимонадного ларька» — строго одна кнопка в строке. */
   .starter-group-1{flex-direction:column;}
   .starter-group-1 .starter-btn{width:100%; max-width:none; flex:none;}
+  /* Надписи кнопок целей «Хочу накопить на» крупнее базовых (mode-btn) на 30%. */
+  #bizGoalGroup .starter-btn{font-size:15px; padding:11px 8px;}
   .starter-btn{
     flex:1; padding:9px 8px; border-radius:14px;
     border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);
