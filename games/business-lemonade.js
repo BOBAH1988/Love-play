@@ -146,6 +146,9 @@ const BIZ_MIN_CAPITAL_FOR_DAY = BIZ_LEMON_TIERS[0].qty * BIZ_LEMON_TIERS[0].pric
 const BIZ_LOAN_INTEREST = 1.2; // друг просит вернуть на 20% больше
 const BIZ_LOAN_DUE_DAYS = 2;
 
+// Вопросы финальной проверки — только логика («как заработать больше»),
+// без вычислений: игра для детей от 7 лет, расчёты их пугают. Правильный
+// ответ в каждом вопросе очевиден из жизненного опыта, а не из арифметики.
 const BIZ_QUIZ_CONCEPT_POOL = [
   {
     q: 'Куда лучше встать с лимонадом в жаркий день?',
@@ -153,19 +156,48 @@ const BIZ_QUIZ_CONCEPT_POOL = [
     correct: 0
   },
   {
-    q: 'Что выгоднее: купить 10 лимонов или 40 лимонов?',
-    options: ['10 — меньше потрачу', '40 — каждый лимон стоит дешевле', 'Одинаково'],
-    correct: 1
+    q: 'Что сделает твой лимонад привлекательнее для покупателей?',
+    options: ['Чистый стакан, дружелюбная улыбка и красивая вывеска', 'Грустить и молчать за прилавком', 'Прятать лимонад от покупателей'],
+    correct: 0
   },
   {
     q: 'Рядом конкурент продаёт лимонад дешевле тебя. Что делать?',
     options: ['Закрыться и уйти', 'Сделать вкуснее или привлечь внимание', 'Тоже снизить цену до нуля'],
     correct: 1
   },
+  {
+    q: 'Ты поставил очень высокую цену. Что случится?',
+    options: ['Покупателей станет больше', 'Покупателей станет меньше — они уйдут к другим', 'Ничего не изменится'],
+    correct: 1
+  },
+  {
+    q: 'На улице дождь и людей мало. Как заработать больше?',
+    options: ['Расстроиться и разлить лимонад', 'Предложить тёплое угощение или переехать туда, где есть люди', 'Поднять цену в два раза'],
+    correct: 1
+  },
+  {
+    q: 'Зачем вкладывать заработанное в развитие ларька (новый прилавок, большая закупка)?',
+    options: ['Чтобы завтра продать больше и лучше', 'Чтобы деньги лежали без дела', 'Чтобы потратить всё сразу'],
+    correct: 0
+  },
+  {
+    q: 'Покупателю понравился твой лимонад. Что он сделает?',
+    options: ['Уйдёт и забудет', 'Вернётся ещё и расскажет друзьям', 'Пожалуется, что вкусно'],
+    correct: 1
+  },
+  {
+    q: 'Ты потратил все деньги и не на что закупить лимоны. Как лучше поступить в следующий раз?',
+    options: ['Отложить часть выручки на закупку заранее', 'Потратить всю выручку на игрушки', 'Взять лимоны без спроса'],
+    correct: 0
+  },
+  {
+    q: 'Друзья говорят, что твоя палатка стоит неудобно, и мимо мало кто ходит. Что делать?',
+    options: ['Перенести палатку туда, где больше людей', 'Оставить как есть — пусть ходят мимо', 'Закрыть ларёк навсегда'],
+    correct: 0
+  },
 ];
 
 function bizPickRandom(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
-function bizRandInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
 function bizWeatherInfo(){ return BIZ_WEATHERS.find(w => w.key === state.businessLemonadeWeatherKey) || BIZ_WEATHERS[1]; }
 function bizEventInfo(){ return state.businessLemonadeEventIdx >= 0 ? BIZ_EVENTS[state.businessLemonadeEventIdx] : null; }
 function bizLocationInfo(){ return BIZ_LOCATIONS[state.businessLemonadeLocation] || null; }
@@ -1032,74 +1064,18 @@ document.getElementById('bizNextDayBtn').addEventListener('click', ()=>{
   startBizDay();
 });
 
-/* ============ ПРОВЕРКА СЕБЯ (когда цель накопления достигнута) — вопросы каждый раз разные:
-   часть построена на реальных числах именно этой партии (день лога
-   выбирается случайно), часть — концептуальные вопросы из перемешанного
-   пула с перемешанными вариантами ответа. ============ */
-function bizNumericOptions(correct, suffix){
-  const opts = new Set([correct]);
-  const magnitude = Math.max(3, Math.round(Math.abs(correct) * 0.3));
-  const deltas = [-magnitude, Math.max(2, Math.round(magnitude * 0.6)), magnitude * 2];
-  deltas.forEach(d=>{
-    let v = correct + d;
-    let guard = 0;
-    while(opts.has(v) && guard < 20){ v += bizRandInt(1, 4); guard++; }
-    opts.add(v);
-  });
-  const arr = shuffle(Array.from(opts));
-  return { options: arr.map(v => v + suffix), correct: arr.indexOf(correct) };
-}
-function bizNumericQuizFromLog(){
-  const log = (state.businessLemonadeDayLog || []).filter(Boolean);
-  if(log.length === 0) return null;
-  const rec = log[bizRandInt(0, log.length - 1)];
-const templates = [
-     ()=>{
-       const cups = rec.lemonCups || rec.teaCups || 1;
-       const correct = Math.round(rec.totalExpenses / cups);
-       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-       return { q: `В день ${rec.day} (${rec.dowShort}, ${rec.locationName}) ты потратил ${rec.totalExpenses} ₽ и сделал ${cups} стаканов ${(rec.drinkType || "Лимонад").toLowerCase()}. Сколько стоил один стакан (себестоимость)?`, options, correct: idx };
-     },
-     ()=>{
-       const costPerCup = BIZ_SUGAR_PER_CUP + BIZ_CUP_PER_CUP;
-       const correct = Math.round((rec.lemonPrice || rec.teaPrice || 40) - costPerCup);
-       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-       return { q: `В день ${rec.day} ты продавал стакан за ${rec.lemonPrice || rec.teaPrice || 40} ₽, а себестоимость была ${costPerCup} ₽. Сколько ты зарабатывал с одного стакана?`, options, correct: idx };
-     },
-     ()=>{
-       const sold = rec.lemonSold || rec.teaSold || 0;
-       const price = rec.lemonPrice || rec.teaPrice || 40;
-       const correct = sold * price;
-       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-       return { q: `В день ${rec.day} (${rec.locationName}) ты продал ${sold} стаканов ${(rec.drinkType || "Лимонад").toLowerCase()} по ${price} ₽ за стакан. Какая была выручка (сколько всего заплатили покупатели)?`, options, correct: idx };
-     },
-     ()=>{
-       const correct = rec.netProfit;
-       const { options, correct: idx } = bizNumericOptions(correct, ' ₽');
-       return { q: `В день ${rec.day} расходы составили ${rec.totalExpenses} ₽, а выручка — ${rec.totalRevenue} ₽. Какая получилась чистая прибыль?`, options, correct: idx };
-     },
-   ];
-  return bizPickRandom(templates)();
-}
+/* ============ ПРОВЕРКА СЕБЯ (когда цель накопления достигнута) —
+   только логические вопросы о том, как заработать больше. Без вычислений:
+   игра рассчитана на детей от 7 лет, расчёты их пугают. Вопросы каждый
+   раз разные: три случайных из пула, варианты ответа перемешиваются. ============ */
 function generateBizQuiz(){
   const quiz = [];
-  const hasLog = (state.businessLemonadeDayLog || []).filter(Boolean).length > 0;
-  const numericCount = hasLog ? 3 : 0;
-  const seen = new Set();
-  let guard = 0;
-  while(quiz.length < numericCount && guard < 30){
-    guard++;
-    const q = bizNumericQuizFromLog();
-    if(!q || seen.has(q.q)) continue;
-    seen.add(q.q);
-    quiz.push(q);
-  }
   const conceptPool = shuffle(BIZ_QUIZ_CONCEPT_POOL);
-  let ci = 0;
-  while(quiz.length < 5 && ci < conceptPool.length){
-    const item = conceptPool[ci++];
-    const idxArr = shuffle(item.options.map((_, i)=>i));
-    const options = idxArr.map(i => item.options[i]);
+  const count = Math.min(3, conceptPool.length);
+  for(let i = 0; i < count; i++){
+    const item = conceptPool[i];
+    const idxArr = shuffle(item.options.map((_, j)=>j));
+    const options = idxArr.map(j => item.options[j]);
     quiz.push({ q: item.q, options, correct: idxArr.indexOf(item.correct) });
   }
   return shuffle(quiz);
