@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260929b">
+<link rel="stylesheet" href="styles/app.css?v=20260929c">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-29 · v334';
+        window.APP_BUILD = '2026-09-29 · v335';
 </script>
 </head>
 <body>
@@ -452,7 +452,7 @@
   <!-- ===== МЕМОРИ: ИГРА ===== -->
   <!-- 📍 логика: games/kids-memory.js | карточки: cards/cards_kids_memory.js -->
   <section id="kidsMemoryGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🧠 Мемори</h1>
+    <h1 class="title" style="font-size:24px;">🧠 Мемори</h1>
     <div class="td-turn-label" id="kidsMemoryTurnLabel">Ходит: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsMemoryScoreRow"></div>
 
@@ -1241,7 +1241,7 @@
   <!-- ===== ВРЕМЯ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-flash-time.js | карточки: cards/cards_flash.js -->
   <section id="flashTimeGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🕐 Время</h1>
+    <h1 class="title" style="font-size:24px;">🕐 Время</h1>
     <div class="krokodil-score-row" id="flashTimeScoreRow"></div>
 
     <div class="flash-time-card-area" id="flashTimeCard"></div>
@@ -1323,7 +1323,7 @@
   <!-- ===== ФЛЕШ КАРТЫ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-flash.js | карточки: cards/cards_flash.js -->
   <section id="flashGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🇬🇧 Английский язык</h1>
+    <h1 class="title" style="font-size:24px;">🇬🇧 Английский язык</h1>
     <div class="td-turn-label" id="flashProgressLabel">Карточка 1 из 25</div>
 
     <div class="card-area">
@@ -1354,7 +1354,7 @@
   <!-- ===== САПЁР (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-saper.js | карточки: cards/cards_kids_saper.js -->
   <section id="kidsSaperGame" class="screen">
-    <h1 class="title" style="font-size:20px;">💣 Сапёр</h1>
+    <h1 class="title" style="font-size:24px;">💣 Сапёр</h1>
     <div class="subtitle" style="margin-bottom:2px;">Две команды по очереди открывают клетки — собирайте линии и повышайте уровень!</div>
     <div class="bingo-level-label" id="kidsSaperLevelLabel">Уровень: 🔍 Разведка</div>
     <div class="td-turn-label" id="kidsSaperTurnLabel">Ходит: Команда 1</div>
@@ -1416,7 +1416,7 @@
   <!-- ===== МАГАЗИН (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/shop.js | карточки: cards/cards_shop.js -->
   <section id="shopGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🛍️ Магазин</h1>
+    <h1 class="title" style="font-size:24px;">🛍️ Магазин</h1>
 
     <!-- Покупатель: витрина 16 товаров (4×4), собираем корзину -->
     <div id="shopBuyerShopping">
@@ -1587,7 +1587,7 @@
   <!-- ===== ЛИМОНАДНЫЙ ЛАРЁК (БИЗНЕС): ИГРА ===== -->
   <!-- 📍 логика: games/business-lemonade.js -->
   <section id="businessLemonadeGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🍋 Лимонадный ларёк</h1>
+    <h1 class="title" style="font-size:24px;">🍋 Лимонадный ларёк</h1>
     <div class="biz-day-bar">
       <div class="biz-day-track"><div class="biz-day-fill" id="bizDayFill"></div></div>
       <div class="biz-day-label" id="bizDayLabel">День 1 · 🎯 0 из 1000 ₽</div>
@@ -1824,7 +1824,7 @@
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-xo.js -->
   <section id="kidsXoGame" class="screen">
-    <h1 class="title" style="font-size:20px;"><span class="xo-green-x">X</span><span class="xo-o">O</span> Крестики нолики</h1>
+    <h1 class="title" style="font-size:24px;"><span class="xo-green-x">X</span><span class="xo-o">O</span> Крестики нолики</h1>
     <div class="td-turn-label" id="kidsXoTurnLabel">Ходит: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsXoScoreRow"></div>
 
@@ -1879,7 +1879,7 @@
   <!-- ===== ЧЕТЫРЕ В РЯД (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-connect4.js -->
   <section id="kidsC4Game" class="screen">
-    <h1 class="title" style="font-size:20px;">🔴🟡 Четыре в ряд</h1>
+    <h1 class="title" style="font-size:24px;">🔴🟡 Четыре в ряд</h1>
     <div class="td-turn-label" id="kidsC4TurnLabel">Ходит: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsC4ScoreRow"></div>
 
@@ -1943,7 +1943,7 @@
   <!-- ===== КРЕСТИКИ-НОЛИКИ (ДЛЯ ОДНОГО): ИГРА ===== -->
   <!-- 📍 логика: games/solo-xo.js -->
   <section id="soloXoGame" class="screen">
-    <h1 class="title" style="font-size:20px;"><span class="xo-green-x">X</span><span class="xo-o">O</span> Крестики нолики</h1>
+    <h1 class="title" style="font-size:24px;"><span class="xo-green-x">X</span><span class="xo-o">O</span> Крестики нолики</h1>
     <div class="td-turn-label" id="soloXoTurnLabel">Ходит: Вы</div>
     <div class="krokodil-score-row two-player" id="soloXoScoreRow"></div>
 
@@ -1999,7 +1999,7 @@
   <!-- ===== МОРСКОЙ БОЙ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-battleship.js -->
   <section id="kidsBattleshipGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🚢 Морской бой</h1>
+    <h1 class="title" style="font-size:24px;">🚢 Морской бой</h1>
     <div class="td-turn-label" id="kidsBattleshipTurnLabel"></div>
     <div class="intro-text" id="kidsBattleshipStatusText" style="text-align:center; min-height:40px; margin-bottom:6px;"></div>
 
@@ -2065,7 +2065,7 @@
   <!-- ===== МОРСКОЙ БОЙ (ДЛЯ ОДНОГО): ИГРА ===== -->
   <!-- 📍 логика: games/solo-battleship.js -->
   <section id="soloBattleshipGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🚢 Морской бой</h1>
+    <h1 class="title" style="font-size:24px;">🚢 Морской бой</h1>
     <div class="intro-text" id="soloBattleshipStatusText" style="text-align:center;"></div>
 
     <!-- Своё поле (видим свои корабли и попадания бота) -->
@@ -2131,7 +2131,7 @@
   <!-- ===== ЧЕТЫРЕ В РЯД (ДЛЯ ОДНОГО): ИГРА ===== -->
   <!-- 📍 логика: games/solo-connect4.js -->
   <section id="soloC4Game" class="screen">
-    <h1 class="title" style="font-size:20px;">🔴🟡 Четыре в ряд</h1>
+    <h1 class="title" style="font-size:24px;">🔴🟡 Четыре в ряд</h1>
     <div class="td-turn-label" id="soloC4TurnLabel">Ходит: Вы</div>
     <div class="krokodil-score-row two-player" id="soloC4ScoreRow"></div>
 
@@ -2260,7 +2260,7 @@
   <!-- ===== СЕКС-БИНГО: ИГРА ===== -->
   <!-- 📍 логика: games/bingo.js | карточки: cards/cards_bingo.js -->
   <section id="bingoGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🎱 Ваше бинго</h1>
+    <h1 class="title" style="font-size:24px;">🎱 Ваше бинго</h1>
     <div class="subtitle" style="margin-bottom:2px;">Собирайте линии — уровень растёт и открывает бонус</div>
     <div class="bingo-level-label" id="bingoLevelLabel"></div>
     <div class="bingo-grid" id="bingoGrid"></div>
@@ -3058,7 +3058,7 @@
   <!-- ===== МЕМОРИ (ОДИН): ИГРА ===== -->
   <!-- 📍 логика: games/solo-memory.js -->
   <section id="soloMemoryGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🧠 Мемори</h1>
+    <h1 class="title" style="font-size:24px;">🧠 Мемори</h1>
     <div class="krokodil-score-row" id="soloMemoryStatsRow">👣 Ходы: 0</div>
     <div class="td-turn-label" id="soloMemoryTimerLabel">⏱️ 00:00</div>
 
@@ -3122,7 +3122,7 @@
   <!-- ===== ВИСЕЛИЦА: ИГРА ===== -->
   <!-- 📍 логика: games/party-hangman.js | карточки: cards/cards_party_hangman.js -->
   <section id="partyHangmanGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🪢 Виселица</h1>
+    <h1 class="title" style="font-size:24px;">🪢 Виселица</h1>
     <div class="subtitle" id="partyHangmanScoreRow" style="margin-bottom:2px;">🏆 Побед: 0   ·   💀 Поражений: 0</div>
 
     <svg class="hangman-svg" viewBox="0 0 120 150">
@@ -3176,7 +3176,7 @@
        Волчок — SVG-колесо, крутится случайно на нужный угол. -->
   <!-- 📍 логика: games/party-roulette.js -->
   <section id="partyRouletteGame" class="screen">
-    <h1 class="title" style="font-size:20px;">🎰 Рулетка</h1>
+    <h1 class="title" style="font-size:24px;">🎰 Рулетка</h1>
     <div class="roulette-players-row" id="roulettePlayersRow"></div>
 
     <div class="roulette-top-row">

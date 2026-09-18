@@ -20,12 +20,12 @@
            ровно совпадает с линией FAB-кнопок;
          • контент .screen лежит в content-боксе #app, поэтому appPad =
            max(16px, env(safe-area-inset-top)) в нём УЖЕ учтён.
-       Низ закреплённой строки: 12px + safe-area + 36px = safe-area + 48px.
+       Низ закреплённой строки: 12px + safe-area + 44px = safe-area + 56px.
        Контент должен начинаться на 8px ниже: appPad + этот отступ =
-       safe-area + 56px. Отсюда формула: в браузере (appPad 16, safe-area 0)
-       отступ 40px, в установленной PWA (appPad = safe-area) — 56px. Тогда
+       safe-area + 64px. Отсюда формула: в браузере (appPad 16, safe-area 0)
+       отступ 48px, в установленной PWA (appPad = safe-area) — 64px. Тогда
        зазор под названием ровно 8px и пустой полосы нет ни там, ни там. */
-    --screen-top-pad:min(56px, calc(40px + env(safe-area-inset-top, 0px)));
+    --screen-top-pad:min(64px, calc(48px + env(safe-area-inset-top, 0px)));
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
   input, textarea{-webkit-user-select:text; user-select:text; -webkit-touch-callout:default;}
@@ -242,7 +242,7 @@
 
   h1.title{
     text-align:center;
-    font-size:26px;
+    font-size:31.2px;
     font-weight:800;
     margin: 6px 0 4px;
     letter-spacing:.3px;
@@ -2653,8 +2653,8 @@
     /* Линия FAB-кнопок: 12px + safe-area (в браузере safe-area = 0 → 12px). */
     top:calc(12px + env(safe-area-inset-top, 0px));
     left:0; right:0; z-index:1100;
-    height:36px; display:flex; align-items:center; justify-content:center;
-    text-align:center; font-size:26px; font-weight:800;
+    height:44px; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-size:31.2px; font-weight:800;
     color:#fff; padding:0 56px;
     letter-spacing:.5px; line-height:1.2;
     pointer-events:none;
@@ -3257,12 +3257,12 @@
     position:fixed;
     top:calc(12px + env(safe-area-inset-top, 0px));
     left:56px; right:56px;
-    width:auto; max-width:none; height:36px;
+    width:auto; max-width:none; height:44px;
     margin:0; padding:0; transform:none;
     display:flex; align-items:center; justify-content:center;
     line-height:1.2; text-align:center;
     white-space:nowrap; overflow:hidden;
-    font-size:clamp(16px, 4.8vw, 26px);
+    font-size:clamp(19.2px, 5.76vw, 31.2px);
     pointer-events:none;
   }
   .screen > h1.title,

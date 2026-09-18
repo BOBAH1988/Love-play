@@ -922,8 +922,8 @@ function checkStyles(html) {
   //   • appPad (max(16px, safe-area)), который .screen получает просто потому,
   //     что лежит в content-боксе #app — без этого вычитания в браузере
   //     оставались лишние 16px полосы.
-  // Итог: min(56px, calc(40px + env(safe-area-inset-top))) — 40px в браузере,
-  // 56px в PWA; зазор под названием в обоих случаях ровно 8px.
+  // Итог: min(64px, calc(48px + env(safe-area-inset-top))) — 48px в браузере,
+  // 64px в PWA; зазор под названием в обоих случаях ровно 8px.
   check(
     'отступ игровых экранов задан переменной --screen-top-pad',
     /--screen-top-pad:/.test(css),
@@ -931,8 +931,8 @@ function checkStyles(html) {
   );
   check(
     '--screen-top-pad учитывает safe-area и appPad',
-    /--screen-top-pad:\s*min\(56px,\s*calc\(40px\s*\+\s*env\(safe-area-inset-top/.test(css),
-    'формула переменной неверна: в PWA под названием игры вырастет пустая полоса (нужно min(56px, calc(40px + env(safe-area-inset-top))))'
+    /--screen-top-pad:\s*min\(64px,\s*calc\(48px\s*\+\s*env\(safe-area-inset-top/.test(css),
+    'формула переменной неверна: в PWA под названием игры вырастет пустая полоса (нужно min(64px, calc(48px + env(safe-area-inset-top))))'
   );
   const padHardcode = css.match(/\.screen[^{]*\{[^}]*padding-top:\s*(?:48|50)px/);
   check(
