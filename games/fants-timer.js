@@ -622,6 +622,45 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       if(e.target === aboutProjectModal) aboutProjectModal.classList.remove('show');
     });
   }
+
+  // ===== «О проекте»: QR со ссылкой и кнопка «Поделиться» =====
+  // Ссылка — публичная страница приложения. QR рисуется локально
+  // (games/qr.js), без внешних сервисов: обещание «данные не покидают
+  // устройство» не нарушается — генерация это чистая математика.
+  const ABOUT_SHARE_URL = 'https://bobah1988.github.io/Love-play/';
+  const aboutShareBtn = document.getElementById('aboutShareBtn');
+  const aboutQrCanvas = document.getElementById('aboutQrCanvas');
+  if(aboutQrCanvas && window.renderQrCode){
+    window.renderQrCode(aboutQrCanvas, ABOUT_SHARE_URL);
+  }
+  if(aboutShareBtn){
+    aboutShareBtn.addEventListener('click', async ()=>{
+      const shareData = {
+        title: 'Давай играй',
+        text: 'Коллекция игр для пары, компании и детей — заходи играй!',
+        url: ABOUT_SHARE_URL,
+      };
+      // Web Share API (телефон — системное меню «Поделиться»),
+      // на десктопе — фолбэк: копируем ссылку в буфер обмена.
+      try{
+        if(navigator.share){
+          await navigator.share(shareData);
+          showToast('Спасибо, что делитесь! 💛');
+          return;
+        }
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(ABOUT_SHARE_URL);
+          showToast('Ссылка скопирована — вставьте её в письмо или мессенджер');
+          return;
+        }
+        showToast('Ссылка: ' + ABOUT_SHARE_URL);
+      }catch(e){
+        // Пользователь закрыл системное меню — не ошибка.
+        if(e && e.name === 'AbortError') return;
+        showToast('Не удалось поделиться — попробуйте позже');
+      }
+    });
+  }
 })();
 
 // ===== СТРАНИЦА ПРАВИЛ ВСЕХ ИГР (меню → «Правила игр») =====
