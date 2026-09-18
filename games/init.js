@@ -73,6 +73,11 @@ if(state.inProgress){
 try{
   if(sessionStorage.getItem('appJustUpdated')){
     sessionStorage.removeItem('appJustUpdated');
+    // Приложение полностью загрузилось — экран обновления больше не нужен
+    // (страховочный таймер в index.html мог бы спрятать его и сам, но зачем
+    // заставлять игрока ждать).
+    const sp = document.getElementById('updateSplash');
+    if(sp) sp.hidden = true;
     setTimeout(()=>showToast('Обновлено до последней версии'), 400);
   }
 }catch(e){}

@@ -1471,7 +1471,13 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
    обязан сходить в сеть и получить свежие файлы. Но если в этот момент нет
    интернета, перезагрузка уходит «в пустоту»: кэш уже удалён, и приложение
    не откроется вовсе. Поэтому без сети НИЧЕГО не трогаем и честно говорим
-   об этом — старый кэш лучше, чем неработающее приложение. */
+   об этом — старый кэш лучше, чем неработающее приложение.
+
+   Индикация. Игрок жмёт «Обновить» — интерфейс сразу перекрывает экран
+   #updateSplash (спиннер + «Обновляю приложение…»): мгновенный отклик,
+   случайные нажатия по «полуживым» кнопкам исключены. После перезагрузки
+   тот же экран остаётся виден (флаг в sessionStorage), пока init.js не
+   закончит загрузку, — вместо «кнопки есть, но не работают». */
 async function hardUpdateApp(){
   // navigator.onLine === false — достоверный признак отсутствия сети.
   // Значение true ничего не гарантирует, но в этом случае обычный сценарий
@@ -1480,18 +1486,35 @@ async function hardUpdateApp(){
     showToast('Нет интернета — обновление возможно только онлайн');
     return;
   }
+  // Экран обновления показываем ДО любых сетевых действий: на медленной сети
+  // unregister+delete занимают заметное время, и без сплеша страница выглядит
+  // «зависшей», а кнопки — сломанными.
+  const splash = document.getElementById('updateSplash');
+  if(splash){
+    splash.hidden = false;
+    const prog = document.getElementById('updateSplashProgress');
+    if(prog) prog.textContent = 'Готовим обновление…';
+  }
   try{
-    if('serviceWorker' in navigator){
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r=>r.unregister()));
-    }
     if('caches' in window){
       const keys = await caches.keys();
       await Promise.all(keys.map(k=>caches.delete(k)));
     }
-    // Флаг читает games/init.js и показывает тост «Обновлено до последней версии».
+    // Service Worker снимается после чистки кэшей: у нового воркера не будет
+    // ни одного препятствия взять управление страницей сразу (clients.claim),
+    // и загрузка свежих файлов начнётся с первой же перезагрузки.
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    // Флаг читают: инлайновый скрипт в index.html (показ сплеша сразу,
+    // до загрузки скриптов) и games/init.js (тост «Обновлено до последней версии»).
     sessionStorage.setItem('appJustUpdated', '1');
-  }catch(e){}
+  }catch(e){
+    if(splash) splash.hidden = true;
+    showToast('Не удалось обновить — попробуйте ещё раз');
+    return;
+  }
   // Параметр _r=… делает адрес уникальным: так браузер гарантированно
   // обходит кэш навигации. Служебный параметр убирает init.js после загрузки.
   const url = new URL(location.href);

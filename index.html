@@ -110,10 +110,56 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-29 · v340';
+        window.APP_BUILD = '2026-09-29 · v341';
 </script>
+<!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
+     после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
+     экрана задают инлайновые стили в разметке ниже. -->
+<style>
+  #updateSplash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:linear-gradient(180deg,#2b0f2e,#1a0a1c);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:center;padding:24px;box-sizing:border-box;}
+  #updateSplash[hidden]{display:none;}
+  .update-splash-spin{width:46px;height:46px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#ffd27a;animation:updateSplashSpin .9s linear infinite;}
+  @keyframes updateSplashSpin{to{transform:rotate(360deg);}}
+</style>
 </head>
 <body>
+  <!-- ===== ЭКРАН ОБНОВЛЕНИЯ =====
+       Показывается в два момента: (1) на старой странице — сразу после нажатия
+       «Обновить» (hardUpdateApp в games/core.js): перекрывает интерфейс и
+       блокирует случайные нажатия, пока идёт подготовка; (2) на свежей
+       странице — инлайновый скрипт ниже включает его ещё до загрузки
+       styles/app.css и скриптов игр, чтобы вместо полуживого интерфейса
+       (кнопки «не работают», потому что их скрипты ещё едут по сети) игрок
+       видел понятный экран «Обновляю приложение…». Прячет его games/init.js,
+       когда приложение полностью готово (там же тост «Обновлено до последней
+       версии»); страховки — window load и таймер 25 с в скрипте ниже. -->
+  <div id="updateSplash" hidden>
+    <div class="update-splash-spin"></div>
+    <div style="font-size:17px;font-weight:700;">Обновляю приложение…</div>
+    <div id="updateSplashProgress" style="font-size:13px;opacity:.75;min-height:18px;"></div>
+  </div>
+  <script>
+    (function(){
+      try{
+        if(sessionStorage.getItem('appJustUpdated') === '1'){
+          var sp = document.getElementById('updateSplash');
+          if(sp) sp.hidden = false;
+        }
+      }catch(e){}
+      var done = false;
+      function hide(){
+        if(done) return; done = true;
+        var sp = document.getElementById('updateSplash');
+        if(sp) sp.hidden = true;
+      }
+      if(typeof window.addEventListener === 'function'){
+        window.addEventListener('load', function(){ setTimeout(hide, 400); });
+      }
+      // Страховка: даже если скрипты приложения не загрузятся (обрыв сети),
+      // экран не должен висеть вечно.
+      setTimeout(hide, 25000);
+    })();
+  </script>
 <!-- ===== ВОЗРАСТНОЕ ПРЕДУПРЕЖДЕНИЕ (18+) =====
      Показывается один раз при первом заходе с устройства (флаги хранятся
      отдельно от основного state в localStorage, чтобы "Сбросить прогресс"
@@ -4220,7 +4266,7 @@
 <script src="cards/cards_kids_saper.js?v=20260929c"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260928p"></script>
-<script src="games/core.js?v=20260929d"></script>
+<script src="games/core.js?v=20260929f"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -4276,7 +4322,7 @@
 <script src="games/sexquest.js?v=20260927x"></script>
 <script src="games/passionmap.js?v=20260927a"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
-<script src="games/init.js?v=20260929c"></script>
+<script src="games/init.js?v=20260929d"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует.
 
@@ -4332,8 +4378,22 @@
             if(!nw) return;
             nw.addEventListener('statechange', function(){
               if(nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateToastIfWaiting();
+              // Прогресс на экране обновления (если он сейчас показан — идёт
+              // жёсткое обновление): стадии «Загружаю новые файлы…» → «Почти готово…».
+              var prog = document.getElementById('updateSplashProgress');
+              if(prog && !document.getElementById('updateSplash').hidden){
+                if(nw.state === 'installing') prog.textContent = 'Загружаю новые файлы…';
+                if(nw.state === 'installed') prog.textContent = 'Почти готово…';
+              }
             });
           });
+          // Сплеш виден, а воркер уже готов (кэш прогрет с прошлого шага) —
+          // показываем стадию сразу, не дожидаясь updatefound.
+          (function(){
+            var sp = document.getElementById('updateSplash');
+            var prog = document.getElementById('updateSplashProgress');
+            if(sp && prog && !sp.hidden && (reg.active || reg.waiting)) prog.textContent = 'Загружаю новые файлы…';
+          })();
           showUpdateToastIfWaiting();
           if(navigator.onLine !== false){
             reg.update().then(showUpdateToastIfWaiting).catch(function(){});

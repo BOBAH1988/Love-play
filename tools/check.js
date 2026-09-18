@@ -741,8 +741,14 @@ function checkStyles(html) {
 
   // Внутри index.html не должно остаться инлайновых <style>: иначе стили
   // разъедутся по двум местам, и правка одного не подействует.
-  const inline = (html.match(/<style[\s>]/g) || []).length;
-  check('нет инлайновых <style> в index.html', inline === 0, `найдено блоков: ${inline}`);
+  // Исключение — ровно один блок #updateSplash: экран обновления обязан
+  // выглядеть правильно ещё до загрузки styles/app.css (сразу после
+  // перезагрузки при жёстком обновлении CSS едет по сети).
+  const inlineStyleBlocks = (html.match(/<style[\s>]/g) || []).length;
+  const splashStyleInline = /<style[\s>][\s\S]{0,600}?#updateSplash[\s\S]*?<\/style>/.test(html);
+  check('нет инлайновых <style> в index.html (кроме #updateSplash)',
+    inlineStyleBlocks === 0 || (inlineStyleBlocks === 1 && splashStyleInline),
+    `найдено блоков: ${inlineStyleBlocks}`);
 
   if (exists(cssPath)) {
     const css = read(cssPath);
