@@ -615,26 +615,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     showToast('Статистика очищена');
   });
 
-  const __statsExportBtn = document.getElementById('statsExportBtn');
-  if(__statsExportBtn) __statsExportBtn.addEventListener('click', ()=>{
-    if(!window.AppStats) return;
-    // Выгружаем JSON-файлом: его удобно обработать скриптом или прислать
-    // разработчику. Никакой отправки по сети — только локальное скачивание.
-    try{
-      const blob = new Blob([window.AppStats.exportText()], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'love-play-stats-' + new Date().toISOString().slice(0,10) + '.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(()=>URL.revokeObjectURL(url), 1000);
-      showToast('Файл статистики сохранён');
-    }catch(e){
-      showToast('Не удалось сохранить файл');
-    }
-  });
   // Закрытие модалки «О проекте» кликом по фону
   const aboutProjectModal = document.getElementById('aboutProjectModal');
   if(aboutProjectModal){

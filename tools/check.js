@@ -1522,7 +1522,7 @@ function checkStats(html) {
   check('открытие приложения учитывается', /AppStats\.markOpen/.test(init), 'init.js не отмечает открытие');
 
   // Экран статистики: все элементы должны быть в разметке.
-  const required = ['statsModal', 'statsBody', 'statsExportBtn', 'statsToggleBtn', 'statsClearBtn', 'statsDevicesRow', 'statsFinishedRow'];
+  const required = ['statsModal', 'statsBody', 'statsToggleBtn', 'statsClearBtn', 'statsDevicesRow', 'statsFinishedRow'];
   const absent = required.filter((id) => !html.includes(`id="${id}"`));
   check(`разметка экрана статистики (${required.length} элементов)`, absent.length === 0, `нет: ${absent.join(', ')}`);
 

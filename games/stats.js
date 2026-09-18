@@ -12,9 +12,8 @@
 //
 // ВАЖНОЕ ОГРАНИЧЕНИЕ. Статистика привязана к устройству и браузеру:
 // телефон и компьютер считаются отдельно, а данные чужого игрока вы
-// увидеть не сможете — только если он сам выгрузит файл через
-// «Экспортировать». Это плата за обещание «данные не покидают устройство»
-// (см. README, раздел «Приватность»).
+// увидеть не сможете — это плата за обещание «данные не покидают
+// устройство» (см. README, раздел «Приватность»).
 //
 // СТРУКТУРА ЗАПИСИ:
 //   {
@@ -248,18 +247,6 @@
     return h + ' ч ' + (min % 60) + ' мин';
   }
 
-  /** Текст для выгрузки в файл (JSON — его удобно обработать скриптом). */
-  function statsExportText() {
-    const g = loadStats();
-    return JSON.stringify({
-      приложение: 'Давай играй',
-      сборка: window.APP_BUILD || 'неизвестна',
-      выгружено: new Date().toISOString(),
-      устройство: navigator.userAgent,
-      статистика: g,
-    }, null, 2);
-  }
-
   // Публичный интерфейс модуля.
   window.AppStats = {
     load: loadStats,
@@ -272,7 +259,6 @@
     enabled: statsEnabled,
     setEnabled: setStatsEnabled,
     formatDuration,
-    exportText: statsExportText,
     deviceCount: statsDeviceCount,
     registerDevice: statsRegisterDevice,
   };
