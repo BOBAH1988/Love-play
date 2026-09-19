@@ -486,6 +486,103 @@
 
   </section>
 
+  <!-- ===== ФЛАГИ: НАСТРОЙКА =====
+       📍 логика: games/flags.js | карточки: cards/flags.js -->
+  <section id="flagsSetup" class="screen">
+    <h1 class="title">🏳️ Флаги</h1>
+    <div class="subtitle">Угадайте страну по флагу</div>
+
+    <div class="field">
+      <label>Сложность</label>
+      <div class="levels" id="flagsSetupLevels"></div>
+    </div>
+
+    <div class="field">
+      <label>Время на ответ</label>
+      <div class="starter-group timer-duration-group" id="flagsAnswerTimeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="10">10 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="15">15 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="20">20 сек</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Вопросов в игре</label>
+      <div class="starter-group timer-duration-group" id="flagsQuestionCountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="3">3</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
+        <button type="button" class="starter-btn mode-btn" data-value="7">7</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="flagsSetupStartBtn">Начать</button>
+
+    <button class="btn btn-secondary" id="flagsSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== ФЛАГИ: ИГРА =====
+       📍 логика: games/flags.js | карточки: cards/flags.js -->
+  <section id="flagsGame" class="screen">
+    <div class="game-level-label">🏳️ Флаги</div>
+    <div class="td-turn-label" id="flagsTurnLabel">Отвечает: Игрок 1</div>
+    <div class="krokodil-score-row two-player" id="flagsScoreRow"></div>
+    <div class="wishlist-progress-row" id="flagsProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="flagsProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="flagsProgressLabel">0 / 3</div>
+    </div>
+    <div class="timer-bar-track" id="flagsBarTrack">
+      <div class="timer-bar-fill" id="flagsBarFill"></div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="flagsCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="znayu-question-text" id="flagsQuestionText">Загрузка…</div>
+          </div>
+          <div class="znayu-answers" id="flagsAnswers"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wishlist-actions-row" id="flagsHandoffRow" style="display:none;">
+      <button type="button" class="btn btn-primary" id="flagsHandoffStartBtn">Начать</button>
+    </div>
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-secondary btn-pause" id="flagsExitBtn">Пауза</button>
+    </div>
+  </section>
+
+  <!-- ===== ФЛАГИ: ИТОГИ ИГРЫ =====
+       📍 логика: games/flags.js -->
+  <div class="modal-overlay" id="flagsSummaryModal">
+    <div class="modal-card">
+      <div class="modal-title">🏆 Игра окончена</div>
+      <div class="intro-text" id="flagsSummaryIntro">Вот кто лучше всех справился с викториной:</div>
+      <div class="krokodil-summary-list" id="flagsSummaryList"></div>
+      <button class="btn btn-primary" id="closeFlagsSummaryBtn">Завершить игру</button>
+    </div>
+  </div>
+
+  <!-- ===== ПРАВИЛА "ФЛАГИ" =====
+       📍 логика: games/flags.js -->
+  <div class="modal-overlay" id="flagsRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🏳️ Правила игры «Флаги»</div>
+      <div class="intro-text">Угадайте страну по флагу. На каждый вопрос — 4 варианта ответа, верный только один. Время на ответ — 10-20 секунд.</div>
+      <ol class="modal-rules">
+        <li>На экране настройки выберите сложность (лёгкий, средний или трудный), время на ответ (10, 15 или 20 секунд) и количество вопросов (3, 5, 7 или 10).</li>
+        <li>На каждый вопрос показывается флаг страны. Вам нужно выбрать правильное название страны из 4 вариантов.</li>
+        <li>На выбор ответа отводится ограниченное время. Если время вышло — ответ засчитывается как неверный.</li>
+        <li>Игроки отвечают по очереди. После каждого вопроса показывается, правильный ответ или нет.</li>
+        <li>В конце игры показывается таблица результатов с местами, числом верных ответов и временем.</li>
+        <li>«Пауза» сохранит прогресс — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+      </ol>
+      <button class="btn btn-primary" id="closeFlagsRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== МЕМОРИ: НАСТРОЙКА ===== -->
   <!-- 📍 логика: games/kids-memory.js | карточки: cards/cards_kids_memory.js -->
   <section id="kidsMemorySetup" class="screen">
@@ -4321,6 +4418,7 @@
 <script src="games/sexquest.js?v=20260927x"></script>
 <script src="games/passionmap.js?v=20260927a"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
+<script src="games/flags.js?v=20260929a"></script>
 <script src="games/init.js?v=20260929d"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует.

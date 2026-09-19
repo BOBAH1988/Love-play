@@ -214,6 +214,13 @@ window.GAME_REGISTRY = [
     resume: 'resumeBusinessLemonadeGame', finish: 'finishBusinessLemonadeGame', back: 'exitBusinessLemonadeGame',
     screens: ['businessLemonadeGame'],
   },
+  {
+    mode: 'flags', title: '«Флаги»', group: 'two', menuTitle: '🏳️ Флаги',
+    pause: 'pauseFlagsGame', resume: 'resumeFlagsGame', finish: 'finishFlagsGame',
+    exitSummary: 'showFlagsSummaryModal',
+    isEmpty: () => !state.flagsCorrect || !state.flagsCorrect.some((c,i) => c && c > 0 || (state.flagsTimeMs && state.flagsTimeMs[i] > 0)),
+    screens: ['flagsGame'],
+  },
 ];
 
 /* ============ ХЕЛПЕРЫ ============ */

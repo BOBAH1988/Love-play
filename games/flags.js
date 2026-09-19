@@ -62,6 +62,7 @@ document.querySelectorAll('#flagsQuestionCountGroup .starter-btn').forEach(btn =
 });
 function goToFlagsSetup(){
   goToGameSetup('flagsSetup', null, () => {
+    renderFlagsSetup();
     renderFlagsSetupLevels();
     renderFlagsAnswerTimeGroup();
     renderFlagsQuestionCountGroup();
@@ -382,6 +383,7 @@ function goToFlagsGame(){
   drawFlagsQueue();
   state.inProgress = true;
   saveState();
+  renderFlagsGame();
   document.getElementById('flagsSetup').classList.remove('active');
   goToGame(null, 'flagsGame');
   updateMuteBtn();
