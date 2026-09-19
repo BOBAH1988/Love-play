@@ -215,7 +215,7 @@ window.GAME_REGISTRY = [
     screens: ['businessLemonadeGame'],
   },
   {
-    mode: 'flags', title: '«Флаги»', group: 'two', menuTitle: '🏳️ Флаги',
+    mode: 'flags', title: '«Флаги»', group: 'two', menuTitle: '🇷🇺 Флаги',
     noPause: true, back: 'exitFlagsGame',
     screens: ['flagsGame'],
   },

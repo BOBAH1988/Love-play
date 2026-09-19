@@ -76,7 +76,7 @@ function showFlagsQuestion(){
     flagsShowingQuestion = false;
     fadeSwapEl('flagsCard', (el) => {
       el.className = 'card card-empty';
-      el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🏳️</div><div class="card-text">Не удалось загрузить вопросы — попробуйте обновить приложение</div></div></div>`;
+      el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🇷🇺</div><div class="card-text">Не удалось загрузить вопросы — попробуйте обновить приложение</div></div></div>`;
     });
     updateFlagsProgressUI();
     return;
@@ -310,7 +310,7 @@ function renderFlagsGame(){
   if(!wrap) return;
   const total = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 5;
   wrap.innerHTML = `
-    <div class="game-level-label">🏳️ Флаги</div>
+    <div class="game-level-label">🇷🇺 Флаги</div>
     <div class="krokodil-score-row two-player" id="flagsScoreRow"></div>
     <div class="wishlist-progress-row" id="flagsProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="flagsProgressFill"></div></div>
@@ -333,7 +333,7 @@ function onGameRegistryLoaded(){
   const existing = registry.find(g => g.mode === 'flags');
   if(existing) return;
   registry.push({
-    mode: 'flags', title: '«Флаги»', group: 'two', menuTitle: '🏳️ Флаги',
+    mode: 'flags', title: '«Флаги»', group: 'two', menuTitle: '🇷🇺 Флаги',
     noPause: true, back: 'exitFlagsGame',
     screens: ['flagsGame'],
   });

@@ -743,7 +743,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     { icon:'📚', name:'Обучающие игры', games:[
       ['🗂️','Английский язык','flashRulesModal'],
       ['🕐','Время','flashTimeRulesModal'],
-      ['🏳️','Флаги','flagsRulesModal'],
+      ['🇷🇺','Флаги','flagsRulesModal'],
     ]},
   ];
 
