@@ -689,7 +689,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   const RULES_HUB = [
     { icon:'💕', name:'Игры для пар 18+', games:[
       ['🎯','Викторина','quizRulesModal'],
-      ['🏳️','Флаги','flagsRulesModal'],
       ['💬','Вопросы про это','ideasRulesModal'],
       ['💘','Фанты','rulesModal'],
       ['❓','Правда/Действие','tdRulesModal'],
@@ -744,6 +743,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     { icon:'📚', name:'Обучающие игры', games:[
       ['🗂️','Английский язык','flashRulesModal'],
       ['🕐','Время','flashTimeRulesModal'],
+      ['🏳️','Флаги','flagsRulesModal'],
     ]},
   ];
 
