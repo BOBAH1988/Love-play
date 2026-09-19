@@ -26,7 +26,7 @@ function stopFlagsInterval(){
 function drawFlagsQueue(){
   const level = Number(state.flagsSelectedLevel) || 1;
   const all = getFlagsCardsList(level);
-  const total = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 5;
+  const total = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 10;
   if(all.length === 0){
     state.flagsQueue = [];
     state.flagsIndex = 0;
@@ -218,7 +218,7 @@ function fmtFlagsTime(ms){
 function showFlagsSummaryModal(){
   const correct = state.flagsCorrect || 0;
   const timeMs = state.flagsTimeMs || 0;
-  const total = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 5;
+  const total = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 10;
   const medals = ['🥇','🥈','🥉'];
   const place = 1;
   const listHtml = `
@@ -290,7 +290,7 @@ function goToFlagsGame(){
   state.pausedMode = null;
   state.flagsSelectedLevel = Number(state.flagsSelectedLevel) || 1;
   state.flagsAnswerSeconds = state.flagsAnswerSeconds || 10;
-  state.flagsQuestionCount = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 5;
+  state.flagsQuestionCount = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 10;
   state.flagsCorrect = 0;
   state.flagsTimeMs = 0;
   state.flagsIndex = 0;
@@ -319,7 +319,7 @@ function exitFlagsGame(){
 function renderFlagsGame(){
   const wrap = document.getElementById('flagsGame');
   if(!wrap) return;
-  const total = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 5;
+  const total = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 10;
   wrap.innerHTML = `
     <div class="game-level-label">🇷🇺 Флаги</div>
     <div class="krokodil-score-row two-player" id="flagsScoreRow"></div>

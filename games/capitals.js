@@ -27,7 +27,7 @@ function stopCapitalsInterval(){
 function drawCapitalsQueue(){
   const level = Number(state.capitalsSelectedLevel) || 1;
   const all = getCapitalsCardsList(level);
-  const total = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 5;
+  const total = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 10;
   if(all.length === 0){
     state.capitalsQueue = [];
     state.capitalsIndex = 0;
@@ -220,7 +220,7 @@ function fmtCapitalsTime(ms){
 function showCapitalsSummaryModal(){
   const correct = state.capitalsCorrect || 0;
   const timeMs = state.capitalsTimeMs || 0;
-  const total = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 5;
+  const total = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 10;
   const medals = ['🥇','🥈','🥉'];
   const place = 1;
   const listHtml = `
@@ -292,7 +292,7 @@ function goToCapitalsGame(){
   state.pausedMode = null;
   state.capitalsSelectedLevel = Number(state.capitalsSelectedLevel) || 1;
   state.capitalsAnswerSeconds = state.capitalsAnswerSeconds || 10;
-  state.capitalsQuestionCount = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 5;
+  state.capitalsQuestionCount = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 10;
   state.capitalsCorrect = 0;
   state.capitalsTimeMs = 0;
   state.capitalsIndex = 0;
@@ -321,7 +321,7 @@ function exitCapitalsGame(){
 function renderCapitalsGame(){
   const wrap = document.getElementById('capitalsGame');
   if(!wrap) return;
-  const total = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 5;
+  const total = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 10;
   wrap.innerHTML = `
     <div class="game-level-label">🏛️ Столицы</div>
     <div class="krokodil-score-row two-player" id="capitalsScoreRow"></div>

@@ -23,6 +23,7 @@ function getFlashPool(theme){
 function goToFlashSetup(){
   goToGameSetup('flashSetup', null, ()=>{
     renderFlashModeGroup();
+    renderFlashThemeGroup();
     renderFlashCountGroup();
   });
 }

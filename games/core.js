@@ -331,10 +331,10 @@ let state = {
   // flashTimeCount — количество карточек за партию (5/10/25/50, как в «Английском»).
   flashTimePool:[], flashTimeIndex:0, flashTimeScore:0, flashTimeErrors:0, flashTimeCount:10,
   // Флаги — уровень, размер партии, текущая очередь и результат.
-  flagsSelectedLevel:1, flagsAnswerSeconds:10, flagsQuestionCount:5,
+  flagsSelectedLevel:1, flagsAnswerSeconds:10, flagsQuestionCount:10,
   flagsUsed:{}, flagsQueue:[], flagsIndex:0, flagsCorrect:0, flagsTimeMs:0,
   // Столицы — уровень, размер партии, текущая очередь и результат.
-  capitalsSelectedLevel:1, capitalsAnswerSeconds:10, capitalsQuestionCount:5,
+  capitalsSelectedLevel:1, capitalsAnswerSeconds:10, capitalsQuestionCount:10,
   capitalsUsed:{}, capitalsQueue:[], capitalsIndex:0, capitalsCorrect:0, capitalsTimeMs:0,
   // Сапёр (дети) — настоящая сапёрская механика (минное поле, цифры,
   // флажки, победа/поражение). kidsSaperWonLines/kidsSaperEscalated* — устарели,
@@ -490,6 +490,16 @@ function loadState(){
       if(localStorage.getItem('couple-game-autospeak-migrated-v1') !== '1'){
         state.autoSpeak = true;
         localStorage.setItem('couple-game-autospeak-migrated-v1','1');
+        saveState();
+      }
+      // Миграция дефолта размера партии «Флагов»/«Столиц»: 5 → 10 карточек,
+      // однократно (по образцу flash-migrated-v1). Значение 5 было единственным
+      // дефолтом с момента появления настройки — почти все сохранённые пятёрки
+      // выбраны не вручную; осознанный выбор пользователю не навязывается.
+      if(localStorage.getItem('couple-game-default-count-v1') !== '1'){
+        if(state.flagsQuestionCount === 5) state.flagsQuestionCount = 10;
+        if(state.capitalsQuestionCount === 5) state.capitalsQuestionCount = 10;
+        localStorage.setItem('couple-game-default-count-v1','1');
         saveState();
       }
     }
@@ -1755,7 +1765,7 @@ function performFullReset(){
    state.flashTimeCount = 10;
    state.flagsSelectedLevel = 1;
    state.flagsAnswerSeconds = 10;
-   state.flagsQuestionCount = 5;
+   state.flagsQuestionCount = 10;
    state.flagsUsed = {};
    state.flagsQueue = [];
    state.flagsIndex = 0;
@@ -1763,7 +1773,7 @@ function performFullReset(){
    state.flagsTimeMs = 0;
    state.capitalsSelectedLevel = 1;
    state.capitalsAnswerSeconds = 10;
-   state.capitalsQuestionCount = 5;
+   state.capitalsQuestionCount = 10;
    state.capitalsUsed = {};
    state.capitalsQueue = [];
    state.capitalsIndex = 0;
