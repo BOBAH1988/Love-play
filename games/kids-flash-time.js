@@ -222,12 +222,7 @@ document.querySelectorAll('#flashTimeCountGroup .starter-btn').forEach(btn=>{
     renderFlashTimeCountGroup();
   });
 });
-document.getElementById('flashTimeNextBtn').addEventListener('click', ()=>{
-  playSuccessSound();
-  state.flashTimeIndex++;
-  saveState();
-  drawFlashTimeCard();
-});
+
 document.getElementById('flashTimeCard').addEventListener('click', (e)=>{
   if(e.target.classList.contains('flash-time-option')){
     handleFlashTimeOption(e.target);
