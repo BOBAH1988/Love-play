@@ -10,6 +10,8 @@ let flagsAnswered = false;
 let flagsQuestionStartedAt = 0;
 let flagsCurrentOptions = [];
 let flagsShowingQuestion = false;
+let flagsAdvanceTimerId = null; // отложенный переход к следующему вопросу (отменяется при выходе)
+let flagsSpeechTimerId = null;  // отложенный старт озвучки после cancel() (отменяется при выходе)
 
 function getFlagsCardsList(level){
   if(typeof FLAGS_CARDS === 'undefined' || !Array.isArray(FLAGS_CARDS)) return [];
@@ -138,7 +140,8 @@ function answerFlagsQuestion(choiceIdx){
   saveState();
   updateFlagsScoreUI();
   updateFlagsProgressUI();
-  setTimeout(advanceFlagsQueue, 900);
+  if(flagsAdvanceTimerId) clearTimeout(flagsAdvanceTimerId);
+  flagsAdvanceTimerId = setTimeout(advanceFlagsQueue, 900);
 }
 function updateFlagsScoreUI(){
   const wrap = document.getElementById('flagsScoreRow');
@@ -169,6 +172,7 @@ function pickFlagsVoice(){
   return female || pool[0] || null;
 }
 function stopFlagsSpeech(){
+  if(flagsSpeechTimerId){ clearTimeout(flagsSpeechTimerId); flagsSpeechTimerId = null; }
   stopSpeech('flagsTtsHint');
 }
 function speakFlagsCard(){
@@ -184,6 +188,7 @@ function speakFlagsCard(){
   if(voice) utter.voice = voice;
   const hint = document.getElementById('flagsTtsHint');
   const fire = () => {
+    flagsSpeechTimerId = null;
     const current = state.flagsQueue && state.flagsQueue[state.flagsIndex];
     if(current !== item) return;
     if(hint) hint.classList.add('speaking');
@@ -193,7 +198,7 @@ function speakFlagsCard(){
   };
   if(synth.speaking || synth.pending){
     synth.cancel();
-    setTimeout(fire, 50);
+    flagsSpeechTimerId = setTimeout(fire, 50);
   } else {
     fire();
   }
@@ -299,6 +304,8 @@ function goToFlagsGame(){
 function exitFlagsGame(){
   stopFlagsInterval();
   stopFlagsSpeech();
+  if(flagsAdvanceTimerId){ clearTimeout(flagsAdvanceTimerId); flagsAdvanceTimerId = null; }
+  flagsShowingQuestion = false;
   stopAllSounds();
   hideModal('flagsSummaryModal');
   state.inProgress = false;

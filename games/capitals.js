@@ -11,6 +11,8 @@ let capitalsAnswered = false;
 let capitalsQuestionStartedAt = 0;
 let capitalsCurrentOptions = [];
 let capitalsShowingQuestion = false;
+let capitalsAdvanceTimerId = null; // отложенный переход к следующему вопросу (отменяется при выходе)
+let capitalsSpeechTimerId = null;  // отложенный старт озвучки после cancel() (отменяется при выходе)
 
 function getCapitalsCardsList(level){
   if(typeof CAPITALS_CARDS === 'undefined' || !Array.isArray(CAPITALS_CARDS)) return [];
@@ -139,7 +141,8 @@ function answerCapitalsQuestion(choiceIdx){
   saveState();
   updateCapitalsScoreUI();
   updateCapitalsProgressUI();
-  setTimeout(advanceCapitalsQueue, 900);
+  if(capitalsAdvanceTimerId) clearTimeout(capitalsAdvanceTimerId);
+  capitalsAdvanceTimerId = setTimeout(advanceCapitalsQueue, 900);
 }
 function updateCapitalsScoreUI(){
   const wrap = document.getElementById('capitalsScoreRow');
@@ -170,6 +173,7 @@ function pickCapitalsVoice(){
   return female || pool[0] || null;
 }
 function stopCapitalsSpeech(){
+  if(capitalsSpeechTimerId){ clearTimeout(capitalsSpeechTimerId); capitalsSpeechTimerId = null; }
   stopSpeech('capitalsTtsHint');
 }
 function speakCapitalsCard(){
@@ -185,6 +189,7 @@ function speakCapitalsCard(){
   if(voice) utter.voice = voice;
   const hint = document.getElementById('capitalsTtsHint');
   const fire = () => {
+    capitalsSpeechTimerId = null;
     const current = state.capitalsQueue && state.capitalsQueue[state.capitalsIndex];
     if(current !== item) return;
     if(hint) hint.classList.add('speaking');
@@ -194,7 +199,7 @@ function speakCapitalsCard(){
   };
   if(synth.speaking || synth.pending){
     synth.cancel();
-    setTimeout(fire, 50);
+    capitalsSpeechTimerId = setTimeout(fire, 50);
   } else {
     fire();
   }
@@ -301,6 +306,8 @@ function goToCapitalsGame(){
 function exitCapitalsGame(){
   stopCapitalsInterval();
   stopCapitalsSpeech();
+  if(capitalsAdvanceTimerId){ clearTimeout(capitalsAdvanceTimerId); capitalsAdvanceTimerId = null; }
+  capitalsShowingQuestion = false;
   stopAllSounds();
   hideModal('capitalsSummaryModal');
   state.inProgress = false;
