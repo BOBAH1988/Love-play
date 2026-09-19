@@ -134,7 +134,10 @@ function drawFlashTimeCard(){
   renderFlashTimeCard(pool[state.flashTimeIndex]);
 }
 function startFlashTimeGame(){
-  state.flashTimePool = getFlashTimePool().slice().sort(() => Math.random() - 0.5);
+  // Партия — фиксированный набор карточек (как в «Английском языке»):
+  // количество выбирается в настройке (5/10/25/50), пул типа — 50 штук.
+  const count = Math.min(state.flashTimeCount || 10, 50);
+  state.flashTimePool = getFlashTimePool().slice().sort(() => Math.random() - 0.5).slice(0, count);
   state.flashTimeIndex = 0;
   state.flashTimeScore = 0;
   state.flashTimeErrors = 0;
@@ -146,6 +149,7 @@ function startFlashTimeGame(){
 function goToFlashTimeSetup(){
   goToGameSetup('flashTimeSetup', null, ()=>{
     renderFlashTimeSubGroup();
+    renderFlashTimeCountGroup();
   });
 }
 function exitFlashTimeSetup(){
@@ -157,6 +161,14 @@ function renderFlashTimeSubGroup(){
   if(state.flashTimeSub !== 'mech' && state.flashTimeSub !== 'digital'){ state.flashTimeSub = 'mech'; saveState(); }
   document.querySelectorAll('#flashTimeSubGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', btn.dataset.value === state.flashTimeSub);
+  });
+}
+// Количество карточек за партию — те же значения, что в «Английском языке».
+const FLASH_TIME_COUNT_VALUES = [5, 10, 25, 50];
+function renderFlashTimeCountGroup(){
+  if(!FLASH_TIME_COUNT_VALUES.includes(state.flashTimeCount)){ state.flashTimeCount = 10; saveState(); }
+  document.querySelectorAll('#flashTimeCountGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === state.flashTimeCount);
   });
 }
 function goToFlashTimeGame(){
@@ -189,6 +201,14 @@ document.querySelectorAll('#flashTimeSubGroup .starter-btn').forEach(btn=>{
     state.flashTimeSub = btn.dataset.value;
     saveState();
     renderFlashTimeSubGroup();
+  });
+});
+document.querySelectorAll('#flashTimeCountGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    playSuccessSound();
+    state.flashTimeCount = parseInt(btn.dataset.value, 10);
+    saveState();
+    renderFlashTimeCountGroup();
   });
 });
 document.getElementById('flashTimeNextBtn').addEventListener('click', ()=>{

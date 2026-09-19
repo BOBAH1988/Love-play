@@ -328,7 +328,8 @@ let state = {
   flashMode:'learn', flashTheme:'english', flashTimeSub:'digital', flashCount:25,
   flashQueue:[], flashIndex:0, flashAutoSpeak:true,
   // «Время» (обучающая игра — часы) — вынесена в отдельную игру (games/kids-flash-time.js).
-  flashTimePool:[], flashTimeIndex:0, flashTimeScore:0, flashTimeErrors:0,
+  // flashTimeCount — количество карточек за партию (5/10/25/50, как в «Английском»).
+  flashTimePool:[], flashTimeIndex:0, flashTimeScore:0, flashTimeErrors:0, flashTimeCount:10,
   // Сапёр (дети) — настоящая сапёрская механика (минное поле, цифры,
   // флажки, победа/поражение). kidsSaperWonLines/kidsSaperEscalated* — устарели,
   // оставлены для обратной совместимости со старыми сохранениями.
@@ -1733,6 +1734,7 @@ function performFullReset(){
    state.flashTimeIndex = 0;
    state.flashTimeScore = 0;
    state.flashTimeErrors = 0;
+   state.flashTimeCount = 10;
    state.shopMode = 'buyer';
    state.shopHintVisible = true;
    state.kidsTdCompleted = [];
