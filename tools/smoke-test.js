@@ -789,6 +789,136 @@ test('Сценарий: вход из хаба возвращает в хаб, �
     'точка входа должна остаться хабом');
 });
 
+test('Сценарий: игра из плитки раздела возвращает в раздел, а не в меню прошлой игры', () => {
+  // Жалоба (повторялась много раз): игрок сыграл одну игру, вышел, зашёл в
+  // ДРУГУЮ группу, сыграл там игру без своего экрана настройки («Виселица»,
+  // «Ваше бинго», «Рулетка», «Твистер», «Сапёр»…), нажал «Выход» — и попал в
+  // меню НАСТРОЙКИ предыдущей игры. Причина: точку входа запоминал только
+  // goToGameSetup(), а игры-плитки стартуют прямо из раздела хаба через
+  // goToGame() — точка входа оставалась от прошлой игры.
+  // Проверяем фактическое поведение: после выхода игрок в хабе, а не в меню
+  // чужой игры.
+  const called = [];
+  const origGoSetup = global.goToGameSetup;
+  global.goToGameSetup = function (id) { called.push(id); return origGoSetup.apply(this, arguments); };
+  try {
+    // 1. Игрок открыл настройку «Фантов» компании — точка входа она.
+    global.goToPartyFantsSetup();
+    assert(global.getEntryScreenState().id === 'partyFantsSetup',
+      `точка входа должна быть partyFantsSetup, получено ${global.getEntryScreenState().id}`);
+
+    // 2. «Выход» из настройки: игрок снова в разделе хаба (это же состояние
+    //    в браузере отслеживает наблюдатель за .screen).
+    global.returnToSetupUI();
+    assert(global.getEntryScreenState().id === 'setup',
+      `в хабе точка входа должна стать setup, получено ${global.getEntryScreenState().id}`);
+
+    // 3. Партия без своего экрана настройки — прямо из плитки раздела.
+    global.goToPartyHangmanGame();
+    assert(global.getEntryScreenState().id === 'setup',
+      `запуск из плитки раздела не должен оставлять чужую точку входа, получено ${global.getEntryScreenState().id}`);
+
+    // 4. Выход: «шаг назад» — хаб, а не меню «Фантов» компании.
+    global.exitPartyHangmanGame();
+    const activeAfterExit = document.querySelectorAll('.screen.active').map(el => el.id);
+    assert(getElById(stub, 'setup').classList.contains('active'),
+      'выход должен открыть хаб (раздел игр), а не меню прошлой игры');
+    assert(activeAfterExit.join(',') === 'setup',
+      `после выхода активен ровно один экран — хаб, а получено: ${activeAfterExit.join(', ') || 'ничего'}`);
+    assert(!activeAfterExit.includes('partyFantsSetup'),
+      'экран настройки прошлой игры не должен остаться активным');
+    assert(global.getEntryScreenState().id === 'setup',
+      `точка входа должна остаться хабом, получено ${global.getEntryScreenState().id}`);
+  } finally {
+    global.goToGameSetup = origGoSetup;
+  }
+  assert(called.includes('partyFantsSetup'),
+    `настройка «Фантов» компании должна открываться через goToGameSetup, вызовы: ${called.join(', ') || 'нет'}`);
+});
+
+test('Сценарий: запуск со своего экрана настройки не превращает точку входа в хаб', () => {
+  // Обратная сторона механизма: если игрок открыл настройку игры и запустил
+  // партию с неё, «шаг назад» ведёт именно в настройку, а не в хаб — иначе
+  // возврат «перепрыгивает» уровень (ровно этот баг чинили в v229).
+  global.goToPartyFantsSetup();
+  const entryBefore = global.getEntryScreenState().id;
+  global.goToPartyFantsGame();
+  assert(global.getEntryScreenState().id === entryBefore,
+    `запуск с настройки не должен менять точку входа: было ${entryBefore}, стало ${global.getEntryScreenState().id}`);
+  assert(entryBefore === 'partyFantsSetup',
+    `точкой входа должна быть настройка игры, получено ${entryBefore}`);
+});
+
+test('Сценарий: игра другой группы из плитки ведёт в свою группу, а не в чужое меню', () => {
+  // Точный сценарий жалобы: сыграл игру в одной группе, вышел, зашёл в ДРУГУЮ
+  // группу, сыграл игру, нажал «Выход» — и оказался в меню ПРОШЛОЙ игры.
+  // «Сапёр» — типичный случай: у него нет своего экрана настройки, партия
+  // стартует прямо из раздела «Игры с детьми», а выход зовёт
+  // exitGame('kidsSaperGame', 'kidsSaperSetup') — старый запасной путь возврата.
+  const origGoSetup = global.goToGameSetup;
+  global.goToGameSetup = function (id) { return origGoSetup.apply(this, arguments); };
+  try {
+    // Прошлая игра: игрок открыл настройку «Фантов» компании и вышел из неё
+    // кнопкой «Выход» на самой настройке — она переключает экраны вручную,
+    // без exitGame() (это и есть путь, на котором точка входа «залипала»).
+    global.goToPartyFantsSetup();
+    assert(global.getEntryScreenState().id === 'partyFantsSetup',
+      `после открытия настройки точка входа — она сама, получено ${global.getEntryScreenState().id}`);
+    global.exitPartyFantsSetup();
+    assert(global.getEntryScreenState().id === 'setup',
+      `после выхода из настройки точка входа — хаб, получено ${global.getEntryScreenState().id}`);
+
+    // Другая группа: раздел «Игры для детей», игра из плитки.
+    global.showSetupView('kidsView');
+    global.goToKidsSaperGame();
+    const entry = global.getEntryScreenState();
+    assert(entry.id === 'setup',
+      `запуск из плитки раздела должен запомнить хаб, получено ${entry.id}`);
+    assert(entry.view === 'kidsView',
+      `возврат должен открыть тот же раздел (kidsView), получено ${entry.view}`);
+
+    global.exitKidsSaperGame();
+    const activeAfterExit = document.querySelectorAll('.screen.active').map(el => el.id);
+    assert(getElById(stub, 'setup').classList.contains('active'),
+      'выход должен открыть хаб, а не меню «Фантов» компании');
+    assert(activeAfterExit.join(',') === 'setup',
+      `активен должен остаться только хаб, получено: ${activeAfterExit.join(', ') || 'ничего'}`);
+    assert(global.getEntryScreenState().id === 'setup',
+      `точка входа должна остаться хабом, получено ${global.getEntryScreenState().id}`);
+    assert(getElById(stub, 'kidsView').classList.contains('section-open'),
+      'возврат в хаб должен открыть тот раздел, откуда запускали игру (kidsView)');
+  } finally {
+    global.goToGameSetup = origGoSetup;
+  }
+});
+
+test('Сценарий: выход из игры, запущенной из хаба, ведёт в хаб (а не в настройку чужой игры)', () => {
+  // Здесь проверяется вторая половина механизма: запуск партии из раздела
+  // хаба сам обновляет точку входа. Нужно это для случаев, когда игрок ушёл
+  // из экрана настройки предыдущей игры «вручную» (такие обработчики есть:
+  // #fantyExitBtn и другие exitXxxSetup просто меняют классы, не трогая
+  // точку входа) — иначе она оставалась от ЧУЖОЙ игры, и «Выход» возвращал
+  // в её меню. Кнопки «Выход» у настроек по-прежнему возвращают в хаб.
+  global.goToFantySetup();
+  assert(global.getEntryScreenState().id === 'fantySetup',
+    `настройка «Фантов» должна стать точкой входа, получено ${global.getEntryScreenState().id}`);
+  getElById(stub, 'fantyExitBtn').click();
+  assert(getElById(stub, 'setup').classList.contains('active'),
+    'после «Выхода» из настроек должен открыться хаб');
+
+  // Партия без своего экрана настройки — из плитки раздела «Игры для одного».
+  global.showSetupView('soloView');
+  global.goToPartyHangmanGame();
+  assert(global.getEntryScreenState().id === 'setup',
+    `запуск из плитки раздела должен перезаписать точку входа хабом, получено ${global.getEntryScreenState().id}`);
+
+  global.exitPartyHangmanGame();
+  assert(getElById(stub, 'setup').classList.contains('active'),
+    'выход должен вернуть в хаб');
+  assert(global.getEntryScreenState().id !== 'fantySetup',
+    'выход не должен возвращать в настройку «Фантов» — чужой игры');
+});
+
 test('Сценарий: exitGame сбрасывает пару флагов и закрывает окно паузы', () => {
   // Правило AGENTS.md: pausedMode и inProgress сбрасываются вместе, иначе
   // настройки в хабе остаются заблокированными, а окно паузы висит поверх.

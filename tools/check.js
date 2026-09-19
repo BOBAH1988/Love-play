@@ -719,6 +719,37 @@ function checkExitNavigation() {
     deadButtons.length === 0,
     `без обработчика: ${deadButtons.join(', ')}`
   );
+
+  // 6. «Шаг назад» не должен вести в меню ПРОШЛОЙ игры. Механизм v342: точка
+  //    входа обновляется, когда игрок действительно стоит в хабе, а партия,
+  //    запущенная прямо из плитки раздела (без своего экрана настройки),
+  //    возвращает в раздел хаба. Раньше точку входа запоминал только
+  //    goToGameSetup(), поэтому «Бинго», «Виселица», «Рулетка», «Твистер»,
+  //    «Сапёр» и другие игры-плитки уводили в меню предыдущей игры.
+  check(
+    'хаб фиксируется точкой входа, когда показан',
+    /function showSetupView/.test(core) &&
+      /rememberReturnScreen\('setup'/.test(core) &&
+      /noteVisibleScreen\('setup'\)/.test(core),
+    'showSetupView()/returnToSetupUI() не обновляют точку входа — выход вернёт в меню прошлой игры'
+  );
+  check(
+    'goToGame() понимает запуск из меню хаба',
+    /function launchedFromHubMenu/.test(core) &&
+      /HUB_MENU_SCREENS/.test(core) &&
+      /launchedFromHubMenu\(launchOrigin/.test(core),
+    'goToGame() не отличает запуск из раздела хаба от запуска со своего экрана настройки'
+  );
+  check(
+    'возврат в хаб открывает тот же раздел',
+    /saved\s*===\s*'setup'/.test(core) && /showSetupView\(entry\.view\)/.test(core),
+    "returnToEntryScreen() не открывает раздел хаба из точки входа — игрок попадает в чужую группу"
+  );
+  check(
+    'активный экран отслеживается наблюдателем',
+    /MutationObserver/.test(core) && /__noteActiveScreen/.test(core),
+    'нет наблюдателя за активным экраном — ручные переключения экранов в играх не учитываются'
+  );
 }
 
 

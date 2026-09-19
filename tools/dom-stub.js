@@ -35,6 +35,36 @@ function setGlobal(name, value) {
  */
 function createDomStub(html, { trackHandlers = false } = {}) {
   const ids = new Set([...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]));
+  // Экраны (<... class="screen ...">) — как в браузере, где смена их класса
+  // ловится MutationObserver'ом (games/core.js, «КОНТЕКСТ ЗАПУСКА ПАРТИИ»).
+  // Заглушка повторяет это: когда экран получает класс .active, она сообщает
+  // приложению, какой экран теперь виден. Без этого сценарии «выход/возврат»
+  // в Node не воспроизводились: код, который вручную включает #setup
+  // (десятки мест в играх), оставался для теста незамеченным — и настоящий
+  // баг «выход ведёт в меню прошлой игры» тесты не ловили.
+  const screenIds = new Set(
+    [...html.matchAll(/<[a-zA-Z][^>]*>/g)]
+      .map((m) => m[0])
+      .map((tag) => {
+        const id = /id="([^"]+)"/.exec(tag);
+        const cls = /class="([^"]*)"/.exec(tag);
+        return id && cls && /(^|\s)screen(\s|$)/.test(cls[1]) ? id[1] : null;
+      })
+      .filter(Boolean)
+  );
+  // Сообщаем приложению о «стал активным экран X» — если core.js это слушает.
+  function noteScreenActive(id) {
+    if (typeof global.__noteActiveScreen === 'function') global.__noteActiveScreen(id);
+  }
+  // Элементы экранов: создаём лениво, но в общем store — чтобы тот же объект
+  // отдавал и getElementById, и document.querySelector('.screen').
+  function elById(id) {
+    if (!store.has(id)) store.set(id, makeEl(id, trackHandlers));
+    return store.get(id);
+  }
+  function screenEls() {
+    return [...screenIds].map((id) => elById(id));
+  }
   const store = new Map();
   const missingIds = new Set();
 
@@ -54,9 +84,20 @@ function createDomStub(html, { trackHandlers = false } = {}) {
       checked: false,
       disabled: false,
       classList: {
-        add: (...c) => c.forEach((x) => classes.add(x)),
+        add: (...c) => c.forEach((x) => {
+          classes.add(x);
+          // Экран стал видимым — сообщаем приложению (аналог MutationObserver).
+          if (x === 'active' && screenIds.has(id)) noteScreenActive(id);
+        }),
         remove: (...c) => c.forEach((x) => classes.delete(x)),
-        toggle: (c, force) => (force ? classes.add(c) : classes.delete(c)),
+        toggle: (c, force) => {
+          if (force) {
+            classes.add(c);
+            if (c === 'active' && screenIds.has(id)) noteScreenActive(id);
+          } else {
+            classes.delete(c);
+          }
+        },
         contains: (c) => classes.has(c),
       },
       _text: '',
@@ -119,11 +160,23 @@ function createDomStub(html, { trackHandlers = false } = {}) {
     // Ключевой момент: неизвестный id → null, как в браузере.
     getElementById(id) {
       if (!ids.has(id)) { missingIds.add(id); return null; }
-      if (!store.has(id)) store.set(id, makeEl(id, trackHandlers));
-      return store.get(id);
+      return elById(id);
     },
-    querySelector() { return makeEl('_q'); },
-    querySelectorAll() { return []; },
+    // Селекторы экранов ведут себя как в браузере: по ним навигация гасит
+    // старые экраны и включает целевой (см. core.js: ensureSingleActiveScreen,
+    // activateSingleScreen, goToGame, exitGame). Без этого «экран делится на
+    // две части» и «остался активным чужой экран» в тестах не воспроизводились
+    // бы вовсе. Для остальных селекторов поведение прежнее — пустая заглушка.
+    querySelector(selector) {
+      if (selector === '.screen.active') return screenEls().find((el) => el.classList.contains('active')) || null;
+      if (selector === '.screen') return screenEls()[0] || null;
+      return makeEl('_q');
+    },
+    querySelectorAll(selector) {
+      if (selector === '.screen') return screenEls();
+      if (selector === '.screen.active') return screenEls().filter((el) => el.classList.contains('active'));
+      return [];
+    },
     createElement(tag) { return makeEl('_' + tag); },
     createTextNode() { return {}; },
     createDocumentFragment() { return makeEl('_frag'); },

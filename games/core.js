@@ -2,6 +2,19 @@
 // Загружается через <script src="games/core.js"></script> в index.html.
 
 
+/* ============ КОНТЕКСТ ЗАПУСКА ПАРТИИ ============
+ * «Шаг назад» обязан вести на экран, с которого игрок пришёл:
+ *     Главная → группа игр → (экран настройки игры) → партия.
+ * Здесь только объявление: какой экран был активен перед запуском партии.
+ * Объявлено в самом начале файла (а не рядом с goToGame()), потому что
+ * переходы экранов случаются уже при загрузке скриптов — например магазин
+ * при инициализации зовёт showSetupView(). `let` в середине файла в этот
+ * момент ещё не инициализирован, и запись в него роняет приложение (TDZ).
+ * Подробности механизма — в блоке «КОНТЕКСТ ЗАПУСКА ПАРТИИ» ниже.
+ */
+let screenSeenActive = 'setup';
+
+
 /* ============ ДАННЫЕ КАРТ ============ */
 const LEVELS = [
   {id:1, key:'meet', name:'Знакомство', desc:'Лёгкие вопросы для начала', color:'#8fd9c4', icon:'🤝'},
@@ -599,6 +612,25 @@ function showSetupView(name){
   if(name === 'kidsView' && typeof renderKidsPlayers === 'function') renderKidsPlayers();
   else if(name === 'businessView' && typeof renderBusinessPlayers === 'function') renderBusinessPlayers();
   else if((name === 'companyView' || name === 'twoPlayerView') && typeof renderPartyPlayers === 'function') renderPartyPlayers();
+  // Хаб снова ВИДИМЫЙ экран (не просто переключили класс у невидимого блока) —
+  // значит, «родитель» для любой игры, запущенной отсюда, именно хаб. Это
+  // закрывает целый класс багов «выход ведёт в меню ПРОШЛОЙ игры»: точка входа
+  // запоминалась только в goToGameSetup(), а игры, которые стартуют прямо из
+  // плитки без своего экрана настройки («Бинго», «Виселица», «Рулетка»,
+  // «Твистер», «Сапёр», «Ответы на вопросы», «Во что поиграть»), её не
+  // обновляли — и выход возвращал в экран настройки игры, сыгранной раньше.
+  // Раздел запоминаем вместе с хабом: возврат откроет ту же группу.
+  // Условие «#setup активен» важно: в goToGameSetup() showSetupView() зовётся,
+  // когда активен уже целевой экран настройки — там точку входа перезаписывать
+  // нельзя (иначе выход возвращал бы в хаб вместо самой настройки игры).
+  const hubEl = document.getElementById('setup');
+  if(hubEl && hubEl.classList.contains('active')){
+    noteVisibleScreen('setup');
+    // Во время паузы хаб показывается «поверх партии»: это не выход игрока в
+    // меню, поэтому точку входа не трогаем — иначе после «Продолжить игру»
+    // выход из партии вёл бы в хаб, а не в меню самой игры.
+    if(!state.pausedMode) rememberReturnScreen('setup', name);
+  }
 }
 document.getElementById('homeTwoPlayerBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('twoPlayerView'); });
 document.getElementById('homeCompanyBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('companyView'); });
@@ -650,6 +682,9 @@ function goToGameSetup(gameSetupId, targetView, beforeSwitch){
   const targetEl = document.getElementById(gameSetupId);
   if(targetEl){
     targetEl.classList.add('active');
+    // Для запуска партии важно, что игрок сейчас на экране настройки этой игры
+    // (см. «КОНТЕКСТ ЗАПУСКА ПАРТИИ»): тогда выход вернёт сюда, а не в хаб.
+    noteVisibleScreen(gameSetupId);
   } else {
     console.warn('goToGameSetup: экран #'+gameSetupId+' не найден в DOM');
   }
@@ -1046,6 +1081,13 @@ function updateProgressBar(fillId, labelId, remaining, total, showMinutes){
 //   document.getElementById('XxxGame').classList.add('active');
 // и обратную (exitXxxGame). Теперь оба перехода — одна строка.
 function goToGame(setupId, gameId, beforeSwitch){
+  // Откуда игрок запускает партию — читаем ДО гашения экранов: это решает,
+  // куда вернёт выход (см. «КОНТЕКСТ ЗАПУСКА ПАРТИИ»). Игры со своим экраном
+  // настройки доходят сюда с него — там точку входа уже записал
+  // goToGameSetup(). А если партия стартовала из плитки раздела или из
+  // подменю хаба, то «на шаг назад» — это сам хаб с текущим разделом: иначе
+  // игрок попадёт в меню игры, которую он играл РАНЬШЕ.
+  const launchOrigin = screenSeenActive;
   if(beforeSwitch) beforeSwitch();
   // Гарантируем единственный активный экран: убираем active со всех текущих
   // экранов (включая #setup и подменю вроде #kidsBoardGamesMenu), затем
@@ -1058,6 +1100,15 @@ function goToGame(setupId, gameId, beforeSwitch){
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
   const game = document.getElementById(gameId);
   if(game) game.classList.add('active');
+  // Старт из хаба (плитка раздела или подменю) — точкой входа становится хаб с
+  // текущим разделом. Проверка стоит ПОСЛЕ включения игрового экрана, поэтому
+  // rememberReturnScreen уже не может быть перетёрт перерисовкой разделов.
+  // «Продолжить игру» (resumingPausedSession) — исключение: это возврат в уже
+  // начатую партию, и выход из неё должен вести в меню самой игры.
+  if(launchedFromHubMenu(launchOrigin) && !resumingPausedSession){
+    rememberReturnScreen('setup', getCurrentSetupView());
+  }
+  noteVisibleScreen(gameId);
   // Чужую паузу снимаем ЗДЕСЬ, а не в каждом обработчике меню по отдельности.
   // Раньше сброс pausedMode/inProgress был «размазан» по кнопкам хаба: где-то
   // его продублировали (gameWrBtn), где-то забыли (gameIdeasBtn) — и после
@@ -1111,7 +1162,10 @@ function exitGame(gameId, setupId){
   const resumed = (typeof returnToEntryScreen === 'function') && returnToEntryScreen();
   if(!resumed){
     const setup = document.getElementById(setupId || 'setup');
-    if(setup) setup.classList.add('active');
+    if(setup){
+      setup.classList.add('active');
+      noteVisibleScreen(setupId || 'setup');
+    }
   }
   if(typeof updateResumeUI === 'function') updateResumeUI();
   // Останавливаем все звуки (Web Audio API + SpeechSynthesis)
@@ -1448,12 +1502,19 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
   // при добавлении игры ветку легко было забыть. Теперь достаточно записи
   // в реестре. См. историю бага «Закончить игру не работала у 4 игр».
   const game = gameByMode(state.pausedMode);
-  if(game && callGame(game.resume)){
-    ensureSingleActiveScreen();
-    return;
+  // Помечаем, что это продолжение партии: goToGame() внутри resume-функции не
+  // должен переписывать точку входа на хаб (см. «КОНТЕКСТ ЗАПУСКА ПАРТИИ»).
+  resumingPausedSession = true;
+  try{
+    if(game && callGame(game.resume)){
+      ensureSingleActiveScreen();
+      return;
+    }
+    // Запасной путь: у «Фантов» продолжение идёт через общую механику карточек.
+    resumeFantyGame();
+  } finally {
+    resumingPausedSession = false;
   }
-  // Запасной путь: у «Фантов» продолжение идёт через общую механику карточек.
-  resumeFantyGame();
 });
 
 
@@ -2204,6 +2265,7 @@ function activateSingleScreen(id){
   if(!el){ console.warn('activateSingleScreen: экран #' + id + ' не найден'); return false; }
   document.querySelectorAll('.screen.active').forEach(s=>s.classList.remove('active'));
   el.classList.add('active');
+  noteVisibleScreen(id);
   window.scrollTo(0, 0);
   return true;
 }
@@ -2216,6 +2278,59 @@ function getCurrentSetupView(){
   }
   return null;
 }
+/* ============ КОНТЕКСТ ЗАПУСКА ПАРТИИ ============
+ * «Шаг назад» обязан вести на экран, с которого игрок пришёл:
+ *     Главная → группа игр → (экран настройки игры) → партия.
+ * Проблема: класс .active ставят десятки мест в 30 файлах (в том числе
+ * вручную, без общих хелперов), поэтому «откуда пришёл» нельзя надёжно
+ * посчитать в каждой функции запуска. Именно из-за таких догадок повторялся
+ * баг «выход возвращает в меню ПРОШЛОЙ игры»: у игр, которые стартуют прямо
+ * из плитки раздела («Ваше бинго», «Виселица», «Рулетка», «Твистер»,
+ * «Сапёр», «Знаю тебя», «Во что поиграть?»), своего экрана настройки нет
+ * вовсе, точка входа оставалась от предыдущей игры, и выход уводил в её
+ * меню — на шаг назад в чужой ветке.
+ *
+ * Решение: единственный наблюдатель за классом .screen запоминает, какой экран
+ * был активен перед запуском партии (screenSeenActive), а goToGame() по нему
+ * решает, что возвращать «на шаг назад»: свой экран настройки (если игрок его
+ * открывал) или сам хаб с текущим разделом.
+ * Само поле screenSeenActive объявлено в начале файла (см. TDZ-комментарий).
+ */
+function noteVisibleScreen(id){
+  if(id) screenSeenActive = id;
+}
+// Наружу — для тестовой среды: в браузере ту же роль играет MutationObserver
+// ниже, в Node (tools/dom-stub.js) заглушка DOM сама зовёт этот хук, когда
+// экран получает класс .active. Так сценарии навигации проверяются честно.
+window.__noteActiveScreen = noteVisibleScreen;
+// Экраны-«меню»: игрок в хабе и запускает игру прямо из списка раздела.
+// #kidsBoardGamesMenu — подменю настольных игр детей: партия из него
+// запускается так же, как из плитки раздела, и «назад» должно вести в хаб.
+const HUB_MENU_SCREENS = new Set(['setup','kidsBoardGamesMenu']);
+function launchedFromHubMenu(screenId){
+  return HUB_MENU_SCREENS.has(screenId || '');
+}
+// Флаг «партия не начинается заново, а продолжается после паузы». Ставит его
+// обработчик #resumeBtn на время вызова resume-функции игры: продолжение —
+// это возврат в ту же партию, поэтому точку входа переписывать нельзя (иначе
+// выход уводил бы в хаб вместо меню игры, которую игрок продолжает).
+let resumingPausedSession = false;
+// Подключаем наблюдатель за .screen (в браузере): он ловит ВСЕ места, где
+// экран включается вручную (в том числе в играх), поэтому механизм не зависит
+// от аккуратности каждой функции. В тестовой среде (Node, без DOM) наблюдателя
+// нет — там состояние обновляют явные вызовы noteVisibleScreen() из
+// goToGameSetup(), activateSingleScreen(), showSetupView() и goToGame().
+(function startScreenWatcher(){
+  if(typeof MutationObserver === 'undefined' || typeof document === 'undefined') return;
+  const screens = document.querySelectorAll ? document.querySelectorAll('.screen') : [];
+  if(!screens || !screens.length) return;
+  const observer = new MutationObserver(()=>{
+    screens.forEach(el=>{
+      if(el.classList && el.classList.contains('active')) noteVisibleScreen(el.id);
+    });
+  });
+  screens.forEach(el=>observer.observe(el, {attributes:true, attributeFilter:['class']}));
+})();
 // Запомнить точку входа. view — раздел хаба (#setup), в котором был игрок:
 // он нужен, если возвращаться придётся в сам хаб (например из «Виселицы»).
 function rememberReturnScreen(id, view){
@@ -2234,6 +2349,15 @@ function getEntryScreenState(){
 function returnToEntryScreen(){
   const entry = getEntryScreenState();
   const saved = entry.id;
+  // Возврат в ХАБ: игру запускали прямо из раздела меню, без своего экрана
+  // настройки. Открываем #setup и тот же раздел — иначе игрок увидел бы
+  // группу, из которой уходил в прошлый раз, то есть «шаг назад не туда».
+  if(saved === 'setup'){
+    if(!activateSingleScreen('setup')) return false;
+    if(entry.view && typeof showSetupView === 'function') showSetupView(entry.view);
+    if(typeof releaseWakeLockNow === 'function') releaseWakeLockNow();
+    return true;
+  }
   if(saved && activateSingleScreen(saved)){
     const setup = document.getElementById('setup');
     const wasInSetup = !!(setup && setup.classList.contains('active'));
@@ -2264,6 +2388,12 @@ function returnToSetupUI(){
   renderLevelToggles();
   updateResumeUI();
   releaseWakeLockNow();
+  // Хаб показан — фиксируем его как точку входа (см. комментарий в
+  // showSetupView): сюда вернёт выход из игры, запущенной прямо из плитки.
+  // Но не во время паузы: пауза лишь показывает хаб «поверх партии», и выход
+  // из неё должен вести в меню самой игры.
+  noteVisibleScreen('setup');
+  if(!state.pausedMode) rememberReturnScreen('setup', getCurrentSetupView());
 }
 // Пауза: выйти в настройки, не сбрасывая счёт и прогресс — можно продолжить позже
 function pauseGame(){
