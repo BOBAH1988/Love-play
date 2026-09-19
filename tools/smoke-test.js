@@ -216,6 +216,33 @@ test('Данные «Столиц» загружены и формируют о�
   }
 });
 
+test('Колоды «Флагов»/«Столиц» покрывают все SVG-флаги ровно по одному разу (15/14/14)', () => {
+  const svgFiles = fs.readdirSync(path.join(ROOT, 'flags-svg'))
+    .filter(f => f.endsWith('.svg'))
+    .sort();
+  assert(svgFiles.length === 43, `в flags-svg/ должно быть 43 SVG-флага, найдено ${svgFiles.length}`);
+  [['FLAGS_CARDS', 'Флагов'], ['CAPITALS_CARDS', 'Столиц']].forEach(([name, label]) => {
+    const cards = eval(`typeof ${name} === "undefined" ? null : ${name}`);
+    assert(Array.isArray(cards) && cards.length === 43,
+      `колода «${label}» должна содержать все 43 карточки`);
+    const perLevel = { 1: 0, 2: 0, 3: 0 };
+    const seen = [];
+    cards.forEach(card => {
+      assert(perLevel[card.level] !== undefined, `уровень карточки должен быть 1..3: ${card.level}`);
+      perLevel[card.level] += 1;
+      seen.push(card.flag);
+      assert(Array.isArray(card.a) && card.a.length === 4,
+        `у карточки «${card.country || card.flag}» должно быть 4 варианта ответа`);
+    });
+    assert(perLevel[1] === 15 && perLevel[2] === 14 && perLevel[3] === 14,
+      `раскладка по уровням должна быть 15/14/14, фактическая ${perLevel[1]}/${perLevel[2]}/${perLevel[3]}`);
+    assert(new Set(seen).size === seen.length, `флаги в колоде «${label}» не должны повторяться`);
+    svgFiles.forEach(f => {
+      assert(seen.includes(`flags-svg/${f}`), `флаг ${f} должен быть в колоде «${label}»`);
+    });
+  });
+});
+
 console.log('\n=== Проверка наличия критических DOM-элементов ===');
 
 const criticalElements = [
