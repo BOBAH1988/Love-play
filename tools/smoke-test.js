@@ -954,6 +954,25 @@ test('Сценарий: настройки «Столиц» и выход без
     global.stopCapitalsInterval();
   }
 });
+test('Крестик не добавляется в окна итогов — выход только по кнопке', () => {
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+  const inject = scripts.find(s => s.includes('modal-close-btn'));
+  assert(inject, 'инлайн-скрипт, добавляющий крестик в модалки, должен существовать');
+  assert(/SummaryModal\$/.test(inject),
+    'инжект крестика должен исключать окна итогов (*SummaryModal)');
+  assert(/ResultsModal\$|ResultModal\$/.test(inject),
+    'инжект крестика должен исключать окна результатов (*ResultsModal/*ResultModal)');
+  ['flagsSummaryModal', 'capitalsSummaryModal'].forEach(id => {
+    const idx = html.indexOf(`id="${id}"`);
+    assert(idx > 0, `окно ${id} должно быть в разметке`);
+    const chunk = html.slice(idx, idx + 700);
+    assert(!chunk.includes('modal-close-btn'),
+      `${id} не должен содержать крестик: итог закрывается только кнопкой «Завершить игру»`);
+  });
+});
+
+
 
 test('Сценарий: завершение игры (finishGameBtn handler)', () => {
   try {
