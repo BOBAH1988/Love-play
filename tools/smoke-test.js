@@ -128,19 +128,36 @@ test('Данные «Флагов» загружены и формируют о�
   const cards = eval('typeof FLAGS_CARDS === "undefined" ? null : FLAGS_CARDS');
   assert(Array.isArray(cards) && cards.length >= 10,
     'колода «Флагов» должна быть подключена в index.html');
+  cards.forEach(card => {
+    assert(card.flag && fs.existsSync(path.join(ROOT, card.flag)),
+      `файл флага должен существовать: ${card.flag}`);
+  });
   const previousLevel = state.flagsSelectedLevel;
+  const previousCount = state.flagsQuestionCount;
   const previousUsed = state.flagsUsed;
+  const previousQueue = state.flagsQueue;
+  const previousIndex = state.flagsIndex;
   try {
     state.flagsSelectedLevel = 1;
     state.flagsUsed = {};
-    global.drawFlagsQueue();
-    assert(state.flagsQueue && state.flagsQueue.length === 5,
-      'из колоды «Флагов» должна сформироваться очередь из 5 вопросов');
+    [5, 10, 25, 50].forEach(count => {
+      state.flagsQuestionCount = count;
+      global.drawFlagsQueue();
+      assert(state.flagsQueue && state.flagsQueue.length === count,
+        `из колоды «Флагов» должна сформироваться очередь из ${count} вопросов`);
+      assert(state.flagsQueue.every(card => card && card.flag),
+        'очередь «Флагов» должна содержать карточки с флагами');
+    });
+    assert((state.flagsUsed[1] || []).every(key => key),
+      'история «Флагов» должна хранить идентификаторы карточек, а не отсутствующее поле q');
   } catch (e) {
     assert(false, `ошибка: ${e.message}`);
   } finally {
     state.flagsSelectedLevel = previousLevel;
+    state.flagsQuestionCount = previousCount;
     state.flagsUsed = previousUsed;
+    state.flagsQueue = previousQueue;
+    state.flagsIndex = previousIndex;
   }
 });
 
@@ -149,6 +166,7 @@ console.log('\n=== Проверка наличия критических DOM-э
 const criticalElements = [
   'setup', 'homeView', 'resumeBtn', 'finishGameBtn', 'globalBackBtn',
   'twoPlayerView', 'companyView', 'kidsView', 'businessView', 'soloView', 'learningView',
+  'flagsSetup', 'flagsGame',
 ];
 
 criticalElements.forEach(id => {
@@ -737,30 +755,56 @@ test('Сценарий: возобновление игры (resumeBtn handler)'
   }
 });
 
-test('Сценарий: пауза «Флагов» оставляет раздел обучения', () => {
+test('Разметка вопроса «Флагов» содержит изображение флага', () => {
+  const item = { flag: 'flags-svg/flag-ru.svg', a: ['Россия', 'Казахстан', 'Украина', 'Беларусь'] };
+  const html = global.flagsQuestionHtml(item, '<button>Ответ</button>');
+  assert(html.includes('class="flags-card-image"') && html.includes(`src="${item.flag}"`),
+    'карточка «Флагов» должна содержать изображение текущего флага');
+  assert(fs.existsSync(path.join(ROOT, item.flag)),
+    'файл изображения флага должен существовать');
+});
+test('Сценарий: настройки «Флагов» и выход без паузы', () => {
   const previous = {
     inProgress: state.inProgress,
     pausedMode: state.pausedMode,
     lastPauseView: state.lastPauseView,
+    flagsQuestionCount: state.flagsQuestionCount,
+    flagsQueue: state.flagsQueue,
+    flagsIndex: state.flagsIndex,
   };
   try {
-    global.pauseFlagsGame();
-    assert(state.pausedMode === 'flags', 'пауза должна сохранить режим «Флаги»');
+    global.goToFlagsSetup();
+    const setup = getElById(stub, 'flagsSetup');
     const learning = getElById(stub, 'learningView');
-    const twoPlayer = getElById(stub, 'twoPlayerView');
+    assert(setup && setup.classList.contains('active'), 'настройки «Флагов» должны открыться');
     assert(learning && learning.classList.contains('section-open'),
-      'пауза «Флагов» должна открыть learningView');
-    assert(twoPlayer && !twoPlayer.classList.contains('section-open'),
-      'пауза «Флагов» не должна открывать twoPlayerView');
+      'настройки «Флагов» должны открыть раздел обучения');
+
+    state.flagsQuestionCount = 25;
+    global.goToFlagsGame();
+    global.stopFlagsInterval();
+    const game = getElById(stub, 'flagsGame');
+    assert(game && game.classList.contains('active'), 'партия «Флагов» должна начаться');
     const flags = global.gameByMode('flags');
-    assert(flags && flags.resume === 'resumeFlagsGame',
-      'реестр «Флагов» должен содержать resumeFlagsGame');
+    assert(flags && flags.noPause === true, 'реестр «Флагов» должен отмечать отсутствие паузы');
+    assert(flags && !flags.pause && !flags.resume, 'у «Флагов» не должно быть функций паузы и продолжения');
+    assert(flags && flags.back === 'exitFlagsGame', 'стрелка «←» должна завершать партию «Флагов»');
+
+    global.exitFlagsGame();
+    assert(getElById(stub, 'flagsSetup').classList.contains('active'),
+      'выход из «Флагов» должен вернуть экран настроек');
+    assert(state.inProgress === false && state.pausedMode === null,
+      'выход из «Флагов» должен снять флаги активной партии и паузы');
   } catch (e) {
     assert(false, `ошибка: ${e.message}`);
   } finally {
     state.inProgress = previous.inProgress;
     state.pausedMode = previous.pausedMode;
     state.lastPauseView = previous.lastPauseView;
+    state.flagsQuestionCount = previous.flagsQuestionCount;
+    state.flagsQueue = previous.flagsQueue;
+    state.flagsIndex = previous.flagsIndex;
+    global.stopFlagsInterval();
   }
 });
 

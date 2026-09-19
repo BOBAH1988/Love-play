@@ -866,6 +866,22 @@
     justify-content:center;
     min-height:0;
   }
+  .flags-card-media{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 auto;
+    padding:2px 0 8px;
+  }
+  .flags-card-image{
+    display:block;
+    width:min(72vw, 280px);
+    max-height:30vh;
+    object-fit:contain;
+    border-radius:10px;
+    background:#fff;
+    box-shadow:0 4px 14px rgba(43,15,46,.18);
+  }
   .card-icon{font-size:38px; margin-bottom:10px; margin-top:10px;}
   /* Сердце на карточке "Передайте телефон" в "Тайных ответах" — увеличено
      в 2 раза относительно обычной иконки карточки (38px → 76px). */

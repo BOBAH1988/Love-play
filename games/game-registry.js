@@ -216,10 +216,7 @@ window.GAME_REGISTRY = [
   },
   {
     mode: 'flags', title: '«Флаги»', group: 'two', menuTitle: '🏳️ Флаги',
-    pause: 'pauseFlagsGame', resume: 'resumeFlagsGame',
-    exitSummary: 'showFlagsSummaryModal',
-    isEmpty: () => !(state.flagsCorrect > 0),
-    finishEmpty: 'exitFlagsGame',
+    noPause: true, back: 'exitFlagsGame',
     screens: ['flagsGame'],
   },
 ];

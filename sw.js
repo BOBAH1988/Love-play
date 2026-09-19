@@ -30,7 +30,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v349';
+const CACHE_NAME = 'veselye-igry-cache-v352';
 
 // Корень приложения относительно адреса воркера: sw.js лежит в корне, поэтому
 // './' относительно его адреса — это корень и в деплое в корень домена ('/'),
@@ -44,6 +44,12 @@ const ROOT = new URL('./', self.location.href).pathname;
 /** @type {any} */
 const ctx = (self);
 
+const FLAG_CODES = [
+  'ru', 'fr', 'jp', 'us', 'de', 'gb', 'it', 'cn', 'kr', 'br',
+  'in', 'mx', 'pl', 'se', 'no', 'fi', 'nl', 'be', 'ie', 'pt',
+  'az', 'pe', 'td', 'ne', 'kw', 'sy', 'mm', 'cf', 'sl', 'tg'
+];
+
 // Ключевые файлы, нужные сразу при первом открытии (вне index.html).
 const PRECACHE_URLS = [
   './index.html',
@@ -51,7 +57,8 @@ const PRECACHE_URLS = [
   './manifest.json',
   './icon-180.png',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  ...FLAG_CODES.map(code => `./flags-svg/flag-${code}.svg`)
 ];
 
 // Собирает полный список предкэшируемых ресурсов: базовый набор + все

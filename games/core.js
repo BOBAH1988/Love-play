@@ -330,6 +330,9 @@ let state = {
   // «Время» (обучающая игра — часы) — вынесена в отдельную игру (games/kids-flash-time.js).
   // flashTimeCount — количество карточек за партию (5/10/25/50, как в «Английском»).
   flashTimePool:[], flashTimeIndex:0, flashTimeScore:0, flashTimeErrors:0, flashTimeCount:10,
+  // Флаги — уровень, размер партии, текущая очередь и результат.
+  flagsSelectedLevel:1, flagsAnswerSeconds:10, flagsQuestionCount:5,
+  flagsUsed:{}, flagsQueue:[], flagsIndex:0, flagsCorrect:0, flagsTimeMs:0,
   // Сапёр (дети) — настоящая сапёрская механика (минное поле, цифры,
   // флажки, победа/поражение). kidsSaperWonLines/kidsSaperEscalated* — устарели,
   // оставлены для обратной совместимости со старыми сохранениями.
@@ -936,11 +939,11 @@ document.getElementById('gameFlashTimeBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToFlashTimeSetup();
 });
-// "Флаги" (обучающая игра) — goToFlagsGame() определена в games/flags.js.
+// "Флаги" (обучающая игра) — goToFlagsSetup() определена в games/flags.js.
 document.getElementById('gameFlagsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToFlagsGame();
+  goToFlagsSetup();
 });
 // "Сапёр" (дети) — goToKidsSaperGame() определена в games/kids-saper.js.
 document.getElementById('gameKidsMinesweeperBtn').addEventListener('click', ()=>{
@@ -1741,6 +1744,14 @@ function performFullReset(){
    state.flashTimeScore = 0;
    state.flashTimeErrors = 0;
    state.flashTimeCount = 10;
+   state.flagsSelectedLevel = 1;
+   state.flagsAnswerSeconds = 10;
+   state.flagsQuestionCount = 5;
+   state.flagsUsed = {};
+   state.flagsQueue = [];
+   state.flagsIndex = 0;
+   state.flagsCorrect = 0;
+   state.flagsTimeMs = 0;
    state.shopMode = 'buyer';
    state.shopHintVisible = true;
    state.kidsTdCompleted = [];
@@ -2508,6 +2519,12 @@ function getPausedGroup(){
   return gameByMode(state.pausedMode)?.group || (state.pausedMode ? 'two' : null);
 }
 function updateResumeUI(){
+  if(state.pausedMode === 'flags'){
+    state.pausedMode = null;
+    state.inProgress = false;
+    state.lastSectionOnPause = null;
+    saveState();
+  }
   const pauseModal = document.getElementById('pauseMenuModal');
   // Базовая парная игра "Фанты" (через общую pauseGame()/#pauseBtn) теперь
   // тоже выставляет state.pausedMode = 'fanty' (см. pauseGame()) — раньше
@@ -2574,7 +2591,6 @@ function updateResumeUI(){
   else if(isKidsPause) showSetupView('kidsView');
   else if(isSoloPause) showSetupView('soloView');
   else if(isBusinessPause) showSetupView('businessView');
-  else if(state.pausedMode === 'flags') showSetupView('learningView');
   else if(isTwoPlayerPause) showSetupView('twoPlayerView');
   updateSettingsLockUI();
 }
