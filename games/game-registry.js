@@ -219,6 +219,11 @@ window.GAME_REGISTRY = [
     noPause: true, back: 'exitFlagsGame',
     screens: ['flagsGame'],
   },
+  {
+    mode: 'capitals', title: '«Столицы»', group: 'two', menuTitle: '🏛️ Столицы',
+    noPause: true, back: 'exitCapitalsGame',
+    screens: ['capitalsGame'],
+  },
 ];
 
 /* ============ ХЕЛПЕРЫ ============ */

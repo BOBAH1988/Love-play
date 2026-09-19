@@ -198,7 +198,11 @@ function speakFlagsCard(){
     fire();
   }
 }
-document.getElementById('flagsCard').addEventListener('click', (e) => {
+// Клик по карточке (не по кнопке ответа) — повторная озвучка вопроса.
+// Делегирование на document: renderFlagsGame() пересоздаёт #flagsCard,
+// и прямая привязка к элементу отмирала после первой перерисовки (регрессия v352).
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('#flagsCard')) return;
   if(e.target.closest('.znayu-answer-btn')) return;
   if(!flagsShowingQuestion) return;
   speakFlagsCard();

@@ -744,6 +744,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🗂️','Английский язык','flashRulesModal'],
       ['🕐','Время','flashTimeRulesModal'],
       ['🇷🇺','Флаги','flagsRulesModal'],
+      ['🏛️','Столицы','capitalsRulesModal'],
     ]},
   ];
 

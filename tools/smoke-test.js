@@ -161,12 +161,50 @@ test('Данные «Флагов» загружены и формируют о�
   }
 });
 
+test('Данные «Столиц» загружены и формируют очередь', () => {
+  const cards = eval('typeof CAPITALS_CARDS === "undefined" ? null : CAPITALS_CARDS');
+  assert(Array.isArray(cards) && cards.length >= 10,
+    'колода «Столиц» должна быть подключена в index.html');
+  cards.forEach(card => {
+    assert(card.country && Array.isArray(card.a) && card.a[0],
+      'карточка «Столиц» должна содержать страну и варианты ответа');
+  });
+  const previousLevel = state.capitalsSelectedLevel;
+  const previousCount = state.capitalsQuestionCount;
+  const previousUsed = state.capitalsUsed;
+  const previousQueue = state.capitalsQueue;
+  const previousIndex = state.capitalsIndex;
+  try {
+    state.capitalsSelectedLevel = 1;
+    state.capitalsUsed = {};
+    [5, 10, 25, 50].forEach(count => {
+      state.capitalsQuestionCount = count;
+      global.drawCapitalsQueue();
+      assert(state.capitalsQueue && state.capitalsQueue.length === count,
+        `из колоды «Столиц» должна сформироваться очередь из ${count} вопросов`);
+      assert(state.capitalsQueue.every(card => card && card.country),
+        'очередь «Столиц» должна содержать карточки со странами');
+    });
+    assert((state.capitalsUsed[1] || []).every(key => key),
+      'история «Столиц» должна хранить идентификаторы карточек');
+  } catch (e) {
+    assert(false, `ошибка: ${e.message}`);
+  } finally {
+    state.capitalsSelectedLevel = previousLevel;
+    state.capitalsQuestionCount = previousCount;
+    state.capitalsUsed = previousUsed;
+    state.capitalsQueue = previousQueue;
+    state.capitalsIndex = previousIndex;
+  }
+});
+
 console.log('\n=== Проверка наличия критических DOM-элементов ===');
 
 const criticalElements = [
   'setup', 'homeView', 'resumeBtn', 'finishGameBtn', 'globalBackBtn',
   'twoPlayerView', 'companyView', 'kidsView', 'businessView', 'soloView', 'learningView',
   'flagsSetup', 'flagsGame',
+  'capitalsSetup', 'capitalsGame',
 ];
 
 criticalElements.forEach(id => {
@@ -539,6 +577,12 @@ test('Сценарий: правила «Флагов» доступны в об
   assert(hubHtml.includes('Флаги'), 'пункт должен называться «Флаги»');
 });
 
+test('Сценарий: правила «Столиц» доступны в общем хабе правил', () => {
+  const hubHtml = document.getElementById('rulesHubList').innerHTML;
+  assert(hubHtml.includes('capitalsRulesModal'), 'в хабе правил должен быть пункт «Столицы»');
+  assert(hubHtml.includes('Столицы'), 'пункт должен называться «Столицы»');
+});
+
 test('Сценарий: уровень «Викторины» (пары) называется «Откровенно» без «18+»', () => {
   // Имя уровня берётся из QUIZ_LEVELS в cards_quiz.js и рисуется в
   // renderQuizSetupLevels() (games/quiz.js). Игра для двоих и так помечена
@@ -847,6 +891,51 @@ test('Сценарий: настройки «Флагов» и выход без
     state.flagsQueue = previous.flagsQueue;
     state.flagsIndex = previous.flagsIndex;
     global.stopFlagsInterval();
+  }
+});
+
+test('Сценарий: настройки «Столиц» и выход без паузы', () => {
+  const previous = {
+    inProgress: state.inProgress,
+    pausedMode: state.pausedMode,
+    lastPauseView: state.lastPauseView,
+    capitalsQuestionCount: state.capitalsQuestionCount,
+    capitalsQueue: state.capitalsQueue,
+    capitalsIndex: state.capitalsIndex,
+  };
+  try {
+    global.goToCapitalsSetup();
+    const setup = getElById(stub, 'capitalsSetup');
+    const learning = getElById(stub, 'learningView');
+    assert(setup && setup.classList.contains('active'), 'настройки «Столиц» должны открыться');
+    assert(learning && learning.classList.contains('section-open'),
+      'настройки «Столиц» должны открыть раздел обучения');
+
+    state.capitalsQuestionCount = 25;
+    global.goToCapitalsGame();
+    global.stopCapitalsInterval();
+    const game = getElById(stub, 'capitalsGame');
+    assert(game && game.classList.contains('active'), 'партия «Столиц» должна начаться');
+    const capitals = global.gameByMode('capitals');
+    assert(capitals && capitals.noPause === true, 'реестр «Столиц» должен отмечать отсутствие паузы');
+    assert(capitals && !capitals.pause && !capitals.resume, 'у «Столиц» не должно быть функций паузы и продолжения');
+    assert(capitals && capitals.back === 'exitCapitalsGame', 'стрелка «←» должна завершать партию «Столиц»');
+
+    global.exitCapitalsGame();
+    assert(getElById(stub, 'capitalsSetup').classList.contains('active'),
+      'выход из «Столиц» должен вернуть экран настроек');
+    assert(state.inProgress === false && state.pausedMode === null,
+      'выход из «Столиц» должен снять флаги активной партии и паузы');
+  } catch (e) {
+    assert(false, `ошибка: ${e.message}`);
+  } finally {
+    state.inProgress = previous.inProgress;
+    state.pausedMode = previous.pausedMode;
+    state.lastPauseView = previous.lastPauseView;
+    state.capitalsQuestionCount = previous.capitalsQuestionCount;
+    state.capitalsQueue = previous.capitalsQueue;
+    state.capitalsIndex = previous.capitalsIndex;
+    global.stopCapitalsInterval();
   }
 });
 

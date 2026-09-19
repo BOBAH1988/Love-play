@@ -333,6 +333,9 @@ let state = {
   // Флаги — уровень, размер партии, текущая очередь и результат.
   flagsSelectedLevel:1, flagsAnswerSeconds:10, flagsQuestionCount:5,
   flagsUsed:{}, flagsQueue:[], flagsIndex:0, flagsCorrect:0, flagsTimeMs:0,
+  // Столицы — уровень, размер партии, текущая очередь и результат.
+  capitalsSelectedLevel:1, capitalsAnswerSeconds:10, capitalsQuestionCount:5,
+  capitalsUsed:{}, capitalsQueue:[], capitalsIndex:0, capitalsCorrect:0, capitalsTimeMs:0,
   // Сапёр (дети) — настоящая сапёрская механика (минное поле, цифры,
   // флажки, победа/поражение). kidsSaperWonLines/kidsSaperEscalated* — устарели,
   // оставлены для обратной совместимости со старыми сохранениями.
@@ -944,6 +947,12 @@ document.getElementById('gameFlagsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   goToFlagsSetup();
+});
+// "Столицы" (обучающая игра) — goToCapitalsSetup() определена в games/capitals.js.
+document.getElementById('gameCapitalsBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  goToCapitalsSetup();
 });
 // "Сапёр" (дети) — goToKidsSaperGame() определена в games/kids-saper.js.
 document.getElementById('gameKidsMinesweeperBtn').addEventListener('click', ()=>{
@@ -1752,6 +1761,14 @@ function performFullReset(){
    state.flagsIndex = 0;
    state.flagsCorrect = 0;
    state.flagsTimeMs = 0;
+   state.capitalsSelectedLevel = 1;
+   state.capitalsAnswerSeconds = 10;
+   state.capitalsQuestionCount = 5;
+   state.capitalsUsed = {};
+   state.capitalsQueue = [];
+   state.capitalsIndex = 0;
+   state.capitalsCorrect = 0;
+   state.capitalsTimeMs = 0;
    state.shopMode = 'buyer';
    state.shopHintVisible = true;
    state.kidsTdCompleted = [];
