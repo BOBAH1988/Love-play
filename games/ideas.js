@@ -1,4 +1,4 @@
-// games/ideas.js — Игра "Ответы на вопросы" (пары).
+// games/ideas.js — Игра "Вопросы про это" (пары).
 // Загружается через <script src="games/ideas.js"></script> в index.html.
 // Основа взята с "Предложи партнеру" (games/core.js: drawPhotoCard/goToPhotoSetup),
 // но без уровней и без картинок — просто текстовые карточки вопрос/ответ из
@@ -15,6 +15,7 @@ function getIdeasPool(){
 }
 
 function drawIdeaCard(){
+  stopIdeasSpeech();
   const pool = getIdeasPool();
   if(pool.length === 0){
     ideasCurrentCard = null;
@@ -44,9 +45,50 @@ function drawIdeaCard(){
           <div class="card-split-title" id="ideasCardTitle">${card.title}</div>
           <div class="card-text" id="ideasCardText">${card.text}</div>
         </div>
+        <div class="quiz-tts-hint" id="ideasTtsHint">🔊</div>
       </div>
     `;
+  }, ()=>{
+    if(state.autoSpeak) speakIdeasCard();
   });
+}
+
+function pickIdeasVoice(){
+  if(!('speechSynthesis' in window)) return null;
+  const voices = window.speechSynthesis.getVoices() || [];
+  const ru = voices.filter(v=>/^ru/i.test(v.lang));
+  const pool = ru.length ? ru : voices;
+  const female = pool.find(v=>/female|женск|milena|olga|katya/i.test(v.name));
+  return female || pool[0] || null;
+}
+function stopIdeasSpeech(){
+  stopSpeech('ideasTtsHint');
+}
+function speakIdeasCard(){
+  const card = ideasCurrentCard;
+  if(!card || !('speechSynthesis' in window)) return;
+  const synth = window.speechSynthesis;
+  const content = [card.title, card.text].join('. ');
+  const text = typeof stripQuotesForSpeech === 'function' ? stripQuotesForSpeech(content) : content;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ru-RU';
+  utter.rate = 0.95;
+  const voice = pickIdeasVoice();
+  if(voice) utter.voice = voice;
+  const hint = document.getElementById('ideasTtsHint');
+  const fire = ()=>{
+    if(ideasCurrentCard !== card) return;
+    if(hint) hint.classList.add('speaking');
+    utter.onend = ()=>{ if(hint) hint.classList.remove('speaking'); };
+    utter.onerror = ()=>{ if(hint) hint.classList.remove('speaking'); };
+    synth.speak(utter);
+  };
+  if(synth.speaking || synth.pending){
+    synth.cancel();
+    setTimeout(fire, 50);
+  } else {
+    fire();
+  }
 }
 
 function goToIdeasGame(){
@@ -56,13 +98,17 @@ function goToIdeasGame(){
   requestWakeLock();
 }
 function exitIdeasGame(){
-  // Вход в игру — плитка «Ответы на вопросы» в разделе «Игры для пар 18+»
+  stopIdeasSpeech();
+  // Вход в игру — плитка «Вопросы про это» в разделе «Игры для пар 18+»
   // (#gameIdeasBtn, core.js). Раньше выход отправлял в companyView, то есть
   // в чужой раздел хаба.
   exitGame('ideasGame', 'setup');
   showSetupView('twoPlayerView');
 }
 
+document.getElementById('ideasCard').addEventListener('click', ()=>{
+  speakIdeasCard();
+});
 document.getElementById('ideasNextBtn').addEventListener('click', ()=>{
   playSuccessSound();
   drawIdeaCard();

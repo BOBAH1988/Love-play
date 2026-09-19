@@ -2474,7 +2474,7 @@
      .memes-tts-hint в "Мемасиках", только под своим именем для карточек
      Викторины (пары/компания/дети): карточка кликабельна (см. #quizCard и
      т.п. ниже), сама иконка тап не перехватывает. */
-  #quizCard, #partyQuizCard, #kidsQuizCard{cursor:pointer;}
+  #quizCard, #partyQuizCard, #kidsQuizCard, #ideasCard{cursor:pointer;}
   .quiz-tts-hint{
     display:none;
     position:absolute; right:16px; bottom:14px; font-size:17px; opacity:.5;

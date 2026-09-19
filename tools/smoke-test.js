@@ -497,6 +497,48 @@ test('Сценарий: викторина озвучивает вопрос и 
   }
 });
 
+test('Сценарий: «Вопросы про это» озвучивают карточку автоматически и по тапу', () => {
+  const saved = {};
+  ['ideasUsed', 'autoSpeak'].forEach(key => { saved[key] = state[key]; });
+  const originalCard = global.ideasCurrentCard;
+  const originalUtterance = global.SpeechSynthesisUtterance;
+  const originalSynth = window.speechSynthesis;
+  const originalFade = global.fadeSwapEl;
+  const originalStrip = global.stripQuotesForSpeech;
+  const spoken = [];
+  try {
+    global.SpeechSynthesisUtterance = function(text){ this.text = text; };
+    window.speechSynthesis = { speaking:false, pending:false, getVoices:()=>[{lang:'ru-RU', name:'Test'}], cancel(){}, speak(utter){ spoken.push(utter.text); } };
+    global.fadeSwapEl = (id, render, onDone)=>{ render(getElById(stub, id)); onDone(); };
+    state.ideasUsed = [];
+    state.autoSpeak = true;
+    drawIdeaCard();
+    const expected = stripQuotesForSpeech(`${ideasCurrentCard.title}. ${ideasCurrentCard.text}`);
+    assert(spoken.length === 1 && spoken[0] === expected, `автоозвучка должна читать вопрос и ответ: ${JSON.stringify(spoken)}`);
+    assert(getElById(stub, 'ideasCard').innerHTML.includes('🔊'), 'карточка должна показывать индикатор озвучки');
+    state.autoSpeak = false;
+    drawIdeaCard();
+    assert(spoken.length === 1, 'при выключенной автоозвучке речь не запускается');
+    speakIdeasCard();
+    const manualExpected = stripQuotesForSpeech(`${ideasCurrentCard.title}. ${ideasCurrentCard.text}`);
+    assert(spoken.length === 2 && spoken[1] === manualExpected, `нажатие на карточку повторяет озвучку: ${JSON.stringify(spoken)}`);
+    stopIdeasSpeech();
+  } finally {
+    global.SpeechSynthesisUtterance = originalUtterance;
+    window.speechSynthesis = originalSynth;
+    global.fadeSwapEl = originalFade;
+    global.stripQuotesForSpeech = originalStrip;
+    global.ideasCurrentCard = originalCard;
+    Object.assign(state, saved);
+  }
+});
+
+test('Сценарий: правила «Флагов» доступны в общем хабе правил', () => {
+  const hubHtml = document.getElementById('rulesHubList').innerHTML;
+  assert(hubHtml.includes('flagsRulesModal'), 'в хабе правил должен быть пункт «Флаги»');
+  assert(hubHtml.includes('Флаги'), 'пункт должен называться «Флаги»');
+});
+
 test('Сценарий: уровень «Викторины» (пары) называется «Откровенно» без «18+»', () => {
   // Имя уровня берётся из QUIZ_LEVELS в cards_quiz.js и рисуется в
   // renderQuizSetupLevels() (games/quiz.js). Игра для двоих и так помечена
