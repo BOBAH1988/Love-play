@@ -237,6 +237,7 @@ function goToFlagsGame(){
   drawFlagsQueue();
   state.inProgress = true;
   saveState();
+  rememberReturnScreen('setup', 'learningView');
   renderFlagsGame();
   goToGame(null, 'flagsGame');
   updateMuteBtn();
@@ -308,6 +309,13 @@ function onGameRegistryLoaded(){
         }
       });
     }
+    document.getElementById('closeFlagsSummaryBtn')?.addEventListener('click', () => {
+    hideModal('flagsSummaryModal');
+    state.inProgress = false;
+    state.pausedMode = null;
+    saveState();
+    updateResumeUI();
+  });
     openRulesModal('flagsGameRulesBtn', 'flagsRulesModal');
     setupRulesModal('flagsRulesModal', 'closeFlagsRulesBtn');
   });
