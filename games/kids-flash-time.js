@@ -83,7 +83,9 @@ function renderFlashTimeCard(card){
     }
     return null;
   };
-  wrap.innerHTML = `
+    const sh = card.options.map((o,i)=>({o,c:i===card.answer}));
+  for(let i=sh.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sh[i],sh[j]]=[sh[j],sh[i]]}
+wrap.innerHTML = `
     <div class="flash-time-display">
       ${card.sub === 'digital'
         ? `<div class="flash-time-digital">${card.word}</div>`
@@ -92,8 +94,6 @@ function renderFlashTimeCard(card){
           : `<div class="flash-time-spoken">${card.word}</div>`}
     </div>
     <div class="flash-time-options">
-  const sh = card.options.map((o,i)=>({o,c:i===card.answer}));
-  for(let i=sh.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sh[i],sh[j]]=[sh[j],sh[i]]}
       ${sh.map((x, i)=>{
         const formatted = optFormat(i, x),
         btnContent = formatted === null ? x.o : formatted;
@@ -245,3 +245,4 @@ document.getElementById('closeFlashTimeSummaryBtn').addEventListener('click', ()
 // нет — правила открываются только через меню ☰ → «Правила игр» (хаб),
 // который ссылается на эту же модалку (flashTimeRulesModal).
 setupRulesModal('flashTimeRulesModal', 'closeFlashTimeRulesBtn');
+
