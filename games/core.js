@@ -936,11 +936,11 @@ document.getElementById('gameFlashTimeBtn').addEventListener('click', ()=>{
   playSuccessSound();
   goToFlashTimeSetup();
 });
-// "Флаги" (обучающая игра) — goToFlagsSetup() определена в games/flags.js.
+// "Флаги" (обучающая игра) — goToFlagsGame() определена в games/flags.js.
 document.getElementById('gameFlagsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToFlagsSetup();
+  goToFlagsGame();
 });
 // "Сапёр" (дети) — goToKidsSaperGame() определена в games/kids-saper.js.
 document.getElementById('gameKidsMinesweeperBtn').addEventListener('click', ()=>{
