@@ -93,8 +93,9 @@ function renderFlashTimeCard(card){
     </div>
     <div class="flash-time-options">
       ${sh.map((x, i)=>{
-        const formatted = optFormat(i, x);
-        return `<button type="button" class="flash-time-option" data-time-index="${i}" data-time-correct="${x.c}">${formatted === false ? x.o : formatted}</button>`;
+        const formatted = optFormat(i, x),
+        btnContent = formatted === null ? x.o : formatted;
+        return `<button type="button" class="flash-time-option" data-time-index="${i}" data-time-correct="${x.c}">${btnContent}</button>`;
       }).join('')}
     </div>
     <div class="flash-card-progress">${(state.flashTimeIndex || 0) + 1} / ${state.flashTimePool.length}</div>
