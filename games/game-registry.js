@@ -10,7 +10,7 @@
 //
 // Добавляя игру, нужно было не забыть все пять. Забытая ветка не выдавала
 // ошибку — просто кнопка «Закончить игру» молча ничего не делала. Именно так
-// сломались сразу четыре игры («Виселица», «Лимонадный ларёк», «Секс-квест»,
+// сломались сразу четыре игры («Виселица», «Лимонадный ларёк», «Пройди квест»,
 // «Карта страсти»): функции завершения были написаны, но не подключены.
 //
 // ТЕПЕРЬ: одна запись на игру. Всё остальное — вывод из неё.
@@ -107,7 +107,7 @@ window.GAME_REGISTRY = [
   },
   // Паузы нет: выход ведёт сразу в меню настройки игры.
   {
-    mode: 'sexQuest', title: '«Секс-квест»', group: 'two', noPause: true, menuTitle: '💘 Секс-квест',
+    mode: 'sexQuest', title: '«Пройди квест»', group: 'two', noPause: true, menuTitle: '🧩 Пройди квест',
     resume: 'resumeSexQuestGame', finish: 'finishPausedSexQuestGame', back: 'finishPausedSexQuestGame',
     screens: ['sexQuestGame'],
   },
@@ -193,7 +193,7 @@ window.GAME_REGISTRY = [
     screens: ['soloQuizGame'],
   },
   {
-    mode: 'soloBs', title: '«Морской бой»', group: 'solo', menuTitle: '🚢 Морской бой (бот)',
+    mode: 'soloBs', title: '«Морской бой»', group: 'solo', menuTitle: '🚢 Морской бой',
     pause: 'pauseSoloBattleshipGame', resume: 'resumeSoloBsGame', finish: 'finishSoloBsGame',
     screens: ['soloBsGame', 'soloBattleshipGame'],
   },
