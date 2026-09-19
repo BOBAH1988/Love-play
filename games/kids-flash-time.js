@@ -127,6 +127,7 @@ function handleFlashTimeOption(btn, currentCard){
   saveState();
   updateFlashTimeScoreUI();
   allBtns.forEach(b=>b.disabled = true);
+  state.flashTimeIndex++;
   setTimeout(drawFlashTimeCard, 1000);
 }
 function updateFlashTimeScoreUI(){
