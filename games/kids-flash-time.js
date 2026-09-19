@@ -115,13 +115,11 @@ function handleFlashTimeOption(btn, currentCard){
   if(isCorrect){
     btn.classList.add('correct');
     playSuccessSound();
-    showToast('✅ Верно!');
     state.flashTimeScore = (state.flashTimeScore || 0) + 1;
   } else {
     btn.classList.add('wrong');
     wrap.querySelectorAll('[data-time-correct="true"]').forEach(el=>{ el.classList.add('correct'); });
     playFailSound();
-    showToast('❌ Неверно');
     state.flashTimeErrors = (state.flashTimeErrors || 0) + 1;
   }
   saveState();
@@ -177,9 +175,9 @@ function renderFlashTimeSubGroup(){
   });
 }
 // Количество карточек за партию — те же значения, что в «Английском языке».
-const FLASH_TIME_COUNT_VALUES = [4, 8, 20, 40];
+const FLASH_TIME_COUNT_VALUES = [5, 10, 25, 50];
 function renderFlashTimeCountGroup(){
-  if(!FLASH_TIME_COUNT_VALUES.includes(state.flashTimeCount)){ state.flashTimeCount = 8; saveState(); }
+  if(!FLASH_TIME_COUNT_VALUES.includes(state.flashTimeCount)){ state.flashTimeCount = 10; saveState(); }
   document.querySelectorAll('#flashTimeCountGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === state.flashTimeCount);
   });
