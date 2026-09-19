@@ -1529,6 +1529,15 @@
     background:linear-gradient(160deg, #5ecf93, #23784f 55%, var(--bg2));
     color:#fff;
   }
+  /* ===== Обучающие игры: тёмно-голубой фон карточек =====
+     Флаги, Столицы и Английский язык получают единую тёмно-голубую подложку
+     вместо белой (.card → var(--card-bg)) и зелёной (#flashCard, правило выше).
+     Текст: у «Флагов»/«Столиц» остаётся тёмным (#2b0f2e от .card), у «Английского» —
+     белым (color:#fff правила выше); оба варианта читаются на голубом.
+     Кнопки ответов (.znayu-*) полупрозрачно-тёмные — контраст сохраняется. */
+  #flagsCard, #capitalsCard, #flashCard{
+    background:linear-gradient(160deg, #8aa9c9, #6f8fb0 55%, #4f6b8a);
+  }
   #kidsTdCard .card-text, #kidsKrokodilCard .card-text, #kidsMemesCard .card-text,
   #whatToPlayCard .card-text, #whatToPlayCard .card-split-title{
     color:#fff;
