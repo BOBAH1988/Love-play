@@ -83,9 +83,9 @@ function renderFlashTimeCard(card){
     }
     return null;
   };
-    const sh = card.options.map((o,i)=>({o,c:i===card.answer}));
+  const sh = card.options.map((o,i)=>({o,c:i===card.answer}));
   for(let i=sh.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sh[i],sh[j]]=[sh[j],sh[i]]}
-wrap.innerHTML = `
+  wrap.innerHTML = `
     <div class="flash-time-display">
       ${card.sub === 'digital'
         ? `<div class="flash-time-digital">${card.word}</div>`
