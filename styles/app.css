@@ -1209,7 +1209,7 @@
     font-size:16px; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,.5);
   }
   .roulette-result{
-    text-align:center; font-size:13px; font-weight:700; min-height:18px; margin-bottom:4px; color:#fff;
+    text-align:center; font-size:16px; font-weight:800; min-height:18px; margin-bottom:4px; color:#ff3b5c;
   }
   /* Верхняя строка поля ставок: Красное | 0 | Чёрное — той же ширины, что и
      сетка чисел ниже (min(80%, 360px)) */
