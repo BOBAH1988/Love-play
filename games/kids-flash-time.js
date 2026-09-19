@@ -103,7 +103,7 @@ function renderFlashTimeCard(card){
     <div class="flash-card-progress">${(state.flashTimeIndex || 0) + 1} / ${state.flashTimePool.length}</div>
   `;
 }
-function handleFlashTimeOption(btn){
+function handleFlashTimeOption(btn, currentCard){
   const wrap = document.getElementById('flashTimeCard');
   if(!wrap) return;
   const alreadySelected = wrap.querySelector('.flash-time-option.selected');
@@ -226,7 +226,7 @@ document.querySelectorAll('#flashTimeCountGroup .starter-btn').forEach(btn=>{
 
 document.getElementById('flashTimeCard').addEventListener('click', (e)=>{
   if(e.target.classList.contains('flash-time-option')){
-    handleFlashTimeOption(e.target);
+    handleFlashTimeOption(e.target, flashTimeCurrentCard);
     return;
   }
 });
