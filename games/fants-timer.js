@@ -403,6 +403,9 @@ let summaryModalMode = 'fanty';
  * Рисует экран статистики: сводка, любимые игры, где выходят.
  * Все данные — с этого устройства (games/stats.js), ничего не отправляется.
  */
+// Раскрыт ли полный список «Любимые игры» (кнопка «Показать все»).
+// Флаг сбрасывается при каждом открытии экрана статистики.
+let statsGamesExpanded = false;
 function renderStatsScreen(){
   const body = document.getElementById('statsBody');
   const toggleBtn = document.getElementById('statsToggleBtn');
@@ -432,15 +435,22 @@ function renderStatsScreen(){
 
     if(s.games.length){
       html += '<div style="margin-top:12px; font-weight:700;">Любимые игры</div>';
-      s.games.slice(0, 7).forEach((g) => {
+      // Показываем первые 5 игр, остальные — по кнопке «Показать все».
+      // Состояние раскрытия живёт в модуле (statsGamesExpanded), а не в DOM:
+      // renderStatsScreen перерисовывает body целиком, и флаг в DOM сгорел бы.
+      const VISIBLE_COUNT = 5;
+      const shown = statsGamesExpanded ? s.games : s.games.slice(0, VISIBLE_COUNT);
+      shown.forEach((g) => {
         const done = g.finished > 0 ? ' · доиграно ' + g.finished : '';
         html += '<div style="display:flex; justify-content:space-between; gap:10px; padding:2px 0;">'
           + '<span>' + g.icon + ' ' + esc(g.title) + '</span>'
           + '<span style="white-space:nowrap; color:#6b4560;">' + g.started + done + '</span></div>';
       });
-      if(s.games.length > 7){
-        html += '<div style="color:#8a5c7a; font-size:13px; margin-top:4px;">…и ещё '
-          + (s.games.length - 7) + '</div>';
+      if(s.games.length > VISIBLE_COUNT){
+        html += '<button type="button" class="btn btn-secondary" id="statsMoreGamesBtn" '
+          + 'style="margin-top:6px; width:100%;">'
+          + (statsGamesExpanded ? 'Скрыть ▲' : 'Показать все (' + s.games.length + ') ▼')
+          + '</button>';
       }
     }
 
@@ -452,6 +462,14 @@ function renderStatsScreen(){
     if (finishedRow) finishedRow.style.display = s.finishedGames !== undefined ? 'block' : 'none';
 
     body.innerHTML = html;
+
+    // Кнопка «Показать все / Скрыть» — вешаем после отрисовки, т.к. body
+    // перерисовывается целиком при каждом вызове.
+    const moreBtn = document.getElementById('statsMoreGamesBtn');
+    if(moreBtn) moreBtn.addEventListener('click', ()=>{
+      statsGamesExpanded = !statsGamesExpanded;
+      renderStatsScreen();
+    });
   }
 
   if(toggleBtn){
@@ -585,6 +603,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   const __statsBtn = document.getElementById('menuStatsBtn');
   if(__statsBtn) __statsBtn.addEventListener('click', ()=>{
     closeMenu();
+    // Каждый раз открываем свёрнутым: сначала топ-5, остальное — по кнопке.
+    statsGamesExpanded = false;
     renderStatsScreen();
     showModal('statsModal');
   });
