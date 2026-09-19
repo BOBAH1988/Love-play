@@ -73,21 +73,32 @@ function renderFlashTimeCard(card){
   const wrap = document.getElementById('flashTimeCard');
   if(!wrap) return;
   flashTimeCurrentCard = card;
-  // Для механических часов выбираем случайный стиль циферблата
-  const clockStyle = card.sub === 'mech' ? CLOCK_STYLES[Math.floor(Math.random() * CLOCK_STYLES.length)] : null;
-  // Shuffle
-  const sh=card.options.map((o,i)=>({o,c:i===card.answer}))
-  for(let i=sh.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sh[i],sh[j]]=[sh[j],sh[i]]}
+  const optText = (w) => w;
+  // Для разговорного режима ответ — тоже разговорное слово («полвторого»,
+  // «четверть пятого»), красиво отформатировано. Иначе варианты искажаются,
+  // когда вариант равен прямой команде JS.
+  const optFormat = (optIdx, el) => {
+    if(card.sub === 'spoken' && el === optIdx){
+      const u = new SpeechSynthesisUtterance(card.word);
+      u.lang = 'ru-RU';
+      return card.word;
+    }
+    return false;
+  einfaches
+  };
   wrap.innerHTML = `
     <div class="flash-time-display">
       ${card.sub === 'digital'
         ? `<div class="flash-time-digital">${card.word}</div>`
-        : `<div class="flash-time-mechanical">${generateClockSVG(card.translation, clockStyle)}<div class="clock-style-hint">${clockStyle === 'full' ? 'Полные' : clockStyle === 'short' ? 'Сокращённые' : 'Римские'}</div></div>`}
+        : card.sub === 'mech'
+          ? `<div class="flash-time-mechanical">${generateClockSVG(card.translation, null)}<div class="clock-style-hint">Механические</div></div>`
+          : `<div class="flash-time-spoken">${card.word}</div>`}
     </div>
     <div class="flash-time-options">
-      ${sh.map((x, i)=>`
-        <button type="button" class="flash-time-option" data-time-index="${i}" data-time-correct="${x.c}">${x.o}</button>
-      `).join('')}
+      ${sh.map((x, i)=>{
+        const formatted = optFormat(i, x);
+        return `<button type="button" class="flash-time-option" data-time-index="${i}" data-time-correct="${x.c}">${formatted === false ? x.o : formatted}</button>`;
+      }).join('')}
     </div>
     <div class="flash-card-progress">${(state.flashTimeIndex || 0) + 1} / ${state.flashTimePool.length}</div>
   `;
@@ -158,7 +169,7 @@ function exitFlashTimeSetup(){
   showSetupView('learningView');
 }
 function renderFlashTimeSubGroup(){
-  if(state.flashTimeSub !== 'mech' && state.flashTimeSub !== 'digital'){ state.flashTimeSub = 'mech'; saveState(); }
+  if(!['digital','mech','spoken'].includes(state.flashTimeSub)){ state.flashTimeSub = 'mech'; saveState(); }
   document.querySelectorAll('#flashTimeSubGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', btn.dataset.value === state.flashTimeSub);
   });
