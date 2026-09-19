@@ -856,6 +856,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     bizObsSetup:'businessView', bizObsGame:'businessView',
     flashSetup:'learningView', flashGame:'learningView',
     flashTimeSetup:'learningView', flashTimeGame:'learningView',
+    flagsSetup:'learningView', flagsGame:'learningView',
   };
   // Экраны настроек (не запущенной партии) — для них "Назад" возвращает в
   // группу БЕЗ открытия меню паузы.
@@ -872,7 +873,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'kidsMemorySetup','kidsQuizSetup','kidsTdSetup','kidsSaperSetup','kidsXoSetup',
     'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','kidsFlashSetup','flashTimeSetup',
     'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBsSetup','soloBattleshipSetup','soloC4Setup',
-    'businessLemonadeSetup','bizObsSetup','flashSetup',
+    'businessLemonadeSetup','bizObsSetup','flashSetup','flagsSetup',
   ]);
   function sectionForScreenId(sid){
     if(SECTION_FOR_SCREEN[sid]) return SECTION_FOR_SCREEN[sid];

@@ -550,6 +550,7 @@ function renderFlagsGame(){
       });
     }
 
+    const flagsExitBtn = document.getElementById('flagsExitBtn');
     if(flagsGame) {
       flagsGame.addEventListener('click', (e) => {
         if(e.target.id === 'flagsExitBtn') {
