@@ -429,9 +429,6 @@ function renderStatsScreen(){
     }
     html += row('Дней в приложении', s.days);
     html += row('Общее время игры', window.AppStats.formatDuration(s.totalMs));
-    if (s.devices !== undefined) {
-      html += row('Всего устройств', s.devices);
-    }
 
     if(s.games.length){
       html += '<div style="margin-top:12px; font-weight:700;">Любимые игры</div>';
@@ -451,8 +448,6 @@ function renderStatsScreen(){
     html += row('из настройки', s.exits.setup || 0);
     html += row('посреди партии', s.exits.midgame || 0);
 
-    const devicesRow = document.getElementById('statsDevicesRow');
-    if (devicesRow) devicesRow.style.display = s.devices !== undefined ? 'block' : 'none';
     const finishedRow = document.getElementById('statsFinishedRow');
     if (finishedRow) finishedRow.style.display = s.finishedGames !== undefined ? 'block' : 'none';
 

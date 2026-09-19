@@ -1598,15 +1598,15 @@ function checkStats(html) {
   check('открытие приложения учитывается', /AppStats\.markOpen/.test(init), 'init.js не отмечает открытие');
 
   // Экран статистики: все элементы должны быть в разметке.
-  const required = ['statsModal', 'statsBody', 'statsToggleBtn', 'statsClearBtn', 'statsDevicesRow', 'statsFinishedRow'];
+  const required = ['statsModal', 'statsBody', 'statsToggleBtn', 'statsClearBtn', 'statsFinishedRow'];
   const absent = required.filter((id) => !html.includes(`id="${id}"`));
   check(`разметка экрана статистики (${required.length} элементов)`, absent.length === 0, `нет: ${absent.join(', ')}`);
 
   check('кнопка в меню есть', html.includes('id="menuStatsBtn"'), 'нет кнопки «Статистика»');
   check('обработчик экрана есть', /function\s+renderStatsScreen\s*\(/.test(core), 'нет renderStatsScreen');
-  check('в сводке есть строки «Всего устройств» и «Законченных партий»',
-    /Всего устройств/.test(core) && /Законченных партий/.test(core),
-    'в renderStatsScreen нет обеих строк');
+  check('в сводке есть строка «Законченных партий»',
+    /Законченных партий/.test(core),
+    'в renderStatsScreen нет строки');
 }
 
 
