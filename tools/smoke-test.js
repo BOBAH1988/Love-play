@@ -161,6 +161,22 @@ test('Данные «Флагов» загружены и формируют о�
   }
 });
 
+test('Данные «Времени»: у цифровых карточек все ответы словами', () => {
+  const cards = eval('typeof FLASH_WORDS === "undefined" ? null : FLASH_WORDS');
+  assert(Array.isArray(cards), 'колода «Времени» должна быть подключена в index.html');
+  const digital = cards.filter(c => c.theme === 'time' && c.sub === 'digital');
+  assert(digital.length > 0, 'в колоде должны быть цифровые карточки');
+  digital.forEach(card => {
+    assert(Array.isArray(card.options) && card.options.length >= 4,
+      `у цифровой карточки ${card.word} должно быть 4 варианта ответа`);
+    card.options.forEach(a => {
+      assert(/час|минут/.test(a) && !/\d\s*[:.]\s*\d/.test(a),
+        `ответ цифровой карточки ${card.word} должен быть словами, а не цифрами: «${a}»`);
+    });
+  });
+});
+
+
 test('Данные «Столиц» загружены и формируют очередь', () => {
   const cards = eval('typeof CAPITALS_CARDS === "undefined" ? null : CAPITALS_CARDS');
   assert(Array.isArray(cards) && cards.length >= 10,
