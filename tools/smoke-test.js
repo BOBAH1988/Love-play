@@ -124,6 +124,26 @@ test('goToSetup — глобально доступна', () => {
   assert(globalFn('goToSetup'), 'функция перехода к главному меню');
 });
 
+test('Данные «Флагов» загружены и формируют очередь', () => {
+  const cards = eval('typeof FLAGS_CARDS === "undefined" ? null : FLAGS_CARDS');
+  assert(Array.isArray(cards) && cards.length >= 10,
+    'колода «Флагов» должна быть подключена в index.html');
+  const previousLevel = state.flagsSelectedLevel;
+  const previousUsed = state.flagsUsed;
+  try {
+    state.flagsSelectedLevel = 1;
+    state.flagsUsed = {};
+    global.drawFlagsQueue();
+    assert(state.flagsQueue && state.flagsQueue.length === 5,
+      'из колоды «Флагов» должна сформироваться очередь из 5 вопросов');
+  } catch (e) {
+    assert(false, `ошибка: ${e.message}`);
+  } finally {
+    state.flagsSelectedLevel = previousLevel;
+    state.flagsUsed = previousUsed;
+  }
+});
+
 console.log('\n=== Проверка наличия критических DOM-элементов ===');
 
 const criticalElements = [
@@ -714,6 +734,33 @@ test('Сценарий: возобновление игры (resumeBtn handler)'
     assert(true, '');
   } catch (e) {
     assert(false, `ошибка: ${e.message}`);
+  }
+});
+
+test('Сценарий: пауза «Флагов» оставляет раздел обучения', () => {
+  const previous = {
+    inProgress: state.inProgress,
+    pausedMode: state.pausedMode,
+    lastPauseView: state.lastPauseView,
+  };
+  try {
+    global.pauseFlagsGame();
+    assert(state.pausedMode === 'flags', 'пауза должна сохранить режим «Флаги»');
+    const learning = getElById(stub, 'learningView');
+    const twoPlayer = getElById(stub, 'twoPlayerView');
+    assert(learning && learning.classList.contains('section-open'),
+      'пауза «Флагов» должна открыть learningView');
+    assert(twoPlayer && !twoPlayer.classList.contains('section-open'),
+      'пауза «Флагов» не должна открывать twoPlayerView');
+    const flags = global.gameByMode('flags');
+    assert(flags && flags.resume === 'resumeFlagsGame',
+      'реестр «Флагов» должен содержать resumeFlagsGame');
+  } catch (e) {
+    assert(false, `ошибка: ${e.message}`);
+  } finally {
+    state.inProgress = previous.inProgress;
+    state.pausedMode = previous.pausedMode;
+    state.lastPauseView = previous.lastPauseView;
   }
 });
 

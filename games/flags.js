@@ -16,12 +16,6 @@ function getFlagsCardsList(level){
 function stopFlagsInterval(){
   flagsIntervalId = stopInterval(flagsIntervalId);
 }
-function updateFlagsBar(remainingMs, totalMs){
-  const fill = document.getElementById('flagsBarFill');
-  if(!fill) return;
-  const pct = totalMs > 0 ? Math.max(0, Math.round((remainingMs/totalMs)*100)) : 0;
-  fill.style.width = pct + '%';
-}
 function drawFlagsQueue(){
   const level = state.flagsSelectedLevel || 1;
   const all = getFlagsCardsList(level);
@@ -87,15 +81,11 @@ function showFlagsQuestion(){
     });
   });
   flagsShowingQuestion = true;
-  const barTrack = document.getElementById('flagsBarTrack');
-  if(barTrack) barTrack.style.display = '';
-  updateFlagsBar(flagsDurationMs, flagsDurationMs);
   if(state.autoSpeak) speakFlagsCard();
   flagsIntervalId = setInterval(flagsTick, 100);
 }
 function flagsTick(){
   const remaining = flagsDeadline - Date.now();
-  updateFlagsBar(Math.max(0, remaining), flagsDurationMs);
   if(remaining <= 0){
     stopFlagsInterval();
     if(!flagsAnswered) answerFlagsQuestion(-1);
@@ -244,6 +234,16 @@ function goToFlagsGame(){
   requestWakeLock();
   showFlagsQuestion();
 }
+function resumeFlagsGame(){
+  state.pausedMode = null;
+  state.inProgress = true;
+  saveState();
+  renderFlagsGame();
+  goToGame(null, 'flagsGame');
+  updateMuteBtn();
+  requestWakeLock();
+  showFlagsQuestion();
+}
 function pauseFlagsGame(){
   stopFlagsInterval();
   stopFlagsSpeech();
@@ -252,6 +252,19 @@ function pauseFlagsGame(){
   saveState();
   document.getElementById('flagsGame').classList.remove('active');
   document.getElementById('setup').classList.add('active');
+  showSetupView('learningView');
+  updateResumeUI();
+}
+function exitFlagsGame(){
+  stopFlagsInterval();
+  stopFlagsSpeech();
+  stopAllSounds();
+  hideModal('flagsSummaryModal');
+  state.inProgress = false;
+  state.pausedMode = null;
+  state.lastSectionOnPause = null;
+  saveState();
+  exitGame('flagsGame', 'setup');
   showSetupView('learningView');
   updateResumeUI();
 }
@@ -264,9 +277,6 @@ function renderFlagsGame(){
     <div class="wishlist-progress-row" id="flagsProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="flagsProgressFill"></div></div>
       <div class="wishlist-progress-label" id="flagsProgressLabel">0 / 5</div>
-    </div>
-    <div class="timer-bar-track" id="flagsBarTrack">
-      <div class="timer-bar-fill" id="flagsBarFill"></div>
     </div>
     <div class="card-area">
       <div class="card" id="flagsCard">
@@ -289,9 +299,10 @@ function onGameRegistryLoaded(){
   if(existing) return;
   registry.push({
     mode: 'flags', title: '«Флаги»', group: 'two', menuTitle: '🏳️ Флаги',
-    pause: 'pauseFlagsGame',
+    pause: 'pauseFlagsGame', resume: 'resumeFlagsGame',
     exitSummary: 'showFlagsSummaryModal',
     isEmpty: () => !(state.flagsCorrect > 0),
+    finishEmpty: 'exitFlagsGame',
     screens: ['flagsGame'],
   });
   window.GAME_REGISTRY = registry;
@@ -310,12 +321,8 @@ function onGameRegistryLoaded(){
       });
     }
     document.getElementById('closeFlagsSummaryBtn')?.addEventListener('click', () => {
-    hideModal('flagsSummaryModal');
-    state.inProgress = false;
-    state.pausedMode = null;
-    saveState();
-    updateResumeUI();
-  });
+      exitFlagsGame();
+    });
     openRulesModal('flagsGameRulesBtn', 'flagsRulesModal');
     setupRulesModal('flagsRulesModal', 'closeFlagsRulesBtn');
   });

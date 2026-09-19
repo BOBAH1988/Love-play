@@ -2574,6 +2574,7 @@ function updateResumeUI(){
   else if(isKidsPause) showSetupView('kidsView');
   else if(isSoloPause) showSetupView('soloView');
   else if(isBusinessPause) showSetupView('businessView');
+  else if(state.pausedMode === 'flags') showSetupView('learningView');
   else if(isTwoPlayerPause) showSetupView('twoPlayerView');
   updateSettingsLockUI();
 }
