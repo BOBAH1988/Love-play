@@ -1544,13 +1544,18 @@
      Базовая прозрачность чуть выше (.18 против .14), чтобы кнопки читались
      заметно светлее фона карточки. Верный/неверный вариант (answer-correct/
      answer-wrong) не трогаем — там свои яркие зелёный/красный. */
+  /* Кнопки ответов на тёмно-голубых карточках — светлые с тёмным текстом:
+     почти белая полупрозрачная подложка (как «светлее» у других карточек,
+     но плотнее — .8, иначе тёмный текст теряется на голубом) и текст
+     #2b0f2e, как у дефолтной схемы для светлого фона. Верный/неверный
+     вариант (answer-correct/answer-wrong) не трогаем — там свои цвета. */
   #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong),
   #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
-    background:rgba(255,255,255,.18); color:#fff; border-color:rgba(255,255,255,.36);
+    background:rgba(255,255,255,.8); color:#2b0f2e; border-color:rgba(43,15,46,.22);
   }
   #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active,
   #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
-    background:rgba(255,255,255,.3);
+    background:rgba(255,255,255,.92);
   }
   #kidsTdCard .card-text, #kidsKrokodilCard .card-text, #kidsMemesCard .card-text,
   #whatToPlayCard .card-text, #whatToPlayCard .card-split-title{
