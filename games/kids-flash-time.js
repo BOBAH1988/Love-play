@@ -177,9 +177,9 @@ function renderFlashTimeSubGroup(){
   });
 }
 // Количество карточек за партию — те же значения, что в «Английском языке».
-const FLASH_TIME_COUNT_VALUES = [5, 10, 25, 50];
+const FLASH_TIME_COUNT_VALUES = [4, 8, 20, 40];
 function renderFlashTimeCountGroup(){
-  if(!FLASH_TIME_COUNT_VALUES.includes(state.flashTimeCount)){ state.flashTimeCount = 10; saveState(); }
+  if(!FLASH_TIME_COUNT_VALUES.includes(state.flashTimeCount)){ state.flashTimeCount = 8; saveState(); }
   document.querySelectorAll('#flashTimeCountGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === state.flashTimeCount);
   });
