@@ -1641,7 +1641,7 @@
   .flash-time-option.correct{ background:rgba(76,175,80,.3); border-color:rgba(76,175,80,.6); color:#4caf50; }
   .flash-time-option.wrong{ background:rgba(244,67,54,.3); border-color:rgba(244,67,54,.6); color:#f44336; }
   .flash-time-option:disabled{ cursor:default; }
-  .flash-time-display{ font-size:48px; font-weight:800; text-align:center; margin:20px 0; color:#fff; }
+  .flash-time-display{ font-size:36px; font-weight:800; text-align:center; margin:20px 0; color:#fff; }
   .flash-time-display .flash-time-mechanical{ font-size:16px; }
   .flash-time-digital{ font-family:'Courier New',monospace; letter-spacing:4px; }
   .flash-time-mechanical{ display:flex; flex-direction:column; align-items:center; gap:8px; }
