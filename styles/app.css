@@ -1534,9 +1534,23 @@
      вместо белой (.card → var(--card-bg)) и зелёной (#flashCard, правило выше).
      Текст: у «Флагов»/«Столиц» остаётся тёмным (#2b0f2e от .card), у «Английского» —
      белым (color:#fff правила выше); оба варианта читаются на голубом.
-     Кнопки ответов (.znayu-*) полупрозрачно-тёмные — контраст сохраняется. */
+     Кнопки ответов .znayu-* осветлены (см. правило ниже). */
   #flagsCard, #capitalsCard, #flashCard{
     background:linear-gradient(160deg, #8aa9c9, #6f8fb0 55%, #4f6b8a);
+  }
+  /* Кнопки ответов на тёмно-голубых карточках — светлые, как у остальных игр
+     с тёмной карточкой (#znayuCard, #quizCard): белая полупрозрачная подложка
+     и белый текст вместо дефолтной тёмной схемы для светлого фона.
+     Базовая прозрачность чуть выше (.18 против .14), чтобы кнопки читались
+     заметно светлее фона карточки. Верный/неверный вариант (answer-correct/
+     answer-wrong) не трогаем — там свои яркие зелёный/красный. */
+  #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong),
+  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+    background:rgba(255,255,255,.18); color:#fff; border-color:rgba(255,255,255,.36);
+  }
+  #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active,
+  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
+    background:rgba(255,255,255,.3);
   }
   #kidsTdCard .card-text, #kidsKrokodilCard .card-text, #kidsMemesCard .card-text,
   #whatToPlayCard .card-text, #whatToPlayCard .card-split-title{
