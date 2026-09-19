@@ -79,12 +79,9 @@ function renderFlashTimeCard(card){
   // когда вариант равен прямой команде JS.
   const optFormat = (optIdx, el) => {
     if(card.sub === 'spoken' && el === optIdx){
-      const u = new SpeechSynthesisUtterance(card.word);
-      u.lang = 'ru-RU';
       return card.word;
     }
-    return false;
-  einfaches
+    return null;
   };
   wrap.innerHTML = `
     <div class="flash-time-display">
