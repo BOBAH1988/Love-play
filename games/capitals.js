@@ -59,7 +59,8 @@ function drawCapitalsQueue(){
   saveState();
 }
 function capitalsQuestionHtml(item, answersHtml){
-  return `<div class="card-inner"><div class="card-body"><div class="znayu-question-text">Столица ${item.country}</div></div><div class="znayu-answers">${answersHtml}</div><div class="quiz-tts-hint" id="capitalsTtsHint">🔊</div></div>`;
+  const flagHtml = item.flag ? `<img class="flags-card-image" src="${item.flag}" alt="Флаг страны" loading="eager">` : '';
+  return `<div class="card-inner"><div class="flags-card-media">${flagHtml}</div><div class="card-body"><div class="znayu-question-text">Столица ${item.country}</div></div><div class="znayu-answers">${answersHtml}</div><div class="quiz-tts-hint" id="capitalsTtsHint">🔊</div></div>`;
 }
 function updateCapitalsProgressUI(){
   const total = state.capitalsQueue.length || (CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 5);

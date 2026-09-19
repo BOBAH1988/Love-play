@@ -30,7 +30,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v362';
+const CACHE_NAME = 'veselye-igry-cache-v363';
 
 // Корень приложения относительно адреса воркера: sw.js лежит в корне, поэтому
 // './' относительно его адреса — это корень и в деплое в корень домена ('/'),
@@ -47,7 +47,9 @@ const ctx = (self);
 const FLAG_CODES = [
   'ru', 'fr', 'jp', 'us', 'de', 'gb', 'it', 'cn', 'kr', 'br',
   'in', 'mx', 'pl', 'se', 'no', 'fi', 'nl', 'be', 'ie', 'pt',
-  'az', 'pe', 'td', 'ne', 'kw', 'sy', 'mm', 'cf', 'sl', 'tg'
+  'az', 'pe', 'td', 'ne', 'kw', 'sy', 'mm', 'cf', 'sl', 'tg',
+  'es', 'au', 'ca', 'kz', 'am', 'ge', 'uz', 'kg', 'tj', 'li',
+  'sm', 'mc', 'st'
 ];
 
 // Ключевые файлы, нужные сразу при первом открытии (вне index.html).

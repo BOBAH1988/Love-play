@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-29 · v362';
+        window.APP_BUILD = '2026-09-29 · v363';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -636,7 +636,7 @@
       <div class="intro-text">Угадайте столицу страны. Перед началом выберите уровень сложности и количество карточек: 5, 10, 25 или 50. На каждый вопрос — 4 варианта ответа, верный только один. Время на ответ — 10 секунд.</div>
        <ol class="modal-rules">
          <li>Перед началом выберите уровень сложности и количество карточек, затем нажмите «Начать».</li>
-         <li>На каждом вопросе показывается название страны. Выберите её столицу из 4 вариантов.</li>
+         <li>На каждом вопросе показываются флаг и название страны. Выберите её столицу из 4 вариантов.</li>
          <li>Если время вышло или выбран неправильный вариант, вопрос засчитывается как неверный.</li>
          <li>После каждого вопроса показывается правильный ответ, затем открывается следующая карточка.</li>
          <li>В конце игры показывается результат: число верных ответов и время.</li>
@@ -4427,7 +4427,7 @@
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20260929a"></script>
-<script src="cards/capitals.js?v=20260929a"></script>
+<script src="cards/capitals.js?v=20260929b"></script>
 <script src="games/core.js?v=20260929l"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
@@ -4485,7 +4485,7 @@
 <script src="games/passionmap.js?v=20260927a"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20260929i"></script>
-<script src="games/capitals.js?v=20260929a"></script>
+<script src="games/capitals.js?v=20260929b"></script>
 <script src="games/init.js?v=20260929d"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует.
@@ -4505,7 +4505,7 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20260929l').then(function (reg) {
+        navigator.serviceWorker.register('./sw.js?v=20260929m').then(function (reg) {
           // Мягкая проверка обновления при каждом запуске: reg.update() в фоне
           // спрашивает сервер, есть ли новый sw.js. Если да — браузер ставит его
           // в reg.waiting (старый воркер при этом НЕ трогаем: офлайн не ломается).

@@ -184,6 +184,8 @@ test('Данные «Столиц» загружены и формируют о�
   cards.forEach(card => {
     assert(card.country && Array.isArray(card.a) && card.a[0],
       'карточка «Столиц» должна содержать страну и варианты ответа');
+    assert(card.flag && fs.existsSync(path.join(ROOT, card.flag)),
+      `карточка «Столиц» должна указывать существующий флаг: ${card.flag || 'нет поля flag'}`);
   });
   const previousLevel = state.capitalsSelectedLevel;
   const previousCount = state.capitalsQuestionCount;
@@ -864,6 +866,22 @@ test('Разметка вопроса «Флагов» содержит изоб
     'карточка «Флагов» должна содержать изображение текущего флага');
   assert(fs.existsSync(path.join(ROOT, item.flag)),
     'файл изображения флага должен существовать');
+});
+
+test('Разметка вопроса «Столиц» содержит флаг над названием страны', () => {
+  const item = { country: 'Франция', flag: 'flags-svg/flag-fr.svg', a: ['Париж', 'Лион', 'Марсель', 'Тулуза'] };
+  const html = global.capitalsQuestionHtml(item, '<button>Ответ</button>');
+  assert(html.includes('class="flags-card-media"') && html.includes('class="flags-card-image"'),
+    'карточка «Столиц» должна показывать блок с флагом');
+  assert(html.includes(`src="${item.flag}"`), 'флаг должен браться из поля flag карточки');
+  assert(html.indexOf('flags-card-media') < html.indexOf('Столица Франция'),
+    'флаг должен располагаться над текстом вопроса');
+  assert(fs.existsSync(path.join(ROOT, item.flag)), 'файл флага должен существовать');
+});
+
+test('«Столицы»: карточка без поля flag не ломает разметку', () => {
+  const html = global.capitalsQuestionHtml({ country: 'Х', a: ['А', 'Б', 'В', 'Г'] }, '');
+  assert(!html.includes('<img'), 'без поля flag изображения быть не должно');
 });
 test('Сценарий: настройки «Флагов» и выход без паузы', () => {
   const previous = {
