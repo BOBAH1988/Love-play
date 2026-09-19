@@ -370,7 +370,6 @@ function onGameRegistryLoaded(){
     document.getElementById('closeFlagsSummaryBtn')?.addEventListener('click', () => {
       exitFlagsGame();
     });
-    openRulesModal('flagsSetupRulesBtn', 'flagsRulesModal');
     setupRulesModal('flagsRulesModal', 'closeFlagsRulesBtn');
   });
 })();

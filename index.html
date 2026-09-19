@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-29 · v355';
+        window.APP_BUILD = '2026-09-29 · v356';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -512,7 +512,6 @@
      </div>
 
      <button class="btn btn-primary" id="flagsSetupStartBtn">Начать</button>
-     <button class="btn btn-secondary" id="flagsSetupRulesBtn" style="margin-top:10px;">Правила</button>
      <button class="btn btn-secondary" id="flagsSetupExitBtn" style="margin-top:10px;">Выход</button>
    </section>
 
@@ -4403,7 +4402,7 @@
 <script src="games/sexquest.js?v=20260927x"></script>
 <script src="games/passionmap.js?v=20260927a"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
-<script src="games/flags.js?v=20260929f"></script>
+<script src="games/flags.js?v=20260929g"></script>
 <script src="games/init.js?v=20260929d"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует.
@@ -4423,7 +4422,7 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20260929e').then(function (reg) {
+        navigator.serviceWorker.register('./sw.js?v=20260929f').then(function (reg) {
           // Мягкая проверка обновления при каждом запуске: reg.update() в фоне
           // спрашивает сервер, есть ли новый sw.js. Если да — браузер ставит его
           // в reg.waiting (старый воркер при этом НЕ трогаем: офлайн не ломается).
