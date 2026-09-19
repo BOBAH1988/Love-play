@@ -74,9 +74,8 @@ MIGRATIONS[1] = function(s){
     if(s.luckyLevel === undefined) s.luckyLevel = 1;
   if(s.luckyCurrentTeamIndex === undefined) s.luckyCurrentTeamIndex = 0;
   if(!s.luckyTeamTurnCount) s.luckyTeamTurnCount = [0,0];
-  // luckyLinesToWin добавлен позже — мигрируем для старых сэвов и защищаем
-  // от некорректных значений (допустимы только 3, 4 или 5).
-  if(typeof s.luckyLinesToWin !== 'number' || ![3,4,5].includes(s.luckyLinesToWin)){ s.luckyLinesToWin = 5; }
+  // luckyLinesToWin удалён из настроек (игра всегда до 5 линий): у старых
+  // сейвов поле просто игнорируется, отдельно мигрировать нечего.
   if(s.lastSectionOnPause === undefined) s.lastSectionOnPause = null;
 
   // «Игры для компании»: прежние «Игрок 1/2/...» → порядковые
@@ -112,15 +111,16 @@ MIGRATIONS[1] = function(s){
       return out;
     });
   }
-  // «Счастливый билет»: «Команда 1/2» → «Первая/Вторая», «Он/Она» → «Парень/Девушка».
+  // «Счастливый билет»: «Команда 1/2» → «Первая/Вторая».
+  // Поля участников (m/f) удалены из настроек — чистятся в ensureLuckyTeams.
   if(Array.isArray(s.luckyTeams)){
     s.luckyTeams = s.luckyTeams.map(t=>{
       if(!t || typeof t !== 'object') return t;
       const out = Object.assign({}, t);
       if(out.name === 'Команда 1') out.name = 'Первая команда';
       if(out.name === 'Команда 2') out.name = 'Вторая команда';
-      if(out.m === 'Он') out.m = 'Парень';
-      if(out.f === 'Она') out.f = 'Девушка';
+      delete out.m;
+      delete out.f;
       return out;
     });
   }
@@ -261,17 +261,16 @@ let state = {
   famZnayuP1Done:false, famZnayuP2Done:false, famZnayuResults:[], famZnayuPendingNext:0,
   // Счастливый билет (общее поле 5x5 на 2 команды, как в Секс-бинго —
   // уровень растёт автоматически после 1-й и 3-й собранной линии).
-  // Ровно 2 команды, в каждой мужчина и женщина ("m"/"f") — задания на поле
-  // выполняются для своего партнёра по команде. luckyTeamTurnCount хранит,
-  // сколько раз уже ходила каждая команда — по чётности переключает, кто
-  // сейчас исполнитель (м или ж) внутри команды.
-  luckyTeams:[{name:'Первая команда', m:'Парень', f:'Девушка'},{name:'Вторая команда', m:'Парень', f:'Девушка'}],
+  // Ровно 2 команды, в каждой пара. Внутри команды партнёры выполняют ход
+  // по очереди: если задание не для конкретного партнёра, ходит следующий
+  // по очереди. luckyTeamTurnCount хранит, сколько раз уже ходила каждая
+  // команда (порядок очереди).
+  luckyTeams:[{name:'Первая команда'},{name:'Вторая команда'}],
   luckyTeamTurnCount:[0,0],
   luckyLevel:1, luckyGrid:[], luckyChecked:[], luckyCurrentTeamIndex:0,
   luckyCompleted:[], luckyWonLines:[], luckyEscalatedTo2:false, luckyEscalatedTo3:false,
   luckyFinished:false, luckyUsed:{},
   luckyTasksHidden:true, luckyRevealed:[],
-  luckyLinesToWin:5,
   // Викторина (пары) — каждый игрок отвечает на все свои вопросы подряд
   // (quizQuestionCount штук), затем передаёт телефон следующему; см. games/quiz.js.
   quizSelectedLevel:1, quizAnswerSeconds:15, quizQuestionCount:5, quizUsed:{},
@@ -1910,13 +1909,12 @@ function performFullReset(){
   state.famZnayuPendingNext = 0;
   // Счастливый билет (общее поле 5x5 на 2 команды)
   state.luckyUsed = {};
-  state.luckyTeams = [{name:'Первая команда', m:'Парень', f:'Девушка'},{name:'Вторая команда', m:'Парень', f:'Девушка'}];
+  state.luckyTeams = [{name:'Первая команда'},{name:'Вторая команда'}];
   state.luckyTeamTurnCount = [0,0];
   state.luckyGrid = []; state.luckyChecked = []; state.luckyCurrentTeamIndex = 0;
   state.luckyCompleted = []; state.luckyWonLines = []; state.luckyLevel = 1;
     state.luckyEscalatedTo2 = false; state.luckyEscalatedTo3 = false; state.luckyFinished = false;
   state.luckyTasksHidden = true; state.luckyRevealed = [];
-  state.luckyLinesToWin = 5;
   // Викторина (пары/компания/дети)
   state.quizUsed = {}; state.quizQueue = []; state.quizIndex = 0; state.quizCurrentPlayerIndex = 0;
   state.quizCorrect = []; state.quizTimeMs = [];

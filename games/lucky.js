@@ -36,19 +36,20 @@ function pickLuckyFinalTask() {
 function luckyLevelInfo(level){
   return (typeof LUCKY_LEVELS !== 'undefined' ? LUCKY_LEVELS.find(l=>l.id===level) : null) || {name:'Знакомство', icon:'🤝'};
 }
-// Дефолтные имена команд «Счастливого билета»: «Первая/Вторая команда»,
-// участники внутри команды — «Парень»/«Девушка». Старые дефолты
-// («Команда 1/2», «Он»/«Она») мигрируются в loadState (games/core.js).
+// Дефолтные имена команд «Счастливого билета»: «Первая/Вторая команда».
+// Старые дефолты («Команда 1/2») мигрируются в loadState (games/core.js).
 function luckyDefaultTeamName(idx){ return idx === 0 ? 'Первая команда' : 'Вторая команда'; }
 function ensureLuckyTeams(){
   if(!Array.isArray(state.luckyTeams) || state.luckyTeams.length < 2){
     state.luckyTeams = [
-      {name:luckyDefaultTeamName(0), m:'Парень', f:'Девушка'},
-      {name:luckyDefaultTeamName(1), m:'Парень', f:'Девушка'}
+      {name:luckyDefaultTeamName(0)},
+      {name:luckyDefaultTeamName(1)}
     ];
-  }
-  if(!Array.isArray(state.luckyTeamTurnCount)){
-    state.luckyTeamTurnCount = [0, 0];
+  } else {
+    // Чистим остатки полей участников (m/f удалены): остались только названия.
+    state.luckyTeams = state.luckyTeams.slice(0, 2).map((t, i)=>({
+      name:(t && t.name) || luckyDefaultTeamName(i)
+    }));
   }
 }
 function renderLuckyTeams(){
@@ -76,52 +77,12 @@ function renderLuckyTeams(){
     });
     nameRow.appendChild(nameInput);
     block.appendChild(nameRow);
-    const membersRow = document.createElement('div');
-    membersRow.className = 'fam-znayu-family-inputs';
-    membersRow.style.marginTop = '6px';
-    const mInput = document.createElement('input');
-    mInput.type = 'text';
-    mInput.maxLength = 14;
-    mInput.placeholder = 'Парень';
-    mInput.value = team.m;
-    mInput.addEventListener('input', ()=>{
-      state.luckyTeams[idx].m = mInput.value.trim() || 'Парень';
-      saveState();
-    });
-    membersRow.appendChild(mInput);
-    const fInput = document.createElement('input');
-    fInput.type = 'text';
-    fInput.maxLength = 14;
-    fInput.placeholder = 'Девушка';
-    fInput.value = team.f;
-    fInput.addEventListener('input', ()=>{
-      state.luckyTeams[idx].f = fInput.value.trim() || 'Девушка';
-      saveState();
-    });
-    membersRow.appendChild(fInput);
-    block.appendChild(membersRow);
     wrap.appendChild(block);
   });
 }
-function renderLuckyLinesToWinGroup(){
-  const vals = [3,4,5];
-  if(!vals.includes(state.luckyLinesToWin)){ state.luckyLinesToWin = 5; saveState(); }
-  document.querySelectorAll('#luckyLinesToWinGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === state.luckyLinesToWin);
-  });
-}
-document.querySelectorAll('#luckyLinesToWinGroup .starter-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    playSuccessSound();
-    state.luckyLinesToWin = parseInt(btn.dataset.value, 10);
-    saveState();
-    renderLuckyLinesToWinGroup();
-  });
-});
 function goToLuckySetup(){
   goToGameSetup('luckySetup', null, ()=>{
     renderLuckyTeams();
-    renderLuckyLinesToWinGroup();
   });
 }
 function exitLuckySetup(){
@@ -147,28 +108,11 @@ function generateLuckyGrid(level){
   state.luckyUsed[level] = used.concat(picked.map(c=>c.text));
   return picked.map(c=>c.text);
 }
-// Кто сейчас исполнитель внутри команды idx — чередуется по чётности
-// luckyTeamTurnCount[idx] (растёт на 1 при каждой передаче хода от этой
-// команды), не зависит от того, сколько ходов было у другой команды.
-function luckyCurrentActor(idx){
-  ensureLuckyTeams();
-  const team = state.luckyTeams[idx] || {name:luckyDefaultTeamName(idx), m:'Парень', f:'Девушка'};
-  const turnCount = (state.luckyTeamTurnCount || [0,0])[idx] || 0;
-  const actorIsM = turnCount % 2 === 0;
-  return {
-    actorName: actorIsM ? team.m : team.f,
-    targetName: actorIsM ? team.f : team.m,
-    actorIsM
-  };
-}
-// Необязательное окончание в скобках, например "готов(а)", разрешается под
-// пол текущего исполнителя — тот же приём, что resolveFamZnayuGenderText в
-// "Знаю тебя", только односторонний (речь о самом исполнителе, а не о паре
-// герой/угадывающий).
-function resolveLuckyActorGenderText(text, actorIsM){
-  if(!text) return text;
-  return text.replace(/([А-Яа-яЁё]+)\(([а-яё]+)\)/g, (m, base, suf)=> actorIsM ? base : base + suf);
-}
+// Ход команды: на экране видно только название команды, чья очередь.
+// Внутри команды партнёры выполняют ход по очереди: если задание не для
+// конкретного партнёра, ходит следующий по очереди. Счётчик
+// luckyTeamTurnCount[idx] растёт на 1 при каждой передаче хода от этой
+// команды (нужен только для порядка очереди).
 function updateLuckyScoreUI(){
   ensureLuckyTeams();
   const teams = state.luckyTeams;
@@ -185,9 +129,8 @@ function updateLuckyScoreUI(){
     });
   }
   const teamName = (teams[idx] && teams[idx].name) || luckyDefaultTeamName(idx);
-  const actor = luckyCurrentActor(idx);
   const turnLabel = document.getElementById('luckyTurnLabel');
-  if(turnLabel) turnLabel.textContent = `Ходит: ${teamName} — ${actor.actorName} → ${actor.targetName}`;
+  if(turnLabel) turnLabel.textContent = `Ходит: ${teamName}`;
   const level = state.luckyLevel || 1;
   const info = luckyLevelInfo(level);
   const linesTotal = (state.luckyWonLines || []).length;
@@ -201,7 +144,6 @@ function renderLuckyGrid(){
   const grid = state.luckyGrid || [];
   const checked = state.luckyChecked || [];
   if(!state.luckyRevealed) state.luckyRevealed = grid.map(()=>true);
-  const actor = luckyCurrentActor(state.luckyCurrentTeamIndex || 0);
   grid.forEach((text, i)=>{
     const isLucky = text === LUCKY_LUCKY_TEXT;
     // "Пропустите ход" остаётся закрытой 🎁 независимо от общего переключателя
@@ -210,7 +152,7 @@ function renderLuckyGrid(){
     const isHidden = !checked[i] && (isLucky || (!!state.luckyTasksHidden && !state.luckyRevealed[i]));
     const cell = document.createElement('div');
     cell.className = 'bingo-cell' + (checked[i] ? ' checked' : '') + (isHidden ? ' hidden' : '') + (checked[i] && isLucky ? ' bingo-lucky' : '');
-    cell.textContent = isHidden ? '🎁' : resolveLuckyActorGenderText(text, actor.actorIsM);
+    cell.textContent = isHidden ? '🎁' : text;
     if(!checked[i] && !state.luckyFinished) cell.addEventListener('click', ()=>clickLuckyCell(i));
     wrap.appendChild(cell);
     // Скрытая клетка показывает только иконку 🎁 — подгонка под текст задания
@@ -245,7 +187,7 @@ function clickLuckyCell(i){
 function passLuckyTurn(){
   const idx = state.luckyCurrentTeamIndex || 0;
   if(!state.luckyTeamTurnCount) state.luckyTeamTurnCount = [0,0];
-  // Переключает исполнителя (м/ж) для этой же команды к её следующему ходу.
+  // Очередь внутри команды: партнёры выполняют ход по очереди (счётчик хода).
   state.luckyTeamTurnCount[idx] = (state.luckyTeamTurnCount[idx] || 0) + 1;
   state.luckyCurrentTeamIndex = (idx + 1) % 2;
   saveState();
@@ -332,7 +274,7 @@ function checkLuckyGameFinished(){
   if(state.luckyFinished) return;
   const total = state.luckyWonLines.length;
   const allChecked = state.luckyChecked.length === 25 && state.luckyChecked.every(Boolean);
-    if(total >= (state.luckyLinesToWin || 5) || allChecked){
+    if(total >= 5 || allChecked){
     state.luckyFinished = true;
     state.inProgress = false;
     saveState();

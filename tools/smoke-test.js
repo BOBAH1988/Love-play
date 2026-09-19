@@ -1403,7 +1403,7 @@ test('Счастливый билет: только финальное зада�
     finished: state.luckyFinished, esc2: state.luckyEscalatedTo2, esc3: state.luckyEscalatedTo3,
     turn: state.luckyCurrentTeamIndex, turns: state.luckyTeamTurnCount };
   try {
-    state.luckyTeams = [{name:'Альфа', m:'Парень', f:'Девушка'}, {name:'Бета', m:'Парень', f:'Девушка'}];
+    state.luckyTeams = [{name:'Альфа'}, {name:'Бета'}];
     state.luckyCompleted = [10, 5];
     state.luckyWonLines = [0, 1, 2, 3, 4];
     state.luckyChecked = new Array(25).fill(true);
@@ -1442,7 +1442,7 @@ test('Счастливый билет: полный цикл партии без
   const savedState = JSON.stringify(state);
   const savedStorage = localStorage.getItem(STORAGE_KEY);
   try {
-    state.luckyTeams = [{name:'Альфа', m:'Он', f:'Она'}, {name:'Бета', m:'Он', f:'Она'}];
+    state.luckyTeams = [{name:'Альфа'}, {name:'Бета'}];
     goToLuckyGame();
     assert(Array.isArray(state.luckyGrid) && state.luckyGrid.length === 25, 'поле 5×5 создано');
     assert(state.luckyChecked.length === 25 && state.luckyChecked.every(v=>v===false), 'все клетки неотмечены');
