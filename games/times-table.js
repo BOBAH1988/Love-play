@@ -25,6 +25,19 @@ function timesTableMulRange(level){
   return [2, 10];
 }
 
+function timesTableLevelAnswerSeconds(level){
+  // Время на ответ зависит от уровня сложности:
+  //   лёгкий (×2–×5)   — 5 секунд,
+  //   средний (×6–×9)  — 3 секунды,
+  //   сложный (×2–×10) — 1 секунда.
+  // Эти значения берутся вместо общего timesTableAnswerSeconds,
+  // который теперь остаётся в state только для обратной совместимости.
+  if(level === 1) return 5;
+  if(level === 2) return 3;
+  if(level === 3) return 1;
+  return 10;
+}
+
 function timesTableCardKey(card){
   return `${card.a}x${card.b}`;
 }
@@ -131,7 +144,7 @@ function showTimesTableQuestion(){
       answerTimesTableQuestion(parseInt(btn.dataset.idx, 10));
     });
   });
-  timesTableDurationMs = (Number(state.timesTableAnswerSeconds) || 10) * 1000;
+  timesTableDurationMs = timesTableLevelAnswerSeconds(state.timesTableSelectedLevel) * 1000;
   timesTableDeadline = Date.now() + timesTableDurationMs;
   updateTimesTableProgressUI();
   updateTimesTableScoreUI();
