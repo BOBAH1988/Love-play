@@ -4691,12 +4691,11 @@ tooltip.textContent = text;
     if(top + th > window.innerHeight - 8) top = rr.top - th - 8;
     tooltip.style.left = left + 'px';
     tooltip.style.top = Math.max(8, top) + 'px';
-    tooltip.style.opacity = '1';
-    tooltip.classList.add('show');
+    tooltip.style.display = 'block';
   }
   function hideTip(){
     var t = document.getElementById('_tip');
-    if(t) { t.style.opacity = '0'; t.classList.remove('show'); }
+    if(t) t.style.display = 'none';
   }
 </script>
 </body>
