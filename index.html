@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-30 · v410';
+        window.APP_BUILD = '2026-09-30 · v411';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -197,9 +197,9 @@
 <div id="app">
 
   <!-- ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== -->
-  <button type="button" class="fab-menu-btn" id="globalMenuBtn" aria-label="Меню" title="Меню">☰</button>
+  <button type="button" class="fab-menu-btn" id="globalMenuBtn" aria-label="Меню" data-tooltip="Меню">☰</button>
   <button type="button" class="fab-menu-btn fab-back-btn" id="globalBackBtn" aria-label="Назад">←</button>
-  <button type="button" class="fab-menu-btn fab-share-btn" id="globalShareBtn" aria-label="Поделиться" title="Поделиться">⤴</button>
+  <button type="button" class="fab-menu-btn fab-share-btn" id="globalShareBtn" aria-label="Поделиться" data-tooltip="Поделиться">⤴</button>
 
   <!-- ===== МОДАЛЬНОЕ ОКНО МЕНЮ ===== -->
   <div class="modal-overlay" id="globalMenuModal">
