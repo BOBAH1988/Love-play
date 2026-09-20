@@ -3704,9 +3704,9 @@
        border:1px solid rgba(255,94,142,.4);
        white-space:normal; max-width:70vw; z-index:200; pointer-events:none;
      }
-     .fab-share-btn[data-tooltip]:hover::after{
-       left:auto; right:0; transform:translateX(0);
-     }
+.fab-share-btn[data-tooltip]:hover::after{
+        left:calc(100% + 8px); right:auto; transform:translateX(0);
+      }
 /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
 	 чтобы media query не перекрывался ими с тем же приоритетом).
      Кнопки привязываются к краям #app (контейнер приложения с другим
