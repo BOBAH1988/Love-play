@@ -697,6 +697,14 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   }
 
   function openShareModal(){
+    if(navigator.share){
+      navigator.share({title:'Давай играй', text:'Коллекция игр для пары, компании и детей — заходи играй!', url:SHARE_URL}).then(function(){
+        showToast('Спасибо, что делитесь! 💛');
+      }).catch(function(e){
+        if(e && e.name !== 'AbortError') showToast('Не удалось поделиться');
+      });
+      return;
+    }
     var modal = document.getElementById('homeShareModal');
     if(!modal) return;
     modal.classList.add('show');
