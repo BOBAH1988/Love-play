@@ -203,16 +203,22 @@ function bizLocationInfo(){ return BIZ_LOCATIONS[state.businessLemonadeLocation]
 // сверх капитала. Для игрока это одна сумма, поэтому в интерфейсе они всегда
 // показываются вместе (см. updateBizHeaderUI).
 function bizMoneyTotal(){
+  return (state.businessLemonadeReserve || 0) + (state.businessLemonadeMoney || 0);
+}
+// Свободные деньги (сверх резерва) — чистая прибыль, идёт к цели.
+function bizTotalNet(){
   return state.businessLemonadeMoney || 0;
 }
-// Суммарная чистая прибыль за все сыгранные дни: вся сумма минус стартовые 200 ₽.
-function bizTotalNet(){
-  return Math.max(0, bizMoneyTotal() - BIZ_START_CAPITAL);
-}
-// Расход: списываем из единой суммы.
+// Расход: сначала свободные, потом резерв (200 ₽ — для производства).
 function bizSpend(amount){
-  state.businessLemonadeMoney = Math.max(0, (state.businessLemonadeMoney || 0) - amount);
-  return state.businessLemonadeMoney;
+  const money = state.businessLemonadeMoney || 0;
+  const fromMoney = Math.min(amount, money);
+  state.businessLemonadeMoney = money - fromMoney;
+  const remaining = amount - fromMoney;
+  const reserve = state.businessLemonadeReserve || 0;
+  const fromReserve = Math.min(remaining, reserve);
+  state.businessLemonadeReserve = reserve - fromReserve;
+  return state.businessLemonadeReserve + state.businessLemonadeMoney;
 }
 function bizGoalInfo(){
   let goal = state.businessLemonadeGoal || 1000;
@@ -294,17 +300,17 @@ function bizHandleDailyFinance(){
   let repaidInfo = null;
   if((state.businessLemonadeLoanOwed || 0) > 0 && day >= (state.businessLemonadeLoanDueDay || 0)){
     const owed = state.businessLemonadeLoanOwed;
-    const paid = Math.min(owed, state.businessLemonadeMoney || 0);
-    state.businessLemonadeMoney = Math.max(0, (state.businessLemonadeMoney || 0) - paid);
+    const paid = Math.min(owed, bizMoneyTotal());
+    bizSpend(paid);
     repaidInfo = { paid, owed, shortfall: owed - paid };
     state.businessLemonadeLoanOwed = 0;
     state.businessLemonadeLoanDueDay = null;
   }
   let loanInfo = null;
-  if((state.businessLemonadeMoney || 0) < BIZ_MIN_CAPITAL_FOR_DAY && !(state.businessLemonadeLoanOwed > 0)){
+  if(bizMoneyTotal() < BIZ_MIN_CAPITAL_FOR_DAY && !(state.businessLemonadeLoanOwed > 0)){
     const borrowed = BIZ_MIN_CAPITAL_FOR_DAY;
     const owed = Math.round(borrowed * BIZ_LOAN_INTEREST);
-    state.businessLemonadeMoney = (state.businessLemonadeMoney || 0) + borrowed;
+    state.businessLemonadeReserve = (state.businessLemonadeReserve || 0) + borrowed;
     state.businessLemonadeLoanOwed = owed;
     state.businessLemonadeLoanDueDay = day + BIZ_LOAN_DUE_DAYS;
     loanInfo = { borrowed, owed, dueDay: state.businessLemonadeLoanDueDay };
@@ -846,8 +852,16 @@ function bizSellDay(){
    state.businessLemonadeLemonStock = 0;
    state.businessLemonadeLemonBoughtDay = null;
 
-  // Единая сумма: прибыль просто прибавляется к деньгам.
-   state.businessLemonadeMoney = Math.max(0, (state.businessLemonadeMoney || 0) + netProfit);
+  // Резерв 200 ₽ остаётся для производства, всё сверху — к цели.
+   const totalBefore = bizMoneyTotal();
+   const newTotal = totalBefore + netProfit;
+   if(newTotal > BIZ_START_CAPITAL){
+     state.businessLemonadeMoney = newTotal - BIZ_START_CAPITAL;
+     state.businessLemonadeReserve = BIZ_START_CAPITAL;
+   } else {
+     state.businessLemonadeMoney = Math.max(0, newTotal);
+     state.businessLemonadeReserve = Math.max(0, newTotal);
+   }
    if(!state.businessLemonadeDayProfits) state.businessLemonadeDayProfits = [];
    state.businessLemonadeDayProfits[(state.businessLemonadeDay || 1) - 1] = netProfit;
 
@@ -1071,7 +1085,8 @@ function goToBusinessLemonadeGame(){
   state.businessLemonadePausedPhase = null;
   state.inProgress = true;
   state.businessLemonadeDay = 1;
-  state.businessLemonadeMoney = BIZ_START_CAPITAL;
+  state.businessLemonadeMoney = 0;
+  state.businessLemonadeReserve = BIZ_START_CAPITAL;
   state.businessLemonadeUpgrades = { sign: false, music: false, recipe: false, seller: false, secondStand: false };
   state.businessLemonadeLocation = null;
   state.businessLemonadeHours = null;

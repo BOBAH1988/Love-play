@@ -367,7 +367,7 @@ let state = {
   // приготовление напитков → цена → итоги дня, капитал переносится между
   // днями (не может уйти ниже 0). Партия завершается, когда накопленная
   // чистая прибыль достигнет цели (businessLemonadeGoal), затем мини-проверка.
-  businessLemonadeDay:1, businessLemonadeMoney:200,
+  businessLemonadeDay:1, businessLemonadeMoney:0, businessLemonadeReserve:200,
   businessLemonadeUpgrades:{sign:false, music:false, recipe:false, seller:false, secondStand:false},
   businessLemonadeWeatherKey:'normal', businessLemonadeEventIdx:-1, businessLemonadeLocation:null,
   businessLemonadeHours:null, businessLemonadeOptions:{},

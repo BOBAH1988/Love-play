@@ -2646,6 +2646,20 @@
     overscroll-behavior:contain;
     box-shadow:0 20px 50px rgba(0,0,0,.5);
   }
+  /* Итоговое окно «Лимонадного ларька»: много строк (график, дни, чек-лист),
+     поэтому уменьшаем отступы и шрифты, чтобы окно влезало на высоту устройства. */
+  #businessLemonadeSummaryModal .modal-card{
+    padding:14px 16px; max-height:88vh;
+  }
+  #businessLemonadeSummaryModal .modal-title{font-size:17px; margin-bottom:10px;}
+  #businessLemonadeSummaryModal .intro-text{font-size:13px; line-height:1.4;}
+  #businessLemonadeSummaryModal .biz-breakdown-row{font-size:12px; padding:2px 0;}
+  #businessLemonadeSummaryModal .biz-breakdown-box{padding:8px 0;}
+  #businessLemonadeSummaryModal .biz-chart{height:120px; padding:6px 0;}
+  #businessLemonadeSummaryModal .biz-chart-col .biz-chart-value{font-size:11px;}
+  #businessLemonadeSummaryModal .biz-summary-drinks{margin:6px 0;}
+  #businessLemonadeSummaryModal .krokodil-summary-row{font-size:12px; padding:1px 0;}
+  #businessLemonadeSummaryModal .btn{padding:8px 14px; font-size:14px; margin-top:8px;}
   .modal-title{font-size:20px; font-weight:800; text-align:center; margin-bottom:16px;}
   .modal-close-btn{
     position:absolute; top:10px; right:12px;
