@@ -29,12 +29,12 @@ function timesTableLevelAnswerSeconds(level){
   // Время на ответ зависит от уровня сложности:
   //   ⭐  — 5 секунд,
   //   ⭐⭐ — 3 секунды,
-  //   ⭐⭐⭐ — 1 секунда.
+  //   ⭐⭐⭐ — 1,5 секунды.
   // Эти значения берутся вместо общего timesTableAnswerSeconds,
   // который теперь остаётся в state только для обратной совместимости.
   if(level === 1) return 5;
   if(level === 2) return 3;
-  if(level === 3) return 1;
+  if(level === 3) return 1.5;
   return 10;
 }
 
