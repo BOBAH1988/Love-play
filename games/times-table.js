@@ -137,7 +137,7 @@ function showTimesTableQuestion(){
   updateTimesTableScoreUI();
   stopTimesTableInterval();
   timesTableIntervalId = setInterval(timesTableTick, 100);
-  speakTimesTableCard();
+  if(state.autoSpeak) speakTimesTableCard();
 }
 
 function timesTableTick(){
@@ -168,6 +168,9 @@ function answerTimesTableQuestion(choiceIdx){
     playSuccessSound();
   } else {
     playErrorSound();
+  }
+  if(wasTimeout){
+    showToast('⏰ Время вышло — ответ не выбран');
   }
   state.timesTableTimeMs += Date.now() - timesTableQuestionStartedAt;
   const key = timesTableCardKey(item);
