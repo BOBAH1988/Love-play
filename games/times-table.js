@@ -205,8 +205,8 @@ function updateTimesTableScoreUI(){
   if(!el) return;
   const total = TIMES_TABLE_COUNT_VALUES.includes(Number(state.timesTableQuestionCount)) ? Number(state.timesTableQuestionCount) : 10;
   el.innerHTML = `
-    <div class="krokodil-score-item"><span class="krokodil-score-label">✅ Верно</span><span class="krokodil-score-value">${state.timesTableCorrect}</span></div>
-    <div class="krokodil-score-item"><span class="krokodil-score-label">⏳ Осталось</span><span class="krokodil-score-value">${Math.max(0, total - state.timesTableIndex - (timesTableAnswered ? 0 : 1))}</span></div>
+    <div class="krokodil-score-item"><span class="krokodil-score-label">Верно</span> <span class="krokodil-score-value">${state.timesTableCorrect}</span></div>
+    <div class="krokodil-score-item"><span class="krokodil-score-label">Осталось</span> <span class="krokodil-score-value">${Math.max(0, total - state.timesTableIndex - (timesTableAnswered ? 0 : 1))}</span></div>
   `;
 }
 
