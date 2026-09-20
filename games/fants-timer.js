@@ -88,11 +88,9 @@ function drawCard(forceLevel){
 
 function renderTdChoiceCard(){
   const turnName = state.currentPlayer===1 ? state.name1 : state.name2;
-  const genderColor = GENDER_COLORS[currentGender()];
   currentCard = null;
   const el = document.getElementById('card');
   el.className = 'card';
-  el.style.borderTop = '10px solid ' + genderColor;
   el.innerHTML = `
       <div class="card-inner">
         <div class="card-header">
@@ -182,18 +180,16 @@ function dislikeCurrentCard(){
   drawCard();
 }
 
-const GENDER_COLORS = { M:'#6ec6ff', F:'#ff9fb0' };
+
 
 let currentCard = null;
 
 function renderCard(card){
   const lvl = levelById(card.level);
   const turnName = state.currentPlayer===1 ? state.name1 : state.name2;
-  const genderColor = GENDER_COLORS[currentGender()];
   currentCard = card;
   fadeSwapCard((el)=>{
     el.className = 'card';
-    el.style.borderTop = `10px solid ${genderColor}`;
     el.innerHTML = `
       <div class="card-inner">
         <div class="card-header">
