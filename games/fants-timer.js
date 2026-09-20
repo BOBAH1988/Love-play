@@ -697,14 +697,12 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   }
 
   function openShareModal(){
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(SHARE_URL).then(function(){
-        showToast('Ссылка скопирована');
-      }).catch(function(){
-        showToast('Ссылка: ' + SHARE_URL);
-      });
-    }else{
-      showToast('Ссылка: ' + SHARE_URL);
+    var modal = document.getElementById('homeShareModal');
+    if(!modal) return;
+    modal.classList.add('show');
+    var qrCanvas = document.getElementById('homeQrCanvas');
+    if(qrCanvas && window.renderQrCode){
+      window.renderQrCode(qrCanvas, SHARE_URL);
     }
   }
 
@@ -734,20 +732,14 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(linkBtn){
     linkBtn.addEventListener('click', async ()=>{
       try{
-        if(navigator.share){
-          await navigator.share({ title:'Давай играй', text:'Коллекция игр для пары, компании и детей — заходи играй!', url: SHARE_URL });
-          showToast('Спасибо, что делитесь! 💛');
-          return;
-        }
         if(navigator.clipboard && navigator.clipboard.writeText){
           await navigator.clipboard.writeText(SHARE_URL);
           showToast('Ссылка скопирована');
-          return;
+        }else{
+          showToast('Ссылка: ' + SHARE_URL);
         }
-        showToast('Ссылка: ' + SHARE_URL);
       }catch(e){
-        if(e && e.name === 'AbortError') return;
-        showToast('Не удалось поделиться — попробуйте позже');
+        showToast('Ссылка: ' + SHARE_URL);
       }
     });
   }
