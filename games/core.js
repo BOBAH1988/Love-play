@@ -336,8 +336,8 @@ let state = {
   // Столицы — уровень, размер партии, текущая очередь и результат.
   capitalsSelectedLevel:1, capitalsAnswerSeconds:10, capitalsQuestionCount:10,
   capitalsUsed:{}, capitalsQueue:[], capitalsIndex:0, capitalsCorrect:0, capitalsTimeMs:0,
-  // Таблица умножения — уровень, размер партии, очередь и результат (карточки генерируются).
-  timesTableSelectedLevel:1, timesTableAnswerSeconds:5, timesTableQuestionCount:10,
+  // Арифметика — тема (операция), уровень, размер партии, очередь и результат (карточки генерируются).
+  timesTableTopic:'multiply', timesTableSelectedLevel:1, timesTableAnswerSeconds:5, timesTableQuestionCount:10,
   timesTableUsed:{}, timesTableQueue:[], timesTableIndex:0, timesTableCorrect:0, timesTableTimeMs:0,
   // Сапёр (дети) — настоящая сапёрская механика (минное поле, цифры,
   // флажки, победа/поражение). kidsSaperWonLines/kidsSaperEscalated* — устарели,
@@ -1788,6 +1788,7 @@ function performFullReset(){
    state.capitalsIndex = 0;
    state.capitalsCorrect = 0;
    state.capitalsTimeMs = 0;
+   state.timesTableTopic = 'multiply';
    state.timesTableSelectedLevel = 1;
    state.timesTableAnswerSeconds = 5;
    state.timesTableQuestionCount = 10;

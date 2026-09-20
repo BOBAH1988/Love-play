@@ -1,8 +1,16 @@
-// games/times-table.js — Игра «Таблица умножения» (обучающая, по образцу «Столиц»).
+// games/times-table.js — Игра «Арифметика» (обучающая, по образцу «Столиц»).
 // Вопросы генерируются программно: a × b = ? с 4 вариантами ответа.
+// Тема «Умножение» — рабочая; «Деление», «Сложение» и «Вычитание» —
+// заглушки: кнопки есть в настройках, но партия по ним пока не стартует.
 // Запускается из экрана настроек в хабе обучающих игр. Однопользовательский режим, без паузы.
 
 const TIMES_TABLE_COUNT_VALUES = [5, 10, 25, 50];
+const TIMES_TABLE_TOPICS = [
+  { id: 'multiply', name: 'Умножение' },
+  { id: 'divide', name: 'Деление' },
+  { id: 'add', name: 'Сложение' },
+  { id: 'subtract', name: 'Вычитание' },
+];
 const TIMES_TABLE_LEVELS = [
   { id: 1, name: '⭐', desc: '5 сек' },
   { id: 2, name: '⭐⭐', desc: '3 сек' },
@@ -274,6 +282,7 @@ function goToTimesTableSetup(){
   // «Флагов» и «Столиц». Раньше здесь стоял goToGame('learningView', ...),
   // из-за чего вызов падал с «goToTimesTableSetup is not defined».
   goToGameSetup('timesTableSetup', 'learningView', ()=>{
+    renderTimesTableTopicGroup();
     renderTimesTableLevelGroup();
     renderTimesTableCountGroup();
   });
@@ -288,6 +297,20 @@ function exitTimesTableSetup(){
   const hub = document.getElementById('setup');
   if(hub) hub.classList.add('active');
   showSetupView('learningView');
+}
+
+function timesTableTopicName(topic){
+  const found = TIMES_TABLE_TOPICS.find(t => t.id === topic);
+  return found ? found.name : 'Умножение';
+}
+
+function renderTimesTableTopicGroup(){
+  const wrap = document.getElementById('timesTableTopicGroup');
+  if(!wrap) return;
+  if(state.timesTableTopic !== 'multiply'){ state.timesTableTopic = 'multiply'; saveState(); }
+  wrap.querySelectorAll('.starter-btn').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.value === 'multiply');
+  });
 }
 
 function renderTimesTableLevelGroup(){
@@ -366,6 +389,7 @@ function goToTimesTableGame(){
   abandonPausedSession('soloBs');
   abandonPausedSession('quiz');
   state.pausedMode = null;
+  if(state.timesTableTopic !== 'multiply'){ state.timesTableTopic = 'multiply'; saveState(); }
   state.timesTableSelectedLevel = Number(state.timesTableSelectedLevel) || 1;
   state.timesTableAnswerSeconds = state.timesTableAnswerSeconds || 5;
   state.timesTableQuestionCount = TIMES_TABLE_COUNT_VALUES.includes(Number(state.timesTableQuestionCount)) ? Number(state.timesTableQuestionCount) : 10;
@@ -400,7 +424,7 @@ function renderTimesTableGame(){
   const wrap = document.getElementById('timesTableGame');
   if(!wrap) return;
   wrap.innerHTML = `
-    <div class="game-level-label"><span class="times-x">✕</span>Арафметика</div>
+    <div class="game-level-label">🧮 Арифметика</div>
     <div class="krokodil-score-row two-player" id="timesTableScoreRow"></div>
     <div class="wishlist-progress-row" id="timesTableProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="timesTableProgressFill"></div></div>
@@ -414,8 +438,22 @@ function renderTimesTableGame(){
 
 (function initTimesTable(){
   document.addEventListener('DOMContentLoaded', () => {
+    renderTimesTableTopicGroup();
     renderTimesTableLevelGroup();
     renderTimesTableCountGroup();
+    document.querySelectorAll('#timesTableTopicGroup .starter-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(btn.dataset.value !== 'multiply'){
+          playErrorSound();
+          showToast(`Тема «${timesTableTopicName(btn.dataset.value)}» скоро появится`);
+          return;
+        }
+        playSuccessSound();
+        state.timesTableTopic = 'multiply';
+        saveState();
+        renderTimesTableTopicGroup();
+      });
+    });
     document.querySelectorAll('#timesTableLevelGroup .starter-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         playSuccessSound();
