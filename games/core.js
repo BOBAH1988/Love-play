@@ -367,7 +367,7 @@ let state = {
   // приготовление напитков → цена → итоги дня, капитал переносится между
   // днями (не может уйти ниже 0). Партия завершается, когда накопленная
   // чистая прибыль достигнет цели (businessLemonadeGoal), затем мини-проверка.
-  businessLemonadeDay:1, businessLemonadeCapital:200,
+  businessLemonadeDay:1, businessLemonadeMoney:200,
   businessLemonadeUpgrades:{sign:false, music:false, recipe:false, seller:false, secondStand:false},
   businessLemonadeWeatherKey:'normal', businessLemonadeEventIdx:-1, businessLemonadeLocation:null,
   businessLemonadeHours:null, businessLemonadeOptions:{},
@@ -1935,7 +1935,7 @@ function performFullReset(){
   state.soloMemoryDeck = []; state.soloMemorySteps = 0; state.soloMemoryElapsedMs = 0;
   state.soloMemoryLeaderboard = []; state.soloMemoryLastName = '';
   // Лимонадный ларёк (бизнес)
-  state.businessLemonadeDay = 1; state.businessLemonadeCapital = 200;
+  state.businessLemonadeDay = 1; state.businessLemonadeMoney = 200;
   state.businessLemonadeUpgrades = {sign:false, music:false, recipe:false, seller:false, secondStand:false};
   state.businessLemonadeWeatherKey = 'normal'; state.businessLemonadeEventIdx = -1;
   state.businessLemonadeLocation = null; state.businessLemonadeHours = null; state.businessLemonadeOptions = {};

@@ -190,6 +190,10 @@ const BIZ_QUIZ_CONCEPT_POOL = [
 ];
 
 function bizPickRandom(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+// Форматирование суммы с пробелами для читаемости: 50000 → "50 000"
+function bizFormatMoney(n){
+  return String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
 function bizWeatherInfo(){ return BIZ_WEATHERS.find(w => w.key === state.businessLemonadeWeatherKey) || BIZ_WEATHERS[1]; }
 function bizEventInfo(){ return state.businessLemonadeEventIdx >= 0 ? BIZ_EVENTS[state.businessLemonadeEventIdx] : null; }
 function bizLocationInfo(){ return BIZ_LOCATIONS[state.businessLemonadeLocation] || null; }
@@ -199,23 +203,16 @@ function bizLocationInfo(){ return BIZ_LOCATIONS[state.businessLemonadeLocation]
 // сверх капитала. Для игрока это одна сумма, поэтому в интерфейсе они всегда
 // показываются вместе (см. updateBizHeaderUI).
 function bizMoneyTotal(){
-  return (state.businessLemonadeCapital || 0) + (state.businessLemonadeGoalReserve || 0);
+  return state.businessLemonadeMoney || 0;
 }
-// Суммарная чистая прибыль за все сыгранные дни + резерв на цель.
+// Суммарная чистая прибыль за все сыгранные дни: вся сумма минус стартовые 200 ₽.
 function bizTotalNet(){
-   const dayProfits = state.businessLemonadeDayProfits || [];
-   return dayProfits.reduce((a,b)=>a+(b||0), 0) + (state.businessLemonadeGoalReserve || 0);
+  return Math.max(0, bizMoneyTotal() - BIZ_START_CAPITAL);
 }
-// Расход: сначала тратим резерв на цель, потом капитал (200₽).
-// Возвращает { fromReserve, fromCapital }.
+// Расход: списываем из единой суммы.
 function bizSpend(amount){
-   const reserve = state.businessLemonadeGoalReserve || 0;
-   const fromReserve = Math.min(amount, reserve);
-   state.businessLemonadeGoalReserve = reserve - fromReserve;
-   const remaining = amount - fromReserve;
-   const fromCapital = Math.min(remaining, state.businessLemonadeCapital || 0);
-   state.businessLemonadeCapital = (state.businessLemonadeCapital || 0) - fromCapital;
-   return { fromReserve, fromCapital };
+  state.businessLemonadeMoney = Math.max(0, (state.businessLemonadeMoney || 0) - amount);
+  return state.businessLemonadeMoney;
 }
 function bizGoalInfo(){
   let goal = state.businessLemonadeGoal || 1000;
@@ -242,9 +239,9 @@ function updateBizHeaderUI(){
   // Прогресс-бар теперь показывает путь к цели накопления, а не дни.
   const pct = Math.max(0, Math.min(100, Math.round(totalNet / goal * 100)));
   document.getElementById('bizDayFill').style.width = pct + '%';
-  document.getElementById('bizDayLabel').textContent = `День ${day} · ${icon} ${totalNet} из ${goal} ₽ (${name})`;
+  document.getElementById('bizDayLabel').textContent = `День ${day} · ${icon} ${bizFormatMoney(totalNet)} из ${bizFormatMoney(goal)} ₽ (${name})`;
   // Единственная денежная строка: капитал + резерв на цель одной суммой.
-  document.getElementById('bizMoneyRow').textContent = `💰 ${bizMoneyTotal()} ₽`;
+  document.getElementById('bizMoneyRow').textContent = `💰 ${bizFormatMoney(bizMoneyTotal())} ₽`;
 }
 function goToBizPhase(phaseId){
   document.querySelectorAll('#businessLemonadeGame .biz-phase').forEach(el=>{
@@ -263,9 +260,9 @@ function updateBizContextBar(){
   const day = state.businessLemonadeDay || 1;
   const dow = bizDayOfWeek(day);
   const w = bizWeatherInfo();
-  const chips = [`${dow.short}`, `${w.icon} ${w.name}`];
+  const chips = [`${dow.short}`, `${w.icon}`];
   const loc = bizLocationInfo();
-  if(loc) chips.push(`${loc.icon} ${loc.name}`);
+  if(loc) chips.push(`${loc.icon}`);
   const ev = bizEventInfo();
   if(ev) chips.push(`${ev.icon} Событие`);
   if(state.businessLemonadeHours) chips.push(`⏰ ${state.businessLemonadeHours} ч`);
@@ -290,31 +287,24 @@ function bizCheckLemonSpoilage(){
   return 0;
 }
 // Возвращает друг долг сегодня (если срок подошёл) и/или одалживает заново
-// (если капитала не хватает даже на самую дешёвую закупку). Безопасно
+// (если денег не хватает даже на самую дешёвую закупку). Безопасно
 // вызывать несколько раз за один день — повторный вызов ничего не меняет.
 function bizHandleDailyFinance(){
   const day = state.businessLemonadeDay || 1;
-  const MAX_CAPITAL = 200;
   let repaidInfo = null;
-if((state.businessLemonadeLoanOwed || 0) > 0 && day >= (state.businessLemonadeLoanDueDay || 0)){
-     const owed = state.businessLemonadeLoanOwed;
-     const { fromReserve, fromCapital } = bizSpend(owed);
-     repaidInfo = { paid: fromReserve + fromCapital, owed, shortfall: owed - (fromReserve + fromCapital) };
-     state.businessLemonadeLoanOwed = 0;
-     state.businessLemonadeLoanDueDay = null;
-   }
-  // Пополняем капитал из резерва до 200₽, если нужно
-  if((state.businessLemonadeCapital || 0) < MAX_CAPITAL){
-    const need = MAX_CAPITAL - (state.businessLemonadeCapital || 0);
-    const fromReserve = Math.min(need, state.businessLemonadeGoalReserve || 0);
-    state.businessLemonadeCapital = (state.businessLemonadeCapital || 0) + fromReserve;
-    state.businessLemonadeGoalReserve = (state.businessLemonadeGoalReserve || 0) - fromReserve;
+  if((state.businessLemonadeLoanOwed || 0) > 0 && day >= (state.businessLemonadeLoanDueDay || 0)){
+    const owed = state.businessLemonadeLoanOwed;
+    const paid = Math.min(owed, state.businessLemonadeMoney || 0);
+    state.businessLemonadeMoney = Math.max(0, (state.businessLemonadeMoney || 0) - paid);
+    repaidInfo = { paid, owed, shortfall: owed - paid };
+    state.businessLemonadeLoanOwed = 0;
+    state.businessLemonadeLoanDueDay = null;
   }
   let loanInfo = null;
-  if((state.businessLemonadeCapital || 0) < BIZ_MIN_CAPITAL_FOR_DAY && !(state.businessLemonadeLoanOwed > 0)){
+  if((state.businessLemonadeMoney || 0) < BIZ_MIN_CAPITAL_FOR_DAY && !(state.businessLemonadeLoanOwed > 0)){
     const borrowed = BIZ_MIN_CAPITAL_FOR_DAY;
     const owed = Math.round(borrowed * BIZ_LOAN_INTEREST);
-    state.businessLemonadeCapital = (state.businessLemonadeCapital || 0) + borrowed;
+    state.businessLemonadeMoney = (state.businessLemonadeMoney || 0) + borrowed;
     state.businessLemonadeLoanOwed = owed;
     state.businessLemonadeLoanDueDay = day + BIZ_LOAN_DUE_DAYS;
     loanInfo = { borrowed, owed, dueDay: state.businessLemonadeLoanDueDay };
@@ -381,7 +371,7 @@ function renderBizUpgradeOffers(){
   btnsWrap.innerHTML = keys.map(k=>{
     const u = BIZ_UPGRADES[k];
     const price = bizUpgradePrice(u.basePrice);
-    const affordable = (state.businessLemonadeCapital || 0) >= price;
+    const affordable = (state.businessLemonadeMoney || 0) >= price;
     return `<button type="button" class="biz-upgrade-btn${affordable ? '' : ' biz-upgrade-owned'}" data-key="${k}" ${affordable ? '' : 'disabled'}>${u.name} — ${u.desc}<span class="biz-upgrade-price">${price} ₽</span></button>`;
   }).join('');
 btnsWrap.querySelectorAll('.biz-upgrade-btn').forEach(btn=>{
@@ -727,10 +717,10 @@ document.getElementById('bizLoanBtn').addEventListener('click', ()=>{
        showToast(`🤝 Оплачено из накоплений: ${shortfall} ₽`);
      } else if(needAfterReserve <= 0){
        return;
-     } else {
-       const borrow = bizLoanAmountForNeed(needAfterReserve);
-       const owed = Math.round(borrow * BIZ_LOAN_INTEREST);
-       state.businessLemonadeCapital = (state.businessLemonadeCapital || 0) + borrow;
+} else {
+        const borrow = bizLoanAmountForNeed(needAfterReserve);
+        const owed = Math.round(borrow * BIZ_LOAN_INTEREST);
+        state.businessLemonadeMoney = (state.businessLemonadeMoney || 0) + borrow;
        // Долги суммируются: можно попросить у друга несколько раз, если денег
        // всё равно не хватает. Возвращать до ближайшего из сроков.
        state.businessLemonadeLoanOwed = (state.businessLemonadeLoanOwed || 0) + owed;
@@ -852,19 +842,12 @@ function bizSellDay(){
   state.businessLemonadeSold = lemonSold;
   state.businessLemonadeRevenue = totalRevenue;
   state.businessLemonadeNetProfit = netProfit;
- // Все запасы расходуются — непроданные стаканы сгорают
+// Все запасы расходуются — непроданные стаканы сгорают
    state.businessLemonadeLemonStock = 0;
    state.businessLemonadeLemonBoughtDay = null;
 
- // Капитал: макс. 200₽, всё сверху — в резерв на цель
-   const capitalBeforeReserve = (state.businessLemonadeCapital || 0) + netProfit;
-   const MAX_CAPITAL = 200;
-   if(capitalBeforeReserve > MAX_CAPITAL){
-     state.businessLemonadeGoalReserve = (state.businessLemonadeGoalReserve || 0) + (capitalBeforeReserve - MAX_CAPITAL);
-     state.businessLemonadeCapital = MAX_CAPITAL;
-   } else {
-     state.businessLemonadeCapital = Math.max(0, capitalBeforeReserve);
-   }
+  // Единая сумма: прибыль просто прибавляется к деньгам.
+   state.businessLemonadeMoney = Math.max(0, (state.businessLemonadeMoney || 0) + netProfit);
    if(!state.businessLemonadeDayProfits) state.businessLemonadeDayProfits = [];
    state.businessLemonadeDayProfits[(state.businessLemonadeDay || 1) - 1] = netProfit;
 
@@ -1021,7 +1004,7 @@ function showBizSummaryModal(){
   const daysPlayed = (state.businessLemonadeDayLog || []).filter(Boolean).length;
   const dayWord = daysPlayed === 1 ? 'день' : (daysPlayed < 5 ? 'дня' : 'дней');
   document.getElementById('bizSummaryTitle').textContent = `${tier.icon} Цель достигнута: ${icon} ${name}!`;
-  document.getElementById('bizSummaryIntro').textContent = `За ${daysPlayed} ${dayWord} ты накопил ${totalProfit >= 0 ? '+' : ''}${totalProfit} ₽ чистыми и достиг цели «${name}» (${goal} ₽). Правильных ответов в проверке: ${correct} из ${total}.`;
+  document.getElementById('bizSummaryIntro').textContent = `За ${daysPlayed} ${dayWord} ты накопил ${totalProfit >= 0 ? '+' : ''}${bizFormatMoney(totalProfit)} ₽ чистыми и достиг цели «${name}» (${bizFormatMoney(goal)} ₽). Правильных ответов в проверке: ${correct} из ${total}.`;
   const log = (state.businessLemonadeDayLog || []).filter(Boolean);
   renderBizWeekChart(log);
   // Данные по лимонаду из дневного лога
@@ -1088,7 +1071,7 @@ function goToBusinessLemonadeGame(){
   state.businessLemonadePausedPhase = null;
   state.inProgress = true;
   state.businessLemonadeDay = 1;
-  state.businessLemonadeCapital = BIZ_START_CAPITAL;
+  state.businessLemonadeMoney = BIZ_START_CAPITAL;
   state.businessLemonadeUpgrades = { sign: false, music: false, recipe: false, seller: false, secondStand: false };
   state.businessLemonadeLocation = null;
   state.businessLemonadeHours = null;
@@ -1098,7 +1081,6 @@ function goToBusinessLemonadeGame(){
   state.businessLemonadeCompetitorPrice = null;
   state.businessLemonadeLoanOwed = 0;
   state.businessLemonadeLoanDueDay = null;
-  state.businessLemonadeGoalReserve = 0;
   state.businessLemonadeCups = 10;
   state.businessLemonadeSelectedLemonIdx = 1;
   state.businessLemonadePrice = 30;
