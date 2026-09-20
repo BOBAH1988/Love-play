@@ -1550,14 +1550,22 @@
      #2b0f2e, как у дефолтной схемы для светлого фона. Верный/неверный
      вариант (answer-correct/answer-wrong) не трогаем — там свои цвета. */
   #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong),
-  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong),
-  #timesTableCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
     background:rgba(255,255,255,.8); color:#2b0f2e; border-color:rgba(43,15,46,.22);
   }
   #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active,
-  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active,
-  #timesTableCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
+  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
     background:rgba(255,255,255,.92);
+  }
+  /* Кнопки ответов «Таблицы умножения» — как у «Викторины» (#quizCard):
+      белая полупрозрачная подложка .14 и белый текст вместо светлой схемы
+      (.8 с тёмным текстом) остальных обучающих карточек. Верный/неверный
+      вариант (answer-correct/answer-wrong) не трогаем — там свои цвета. */
+  #timesTableCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
+  }
+  #timesTableCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
+    background:rgba(255,255,255,.24);
   }
   /* Задание «Таблицы умножения» — пример (7 × 8 = ?) занимает место вопроса
      (.znayu-question-text, как у «Флагов»/«Столиц»), но крупнее обычного
