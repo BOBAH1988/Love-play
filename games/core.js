@@ -2821,16 +2821,16 @@ function updateLevelProgressUI(){
         const target = ((state.autoMilestone||0)+1)*10;
         const cur = Math.min(state.score1, state.score2);
         pct = target > 0 ? Math.round((cur/target)*100) : 0;
-        labelText = `До уровня: ${Math.max(0, target-cur)}`;
+        labelText = `До след. уровня: ${Math.max(0, target-cur)}`;
       } else if(state.gameMode === 'hot'){
         if(!state.autoMilestone){
           const cur = Math.max(state.score1, state.score2);
           pct = 5 > 0 ? Math.round((cur/5)*100) : 0;
-          labelText = `До уровня: ${Math.max(0, 5-cur)}`;
+          labelText = `До след. уровня: ${Math.max(0, 5-cur)}`;
         } else {
           const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
           pct = 10 > 0 ? Math.round((since/10)*100) : 0;
-          labelText = `До уровня: ${Math.max(0, 10-since)}`;
+          labelText = `До след. уровня: ${Math.max(0, 10-since)}`;
         }
       }
     }
