@@ -886,7 +886,8 @@
   /* ---- Game screen ---- */
   /* .score-row убран — вместо него .krokodil-score-row в единой системе */
   .krokodil-score-row #score1, .krokodil-score-row #score2{white-space:nowrap;}
-  .level-progress{
+  .level-progress,
+.level-scale{
     text-align:center; font-size:11px; color:#cba0bf; min-height:14px; margin-bottom:6px;
   }
 
@@ -993,7 +994,7 @@
     object-fit:contain;
   }
   /* В "Видеорулетке" уровней нет — прячем пустую полоску прогресса над карточкой */
-  #game.video-mode #levelProgress, #game.davay-mode #levelProgress{display:none;}
+  #game.video-mode #levelScale, #game.davay-mode #levelScale{display:none;}
   .card-inner{
     display:flex;
     flex-direction:column;
@@ -2285,7 +2286,7 @@
      карточек. "Выход" (pauseBtn) в row2 оставляем видимым — это единственный
      способ покинуть просмотр избранного. */
   #photoFavPrevBtn, #photoFavNextBtn{display:none;}
-  #game.placeholder-mode.photo-favview #levelProgress{display:none;}
+  #game.placeholder-mode.photo-favview #levelScale{display:none;}
   #game.placeholder-mode.photo-favview #doneBtn,
   #game.placeholder-mode.photo-favview #favoriteBtn,
   #game.placeholder-mode.photo-favview #sexshopOwnedBtn,
@@ -3042,9 +3043,9 @@
      обычный заголовок игры .game-level-label, поэтому здесь никаких правок
      шрифта не нужно: раньше метка хода раздувалась до font-size:28px, чтобы
      сойти за заголовок, и выбивалась из общего стиля (26px, вес 800,
-     межбуквенный интервал). Строку «До след. уровня» (#levelProgress)
-     скрываем — в «Фантах» она показывается внутри карточки. */
-  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
+межбуквенный интервал). Строку «До след. уровня» (#levelScale)
+      скрываем — в «Фантах» она показывается внутри карточки. */
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelScale{display:none;}
   /* В игре «Предложи партнеру» нет соревнования — скрываем счёт Парень/Девушка */
   #game.placeholder-mode #gameScoreRow{display:none;}
   /* В «Видеорулетке» соревнования тоже нет: игроки смотрят ролики вместе,
@@ -3221,26 +3222,58 @@
     z-index:10; margin:0; white-space:nowrap;
     max-width:calc(100% - 112px);
   }
-  /* Фанты (парная игра): строка «До след. уровня» — второй строкой верхней панели,
-     прямо под плавающей меткой хода «Ходит: …» (top метки + строка ~22px).
-     Отсчёт тот же, что у метки, поэтому safe-area прибавляем так же явно.
-     Только экран #game: на других экранах .level-progress нет. Скрытия в video/davay/
-     placeholder-режимах (#game.… #levelProgress{display:none}) специфичнее и работают. */
-  #game #levelProgress{
+/* Фанты (парная игра): шкала уровней с индикаторами «Парень» / «Девушка» */
+.level-scale{
     position:absolute;
     top:calc(12px + env(safe-area-inset-top, 0px) + 22px);
     left:50%; transform:translateX(-50%);
-    z-index:10; margin:0; white-space:nowrap;
-    max-width:calc(100% - 112px);
-  }
-  /* Mobile: FAB-кнопки парят сверху — нужны отступы, чтобы имена/контент
-     не налезали на кнопки. Отступ = --screen-top-pad: линия кнопок
-     (12px + safe-area) + их высота 36px + 8px зазора, минус appPad, который
-     в content-боксе #app уже есть (см. формулу у переменной в :root).
-     Раньше здесь стояли «на глаз» 50/56px без вычета appPad: в браузере это
-     давало лишние 16px пустой полосы, а в установленной PWA — ещё и
-     safe-area. */
-  .screen:has(> .krokodil-score-row){
+    z-index:10; width:calc(100% - 112px); max-width:340px;
+}
+.level-scale-track{
+    display:flex; gap:3px; align-items:center;
+    padding:4px 6px; border-radius:10px;
+    background:rgba(255,255,255,.08);
+}
+.level-scale-seg{
+    flex:1; height:8px; border-radius:4px;
+    background:rgba(255,255,255,.12);
+    transition:background .3s;
+    position:relative;
+}
+.level-scale-seg.active{
+    background:var(--accent);
+}
+.level-scale-seg .seg-dot{
+    position:absolute; top:-4px; left:50%; transform:translateX(-50%);
+    width:10px; height:10px; border-radius:50%;
+    background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.3);
+    transition:background .3s, border-color .3s;
+}
+.level-scale-seg.active .seg-dot{
+    background:#fff; border-color:#fff;
+}
+.level-scale-players{
+    display:flex; justify-content:space-between;
+    margin-top:6px; font-size:10px; font-weight:700;
+}
+.level-scale-player{
+    display:flex; align-items:center; gap:4px;
+}
+.level-scale-player .ps{
+    width:8px; height:8px; border-radius:50%;
+    transition:background .3s;
+}
+.level-scale-player .ps.m{ background:#6ec6ff; }
+.level-scale-player .ps.f{ background:#ff9fb0; }
+.level-scale-player .pl{ color:#cba0bf; }
+/* Mobile: FAB-кнопки парят сверху — нужны отступы, чтобы имена/контент
+   не налезали на кнопки. Отступ = --screen-top-pad: линия кнопок
+   (12px + safe-area) + их высота 36px + 8px зазора, минус appPad, который
+   в content-боксе #app уже есть (см. формулу у переменной в :root).
+   Раньше здесь стояли «на глаз» 50/56px без вычета appPad: в браузере это
+   давало лишние 16px пустой полосы, а в установленной PWA — ещё и
+   safe-area. */
+.screen:has(> .krokodil-score-row){
     padding-top: var(--screen-top-pad);
   }
   .screen:has(> .td-turn-label):not(:has(> .krokodil-score-row)){

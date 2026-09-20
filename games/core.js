@@ -2755,7 +2755,7 @@ function updateLevelUI(){
     btn.textContent = 'Следующий вариант';
     const downBtn = document.getElementById('levelDownBtn');
     if(downBtn) downBtn.disabled = false;
-    const el = document.getElementById('levelProgress');
+    const el = document.getElementById('levelScale');
     if(el) el.textContent = '';
     if(levelLabel){
       const lvl = PHOTO_LEVELS.find(l => l.id === photoLevel);
@@ -2772,7 +2772,7 @@ function updateLevelUI(){
   if(isVideoMode() || isDavayMode()){
     btn.disabled = false;
     btn.textContent = 'Сложнее';
-    const el = document.getElementById('levelProgress');
+    const el = document.getElementById('levelScale');
     if(el) el.textContent = '';
     return;
   }
@@ -2786,26 +2786,19 @@ function updateLevelUI(){
 }
 
 function updateLevelProgressUI(){
-  const el = document.getElementById('levelProgress');
+  const el = document.getElementById('levelScale');
   if(!el) return;
   const levels = getSortedActiveLevels();
   const isMax = levels.indexOf(state.levelCap) === levels.length-1;
-  let text = '';
-  if(isMax){ text = ''; }
-  else if(state.gameMode === 'romantic'){
-    const target = ((state.autoMilestone||0)+1)*10;
-    const cur = Math.min(state.score1, state.score2);
-    text = `До след. уровня: ${Math.max(0, target-cur)} очк. (у обоих партнёров)`;
-  } else if(state.gameMode === 'hot'){
-    if(!state.autoMilestone){
-      const cur = Math.max(state.score1, state.score2);
-      text = `До след. уровня: ${Math.max(0, 5-cur)} очк.`;
-    } else {
-      const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
-      text = `До след. уровня: ${Math.max(0, 10-since)} карт`;
-    }
-  }
-  el.textContent = text;
+  const activeLevels = levels.map(id => levelById(id));
+  // Строим шкалу
+  el.innerHTML = '<div class="level-scale-track">' + activeLevels.map(l =>
+    '<div class="level-scale-seg' + (l.id <= state.levelCap ? ' active' : '') + '"><span class="seg-dot"></span></div>'
+  ).join('') + '</div>';
+  el.innerHTML += '<div class="level-scale-players">' +
+    '<span class="level-scale-player"><span class="ps m"></span><span class="pl">Парень: ' + state.score1 + '</span></span>' +
+    '<span class="level-scale-player"><span class="ps f"></span><span class="pl">Девушка: ' + state.score2 + '</span></span>' +
+  '</div>';
   // «До след. уровня» дублируется внутрь карточки «Фантов» — над пилюлей
   // «Правда/Действие»: пользователь просил держать эту надпись на карте.
   const inCard = document.getElementById('cardLevelProgress');
@@ -2813,8 +2806,6 @@ function updateLevelProgressUI(){
     const fill = document.getElementById('cardLevelProgressFill');
     if(fill){
       let pct = 0;
-      const levels = getSortedActiveLevels();
-      const isMax = levels.indexOf(state.levelCap) === levels.length-1;
       if(!isMax){
         if(state.gameMode === 'romantic'){
           const target = ((state.autoMilestone||0)+1)*10;
