@@ -728,21 +728,31 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     });
   }
 
-  var linkBtn = document.getElementById('homeShareLinkBtn');
-  if(linkBtn){
-    linkBtn.addEventListener('click', async ()=>{
+  var linkBtnHandler = function(){
       try{
         if(navigator.clipboard && navigator.clipboard.writeText){
-          await navigator.clipboard.writeText(SHARE_URL);
-          showToast('Ссылка скопирована');
+          navigator.clipboard.writeText(SHARE_URL).then(function(){
+            showToast('Ссылка скопирована');
+          }).catch(function(){
+            showToast('Ссылка: ' + SHARE_URL);
+          });
         }else{
           showToast('Ссылка: ' + SHARE_URL);
         }
       }catch(e){
         showToast('Ссылка: ' + SHARE_URL);
       }
+    };
+    document.addEventListener('click', function(e){
+      var target = e.target;
+      while(target && target !== document.body){
+        if(target.id === 'homeShareLinkBtn'){
+          linkBtnHandler();
+          break;
+        }
+        target = target.parentElement;
+      }
     });
-  }
 
   if(backBtn){
     if('MutationObserver' in window){
