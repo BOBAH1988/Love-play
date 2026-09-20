@@ -2757,7 +2757,11 @@ function updateLevelUI(){
     const downBtn = document.getElementById('levelDownBtn');
     if(downBtn) downBtn.disabled = false;
     const el = document.getElementById('levelProgress');
-    if(el) el.textContent = '';
+    // Пилюлю нужно очистить и от текста, и от ФОНА: updateLevelProgressUI
+    // («Фанты») красит её цветом уровня (#b07bff «Сближение» и т.п.), и
+    // пустая окрашенная пилюля видна в «Предложи партнёру» как цветная
+    // полоска над карточкой.
+    if(el){ el.textContent = ''; el.style.background = ''; }
     if(levelLabel){
       const lvl = PHOTO_LEVELS.find(l => l.id === photoLevel);
       levelLabel.textContent = lvl ? `${lvl.icon} ${lvl.name}` : '';
@@ -2774,7 +2778,9 @@ function updateLevelUI(){
     btn.disabled = false;
     btn.textContent = 'Сложнее';
     const el = document.getElementById('levelProgress');
-    if(el) el.textContent = '';
+    // Сбрасываем и фон — как в placeholder-ветке выше: пилюля скрыта CSS-ом,
+    // но остаточный инлайн-стиль не должен переживать смену режима.
+    if(el){ el.textContent = ''; el.style.background = ''; }
     return;
   }
   const levels = getSortedActiveLevels();

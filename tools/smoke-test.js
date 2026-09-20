@@ -1022,6 +1022,32 @@ test('Сценарий: «Предложи партнёру» по-прежне�
   MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
 });
 
+test('Сценарий: пилюля прогресса в «Предложи партнёру» остаётся без фона и текста', () => {
+  // updateLevelProgressUI («Фанты») красит #levelProgress цветом уровня
+  // (#b07bff «Сближение», #7a5cff «Фантазии»), а updateLevelUI в
+  // placeholder-режиме очищал пилюлю только от текста — над карточкой
+  // «Предложи партнёру» оставалась фиолетовая полоска. Фон должен
+  // сбрасываться вместе с текстом.
+  const gameEl = getElById(stub, 'game');
+  const pill = getElById(stub, 'levelProgress');
+  const savedBg = pill.style.background, savedText = pill.textContent;
+  try {
+    asFantyScreen();
+    global.updateTurnUI();
+    global.updateLevelUI(); // «Фанты»: пилюля получает цвет уровня
+    const fantyBg = pill.style.background;
+    assert(!!fantyBg, `в «Фантах» пилюля должна получить цвет уровня, получено «${fantyBg}»`);
+    gameEl.classList.add('placeholder-mode');
+    global.updateLevelUI();
+    assert(!pill.style.background && !pill.textContent,
+      'в «Предложи партнёру» пилюля должна остаться без фона и текста');
+  } finally {
+    gameEl.classList.remove('placeholder-mode');
+    pill.style.background = savedBg;
+    pill.textContent = savedText;
+  }
+});
+
 test('Сценарий: названия режимов не смешиваются при переключении', () => {
   // Каждый вход в режим должен заново выставлять СВОЙ заголовок: раньше
   // заголовок просто скрывался, и при переходе между играми мог остаться

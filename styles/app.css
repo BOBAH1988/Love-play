@@ -3061,6 +3061,10 @@
 межбуквенный интервал). Строку «До след. уровня» (#levelProgress)
       скрываем — в «Фантах» она показывается внутри карточки. */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
+  /* В placeholder-режиме («Предложи партнеру» и другие игры без уровней)
+     пилюля прогресса всегда пустая (updateLevelUI очищает текст), а фон мог
+     остаться от «Фантов» — прячем целиком, как в video/davay-режимах. */
+  #game.placeholder-mode #levelProgress{display:none;}
   /* В игре «Предложи партнеру» нет соревнования — скрываем счёт Парень/Девушка */
   #game.placeholder-mode #gameScoreRow{display:none;}
   /* В «Видеорулетке» соревнования тоже нет: игроки смотрят ролики вместе,
