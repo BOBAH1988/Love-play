@@ -141,12 +141,14 @@ function showTimesTableQuestion(){
 }
 
 function timesTableTick(){
-  if(timesTableAnswered) return;
-  if(timesTableDeadline - Date.now() > 0) return;
-  timesTableAnswered = true;
-  stopTimesTableInterval();
-  stopTimesTableSpeech();
-  answerTimesTableQuestion(-1);
+  // Эталон викторины (games/quiz.js → quizTick) и флагов (games/flags.js →
+  // flagsTick): тик сам флаг НЕ ставит — ответ с choiceIdx = -1 делает это
+  // сам (timesTableAnswered + подсветка в answerTimesTableQuestion).
+  const remaining = timesTableDeadline - Date.now();
+  if(remaining <= 0){
+    stopTimesTableInterval();
+    if(!timesTableAnswered) answerTimesTableQuestion(-1);
+  }
 }
 
 function answerTimesTableQuestion(choiceIdx){
@@ -172,9 +174,7 @@ function answerTimesTableQuestion(choiceIdx){
   }
   // Эталон викторины: зелёная подсветка верного варианта — подсказка,
   // очко за неё НЕ начисляется (state.timesTableCorrect не растёт).
-  if(choiceIdx < 0){
-    showToast('⏰ Время вышло — ответ не выбран, засчитано как неверно');
-  }
+
   state.timesTableTimeMs += Date.now() - timesTableQuestionStartedAt;
   const key = timesTableCardKey(item);
   const lvl = Number(state.timesTableSelectedLevel) || 1;
@@ -182,12 +182,17 @@ function answerTimesTableQuestion(choiceIdx){
   if(!state.timesTableUsed[lvl].includes(key)) state.timesTableUsed[lvl].push(key);
   const card = document.getElementById('timesTableCard');
   if(card){
-    const answersHtml = timesTableCurrentOptions.map(opt =>
-      `<button type="button" class="znayu-answer-btn ${opt === answer ? 'answer-correct' : ''} ${opt === chosen ? 'answer-wrong' : ''}" disabled>${opt}</button>`
-    ).join('');
-    const note = choiceIdx < 0 ? '⏰ Время вышло' : (correct ? '✅ Верно!' : '❌ Неверно');
-    card.innerHTML = timesTableQuestionHtml(item, answersHtml) +
-      `<div class="flags-answer-note">${note} — ${item.a} × ${item.b} = ${answer}</div>`;
+    // Эталон викторины: верный вариант — только answer-correct (зелёный контур),
+    // выбранный неверный — только answer-wrong (красный). else-логика, а не два
+    // независимых тернарника: иначе при верном ответе одна кнопка получала оба
+    // класса и красный перебивал зелёный.
+    const answersHtml = timesTableCurrentOptions.map(opt =>{
+      let cls = 'btn btn-secondary znayu-answer-btn';
+      if(opt === answer) cls += ' answer-correct';
+      else if(opt === chosen) cls += ' answer-wrong';
+      return `<button type="button" class="${cls}" disabled>${opt}</button>`;
+    }).join('');
+    card.innerHTML = timesTableQuestionHtml(item, answersHtml);
   }
   updateTimesTableScoreUI();
   stopTimesTableAdvanceTimer();
