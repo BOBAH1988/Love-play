@@ -2697,7 +2697,8 @@ function updateAutoSpeakBtn(){
   const menuAutoSpeakBtn = document.getElementById('menuAutoSpeakBtn');
   if(menuAutoSpeakBtn){
     const icon = menuAutoSpeakBtn.querySelector('.menu-icon');
-    if(icon) icon.textContent = state.autoSpeak ? '🔊' : '🔇';
+    // ▶ — режим включён, ⏸ — выключен (те же глифы, что у кнопок таймера «▶ Старт»/«⏸ Пауза»)
+    if(icon) icon.textContent = state.autoSpeak ? '▶' : '⏸';
   }
 }
 document.getElementById('muteBtn').addEventListener('click', ()=>{
