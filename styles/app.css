@@ -3707,6 +3707,9 @@
 .fab-share-btn[data-tooltip]:hover::after{
         left:0; right:auto; transform:translateX(0);
       }
+      .fab-back-btn[data-tooltip]:hover::after{
+        left:0; right:auto; transform:translateX(0);
+      }
 /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
 	 чтобы media query не перекрывался ими с тем же приоритетом).
      Кнопки привязываются к краям #app (контейнер приложения с другим

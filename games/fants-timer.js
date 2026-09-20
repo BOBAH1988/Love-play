@@ -684,10 +684,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 // При нажатии всплывает окно с кнопкой «Поделиться ссылкой» и QR-кодом.
 (function(){
   const shareBtn = document.getElementById('globalShareBtn');
-  const modal = document.getElementById('homeShareModal');
-  const closeBtn = document.getElementById('homeShareCloseBtn');
-  const linkBtn = document.getElementById('homeShareLinkBtn');
-  const qrCanvas = document.getElementById('homeQrCanvas');
   const backBtn = document.getElementById('globalBackBtn');
   const setupEl = document.getElementById('setup');
   const homeViewEl = document.getElementById('homeView');
@@ -701,14 +697,17 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   }
 
   function openShareModal(){
+    var modal = document.getElementById('homeShareModal');
     if(!modal) return;
     modal.classList.add('show');
+    var qrCanvas = document.getElementById('homeQrCanvas');
     if(qrCanvas && window.renderQrCode){
       window.renderQrCode(qrCanvas, SHARE_URL);
     }
   }
 
   function closeShareModal(){
+    var modal = document.getElementById('homeShareModal');
     if(!modal) return;
     modal.classList.remove('show');
   }
@@ -716,14 +715,20 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(shareBtn){
     shareBtn.addEventListener('click', openShareModal);
   }
+
+  var closeBtn = document.getElementById('homeShareCloseBtn');
   if(closeBtn){
     closeBtn.addEventListener('click', closeShareModal);
   }
-  if(modal){
-    modal.addEventListener('click', (e)=>{
-      if(e.target === modal) closeShareModal();
+
+  var modalEl = document.getElementById('homeShareModal');
+  if(modalEl){
+    modalEl.addEventListener('click', (e)=>{
+      if(e.target === modalEl) closeShareModal();
     });
   }
+
+  var linkBtn = document.getElementById('homeShareLinkBtn');
   if(linkBtn){
     linkBtn.addEventListener('click', async ()=>{
       try{
