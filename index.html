@@ -4665,5 +4665,46 @@
       </div>
     </div>
   </div>
+  <script>
+  window.addEventListener('load', function(){
+    var tooltip = document.createElement('div');
+    tooltip.style.cssText = 'position:fixed;display:none;background:#000;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px;line-height:1.4;white-space:nowrap;z-index:9999;pointer-events:none;';
+    document.body.appendChild(tooltip);
+    document.addEventListener('mouseover', function(e){
+      var t = e.target;
+      while(t && t !== document.body){
+        if(t.hasAttribute('data-tooltip') && !t.classList.contains('fab-menu-btn')){
+          var text = t.getAttribute('data-tooltip');
+          if(text){
+            tooltip.textContent = text;
+            tooltip.style.display = 'block';
+            var tr = tooltip.getBoundingClientRect();
+            var tw = tr.width || 60;
+            var th = tr.height || 20;
+            var rr = t.getBoundingClientRect();
+            var left = rr.left + rr.width/2 - tw/2;
+            var top = rr.top - th - 8;
+            if(left < 4) left = 4;
+            if(left + tw > window.innerWidth - 4) left = window.innerWidth - tw - 4;
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = Math.max(4, top) + 'px';
+          }
+          break;
+        }
+        t = t.parentElement;
+      }
+    });
+    document.addEventListener('mouseout', function(e){
+      var t = e.target;
+      while(t && t !== document.body){
+        if(t.hasAttribute('data-tooltip') && !t.classList.contains('fab-menu-btn')){
+          tooltip.style.display = 'none';
+          break;
+        }
+        t = t.parentElement;
+      }
+    });
+  });
+  </script>
 </body>
 </html>
