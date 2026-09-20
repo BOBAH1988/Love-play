@@ -479,7 +479,7 @@
           <button type="button" class="btn btn-menu-item" id="gameFlashTimeBtn"><span class="menu-icon">🕐</span> Время</button>
           <button type="button" class="btn btn-menu-item" id="gameFlagsBtn"><span class="menu-icon">🇷🇺</span> Флаги</button>
           <button type="button" class="btn btn-menu-item" id="gameCapitalsBtn"><span class="menu-icon">🏛️</span> Столицы</button>
-          <button type="button" class="btn btn-menu-item" id="gameTimesTableBtn"><span class="menu-icon"><span class="times-x">✕</span></span> Таблица умножения</button>
+          <button type="button" class="btn btn-menu-item" id="gameTimesTableBtn"><span class="menu-icon"><span class="times-x">✕</span></span> Арафметика</button>
         </div>
       </div>
 
@@ -546,11 +546,11 @@
    <button class="btn btn-secondary" id="capitalsSetupExitBtn" style="margin-top:10px;">Выход</button>
  </section>
 
-<!-- ===== ТАБЛИЦА УМНОЖЕНИЯ: НАСТРОЙКА =====
+<!-- ===== АРАФМЕТИКА: НАСТРОЙКА =====
      📍 логика: games/times-table.js | карточки генерируются программно -->
  <section id="timesTableSetup" class="screen">
-   <h1 class="title"><span class="times-x">✕</span>Таблица умножения</h1>
-   <div class="subtitle">Выучите таблицу умножения — выберите уровень и размер партии</div>
+   <h1 class="title"><span class="times-x">✕</span>Арафметика</h1>
+   <div class="subtitle">Тренируйте арифметику — выберите уровень и размер партии</div>
 
    <div class="field">
      <label>Уровень сложности</label>
@@ -617,10 +617,10 @@
    </div>
  </section>
 
-<!-- ===== ТАБЛИЦА УМНОЖЕНИЯ: ИГРА =====
+<!-- ===== АРАФМЕТИКА: ИГРА =====
      📍 логика: games/times-table.js -->
  <section id="timesTableGame" class="screen">
-   <div class="game-level-label"><span class="times-x">✕</span>Таблица умножения</div>
+   <div class="game-level-label"><span class="times-x">✕</span>Арафметика</div>
    <div class="krokodil-score-row two-player" id="timesTableScoreRow"></div>
    <div class="wishlist-progress-row" id="timesTableProgressRow">
      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="timesTableProgressFill"></div></div>
@@ -670,7 +670,7 @@
     </div>
   </div>
 
-  <!-- ===== ТАБЛИЦА УМНОЖЕНИЯ: ИТОГИ ИГРЫ =====
+  <!-- ===== АРАФМЕТИКА: ИТОГИ ИГРЫ =====
        📍 логика: games/times-table.js -->
   <div class="modal-overlay" id="timesTableSummaryModal">
     <div class="modal-card">
@@ -680,12 +680,12 @@
     </div>
   </div>
 
-  <!-- ===== ПРАВИЛА «ТАБЛИЦА УМНОЖЕНИЯ» =====
+  <!-- ===== ПРАВИЛА «АРАФМЕТИКА» =====
        📍 логика: games/times-table.js -->
   <div class="modal-overlay" id="timesTableRulesModal">
     <div class="modal-card">
-      <div class="modal-title"><span class="times-x">✕</span>Правила игры «Таблица умножения»</div>
-      <div class="intro-text">Выучите таблицу умножения. Перед началом выберите уровень сложности и количество карточек: 5, 10, 25 или 50. На каждый вопрос — 4 варианта ответа, верный только один. Время на ответ зависит от уровня: ⭐ — 5 секунд, ⭐⭐ — 3 секунды, ⭐⭐⭐ — 1 секунда. Если время вышло — показывается верный ответ.</div>
+      <div class="modal-title"><span class="times-x">✕</span>Правила игры «Арафметика»</div>
+      <div class="intro-text">Тренируйте арифметику. Перед началом выберите уровень сложности и количество карточек: 5, 10, 25 или 50. На каждый вопрос — 4 варианта ответа, верный только один. Время на ответ зависит от уровня: ⭐ — 5 секунд, ⭐⭐ — 3 секунды, ⭐⭐⭐ — 1 секунда. Если время вышло — показывается верный ответ.</div>
        <ol class="modal-rules">
          <li>Перед началом выберите уровень сложности и количество карточек, затем нажмите «Начать».</li>
          <li>На каждой карточке показан пример (например, 7 × 8). Выберите правильный ответ из 4 вариантов.</li>

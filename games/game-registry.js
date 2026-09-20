@@ -225,7 +225,7 @@ window.GAME_REGISTRY = [
     screens: ['capitalsGame'],
   },
   {
-    mode: 'timesTable', title: '«Таблица умножения»', group: 'two', menuTitle: '✕ Таблица умножения',
+    mode: 'timesTable', title: '«Арафметика»', group: 'two', menuTitle: '✕ Арафметика',
     noPause: true, back: 'exitTimesTableGame',
     screens: ['timesTableGame'],
   },

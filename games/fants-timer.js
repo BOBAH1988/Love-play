@@ -745,7 +745,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🕐','Время','flashTimeRulesModal'],
       ['🇷🇺','Флаги','flagsRulesModal'],
       ['🏛️','Столицы','capitalsRulesModal'],
-      ['<span class="times-x">✕</span>','Таблица умножения','timesTableRulesModal'],
+      ['<span class="times-x">✕</span>','Арафметика','timesTableRulesModal'],
     ]},
   ];
 

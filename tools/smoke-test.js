@@ -177,7 +177,7 @@ test('Данные «Времени»: у цифровых карточек вс
 });
 
 
-test('«Таблица умножения»: подсветка кнопок использует класс on, а не active', () => {
+test('«Арафметика»: подсветка кнопок использует класс on, а не active', () => {
   const src = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
   const levelFn = src.slice(src.indexOf('function renderTimesTableLevelGroup'),
                             src.indexOf('function renderTimesTableCountGroup'));
@@ -191,7 +191,7 @@ test('«Таблица умножения»: подсветка кнопок и�
     'кнопки выбора не должны использовать экранный класс active — он не стилизован');
 });
 
-test('«Таблица умножения»: карточка собрана как у остальных обучающих игр', () => {
+test('«Арафметика»: карточка собрана как у остальных обучающих игр', () => {
   const src = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
   const htmlFn = src.slice(src.indexOf('function timesTableQuestionHtml'),
                            src.indexOf('function updateTimesTableProgressUI'));
@@ -209,14 +209,14 @@ test('«Таблица умножения»: карточка собрана к�
     'на карточке должна быть иконка-подсказка озвучки 🔊, как у группы');
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
   assert(/#timesTableCard,/.test(css) || /, #timesTableCard/.test(css),
-    '«Таблица умножения» должна входить в блок тёмно-голубых карточек обучающих игр');
+    '«Арафметика» должна входить в блок тёмно-голубых карточек обучающих игр');
   assert(/#timesTableCard \.znayu-answers/.test(css),
     'кнопки ответов «Таблицы» должны использовать схему «Викторины» (полупрозрачные, белый текст)');
   assert(/#timesTableCard \.znayu-answers \.znayu-answer-btn:not\(\.answer-correct\):not\(\.answer-wrong\)\{\s*background:rgba\(255,255,255,\.14\); color:#fff/.test(css),
     'кнопки «Таблицы» — как у #quizCard (.14, белый текст), а не светлая схема обучающих карточек');
 });
 
-test('«Таблица умножения»: иконка отделена отступом от названия', () => {
+test('«Арафметика»: иконка отделена отступом от названия', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
   assert(/\.game-level-label > \.times-x[\s\S]{0,120}margin-right/.test(css),
     'отступ у иконки задаётся явно: в .game-level-label (flex) пробел между иконкой и названием зазора не создаёт');
@@ -224,8 +224,8 @@ test('«Таблица умножения»: иконка отделена от�
     'тот же отступ нужен в заголовке .title и в .modal-title');
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const js = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
-  const block = /<span class="times-x">✕<\/span>Таблица умножения/;
-  assert(/<h1 class="title"><span class="times-x">✕<\/span>Таблица умножения<\/h1>/.test(html),
+  const block = /<span class="times-x">✕<\/span>Арафметика/;
+  assert(/<h1 class="title"><span class="times-x">✕<\/span>Арафметика<\/h1>/.test(html),
     'заголовок экрана настроек — иконка вплотную к тексту (отступ даёт CSS)');
   assert(new RegExp('<div class="game-level-label">' + block.source + '<\\/div>').test(html),
     'подпись на игровом экране — без лишнего пробела после иконки');
@@ -301,7 +301,7 @@ test('Колоды «Флагов»/«Столиц» покрывают все S
   });
 });
 
-test('«Таблица умножения»: очередь на уровнях и размерах партии', () => {
+test('«Арафметика»: очередь на уровнях и размерах партии', () => {
   const prevLevel = state.timesTableSelectedLevel;
   const prevCount = state.timesTableQuestionCount;
   const prevUsed = state.timesTableUsed;
