@@ -3685,7 +3685,7 @@
     right: calc(12px + env(safe-area-inset-right));
     z-index:150;
     width:36px; height:36px; border-radius:50%;
-    background:rgba(20,10,28,.85); border:1px solid rgba(255,255,255,.25);
+    background:rgba(60,25,60,.85); border:1px solid rgba(255,255,255,.25);
     color:rgba(255,255,255,.85); font-size:16px; line-height:1; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     transition:background .2s ease, color .2s ease, border-color .2s ease;
