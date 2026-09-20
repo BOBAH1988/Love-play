@@ -3703,14 +3703,8 @@
      background:#000; color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; line-height:1.4;
      white-space:nowrap; z-index:200; pointer-events:none;
    }
-   /* JS-подсказка */
-   .js-tooltip{
-     position:fixed; top:0; left:0;
-     background:#000; color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; line-height:1.4;
-     white-space:nowrap; z-index:9999; pointer-events:none; display:none;
-   }
-  /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
-     чтобы media query не перекрывался ими с тем же приоритетом).
+/* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
+	 чтобы media query не перекрывался ими с тем же приоритетом).
      Кнопки привязываются к краям #app (контейнер приложения с другим
      фоном, отличающимся от заднего фона body) — на 12px от верхнего
      правого/левого края. position:absolute работает относительно #app
