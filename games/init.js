@@ -108,6 +108,7 @@ try{
 // ===== Подсказки (data-tooltip) — делегирование =====
 (function(){
   var tooltip = null;
+  var currentTarget = null;
   function getTooltip(){
     if(!tooltip){
       tooltip = document.createElement('div');
@@ -117,38 +118,47 @@ try{
     }
     return tooltip;
   }
-  document.addEventListener('mouseover', function(e){
+  function positionTooltip(t){
+    var text = t.getAttribute('data-tooltip');
+    if(!text) return false;
+    var tip = getTooltip();
+    tip.textContent = text;
+    tip.style.display = 'block';
+    var tr = tip.getBoundingClientRect();
+    var tw = tr.width || 80;
+    var th = tr.height || 20;
+    var rr = t.getBoundingClientRect();
+    var left = rr.left + rr.width/2 - tw/2;
+    if(left < 8) left = 8;
+    if(left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
+    var top = rr.top + rr.height + 8;
+    if(top + th > window.innerHeight - 8) top = rr.top - th - 8;
+    tip.style.left = left + 'px';
+    tip.style.top = Math.max(8, top) + 'px';
+    currentTarget = t;
+    return true;
+  }
+  function hideTooltip(){
+    var tip = document.querySelector('[data-tooltip-tip]');
+    if(tip) tip.style.display = 'none';
+    currentTarget = null;
+  }
+  document.addEventListener('mousemove', function(e){
     var t = e.target;
     while(t && t !== document.body){
       if(t.hasAttribute('data-tooltip')){
-        var text = t.getAttribute('data-tooltip');
-        if(text){
-          var tip = getTooltip();
-          tip.textContent = text;
-          tip.style.display = 'block';
-          var tr = tip.getBoundingClientRect();
-          var tw = tr.width || 80;
-          var th = tr.height || 20;
-          var rr = t.getBoundingClientRect();
-          var left = rr.left + rr.width/2 - tw/2;
-          if(left < 8) left = 8;
-          if(left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
-          var top = rr.top + rr.height + 8;
-          if(top + th > window.innerHeight - 8) top = rr.top - th - 8;
-          tip.style.left = left + 'px';
-          tip.style.top = Math.max(8, top) + 'px';
-        }
-        break;
+        if(currentTarget !== t) positionTooltip(t);
+        return;
       }
       t = t.parentElement;
     }
+    if(currentTarget) hideTooltip();
   });
   document.addEventListener('mouseout', function(e){
     var t = e.target;
     while(t && t !== document.body){
       if(t.hasAttribute('data-tooltip')){
-        var tip = document.querySelector('[data-tooltip-tip]');
-        if(tip) tip.style.display = 'none';
+        hideTooltip();
         break;
       }
       t = t.parentElement;

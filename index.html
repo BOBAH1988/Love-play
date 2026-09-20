@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261020f">
+<link rel="stylesheet" href="styles/app.css?v=20261020g">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-30 · v412';
+        window.APP_BUILD = '2026-09-30 · v413';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -4542,7 +4542,7 @@
 <script src="games/flags.js?v=20260929k"></script>
 <script src="games/capitals.js?v=20260929d"></script>
 <script src="games/times-table.js?v=20260920h"></script>
-<script src="games/init.js?v=20260929d"></script>
+<script src="games/init.js?v=20260929e"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует.
 
@@ -4665,42 +4665,5 @@
       </div>
     </div>
   </div>
-  <script>
-  function showTip(el){
-    var text = el.getAttribute('data-tooltip') || el.getAttribute('title');
-    if(!text) return;
-    var tooltip = document.getElementById('_tip');
-    if(!tooltip){
-      tooltip = document.createElement('div');
-      tooltip.id = '_tip';
-      document.body.appendChild(tooltip);
-    }
-    tooltip.textContent = text;
-    tooltip.style.position = 'fixed';
-    tooltip.style.display = 'block';
-    tooltip.style.background = 'rgba(80,30,80,.92)';
-    tooltip.style.color = '#fff';
-    tooltip.style.padding = '4px 10px';
-    tooltip.style.borderRadius = '8px';
-    tooltip.style.fontSize = '13px';
-    tooltip.style.lineHeight = '1.4';
-    tooltip.style.whiteSpace = 'normal';
-    tooltip.style.zIndex = '9999';
-    tooltip.style.pointerEvents = 'none';
-    tooltip.style.border = '1px solid rgba(255,94,142,.4)';
-    tooltip.style.maxWidth = '70vw';
-    tooltip.style.textAlign = 'center';
-    tooltip.style.wordWrap = 'break-word';
-    var tr = tooltip.getBoundingClientRect();
-    var tw = tr.width || 80;
-    var th = tr.height || 20;
-    var rr = el.getBoundingClientRect();
-    var left = rr.left + rr.width/2 - tw/2;
-    if(left < 8) left = 8;
-    if(left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
-    var top = rr.top + rr.height + 8;
-    if(top + th > window.innerHeight - 8) top = rr.top - th - 8;
-    tooltip.style.left = left + 'px';
-    tooltip.style.top = Math.max(8, top) + 'px';
 </body>
 </html>
