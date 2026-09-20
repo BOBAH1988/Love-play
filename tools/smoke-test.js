@@ -781,6 +781,32 @@ test('Сценарий: правила «Флагов» доступны в об
   assert(hubHtml.includes('Флаги'), 'пункт должен называться «Флаги»');
 });
 
+test('Сценарий: GENDER_COLORS определён и полосы карточек четырёх игр не падают', () => {
+  // Регрессия: GENDER_COLORS жил в fants-timer.js и был удалён вместе с
+  // полосами фантиков, а znayu.js / truth-dare.js / timer-game.js /
+  // wishlist.js продолжали им пользоваться — ReferenceError при показе
+  // карточки («Дальше отвечает…» и вопроса). Теперь константа в core.js.
+  assert(typeof GENDER_COLORS === 'object' && GENDER_COLORS.M && GENDER_COLORS.F,
+    'GENDER_COLORS должен быть определён в core.js с ключами M и F');
+  const originalFade = global.fadeSwapEl;
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    const savedName1 = state.name1, savedName2 = state.name2;
+    state.name1 = 'Игрок 1'; state.name2 = 'Игрок 2';
+    // Каждая из игр рисует полосу в обработчике: достаточно, что функции
+    // выполняются без ReferenceError (стаб не отражает innerHTML).
+    state.znayuActivePlayer = 1;
+    showZnayuHandoffCard(2);
+    state.tdCurrentPlayer = 1;
+    tdShowChoice();
+    state.timerCurrentPlayer = 1;
+    showWishlistHandoffCard(2);
+    Object.assign(state, { name1: savedName1, name2: savedName2 });
+  } finally {
+    global.fadeSwapEl = originalFade;
+  }
+});
+
 test('Сценарий: правила «Столиц» доступны в общем хабе правил', () => {
   const hubHtml = document.getElementById('rulesHubList').innerHTML;
   assert(hubHtml.includes('capitalsRulesModal'), 'в хабе правил должен быть пункт «Столицы»');

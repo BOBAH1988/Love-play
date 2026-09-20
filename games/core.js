@@ -165,6 +165,12 @@ function businessDefaultName(idx){
   if(isNaN(idx) || idx < 0) idx = 0;
   return BUSINESS_PLAYER_DEFAULTS[idx] || ('Игрок ' + (idx + 1));
 }
+// Цвета полос карточек по полу активного игрока (M — голубой, F — розовый).
+// Определение здесь, в core.js: им пользуются znayu.js, truth-dare.js,
+// timer-game.js и wishlist.js, а раньше оно жило в fants-timer.js и было
+// удалено вместе с полосами фантиков (4b42e98) — игры падали с
+// ReferenceError при показе карточки.
+const GENDER_COLORS = { M:'#6ec6ff', F:'#ff9fb0' };
 let state = {
   // Версия формата сохранений (см. SCHEMA_VERSION и MIGRATIONS выше).
   // У нового игрока сразу текущая — миграции ему не нужны.
