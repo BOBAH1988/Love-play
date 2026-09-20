@@ -177,7 +177,7 @@ test('Данные «Времени»: у цифровых карточек вс
 });
 
 
-test('«Арифметика»: выбор темы — Умножение и Деление рабочие, Сложение/Вычитание скоро появятся', () => {
+test('«Арифметика»: выбор темы — все 4 темы рабочие (Умножение/Деление 1–10, Сложение/Вычитание 0–20)', () => {
   const src = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   assert(/id="timesTableTopicGroup"/.test(html),
@@ -188,10 +188,9 @@ test('«Арифметика»: выбор темы — Умножение и Д
   });
   assert(/TIMES_TABLE_TOPICS/.test(src),
     'список тем должен быть задан в games/times-table.js (TIMES_TABLE_TOPICS)');
-  assert(/btn\.dataset\.value !== 'multiply' && btn\.dataset\.value !== 'divide'/.test(src),
-    'рабочие темы — Умножение и Деление; заглушки — только Сложение/Вычитание');
-  assert(/скоро появится/.test(src),
-    'заглушки тем (Сложение/Вычитание) должны показывать тост «скоро появится»');
+  // Все темы рабочие — заглушки с тостом «скоро появится» больше нет.
+  assert(!/btn\.dataset\.value !== 'multiply' && btn\.dataset\.value !== 'divide'[\s\S]{0,200}скоро появится/.test(src),
+    'тост «скоро появится» для тем Сложение/Вычитание должен быть убран');
   assert(/state\.timesTableTopic/.test(src),
     'выбранная тема должна храниться в state.timesTableTopic');
   assert(/🔢 Арифметика/.test(html),
@@ -239,7 +238,52 @@ test('«Арифметика»: карточка собрана как у ост
     'кнопки «Таблицы» — как у #quizCard (.14, белый текст), а не светлая схема обучающих карточек');
 });
 
-test('«Арифметика»: заголовки используют иконку 🔢 без legacy times-x', () => {
+test('«Арифметика»: темы «Сложение» и «Вычитание» — примеры от 0 до 20', () => {
+  const prevTopic = state.timesTableTopic;
+  const prevLevel = state.timesTableSelectedLevel;
+  const prevCount = state.timesTableQuestionCount;
+  const prevUsed = state.timesTableUsed;
+  const prevQueue = state.timesTableQueue;
+  const prevIndex = state.timesTableIndex;
+  try {
+    state.timesTableSelectedLevel = 1;
+    state.timesTableQuestionCount = 10;
+    state.timesTableUsed = {};
+    ['add', 'subtract'].forEach(topic => {
+      state.timesTableTopic = topic;
+      global.drawTimesTableQueue();
+      assert(state.timesTableQueue && state.timesTableQueue.length === 10,
+        `тема «${topic}»: очередь должна быть из 10 вопросов`);
+      assert(state.timesTableQueue.every(q => q && q.op === topic),
+        `тема «${topic}»: все карточки должны иметь op="${topic}"`);
+      assert(state.timesTableQueue.every(q => q.a >= 0 && q.a <= 20 && q.b >= 0 && q.b <= 20),
+        `тема «${topic}»: оба числа должны быть в диапазоне 0–20`);
+      if(topic === 'subtract'){
+        assert(state.timesTableQueue.every(q => q.a >= q.b),
+          `тема «${topic}»: в вычитании a ≥ b (ответ неотрицательный)`);
+      }
+      // Проверяем вычисление ответа через timesTableAnswer
+      state.timesTableQueue.forEach(q => {
+        const expected = topic === 'add' ? q.a + q.b : q.a - q.b;
+        assert(global.timesTableAnswer(q) === expected,
+          `тема «${topic}»: ответ для ${q.a} ${topic === 'add' ? '+' : '−'} ${q.b} должен быть ${expected}`);
+      });
+      // Повторы не встречаются в партии
+      const keys = state.timesTableQueue.map(q => `${q.a}x${q.b}`);
+      assert(new Set(keys).size === keys.length, `тема «${topic}»: в партии не должно быть повторов примеров`);
+    });
+  } catch (e) {
+    assert(false, `ошибка: ${e.message}`);
+  } finally {
+    state.timesTableTopic = prevTopic;
+    state.timesTableSelectedLevel = prevLevel;
+    state.timesTableQuestionCount = prevCount;
+    state.timesTableUsed = prevUsed;
+    state.timesTableQueue = prevQueue;
+    state.timesTableIndex = prevIndex;
+  }
+});
+  test('«Арифметика»: заголовки используют иконку 🔢 без legacy times-x', () => {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const js = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
   assert(/<h1 class="title">🔢 Арифметика<\/h1>/.test(html),
