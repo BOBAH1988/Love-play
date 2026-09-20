@@ -466,6 +466,7 @@ function showSummary(){
   summaryModalMode = 'fanty';
   document.getElementById('summaryBonusText').style.display = 'none';
   const winnerEl = document.getElementById('summaryWinner');
+  winnerEl.style.display = ''; // «Ваше бинго» в итогах выхода прячет эту строку
   if(state.score1 === state.score2){
     winnerEl.textContent = '🤝 Ничья!';
   } else {

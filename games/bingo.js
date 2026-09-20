@@ -222,10 +222,13 @@ function showBingoSummary(){
   summaryModalMode = 'bingo';
   const total = state.bingoWonLines.length;
   const allChecked = state.bingoChecked.length === 25 && state.bingoChecked.every(Boolean);
-  const lvl = (typeof BINGO_LEVELS !== 'undefined') ? BINGO_LEVELS.find(l=>l.id === (state.bingoCurrentLevel||1)) : null;
-  document.getElementById('summaryWinner').textContent = '🏆 Карта пройдена!';
-  document.getElementById('summaryScore').textContent = `Собрано линий: ${total} из 10`;
-  document.getElementById('summaryCounts').textContent = (allChecked ? 'Отмечены все 25 клеток' : 'Собрано 5 линий') + (lvl ? ` · Уровень: ${lvl.icon} ${lvl.name}` : '');
+  // Партия идёт до 5 линий, поэтому знаменатель — 5. Уровень в итогах не
+  // показываем: он и так виден по ходу игры (тосты, задания на клетках).
+  const winnerEl = document.getElementById('summaryWinner');
+  winnerEl.style.display = '';
+  winnerEl.textContent = '🏆 Карта пройдена!';
+  document.getElementById('summaryScore').textContent = `Собрано линий: ${total} из 5`;
+  document.getElementById('summaryCounts').textContent = allChecked ? 'Отмечены все 25 клеток' : 'Собрано 5 линий';
   // Финальный приз — самый смелый уровень бонусов, выдаётся один раз, только
   // за победу.
   const bonusEl = document.getElementById('summaryBonusText');
@@ -397,10 +400,13 @@ function showBingoExitSummary(){
   summaryModalMode = 'bingoExit';
   const checkedCount = (state.bingoChecked || []).filter(Boolean).length;
   const total = (state.bingoWonLines || []).length;
-  const lvl = (typeof BINGO_LEVELS !== 'undefined') ? BINGO_LEVELS.find(l=>l.id === (state.bingoCurrentLevel||1)) : null;
-  document.getElementById('summaryWinner').textContent = '⏸️ Партия прервана';
+  // Без заголовка «Партия прервана» и без уровня — окно начинается сразу со
+  // счёта. Партия идёт до 5 линий, поэтому знаменатель — 5.
+  const winnerEl = document.getElementById('summaryWinner');
+  winnerEl.style.display = 'none';
+  winnerEl.textContent = '';
   document.getElementById('summaryScore').textContent = `Отмечено заданий: ${checkedCount} из 25`;
-  document.getElementById('summaryCounts').textContent = `Линий собрано: ${total} из 10` + (lvl ? ` · Уровень: ${lvl.icon} ${lvl.name}` : '');
+  document.getElementById('summaryCounts').textContent = `Линий собрано: ${total} из 5`;
   const bonusEl = document.getElementById('summaryBonusText');
   const lastBonus = (state.bingoBonusChecklist || []).slice(-1)[0];
   if(lastBonus){

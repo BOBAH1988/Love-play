@@ -809,6 +809,36 @@ test('Сценарий: цветные полосы по полу на карт�
   }
 });
 
+test('Сценарий: итоги «Вашего бинго» — без «Партия прервана» и уровня, линии «из 5»', () => {
+  const saved = {
+    bingoChecked: state.bingoChecked, bingoWonLines: state.bingoWonLines,
+    bingoCurrentLevel: state.bingoCurrentLevel, bingoBonusChecklist: state.bingoBonusChecklist,
+  };
+  try {
+    state.bingoChecked = [true, true, true, false, false];
+    state.bingoWonLines = ['l1', 'l2', 'l3'];
+    state.bingoCurrentLevel = 3;
+    state.bingoBonusChecklist = [];
+    showBingoExitSummary();
+    let winner = getElById(stub, 'summaryWinner');
+    assert(winner.style.display === 'none' && !winner.textContent,
+      'в итогах при выходе не должно быть надписи «Партия прервана»');
+    assert(getElById(stub, 'summaryCounts').textContent === 'Линий собрано: 3 из 5',
+      'счётчик линий в итогах при выходе — «из 5» и без уровня');
+    state.bingoWonLines = ['l1', 'l2', 'l3', 'l4', 'l5'];
+    showBingoSummary();
+    winner = getElById(stub, 'summaryWinner');
+    assert(winner.style.display !== 'none' && winner.textContent === '🏆 Карта пройдена!',
+      'в итогах победы первая строка снова видима и без «Партия прервана»');
+    assert(getElById(stub, 'summaryScore').textContent === 'Собрано линий: 5 из 5',
+      'счётчик линий в итогах победы — «из 5»');
+    assert(getElById(stub, 'summaryCounts').textContent === 'Собрано 5 линий',
+      'в итогах победы не должно быть уровня');
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
 test('Сценарий: правила «Столиц» доступны в общем хабе правил', () => {
   const hubHtml = document.getElementById('rulesHubList').innerHTML;
   assert(hubHtml.includes('capitalsRulesModal'), 'в хабе правил должен быть пункт «Столицы»');

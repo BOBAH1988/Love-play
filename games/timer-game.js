@@ -366,6 +366,7 @@ function showTimerSummary(){
   summaryModalMode = 'timer';
   document.getElementById('summaryBonusText').style.display = 'none';
   const winnerEl = document.getElementById('summaryWinner');
+  winnerEl.style.display = ''; // «Ваше бинго» в итогах выхода прячет эту строку
   const name1 = state.name1 || 'Игрок 1';
   const name2 = state.name2 || 'Игрок 2';
   if(state.timerScore1 === state.timerScore2){
