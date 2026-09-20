@@ -3700,8 +3700,8 @@
 .fab-menu-btn[data-tooltip]:hover::after{
      content: attr(data-tooltip);
      position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
-     background:#000; color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; line-height:1.4;
-     white-space:nowrap; z-index:200; pointer-events:none;
+background:rgba(74,18,64,.95); color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; line-height:1.4;
+      white-space:nowrap; z-index:200; pointer-events:none;
    }
 /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
 	 чтобы media query не перекрывался ими с тем же приоритетом).
