@@ -195,6 +195,10 @@ function advanceTimesTableQueue(){
   if(state.timesTableIndex >= total || state.timesTableIndex >= (state.timesTableQueue || []).length){
     showTimesTableSummaryModal();
     return;
+  }
+  showTimesTableQuestion();
+}
+
 function updateTimesTableScoreUI(){
   const el = document.getElementById('timesTableScoreRow');
   if(!el) return;
@@ -241,16 +245,24 @@ function goToTimesTableSetup(){
   stopTimesTableSpeech();
   stopTimesTableSpeakTimer();
   state.pausedMode = null;
-  goToGame('learningView', 'timesTableSetup');
-  renderTimesTableLevelGroup();
-  renderTimesTableCountGroup();
+  // Сигнатура goToGameSetup(gameSetupId, targetView, beforeSwitch) — как у
+  // «Флагов» и «Столиц». Раньше здесь стоял goToGame('learningView', ...),
+  // из-за чего вызов падал с «goToTimesTableSetup is not defined».
+  goToGameSetup('timesTableSetup', 'learningView', ()=>{
+    renderTimesTableLevelGroup();
+    renderTimesTableCountGroup();
+  });
   updateMuteBtn();
   saveState();
 }
 
 function exitTimesTableSetup(){
   playSuccessSound();
-  goToSetup();
+  const setup = document.getElementById('timesTableSetup');
+  if(setup) setup.classList.remove('active');
+  const hub = document.getElementById('setup');
+  if(hub) hub.classList.add('active');
+  showSetupView('learningView');
 }
 
 function renderTimesTableLevelGroup(){
@@ -266,6 +278,9 @@ function renderTimesTableCountGroup(){
   if(!wrap) return;
   wrap.querySelectorAll('.starter-btn').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.value, 10) === (Number(state.timesTableQuestionCount) || 10));
+  });
+}
+
 function pickTimesTableVoice(){
   try{
     const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
@@ -391,8 +406,3 @@ function renderTimesTableGame(){
     setupRulesModal('timesTableRulesModal', 'closeTimesTableRulesBtn');
   });
 })();
-  });
-}
-  }
-  showTimesTableQuestion();
-}
