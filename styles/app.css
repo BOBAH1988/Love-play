@@ -3177,7 +3177,7 @@
   /* Кастомные подсказки для ⭐ и 🔥 — работают и на touch (:active), и на hover */
   [data-tt]::after{
     content:attr(data-tt);
-    position:absolute; bottom:100%; left:50%; transform:translateX(calc(-50% + var(--tt-shift, 0px))) scale(.9);
+    position:absolute; bottom:120%; left:50%; transform:translateX(calc(-50% + var(--tt-shift, 0px))) scale(.9);
     background:rgba(80,30,80,.92); color:#fff; font-size:12px; font-weight:600;
     padding:5px 10px; border-radius:8px; white-space:nowrap;
     opacity:0; pointer-events:none; transition:opacity .15s, transform .15s;
