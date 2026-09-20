@@ -244,11 +244,10 @@ if(state.gameType === 'td' && !currentCard){
           drawCardWithType(b.dataset.type);
         });
       });
-    } else {
-      tdRow.style.display = 'none';
-      typeRow.style.display = '';
-      cardBody.style.display = '';
-    }
+} else {
+       tdRow.style.display = 'none';
+       cardBody.style.display = '';
+     }
     fitTextToContainer(
       document.getElementById('cardBody'),
       document.getElementById('cardText'),
