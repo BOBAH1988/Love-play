@@ -76,12 +76,10 @@ function wishlistCardHeaderHtml(label, name, showBadge){
 }
 function showWishlistHandoffCard(nextPlayerNum){
   const nextName = nextPlayerNum === 2 ? (state.name2 || 'Игрок 2') : (state.name1 || 'Игрок 1');
-  const gender = nextPlayerNum === 2 ? 'F' : 'M';
   document.getElementById('wishlistAnswerRow').style.display = 'none';
   document.getElementById('wishlistHandoffRow').style.display = 'flex';
   fadeSwapEl('wishlistCard', (el)=>{
     el.className = 'card';
-    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
     el.innerHTML = `<div class="card-inner">${wishlistCardHeaderHtml('Дальше отвечает', nextName, false)}<div class="card-body"><div class="card-icon">💞</div><div class="card-text">Передайте телефон игроку «${nextName}»</div></div></div>`;
   });
 }
@@ -89,13 +87,11 @@ function showWishlistCurrentItem(){
   const idx = state.wishlistQueue[state.wishlistIndex];
   const items = (typeof WISHLIST_ITEMS !== 'undefined' && Array.isArray(WISHLIST_ITEMS)) ? WISHLIST_ITEMS : [];
   const item = items[idx];
-  const gender = state.wishlistActivePlayer === 2 ? 'F' : 'M';
   const turnName = state.wishlistActivePlayer === 2 ? (state.name2 || 'Игрок 2') : (state.name1 || 'Игрок 1');
   document.getElementById('wishlistAnswerRow').style.display = 'flex';
   document.getElementById('wishlistHandoffRow').style.display = 'none';
   fadeSwapEl('wishlistCard', (el)=>{
     el.className = 'card';
-    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
     const titleHtml = `<div class="wishlist-item-title">${item ? item.text : '—'}</div>`;
     const descHtml = (item && item.desc) ? `<div class="wishlist-item-desc">${item.desc}</div>` : '';
     el.innerHTML = `<div class="card-inner">${wishlistCardHeaderHtml('Отвечает', turnName, true)}<div class="card-body"><div class="card-icon">💌</div>${titleHtml}${descHtml}</div></div>`;

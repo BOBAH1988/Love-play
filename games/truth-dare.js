@@ -80,10 +80,8 @@ function tdShowChoice(){
   tdLocked = true;
   document.getElementById('tdChoiceRow').style.display = 'flex';
   document.getElementById('tdAnswerRow').style.display = 'none';
-  const gender = state.tdCurrentPlayer === 1 ? 'M' : 'F';
   fadeSwapEl('tdCard', (el)=>{
     el.className = 'card';
-    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
     el.innerHTML = `
       <div class="card-inner">
         ${tdCardHeaderHtml()}
@@ -126,7 +124,6 @@ function tdDraw(type){
   document.getElementById('tdAnswerRow').style.display = 'flex';
   fadeSwapEl('tdCard', (el)=>{
     el.className = 'card';
-    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
     el.innerHTML = `
       <div class="card-inner">
         ${tdCardHeaderHtml()}

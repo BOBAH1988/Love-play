@@ -139,11 +139,9 @@ function mtDrawCard(){
   document.getElementById('timerPauseBtn').textContent = '⏸ Пауза';
   const all = getMtCardsList(mtLevel);
   const levelInfo = getMtLevelInfo(mtLevel);
-  const gender = state.timerCurrentPlayer === 1 ? 'M' : 'F';
   if(all.length === 0){
     fadeSwapEl('timerCard', (el)=>{
       el.className = 'card';
-      el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
       el.innerHTML = `<div class="card-inner">${mtCardHeaderHtml(levelInfo)}<div class="card-body"><div class="card-icon">🃏</div><div class="card-text">Нет заданий для этого уровня</div></div>
         <div class="timer-bar-track"><div class="timer-bar-fill" id="timerBarFill"></div></div>
         <div class="timer-label" id="timerLabel">00:00</div>
@@ -172,7 +170,6 @@ function mtDrawCard(){
   mtRemaining = mtTotal;
   fadeSwapEl('timerCard', (el)=>{
     el.className = 'card';
-    el.style.borderTop = `10px solid ${GENDER_COLORS[gender]}`;
     el.innerHTML = `<div class="card-inner">${mtCardHeaderHtml(levelInfo)}<div class="card-body"><div class="card-text">${card.text}</div></div>
       <div class="timer-bar-track"><div class="timer-bar-fill" id="timerBarFill"></div></div>
       <div class="timer-label" id="timerLabel">00:00</div>
