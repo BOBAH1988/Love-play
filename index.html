@@ -4676,9 +4676,7 @@
       tooltip.className = 'js-tooltip';
       document.body.appendChild(tooltip);
     }
-    tooltip.textContent = text;
-    tooltip.style.display = 'block';
-    tooltip.style.visibility = 'hidden';
+tooltip.textContent = text;
     tooltip.style.left = '0px';
     tooltip.style.transform = 'none';
     void tooltip.offsetWidth;
@@ -4692,13 +4690,13 @@
     var top = rr.top + rr.height + 8;
     if(top + th > window.innerHeight - 8) top = rr.top - th - 8;
     tooltip.style.left = left + 'px';
-    tooltip.style.transform = 'none';
     tooltip.style.top = Math.max(8, top) + 'px';
-    tooltip.style.visibility = 'visible';
+    tooltip.style.opacity = '1';
+    tooltip.classList.add('show');
   }
   function hideTip(){
     var t = document.getElementById('_tip');
-    if(t) t.style.display = 'none';
+    if(t) { t.style.opacity = '0'; t.classList.remove('show'); }
   }
 </script>
 </body>
