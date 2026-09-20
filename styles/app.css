@@ -1007,8 +1007,9 @@
   #card:fullscreen .card-split-media video, #card:-webkit-full-screen .card-split-media video{
     object-fit:contain;
   }
-  /* В "Видеорулетке" уровней нет — прячем пустую полоску прогресса над карточкой */
-  #game.video-mode #levelProgress, #game.davay-mode #levelProgress{display:none;}
+/* В "Видеорулетке" уровней нет — прячем пустую полоску прогресса над карточкой */
+   #game.video-mode #levelProgress, #game.davay-mode #levelProgress{display:none;}
+   #game.video-mode #fantsProgressRow, #game.davay-mode #fantsProgressRow{display:none;}
   .card-inner{
     display:flex;
     flex-direction:column;
