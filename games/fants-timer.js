@@ -697,20 +697,14 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   }
 
   function openShareModal(){
-    if(navigator.share){
-      navigator.share({title:'Давай играй', text:'Коллекция игр для пары, компании и детей — заходи играй!', url:SHARE_URL}).then(function(){
-        showToast('Спасибо, что делитесь! 💛');
-      }).catch(function(e){
-        if(e && e.name !== 'AbortError') showToast('Не удалось поделиться');
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(SHARE_URL).then(function(){
+        showToast('Ссылка скопирована');
+      }).catch(function(){
+        showToast('Ссылка: ' + SHARE_URL);
       });
-      return;
-    }
-    var modal = document.getElementById('homeShareModal');
-    if(!modal) return;
-    modal.classList.add('show');
-    var qrCanvas = document.getElementById('homeQrCanvas');
-    if(qrCanvas && window.renderQrCode){
-      window.renderQrCode(qrCanvas, SHARE_URL);
+    }else{
+      showToast('Ссылка: ' + SHARE_URL);
     }
   }
 
