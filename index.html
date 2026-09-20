@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-30 · v411';
+        window.APP_BUILD = '2026-09-30 · v412';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -970,7 +970,7 @@
       <label>Режим игры</label>
       <div class="starter-group" id="modeGroup">
         <button type="button" class="starter-btn mode-btn" data-value="romantic">Романтический</button>
-        <button type="button" class="starter-btn mode-btn" data-value="hot">Страстный</button>
+        <button type="button" class="starter-btn mode-btn" data-value="hot" data-tooltip="Горячее">Страстный</button>
         <button type="button" class="starter-btn mode-btn" data-value="custom">Пользовательский</button>
       </div>
     </div>
@@ -1115,11 +1115,11 @@
         <button type="button" class="btn btn-secondary btn-square" id="photoRandomToggleBtn" aria-label="Случайный порядок">🔀</button>
         <button class="btn btn-secondary" id="skipBtn">🚫 Отказ</button>
         <div class="video-level-row" id="videoLevelRow">
-          <button type="button" class="btn btn-secondary" id="videoLevelUpBtn" aria-label="Повысить уровень видео">Горячее</button>
+          <button type="button" class="btn btn-secondary" id="videoLevelUpBtn" aria-label="Повысить уровень видео" data-tooltip="Горячее">Горячее</button>
           <button type="button" class="btn btn-secondary" id="videoNextBtn" aria-label="Повысить уровень">Повысить уровень</button>
         </div>
         <div class="davay-level-row" id="davayLevelRow">
-          <button type="button" class="btn btn-secondary" id="davayLevelUpBtn" aria-label="Повысить уровень">Горячее</button>
+          <button type="button" class="btn btn-secondary" id="davayLevelUpBtn" aria-label="Повысить уровень" data-tooltip="Горячее">Горячее</button>
           <button type="button" class="btn btn-secondary" id="davayNextBtn" aria-label="Повысить уровень">Повысить уровень</button>
           <button type="button" class="btn btn-secondary btn-square" id="davayMuteBtn" aria-label="Включить звук видео">🔇</button>
         </div>
@@ -1137,7 +1137,7 @@
       </div>
       <div class="video-extra-toggle" id="videoExtraToggle">Дополнительно <span class="video-extra-arrow">▾</span></div>
       <div class="row2">
-        <button class="btn btn-secondary" id="levelUpBtn">🔥 Горячее</button>
+        <button class="btn btn-secondary" id="levelUpBtn" data-tooltip="Горячее">🔥 Горячее</button>
         <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Предыдущий вариант">Предыдущий вариант</button>
         <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">🚫</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoMuteBtn" aria-label="Включить звук видео">🔇</button>
@@ -2495,7 +2495,7 @@
       <button type="button" class="btn btn-secondary" id="tdSkipBtn">🚫 Отказ</button>
     </div>
     <div class="td-actions-row" style="margin-top:10px;">
-      <button type="button" class="btn btn-secondary" id="tdLevelUpBtn">🔥 Горячее</button>
+      <button type="button" class="btn btn-secondary" id="tdLevelUpBtn" data-tooltip="Горячее">🔥 Горячее</button>
       <button type="button" class="btn btn-secondary btn-pause" id="tdPauseBtn">Пауза</button>
     </div>
   
@@ -2635,7 +2635,7 @@
         <button type="button" class="btn btn-secondary btn-pause" id="timerExitBtn">Пауза</button>
       </div>
       <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;">🔥 Горячее</button>
+        <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;" data-tooltip="Горячее">🔥 Горячее</button>
       </div>
     </div>
     </div>
