@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-30 · v400';
+        window.APP_BUILD = '2026-09-30 · v401';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -235,40 +235,40 @@
     <div class="modal-card about-card">
       <div class="modal-title">💡 О проекте <button type="button" class="modal-close-btn" id="aboutProjectCloseBtn" aria-label="Закрыть">✕</button></div>
       <div class="about-logo">🎲</div>
-      <div class="about-headline">«Давай играй» — коллекция игр для любых компаний</div>
-      <div class="about-text">Проект начинался как маленькое приложение для своих: несколько игр, один телефон и вечера в кругу близких. Постепенно коллекция росла — и выросла в целую платформу с десятками игр для самых разных компаний.</div>
+      <div class="about-headline">«Давай играй» — коллекция для любого формата</div>
+      <div class="about-text">Пять разделов: пары 18+, компания, дети, бизнес и игры для одного.</div>
 
-      <div class="about-ideas-title">Ключевые идеи</div>
+      <div class="about-ideas-title">Главное</div>
       <div class="about-idea-block">
         <div class="about-idea-icon">❤️</div>
         <div>
-          <div class="about-idea-name">Для двоих</div>
-          <div class="about-idea-desc">Романтические вечера с половинкой: вопросы, фанты, желания и многое другое — 18+.</div>
+          <div class="about-idea-name">Для пары 18+</div>
+          <div class="about-idea-desc">Фанты, желания, викторины и другие форматы для двоих.</div>
         </div>
       </div>
       <div class="about-idea-block">
         <div class="about-idea-icon">🎉</div>
         <div>
           <div class="about-idea-name">Для компании</div>
-          <div class="about-idea-desc">Шумные вечеринки, крокодил, викторины и игры для больших дружных компаний.</div>
+          <div class="about-idea-desc">Крокодил, мемасики, бинго, викторины и другие игры для группы.</div>
         </div>
       </div>
       <div class="about-idea-block">
         <div class="about-idea-icon">🧸</div>
         <div>
           <div class="about-idea-name">Для детей</div>
-          <div class="about-idea-desc">Развивающие и весёлые игры, с которыми время с ребёнком пролетит незаметно.</div>
+          <div class="about-idea-desc">Задания и викторины по возрасту, мемо и настольные игры.</div>
         </div>
       </div>
       <div class="about-idea-block">
         <div class="about-idea-icon">🧠</div>
         <div>
-          <div class="about-idea-name">Для развития</div>
-          <div class="about-idea-desc">Обучающие флеш-карты, время, английский — учиться в игре всегда интереснее.</div>
+          <div class="about-idea-name">Бизнес и обучение</div>
+          <div class="about-idea-desc">Лимонадный ларёк, магазин, флаги, столицы, английский и время.</div>
         </div>
       </div>
 
-      <div class="about-footer">🚀 Проект продолжает расти — скоро появятся новые игры. Следите за обновлениями!</div>
+      <div class="about-footer">PWA работает офлайн без сервера и регистрации; прогресс и статистика хранятся на устройстве.</div>
 
       <div class="about-share-block">
         <button type="button" class="btn btn-secondary" id="aboutShareBtn">Поделиться приложением</button>
