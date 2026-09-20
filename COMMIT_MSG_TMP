@@ -1,0 +1,9 @@
+Таблица умножения: время на ответ зависит от уровня — лёгкий 5 сек, средний 3 сек, сложный 1 секунда; после истечения показывается верный ответ.
+
+Правки:
+• games/times-table.js — добавлена timesTableLevelAnswerSeconds(level); длительность выбирается по уровню.
+• Правила игры (index.html) и описание (README.md) обновлены.
+• Версии: games/times-table.js ?v=20260920a, CACHE_NAME v385, APP_BUILD v385.
+• sw.js: CACHE_NAME v385.
+
+Проверено: node tools/check.js + smoke-test.js (0 ошибок).
