@@ -243,6 +243,43 @@ test('Колоды «Флагов»/«Столиц» покрывают все S
   });
 });
 
+test('«Таблица умножения»: очередь на уровнях и размерах партии', () => {
+  const prevLevel = state.timesTableSelectedLevel;
+  const prevCount = state.timesTableQuestionCount;
+  const prevUsed = state.timesTableUsed;
+  const prevQueue = state.timesTableQueue;
+  const prevIndex = state.timesTableIndex;
+  try {
+    [1, 2, 3].forEach(level => {
+      state.timesTableSelectedLevel = level;
+      state.timesTableUsed = {};
+      [5, 10, 25].forEach(count => {
+        state.timesTableQuestionCount = count;
+        global.drawTimesTableQueue();
+        assert(state.timesTableQueue && state.timesTableQueue.length === count,
+          `уровень ${level}: очередь должна быть из ${count} вопросов`);
+        assert(state.timesTableQueue.every(q => q && typeof q.a === 'number' && typeof q.b === 'number'),
+          `уровень ${level}: карточки должны содержать множители a и b`);
+        const keys = state.timesTableQueue.map(q => `${q.a}x${q.b}`);
+        const poolSize = level === 3 ? 81 : 16; // ×2–×5 и ×6–×9 → 16 примеров, ×2–×10 → 81
+        if(count <= poolSize){
+          assert(new Set(keys).size === keys.length, `уровень ${level}: в партии не должно быть повторов примеров`);
+        } else {
+          assert(new Set(keys).size <= poolSize, `уровень ${level}: повторы допустимы только после исчерпания пула`);
+        }
+      });
+    });
+  } catch (e) {
+    assert(false, `ошибка: ${e.message}`);
+  } finally {
+    state.timesTableSelectedLevel = prevLevel;
+    state.timesTableQuestionCount = prevCount;
+    state.timesTableUsed = prevUsed;
+    state.timesTableQueue = prevQueue;
+    state.timesTableIndex = prevIndex;
+  }
+});
+
 console.log('\n=== Проверка наличия критических DOM-элементов ===');
 
 const criticalElements = [
@@ -250,6 +287,7 @@ const criticalElements = [
   'twoPlayerView', 'companyView', 'kidsView', 'businessView', 'soloView', 'learningView',
   'flagsSetup', 'flagsGame',
   'capitalsSetup', 'capitalsGame',
+  'timesTableSetup', 'timesTableGame',
 ];
 
 criticalElements.forEach(id => {

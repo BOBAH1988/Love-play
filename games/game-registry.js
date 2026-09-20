@@ -224,6 +224,11 @@ window.GAME_REGISTRY = [
     noPause: true, back: 'exitCapitalsGame',
     screens: ['capitalsGame'],
   },
+  {
+    mode: 'timesTable', title: '«Таблица умножения»', group: 'two', menuTitle: '✖️ Таблица умножения',
+    noPause: true, back: 'exitTimesTableGame',
+    screens: ['timesTableGame'],
+  },
 ];
 
 /* ============ ХЕЛПЕРЫ ============ */
