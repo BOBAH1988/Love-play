@@ -150,9 +150,8 @@ function timesTableTick(){
 }
 
 function answerTimesTableQuestion(choiceIdx){
-  const wasTimeout = choiceIdx === -1;
-  if(timesTableAnswered && !wasTimeout) return;
-  if(wasTimeout && timesTableAnswered && !timesTableShowingQuestion) return;
+  // Эталон: games/quiz.js → answerQuizQuestion (choiceIdx = -1 при тайм-ауте).
+  if(timesTableAnswered) return;
   timesTableAnswered = true;
   timesTableShowingQuestion = false;
   stopTimesTableInterval();
@@ -161,7 +160,9 @@ function answerTimesTableQuestion(choiceIdx){
   const item = queue[state.timesTableIndex];
   if(!item) return;
   const answer = item.a * item.b;
-  const chosen = wasTimeout ? null : timesTableCurrentOptions[choiceIdx];
+  // Эталон викторины (games/quiz.js): choiceIdx >= 0 — при тайм-ауте (-1)
+  // isCorrect всегда false, очко не засчитывается.
+  const chosen = choiceIdx >= 0 ? timesTableCurrentOptions[choiceIdx] : null;
   const correct = chosen === answer;
   if(correct){
     state.timesTableCorrect++;
@@ -169,8 +170,10 @@ function answerTimesTableQuestion(choiceIdx){
   } else {
     playErrorSound();
   }
-  if(wasTimeout){
-    showToast('⏰ Время вышло — ответ не выбран');
+  // Эталон викторины: зелёная подсветка верного варианта — подсказка,
+  // очко за неё НЕ начисляется (state.timesTableCorrect не растёт).
+  if(choiceIdx < 0){
+    showToast('⏰ Время вышло — ответ не выбран, засчитано как неверно');
   }
   state.timesTableTimeMs += Date.now() - timesTableQuestionStartedAt;
   const key = timesTableCardKey(item);
@@ -182,7 +185,7 @@ function answerTimesTableQuestion(choiceIdx){
     const answersHtml = timesTableCurrentOptions.map(opt =>
       `<button type="button" class="znayu-answer-btn ${opt === answer ? 'answer-correct' : ''} ${opt === chosen ? 'answer-wrong' : ''}" disabled>${opt}</button>`
     ).join('');
-    const note = wasTimeout ? '⏰ Время вышло' : (correct ? '✅ Верно!' : '❌ Неверно');
+    const note = choiceIdx < 0 ? '⏰ Время вышло' : (correct ? '✅ Верно!' : '❌ Неверно');
     card.innerHTML = timesTableQuestionHtml(item, answersHtml) +
       `<div class="flags-answer-note">${note} — ${item.a} × ${item.b} = ${answer}</div>`;
   }
