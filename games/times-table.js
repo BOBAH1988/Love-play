@@ -269,7 +269,7 @@ function renderTimesTableLevelGroup(){
   const wrap = document.getElementById('timesTableLevelGroup');
   if(!wrap) return;
   wrap.querySelectorAll('.starter-btn').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.value, 10) === (Number(state.timesTableSelectedLevel) || 1));
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (Number(state.timesTableSelectedLevel) || 1));
   });
 }
 
@@ -277,7 +277,7 @@ function renderTimesTableCountGroup(){
   const wrap = document.getElementById('timesTableCountGroup');
   if(!wrap) return;
   wrap.querySelectorAll('.starter-btn').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.value, 10) === (Number(state.timesTableQuestionCount) || 10));
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (Number(state.timesTableQuestionCount) || 10));
   });
 }
 

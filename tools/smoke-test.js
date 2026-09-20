@@ -177,6 +177,20 @@ test('Данные «Времени»: у цифровых карточек вс
 });
 
 
+test('«Таблица умножения»: подсветка кнопок использует класс on, а не active', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
+  const levelFn = src.slice(src.indexOf('function renderTimesTableLevelGroup'),
+                            src.indexOf('function renderTimesTableCountGroup'));
+  const countFn = src.slice(src.indexOf('function renderTimesTableCountGroup'),
+                            src.indexOf('document.addEventListener'));
+  assert(/classList\.toggle\('on'/.test(levelFn),
+    'выбранный уровень должен подсвечиваться классом on (.starter-btn.on)');
+  assert(/classList\.toggle\('on'/.test(countFn),
+    'выбранное количество карточек должно подсвечиваться классом on');
+  assert(!/starter-btn[^\n]*'active'/.test(src) && !/classList\.add\('active'\)[\s\S]{0,80}starter/.test(src),
+    'кнопки выбора не должны использовать экранный класс active — он не стилизован');
+});
+
 test('Данные «Столиц» загружены и формируют очередь', () => {
   const cards = eval('typeof CAPITALS_CARDS === "undefined" ? null : CAPITALS_CARDS');
   assert(Array.isArray(cards) && cards.length >= 10,
