@@ -1329,7 +1329,7 @@ test('Сценарий: игра другой группы из плитки в�
     assert(global.getEntryScreenState().id === 'setup',
       `после выхода из настройки точка входа — хаб, получено ${global.getEntryScreenState().id}`);
 
-    // Другая группа: раздел «Игры для детей», игра из плитки.
+    // Другая группа: раздел «Игры с детьми», игра из плитки.
     global.showSetupView('kidsView');
     global.goToKidsSaperGame();
     const entry = global.getEntryScreenState();
