@@ -3239,6 +3239,13 @@
   .krokodil-summary-row.krokodil-summary-first .krokodil-summary-name,
   .krokodil-summary-row.krokodil-summary-first .krokodil-summary-score{color:#2b0f2e;}
 
+  .krokodil-summary-item{
+    display:flex; align-items:center; gap:10px; padding:6px 0;
+  }
+  .krokodil-summary-item > span:first-child{
+    font-weight:700; color:#5c3a52;
+  }
+
   /* ---- Таймер ---- */
   .timer-bar-track{height:10px; border-radius:6px; background:rgba(255,255,255,.15); overflow:hidden; margin-top:14px;}
   .timer-bar-fill{
