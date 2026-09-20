@@ -3700,7 +3700,7 @@
 .fab-menu-btn[data-tooltip]:hover::after{
      content: attr(data-tooltip);
      position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
-background:rgba(74,18,64,.95); color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; line-height:1.4;
+background:rgba(80,30,80,.92); color:#fff; padding:4px 10px; border-radius:8px; font-size:13px; line-height:1.4; border:1px solid rgba(255,94,142,.4);
       white-space:nowrap; z-index:200; pointer-events:none;
    }
 /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
