@@ -4679,9 +4679,8 @@
     tooltip.textContent = text;
     tooltip.style.display = 'block';
     void tooltip.offsetWidth;
-    var tr = tooltip.getBoundingClientRect();
-    var tw = Math.min(tr.width || 60, window.innerWidth - 16);
-    var th = tr.height || 20;
+    var tw = tooltip.offsetWidth || 80;
+    var th = tooltip.offsetHeight || 20;
     var rr = el.getBoundingClientRect();
     var left = rr.left + rr.width/2 - tw/2;
     if(left < 8) left = 8;
@@ -4690,6 +4689,7 @@
     if(top + th > window.innerHeight - 8) top = rr.top - th - 8;
     tooltip.style.left = left + 'px';
     tooltip.style.top = Math.max(8, top) + 'px';
+    tooltip.style.transform = 'none';
   }
   function hideTip(){
     var t = document.getElementById('_tip');
