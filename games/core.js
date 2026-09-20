@@ -2810,6 +2810,33 @@ function updateLevelProgressUI(){
   if(currentLevel){
     el.style.background = currentLevel.color;
   }
+  // Прогресс-бар под строками счёта
+  const fill = document.getElementById('fantsProgressFill');
+  const label = document.getElementById('fantsProgressLabel');
+  if(fill && label){
+    let pct = 0;
+    let labelText = '';
+    if(!isMax){
+      if(state.gameMode === 'romantic'){
+        const target = ((state.autoMilestone||0)+1)*10;
+        const cur = Math.min(state.score1, state.score2);
+        pct = target > 0 ? Math.round((cur/target)*100) : 0;
+        labelText = `До уровня: ${Math.max(0, target-cur)}`;
+      } else if(state.gameMode === 'hot'){
+        if(!state.autoMilestone){
+          const cur = Math.max(state.score1, state.score2);
+          pct = 5 > 0 ? Math.round((cur/5)*100) : 0;
+          labelText = `До уровня: ${Math.max(0, 5-cur)}`;
+        } else {
+          const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
+          pct = 10 > 0 ? Math.round((since/10)*100) : 0;
+          labelText = `До уровня: ${Math.max(0, 10-since)}`;
+        }
+      }
+    }
+    fill.style.width = pct + '%';
+    label.textContent = labelText;
+  }
   // «До след. уровня» дублируется внутрь карточки «Фантов» — над пилюлей
   // «Правда/Действие»: пользователь просил держать эту надпись на карте.
   const inCard = document.getElementById('cardLevelProgress');
