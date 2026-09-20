@@ -19,6 +19,7 @@ const BIZ_GOALS = [
   { sum: 2500,  name: 'аттракционы',   icon: '🎡' },
   { sum: 5000,  name: 'ролики',        icon: '🛼' },
   { sum: 10000, name: 'велосипед',     icon: '🚲' },
+  { sum: 50000, name: 'PlayStation 5', icon: '🎮' },
 ];
 const BIZ_START_CAPITAL = 200;
 const BIZ_SUGAR_PER_CUP = 2;
