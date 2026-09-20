@@ -4673,21 +4673,7 @@
     if(!tooltip){
       tooltip = document.createElement('div');
       tooltip.id = '_tip';
-      tooltip.style.position = 'fixed';
-      tooltip.style.display = 'none';
-      tooltip.style.background = 'rgba(80,30,80,.92)';
-      tooltip.style.color = '#fff';
-      tooltip.style.padding = '4px 10px';
-      tooltip.style.borderRadius = '8px';
-      tooltip.style.fontSize = '13px';
-      tooltip.style.lineHeight = '1.4';
-      tooltip.style.whiteSpace = 'normal';
-      tooltip.style.zIndex = '9999';
-      tooltip.style.pointerEvents = 'none';
-      tooltip.style.border = '1px solid rgba(255,94,142,.4)';
-      tooltip.style.maxWidth = '70vw';
-      tooltip.style.textAlign = 'center';
-      tooltip.style.wordWrap = 'break-word';
+      tooltip.className = 'js-tooltip';
       document.body.appendChild(tooltip);
     }
     tooltip.textContent = text;

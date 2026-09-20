@@ -3710,7 +3710,12 @@
       .fab-back-btn[data-tooltip]:hover::after{
          right:0 !important; left:auto !important; transform:translateX(0) !important;
        }
-/* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
+/* JS-подсказка */
+   #_tip{
+     position:fixed; display:none; background:rgba(80,30,80,.92); color:#fff; padding:4px 10px; border-radius:8px; font-size:13px; line-height:1.4;
+     white-space:normal; z-index:9999; pointer-events:none; border:1px solid rgba(255,94,142,.4); max-width:70vw; text-align:center; word-wrap:break-word;
+   }
+   /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
 	 чтобы media query не перекрывался ими с тем же приоритетом).
      Кнопки привязываются к краям #app (контейнер приложения с другим
      фоном, отличающимся от заднего фона body) — на 12px от верхнего
