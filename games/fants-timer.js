@@ -665,7 +665,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
         }
         if(navigator.clipboard && navigator.clipboard.writeText){
           await navigator.clipboard.writeText(ABOUT_SHARE_URL);
-          showToast('Ссылка скопирована — вставьте её в письмо или мессенджер');
+          showToast('Ссылка скопирована');
           return;
         }
         showToast('Ссылка: ' + ABOUT_SHARE_URL);
