@@ -1535,7 +1535,7 @@
      Текст: у «Флагов»/«Столиц» остаётся тёмным (#2b0f2e от .card), у «Английского» —
      белым (color:#fff правила выше); оба варианта читаются на голубом.
      Кнопки ответов .znayu-* осветлены (см. правило ниже). */
-  #flagsCard, #capitalsCard, #flashCard{
+  #flagsCard, #capitalsCard, #flashCard, #timesTableCard{
     background:linear-gradient(160deg, #8aa9c9, #6f8fb0 55%, #4f6b8a);
   }
   /* Кнопки ответов на тёмно-голубых карточках — светлые, как у остальных игр
@@ -1550,12 +1550,20 @@
      #2b0f2e, как у дефолтной схемы для светлого фона. Верный/неверный
      вариант (answer-correct/answer-wrong) не трогаем — там свои цвета. */
   #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong),
-  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
+  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong),
+  #timesTableCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
     background:rgba(255,255,255,.8); color:#2b0f2e; border-color:rgba(43,15,46,.22);
   }
   #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active,
-  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
+  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active,
+  #timesTableCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
     background:rgba(255,255,255,.92);
+  }
+  /* Задание «Таблицы умножения» — пример (7 × 8 = ?) занимает место вопроса
+     (.znayu-question-text, как у «Флагов»/«Столиц»), но крупнее обычного
+     текста вопроса: на нём держится вся карточка. */
+  #timesTableCard .znayu-question-text{
+    font-size:34px; font-weight:800; letter-spacing:1px;
   }
   #kidsTdCard .card-text, #kidsKrokodilCard .card-text, #kidsMemesCard .card-text,
   #whatToPlayCard .card-text, #whatToPlayCard .card-split-title{

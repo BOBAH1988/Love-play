@@ -48,6 +48,7 @@ function stopTimesTableSpeech(){
   try{
     if(window.speechSynthesis) window.speechSynthesis.cancel();
   }catch(e){}
+  stopSpeech('timesTableTtsHint');
 }
 
 function drawTimesTableQueue(){
@@ -95,10 +96,10 @@ function timesTableOptions(a, b){
 }
 
 function timesTableQuestionHtml(item, answersHtml){
-  return `
-    <div class="flags-card-media"><div class="times-table-expression">${item.a} × ${item.b} = ?</div></div>
-    <div class="card-text">${answersHtml}</div>
-  `;
+  // Разметка карточки — как у «Флагов»/«Столиц»: card-body с вопросом
+  // (.znayu-question-text), ниже .znayu-answers с кнопками ответов и
+  // иконка-подсказка озвучки. Пример (7 × 8 = ?) занимает место вопроса.
+  return `<div class="card-inner"><div class="card-body"><div class="znayu-question-text">${item.a} × ${item.b} = ?</div></div><div class="znayu-answers">${answersHtml}</div><div class="quiz-tts-hint" id="timesTableTtsHint">🔊</div></div>`;
 }
 
 function updateTimesTableProgressUI(){
@@ -122,7 +123,7 @@ function showTimesTableQuestion(){
   timesTableShowingQuestion = true;
   timesTableQuestionStartedAt = Date.now();
   const buttonsHtml = timesTableCurrentOptions.map((opt, idx) =>
-    `<button type="button" class="znayu-answer-btn" data-idx="${idx}">${opt}</button>`
+    `<button type="button" class="btn btn-secondary znayu-answer-btn" data-idx="${idx}">${opt}</button>`
   ).join('');
   card.innerHTML = timesTableQuestionHtml(item, buttonsHtml);
   card.querySelectorAll('.znayu-answer-btn').forEach(btn => {
@@ -294,6 +295,7 @@ function speakTimesTableCard(){
   if(!item) return;
   stopTimesTableSpeech();
   stopTimesTableSpeakTimer();
+  const hint = document.getElementById('timesTableTtsHint');
   const text = `${item.a} умножить на ${item.b}`;
   timesTableSpeakTimerId = setTimeout(() => {
     timesTableSpeakTimerId = null;
@@ -302,10 +304,23 @@ function speakTimesTableCard(){
       const v = pickTimesTableVoice();
       if(v) u.voice = v;
       u.lang = 'ru-RU';
+      if(hint) hint.classList.add('speaking');
+      u.onend = () => { if(hint) hint.classList.remove('speaking'); };
+      u.onerror = () => { if(hint) hint.classList.remove('speaking'); };
       window.speechSynthesis.speak(u);
     }catch(e){}
   }, 50);
 }
+// Клик по карточке (не по кнопке ответа) — повторная озвучка задания, как
+// во «Флагах»/«Столицах». Слушатель навешан делегированием на document:
+// renderTimesTableGame() пересоздаёт #timesTableCard, и прямая привязка к
+// элементу отмирала бы после первой перерисовки.
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('#timesTableCard')) return;
+  if(e.target.closest('.znayu-answer-btn')) return;
+  if(!timesTableShowingQuestion) return;
+  speakTimesTableCard();
+});
 
 function goToTimesTableGame(){
   abandonPausedSession('davay');

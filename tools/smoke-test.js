@@ -191,6 +191,29 @@ test('«Таблица умножения»: подсветка кнопок и�
     'кнопки выбора не должны использовать экранный класс active — он не стилизован');
 });
 
+test('«Таблица умножения»: карточка собрана как у остальных обучающих игр', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
+  const htmlFn = src.slice(src.indexOf('function timesTableQuestionHtml'),
+                           src.indexOf('function updateTimesTableProgressUI'));
+  assert(/class="card-inner"/.test(htmlFn),
+    'карточка должна использовать .card-inner, как «Флаги»/«Столицы»');
+  assert(/class="znayu-question-text"/.test(htmlFn),
+    'задание должно использовать .znayu-question-text');
+  assert(/class="znayu-answers"/.test(htmlFn),
+    'ответы должны лежать в .znayu-answers (иначе не работают стили кнопок группы)');
+  assert(!/class="card-text"/.test(htmlFn),
+    'карточка не должна использовать .card-text как контейнер ответов');
+  assert(/class="btn btn-secondary znayu-answer-btn"/.test(src),
+    'кнопки ответов должны быть .btn.btn-secondary.znayu-answer-btn');
+  assert(/quiz-tts-hint/.test(htmlFn),
+    'на карточке должна быть иконка-подсказка озвучки 🔊, как у группы');
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  assert(/#timesTableCard,/.test(css) || /, #timesTableCard/.test(css),
+    '«Таблица умножения» должна входить в блок тёмно-голубых карточек обучающих игр');
+  assert(/#timesTableCard \.znayu-answers/.test(css),
+    'кнопки ответов «Таблицы» должны использовать светлую схему обучающих карточек');
+});
+
 test('Данные «Столиц» загружены и формируют очередь', () => {
   const cards = eval('typeof CAPITALS_CARDS === "undefined" ? null : CAPITALS_CARDS');
   assert(Array.isArray(cards) && cards.length >= 10,
