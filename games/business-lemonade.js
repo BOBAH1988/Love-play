@@ -1053,14 +1053,13 @@ function showBizSummaryModal(){
   `).join('');
   showModal('businessLemonadeSummaryModal');
 }
-document.getElementById('bizPlayAgainBtn').addEventListener('click', ()=>{
-  hideModal('businessLemonadeSummaryModal');
-  goToBusinessLemonadeGame();
-});
-document.getElementById('closeBusinessLemonadeSummaryBtn').addEventListener('click', ()=>{
-  hideModal('businessLemonadeSummaryModal');
-  exitBusinessLemonadeGame();
-});
+const closeBizSummaryBtn = document.getElementById('closeBusinessLemonadeSummaryBtn');
+  if(closeBizSummaryBtn){
+    closeBizSummaryBtn.addEventListener('click', ()=>{
+      hideModal('businessLemonadeSummaryModal');
+      exitBusinessLemonadeGame();
+    });
+  }
 
 /* ============ ВХОД/ВЫХОД ============ */
 function goToBusinessLemonadeSetup(){
