@@ -180,7 +180,7 @@ function answerTimesTableQuestion(choiceIdx){
   const card = document.getElementById('timesTableCard');
   if(card){
     const answersHtml = timesTableCurrentOptions.map(opt =>
-      `<button type="button" class="znayu-answer-btn ${opt === answer ? 'is-correct' : ''} ${opt === chosen ? 'is-wrong' : ''}" disabled>${opt}</button>`
+      `<button type="button" class="znayu-answer-btn ${opt === answer ? 'answer-correct' : ''} ${opt === chosen ? 'answer-wrong' : ''}" disabled>${opt}</button>`
     ).join('');
     const note = wasTimeout ? '⏰ Время вышло' : (correct ? '✅ Верно!' : '❌ Неверно');
     card.innerHTML = timesTableQuestionHtml(item, answersHtml) +
