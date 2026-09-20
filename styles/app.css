@@ -8,6 +8,7 @@
     color-scheme:dark;
     --card-bg:#fff;
     --accent:#ff5e8e;
+    --accent-rgb:255,94,142;
     --gold:#ffd27a;
     --btn-height:52px;
     /* Отступ сверху для контента игровых экранов, у которых первая строка
@@ -26,6 +27,24 @@
        отступ 48px, в установленной PWA (appPad = safe-area) — 64px. Тогда
        зазор под названием ровно 8px и пустой полосы нет ни там, ни там. */
     --screen-top-pad:min(64px, calc(48px + env(safe-area-inset-top, 0px)));
+
+    /* ---- Система микроанимаций кнопок ---- */
+    /* Единые тайминги/значения. Переопределяются в prefers-reduced-motion. */
+    --btn-hover-y: -2px;
+    --btn-hover-scale: 1.03;
+    --btn-active-scale: .97;
+    --btn-transition-duration: .18s;
+    --btn-transition-ease: cubic-bezier(.23,.5,.25,1);
+    /* Тень при поднятии (hover) и "всплывание" успеха */
+    --btn-raise-shadow: 0 4px 16px hsl(var(--accent-rgb) / .32);
+    --btn-success-shadow: 0 0 0 3px #fff, 0 0 0 6px hsl(var(--accent-rgb) / .55);
+  }
+  /* Увядание анимации для пользователей, предпочитающих уменьшить движение */
+  @media (prefers-reduced-motion: reduce){
+    :root{
+      --btn-hover-y:0; --btn-hover-scale:1; --btn-active-scale:1;
+      --btn-transition-duration:.001ms;
+    }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
   input, textarea{-webkit-user-select:text; user-select:text; -webkit-touch-callout:default;}
@@ -357,9 +376,22 @@
     background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
     color:#fff; border-radius:12px; padding:10px 8px; font-size:13px; font-weight:700;
     cursor:pointer; text-align:center;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
   }
   .toggle-pill.on{
     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
+  }
+  .toggle-pill:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .toggle-pill:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+  }
+  .toggle-pill:disabled{
+    opacity:.5; pointer-events:none; cursor:default;
+    transform:none; box-shadow:initial;
   }
   /* "Правила" — везде получает один и тот же узнаваемый голубой акцент,
      чтобы отличаться от остальных кнопок с первого взгляда (кнопка
@@ -511,11 +543,14 @@
     flex:1; padding:9px 8px; border-radius:14px;
     border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);
     color:#fff; font-weight:800; font-size:14px; cursor:pointer;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease),
+               background-color var(--btn-transition-duration) var(--btn-transition-ease);
   }
   .starter-btn.on{
     background:var(--accent); border-color:var(--accent); color:#2b0f2e;
   }
-  .starter-btn:disabled{ opacity:.35; cursor:default; }
+  .starter-btn:disabled{ opacity:.35; cursor:default; pointer-events:none; transform:none; box-shadow:initial; }
   .mode-btn{font-size:11.5px; padding:9px 4px; letter-spacing:-.1px;}
   #timerModeGroup .mode-btn{font-size:15px; padding:10px 8px; letter-spacing:normal;}
   /* «Пройди квест»: надписи режимов на 25% крупнее базовых (11.5px → 14.4px), иконки с кнопок убраны. */
@@ -538,7 +573,11 @@
     width:100%; text-align:center; padding:15px;
     border-radius:16px; border:1px solid transparent; font-size:17px; font-weight:800; line-height:1.2;
     cursor:pointer; -webkit-appearance:none; box-sizing:border-box;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
   }
+  .btn-primary:hover{box-shadow:var(--btn-raise-shadow);}
+  .btn-secondary:hover{box-shadow:var(--btn-raise-shadow);}
   .btn-primary{
     background:linear-gradient(135deg,#ff5e8e,#ff8a5e);
     color:#2b0f2e;
@@ -612,6 +651,15 @@
     padding:11px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
     background:rgba(255,255,255,.05); color:#fff; font-size:15px; font-weight:700;
     text-align:left; cursor:pointer;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
+  }
+  .rules-group-head:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .rules-group-head:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
   }
   .rules-group-head .rules-chev{ transition:transform .2s; color:#e8c9dd; }
   .rules-group.open .rules-group-head .rules-chev{ transform:rotate(90deg); }
@@ -621,8 +669,17 @@
     display:flex; align-items:center; gap:8px; width:100%; padding:9px 12px;
     border-radius:10px; border:1px solid rgba(255,255,255,.1); background:transparent;
     color:#fff; font-size:14px; text-align:left; cursor:pointer;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
   }
-  .rules-item:active{ background:rgba(255,255,255,.08); }
+  .rules-item:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .rules-item:active{
+    background:rgba(255,255,255,.08);
+    transform:translateY(0) scale(var(--btn-active-scale));
+  }
   .rules-item .rules-chev{ margin-left:auto; color:#e8c9dd; }
   .rules-icon{ width:1.5em; text-align:center; flex-shrink:0; }
   .rules-name{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -695,12 +752,128 @@
   #homeMenuList .btn-menu-item > :not(.menu-icon){
     text-align:left; padding-left:32px; /* компенсация иконки, текст идёт сразу за ней */
   }
-  .btn-menu-item:active{background:rgba(255,94,142,.32); border-color:rgba(255,255,255,.5);}
+  .btn-menu-item:active{
+    background:rgba(255,94,142,.34);
+    border-color:rgba(255,255,255,.5);
+    transform:translateY(.5px) scale(var(--btn-active-scale));
+  }
   .btn-ghost{
     background:transparent; color:#e8c9dd; text-decoration:underline; font-weight:600; font-size:14px;
     cursor:pointer;
   }
-  .btn:active{transform:scale(.98);}
+  .btn-ghost:hover{
+    color:#fff;
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+  }
+  .btn-ghost:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+  }
+  /* ---- Система микроанимаций кнопок (hover/active/focus/disabled) ---- */
+  /* Базовый слой — применяется ко всем .btn (и их псевдоклассам).
+     Переопределяется более специфичными правилами ниже там, где нужно. */
+  .btn{
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease);
+  }
+  .btn:hover,
+  .starter-btn:hover,
+  .mode-btn:hover,
+  .fab-menu-btn:hover,
+  .fab-back-btn:hover,
+  .btn-ghost:hover,
+  .menu-list .btn-secondary:hover,
+  [class*="ExitBtn"]:hover,
+  .level-toggle:hover,
+  .btn-menu-item:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .btn:active,
+  .starter-btn:active,
+  .mode-btn:active,
+  .fab-menu-btn:active,
+  .fab-back-btn:active,
+  .btn-ghost:active,
+  .menu-list .btn-secondary:active,
+  .level-toggle:active,
+  .btn-menu-item:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"],
+  .starter-btn:disabled,
+  .mode-btn:disabled,
+  .menu-list .btn-secondary:disabled,
+  .level-toggle:disabled{
+    opacity:.5;
+    pointer-events:none;
+    cursor:default;
+    transform:none;
+    box-shadow:initial;
+  }
+  .btn:focus-visible,
+  .starter-btn:focus-visible,
+  .mode-btn:focus-visible,
+  .fab-menu-btn:focus-visible,
+  .fab-back-btn:focus-visible,
+  .btn-ghost:focus-visible,
+  .menu-list .btn-secondary:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .btn:hover,
+    .starter-btn:hover,
+    .mode-btn:hover,
+    .fab-menu-btn:hover,
+    .fab-back-btn:hover,
+    .btn-ghost:hover,
+    .menu-list .btn-secondary:hover,
+    .level-toggle:hover,
+    .btn-menu-item:hover,
+    .btn:active,
+    .starter-btn:active,
+    .mode-btn:active,
+    .fab-menu-btn:active,
+    .fab-back-btn:active,
+    .btn-ghost:active,
+    .menu-list .btn-secondary:active,
+    .level-toggle:active,
+    .btn-menu-item:active{
+      transform:none;
+      box-shadow:initial;
+    }
+  }
+  /* ---- Состояния загрузки / успеха (применяются JS‑ом) ---- */
+  .is-loading,
+  [aria-busy="true"]{
+    position:relative;
+    pointer-events:none;
+    opacity:.8;
+  }
+  .is-loading::after,
+  [aria-busy="true"]::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    margin:auto;
+    width:18px; height:18px;
+    border:2px solid currentColor;
+    border-right-color:transparent;
+    border-radius:50%;
+    animation:spin 0.7s linear infinite;
+  }
+  .is-success{
+    animation:krokodil-success-pulse .5s ease-out 2;
+  }
+  @keyframes spin{
+    to{transform:rotate(360deg);}
+  }
+  @keyframes krokodil-success-pulse{
+    0%{box-shadow:var(--btn-success-shadow);}
+    50%{box-shadow:0 0 0 4px #fff, 0 0 0 7px hsl(var(--accent-rgb) / .65);}
+    100%{box-shadow:var(--btn-success-shadow);}
+  }
 
   /* ---- Game screen ---- */
   /* .score-row убран — вместо него .krokodil-score-row в единой системе */
@@ -925,8 +1098,18 @@
     aspect-ratio:1/1; border-radius:8px; border:1px solid rgba(255,255,255,.25);
     background:rgba(255,255,255,.1); color:#fff; font-size:14px; font-weight:700;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
   }
-  .hangman-key:disabled{ cursor:default; }
+  .hangman-key:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .hangman-key:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+  .hangman-key:disabled{ cursor:default; opacity:.5; pointer-events:none; transform:none; box-shadow:initial; }
   .hangman-key-correct{ background:rgba(76,217,100,.85); color:#0b3d1f; border-color:transparent; }
   .hangman-key-wrong{ background:rgba(255,69,58,.6); color:#fff; border-color:transparent; opacity:.7; }
   /* Магазин (дети) — корзина покупателя, касса продавца, денежный лоток. */
@@ -952,7 +1135,10 @@
     border:2px solid rgba(255,255,255,.25); color:#fff; text-align:center;
     cursor:pointer; min-height:74px;
   }
-  .shop-showcase-item:active{ transform:scale(.94); }
+  .shop-showcase-item:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
   .shop-showcase-item-selected{
     border-color:#ffd27a; box-shadow:0 0 0 3px rgba(255,210,122,.45), inset 0 0 12px rgba(255,210,122,.25);
   }
@@ -969,8 +1155,17 @@
     background:rgba(255,210,122,.15); color:#ffd27a;
     border:1px solid rgba(255,210,122,.45); border-radius:16px;
     padding:6px 14px; margin-bottom:8px; font-size:13px; font-weight:800; cursor:pointer;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
   }
-  .shop-hint-toggle:active{ transform:scale(.95); }
+  .shop-hint-toggle:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .shop-hint-toggle:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
   .shop-money-sum{ font-size:28px; font-weight:900; margin-bottom:14px; color:#ffd27a; text-shadow:0 2px 8px rgba(0,0,0,.3); }
   .shop-money-group{ margin-bottom:12px; }
   .shop-money-group-label{
@@ -981,9 +1176,17 @@
   .shop-money-btn{
     border:none; cursor:pointer; font-weight:800; color:#3d2b00;
     box-shadow:0 3px 8px rgba(0,0,0,.35), inset 0 0 0 2px rgba(255,255,255,.4);
-    transition:transform .12s ease;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
   }
-  .shop-money-btn:active{ transform:scale(.92); }
+  .shop-money-btn:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .shop-money-btn:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
   .shop-money-btn.shop-money-coin{
     width:54px; height:54px; border-radius:50%; font-size:14px;
     background:radial-gradient(circle at 35% 30%, #fff6d9, #ffcf5c 55%, #dd9c2a);
@@ -1651,12 +1854,22 @@
     background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
     border-radius:12px; padding:12px 14px; font-size:18px; font-weight:600;
     color:rgba(255,255,255,.85); cursor:pointer; text-align:center;
-    transition:all .18s ease;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease),
+               background-color var(--btn-transition-duration) var(--btn-transition-ease);
   }
-  .flash-time-option:hover{ background:rgba(255,255,255,.12); }
+  .flash-time-option:hover{
+    background:rgba(255,255,255,.12);
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .flash-time-option:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
   .flash-time-option.correct{ background:rgba(76,175,80,.3); border-color:rgba(76,175,80,.6); color:#4caf50; }
   .flash-time-option.wrong{ background:rgba(244,67,54,.3); border-color:rgba(244,67,54,.6); color:#f44336; }
-  .flash-time-option:disabled{ cursor:default; }
+  .flash-time-option:disabled{ cursor:default; opacity:.5; pointer-events:none; transform:none; box-shadow:initial; }
   .flash-time-display{ font-size:36px; font-weight:800; text-align:center; margin:20px 0; color:#fff; }
   .flash-time-display .flash-time-mechanical{ font-size:16px; }
   .flash-time-digital{ font-family:'Courier New',monospace; letter-spacing:4px; }
@@ -2278,9 +2491,18 @@
   .timer-btn{
     background:rgba(0,0,0,.06); border:none; border-radius:20px;
     padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; color:#2b0f2e;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
   }
   .timer-btn.running{background:var(--accent);}
-  .timer-btn:active{transform:scale(.96);}
+  .timer-btn:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .timer-btn:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
 
   @keyframes timerPulse{
     0%,100%{ transform:scale(1); color:#fff; }
@@ -2429,8 +2651,12 @@
     position:absolute; top:10px; right:12px;
     background:none; border:none; color:#ff4d4d; font-size:22px; line-height:1;
     cursor:pointer; padding:4px; z-index:10;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               color var(--btn-transition-duration) var(--btn-transition-ease);
   }
-  .modal-close-btn:active{color:#c62828;}
+  .modal-close-btn:hover{color:#ff1744; transform:scale(1.15);}
+  .modal-close-btn:active{color:#c62828; transform:scale(.9);}
+  .modal-close-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
   /* Меню паузы — название игры на первой строке, "Пауза" отдельной строкой
      ниже (не одной длинной фразой через тире, которая раньше рвалась
      переносом посреди слова на узких экранах), см. PAUSE_MENU_TITLES. */
@@ -2483,8 +2709,20 @@
   .znayu-answers .znayu-answer-btn{
     width:100%; white-space:normal; height:auto; min-height:var(--btn-height); padding:10px 14px; line-height:1.3;
     background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+    transition:background-color var(--btn-transition-duration) var(--btn-transition-ease),
+               transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
   }
-  .znayu-answers .znayu-answer-btn:active{ background:rgba(43,15,46,.14); }
+  .znayu-answers .znayu-answer-btn:hover{
+    background:rgba(43,15,46,.1);
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .znayu-answers .znayu-answer-btn:active{
+    background:rgba(43,15,46,.14);
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
   /* "Не хочу отвечать" — не вариант ответа, а отказ от вопроса, поэтому
      стоит отдельно под .znayu-answers, приглушённым пунктирным стилем,
      чтобы не путали с обычным вариантом ответа. */
@@ -2798,13 +3036,31 @@
   #game.davay-mode #gameScoreRow{display:none;}
   /* В «Фантах» «До след. уровня» показывается внутри карточки (над пилюлей
      «Правда/Действие»), поэтому плавающая строка сверху скрыта. */
-  .game-type-btn{flex:1; min-width:0; font-size:13px; padding:9px 6px;}
+  .game-type-btn{flex:1; min-width:0; font-size:13px; padding:9px 6px;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);}
   .game-type-btn.active{background:var(--accent); color:#2b0f2e;}
+  .game-type-btn:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .game-type-btn:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+  }
   /* В режиме Правда/Действие — пилюли выбора перед ходом внутри карточки */
   .td-choice-row{display:flex; gap:10px; margin:6px 0 2px; justify-content:center;}
   .td-choice-btn{flex:1; padding:10px 8px; border-radius:14px; font-size:13px; font-weight:700;
-    border:2px solid rgba(255,255,255,.3); background:rgba(255,255,255,.12); color:#fff; cursor:pointer;}
-  .td-choice-btn:active{transform:scale(.96);}
+    border:2px solid rgba(255,255,255,.3); background:rgba(255,255,255,.12); color:#fff; cursor:pointer;
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);}
+  .td-choice-btn:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
+  .td-choice-btn:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
   /* В «Фантах» кнопка «Пауза» скрыта — выход/пауза работает по стрелке «назад». */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #pauseBtn{display:none;}
   /* «Видеорулетка» и «Давай попробуем»: кнопки «Пауза»/«Выход» в нижнем ряду
@@ -2824,8 +3080,20 @@
   .card-hot-btn{position:absolute; left:18px; bottom:10px; width:44px; height:44px;
     padding:0; border-radius:50%; font-size:26px; line-height:1; margin:0;
     background:rgba(255,255,255,.14); border:none; cursor:pointer; color:#fff; z-index:5;}
-  .card-hot-btn:disabled{opacity:.4; cursor:default;}
-  .card-hot-btn:active{transform:scale(.96);}
+  .card-hot-btn:disabled{opacity:.4; cursor:default; pointer-events:none; transform:none; box-shadow:initial;}
+  .card-hot-btn:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+  .card-hot-btn{
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease),
+               opacity var(--btn-transition-duration) var(--btn-transition-ease);
+  }
+  .card-hot-btn:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
   /* «Предложи партнеру»: стрелки-навигация в нижних углах карточки
      (◀ = «Предыдущий уровень», ▶ = «Следующий уровень») — зеркально кнопкам
      «Горячее»/«Избранное» в «Фантах». Карточке нужен position:relative. */
@@ -2839,7 +3107,18 @@
   }
   .card-photo-prev{left:10px;}
   .card-photo-next{right:10px;}
-  .card-photo-nav:active{transform:scale(.94);}
+  .card-photo-nav:active{
+    transform:translateY(0) scale(var(--btn-active-scale));
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+  .card-photo-nav{
+    transition:transform var(--btn-transition-duration) var(--btn-transition-ease),
+               box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
+  }
+  .card-photo-nav:hover{
+    transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
+    box-shadow:var(--btn-raise-shadow);
+  }
   /* В просмотре избранного навигация идёт кнопками внизу — стрелки не нужны */
   #game.placeholder-mode.photo-favview .card-photo-nav{display:none;}
   /* Рулетка желаний */
