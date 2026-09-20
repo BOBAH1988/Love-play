@@ -100,7 +100,7 @@ function renderTdChoiceCard(){
           </div>
         </div>
 <div class="card-type-row">
-           <div class="timer-bar-track" id="cardLevelProgress"><div class="timer-bar-fill" id="cardLevelProgressFill"></div></div>
+           <span class="card-level-progress" id="cardLevelProgress"></span>
            <span class="type-pill" style="visibility:hidden;">&nbsp;</span>
          </div>
         <div class="card-body" id="cardBody">
@@ -202,7 +202,7 @@ function renderCard(card){
           </div>
         </div>
 <div class="card-type-row">
-           <div class="timer-bar-track" id="cardLevelProgress"><div class="timer-bar-fill" id="cardLevelProgressFill"></div></div>
+           <span class="card-level-progress" id="cardLevelProgress"></span>
            <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
          </div>
         <div class="card-body" id="cardBody">

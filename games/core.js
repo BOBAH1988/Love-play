@@ -2755,7 +2755,7 @@ function updateLevelUI(){
     btn.textContent = 'Следующий вариант';
     const downBtn = document.getElementById('levelDownBtn');
     if(downBtn) downBtn.disabled = false;
-    const el = document.getElementById('levelScale');
+    const el = document.getElementById('levelProgress');
     if(el) el.textContent = '';
     if(levelLabel){
       const lvl = PHOTO_LEVELS.find(l => l.id === photoLevel);
@@ -2772,7 +2772,7 @@ function updateLevelUI(){
   if(isVideoMode() || isDavayMode()){
     btn.disabled = false;
     btn.textContent = 'Сложнее';
-    const el = document.getElementById('levelScale');
+    const el = document.getElementById('levelProgress');
     if(el) el.textContent = '';
     return;
   }
@@ -2786,44 +2786,30 @@ function updateLevelUI(){
 }
 
 function updateLevelProgressUI(){
-  const el = document.getElementById('levelScale');
+  const el = document.getElementById('levelProgress');
   if(!el) return;
   const levels = getSortedActiveLevels();
   const isMax = levels.indexOf(state.levelCap) === levels.length-1;
-  const activeLevels = levels.map(id => levelById(id));
-  // Строим шкалу
-  el.innerHTML = '<div class="level-scale-track">' + activeLevels.map(l =>
-    '<div class="level-scale-seg' + (l.id <= state.levelCap ? ' active' : '') + '"><span class="seg-dot"></span></div>'
-  ).join('') + '</div>';
-  el.innerHTML += '<div class="level-scale-players">' +
-    '<span class="level-scale-player"><span class="ps m"></span><span class="pl">Парень: ' + state.score1 + '</span></span>' +
-    '<span class="level-scale-player"><span class="ps f"></span><span class="pl">Девушка: ' + state.score2 + '</span></span>' +
-  '</div>';
+  let text = '';
+  if(isMax){ text = ''; }
+  else if(state.gameMode === 'romantic'){
+    const target = ((state.autoMilestone||0)+1)*10;
+    const cur = Math.min(state.score1, state.score2);
+    text = `До след. уровня: ${Math.max(0, target-cur)} очк. (у обоих партнёров)`;
+  } else if(state.gameMode === 'hot'){
+    if(!state.autoMilestone){
+      const cur = Math.max(state.score1, state.score2);
+      text = `До след. уровня: ${Math.max(0, 5-cur)} очк.`;
+    } else {
+      const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
+      text = `До след. уровня: ${Math.max(0, 10-since)} карт`;
+    }
+  }
+  el.textContent = text;
   // «До след. уровня» дублируется внутрь карточки «Фантов» — над пилюлей
   // «Правда/Действие»: пользователь просил держать эту надпись на карте.
   const inCard = document.getElementById('cardLevelProgress');
-  if(inCard){
-    const fill = document.getElementById('cardLevelProgressFill');
-    if(fill){
-      let pct = 0;
-      if(!isMax){
-        if(state.gameMode === 'romantic'){
-          const target = ((state.autoMilestone||0)+1)*10;
-          const cur = Math.min(state.score1, state.score2);
-          pct = target > 0 ? Math.round((cur/target)*100) : 0;
-        } else if(state.gameMode === 'hot'){
-          if(!state.autoMilestone){
-            const cur = Math.max(state.score1, state.score2);
-            pct = 5 > 0 ? Math.round((cur/5)*100) : 0;
-          } else {
-            const since = (state.turnsPlayed||0) - (state.turnsAtLastLevelUp||0);
-            pct = 10 > 0 ? Math.round((since/10)*100) : 0;
-          }
-        }
-      }
-      fill.style.width = pct + '%';
-    }
-  }
+  if(inCard) inCard.textContent = text;
 }
 
 function advanceLevel(){

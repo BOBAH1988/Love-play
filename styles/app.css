@@ -886,9 +886,20 @@
   /* ---- Game screen ---- */
   /* .score-row убран — вместо него .krokodil-score-row в единой системе */
   .krokodil-score-row #score1, .krokodil-score-row #score2{white-space:nowrap;}
-  .level-progress,
-.level-scale{
+  .level-progress{
     text-align:center; font-size:11px; color:#cba0bf; min-height:14px; margin-bottom:6px;
+  }
+  /* Фанты (парная игра): строка «До след. уровня» — второй строкой верхней панели,
+     прямо под плавающей меткой хода «Ходит: …» (top метки + строка ~22px).
+     Отсчёт тот же, что у метки, поэтому safe-area прибавляем так же явно.
+     Только экран #game: на других экранах .level-progress нет. Скрытия в video/davay/
+     placeholder-режимах (#game.… #levelProgress{display:none}) специфичнее и работают. */
+  #game #levelProgress{
+    position:absolute;
+    top:calc(12px + env(safe-area-inset-top, 0px) + 22px);
+    left:50%; transform:translateX(-50%);
+    z-index:10; margin:0; white-space:nowrap;
+    max-width:calc(100% - 112px);
   }
 
   .card-area{
@@ -994,7 +1005,7 @@
     object-fit:contain;
   }
   /* В "Видеорулетке" уровней нет — прячем пустую полоску прогресса над карточкой */
-  #game.video-mode #levelScale, #game.davay-mode #levelScale{display:none;}
+  #game.video-mode #levelProgress, #game.davay-mode #levelProgress{display:none;}
   .card-inner{
     display:flex;
     flex-direction:column;
@@ -2286,7 +2297,7 @@
      карточек. "Выход" (pauseBtn) в row2 оставляем видимым — это единственный
      способ покинуть просмотр избранного. */
   #photoFavPrevBtn, #photoFavNextBtn{display:none;}
-  #game.placeholder-mode.photo-favview #levelScale{display:none;}
+  #game.placeholder-mode.photo-favview #levelProgress{display:none;}
   #game.placeholder-mode.photo-favview #doneBtn,
   #game.placeholder-mode.photo-favview #favoriteBtn,
   #game.placeholder-mode.photo-favview #sexshopOwnedBtn,
@@ -3043,9 +3054,9 @@
      обычный заголовок игры .game-level-label, поэтому здесь никаких правок
      шрифта не нужно: раньше метка хода раздувалась до font-size:28px, чтобы
      сойти за заголовок, и выбивалась из общего стиля (26px, вес 800,
-межбуквенный интервал). Строку «До след. уровня» (#levelScale)
+межбуквенный интервал). Строку «До след. уровня» (#levelProgress)
       скрываем — в «Фантах» она показывается внутри карточки. */
-  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelScale{display:none;}
+  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) #levelProgress{display:none;}
   /* В игре «Предложи партнеру» нет соревнования — скрываем счёт Парень/Девушка */
   #game.placeholder-mode #gameScoreRow{display:none;}
   /* В «Видеорулетке» соревнования тоже нет: игроки смотрят ролики вместе,
@@ -3190,21 +3201,16 @@
   .card-fav-btn{position:absolute; right:18px; bottom:10px; width:44px; height:44px;
     padding:0; border-radius:50%; font-size:22px; line-height:1; margin:0; z-index:5;}
   .card-fav-btn.active{background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00;}
-/* В «Фантах» строка типа карточки: слева прогресс-бар, справа —
-      «Правда/Действие» (только фанты — в П/Д и таймере строка остаётся по центру). */
+/* В «Фантах» строка типа карточки: слева пилюля «Правда/Действие», справа —
+      «До след. уровня» (только фанты — в П/Д и таймере строка остаётся по центру). */
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row{
     justify-content:space-between; align-items:center;
     margin-left:-22px; margin-right:-22px; padding:0 10px;
   }
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row .type-pill{margin-left:auto;}
   #cardLevelProgress{
-    flex:1; margin-right:8px;
-  }
-  /* Прогресс-бар в карточке «Фантов» */
-  .timer-bar-track{height:8px; border-radius:4px; background:rgba(255,255,255,.15); overflow:hidden;}
-  .timer-bar-fill{
-    height:100%; border-radius:4px;
-    background:linear-gradient(135deg,#ff9a5e,#ff6b8b); transition:width .5s ease;
+    font-size:12px; font-weight:700;
+    color:#fff; margin-right:auto; white-space:nowrap;
   }
   /* Turn-label — ПЕРВЫЙ элемент экрана (Фанты, Правда/Действие, Крокодил, Таймер,
      «Знаю тебя», kids-игры и т.д.) — парит в самой верхней полосе: по центру между
@@ -3222,50 +3228,6 @@
     z-index:10; margin:0; white-space:nowrap;
     max-width:calc(100% - 112px);
   }
-/* Фанты (парная игра): шкала уровней с индикаторами «Парень» / «Девушка» */
-.level-scale{
-    position:absolute;
-    top:calc(12px + env(safe-area-inset-top, 0px) + 22px);
-    left:50%; transform:translateX(-50%);
-    z-index:10; width:calc(100% - 112px); max-width:340px;
-}
-.level-scale-track{
-    display:flex; gap:3px; align-items:center;
-    padding:4px 6px; border-radius:10px;
-    background:rgba(255,255,255,.08);
-}
-.level-scale-seg{
-    flex:1; height:8px; border-radius:4px;
-    background:rgba(255,255,255,.12);
-    transition:background .3s;
-    position:relative;
-}
-.level-scale-seg.active{
-    background:var(--accent);
-}
-.level-scale-seg .seg-dot{
-    position:absolute; top:-4px; left:50%; transform:translateX(-50%);
-    width:10px; height:10px; border-radius:50%;
-    background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.3);
-    transition:background .3s, border-color .3s;
-}
-.level-scale-seg.active .seg-dot{
-    background:#fff; border-color:#fff;
-}
-.level-scale-players{
-    display:flex; justify-content:space-between;
-    margin-top:6px; font-size:10px; font-weight:700;
-}
-.level-scale-player{
-    display:flex; align-items:center; gap:4px;
-}
-.level-scale-player .ps{
-    width:8px; height:8px; border-radius:50%;
-    transition:background .3s;
-}
-.level-scale-player .ps.m{ background:#6ec6ff; }
-.level-scale-player .ps.f{ background:#ff9fb0; }
-.level-scale-player .pl{ color:#cba0bf; }
 /* Mobile: FAB-кнопки парят сверху — нужны отступы, чтобы имена/контент
    не налезали на кнопки. Отступ = --screen-top-pad: линия кнопок
    (12px + safe-area) + их высота 36px + 8px зазора, минус appPad, который
