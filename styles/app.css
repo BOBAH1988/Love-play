@@ -3697,18 +3697,17 @@
   .fab-back-btn{right:auto; left:12px; font-size:18px; line-height:1; transition:opacity .2s ease;}
   .fab-share-btn{right:auto; left:12px; font-size:18px; line-height:1; transition:opacity .2s ease; opacity:0; pointer-events:none;}
   .home-share-hint{ font-size:12px; color:#5c3a52; text-align:center; line-height:1.4; margin-top:8px;}
-.btn[data-tooltip], .starter-btn[data-tooltip]{position:relative;}
-   [data-tooltip]:hover::after{
+.fab-menu-btn[data-tooltip]:hover::after{
      content: attr(data-tooltip);
      position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
      background:#000; color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; line-height:1.4;
      white-space:nowrap; z-index:200; pointer-events:none;
    }
-   .fab-menu-btn[data-tooltip]:hover::after{
-     content: attr(data-tooltip);
-     position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+   /* JS-подсказка */
+   .js-tooltip{
+     position:fixed; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
      background:#000; color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; line-height:1.4;
-     white-space:nowrap; z-index:200; pointer-events:none;
+     white-space:nowrap; z-index:9999; pointer-events:none;
    }
   /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
      чтобы media query не перекрывался ими с тем же приоритетом).
