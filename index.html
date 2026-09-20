@@ -4676,7 +4676,21 @@
       document.body.appendChild(tooltip);
     }
     tooltip.textContent = text;
-    tooltip.style.cssText = 'position:fixed;display:block;background:rgba(80,30,80,.92);color:#fff;padding:4px 10px;border-radius:8px;font-size:13px;line-height:1.4;white-space:normal;z-index:9999;pointer-events:none;border:1px solid rgba(255,94,142,.4);max-width:70vw;text-align:center;word-wrap:break-word;left:0px;top:0px;';
+    tooltip.style.position = 'fixed';
+    tooltip.style.display = 'block';
+    tooltip.style.background = 'rgba(80,30,80,.92)';
+    tooltip.style.color = '#fff';
+    tooltip.style.padding = '4px 10px';
+    tooltip.style.borderRadius = '8px';
+    tooltip.style.fontSize = '13px';
+    tooltip.style.lineHeight = '1.4';
+    tooltip.style.whiteSpace = 'normal';
+    tooltip.style.zIndex = '9999';
+    tooltip.style.pointerEvents = 'none';
+    tooltip.style.border = '1px solid rgba(255,94,142,.4)';
+    tooltip.style.maxWidth = '70vw';
+    tooltip.style.textAlign = 'center';
+    tooltip.style.wordWrap = 'break-word';
     var tr = tooltip.getBoundingClientRect();
     var tw = tr.width || 80;
     var th = tr.height || 20;

@@ -3704,11 +3704,11 @@
         border:1px solid rgba(255,94,142,.4) !important;
         white-space:normal !important; max-width:70vw !important; z-index:200 !important; pointer-events:none !important;
       }
-      .fab-share-btn[data-tooltip]:hover::after{
-         left:0 !important; right:auto !important; transform:translateX(0) !important;
-       }
+.fab-share-btn[data-tooltip]:hover::after{
+          left:0 !important; right:auto !important; transform:translateX(0) !important;
+        }
 .fab-back-btn[data-tooltip]:hover::after{
-         left:calc(100% + 8px); right:auto; transform:translateX(0) !important;
+         left:calc(100% + 8px) !important; right:auto !important; transform:translateX(0) !important;
        }
 /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
 	 чтобы media query не перекрывался ими с тем же приоритетом).
