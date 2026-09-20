@@ -3698,12 +3698,15 @@
   .fab-share-btn{right:auto; left:12px; font-size:18px; line-height:1; transition:opacity .2s ease; opacity:0; pointer-events:none;}
   .home-share-hint{ font-size:12px; color:#5c3a52; text-align:center; line-height:1.4; margin-top:8px;}
 .fab-menu-btn[data-tooltip]:hover::after{
-      content: attr(data-tooltip);
-      position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%);
-      background:rgba(80,30,80,.92); color:#fff; padding:4px 10px; border-radius:8px; font-size:13px; line-height:1.4;
-      border:1px solid rgba(255,94,142,.4);
-      white-space:nowrap; z-index:200; pointer-events:none;
-    }
+       content: attr(data-tooltip);
+       position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%);
+       background:rgba(80,30,80,.92); color:#fff; padding:4px 10px; border-radius:8px; font-size:13px; line-height:1.4;
+       border:1px solid rgba(255,94,142,.4);
+       white-space:normal; max-width:70vw; z-index:200; pointer-events:none;
+     }
+     .fab-share-btn[data-tooltip]:hover::after{
+       left:auto; right:0; transform:translateX(0);
+     }
 /* Desktop: переопределяем FAB-кнопки (объявлены после базовых стилей,
 	 чтобы media query не перекрывался ими с тем же приоритетом).
      Кнопки привязываются к краям #app (контейнер приложения с другим
