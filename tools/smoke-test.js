@@ -214,6 +214,25 @@ test('«Таблица умножения»: карточка собрана к�
     'кнопки ответов «Таблицы» должны использовать светлую схему обучающих карточек');
 });
 
+test('«Таблица умножения»: иконка отделена отступом от названия', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  assert(/\.game-level-label > \.times-x[\s\S]{0,120}margin-right/.test(css),
+    'отступ у иконки задаётся явно: в .game-level-label (flex) пробел между иконкой и названием зазора не создаёт');
+  assert(/\.title > \.times-x/.test(css) && /\.modal-title > \.times-x/.test(css),
+    'тот же отступ нужен в заголовке .title и в .modal-title');
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const js = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
+  const block = /<span class="times-x">✕<\/span>Таблица умножения/;
+  assert(/<h1 class="title"><span class="times-x">✕<\/span>Таблица умножения<\/h1>/.test(html),
+    'заголовок экрана настроек — иконка вплотную к тексту (отступ даёт CSS)');
+  assert(new RegExp('<div class="game-level-label">' + block.source + '<\\/div>').test(html),
+    'подпись на игровом экране — без лишнего пробела после иконки');
+  assert(block.test(js),
+    'renderTimesTableGame() рендерит подпись тем же способом');
+  assert(/<span class="times-x">✕<\/span>Правила игры/.test(html),
+    'заголовок модалки правил — без лишнего пробела после иконки');
+});
+
 test('Данные «Столиц» загружены и формируют очередь', () => {
   const cards = eval('typeof CAPITALS_CARDS === "undefined" ? null : CAPITALS_CARDS');
   assert(Array.isArray(cards) && cards.length >= 10,
