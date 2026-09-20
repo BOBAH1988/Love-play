@@ -678,6 +678,82 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   }
 })();
 
+// ===== ГЛАВНАЯ СТРАНИЦА: кнопка «Поделиться» и всплывающее окно =====
+// Кнопка показана только на главной (когда скрыта кнопка «Назад»),
+// потому что на остальных экранах слева уже есть стрелка назад.
+// При нажатии всплывает окно с кнопкой «Поделиться ссылкой» и QR-кодом.
+(function(){
+  const shareBtn = document.getElementById('globalShareBtn');
+  const modal = document.getElementById('homeShareModal');
+  const closeBtn = document.getElementById('homeShareCloseBtn');
+  const linkBtn = document.getElementById('homeShareLinkBtn');
+  const qrCanvas = document.getElementById('homeQrCanvas');
+  const backBtn = document.getElementById('globalBackBtn');
+  const setupEl = document.getElementById('setup');
+  const homeViewEl = document.getElementById('homeView');
+  const SHARE_URL = 'https://bobah1988.github.io/Love-play/';
+
+  function updateShareBtn(){
+    if(!shareBtn || !backBtn || !setupEl || !homeViewEl) return;
+    const isHome = setupEl.classList.contains('active') && homeViewEl.classList.contains('section-open');
+    shareBtn.style.opacity = isHome ? '1' : '0';
+    shareBtn.style.pointerEvents = isHome ? 'auto' : 'none';
+  }
+
+  function openShareModal(){
+    if(!modal) return;
+    modal.classList.add('show');
+    if(qrCanvas && window.renderQrCode){
+      window.renderQrCode(qrCanvas, SHARE_URL);
+    }
+  }
+
+  function closeShareModal(){
+    if(!modal) return;
+    modal.classList.remove('show');
+  }
+
+  if(shareBtn){
+    shareBtn.addEventListener('click', openShareModal);
+  }
+  if(closeBtn){
+    closeBtn.addEventListener('click', closeShareModal);
+  }
+  if(modal){
+    modal.addEventListener('click', (e)=>{
+      if(e.target === modal) closeShareModal();
+    });
+  }
+  if(linkBtn){
+    linkBtn.addEventListener('click', async ()=>{
+      try{
+        if(navigator.share){
+          await navigator.share({ title:'Давай играй', text:'Коллекция игр для пары, компании и детей — заходи играй!', url: SHARE_URL });
+          showToast('Спасибо, что делитесь! 💛');
+          return;
+        }
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(SHARE_URL);
+          showToast('Ссылка скопирована');
+          return;
+        }
+        showToast('Ссылка: ' + SHARE_URL);
+      }catch(e){
+        if(e && e.name === 'AbortError') return;
+        showToast('Не удалось поделиться — попробуйте позже');
+      }
+    });
+  }
+
+  if(backBtn){
+    if('MutationObserver' in window){
+      new MutationObserver(updateShareBtn).observe(setupEl, {attributes:true, attributeFilter:['class']});
+      new MutationObserver(updateShareBtn).observe(homeViewEl, {attributes:true, attributeFilter:['class']});
+      updateShareBtn();
+    }
+  }
+})();
+
 // ===== СТРАНИЦА ПРАВИЛ ВСЕХ ИГР (меню → «Правила игр») =====
 // Структура: группа → игра → вложенная игра (если есть).
 // Каждая игра переиспользует свою существующую модалку правил.
