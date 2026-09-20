@@ -2813,6 +2813,14 @@ function updateLevelProgressUI(){
   // Прогресс-бар под строками счёта
   const fill = document.getElementById('fantsProgressFill');
   const label = document.getElementById('fantsProgressLabel');
+  const progressRow = document.getElementById('fantsProgressRow');
+  if(state.gameMode === 'custom'){
+    if(progressRow) progressRow.style.display = 'none';
+    if(fill) fill.style.width = '0%';
+    if(label) label.textContent = '';
+    return;
+  }
+  if(progressRow) progressRow.style.display = '';
   if(fill && label){
     let pct = 0;
     let labelText = '';
