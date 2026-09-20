@@ -2837,11 +2837,7 @@ function updateLevelProgressUI(){
     fill.style.width = pct + '%';
     label.textContent = labelText;
   }
-  // «До след. уровня» дублируется внутрь карточки «Фантов» — над пилюлей
-  // «Правда/Действие»: пользователь просил держать эту надпись на карте.
-  const inCard = document.getElementById('cardLevelProgress');
-  if(inCard) inCard.textContent = text;
-}
+  }
 
 function advanceLevel(){
   const levels = getSortedActiveLevels();

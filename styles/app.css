@@ -3203,19 +3203,8 @@
   #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card{position:relative;}
   .card-fav-btn{position:absolute; right:18px; bottom:10px; width:44px; height:44px;
     padding:0; border-radius:50%; font-size:22px; line-height:1; margin:0; z-index:5;}
-  .card-fav-btn.active{background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00;}
-/* В «Фантах» строка типа карточки: слева пилюля «Правда/Действие», справа —
-      «До след. уровня» (только фанты — в П/Д и таймере строка остаётся по центру). */
-  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row{
-    justify-content:space-between; align-items:center;
-    margin-left:-22px; margin-right:-22px; padding:0 10px;
-  }
-  #game:not(.video-mode):not(.davay-mode):not(.placeholder-mode) .card-type-row .type-pill{margin-left:auto;}
-  #cardLevelProgress{
-    font-size:12px; font-weight:700;
-    color:#fff; margin-right:auto; white-space:nowrap;
-  }
-  /* Turn-label — ПЕРВЫЙ элемент экрана (Фанты, Правда/Действие, Крокодил, Таймер,
+.card-fav-btn.active{background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00;}
+   /* Turn-label — ПЕРВЫЙ элемент экрана (Фанты, Правда/Действие, Крокодил, Таймер,
      «Знаю тебя», kids-игры и т.д.) — парит в самой верхней полосе: по центру между
      FAB-кнопками «←»/«☰» (та же линия 12px + safe-area, что и у кнопок) на всех
      ширинах экрана, как единая верхняя панель [☰] [Ходит: …] [←]. Контент экрана

@@ -98,13 +98,9 @@ function renderTdChoiceCard(){
             <div class="card-turn-label">Ход игрока</div>
             <div class="card-turn-name">${turnName}</div>
           </div>
-        </div>
-<div class="card-type-row">
-           <span class="card-level-progress" id="cardLevelProgress"></span>
-           <span class="type-pill" style="visibility:hidden;">&nbsp;</span>
-         </div>
-        <div class="card-body" id="cardBody">
-          <div class="card-text" id="cardText">Выберите<br>правда или действие</div>
+</div>
+         <div class="card-body" id="cardBody">
+           <div class="card-text" id="cardText">Выберите<br>правда или действие</div>
         </div>
         <div class="td-choice-row" id="tdChoiceRow" style="display:none; margin-top:8px;">
           <button type="button" class="td-choice-btn" data-type="truth">Правда</button>
@@ -200,13 +196,9 @@ function renderCard(card){
           <div class="badge">
             <span class="level-pill" style="background:${lvl.color}">${lvl.icon} ${lvl.name}</span>
           </div>
-        </div>
-<div class="card-type-row">
-           <span class="card-level-progress" id="cardLevelProgress"></span>
-           <span class="type-pill">${card.type==='truth' ? 'Правда' : 'Действие'}</span>
-         </div>
-        <div class="card-body" id="cardBody">
-          <div class="card-text" id="cardText"></div>
+</div>
+         <div class="card-body" id="cardBody">
+           <div class="card-text" id="cardText"></div>
         </div>
         <div class="card-timer">
           <div class="timer-durations">
@@ -241,13 +233,11 @@ function renderCard(card){
     /* Режим «Правда/Действие» — кнопки выбора показываем ТОЛКО когда карта
        не вытянута (currentCard===null). После выбора типа drawCardWithType()
        рисует карту → renderCard вызывается с currentCard!==null → показываем текст. */
-    const tdRow = document.getElementById('tdChoiceRow');
-    const typeRow = el.querySelector('.card-type-row');
-    const cardBody = document.getElementById('cardBody');
-    if(state.gameType === 'td' && !currentCard){
-      tdRow.style.display = 'flex';
-      typeRow.style.display = 'none';
-      cardBody.style.display = 'none';
+const tdRow = document.getElementById('tdChoiceRow');
+     const cardBody = document.getElementById('cardBody');
+if(state.gameType === 'td' && !currentCard){
+       tdRow.style.display = 'flex';
+       cardBody.style.display = 'none';
       tdRow.querySelectorAll('.td-choice-btn').forEach(b=>{
         b.addEventListener('click', ()=>{
           tdRow.style.display = 'none';
