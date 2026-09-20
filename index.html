@@ -197,9 +197,9 @@
 <div id="app">
 
   <!-- ===== ПЛАВАЮЩАЯ КНОПКА МЕНЮ ===== -->
-  <button type="button" class="fab-menu-btn" id="globalMenuBtn" aria-label="Меню" data-tooltip="Меню">☰</button>
+  <button type="button" class="fab-menu-btn" id="globalMenuBtn" aria-label="Меню" data-tooltip="Меню" title="Меню">☰</button>
   <button type="button" class="fab-menu-btn fab-back-btn" id="globalBackBtn" aria-label="Назад">←</button>
-  <button type="button" class="fab-menu-btn fab-share-btn" id="globalShareBtn" aria-label="Поделиться" data-tooltip="Поделиться">⤴</button>
+  <button type="button" class="fab-menu-btn fab-share-btn" id="globalShareBtn" aria-label="Поделиться" data-tooltip="Поделиться" title="Поделиться">⤴</button>
 
   <!-- ===== МОДАЛЬНОЕ ОКНО МЕНЮ ===== -->
   <div class="modal-overlay" id="globalMenuModal">
@@ -970,7 +970,7 @@
       <label>Режим игры</label>
       <div class="starter-group" id="modeGroup">
         <button type="button" class="starter-btn mode-btn" data-value="romantic">Романтический</button>
-        <button type="button" class="starter-btn mode-btn" data-value="hot" data-tooltip="Горячее">Страстный</button>
+        <button type="button" class="starter-btn mode-btn" data-value="hot" data-tooltip="Горячее" title="Горячее">Страстный</button>
         <button type="button" class="starter-btn mode-btn" data-value="custom">Пользовательский</button>
       </div>
     </div>
@@ -1115,11 +1115,11 @@
         <button type="button" class="btn btn-secondary btn-square" id="photoRandomToggleBtn" aria-label="Случайный порядок">🔀</button>
         <button class="btn btn-secondary" id="skipBtn">🚫 Отказ</button>
         <div class="video-level-row" id="videoLevelRow">
-          <button type="button" class="btn btn-secondary" id="videoLevelUpBtn" aria-label="Повысить уровень видео" data-tooltip="Горячее">Горячее</button>
+          <button type="button" class="btn btn-secondary" id="videoLevelUpBtn" aria-label="Повысить уровень видео" data-tooltip="Горячее" title="Горячее">Горячее</button>
           <button type="button" class="btn btn-secondary" id="videoNextBtn" aria-label="Повысить уровень">Повысить уровень</button>
         </div>
         <div class="davay-level-row" id="davayLevelRow">
-          <button type="button" class="btn btn-secondary" id="davayLevelUpBtn" aria-label="Повысить уровень" data-tooltip="Горячее">Горячее</button>
+          <button type="button" class="btn btn-secondary" id="davayLevelUpBtn" aria-label="Повысить уровень" data-tooltip="Горячее" title="Горячее">Горячее</button>
           <button type="button" class="btn btn-secondary" id="davayNextBtn" aria-label="Повысить уровень">Повысить уровень</button>
           <button type="button" class="btn btn-secondary btn-square" id="davayMuteBtn" aria-label="Включить звук видео">🔇</button>
         </div>
@@ -1137,7 +1137,7 @@
       </div>
       <div class="video-extra-toggle" id="videoExtraToggle">Дополнительно <span class="video-extra-arrow">▾</span></div>
       <div class="row2">
-        <button class="btn btn-secondary" id="levelUpBtn" data-tooltip="Горячее">🔥 Горячее</button>
+        <button class="btn btn-secondary" id="levelUpBtn" data-tooltip="Горячее" title="Горячее">🔥 Горячее</button>
         <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Предыдущий вариант">Предыдущий вариант</button>
         <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">🚫</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoMuteBtn" aria-label="Включить звук видео">🔇</button>
@@ -2495,7 +2495,7 @@
       <button type="button" class="btn btn-secondary" id="tdSkipBtn">🚫 Отказ</button>
     </div>
     <div class="td-actions-row" style="margin-top:10px;">
-      <button type="button" class="btn btn-secondary" id="tdLevelUpBtn" data-tooltip="Горячее">🔥 Горячее</button>
+      <button type="button" class="btn btn-secondary" id="tdLevelUpBtn" data-tooltip="Горячее" title="Горячее">🔥 Горячее</button>
       <button type="button" class="btn btn-secondary btn-pause" id="tdPauseBtn">Пауза</button>
     </div>
   
@@ -2635,7 +2635,7 @@
         <button type="button" class="btn btn-secondary btn-pause" id="timerExitBtn">Пауза</button>
       </div>
       <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;" data-tooltip="Горячее">🔥 Горячее</button>
+        <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;" data-tooltip="Горячее" title="Горячее">🔥 Горячее</button>
       </div>
     </div>
     </div>
@@ -4666,45 +4666,52 @@
     </div>
   </div>
   <script>
-  window.addEventListener('load', function(){
-    var tooltip = document.createElement('div');
-    tooltip.style.cssText = 'position:fixed;display:none;background:#000;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px;line-height:1.4;white-space:nowrap;z-index:9999;pointer-events:none;';
-    document.body.appendChild(tooltip);
-    document.addEventListener('mouseover', function(e){
-      var t = e.target;
-      while(t && t !== document.body){
-        if(t.hasAttribute('data-tooltip') && !t.classList.contains('fab-menu-btn')){
-          var text = t.getAttribute('data-tooltip');
-          if(text){
-            tooltip.textContent = text;
-            tooltip.style.display = 'block';
-            var tr = tooltip.getBoundingClientRect();
-            var tw = tr.width || 60;
-            var th = tr.height || 20;
-            var rr = t.getBoundingClientRect();
-            var left = rr.left + rr.width/2 - tw/2;
-            var top = rr.top - th - 8;
-            if(left < 4) left = 4;
-            if(left + tw > window.innerWidth - 4) left = window.innerWidth - tw - 4;
-            tooltip.style.left = left + 'px';
-            tooltip.style.top = Math.max(4, top) + 'px';
+  (function(){
+    function init(){
+      var tooltip = document.createElement('div');
+      tooltip.style.cssText = 'position:fixed;display:none;background:#000;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px;line-height:1.4;white-space:nowrap;z-index:9999;pointer-events:none;';
+      document.body.appendChild(tooltip);
+      document.addEventListener('mouseover', function(e){
+        var t = e.target;
+        while(t && t !== document.body){
+          if(t.hasAttribute('data-tooltip') && !t.classList.contains('fab-menu-btn')){
+            var text = t.getAttribute('data-tooltip');
+            if(text){
+              tooltip.textContent = text;
+              tooltip.style.display = 'block';
+              var tr = tooltip.getBoundingClientRect();
+              var tw = tr.width || 60;
+              var th = tr.height || 20;
+              var rr = t.getBoundingClientRect();
+              var left = rr.left + rr.width/2 - tw/2;
+              var top = rr.top - th - 8;
+              if(left < 4) left = 4;
+              if(left + tw > window.innerWidth - 4) left = window.innerWidth - tw - 4;
+              tooltip.style.left = left + 'px';
+              tooltip.style.top = Math.max(4, top) + 'px';
+            }
+            break;
           }
-          break;
+          t = t.parentElement;
         }
-        t = t.parentElement;
-      }
-    });
-    document.addEventListener('mouseout', function(e){
-      var t = e.target;
-      while(t && t !== document.body){
-        if(t.hasAttribute('data-tooltip') && !t.classList.contains('fab-menu-btn')){
-          tooltip.style.display = 'none';
-          break;
+      });
+      document.addEventListener('mouseout', function(e){
+        var t = e.target;
+        while(t && t !== document.body){
+          if(t.hasAttribute('data-tooltip') && !t.classList.contains('fab-menu-btn')){
+            tooltip.style.display = 'none';
+            break;
+          }
+          t = t.parentElement;
         }
-        t = t.parentElement;
-      }
-    });
-  });
+      });
+    }
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', init);
+    }else{
+      init();
+    }
+  })();
   </script>
 </body>
 </html>
