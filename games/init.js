@@ -104,3 +104,54 @@ try{
 try{
   if(window.AppStats) window.AppStats.markOpen();
 }catch(e){}
+
+// ===== Подсказки (data-tooltip) — делегирование =====
+(function(){
+  var tooltip = null;
+  function getTooltip(){
+    if(!tooltip){
+      tooltip = document.createElement('div');
+      tooltip.setAttribute('data-tooltip-tip', '');
+      tooltip.style.cssText = 'position:fixed;display:none;background:rgba(80,30,80,.92);color:#fff;padding:4px 10px;border-radius:8px;font-size:13px;line-height:1.4;white-space:normal;z-index:9999;pointer-events:none;border:1px solid rgba(255,94,142,.4);max-width:70vw;text-align:center;word-wrap:break-word;';
+      document.body.appendChild(tooltip);
+    }
+    return tooltip;
+  }
+  document.addEventListener('mouseover', function(e){
+    var t = e.target;
+    while(t && t !== document.body){
+      if(t.hasAttribute('data-tooltip')){
+        var text = t.getAttribute('data-tooltip');
+        if(text){
+          var tip = getTooltip();
+          tip.textContent = text;
+          tip.style.display = 'block';
+          var tr = tip.getBoundingClientRect();
+          var tw = tr.width || 80;
+          var th = tr.height || 20;
+          var rr = t.getBoundingClientRect();
+          var left = rr.left + rr.width/2 - tw/2;
+          if(left < 8) left = 8;
+          if(left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
+          var top = rr.top + rr.height + 8;
+          if(top + th > window.innerHeight - 8) top = rr.top - th - 8;
+          tip.style.left = left + 'px';
+          tip.style.top = Math.max(8, top) + 'px';
+        }
+        break;
+      }
+      t = t.parentElement;
+    }
+  });
+  document.addEventListener('mouseout', function(e){
+    var t = e.target;
+    while(t && t !== document.body){
+      if(t.hasAttribute('data-tooltip')){
+        var tip = document.querySelector('[data-tooltip-tip]');
+        if(tip) tip.style.display = 'none';
+        break;
+      }
+      t = t.parentElement;
+    }
+  });
+})();
