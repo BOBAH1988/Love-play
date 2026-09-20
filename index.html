@@ -4673,13 +4673,10 @@
     if(!tooltip){
       tooltip = document.createElement('div');
       tooltip.id = '_tip';
-      tooltip.className = 'js-tooltip';
       document.body.appendChild(tooltip);
     }
-tooltip.textContent = text;
-    tooltip.style.left = '0px';
-    tooltip.style.transform = 'none';
-    void tooltip.offsetWidth;
+    tooltip.textContent = text;
+    tooltip.style.cssText = 'position:fixed;display:block;background:rgba(80,30,80,.92);color:#fff;padding:4px 10px;border-radius:8px;font-size:13px;line-height:1.4;white-space:normal;z-index:9999;pointer-events:none;border:1px solid rgba(255,94,142,.4);max-width:70vw;text-align:center;word-wrap:break-word;left:0px;top:0px;';
     var tr = tooltip.getBoundingClientRect();
     var tw = tr.width || 80;
     var th = tr.height || 20;
@@ -4691,7 +4688,6 @@ tooltip.textContent = text;
     if(top + th > window.innerHeight - 8) top = rr.top - th - 8;
     tooltip.style.left = left + 'px';
     tooltip.style.top = Math.max(8, top) + 'px';
-    tooltip.style.display = 'block';
   }
   function hideTip(){
     var t = document.getElementById('_tip');
