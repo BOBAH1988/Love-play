@@ -4673,23 +4673,24 @@
     if(!tooltip){
       tooltip = document.createElement('div');
       tooltip.id = '_tip';
-      tooltip.style.cssText = 'position:fixed;display:none;background:rgba(80,30,80,.92);color:#fff;padding:4px 10px;border-radius:8px;font-size:13px;line-height:1.4;white-space:normal;z-index:9999;pointer-events:none;border:1px solid rgba(255,94,142,.4);max-width:80vw;text-align:center;word-wrap:break-word;';
+      tooltip.style.cssText = 'position:fixed;display:none;background:rgba(80,30,80,.92);color:#fff;padding:4px 10px;border-radius:8px;font-size:13px;line-height:1.4;white-space:normal;z-index:9999;pointer-events:none;border:1px solid rgba(255,94,142,.4);max-width:80vw;text-align:center;word-wrap:break-word;left:50%;transform:translateX(-50%);';
       document.body.appendChild(tooltip);
     }
     tooltip.textContent = text;
     tooltip.style.display = 'block';
+    tooltip.style.visibility = 'hidden';
+    tooltip.style.left = '50%';
+    tooltip.style.transform = 'translateX(-50%)';
     void tooltip.offsetWidth;
     var tw = tooltip.offsetWidth || 80;
     var th = tooltip.offsetHeight || 20;
     var rr = el.getBoundingClientRect();
-    var left = rr.left + rr.width/2 - tw/2;
-    if(left < 8) left = 8;
-    if(left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
     var top = rr.top + rr.height + 8;
     if(top + th > window.innerHeight - 8) top = rr.top - th - 8;
-    tooltip.style.left = left + 'px';
+    tooltip.style.left = (rr.left + rr.width/2) + 'px';
+    tooltip.style.transform = 'translateX(-50%)';
     tooltip.style.top = Math.max(8, top) + 'px';
-    tooltip.style.transform = 'none';
+    tooltip.style.visibility = 'visible';
   }
   function hideTip(){
     var t = document.getElementById('_tip');
