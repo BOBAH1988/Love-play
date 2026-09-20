@@ -4,9 +4,9 @@
 
 const TIMES_TABLE_COUNT_VALUES = [5, 10, 25, 50];
 const TIMES_TABLE_LEVELS = [
-  { id: 1, name: '⭐', desc: '×2 — ×5' },
-  { id: 2, name: '⭐⭐', desc: '×6 — ×9' },
-  { id: 3, name: '⭐⭐⭐', desc: '×2 — ×10' },
+  { id: 1, name: '⭐', desc: '5 сек' },
+  { id: 2, name: '⭐⭐', desc: '3 сек' },
+  { id: 3, name: '⭐⭐⭐', desc: '1 сек' },
 ];
 
 let timesTableIntervalId = null;
@@ -27,9 +27,9 @@ function timesTableMulRange(level){
 
 function timesTableLevelAnswerSeconds(level){
   // Время на ответ зависит от уровня сложности:
-  //   ⭐    (×2–×5)   — 5 секунд,
-  //   ⭐⭐   (×6–×9)  — 3 секунды,
-  //   ⭐⭐⭐ (×2–×10) — 1 секунда.
+  //   ⭐  — 5 секунд,
+  //   ⭐⭐ — 3 секунды,
+  //   ⭐⭐⭐ — 1 секунда.
   // Эти значения берутся вместо общего timesTableAnswerSeconds,
   // который теперь остаётся в state только для обратной совместимости.
   if(level === 1) return 5;
