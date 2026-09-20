@@ -221,13 +221,13 @@ function bizSpend(amount){
   return state.businessLemonadeReserve + state.businessLemonadeMoney;
 }
 function bizGoalInfo(){
-  let goal = state.businessLemonadeGoal || 1000;
+  let goal = state.businessLemonadeGoal || 5000;
   let item = BIZ_GOALS.find(g => g.sum === goal);
   if(!item){
     // Сохранение со старой/удалённой целью (например, «500 на кино») —
-    // мягко переносим на первую цель текущего списка, иначе прогресс-бар
+    // мягко переносим на цель «ролики» по умолчанию, иначе прогресс-бар
     // и условие победы разъедутся.
-    item = BIZ_GOALS[0];
+    item = BIZ_GOALS[2];
     state.businessLemonadeGoal = item.sum;
     state.businessLemonadeGoalName = item.name;
   }
@@ -236,7 +236,7 @@ function bizGoalInfo(){
   return { goal, name: item.name, icon: item.icon };
 }
 function bizGoalReached(){
-  return bizTotalNet() >= (state.businessLemonadeGoal || 1000);
+  return bizTotalNet() >= (state.businessLemonadeGoal || 5000);
 }
 function updateBizHeaderUI(){
   const day = state.businessLemonadeDay || 1;
@@ -1050,13 +1050,6 @@ function showBizSummaryModal(){
   }
   document.getElementById('bizSummaryDaysBox').innerHTML = log.map(rec=>`
     <div class="biz-breakdown-row"><span>${rec.dowShort} ${rec.locationIcon} ${rec.locationName} ${rec.weatherIcon}</span><span>${rec.netProfit >= 0 ? '+' : ''}${rec.netProfit} ₽</span></div>
-  `).join('');
-  const checklist = ['Я знаю, что такое себестоимость.', 'Я знаю, что такое цена.', 'Я знаю, что такое прибыль.', 'Я знаю, что такое выручка и расходы.', 'Я понимаю, зачем вкладывать часть прибыли в развитие.'];
-  document.getElementById('bizSummaryList').innerHTML = checklist.map(text=>`
-    <div class="krokodil-summary-row">
-      <span class="krokodil-summary-place">✅</span>
-      <span class="krokodil-summary-name">${text}</span>
-    </div>
   `).join('');
   showModal('businessLemonadeSummaryModal');
 }

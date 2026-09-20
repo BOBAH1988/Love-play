@@ -374,7 +374,7 @@ let state = {
   businessLemonadeLemonStock:0, businessLemonadeLemonBoughtDay:null, businessLemonadeTeaStock:0, businessLemonadeCompetitorPrice:null,
   businessLemonadeLoanOwed:0, businessLemonadeLoanDueDay:null,
   businessLemonadeCups:10, businessLemonadePrice:40, businessLemonadeTeaCups:10, businessLemonadeTeaPrice:10, businessLemonadeDrinkType:'lemonade', businessLemonadeSold:0,
-  businessLemonadeGoal:1000, businessLemonadeGoalName:'поход в кафе',
+  businessLemonadeGoal:5000, businessLemonadeGoalName:'ролики',
   businessLemonadeRevenue:0, businessLemonadeNetProfit:0, businessLemonadeDayProfits:[], businessLemonadeDayLog:[],
   businessLemonadeQuizIndex:0, businessLemonadeQuizCorrect:0, businessLemonadeQuizItems:[],
   // Крестики нолики (дети) — счёт партии переживает раунды, обнуляется только при выходе.
@@ -1946,7 +1946,7 @@ function performFullReset(){
   state.businessLemonadeTeaCups = 10; state.businessLemonadeTeaPrice = 10; state.businessLemonadeTeaStock = 0; state.businessLemonadeDrinkType = 'lemonade';
   state.businessLemonadeRevenue = 0; state.businessLemonadeNetProfit = 0; state.businessLemonadeDayProfits = [];
   state.businessLemonadeDayLog = [];
-  state.businessLemonadeGoal = 1000; state.businessLemonadeGoalName = 'поход в кафе';
+  state.businessLemonadeGoal = 5000; state.businessLemonadeGoalName = 'ролики';
   state.businessLemonadeQuizIndex = 0; state.businessLemonadeQuizCorrect = 0; state.businessLemonadeQuizItems = [];
   // Крестики нолики (дети)
   state.kidsXoBoard = []; state.kidsXoCurrentPlayer = 'X'; state.kidsXoRoundOver = false;
