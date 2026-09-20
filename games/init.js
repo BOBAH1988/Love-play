@@ -104,3 +104,48 @@ try{
 try{
   if(window.AppStats) window.AppStats.markOpen();
 }catch(e){}
+
+// ===== JS-подсказки (data-tooltip) =====
+(function(){
+  var tooltip = document.createElement('div');
+  tooltip.className = 'js-tooltip';
+  document.body.appendChild(tooltip);
+  var hideTimer = null;
+
+  document.addEventListener('mouseover', function(e){
+    clearTimeout(hideTimer);
+    var target = e.target;
+    while(target && target !== document.body){
+      if(target.hasAttribute && target.hasAttribute('data-tooltip') && !target.classList.contains('fab-menu-btn')){
+        var text = target.getAttribute('data-tooltip');
+        if(text){
+          tooltip.textContent = text;
+          tooltip.style.display = 'block';
+          var r = tooltip.getBoundingClientRect();
+          var tipW = r.width || 60;
+          var tipH = r.height || 20;
+          var rect = target.getBoundingClientRect();
+          var left = rect.left + rect.width / 2 - tipW / 2;
+          var top = rect.top - tipH - 8;
+          if(left < 4) left = 4;
+          if(left + tipW > window.innerWidth - 4) left = window.innerWidth - tipW - 4;
+          tooltip.style.left = left + 'px';
+          tooltip.style.top = Math.max(4, top) + 'px';
+        }
+        break;
+      }
+      target = target.parentElement;
+    }
+  }, true);
+
+  document.addEventListener('mouseout', function(e){
+    var target = e.target;
+    while(target && target !== document.body){
+      if(target.hasAttribute && target.hasAttribute('data-tooltip') && !target.classList.contains('fab-menu-btn')){
+        hideTimer = setTimeout(function(){ tooltip.style.display = 'none'; }, 50);
+        break;
+      }
+      target = target.parentElement;
+    }
+  }, true);
+})();
