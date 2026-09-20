@@ -28,9 +28,10 @@ let timesTableAdvanceTimerId = null;
 let timesTableSpeakTimerId = null;
 
 function timesTableMulRange(level){
-  if(level === 1) return [2, 5];
-  if(level === 2) return [6, 9];
-  return [2, 10];
+  // Все уровни используют полный пул примеров 1–10: от уровня зависит
+  // только время на ответ (см. timesTableLevelAnswerSeconds).
+  void level;
+  return [1, 10];
 }
 
 function timesTableLevelAnswerSeconds(level){

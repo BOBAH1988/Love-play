@@ -336,7 +336,7 @@ test('«Арифметика»: очередь на уровнях и разме
         assert(state.timesTableQueue.every(q => q && typeof q.a === 'number' && typeof q.b === 'number'),
           `уровень ${level}: карточки должны содержать множители a и b`);
         const keys = state.timesTableQueue.map(q => `${q.a}x${q.b}`);
-        const poolSize = level === 3 ? 81 : 16; // ×2–×5 и ×6–×9 → 16 примеров, ×2–×10 → 81
+        const poolSize = 100; // все уровни: полный пул примеров 1–10
         if(count <= poolSize){
           assert(new Set(keys).size === keys.length, `уровень ${level}: в партии не должно быть повторов примеров`);
         } else {
