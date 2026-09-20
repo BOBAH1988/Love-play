@@ -177,7 +177,7 @@ test('Данные «Времени»: у цифровых карточек вс
 });
 
 
-test('«Арифметика»: выбор темы — Умножение активно, остальные скоро появятся', () => {
+test('«Арифметика»: выбор темы — Умножение и Деление рабочие, Сложение/Вычитание скоро появятся', () => {
   const src = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   assert(/id="timesTableTopicGroup"/.test(html),
@@ -188,8 +188,10 @@ test('«Арифметика»: выбор темы — Умножение ак�
   });
   assert(/TIMES_TABLE_TOPICS/.test(src),
     'список тем должен быть задан в games/times-table.js (TIMES_TABLE_TOPICS)');
+  assert(/btn\.dataset\.value !== 'multiply' && btn\.dataset\.value !== 'divide'/.test(src),
+    'рабочие темы — Умножение и Деление; заглушки — только Сложение/Вычитание');
   assert(/скоро появится/.test(src),
-    'заглушки тем (Деление/Сложение/Вычитание) должны показывать тост «скоро появится»');
+    'заглушки тем (Сложение/Вычитание) должны показывать тост «скоро появится»');
   assert(/state\.timesTableTopic/.test(src),
     'выбранная тема должна храниться в state.timesTableTopic');
   assert(/🔢 Арифметика/.test(html),

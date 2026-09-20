@@ -1,7 +1,8 @@
 // games/times-table.js — Игра «Арифметика» (обучающая, по образцу «Столиц»).
-// Вопросы генерируются программно: a × b = ? с 4 вариантами ответа.
-// Тема «Умножение» — рабочая; «Деление», «Сложение» и «Вычитание» —
-// заглушки: кнопки есть в настройках, но партия по ним пока не стартует.
+// Вопросы генерируются программно с 4 вариантами ответа.
+// Рабочие темы: «Умножение» (a × b) и «Деление» (a ÷ b с целым ответом);
+// «Сложение» и «Вычитание» — заглушки: кнопки есть в настройках,
+// но партия по ним пока не стартует.
 // Запускается из экрана настроек в хабе обучающих игр. Однопользовательский режим, без паузы.
 
 const TIMES_TABLE_COUNT_VALUES = [5, 10, 25, 50];
@@ -27,10 +28,9 @@ let timesTableShowingQuestion = false;
 let timesTableAdvanceTimerId = null;
 let timesTableSpeakTimerId = null;
 
-function timesTableMulRange(level){
+function timesTableRange(){
   // Все уровни используют полный пул примеров 1–10: от уровня зависит
   // только время на ответ (см. timesTableLevelAnswerSeconds).
-  void level;
   return [1, 10];
 }
 
@@ -47,8 +47,20 @@ function timesTableLevelAnswerSeconds(level){
   return 10;
 }
 
+function timesTableTopic(){
+  return state.timesTableTopic === 'divide' ? 'divide' : 'multiply';
+}
+
+function timesTableUsedKey(){
+  // Историю ведём отдельно по теме и уровню: пулы «Умножения» и «Деления»
+  // разные, и повтор из чужой темы не должен блокировать вопрос.
+  const lvl = Number(state.timesTableSelectedLevel) || 1;
+  return `${timesTableTopic()}:${lvl}`;
+}
+
 function timesTableCardKey(card){
-  return `${card.a}x${card.b}`;
+  const op = card && card.op === 'divide' ? '÷' : 'x';
+  return `${op}${card.a}x${card.b}`;
 }
 
 function stopTimesTableInterval(){
@@ -74,33 +86,47 @@ function stopTimesTableSpeech(){
 }
 
 function drawTimesTableQueue(){
-  const level = Number(state.timesTableSelectedLevel) || 1;
-  const [minA, maxB] = timesTableMulRange(level);
+  const topic = timesTableTopic();
+  const usedKey = timesTableUsedKey();
+  const [minA, maxB] = timesTableRange();
   const total = TIMES_TABLE_COUNT_VALUES.includes(Number(state.timesTableQuestionCount)) ? Number(state.timesTableQuestionCount) : 10;
-  state.timesTableUsed[level] = state.timesTableUsed[level] || [];
-  const usedKeys = new Set(state.timesTableUsed[level]);
+  state.timesTableUsed[usedKey] = state.timesTableUsed[usedKey] || [];
+  const usedKeys = new Set(state.timesTableUsed[usedKey]);
   const queue = [];
   const seen = new Set();
   const poolSize = (maxB - minA + 1) * (maxB - minA + 1);
   let guard = 0;
   while(queue.length < total && guard < total * 30){
     guard++;
-    const a = minA + Math.floor(Math.random() * (maxB - minA + 1));
-    const b = minA + Math.floor(Math.random() * (maxB - minA + 1));
-    const key = `${a}x${b}`;
+    let a, b;
+    if(topic === 'divide'){
+      // Деление — зеркало умножения: подбираем делитель b и частное q
+      // из 1–10, делимое a = b * q — ответ всегда целый.
+      b = minA + Math.floor(Math.random() * (maxB - minA + 1));
+      const q = minA + Math.floor(Math.random() * (maxB - minA + 1));
+      a = b * q;
+    } else {
+      a = minA + Math.floor(Math.random() * (maxB - minA + 1));
+      b = minA + Math.floor(Math.random() * (maxB - minA + 1));
+    }
+    const key = topic === 'divide' ? `÷${a}x${b}` : `${a}x${b}`;
     if(seen.size >= poolSize){
-      // Пул уровня исчерпан — добираем повторами (как во «Флагах»).
+      // Пул темы исчерпан — добираем повторами (как во «Флагах»).
     } else if(seen.has(key)) continue;
     if(usedKeys.has(key) && seen.size + usedKeys.size < poolSize) continue;
     seen.add(key);
-    queue.push({ a, b, level });
+    queue.push({ a, b, op: topic, level: Number(state.timesTableSelectedLevel) || 1 });
   }
   state.timesTableQueue = queue;
   state.timesTableIndex = 0;
 }
 
-function timesTableOptions(a, b){
-  const answer = a * b;
+function timesTableAnswer(item){
+  return item.op === 'divide' ? item.a / item.b : item.a * item.b;
+}
+
+function timesTableOptions(a, b, op){
+  const answer = op === 'divide' ? a / b : a * b;
   const set = new Set([answer]);
   let guard = 0;
   while(set.size < 4 && guard < 100){
@@ -120,8 +146,10 @@ function timesTableOptions(a, b){
 function timesTableQuestionHtml(item, answersHtml){
   // Разметка карточки — как у «Флагов»/«Столиц»: card-body с вопросом
   // (.znayu-question-text), ниже .znayu-answers с кнопками ответов и
-  // иконка-подсказка озвучки. Пример (7 × 8 = ?) занимает место вопроса.
-  return `<div class="card-inner"><div class="card-body"><div class="znayu-question-text">${item.a} × ${item.b} = ?</div></div><div class="znayu-answers">${answersHtml}</div><div class="quiz-tts-hint" id="timesTableTtsHint">🔊</div></div>`;
+  // иконка-подсказка озвучки. Пример (7 × 8 = ? или 56 ÷ 8 = ?)
+  // занимает место вопроса.
+  const sign = item.op === 'divide' ? '÷' : '×';
+  return `<div class="card-inner"><div class="card-body"><div class="znayu-question-text">${item.a} ${sign} ${item.b} = ?</div></div><div class="znayu-answers">${answersHtml}</div><div class="quiz-tts-hint" id="timesTableTtsHint">🔊</div></div>`;
 }
 
 function updateTimesTableProgressUI(){
@@ -140,7 +168,7 @@ function showTimesTableQuestion(){
     showTimesTableSummaryModal();
     return;
   }
-  timesTableCurrentOptions = timesTableOptions(item.a, item.b);
+  timesTableCurrentOptions = timesTableOptions(item.a, item.b, item.op);
   timesTableAnswered = false;
   timesTableShowingQuestion = true;
   timesTableQuestionStartedAt = Date.now();
@@ -183,7 +211,7 @@ function answerTimesTableQuestion(choiceIdx){
   const queue = state.timesTableQueue || [];
   const item = queue[state.timesTableIndex];
   if(!item) return;
-  const answer = item.a * item.b;
+  const answer = timesTableAnswer(item);
   // Эталон викторины (games/quiz.js): choiceIdx >= 0 — при тайм-ауте (-1)
   // isCorrect всегда false, очко не засчитывается.
   const chosen = choiceIdx >= 0 ? timesTableCurrentOptions[choiceIdx] : null;
@@ -199,9 +227,9 @@ function answerTimesTableQuestion(choiceIdx){
 
   state.timesTableTimeMs += Date.now() - timesTableQuestionStartedAt;
   const key = timesTableCardKey(item);
-  const lvl = Number(state.timesTableSelectedLevel) || 1;
-  state.timesTableUsed[lvl] = state.timesTableUsed[lvl] || [];
-  if(!state.timesTableUsed[lvl].includes(key)) state.timesTableUsed[lvl].push(key);
+  const usedKey = timesTableUsedKey();
+  state.timesTableUsed[usedKey] = state.timesTableUsed[usedKey] || [];
+  if(!state.timesTableUsed[usedKey].includes(key)) state.timesTableUsed[usedKey].push(key);
   const card = document.getElementById('timesTableCard');
   if(card){
     // Эталон викторины: верный вариант — только answer-correct (зелёный контур),
@@ -308,9 +336,10 @@ function timesTableTopicName(topic){
 function renderTimesTableTopicGroup(){
   const wrap = document.getElementById('timesTableTopicGroup');
   if(!wrap) return;
-  if(state.timesTableTopic !== 'multiply'){ state.timesTableTopic = 'multiply'; saveState(); }
+  const valid = TIMES_TABLE_TOPICS.some(t => t.id === state.timesTableTopic);
+  if(!valid){ state.timesTableTopic = 'multiply'; saveState(); }
   wrap.querySelectorAll('.starter-btn').forEach(btn => {
-    btn.classList.toggle('on', btn.dataset.value === 'multiply');
+    btn.classList.toggle('on', btn.dataset.value === state.timesTableTopic);
   });
 }
 
@@ -344,7 +373,7 @@ function speakTimesTableCard(){
   stopTimesTableSpeech();
   stopTimesTableSpeakTimer();
   const hint = document.getElementById('timesTableTtsHint');
-  const text = `${item.a} умножить на ${item.b}`;
+  const text = item.op === 'divide' ? `${item.a} разделить на ${item.b}` : `${item.a} умножить на ${item.b}`;
   timesTableSpeakTimerId = setTimeout(() => {
     timesTableSpeakTimerId = null;
     try{
@@ -390,7 +419,8 @@ function goToTimesTableGame(){
   abandonPausedSession('soloBs');
   abandonPausedSession('quiz');
   state.pausedMode = null;
-  if(state.timesTableTopic !== 'multiply'){ state.timesTableTopic = 'multiply'; saveState(); }
+  const topic = state.timesTableTopic === 'divide' ? 'divide' : 'multiply';
+  if(state.timesTableTopic !== topic){ state.timesTableTopic = topic; saveState(); }
   state.timesTableSelectedLevel = Number(state.timesTableSelectedLevel) || 1;
   state.timesTableAnswerSeconds = state.timesTableAnswerSeconds || 5;
   state.timesTableQuestionCount = TIMES_TABLE_COUNT_VALUES.includes(Number(state.timesTableQuestionCount)) ? Number(state.timesTableQuestionCount) : 10;
@@ -444,13 +474,13 @@ function renderTimesTableGame(){
     renderTimesTableCountGroup();
     document.querySelectorAll('#timesTableTopicGroup .starter-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        if(btn.dataset.value !== 'multiply'){
+        if(btn.dataset.value !== 'multiply' && btn.dataset.value !== 'divide'){
           playErrorSound();
           showToast(`Тема «${timesTableTopicName(btn.dataset.value)}» скоро появится`);
           return;
         }
         playSuccessSound();
-        state.timesTableTopic = 'multiply';
+        state.timesTableTopic = btn.dataset.value;
         saveState();
         renderTimesTableTopicGroup();
       });
