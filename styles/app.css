@@ -900,6 +900,9 @@
     left:50%; transform:translateX(-50%);
     z-index:10; margin:0; white-space:nowrap;
     max-width:calc(100% - 112px);
+    font-size:13px; font-weight:800; padding:6px 14px; border-radius:20px; color:#fff;
+    letter-spacing:.3px;
+    transition:background .3s;
   }
 
   .card-area{

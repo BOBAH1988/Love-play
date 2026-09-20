@@ -2790,6 +2790,7 @@ function updateLevelProgressUI(){
   if(!el) return;
   const levels = getSortedActiveLevels();
   const isMax = levels.indexOf(state.levelCap) === levels.length-1;
+  const currentLevel = levelById(state.levelCap);
   let text = '';
   if(isMax){ text = ''; }
   else if(state.gameMode === 'romantic'){
@@ -2806,6 +2807,9 @@ function updateLevelProgressUI(){
     }
   }
   el.textContent = text;
+  if(currentLevel){
+    el.style.background = currentLevel.color;
+  }
   // «До след. уровня» дублируется внутрь карточки «Фантов» — над пилюлей
   // «Правда/Действие»: пользователь просил держать эту надпись на карте.
   const inCard = document.getElementById('cardLevelProgress');
