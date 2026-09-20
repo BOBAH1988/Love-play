@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-30 · v386';
+        window.APP_BUILD = '2026-09-30 · v387';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -557,7 +557,7 @@
      <div class="starter-group" id="timesTableLevelGroup">
        <button type="button" class="starter-btn mode-btn" data-value="1">⭐ 5 сек</button>
        <button type="button" class="starter-btn mode-btn" data-value="2">⭐⭐ 3 сек</button>
-       <button type="button" class="starter-btn mode-btn" data-value="3">⭐⭐⭐ 1 сек</button>
+       <button type="button" class="starter-btn mode-btn" data-value="3">⭐⭐⭐ 1,5 сек</button>
      </div>
    </div>
 
@@ -685,7 +685,7 @@
   <div class="modal-overlay" id="timesTableRulesModal">
     <div class="modal-card">
       <div class="modal-title"><span class="times-x">✕</span>Правила игры «Арафметика»</div>
-      <div class="intro-text">Тренируйте арифметику. Перед началом выберите уровень сложности и количество карточек: 5, 10, 25 или 50. На каждый вопрос — 4 варианта ответа, верный только один. Время на ответ зависит от уровня: ⭐ — 5 секунд, ⭐⭐ — 3 секунды, ⭐⭐⭐ — 1 секунда. Если время вышло — показывается верный ответ.</div>
+      <div class="intro-text">Тренируйте арифметику. Перед началом выберите уровень сложности и количество карточек: 5, 10, 25 или 50. На каждый вопрос — 4 варианта ответа, верный только один. Время на ответ зависит от уровня: ⭐ — 5 секунд, ⭐⭐ — 3 секунды, ⭐⭐⭐ — 1,5 секунды. Если время вышло — показывается верный ответ.</div>
        <ol class="modal-rules">
          <li>Перед началом выберите уровень сложности и количество карточек, затем нажмите «Начать».</li>
          <li>На каждой карточке показан пример (например, 7 × 8). Выберите правильный ответ из 4 вариантов.</li>
@@ -4557,7 +4557,7 @@
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20260929k"></script>
 <script src="games/capitals.js?v=20260929d"></script>
-<script src="games/times-table.js?v=20260920b"></script>
+<script src="games/times-table.js?v=20260920c"></script>
 <script src="games/init.js?v=20260929d"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует.

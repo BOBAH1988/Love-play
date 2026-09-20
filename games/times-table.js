@@ -6,7 +6,7 @@ const TIMES_TABLE_COUNT_VALUES = [5, 10, 25, 50];
 const TIMES_TABLE_LEVELS = [
   { id: 1, name: '⭐', desc: '5 сек' },
   { id: 2, name: '⭐⭐', desc: '3 сек' },
-  { id: 3, name: '⭐⭐⭐', desc: '1 сек' },
+  { id: 3, name: '⭐⭐⭐', desc: '1,5 сек' },
 ];
 
 let timesTableIntervalId = null;
@@ -367,7 +367,7 @@ function goToTimesTableGame(){
   abandonPausedSession('quiz');
   state.pausedMode = null;
   state.timesTableSelectedLevel = Number(state.timesTableSelectedLevel) || 1;
-  state.timesTableAnswerSeconds = state.timesTableAnswerSeconds || 10;
+  state.timesTableAnswerSeconds = state.timesTableAnswerSeconds || 5;
   state.timesTableQuestionCount = TIMES_TABLE_COUNT_VALUES.includes(Number(state.timesTableQuestionCount)) ? Number(state.timesTableQuestionCount) : 10;
   state.timesTableCorrect = 0;
   state.timesTableTimeMs = 0;
