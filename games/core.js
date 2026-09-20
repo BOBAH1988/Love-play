@@ -4176,29 +4176,36 @@ function playHitSound(){
 
 // ===== JS-подсказки (data-tooltip) =====
 (function(){
-  const tooltip = document.createElement('div');
-  tooltip.className = 'js-tooltip';
-  tooltip.style.display = 'none';
-  document.body.appendChild(tooltip);
+  function initTooltips(){
+    var tooltip = document.createElement('div');
+    tooltip.className = 'js-tooltip';
+    document.body.appendChild(tooltip);
 
-  document.querySelectorAll('[data-tooltip]:not(.fab-menu-btn)').forEach(function(el){
-    el.addEventListener('mouseenter', function(){
-      var text = el.getAttribute('data-tooltip');
-      if(!text) return;
-      tooltip.textContent = text;
-      tooltip.style.display = 'block';
-      var rect = el.getBoundingClientRect();
-      var tipW = tooltip.offsetWidth;
-      var tipH = tooltip.offsetHeight;
-      var left = rect.left + rect.width / 2 - tipW / 2;
-      var top = rect.top - tipH - 8;
-      if(left < 4) left = 4;
-      if(left + tipW > window.innerWidth - 4) left = window.innerWidth - tipW - 4;
-      tooltip.style.left = left + 'px';
-      tooltip.style.top = Math.max(4, top) + 'px';
+    document.querySelectorAll('[data-tooltip]:not(.fab-menu-btn)').forEach(function(el){
+      el.addEventListener('mouseenter', function(){
+        var text = el.getAttribute('data-tooltip');
+        if(!text) return;
+        tooltip.textContent = text;
+        tooltip.style.display = 'block';
+        var r = tooltip.getBoundingClientRect();
+        var tipW = r.width || 60;
+        var tipH = r.height || 20;
+        var rect = el.getBoundingClientRect();
+        var left = rect.left + rect.width / 2 - tipW / 2;
+        var top = rect.top - tipH - 8;
+        if(left < 4) left = 4;
+        if(left + tipW > window.innerWidth - 4) left = window.innerWidth - tipW - 4;
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = Math.max(4, top) + 'px';
+      });
+      el.addEventListener('mouseleave', function(){
+        tooltip.style.display = 'none';
+      });
     });
-    el.addEventListener('mouseleave', function(){
-      tooltip.style.display = 'none';
-    });
-  });
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initTooltips);
+  }else{
+    initTooltips();
+  }
 })();
