@@ -2597,9 +2597,17 @@
      (правила, бонусы и т.д.). Верхний край toast выровнен с верхним краем
      названия игры: top:calc(12px + env(safe-area-inset-top)), та же линия FAB-кнопок.
      z-index 1200 — выше любого модального окна и заголовка, чтобы тост
-     никогда не перекрывался. */
+     никогда не перекрывался.
+
+     ВАЖНО: position:absolute (а не fixed) — как и .game-level-label. В PWA
+     standalone body держит position:fixed; inset:0, и fixed-потомки могут
+     позиционироваться относительно body вместо viewport, где они прячутся
+     за названием игры. Absolute внутри #app (position:relative) использует тот
+     же содержащий блок, что и .game-level-label, — гарантированно работает
+     во всех режимах. toast — sibling .screen внутри #app, поэтому скролл
+     игрового экрана его не смещает. */
   .toast{
-    position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top, 0px));
+    position:absolute; left:50%; top:calc(12px + env(safe-area-inset-top, 0px));
     transform:translate(-50%,0) scale(.92);
     max-width:80vw;
     /* Визуальный стиль как у всплывающих подсказок ([data-tooltip] и [data-tt]):
@@ -2616,8 +2624,8 @@
   /* Плашка обновления в два этажа: текст сверху, под ним ряд с кнопкой
      «Обновить» и крестиком. Раньше текст стоял в одну строку слева от кнопки
      — на узком экране всё сжималось и выглядело неопрятно. */
-   .update-toast{
-     position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top, 0px));
+    .update-toast{
+      position:absolute; left:50%; top:calc(12px + env(safe-area-inset-top, 0px));
     transform:translate(-50%,0);
     display:flex; flex-direction:column; align-items:center; gap:10px;
     max-width:80vw;
