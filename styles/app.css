@@ -2310,10 +2310,10 @@
   #game.placeholder-mode.photo-favview #levelUpBtn,
   #game.placeholder-mode.photo-favview #levelDownBtn,
   #game.placeholder-mode.photo-favview #dislikeBtn{display:none;}
-/* Всплывающее окно уровня при переключении — выше карточки,
-      на уровне названия игры и выше */
+/* Всплывающее окно уровня при переключении — между FAB-кнопками
+      «←» и «☰» на одной линии с ними */
    #game.placeholder-mode .toast{
-     top:calc(4px + env(safe-area-inset-top, 0px));
+     top:calc(12px + env(safe-area-inset-top, 0px));
    }
   #game.placeholder-mode.photo-favview #photoFavPrevBtn,
   #game.placeholder-mode.photo-favview #photoFavNextBtn{
