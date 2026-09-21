@@ -2592,8 +2592,14 @@
      (правила, бонусы и т.д.). Toast центрирован по горизонтали между
      FAB-кнопками «←» (лево) и «☰» (право); z-index 600 — выше любого
      модального окна, чтобы тост никогда не перекрывался. */
+  /* Уведомления показываются у самого верха экрана — поверх названия игры
+     (.game-level-label / h1.title, z-index 140/1100) и над модальными окнами
+     (правила, бонусы и т.д.). Верхний край toast выровнен с верхним краем
+     названия игры: top:calc(12px + env(safe-area-inset-top)), та же линия FAB-кнопок.
+     z-index 1200 — выше любого модального окна и заголовка, чтобы тост
+     никогда не перекрывался. */
   .toast{
-    position:fixed; left:50%; top:0;
+    position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top, 0px));
     transform:translate(-50%,0) scale(.92);
     max-width:80vw;
     /* Визуальный стиль как у всплывающих подсказок ([data-tooltip] и [data-tt]):
@@ -2610,8 +2616,8 @@
   /* Плашка обновления в два этажа: текст сверху, под ним ряд с кнопкой
      «Обновить» и крестиком. Раньше текст стоял в одну строку слева от кнопки
      — на узком экране всё сжималось и выглядело неопрятно. */
-  .update-toast{
-    position:fixed; left:50%; top:calc(16px + env(safe-area-inset-top, 0px) + 3vh);
+   .update-toast{
+     position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top, 0px));
     transform:translate(-50%,0);
     display:flex; flex-direction:column; align-items:center; gap:10px;
     max-width:80vw;
