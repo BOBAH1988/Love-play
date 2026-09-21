@@ -1257,7 +1257,7 @@ function checkStyles(html) {
     'CSS снова прячет «Горячее»/«Повысить» в davay-mode');
   check('под уровень фильтруют обе видео-игры',
     /else if\(davaySubLevel > 0\)/.test(davaySrc2)
-      && /else if\(videoSubLevel > 0\)/.test(videoSrc2),
+      && /else if\(videoSubLevel > 0/.test(videoSrc2),
     'отбор карточек по подуровню пропал из draw-функций');
   // Видео карточки обязано гаснуть ДО перезаписи innerHTML: плееры создаются
   // внутри карточки, и любая её смена (карточка «Передайте телефон», заглушка,

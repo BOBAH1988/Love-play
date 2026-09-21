@@ -993,13 +993,21 @@ function showToast(msg, duration){
   const t = document.getElementById('toast');
   t.innerHTML = msg.replace(/\n/g, '<br>');
   t.classList.add('show');
+  const levelLabel = document.getElementById('gameLevelLabel');
+  if(levelLabel) levelLabel.style.display = 'none';
   clearTimeout(showToast._tm);
   // duration === 0 — «не гаснуть»: тост держится до следующего showToast.
   // Нужно для длинных операций (синхронизация с Яндекс Диском), когда игрок
   // должен видеть «идёт работа», а не пустой экран: «Синхронизируем…» висит,
   // пока результат (успех/ошибка) не придёт ему на смену.
   if(duration === 0) return;
-  showToast._tm = setTimeout(()=>t.classList.remove('show'), duration || 1800);
+  showToast._tm = setTimeout(()=>{
+    t.classList.remove('show');
+    if(levelLabel && isPlaceholderMode()){
+      const lvl = PHOTO_LEVELS.find(l => l.id === photoLevel);
+      levelLabel.style.display = lvl ? 'block' : 'none';
+    }
+  }, duration || 1800);
 }
 /* Коррекция позиции подсказки [data-tt], чтобы не вылезала за края экрана. */
 function fixTooltipPosition(el){
@@ -3167,15 +3175,25 @@ function renderPhotoCard(card, level){
     // ▶ = «Следующий вариант» (levelUpBtn). Навешиваем обработчики каждый раз,
     // потому что карточка (и кнопки) пересоздаются при каждой перерисовке.
     const navPrevBtn = document.getElementById('photoPrevCardBtn');
-    if(navPrevBtn) navPrevBtn.addEventListener('click', ()=>{
-      const b = document.getElementById('levelDownBtn');
-      if(b) b.click();
-    });
+    if(navPrevBtn){
+      navPrevBtn.addEventListener('click', ()=>{
+        const b = document.getElementById('levelDownBtn');
+        if(b) b.click();
+      });
+      const prevLevel = photoLevel > 1 ? photoLevel - 1 : PHOTO_LEVELS.length;
+      const prevLvl = PHOTO_LEVELS.find(l => l.id === prevLevel);
+      navPrevBtn.dataset.tt = prevLvl ? `${prevLvl.icon} ${prevLvl.name}` : 'Предыдущий вариант';
+    }
     const navNextBtn = document.getElementById('photoNextCardBtn');
-    if(navNextBtn) navNextBtn.addEventListener('click', ()=>{
-      const b = document.getElementById('levelUpBtn');
-      if(b) b.click();
-    });
+    if(navNextBtn){
+      navNextBtn.addEventListener('click', ()=>{
+        const b = document.getElementById('levelUpBtn');
+        if(b) b.click();
+      });
+      const nextLevel = photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1;
+      const nextLvl = PHOTO_LEVELS.find(l => l.id === nextLevel);
+      navNextBtn.dataset.tt = nextLvl ? `${nextLvl.icon} ${nextLvl.name}` : 'Следующий вариант';
+    }
     fitTextToContainer(
       document.getElementById('placeholderDesc'),
       document.getElementById('placeholderText'),
@@ -3239,6 +3257,7 @@ function updatePhotoRandomToggleBtn(){
   const ordered = !!state.photoOrderMode;
   btn.textContent = ordered ? '📶' : '🔀';
   btn.setAttribute('aria-label', ordered ? 'Показ по порядку — нажмите для случайного' : 'Случайный порядок — нажмите для показа по порядку');
+  btn.dataset.tt = ordered ? 'По порядку' : 'Случайный порядок';
 }
 document.getElementById('photoRandomToggleBtn').addEventListener('click', ()=>{
   if(!isPlaceholderMode()) return;
@@ -3288,10 +3307,11 @@ function updateFavoriteBtn(){
   const btn = document.getElementById('favoriteBtn');
   if(!btn) return;
   if(isPlaceholderMode()){
-    if(!currentPhotoCard){ btn.textContent = '🤍'; btn.classList.remove('active'); return; }
+    if(!currentPhotoCard){ btn.textContent = '🤍'; btn.classList.remove('active'); btn.dataset.tt = 'В избранное'; return; }
     const isDone = (state.photoDone||[]).includes(photoCardKey(currentPhotoCard));
     btn.textContent = isDone ? '❤️' : '🤍';
     btn.classList.toggle('active', isDone);
+    btn.dataset.tt = isDone ? 'Снять из избранного' : 'В избранное';
     return;
   }
   if(isVideoMode()){

@@ -160,6 +160,7 @@ function updateVideoLoopBtn(){
   btn.setAttribute('aria-label', state.videoAutoAdvance
     ? 'Выключить автопереключение на следующее видео'
     : 'Включить автопереключение на следующее видео');
+  btn.dataset.tt = state.videoAutoAdvance ? 'Автоповтор вкл' : 'Автоповтор выкл';
 }
 document.getElementById('videoLoopBtn').addEventListener('click', ()=>{
   state.videoAutoAdvance = !state.videoAutoAdvance;
@@ -168,8 +169,26 @@ document.getElementById('videoLoopBtn').addEventListener('click', ()=>{
   const video = document.getElementById('videoPlayer');
   if(video) video.loop = !state.videoAutoAdvance;
   showToast(state.videoAutoAdvance
-    ? 'Автопереключение включено 🔁'
-    : 'Видео будет повторяться само');
+    ? 'Автоповтор вкл 🔁'
+    : 'Автоповтор выкл');
+});
+
+function updateVideoRandomBtn(){
+  const btn = document.getElementById('videoRandomBtn');
+  if(!btn) return;
+  btn.classList.toggle('active', !!state.videoRandomMode);
+  btn.setAttribute('aria-label', state.videoRandomMode
+    ? 'Выключить случайный порядок'
+    : 'Включить случайный порядок');
+  btn.dataset.tt = state.videoRandomMode ? 'Случайный порядок вкл' : 'Случайный порядок';
+}
+document.getElementById('videoRandomBtn').addEventListener('click', ()=>{
+  state.videoRandomMode = !state.videoRandomMode;
+  saveState();
+  updateVideoRandomBtn();
+  showToast(state.videoRandomMode
+    ? 'Случайный порядок вкл 🎲'
+    : 'Случайный порядок выкл');
 });
 
 // Флаги "мы сейчас в полноэкранном режиме видео" — чтобы при переходе на
@@ -416,9 +435,12 @@ function drawVideoCard(level, announceEmpty){
   // Видео берутся из общего каталога "Давай попробуем" — своей отдельной
   // колоды у "Видеорулетки" больше нет.
   let all = getDavayCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
+  if(state.videoRandomMode){
+    all = getDavayCardsList().filter(c=>!hidden.includes(videoCardId(c)));
+  }
   if(state.videoFavoritesOnly){
     all = all.filter(c=>liked.includes(videoCardId(c)));
-  } else if(videoSubLevel > 0){
+  } else if(videoSubLevel > 0 && !state.videoRandomMode){
     // Играем только папку выбранного подуровня («Level N-1 …», см. videoSubLevel).
     // Фолбэк: если роликов с таким подуровнем нет (например, все видео — свои,
     // добавленные с телефона без папки на Диске), играем весь уровень, а не
@@ -449,16 +471,17 @@ function drawVideoCard(level, announceEmpty){
     selectable = all;
   }
   if(!state.videoUsed) state.videoUsed = {};
-  let used = state.videoUsed[level] || [];
+  const usedKey = state.videoRandomMode ? '*' : String(level);
+  let used = state.videoUsed[usedKey] || [];
   let pool = selectable.filter(c=>!used.includes(videoCardId(c)));
   if(pool.length===0){
     pool = selectable;
     used = [];
-    showToast('Видео этого уровня показаны заново 🔀');
+    showToast(state.videoRandomMode ? 'Видео показаны заново 🔀' : 'Видео этого уровня показаны заново 🔀');
   }
   const card = pool[Math.floor(Math.random()*pool.length)];
   used.push(videoCardId(card));
-  state.videoUsed[level] = used;
+  state.videoUsed[usedKey] = used;
   currentVideoCard = card;
   saveState();
   // Новое видео всегда дописывается в конец истории (ничего не теряем,
@@ -717,6 +740,7 @@ function renderVideoCard(card, level){
     setupVideoPlayerElement(existingVideo, card, level, true);
     updateVideoMuteBtn();
     updateVideoLoopBtn();
+    updateVideoRandomBtn();
     updateVideoFavoritesBtn();
     updateFavoriteBtn();
     return;
@@ -740,6 +764,7 @@ function renderVideoCard(card, level){
     if(video) setupVideoPlayerElement(video, card, level, false);
     updateVideoMuteBtn();
     updateVideoLoopBtn();
+    updateVideoRandomBtn();
     updateVideoFavoritesBtn();
   });
   updateFavoriteBtn();
@@ -815,6 +840,7 @@ async function goToVideoGame(){
   updateLevelUI();
   updateMuteBtn();
   updateVideoFavoritesBtn();
+  updateVideoRandomBtn();
   requestWakeLock();
   await ensureImportedDavayVideosLoaded();
   // Массовое переподписание ссылок Яндекса (десятки запросов к API, секунды
