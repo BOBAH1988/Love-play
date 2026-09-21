@@ -2598,9 +2598,12 @@
     position:fixed; left:50%; top:calc(16px + env(safe-area-inset-top, 0px) + 6vh);
     transform:translate(-50%,-10px) scale(.92);
     max-width:80vw;
-    background:rgba(0,0,0,.85); color:#fff; padding:14px 22px; border-radius:16px;
-    font-size:17px; font-weight:700; text-align:center; opacity:0; transition:all .3s ease; pointer-events:none; z-index:600;
-    white-space:normal;
+    /* Визуальный стиль как у всплывающих подсказок ([data-tooltip] и [data-tt]):
+       тот же тёмно-фиолетовый фон и розовый бордер — toast сливается со стилем
+       остальных хинтов в интерфейсе. */
+    background:rgba(80,30,80,.92); color:#fff; padding:6px 12px; border:1px solid rgba(255,94,142,.4); border-radius:8px;
+    font-size:13px; font-weight:600; text-align:center; opacity:0; transition:all .3s ease; pointer-events:none; z-index:600;
+    white-space:normal; line-height:1.4;
   }
   .toast.show{opacity:1; transform:translate(-50%,0) scale(1);}
   /* Плашка доступного обновления PWA (#updateToast): как и .toast живёт у
