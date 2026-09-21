@@ -1464,54 +1464,13 @@ function checkStyles(html) {
       bigIcon && baseIcon,
       `крупная иконка: ${bigIcon}, базовая 52px: ${baseIcon} — ожидалось 104px против 52px`);
   }
-  // Плашки уровней в «Давай попробуем» ниже на 30% (56 → 39px): шесть
-  // уровней прежнего размера выдавливали кнопки запуска за экран.
-  check('плашки уровней «Давай попробуем» ниже общего размера',
-    /#davaySetup \.level-toggle\{[^}]*min-height:\s*39px/.test(css),
-    'нет правила #davaySetup .level-toggle — высота плашек не уменьшена');
-  check('размер плашек «Фантов» и «Предложи партнёру» не тронут',
-    !/^[^#\n]*\.level-toggle\{[^}]*min-height:\s*39px/m.test(css.replace(/#davaySetup[^{]*\{[^}]*\}/g, '')),
-    'высота уменьшена для всех .level-toggle — пострадали другие игры');
-  // Высоту плашки задаёт не только min-height: если содержимое выше, плашка
-  // растягивается по нему. При старых шрифтах она оставалась 42px — минус 26%
-  // вместо заявленных 30%. Считаем высоту по фактическим правилам CSS, чтобы
-  // «-30%» нельзя было потерять незаметно при правке шрифтов.
-  const declNum = (block, prop) => {
-    const m = new RegExp(prop + ':\\s*([\\d.]+)px').exec(block);
-    return m ? parseFloat(m[1]) : null;
-  };
-  // anchor=true требует, чтобы селектор начинал правило, а не был хвостом
-  // другого: «.btn» без привязки совпадает внутри «.btn-square»/«.btn-pause».
-  const ruleFor = (selector, anchor) => {
-    const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s*');
-    const prefix = anchor ? '(?:^|[\\s,}])' : '';
-    const m = new RegExp(prefix + esc + '\\s*\\{([^}]*)\\}').exec(css);
-    return m ? m[1] : '';
-  };
-  const baseName = ruleFor('.level-toggle .lname');
-  const baseDesc = ruleFor('.level-toggle .ldesc');
-  const baseTile = ruleFor('.level-toggle');
-  const davayTile = ruleFor('#davaySetup .level-toggle');
-  const davayName = ruleFor('#davaySetup .level-toggle .lname');
-  const davayDesc = ruleFor('#davaySetup .level-toggle .ldesc');
-  // Высота = max(min-height, содержимое), где содержимое — две строки текста,
-  // отступ между ними и вертикальные padding. line-height в проекте задан не
-  // везде, для незаданного берём браузерные 1.2.
-  const tileHeight = (tile, lname, ldesc) => {
-    const padY = declNum(tile, 'padding') !== null ? declNum(tile, 'padding') : 8;
-    const minH = declNum(tile, 'min-height') || 0;
-    const nameH = declNum(lname, 'font-size') * (declNum(lname, 'line-height') || 1.2);
-    const descH = declNum(ldesc, 'font-size') * (declNum(ldesc, 'line-height') || 1.3);
-    const gap = declNum(ldesc, 'margin-top') || 0;
-    return Math.max(minH, nameH + gap + descH + padY * 2);
-  };
-  const baseH = tileHeight(baseTile, baseName, baseDesc);
-  const davayH = tileHeight(davayTile, davayName, davayDesc);
-  check('высота плашек «Давай попробуем» действительно на 30% меньше',
-    baseH > 0 && davayH <= baseH * 0.7 + 0.5,
-    `базовая ${baseH.toFixed(1)}px (padding ${declNum(baseTile, 'padding')}px), ` +
-    `в «Давай попробуем» ${davayH.toFixed(1)}px (padding ${declNum(davayTile, 'padding')}px) — ` +
-    `снижение ${(((baseH - davayH) / baseH) * 100).toFixed(1)}%, ожидалось ≥30%`);
+  // Плашки уровней в «Давай попробуем» — общий стиль .level-toggle, как в
+  // «Фантах» и других играх (v439; раньше были компактными 39px). Отдельных
+  // правил #davaySetup .level-toggle быть не должно — иначе стиль снова
+  // разойдётся с остальными играми.
+  check('плашки уровней «Давай попробуем» — общий стиль, отдельных правил нет',
+    !/#davaySetup[^{]*\.level-toggle/.test(css),
+    'в CSS снова есть правило #davaySetup .level-toggle — стиль плашек разошёлся с другими играми');
   // Блоки «Парень»/«Девушка» над карточкой в «Давай попробуем» — ниже обычной
   // кнопки на 30%. Они только показывают, кто отвечает, а высоту базовой
   // кнопки (padding 15px ×2 + 17px текста ≈ 51px) тратили зря. Как и с
@@ -1524,6 +1483,10 @@ function checkStyles(html) {
   const cssNoMedia = css.replace(/@media[^{]*\{(?:[^{}]*\{[^}]*\})*[^}]*\}/g, '');
   const davayPlayerBtn = (/(?:^|\n)\s*\.davay-player-row\s+\.btn\s*\{([^}]*)\}/.exec(cssNoMedia) || ['', ''])[1];
   const baseBtn = (/(?:^|\n)\s*\.btn\s*\{([^}]*)\}/.exec(cssNoMedia) || ['', ''])[1];
+  const declNum = (block, prop) => {
+    const m = new RegExp(prop + ':\\s*([\\d.]+)px').exec(block);
+    return m ? parseFloat(m[1]) : null;
+  };
   const boxHeight = (block, text) => {
     const explicit = declNum(block, 'height');
     if (explicit !== null) {
