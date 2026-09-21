@@ -3138,7 +3138,7 @@ function renderPhotoCard(card, level){
     // <img> с пустым src каждый раз падал бы в onerror-заглушку 🃏).
     el.innerHTML = `
        <div class="card-inner card-split${card.image ? '' : ' card-split-text-only'}">
-         ${card.rank ? `<div class="card-rank-badge card-rank-badge-outside">№${card.rank}</div>` : ''}
+         ${card.image && card.rank ? `<div class="card-rank-badge card-rank-badge-outside">№${card.rank}</div>` : ''}
          ${card.image ? `
          <div class="card-split-media" id="placeholderMedia">
            <img src="${card.image}" alt="" id="placeholderImg">
