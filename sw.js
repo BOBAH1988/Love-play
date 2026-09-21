@@ -30,7 +30,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v440';
+const CACHE_NAME = 'veselye-igry-cache-v441';
 
 // Корень приложения относительно адреса воркера: sw.js лежит в корне, поэтому
 // './' относительно его адреса — это корень и в деплое в корень домена ('/'),
@@ -197,14 +197,16 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // Стили и игровые скрипты — всегда network-first.
+    // Стили, игровые скрипты и колоды карточек — всегда network-first.
     // CSS вынесен из index.html в styles/app.css: при stale-while-revalidate
     // (как у картинок) устройство сначала отдавало бы СТАРЫЙ стиль, и правки
-    // внешнего вида «не применялись» до второй перезагрузки.
-    // Офлайн fallback теперь всегда есть: games/* и styles/* предкэшируются
-    // при установке, а при пустом кэше отдаём заглушку вместо пустого ответа
-    // (respondWith(undefined) ронял загрузку скрипта — белый экран).
-    if (url.pathname.startsWith(ROOT + 'games/') || url.pathname.startsWith(ROOT + 'styles/')) {
+    // внешнего вида «не применялись» до второй перезагрузки. С cards/* та же
+    // история: исправленные вопросы «Викторины» доезжали до игрока только со
+    // второй сессии — первый заход после обновления показывал старую колоду.
+    // Офлайн fallback теперь всегда есть: games/*, styles/* и cards/*
+    // предкэшируются при установке, а при пустом кэше отдаём заглушку вместо
+    // пустого ответа (respondWith(undefined) ронял загрузку скрипта — белый экран).
+    if (url.pathname.startsWith(ROOT + 'games/') || url.pathname.startsWith(ROOT + 'styles/') || url.pathname.startsWith(ROOT + 'cards/')) {
       event.respondWith(
         fetch(request)
           .then((response) => {
