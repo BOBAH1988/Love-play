@@ -2474,7 +2474,13 @@
   #game.video-mode #videoLoopBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #videoFullscreenBtn{order:10; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
   #game.video-mode #dislikeBtn{order:11; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
-  #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active{
+  /* Включённое состояние кнопок-переключателей блока «Дополнительно» — общая
+     подсветка у 🔁 (автоповтор), 🔀 (случайный порядок) и ⭐ (избранное).
+     Класс `active` ставит JS (`updateVideoLoopBtn`/`updateVideoRandomBtn`),
+     поэтому стиль должен быть одинаковым: игрок понимает состояние кнопки и
+     без подсказки data-tt. */
+  #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active,
+  #game.video-mode #videoRandomBtn.active{
     background:rgba(255,255,255,.35); border-color:rgba(255,255,255,.5);
   }
   /* Видео растягиваем абсолютным позиционированием, а НЕ height:100%.

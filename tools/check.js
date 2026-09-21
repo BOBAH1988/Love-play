@@ -1085,6 +1085,25 @@ function checkStyles(html) {
   check('у кнопок блока «Дополнительно» уникальный order',
     extraOrders.every(o => o !== null) && new Set(extraOrders).size === extraOrders.length,
     `order: ${extraOrders.join(', ')} — значения повторяются, часть кнопок встанет по разметке`);
+  // Включённая 🔀 должна подсвечиваться так же, как 🔁 «Автоповтор»: класс
+  // `active` JS ставил и раньше, а правила для него не было — включённый
+  // случайный порядок выглядел выключенным (состояние выдавала только
+  // подсказка). Сравниваем тела правил: одно и то же правило — стиль совпадает.
+  const activeRuleBodies = (sel) => {
+    const re = /([^{}]+)\{([^}]*)\}/g;
+    const out = [];
+    let m;
+    while ((m = re.exec(css))) {
+      if (m[1].includes(sel) && /background:/.test(m[2])) out.push(m[2].replace(/\s+/g, ' ').trim());
+    }
+    return out;
+  };
+  const loopActive = activeRuleBodies('#game.video-mode #videoLoopBtn.active');
+  const randomActive = activeRuleBodies('#game.video-mode #videoRandomBtn.active');
+  check('включённая 🔀 подсвечивается как 🔁 (автоповтор)',
+    randomActive.length > 0 && loopActive.length > 0
+      && randomActive.every(body => body === loopActive[0]),
+    `стиль активной 🔀: ${randomActive.join(' | ') || 'правила нет'} — должен совпадать с автоповтором: ${loopActive.join(' | ') || 'правила нет'}`);
   // Стрелка «←» обязана сама разбирать davay-режим: без этой ветки режим
   // проваливался в общую логику паузы, а экран #game принадлежит «Фантам» —
   // игрок попадал в чужое меню паузы, и прогресс партии не сохранялся.
