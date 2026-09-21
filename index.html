@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261021m">
+<link rel="stylesheet" href="styles/app.css?v=20261021n">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-10-21 · v436';
+        window.APP_BUILD = '2026-10-21 · v437';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -1030,7 +1030,7 @@
     <div class="toggle-row" style="margin-top:10px;">
       <button type="button" class="toggle-pill" id="davaySetupImportBtn"><span class="davay-add-plus" aria-hidden="true">+</span>Добавить свое видео</button>
       <button type="button" class="toggle-pill" id="davaySetupYandexBtn">Обновить видеофайлы</button>
-      <button type="button" class="toggle-pill" id="davaySetupSoundBtn" aria-label="Включить звук видео">🔇 Звук выключен</button>
+      <button type="button" class="toggle-pill" id="davaySetupSoundBtn" aria-label="Включить звук видео"><span class="davay-sound-icon" aria-hidden="true">🔇</span> Звук выключен</button>
     </div>
 
     <button class="btn btn-secondary" id="davaySetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -4494,7 +4494,7 @@
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
 <script src="games/fants-video.js?v=20260925g"></script>
-<script src="games/fants-davay.js?v=20260928m"></script>
+<script src="games/fants-davay.js?v=20260928n"></script>
 <script src="games/qr.js?v=20260929a"></script>
 <script src="games/fants-timer.js?v=20260930d"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.

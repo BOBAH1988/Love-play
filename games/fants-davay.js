@@ -884,7 +884,11 @@ function updateDavayMuteBtn(){
 function updateDavaySetupSoundBtn(){
   const btn = document.getElementById('davaySetupSoundBtn');
   if(!btn) return;
-  btn.textContent = davaySoundOn ? '🔊 Звук включён' : '🔇 Звук выключен';
+  // Значок звука рисуем отдельным элементом: он крупнее подписи (см. CSS
+  // `.davay-sound-icon`) — размер эмодзи задаётся font-size его обёртки.
+  btn.innerHTML = davaySoundOn
+    ? '<span class="davay-sound-icon" aria-hidden="true">🔊</span> Звук включён'
+    : '<span class="davay-sound-icon" aria-hidden="true">🔇</span> Звук выключен';
   btn.classList.toggle('on', davaySoundOn);
   btn.setAttribute('aria-label', davaySoundOn ? 'Выключить звук видео' : 'Включить звук видео');
 }
