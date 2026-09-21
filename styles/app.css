@@ -2600,13 +2600,13 @@
        тот же тёмно-фиолетовый фон и розовый бордер — toast сливается со стилем
        остальных хинтов в интерфейсе. */
     background:rgba(80,30,80,.92); color:#fff; padding:6px 12px; border:1px solid rgba(255,94,142,.4); border-radius:8px;
-    font-size:13px; font-weight:600; text-align:center; opacity:0; transition:all .3s ease; pointer-events:none; z-index:600;
+    font-size:13px; font-weight:600; text-align:center; opacity:0; transition:all .3s ease; pointer-events:none; z-index:1200;
     white-space:normal; line-height:1.4;
   }
   .toast.show{opacity:1; transform:translate(-50%,0) scale(1);}
-  /* Плашка доступного обновления PWA (#updateToast): как и .toast живёт у
-     верха экрана выше модалок (z-index 600), но это отдельный элемент —
-     с кнопкой и без автозакрытия ([hidden] вместо .show). */
+   /* Плашка доступного обновления PWA (#updateToast): как и .toast живёт у
+      верха экрана выше модалок (z-index 1200), но это отдельный элемент —
+      с кнопкой и без автозакрытия ([hidden] вместо .show). */
   /* Плашка обновления в два этажа: текст сверху, под ним ряд с кнопкой
      «Обновить» и крестиком. Раньше текст стоял в одну строку слева от кнопки
      — на узком экране всё сжималось и выглядело неопрятно. */
@@ -2616,7 +2616,7 @@
     display:flex; flex-direction:column; align-items:center; gap:10px;
     max-width:80vw;
     background:rgba(0,0,0,.85); color:#fff; padding:14px 22px; border-radius:16px;
-    font-size:17px; font-weight:700; text-align:center; z-index:600;
+    font-size:17px; font-weight:700; text-align:center; z-index:1200;
     white-space:normal;
   }
   .update-toast[hidden]{display:none;}
