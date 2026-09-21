@@ -3059,6 +3059,13 @@
   .card-rank-badge-wrap .card-rank-badge{
     box-shadow:0 2px 8px rgba(0,0,0,.3);
   }
+  /* Рейтинг вне медиа-блока — над картинкой, в верху карточки */
+  .card-rank-badge-outside{
+    display:block; background:var(--accent); color:#2b0f2e; flex-shrink:0;
+    border-radius:12px; padding:5px 16px; font-size:20px; font-weight:900;
+    letter-spacing:.3px; align-self:center; margin:0 0 6px;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);
+  }
   /* Фанты (парные): название режима («💘 Фанты» / «❓ Правда/Действие») — это
      обычный заголовок игры .game-level-label, поэтому здесь никаких правок
      шрифта не нужно: раньше метка хода раздувалась до font-size:28px, чтобы

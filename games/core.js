@@ -3137,15 +3137,15 @@ function renderPhotoCard(card, level){
     // карточки без фото, поэтому медиа-блок вообще не рендерится (иначе
     // <img> с пустым src каждый раз падал бы в onerror-заглушку 🃏).
     el.innerHTML = `
-      <div class="card-inner card-split${card.image ? '' : ' card-split-text-only'}">
-        ${card.image ? `
-        <div class="card-split-media" id="placeholderMedia">
-          <div class="card-rank-badge-wrap">${card.rank ? `<div class="card-rank-badge">№${card.rank}</div>` : ''}</div>
-          <img src="${card.image}" alt="" id="placeholderImg">
-        </div>
-        ` : ''}
-        ${!card.image && card.rank ? `<div class="card-rank-badge">№${card.rank}</div>` : ''}
-        <div class="card-split-desc" id="placeholderDesc">
+       <div class="card-inner card-split${card.image ? '' : ' card-split-text-only'}">
+         ${card.rank ? `<div class="card-rank-badge card-rank-badge-outside">№${card.rank}</div>` : ''}
+         ${card.image ? `
+         <div class="card-split-media" id="placeholderMedia">
+           <img src="${card.image}" alt="" id="placeholderImg">
+         </div>
+         ` : ''}
+         ${!card.image && card.rank ? `<div class="card-rank-badge">№${card.rank}</div>` : ''}
+         <div class="card-split-desc" id="placeholderDesc">
           ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
           <div class="card-text" id="placeholderText"></div>
           <div class="card-forwhom-row" id="placeholderForWhom"></div>
