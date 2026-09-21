@@ -55,7 +55,7 @@ function renderVideoPlaceholderCard(){
   fadeSwapCard((card)=>{
     card.className = 'card card-empty';
     card.style.borderTop = '';
-    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">Видео пока нет — добавьте их на странице «Давай попробуем» кнопкой «+ Добавить свое видео»</div></div>`;
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">Видео пока нет — добавьте их на странице «Давай попробуем» кнопкой «Добавить свое видео»</div></div>`;
   });
 }
 

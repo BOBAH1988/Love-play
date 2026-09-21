@@ -884,11 +884,9 @@ function updateDavayMuteBtn(){
 function updateDavaySetupSoundBtn(){
   const btn = document.getElementById('davaySetupSoundBtn');
   if(!btn) return;
-  // Значок звука рисуем отдельным элементом: он крупнее подписи (см. CSS
-  // `.davay-sound-icon`) — размер эмодзи задаётся font-size его обёртки.
-  btn.innerHTML = davaySoundOn
-    ? '<span class="davay-sound-icon" aria-hidden="true">🔊</span> Звук включён'
-    : '<span class="davay-sound-icon" aria-hidden="true">🔇</span> Звук выключен';
+  // Без значка: в строке пилюль «Давай попробуем» значки убраны намеренно
+  // («Добавить свое видео», «Обновить видеофайлы» — тоже чистый текст).
+  btn.textContent = davaySoundOn ? 'Звук включён' : 'Звук выключен';
   btn.classList.toggle('on', davaySoundOn);
   btn.setAttribute('aria-label', davaySoundOn ? 'Выключить звук видео' : 'Включить звук видео');
 }
