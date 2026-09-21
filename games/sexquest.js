@@ -306,9 +306,9 @@ function renderSexQuestStep(){
     el.className = 'card';
     el.innerHTML = `
       <div class="card-inner">
+        <div class="sexquest-level-badge">Уровень ${sexQuestCurrentStepIndex + 1} из ${sexQuestCurrentWish.quest.length}</div>
         <div class="card-header">
           <div class="card-turn">
-            <div class="card-turn-label">Уровень ${sexQuestCurrentStepIndex + 1} из ${sexQuestCurrentWish.quest.length}</div>
             <div class="card-turn-name">${sexQuestCurrentWish.title}</div>
           </div>
         </div>
