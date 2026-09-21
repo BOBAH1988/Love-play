@@ -2464,16 +2464,19 @@
     display:none;
   }
   #game.davay-mode #pauseBtn{order:6; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
-  #game.video-mode #videoMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  /* 🔀 «Случайный порядок» стоит между 🔊 (звук) и 🔁 (автоповтор). Место
-     кнопки задаёт именно `order`, а не разметка: в раскрытом блоке
+  /* Кнопки-иконки скрытого блока «Дополнительно» — 🔊 звук, 🔀 случайный
+     порядок, 🔁 автоповтор, ⛶ полный экран и 🚫 «не показывать». Иконки на
+     30% крупнее прежних 16px (20.8px): блок раскрывают редко, и мелкие глифы
+     в нём легко спутать между собой. */
+  #game.video-mode #videoMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  /* Место кнопки 🔀 задаёт именно `order`, а не разметка: в раскрытом блоке
      «Дополнительно» `.row2` становится `display:contents`, и все кнопки
      попадают в один flex-контейнер `.controls`. Без своего правила кнопка
      получала order:0 и вставала первой — раньше «Готово» в верхнем ряду. */
-  #game.video-mode #videoRandomBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #videoLoopBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #videoFullscreenBtn{order:10; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #dislikeBtn{order:11; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
+  #game.video-mode #videoRandomBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoLoopBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoFullscreenBtn{order:10; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  #game.video-mode #dislikeBtn{order:11; flex:0 0 40px; width:40px; padding:0; font-size:20.8px;}
   /* Включённое состояние кнопок-переключателей блока «Дополнительно» — общая
      подсветка у 🔁 (автоповтор), 🔀 (случайный порядок) и ⭐ (избранное).
      Класс `active` ставит JS (`updateVideoLoopBtn`/`updateVideoRandomBtn`),

@@ -1059,18 +1059,24 @@ function checkStyles(html) {
   check('кнопка 🔀 показана в «Видеорулетке»',
     /#game\.video-mode #videoMuteBtn[^{}]*#game\.video-mode #videoRandomBtn[^{}]*\{[^}]*display:\s*flex/.test(css),
     'нет правила показа для #videoRandomBtn — кнопка пропадёт из блока «Дополнительно»');
-  const videoOrder = (id) => {
-    // Ищем не первое совпадение селектора, а правило, где реально есть
-    // `order`: id может встречаться и в списке через запятую, например
-    // `#game.video-mode #videoFullscreenBtn{display:flex;}`.
+  // Правило кнопки блока «Дополнительно» — у каждой из пяти есть своё правило
+  // с `order` (именно это отличает его от правила показа списком через запятую,
+  // например `#game.video-mode #videoFullscreenBtn{display:flex;}`).
+  const videoExtraRule = (id) => {
     const re = new RegExp(`#game\\.video-mode #${id}\\{([^}]*)\\}`, 'g');
     let m;
     while ((m = re.exec(css))) {
-      const ord = m[1].match(/order:\s*(\d+)/);
-      if (ord) return Number(ord[1]);
+      if (/order:/.test(m[1])) return m[1];
     }
     return null;
   };
+  const videoOrder = (id) => {
+    const body = videoExtraRule(id);
+    const m = body && body.match(/order:\s*(\d+)/);
+    return m ? Number(m[1]) : null;
+  };
+  const VIDEO_EXTRA_BTNS = ['videoMuteBtn', 'videoRandomBtn', 'videoLoopBtn',
+    'videoFullscreenBtn', 'dislikeBtn'];
   const ordMute = videoOrder('videoMuteBtn');
   const ordRandom = videoOrder('videoRandomBtn');
   const ordLoop = videoOrder('videoLoopBtn');
@@ -1085,6 +1091,17 @@ function checkStyles(html) {
   check('у кнопок блока «Дополнительно» уникальный order',
     extraOrders.every(o => o !== null) && new Set(extraOrders).size === extraOrders.length,
     `order: ${extraOrders.join(', ')} — значения повторяются, часть кнопок встанет по разметке`);
+  // Иконки блока «Дополнительно» увеличены на 30% (16px → 20.8px). Размер
+  // иконки задаёт `font-size` в том же правиле, где `order`.
+  const extraIconSize = (id) => {
+    const body = videoExtraRule(id);
+    const m = body && body.match(/font-size:\s*([\d.]+)px/);
+    return m ? Number(m[1]) : null;
+  };
+  const extraIconSizes = VIDEO_EXTRA_BTNS.map(extraIconSize);
+  check('иконки блока «Дополнительно» крупнее на 30% (20.8px) у всех пяти',
+    extraIconSizes.every(s => s === 20.8),
+    `размеры иконок (${VIDEO_EXTRA_BTNS.join(', ')}): ${extraIconSizes.join(', ')} — должно быть 20.8px (16px + 30%)`);
   // Включённая 🔀 должна подсвечиваться так же, как 🔁 «Автоповтор»: класс
   // `active` JS ставил и раньше, а правила для него не было — включённый
   // случайный порядок выглядел выключенным (состояние выдавала только
