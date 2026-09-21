@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-10-21 · v434';
+        window.APP_BUILD = '2026-10-21 · v435';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -1143,11 +1143,11 @@
       <div class="row2">
         <button class="btn btn-secondary" id="levelUpBtn" data-tooltip="Горячее">🔥 Горячее</button>
         <button type="button" class="btn btn-secondary" id="levelDownBtn" aria-label="Предыдущий вариант">Предыдущий вариант</button>
-        <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше">🚫</button>
-        <button type="button" class="btn btn-secondary btn-square" id="videoMuteBtn" aria-label="Включить звук видео">🔇</button>
+        <button type="button" class="btn btn-secondary btn-square" id="dislikeBtn" aria-label="Не показывать больше" data-tt="Не показывать больше">🚫</button>
+        <button type="button" class="btn btn-secondary btn-square" id="videoMuteBtn" aria-label="Включить звук видео" data-tt="Звук выкл">🔇</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoRandomBtn" aria-label="Случайный порядок" data-tt="Случайный порядок выкл">🔀</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoLoopBtn" aria-label="Автоповтор" data-tt="Автоповтор">🔁</button>
-        <button type="button" class="btn btn-secondary btn-square" id="videoFullscreenBtn" aria-label="Видео на весь экран">⛶</button>
+        <button type="button" class="btn btn-secondary btn-square" id="videoFullscreenBtn" aria-label="Видео на весь экран" data-tt="Видео на весь экран">⛶</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoFavoritesBtn" aria-label="Смотреть избранное">⭐</button>
         <button type="button" class="btn btn-secondary btn-square btn-text-square btn-pause" id="pauseBtn" aria-label="Пауза">Пауза</button>
       </div>
@@ -4493,7 +4493,7 @@
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
-<script src="games/fants-video.js?v=20260925e"></script>
+<script src="games/fants-video.js?v=20260925f"></script>
 <script src="games/fants-davay.js?v=20260928m"></script>
 <script src="games/qr.js?v=20260929a"></script>
 <script src="games/fants-timer.js?v=20260930d"></script>

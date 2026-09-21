@@ -143,6 +143,8 @@ function updateVideoMuteBtn(){
   if(!btn) return;
   btn.textContent = videoSoundOn ? '🔊' : '🔇';
   btn.setAttribute('aria-label', videoSoundOn ? 'Выключить звук видео' : 'Включить звук видео');
+  // Подсказка называет состояние — как у 🔀/🔁 рядом в блоке «Дополнительно».
+  btn.dataset.tt = videoSoundOn ? 'Звук вкл' : 'Звук выкл';
 }
 function setVideoSoundOn(on){
   // Вся работа — в общем переключателе (core.js): 🔊 «Видеорулетки» меняет

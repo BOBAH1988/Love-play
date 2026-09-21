@@ -1102,6 +1102,15 @@ function checkStyles(html) {
   check('иконки блока «Дополнительно» крупнее на 30% (20.8px) у всех пяти',
     extraIconSizes.every(s => s === 20.8),
     `размеры иконок (${VIDEO_EXTRA_BTNS.join(', ')}): ${extraIconSizes.join(', ')} — должно быть 20.8px (16px + 30%)`);
+  // Подсказку [data-tt] должны иметь ВСЕ пять кнопок блока: у 🔊 ⛶ 🚫 её не было,
+  // а по одной иконке назначение кнопки не читается (особенно у 🚫).
+  const extraWithoutTooltip = VIDEO_EXTRA_BTNS.filter((id) => {
+    const btn = html.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`));
+    return !btn || !/data-tt="[^"]+"/.test(btn[0]);
+  });
+  check('у всех кнопок блока «Дополнительно» есть подсказка data-tt',
+    extraWithoutTooltip.length === 0,
+    `без подсказки: ${extraWithoutTooltip.join(', ')} — игрок не поймёт, что делает иконка`);
   // Включённая 🔀 должна подсвечиваться так же, как 🔁 «Автоповтор»: класс
   // `active` JS ставил и раньше, а правила для него не было — включённый
   // случайный порядок выглядел выключенным (состояние выдавала только
@@ -1190,16 +1199,18 @@ function checkStyles(html) {
   // Подсказка [data-tt] у кнопок-переключателей обязана называть состояние:
   // у 🔀 при выключенном режиме текст был без «выкл» — игрок не понимал,
   // включён случайный порядок или нет. У 🔁 «Автоповтор вкл/выкл» — образец.
-  const tooltipReportsState = (fnName, stateField) => {
+  const tooltipReportsState = (fnName, cond) => {
     const fn = sndVideo.match(new RegExp(`function ${fnName}\\(\\)\\{([\\s\\S]*?)\\n\\}`));
-    return !!fn
-      && new RegExp(`state\\.${stateField}\\s*\\?\\s*'[^']*вкл'\\s*:\\s*'[^']*выкл'`).test(fn[1]);
+    return !!fn && new RegExp(`${cond}\\s*\\?\\s*'[^']*вкл'\\s*:\\s*'[^']*выкл'`).test(fn[1]);
   };
+  check('подсказка 🔊 сообщает состояние (вкл/выкл)',
+    tooltipReportsState('updateVideoMuteBtn', 'videoSoundOn'),
+    'подсказка 🔊 не зависит от режима — игрок не увидит, включён звук или нет');
   check('подсказка 🔀 сообщает состояние (вкл/выкл)',
-    tooltipReportsState('updateVideoRandomBtn', 'videoRandomMode'),
+    tooltipReportsState('updateVideoRandomBtn', 'state\\.videoRandomMode'),
     'подсказка 🔀 не зависит от режима — игрок не увидит, включён случайный порядок или нет');
   check('подсказка 🔁 сообщает состояние (вкл/выкл)',
-    tooltipReportsState('updateVideoLoopBtn', 'videoAutoAdvance'),
+    tooltipReportsState('updateVideoLoopBtn', 'state\\.videoAutoAdvance'),
     'подсказка 🔁 не зависит от режима — игрок не увидит, включён автоповтор или нет');
   // Название уровня «Викторины» (пары): игра и так помечена 18+, поэтому
   // приписка в названии уровня лишняя и не влезала в строку.
