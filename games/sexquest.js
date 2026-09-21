@@ -299,14 +299,15 @@ function sexQuestStepDisplayIndex(realIndex){
 }
 
 function renderSexQuestStep(){
-  if(!sexQuestCurrentWish) return;
-  updateSexQuestProgress();
-  const step = sexQuestCurrentWish.quest[sexQuestStepDisplayIndex(sexQuestCurrentStepIndex)];
-  fadeSwapEl('sexQuestCard', (el)=>{
+   if(!sexQuestCurrentWish) return;
+   updateSexQuestProgress();
+   const step = sexQuestCurrentWish.quest[sexQuestStepDisplayIndex(sexQuestCurrentStepIndex)];
+   const badge = document.getElementById('sexQuestLevelBadge');
+   if(badge) badge.textContent = `Уровень ${sexQuestCurrentStepIndex + 1} из ${sexQuestCurrentWish.quest.length}`;
+   fadeSwapEl('sexQuestCard', (el)=>{
     el.className = 'card';
     el.innerHTML = `
       <div class="card-inner">
-        <div class="sexquest-level-badge">Уровень ${sexQuestCurrentStepIndex + 1} из ${sexQuestCurrentWish.quest.length}</div>
         <div class="card-header">
           <div class="card-turn">
             <div class="card-turn-name">${sexQuestCurrentWish.title}</div>

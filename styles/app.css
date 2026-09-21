@@ -2815,8 +2815,9 @@
      чек-листов (games/sexquest.js). */
   /* "Секс-квест" — ярлык уровня над карточкой задания */
   .sexquest-level-badge{
-    font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
-    color:#ff5e8a; text-align:center; padding:6px 0 4px;
+    font-size:13px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+    color:#ff5e8a; text-align:center; padding:8px 0 6px;
+    background:rgba(255,94,138,.10); border-radius:10px; margin:0 0 8px;
   }
   .sexquest-status-row{
     display:flex; justify-content:space-between; align-items:center;
