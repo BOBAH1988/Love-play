@@ -2311,8 +2311,9 @@
   #game.placeholder-mode.photo-favview #levelDownBtn,
   #game.placeholder-mode.photo-favview #dislikeBtn{display:none;}
   /* Всплывающее окно уровня при переключении — выше карточки,
-     между FAB-кнопками «←» (лево) и «☰» (право) */
-  #game.placeholder-mode .toast{
+     между FAB-кнопками «←» (лево) и «☰» (право). #toast — не потомок
+     #game (лежит в #app рядом с ним), поэтому селектор через body:has. */
+  body:has(#game.placeholder-mode) .toast{
     top:0;
   }
   #game.placeholder-mode.photo-favview #photoFavPrevBtn,
