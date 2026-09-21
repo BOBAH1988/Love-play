@@ -164,4 +164,7 @@ try{
       t = t.parentElement;
     }
   });
+  document.addEventListener('touchstart', function(){
+    if(currentTarget) hideTooltip();
+  }, {passive: true});
 })();
