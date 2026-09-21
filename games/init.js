@@ -109,6 +109,7 @@ try{
 (function(){
   var tooltip = null;
   var currentTarget = null;
+  var hideTimer = null;
   function getTooltip(){
     if(!tooltip){
       tooltip = document.createElement('div');
@@ -136,9 +137,12 @@ try{
     tip.style.left = left + 'px';
     tip.style.top = Math.max(8, top) + 'px';
     currentTarget = t;
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hideTooltip, 1000);
     return true;
   }
   function hideTooltip(){
+    clearTimeout(hideTimer);
     var tip = document.querySelector('[data-tooltip-tip]');
     if(tip) tip.style.display = 'none';
     currentTarget = null;
