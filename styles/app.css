@@ -2310,12 +2310,9 @@
   #game.placeholder-mode.photo-favview #levelUpBtn,
   #game.placeholder-mode.photo-favview #levelDownBtn,
   #game.placeholder-mode.photo-favview #dislikeBtn{display:none;}
-  /* Всплывающее окно уровня при переключении — выше карточки,
-     между FAB-кнопками «←» (лево) и «☰» (право). #toast — не потомок
-     #game (лежит в #app рядом с ним), поэтому селектор через body:has. */
-  body:has(#game.placeholder-mode) .toast{
-    top:0;
-  }
+  /* Всплывающее окно уровня при переключении — выше карточки, между FAB-кнопками
+     «←» (лево) и «☰» (право). #toast — не потомок #game (лежит в #app рядом с
+     ним), поэтому селектор через body:has. top:0 — в базовом правиле .toast. */
   #game.placeholder-mode.photo-favview #photoFavPrevBtn,
   #game.placeholder-mode.photo-favview #photoFavNextBtn{
     display:flex; flex:1; min-width:0; font-size:14px; padding:0 8px;
@@ -2590,13 +2587,14 @@
     flex:0 0 auto; width:auto; padding:0 12px; font-size:11px; text-transform:none;
   }
 
-  /* Уведомления показываются у самого верха экрана — над игровой картой И
-     над модальными окнами (правила, бонусы и т.д.), чтобы всплывающее окно
-     игры никогда не перекрывало тост. z-index тоже выше любого модального
-     окна в приложении на случай, если модалка растянется до самого верха. */
+  /* Уведомления показываются у самого верха экрана — поверх названия игры
+     (h1.title / .game-level-label, z-index 140) и над модальными окнами
+     (правила, бонусы и т.д.). Toast центрирован по горизонтали между
+     FAB-кнопками «←» (лево) и «☰» (право); z-index 600 — выше любого
+     модального окна, чтобы тост никогда не перекрывался. */
   .toast{
-    position:fixed; left:50%; top:calc(16px + env(safe-area-inset-top, 0px) + 6vh);
-    transform:translate(-50%,-10px) scale(.92);
+    position:fixed; left:50%; top:0;
+    transform:translate(-50%,0) scale(.92);
     max-width:80vw;
     /* Визуальный стиль как у всплывающих подсказок ([data-tooltip] и [data-tt]):
        тот же тёмно-фиолетовый фон и розовый бордер — toast сливается со стилем
