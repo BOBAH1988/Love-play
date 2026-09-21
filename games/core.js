@@ -3146,11 +3146,11 @@ function renderPhotoCard(card, level){
          ` : ''}
          ${!card.image && card.rank ? `<div class="card-rank-badge">№${card.rank}</div>` : ''}
          <div class="card-split-desc" id="placeholderDesc">
-          ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
-          <div class="card-text" id="placeholderText"></div>
-          <div class="card-forwhom-row" id="placeholderForWhom"></div>
-          <div class="card-rating-row" id="placeholderRating"></div>
-        </div>
+           ${card.title ? `<div class="card-split-title">${card.title}</div>` : ''}
+           <div class="card-text" id="placeholderText"></div>
+           <div class="card-forwhom-row" id="placeholderForWhom"></div>
+         </div>
+         <div class="card-rating-row" id="placeholderRating"></div>
       </div>
       <button type="button" class="card-photo-nav card-photo-prev" id="photoPrevCardBtn" data-tt="Предыдущий вариант" aria-label="Предыдущий вариант">◀</button>
       <button type="button" class="card-photo-nav card-photo-next" id="photoNextCardBtn" data-tt="Следующий вариант" aria-label="Следующий вариант">▶</button>

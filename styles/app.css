@@ -2230,9 +2230,10 @@
     letter-spacing:.2px; background:rgba(180,140,255,.16); color:#6a3fc2;
   }
   /* Оценки партнёров — отдельная строка ниже (модуль "Секс-шоп") */
-  .card-rating-row{
-    display:none; justify-content:center; gap:10px; margin-top:2px; flex-wrap:wrap;
-  }
+   .card-rating-row{
+     display:none; justify-content:center; gap:10px; margin-top:auto; flex-wrap:wrap;
+     padding-bottom:5px;
+   }
   .rating-pill{
     display:inline-flex; align-items:center; gap:5px;
     padding:6px 13px; border-radius:16px; font-size:13px; font-weight:800;
