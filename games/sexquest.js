@@ -261,25 +261,26 @@ function updateSexQuestProgress(){
   if(el) el.textContent = `${state.sexQuestIndex + 1} / ${state.sexQuestQueue.length}`;
 }
 
-function renderSexQuestIntroCard(){
-  updateSexQuestProgress();
-  fadeSwapEl('sexQuestCard', (el)=>{
-    el.className = 'card';
-    el.innerHTML = `
-      <div class="card-inner">
-        <div class="card-header">
-          <div class="card-turn">
-            <div class="card-turn-label">Желание</div>
-            <div class="card-turn-name">${sexQuestCurrentWish.title}</div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="card-icon">🧩</div>
-          <div class="card-text">${sexQuestCurrentWish.text}</div>
-        </div>
-      </div>
-    `;
-  });
+ function renderSexQuestIntroCard(){
+   updateSexQuestProgress();
+   fadeSwapEl('sexQuestCard', (el)=>{
+     el.className = 'card';
+     el.innerHTML = `
+       <div class="card-inner">
+         <div class="sexquest-level-badge" id="sexQuestLevelBadge"></div>
+         <div class="card-header">
+           <div class="card-turn">
+             <div class="card-turn-label">Желание</div>
+             <div class="card-turn-name">${sexQuestCurrentWish.title}</div>
+           </div>
+         </div>
+         <div class="card-body">
+           <div class="card-icon">🧩</div>
+           <div class="card-text">${sexQuestCurrentWish.text}</div>
+         </div>
+       </div>
+     `;
+   });
   // На карточке знакомства решений не спрашиваем: «Да/Нет» скрыты,
   // вопрос откроется по кнопке «▶ Начать» (renderSexQuestStep).
   document.getElementById('sexQuestYesBtn').style.display = 'none';
@@ -298,28 +299,27 @@ function sexQuestStepDisplayIndex(realIndex){
   return sexQuestCurrentWish.quest.length - 1 - realIndex;
 }
 
-function renderSexQuestStep(){
+ function renderSexQuestStep(){
    if(!sexQuestCurrentWish) return;
    updateSexQuestProgress();
    const step = sexQuestCurrentWish.quest[sexQuestStepDisplayIndex(sexQuestCurrentStepIndex)];
-   const badge = document.getElementById('sexQuestLevelBadge');
-   if(badge) badge.textContent = `Уровень ${sexQuestCurrentStepIndex + 1} из ${sexQuestCurrentWish.quest.length}`;
    fadeSwapEl('sexQuestCard', (el)=>{
-    el.className = 'card';
-    el.innerHTML = `
-      <div class="card-inner">
-        <div class="card-header">
-          <div class="card-turn">
-            <div class="card-turn-name">${sexQuestCurrentWish.title}</div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="card-icon">🧩</div>
-          <div class="card-text">${step.question}</div>
-        </div>
-      </div>
-    `;
-  });
+     el.className = 'card';
+     el.innerHTML = `
+       <div class="card-inner">
+         <div class="sexquest-level-badge" id="sexQuestLevelBadge">Уровень ${sexQuestCurrentStepIndex + 1} из ${sexQuestCurrentWish.quest.length}</div>
+         <div class="card-header">
+           <div class="card-turn">
+             <div class="card-turn-name">${sexQuestCurrentWish.title}</div>
+           </div>
+         </div>
+         <div class="card-body">
+           <div class="card-icon">🧩</div>
+           <div class="card-text">${step.question}</div>
+         </div>
+       </div>
+     `;
+   });
   document.getElementById('sexQuestYesBtn').textContent = 'Да';
   document.getElementById('sexQuestYesBtn').style.display = 'flex';
   document.getElementById('sexQuestNoBtn').textContent = 'Нет';
