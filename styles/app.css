@@ -2319,9 +2319,9 @@
   }
   #levelDownBtn{display:none;}
   #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
-  #videoMuteBtn, #videoLoopBtn, #videoFavoritesBtn, #videoFullscreenBtn,
+  #videoMuteBtn, #videoLoopBtn, #videoRandomBtn, #videoFavoritesBtn, #videoFullscreenBtn,
   #davayMuteBtn{display:none;}
-  #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoFavoritesBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
+  #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoRandomBtn, #game.video-mode #videoFavoritesBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
   #game.davay-mode #davayMuteBtn{display:flex;}
   /* В "Видеорулетке" и "Давай попробуем" обычные кнопки уровня скрыты — вместо них своя "Горячее" */
   #game.video-mode #levelUpBtn, #game.video-mode #levelDownBtn,
@@ -2465,9 +2465,15 @@
   }
   #game.davay-mode #pauseBtn{order:6; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
   #game.video-mode #videoMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #videoLoopBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #videoFullscreenBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
-  #game.video-mode #dislikeBtn{order:10; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
+  /* 🔀 «Случайный порядок» стоит между 🔊 (звук) и 🔁 (автоповтор). Место
+     кнопки задаёт именно `order`, а не разметка: в раскрытом блоке
+     «Дополнительно» `.row2` становится `display:contents`, и все кнопки
+     попадают в один flex-контейнер `.controls`. Без своего правила кнопка
+     получала order:0 и вставала первой — раньше «Готово» в верхнем ряду. */
+  #game.video-mode #videoRandomBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #videoLoopBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #videoFullscreenBtn{order:10; flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  #game.video-mode #dislikeBtn{order:11; flex:0 0 40px; width:40px; padding:0; font-size:16px;}
   #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active{
     background:rgba(255,255,255,.35); border-color:rgba(255,255,255,.5);
   }

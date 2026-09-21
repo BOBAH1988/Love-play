@@ -1044,6 +1044,47 @@ function checkStyles(html) {
     'кнопка осталась — в видеорежиме её заменяет стрелка «←»');
   check('кнопка «Пауза» скрыта в «Давай попробуем»', pauseHidden('davay-mode'),
     'кнопка осталась — выход/пауза работает по стрелке «←»');
+  // Кнопка 🔀 «Случайный порядок» живёт в скрытом блоке «Дополнительно»
+  // (row2) «Видеорулетки». Видимость и место задаёт CSS, а не разметка:
+  // в раскрытом блоке `.row2` становится `display:contents`, и все кнопки
+  // попадают в один flex-контейнер `.controls`, где место определяет `order`.
+  // Без своего правила кнопка получала order:0 и вставала первой — перед
+  // «Готово», вне блока «Дополнительно» (баг v431). Плюс вне видеорежима
+  // кнопку нужно прятать: её режим (`videoRandomMode`) к «Предложи партнёру»
+  // не относится, там она висела второй 🔀.
+  const hideVideoBtnList = css.match(/#videoMuteBtn,[^{]*\{[^}]*display:\s*none/);
+  check('кнопка 🔀 скрыта вне «Видеорулетки»',
+    !!hideVideoBtnList && hideVideoBtnList[0].includes('#videoRandomBtn'),
+    'нет #videoRandomBtn в списке display:none — кнопка висит в «Предложи партнёру» второй 🔀');
+  check('кнопка 🔀 показана в «Видеорулетке»',
+    /#game\.video-mode #videoMuteBtn[^{}]*#game\.video-mode #videoRandomBtn[^{}]*\{[^}]*display:\s*flex/.test(css),
+    'нет правила показа для #videoRandomBtn — кнопка пропадёт из блока «Дополнительно»');
+  const videoOrder = (id) => {
+    // Ищем не первое совпадение селектора, а правило, где реально есть
+    // `order`: id может встречаться и в списке через запятую, например
+    // `#game.video-mode #videoFullscreenBtn{display:flex;}`.
+    const re = new RegExp(`#game\\.video-mode #${id}\\{([^}]*)\\}`, 'g');
+    let m;
+    while ((m = re.exec(css))) {
+      const ord = m[1].match(/order:\s*(\d+)/);
+      if (ord) return Number(ord[1]);
+    }
+    return null;
+  };
+  const ordMute = videoOrder('videoMuteBtn');
+  const ordRandom = videoOrder('videoRandomBtn');
+  const ordLoop = videoOrder('videoLoopBtn');
+  const ordFull = videoOrder('videoFullscreenBtn');
+  const ordDislike = videoOrder('dislikeBtn');
+  check('🔀 в блоке «Дополнительно» стоит между звуком и автоповтором',
+    ordMute !== null && ordRandom !== null && ordLoop !== null
+      && ordMute < ordRandom && ordRandom < ordLoop,
+    `order: 🔊 ${ordMute} → 🔀 ${ordRandom} → 🔁 ${ordLoop} — нужен возрастающий порядок `
+    + '(без `order` кнопка получает 0 и уходит в начало ряда, к «Готово»)');
+  const extraOrders = [ordMute, ordRandom, ordLoop, ordFull, ordDislike];
+  check('у кнопок блока «Дополнительно» уникальный order',
+    extraOrders.every(o => o !== null) && new Set(extraOrders).size === extraOrders.length,
+    `order: ${extraOrders.join(', ')} — значения повторяются, часть кнопок встанет по разметке`);
   // Стрелка «←» обязана сама разбирать davay-режим: без этой ветки режим
   // проваливался в общую логику паузы, а экран #game принадлежит «Фантам» —
   // игрок попадал в чужое меню паузы, и прогресс партии не сохранялся.

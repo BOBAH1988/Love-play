@@ -182,7 +182,8 @@ let state = {
   wrSelectedLevel:1, wrScore1:0, wrScore2:0, /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правда/Действие перед ходом */
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
   photoOrderMode:false, photoSeqIndex:{},
-  videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false, videoSoundOn:false,
+  videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false,
+  videoRandomMode:false, videoSoundOn:false,
   videoDbMigrated:false, videoResetAt:0,
   davayUsed:{}, davayHidden:[], davayLiked:[], davayFavoritesOnly:false, davayAutoAdvance:false,
   davayFavYes:[], davayFavLater:[], davayFavNo:[],
@@ -1826,6 +1827,7 @@ function performFullReset(){
   state.videoLiked = [];
   state.videoFavoritesOnly = false;
   state.videoAutoAdvance = false;
+  state.videoRandomMode = false;
   // Давай попробуем
   state.davayUsed = {};
   state.davayHidden = [];
