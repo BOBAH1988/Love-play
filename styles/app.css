@@ -2813,11 +2813,10 @@
   .summary-row{font-size:16px; font-weight:700; color:#3a2438;}
   /* "Секс-квест" — счёт/прогресс над карточкой, итог партии и история
      чек-листов (games/sexquest.js). */
-  /* "Секс-квест" — ярлык уровня над карточкой задания */
+  /* "Секс-квест" — ярлык уровня в самом верху карточки задания */
   .sexquest-level-badge{
-    font-size:13px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
-    color:#ff5e8a; text-align:center; padding:8px 0 6px;
-    background:rgba(255,94,138,.10); border-radius:10px; margin:0 0 8px;
+    font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+    color:#ff5e8a; text-align:center; padding:4px 0 8px;
   }
   .sexquest-status-row{
     display:flex; justify-content:space-between; align-items:center;
