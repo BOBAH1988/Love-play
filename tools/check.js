@@ -2071,6 +2071,45 @@ function checkPartyQuizCards() {
     new Set(cards.map(c => c.q.toLowerCase())).size === cards.length);
 }
 
+// Викторины (пары/компания/один/дети): память показанных вопросов (XQuizUsed)
+// живёт между партиями, поэтому один и тот же вопрос не должен выпадать из
+// игры в игру. Проверяем: (1) «мягкое возвращение» на месте — при исчерпании
+// пула забывается только СТАРАЯ половина показанных (used.slice(-keep)), а не
+// вся память; (2) старт партии не обнуляет память (раньше goToKidsQuizGame
+// стирал kidsQuizUsed перед каждой партией — повтор шёл каждую игру);
+// (3) «Сбросить прогресс» (performFullReset) по-прежнему чистит память всех
+// четырёх викторин — с чистого листа вопросы идут с начала колоды.
+function checkQuizNoRepeat() {
+  group('Викторины: без повторов между партиями');
+  const files = [
+    ['games/quiz.js', 'quizUsed'],
+    ['games/party-quiz.js', 'partyQuizUsed'],
+    ['games/solo-quiz.js', 'soloQuizUsed'],
+    ['games/kids-quiz.js', 'kidsQuizUsed'],
+  ];
+  for (const [file, field] of files) {
+    const src = read(file);
+    check(
+      `${file}: «мягкое возвращение» вопросов`,
+      /const keep = Math\.max\(1, Math\.floor\(used\.length \/ 2\)\);/.test(src) && src.includes('used = used.slice(-keep);'),
+      'в draw-функции нет блока used.slice(-keep) — при исчерпании пула вопросы снова пойдут по кругу от первой карточки'
+    );
+    check(
+      `${file}: память ${field} не обнуляется при старте партии`,
+      !new RegExp(`${field}\\[[^\\]]*\\]\\s*=\\s*\\[\\]`).test(src),
+      `найден сброс ${field}[…] = [] — вопросы начнут повторяться в каждой новой партии`
+    );
+  }
+  const core = read('games/core.js');
+  const resetMatch = core.match(/function performFullReset[\s\S]*?\nfunction /);
+  const resetSrc = resetMatch ? resetMatch[0] : core;
+  check(
+    '«Сбросить прогресс» чистит память викторин',
+    ['quizUsed', 'partyQuizUsed', 'soloQuizUsed', 'kidsQuizUsed'].every(f => resetSrc.includes(`state.${f} = {}`)),
+    'в performFullReset нет сброса XQuizUsed — после сброса прогресса колода не начнётся с чистого листа'
+  );
+}
+
 function main() {
   const html = read('index.html');
   const { missingIds } = checkScripts(html);
@@ -2083,6 +2122,7 @@ function main() {
   checkRegistry();
   checkKidsQuizCards();
   checkPartyQuizCards();
+  checkQuizNoRepeat();
   checkPauseResetOnStart();
   checkExitNavigation();
   checkStyles(html);

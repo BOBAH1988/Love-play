@@ -117,8 +117,11 @@ function updateKidsQuizBar(remainingMs, totalMs){
 }
 // Общая длина очереди = kidsQuizQuestionCount (вопросов НА игрока) × число
 // игроков — первые kidsQuizQuestionCount вопросов достаются игроку 0,
-// следующие — игроку 1 и т.д. (см. advanceKidsQuizQueue). Если общая длина
-// очереди больше пула возраста, пул зацикливается заново с перемешиванием.
+// следующие — игроку 1 и т.д. (см. advanceKidsQuizQueue). Вопросы внутри
+// возраста не повторяются, пока не закончится пул. Память показанных
+// (kidsQuizUsed) живёт между партиями: когда свежих вопросов не осталось,
+// в оборот плавно возвращаются только давно показанные — недавно показанные
+// не повторяются (см. «мягкое возвращение» в drawKidsQuizQueue).
 function drawKidsQuizQueue(){
   const level = state.kidsAge || 1;
   const all = getKidsQuizCardsList(level);
@@ -138,9 +141,18 @@ function drawKidsQuizQueue(){
   let recycled = false;
   while(chosen.length < total){
     if(pool.length === 0){
-      pool = shuffle(all);
-      used = [];
-      if(!recycled){ showToast('Вопросы этого возраста показаны заново 🔀'); recycled = true; }
+      // Мягкое возвращение вместо полного сброса памяти: used хранит вопросы
+      // в порядке показа (конец массива — самые свежие), поэтому забываем
+      // только СТАРУЮ половину показанных. Только что показанные вопросы
+      // попасться не могут, а давно показанные возвращаются постепенно —
+      // повторов между соседними партиями почти не бывает. Если пул и после
+      // этого пуст (крошечная колода) — полный пересбор, чтобы цикл
+      // гарантированно завершился.
+      const keep = Math.max(1, Math.floor(used.length / 2));
+      used = used.slice(-keep);
+      pool = shuffle(all.filter(c=>!used.includes(c.q)));
+      if(pool.length === 0) pool = shuffle(all);
+      if(!recycled){ showToast('Вопросы этого возраста начинают повторяться 🔀'); recycled = true; }
     }
     const take = Math.min(pool.length, total - chosen.length);
     const part = pool.slice(0, take);
@@ -329,8 +341,9 @@ function goToKidsQuizGame(){
   state.kidsQuizCorrect = new Array(players.length).fill(0);
   state.kidsQuizTimeMs = new Array(players.length).fill(0);
   state.kidsQuizCurrentPlayerIndex = Math.floor(Math.random() * players.length);
-  state.kidsQuizUsed = state.kidsQuizUsed || {};
-  state.kidsQuizUsed[state.kidsAge || 1] = [];
+  // Память показанных вопросов (kidsQuizUsed) НЕ сбрасываем при старте
+  // партии: она живёт между партиями, чтобы вопросы не повторялись из игры
+  // в игру (см. drawKidsQuizQueue).
   drawKidsQuizQueue();
   state.inProgress = true;
   saveState();

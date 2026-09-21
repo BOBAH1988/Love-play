@@ -118,8 +118,9 @@ function updatePartyQuizBar(remainingMs, totalMs){
 }
 // Общая длина очереди = partyQuizQuestionCount (вопросов НА игрока) × число
 // игроков — первые partyQuizQuestionCount вопросов достаются игроку 0,
-// следующие — игроку 1 и т.д. (см. advancePartyQuizQueue). Если общая длина
-// очереди больше пула уровня, пул зацикливается заново с перемешиванием.
+// следующие — игроку 1 и т.д. (см. advancePartyQuizQueue). Память показанных
+// (partyQuizUsed) живёт между партиями; при исчерпании пула давно показанные
+// вопросы возвращаются постепенно, недавно показанные не повторяются.
 function drawPartyQuizQueue(){
   const level = state.partyQuizSelectedLevel || 1;
   const all = getPartyQuizCardsList(level);
@@ -139,9 +140,18 @@ function drawPartyQuizQueue(){
   let recycled = false;
   while(chosen.length < total){
     if(pool.length === 0){
-      pool = shuffle(all);
-      used = [];
-      if(!recycled){ showToast('Вопросы этого уровня показаны заново 🔀'); recycled = true; }
+      // Мягкое возвращение вместо полного сброса памяти: used хранит вопросы
+      // в порядке показа (конец массива — самые свежие), поэтому забываем
+      // только СТАРУЮ половину показанных. Только что показанные вопросы
+      // попасться не могут, а давно показанные возвращаются постепенно —
+      // повторов между соседними партиями почти не бывает. Если пул и после
+      // этого пуст (крошечная колода) — полный пересбор, чтобы цикл
+      // гарантированно завершился.
+      const keep = Math.max(1, Math.floor(used.length / 2));
+      used = used.slice(-keep);
+      pool = shuffle(all.filter(c=>!used.includes(c.q)));
+      if(pool.length === 0) pool = shuffle(all);
+      if(!recycled){ showToast('Вопросы этого уровня начинают повторяться 🔀'); recycled = true; }
     }
     const take = Math.min(pool.length, total - chosen.length);
     const part = pool.slice(0, take);

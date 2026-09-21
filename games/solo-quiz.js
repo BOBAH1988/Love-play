@@ -128,9 +128,18 @@ function drawSoloQuizQueue(){
   let recycled = false;
   while(chosen.length < total){
     if(pool.length === 0){
-      pool = shuffle(all);
-      used = [];
-      if(!recycled){ showToast('Вопросы этого уровня показаны заново 🔀'); recycled = true; }
+      // Мягкое возвращение вместо полного сброса памяти: used хранит вопросы
+      // в порядке показа (конец массива — самые свежие), поэтому забываем
+      // только СТАРУЮ половину показанных. Только что показанные вопросы
+      // попасться не могут, а давно показанные возвращаются постепенно —
+      // повторов между соседними партиями почти не бывает. Если пул и после
+      // этого пуст (крошечная колода) — полный пересбор, чтобы цикл
+      // гарантированно завершился.
+      const keep = Math.max(1, Math.floor(used.length / 2));
+      used = used.slice(-keep);
+      pool = shuffle(all.filter(c=>!used.includes(c.q)));
+      if(pool.length === 0) pool = shuffle(all);
+      if(!recycled){ showToast('Вопросы этого уровня начинают повторяться 🔀'); recycled = true; }
     }
     const take = Math.min(pool.length, total - chosen.length);
     const part = pool.slice(0, take);
@@ -237,8 +246,9 @@ function showSoloQuizSummaryModal(){
 function goToSoloQuizGame(){
   state.soloQuizCorrect = 0;
   state.soloQuizTimeMs = 0;
-  state.soloQuizUsed = state.soloQuizUsed || {};
-  state.soloQuizUsed[state.soloQuizSelectedLevel || 1] = [];
+  // Память показанных вопросов (soloQuizUsed) НЕ сбрасываем при старте
+  // партии: она живёт между партиями, чтобы вопросы не повторялись из игры
+  // в игру (см. drawSoloQuizQueue).
   drawSoloQuizQueue();
   document.getElementById('soloQuizSetup').classList.remove('active');
   goToGame(null, 'soloQuizGame');
