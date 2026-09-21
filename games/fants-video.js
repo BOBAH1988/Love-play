@@ -180,7 +180,7 @@ function updateVideoRandomBtn(){
   btn.setAttribute('aria-label', state.videoRandomMode
     ? 'Выключить случайный порядок'
     : 'Включить случайный порядок');
-  btn.dataset.tt = state.videoRandomMode ? 'Случайный порядок вкл' : 'Случайный порядок';
+  btn.dataset.tt = state.videoRandomMode ? 'Случайный порядок вкл' : 'Случайный порядок выкл';
 }
 document.getElementById('videoRandomBtn').addEventListener('click', ()=>{
   state.videoRandomMode = !state.videoRandomMode;

@@ -1187,6 +1187,20 @@ function checkStyles(html) {
   check('игры не пишут звук напрямую, только через общий переключатель',
     !/davaySoundOn\s*=\s*!!on/.test(sndDavay) && !/videoSoundOn\s*=\s*!!on/.test(sndVideo),
     'в играх снова прямая запись звука — настройка разъедется между играми');
+  // Подсказка [data-tt] у кнопок-переключателей обязана называть состояние:
+  // у 🔀 при выключенном режиме текст был без «выкл» — игрок не понимал,
+  // включён случайный порядок или нет. У 🔁 «Автоповтор вкл/выкл» — образец.
+  const tooltipReportsState = (fnName, stateField) => {
+    const fn = sndVideo.match(new RegExp(`function ${fnName}\\(\\)\\{([\\s\\S]*?)\\n\\}`));
+    return !!fn
+      && new RegExp(`state\\.${stateField}\\s*\\?\\s*'[^']*вкл'\\s*:\\s*'[^']*выкл'`).test(fn[1]);
+  };
+  check('подсказка 🔀 сообщает состояние (вкл/выкл)',
+    tooltipReportsState('updateVideoRandomBtn', 'videoRandomMode'),
+    'подсказка 🔀 не зависит от режима — игрок не увидит, включён случайный порядок или нет');
+  check('подсказка 🔁 сообщает состояние (вкл/выкл)',
+    tooltipReportsState('updateVideoLoopBtn', 'videoAutoAdvance'),
+    'подсказка 🔁 не зависит от режима — игрок не увидит, включён автоповтор или нет');
   // Название уровня «Викторины» (пары): игра и так помечена 18+, поэтому
   // приписка в названии уровня лишняя и не влезала в строку.
   const quizCards = read('cards/cards_quiz.js');

@@ -3251,12 +3251,15 @@
   .wr-actions .btn{flex:1; min-width:80px; max-width:140px;}
   .wr-summary-winner{font-size:18px; font-weight:700; text-align:center; margin:10px 0;}
   .wr-summary-scores{display:flex; justify-content:space-around; font-size:15px; margin-bottom:12px;}
-  /* Кастомные подсказки для ⭐ и 🔥 — работают и на touch (:active), и на hover */
+  /* Кастомные подсказки для ⭐ и 🔥 — работают и на touch (:active), и на hover.
+     Длинные тексты (например «Случайный порядок выкл») переносятся: `nowrap`
+     вместе с `max-width:160px` заставлял строку вылезать за фон подсказки.
+     `width:max-content` держит короткие подсказки в одну строку. */
   [data-tt]::after{
     content:attr(data-tt);
     position:absolute; bottom:120%; left:50%; transform:translateX(calc(-50% + var(--tt-shift, 0px))) scale(.9);
     background:rgba(80,30,80,.92); color:#fff; font-size:12px; font-weight:600;
-    padding:5px 10px; border-radius:8px; white-space:nowrap;
+    padding:5px 10px; border-radius:8px; width:max-content; white-space:normal;
     opacity:0; pointer-events:none; transition:opacity .15s, transform .15s;
     z-index:100; max-width:160px; text-align:center; line-height:1.3;
     border:1px solid rgba(255,94,142,.4);
