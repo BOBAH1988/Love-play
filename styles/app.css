@@ -2310,6 +2310,10 @@
   #game.placeholder-mode.photo-favview #levelUpBtn,
   #game.placeholder-mode.photo-favview #levelDownBtn,
   #game.placeholder-mode.photo-favview #dislikeBtn{display:none;}
+  /* Всплывающее окно уровня при переключении — на уровне названия игры */
+  #game.placeholder-mode .toast{
+    top:calc(12px + env(safe-area-inset-top, 0px));
+  }
   #game.placeholder-mode.photo-favview #photoFavPrevBtn,
   #game.placeholder-mode.photo-favview #photoFavNextBtn{
     display:flex; flex:1; min-width:0; font-size:14px; padding:0 8px;
