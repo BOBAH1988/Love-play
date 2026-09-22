@@ -207,11 +207,19 @@ function spinWishWheel(){
     wishCurrentCard = landed || pickRandomWishCard();
     const isDare = wishCurrentCard.type === 'dare';
     if(resultEl){
-      const who = wishCurrentCard.who || 'both';
+      let who = wishCurrentCard.who || 'both';
+      // В режиме «Простая» ходы идут строго по очереди, независимо от цвета
+      // выпавшего сектора: чёрный/красный/зеро — не важно, выполняет тот,
+      // чья очередь. Очередь чередуется после каждого кручения.
+      if(state.wrGameMode === 'simple'){
+        who = state.wrSimpleTurn ? 'F' : 'M';
+        state.wrSimpleTurn = state.wrSimpleTurn ? 0 : 1;
+        saveState();
+      }
       let whoLine = '';
       // Для уровня 5 (Камасутра) не показываем "Выполняет" и "Общее задание"
       // Для уровня 6 (Желания) меняем надписи на "Желание девушки/парня"
-      if(level === 6){
+      if(level === 6 && state.wrGameMode !== 'simple'){
         if(who === 'M'){
           whoLine = 'Желание парня';
         } else if(who === 'F'){

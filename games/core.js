@@ -179,7 +179,7 @@ let state = {
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
   gameType:'fanty',
   /* Рулетка желаний */
-  wrSelectedLevel:1, wrScore1:0, wrScore2:0, wrGameMode:'interesting', /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правду/Действие перед ходом */
+  wrSelectedLevel:1, wrScore1:0, wrScore2:0, wrGameMode:'interesting', wrSimpleTurn:0, /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правду/Действие перед ходом */
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
   photoOrderMode:false, photoSeqIndex:{},
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false,
@@ -2001,6 +2001,7 @@ function performFullReset(){
   state.wrScore1 = 0;
   state.wrScore2 = 0;
   state.wrGameMode = 'interesting';
+  state.wrSimpleTurn = 0;
   state.wishCurrentCard = null;
   if(state.pausedMode === 'wishRoulette'){
     state.pausedMode = null;
