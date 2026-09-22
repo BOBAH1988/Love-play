@@ -463,10 +463,6 @@ document.getElementById('closeKrokodilSummaryBtn').addEventListener('click', ()=
     exitKrokodilGame();
   }
 });
-document.getElementById('krokodilExitBtn').addEventListener('click', ()=>{
-  pauseKrokodilGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 (document.getElementById('krokodilSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('krokodilRulesModal'); });
 setupRulesModal('krokodilRulesModal', 'closeKrokodilRulesBtn');
 
