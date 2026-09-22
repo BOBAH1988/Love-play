@@ -302,6 +302,47 @@ document.getElementById('videoFavoritesBtn').addEventListener('click', ()=>{
   drawVideoCard(videoLevel || 1);
 });
 
+// Кнопка ⤴ «Поделиться видео» — стандартное системное меню «Поделиться»
+// (Web Share API, как в Telegram), на десктопе — фолбэк: копирование ссылки
+// в буфер обмена. Делимся ссылкой на текущее видео (currentVideoCard.video —
+// прямая ссылка с Яндекс Диска; у локальных роликов это blob-ссылка, она
+// имеет смысл только на этом устройстве — что честно отражаем в тосте).
+document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
+  if(!currentVideoCard || !currentVideoCard.video){
+    playErrorSound();
+    showToast('Сначала откройте видео');
+    return;
+  }
+  const url = currentVideoCard.video;
+  if(url.indexOf('blob:') === 0){
+    showToast('Локальное видео нельзя отправить ссылкой — оно доступно только на этом устройстве');
+    return;
+  }
+  const shareData = {
+    title: 'Давай играй',
+    text: 'Смотри, какое видео выпало в «Видеорулетке» 😉',
+    url: url
+  };
+  try{
+    if(navigator.share){
+      await navigator.share(shareData);
+      showToast('Спасибо, что делитесь! 💛');
+      return;
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(url);
+      showToast('Ссылка скопирована');
+      return;
+    }
+    showToast('Ссылка: ' + url);
+  }catch(e){
+    // Пользователь закрыл системное меню — не ошибка.
+    if(e && e.name === 'AbortError') return;
+    showToast('Не удалось поделиться — попробуйте позже');
+  }
+});
+
+
 // Подгоняет ширину/aspect-ratio карточки под текущее видео и доступную
 // область (.card-area). Высота карточки всегда занимает всё доступное
 // место; ширину сужаем только если видео "уже" области (портретное) — для

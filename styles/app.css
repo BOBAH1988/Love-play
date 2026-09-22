@@ -2319,7 +2319,10 @@
   #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
   #videoMuteBtn, #videoLoopBtn, #videoRandomBtn, #videoFavoritesBtn, #videoFullscreenBtn,
   #davayMuteBtn{display:none;}
+  /* ⤴ «Поделиться видео» — только в «Видеорулетке», рядом с сердечком. */
+  #videoShareBtn{display:none;}
   #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoRandomBtn, #game.video-mode #videoFavoritesBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
+  #game.video-mode #videoShareBtn{display:flex;}
   #game.davay-mode #davayMuteBtn{display:flex;}
   /* В "Видеорулетке" и "Давай попробуем" обычные кнопки уровня скрыты — вместо них своя "Горячее" */
   #game.video-mode #levelUpBtn, #game.video-mode #levelDownBtn,
@@ -2341,7 +2344,7 @@
   #game.video-mode .controls .btn, #game.davay-mode .controls .btn{height:44px;}
   .video-extra-toggle{display:none;}
   #game.video-mode .video-extra-toggle#videoExtraToggle{
-    display:flex; order:6; flex-basis:100%; align-items:center; justify-content:center;
+    display:flex; order:7; flex-basis:100%; align-items:center; justify-content:center;
     text-align:center; font-size:12px; font-weight:700; color:#cba0bf;
     text-transform:uppercase; letter-spacing:.5px; cursor:pointer; padding:4px 0;
   }
@@ -2349,11 +2352,13 @@
   .controls.video-extra-open .video-extra-toggle .video-extra-arrow{transform:rotate(180deg);}
   #game.video-mode #doneBtn{order:1; flex:1; min-width:0; font-size:14px; padding:0 8px;}
   #game.video-mode #favoriteBtn{order:2; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
-  #game.video-mode #videoFavoritesBtn{order:3; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
-  #game.video-mode #pauseBtn{order:4; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
+  /* ⤴ «Поделиться видео» — сразу после сердечка, до ⭐ «смотреть избранное». */
+  #game.video-mode #videoShareBtn{order:3; flex:0 0 44px; width:44px; padding:0; font-size:18px;}
+  #game.video-mode #videoFavoritesBtn{order:4; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
+  #game.video-mode #pauseBtn{order:5; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
   /* Строка уровней «Видеорулетки»: «Горячее» + «Повысить уровень» — поровну. */
   .video-level-row{display:none;}
-  #game.video-mode .video-level-row{display:flex; order:5; flex-basis:100%; gap:6px;}
+  #game.video-mode .video-level-row{display:flex; order:6; flex-basis:100%; gap:6px;}
   .video-level-row .btn{flex:1; min-width:0; font-size:13px; padding:0 6px;}
   /* В "Давай попробуем" вместо "Следующее" — заголовок и три кнопки ответов;
      "Избранное" (сердечко) хранит видео, на которые оба игрока независимо
@@ -2466,15 +2471,15 @@
      порядок, 🔁 автоповтор, ⛶ полный экран и 🚫 «не показывать». Иконки на
      30% крупнее прежних 16px (20.8px): блок раскрывают редко, и мелкие глифы
      в нём легко спутать между собой. */
-  #game.video-mode #videoMuteBtn{order:7; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoMuteBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
   /* Место кнопки 🔀 задаёт именно `order`, а не разметка: в раскрытом блоке
      «Дополнительно» `.row2` становится `display:contents`, и все кнопки
      попадают в один flex-контейнер `.controls`. Без своего правила кнопка
      получала order:0 и вставала первой — раньше «Готово» в верхнем ряду. */
-  #game.video-mode #videoRandomBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
-  #game.video-mode #videoLoopBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
-  #game.video-mode #videoFullscreenBtn{order:10; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
-  #game.video-mode #dislikeBtn{order:11; flex:0 0 40px; width:40px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoRandomBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoLoopBtn{order:10; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoFullscreenBtn{order:11; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  #game.video-mode #dislikeBtn{order:12; flex:0 0 40px; width:40px; padding:0; font-size:20.8px;}
   /* Включённое состояние кнопок-переключателей блока «Дополнительно» — общая
      подсветка у 🔁 (автоповтор), 🔀 (случайный порядок) и ⭐ (избранное).
      Класс `active` ставит JS (`updateVideoLoopBtn`/`updateVideoRandomBtn`),
