@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261021q">
+<link rel="stylesheet" href="styles/app.css?v=20261021r">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-10-21 · v442';
+        window.APP_BUILD = '2026-10-21 · v443';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -2514,8 +2514,15 @@
     <h1 class="title">🎡 Рулетка желаний</h1>
     <div class="subtitle">Крутите колесо и выполняйте задания вместе</div>
 
-
     <div class="field">
+      <label>Варианты игры</label>
+      <div class="starter-group" id="wrGameModeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="simple">Простая</button>
+        <button type="button" class="starter-btn mode-btn" data-value="interesting">Интересная</button>
+      </div>
+    </div>
+
+    <div class="field" id="wrSetupLevelField">
       <label>Уровень</label>
       <div class="levels" id="wrSetupLevels"></div>
     </div>
@@ -4517,8 +4524,8 @@
 <script src="games/kids-battleship.js?v=20260913a"></script>
 <script src="games/kids-connect4.js?v=20260921j"></script>
 <script src="games/solo-battleship.js?v=20260830u"></script>
-<script src="cards/wish-roulette-cards.js?v=20260916a"></script>
-<script src="games/wish-roulette.js?v=20260918a"></script>
+<script src="cards/wish-roulette-cards.js?v=20261021q"></script>
+<script src="games/wish-roulette.js?v=20261021q"></script>
 <script src="games/truth-dare.js?v=20260930d"></script>
 <script src="games/bingo.js?v=20260930d"></script>
 <script src="games/timer-game.js?v=20260930d"></script>
@@ -4567,7 +4574,7 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20261021q').then(function (reg) {
+        navigator.serviceWorker.register('./sw.js?v=20261021r').then(function (reg) {
           // Мягкая проверка обновления при каждом запуске: reg.update() в фоне
           // спрашивает сервер, есть ли новый sw.js. Если да — браузер ставит его
           // в reg.waiting (старый воркер при этом НЕ трогаем: офлайн не ломается).

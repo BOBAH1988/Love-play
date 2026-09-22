@@ -549,6 +549,8 @@
   .starter-btn:disabled{ opacity:.35; cursor:default; pointer-events:none; transform:none; box-shadow:initial; }
   .mode-btn{font-size:11.5px; padding:9px 4px; letter-spacing:-.1px;}
   #timerModeGroup .mode-btn{font-size:15px; padding:10px 8px; letter-spacing:normal;}
+  /* «Рулетка желаний»: два варианта игры — Простая и Интересная */
+  #wrGameModeGroup .mode-btn{font-size:15px; padding:10px 8px; letter-spacing:normal;}
   /* «Пройди квест»: надписи режимов на 25% крупнее базовых (11.5px → 14.4px), иконки с кнопок убраны. */
   #sexQuestModeGroup .mode-btn{font-size:14.4px;}
   .timer-mode-caption{display:block; font-size:11.5px; font-weight:600; opacity:.75; margin-top:4px; letter-spacing:0;}

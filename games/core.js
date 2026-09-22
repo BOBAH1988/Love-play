@@ -179,7 +179,7 @@ let state = {
   customCards:[], favoriteIndexes:[], favoritesOnly:false,
   gameType:'fanty',
   /* Рулетка желаний */
-  wrSelectedLevel:1, wrScore1:0, wrScore2:0, /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правда/Действие перед ходом */
+  wrSelectedLevel:1, wrScore1:0, wrScore2:0, wrGameMode:'simple', /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правду/Действие перед ходом */
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
   photoOrderMode:false, photoSeqIndex:{},
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false,
@@ -2000,6 +2000,7 @@ function performFullReset(){
   state.wrSelectedLevel = 1;
   state.wrScore1 = 0;
   state.wrScore2 = 0;
+  state.wrGameMode = 'simple';
   state.wishCurrentCard = null;
   if(state.pausedMode === 'wishRoulette'){
     state.pausedMode = null;
@@ -2023,6 +2024,7 @@ function performFullReset(){
   renderDavaySetupStarterGroup();
   renderDavaySetupLevels();
   if(typeof wrRenderSetupLevels === 'function') wrRenderSetupLevels();
+  if(typeof wrRenderSetupGameMode === 'function') wrRenderSetupGameMode();
   if(typeof drawWishWheel === 'function') drawWishWheel();
   updateFavoritesOnlyBtn();
   updateResumeUI();

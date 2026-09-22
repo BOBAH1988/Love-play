@@ -23,7 +23,20 @@ function wishColorHex(n){ const c=wishColorOf(n); return c==='red'?'#e74c3c':c==
 function wrEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function getCardsForLevel(level){
+  if (state.wrGameMode === 'simple') {
+    return (window.WISH_ROULETTE_SIMPLE_CARDS || []);
+  }
   return (window.WISH_ROULETTE_CARDS || []).filter(c => c.level === level);
+}
+
+function wrRenderSetupGameMode(){
+  document.querySelectorAll('#wrGameModeGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', btn.dataset.value === (state.wrGameMode || 'simple'));
+  });
+  // В режиме «Простая» уровень не влияет на задания — прячем селектор, чтобы
+  // не вводить в заблуждение. В «Интересной» уровень опять важен.
+  const levelField = document.getElementById('wrSetupLevelField');
+  if(levelField){ levelField.style.display = (state.wrGameMode || 'simple') === 'simple' ? 'none' : ''; }
 }
 
 function wrRenderSetupLevels(){
@@ -40,8 +53,17 @@ function wrRenderSetupLevels(){
 }
 
 function goToWrSetup(){
-  if(typeof goToGameSetup === 'function') goToGameSetup('wrSetup', null, () => { wrRenderSetupLevels(); });
+  if(typeof goToGameSetup === 'function') goToGameSetup('wrSetup', null, () => { wrRenderSetupLevels(); wrRenderSetupGameMode(); });
 }
+
+// Переключатель режима «Простая / Интересная»
+document.querySelectorAll('#wrGameModeGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.wrGameMode = btn.dataset.value;
+    saveState();
+    wrRenderSetupGameMode();
+  });
+});
 
 // ---- Анимация колеса (накапливающийся угол, всегда по часовой, min 3 оборота, плавное торможение) ----
 let wishWheelTotalRotation = 0;
