@@ -235,10 +235,6 @@ document.getElementById('kidsTdSkipBtn').addEventListener('click', ()=>{
   saveState();
   kidsTdNextTurn();
 });
-document.getElementById('kidsTdExitBtn').addEventListener('click', ()=>{
-  pauseKidsTdGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 (document.getElementById('kidsTdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsTdRulesModal'); });
 setupRulesModal('kidsTdRulesModal', 'closeKidsTdRulesBtn');
 

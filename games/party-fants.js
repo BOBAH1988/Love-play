@@ -197,10 +197,6 @@ document.getElementById('partyFantsSkipBtn').addEventListener('click', ()=>{
   saveState();
   partyFantsNextTurn();
 });
-document.getElementById('partyFantsExitBtn').addEventListener('click', ()=>{
-  pausePartyFantsGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 (document.getElementById('partyFantsSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyFantsRulesModal'); });
 setupRulesModal('partyFantsRulesModal', 'closePartyFantsRulesBtn');
 

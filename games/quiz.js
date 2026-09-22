@@ -483,10 +483,6 @@ document.getElementById('quizHandoffStartBtn').addEventListener('click', ()=>{
   playSuccessSound();
   showQuizQuestion();
 });
-document.getElementById('quizExitBtn').addEventListener('click', ()=>{
-  pauseQuizGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 document.getElementById('closeQuizSummaryBtn').addEventListener('click', ()=>{ exitQuizGame(); });
 (document.getElementById('quizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('quizRulesModal'); });
 setupRulesModal('quizRulesModal', 'closeQuizRulesBtn');

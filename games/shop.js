@@ -435,10 +435,6 @@ function finishShopGame(){
 }
 document.getElementById('shopSetupStartBtn').addEventListener('click', ()=>{ goToShopGame(); });
 document.getElementById('shopSetupExitBtn').addEventListener('click', ()=>{ exitShopSetup(); });
-document.getElementById('shopExitBtn').addEventListener('click', ()=>{
-  pauseShopGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 openRulesModal('shopGameRulesBtn', 'shopRulesModal');
 setupRulesModal('shopRulesModal', 'closeShopRulesBtn');
 

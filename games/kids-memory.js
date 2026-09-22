@@ -262,10 +262,6 @@ function finishKidsMemoryGame(){
 document.getElementById('kidsMemorySetupStartBtn').addEventListener('click', ()=>{ goToKidsMemoryGame(); });
 document.getElementById('kidsMemorySetupExitBtn').addEventListener('click', ()=>{ exitKidsMemorySetup(); });
 document.getElementById('closeKidsMemorySummaryBtn').addEventListener('click', ()=>{ exitKidsMemoryGame(); });
-document.getElementById('kidsMemoryExitBtn').addEventListener('click', ()=>{
-  pauseKidsMemoryGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 (document.getElementById('kidsMemorySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsMemoryRulesModal'); });
 openRulesModal('kidsMemoryGameRulesBtn', 'kidsMemoryRulesModal');
 setupRulesModal('kidsMemoryRulesModal', 'closeKidsMemoryRulesBtn');

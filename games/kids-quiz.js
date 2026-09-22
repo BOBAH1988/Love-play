@@ -455,10 +455,6 @@ document.getElementById('kidsQuizHandoffStartBtn').addEventListener('click', ()=
   playSuccessSound();
   showKidsQuizQuestion();
 });
-document.getElementById('kidsQuizExitBtn').addEventListener('click', ()=>{
-  pauseKidsQuizGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 document.getElementById('closeKidsQuizSummaryBtn').addEventListener('click', ()=>{ exitKidsQuizGame(); });
 (document.getElementById('kidsQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsQuizRulesModal'); });
 setupRulesModal('kidsQuizRulesModal', 'closeKidsQuizRulesBtn');

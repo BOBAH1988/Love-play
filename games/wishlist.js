@@ -350,10 +350,6 @@ document.getElementById('wishlistHandoffStartBtn').addEventListener('click', ()=
   saveState();
   startWishlistPlayer(next);
 });
-document.getElementById('wishlistExitBtn').addEventListener('click', ()=>{
-  pauseWishlistGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 document.getElementById('closeWishlistSummaryBtn').addEventListener('click', ()=>{
   hideModal('wishlistSummaryModal');
   resetWishlistQuiz();

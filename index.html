@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-10-21 · v443';
+        window.APP_BUILD = '2026-09-22 · v445';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -753,9 +753,6 @@
 
     <div class="memory-grid" id="kidsMemoryGrid"></div>
 
-    <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-pause" id="kidsMemoryExitBtn">Пауза</button>
-    </div>
   </section>
 
   <!-- ===== МЕМОРИ: ИТОГИ ИГРЫ ===== -->
@@ -779,7 +776,7 @@
         <li>На своём ходу откройте две любые карточки. Если картинки совпали — пара найдена, очко ваше, и вы ходите ещё раз. Если нет — карточки перевернутся обратно, и ход переходит следующему игроку.</li>
         <li>Старайтесь запоминать, где какая картинка лежала — это поможет собрать пары быстрее.</li>
         <li>Игра заканчивается, когда все пары найдены. Побеждает тот, кто нашёл больше всего пар.</li>
-        <li>«Пауза» сохранит поле и счёт — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит поле и счёт — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsMemoryRulesBtn">Понятно</button>
     </div>
@@ -825,9 +822,6 @@
         <button type="button" class="btn btn-secondary" id="kidsTdSkipBtn">🚫 Отказ</button>
       </div>
 
-      <div class="timer-actions-bottom" style="margin-top:10px;">
-        <button type="button" class="btn btn-secondary btn-pause" id="kidsTdExitBtn">Пауза</button>
-      </div>
     </div>
 </section>
 
@@ -852,7 +846,7 @@
         <li>Игрок выбирает «🗣️ Правда» (ответить на вопрос вслух) или «🎭 Действие» (выполнить задание).</li>
         <li>Ответили или выполнили — нажмите «✅ Выполнено», очко засчитано, и очередь переходит следующему игроку. Не хотите — «🚫 Отказ», очко не засчитывается, но игра продолжается.</li>
         <li>Счёт по каждому игроку виден вверху экрана всё время — отдельного окна с итогами нет, игра продолжается, пока вы сами не решите закончить.</li>
-        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsTdRulesBtn">Понятно</button>
     </div>
@@ -919,9 +913,6 @@
     <div class="wishlist-actions-row" id="kidsQuizHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="kidsQuizHandoffStartBtn">Начать</button>
     </div>
-    <div class="quiz-pause-row">
-      <button type="button" class="btn btn-secondary btn-pause" id="kidsQuizExitBtn">Пауза</button>
-    </div>
   </section>
 
   <!-- ===== ВИКТОРИНА (ДЕТИ): ИТОГИ ИГРЫ ===== -->
@@ -945,7 +936,7 @@
         <li>На каждый вопрос — 4 варианта ответа, верный только один. Кнопки «Пропустить» нет — нужно успеть выбрать вариант, пока идёт отсчёт времени.</li>
         <li>Если время вышло, а ответ не выбран — вопрос засчитывается как неверный.</li>
         <li>В конце — таблица результатов: место, имя, число верных ответов и общее время, потраченное на ответы. Если по числу верных ответов победитель не определился — побеждает тот, кто отвечал быстрее.</li>
-        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
         <li>Вопросы — по школьной программе: русский язык и чтение, окружающий мир, история, литература, физика, химия, биология, а из математики — понятия (периметр, площадь, чётные числа). Примеров на сложение, умножение, деление и степени в колоде нет: под таймером нужно думать, а не считать в уме.</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsQuizRulesBtn">Понятно</button>
@@ -1470,7 +1461,6 @@
       </div>
     </div>
     <div class="timer-actions-row timer-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-pause" id="kidsKrokodilPauseBtn">Пауза</button>
       <button type="button" class="btn btn-secondary btn-pause" id="kidsKrokodilExitBtn">Выход</button>
     </div>
   </section>
@@ -1676,9 +1666,6 @@
       <button type="button" class="btn btn-secondary" id="kidsSaperRandomBtn">🎲 Случайно</button>
       <button type="button" class="btn btn-secondary" id="kidsSaperHideTasksBtn">🙈 Скрыть задания</button>
     </div>
-    <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-pause" id="kidsSaperPauseBtn">Пауза</button>
-    </div>
     <div class="bingo-bonus-checklist-block" id="kidsSaperBonusChecklistBlock" style="display:none;">
       <div class="bingo-bonus-checklist-title">📌 Задания после игры</div>
       <ul class="bingo-bonus-checklist" id="kidsSaperBonusChecklistList"></ul>
@@ -1777,9 +1764,6 @@
       <div class="timer-actions-top">
         <button type="button" class="btn btn-secondary" id="shopNextSaleBtn" style="display:none;">Следующий покупатель</button>
       </div>
-      <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-pause" id="shopExitBtn">Пауза</button>
-      </div>
     </div>
 </section>
 
@@ -1794,7 +1778,7 @@
         <li>Сумма совпала — покупка засчитана, начнётся новая корзина. Не совпала — приложение подскажет, не хватает денег или слишком много.</li>
         <li><b>💰 Продавец</b>: на кассе — случайный чек из 5–10 товаров, итоговая сумма и сумма наличных от покупателя. Список покупок идёт в два столбца, чтобы чек был как настоящий. Нужно отсчитать и отдать точную сдачу. Сумма сдачи видна сразу; кнопка «🙈 Скрыть подсказку» над лотком спрячет строку «Нужно отдать сдачу: …» (кнопка «💡 Подсказка» вернёт её). Выбор запоминается: у следующих покупателей подсказка остаётся скрытой, пока вы сами её не вернёте.</li>
         <li>«Следующий покупатель» — новая случайная покупка.</li>
-        <li>«Пауза» сохранит корзину (или кассу) и деньги — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит корзину (или кассу) и деньги — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeShopRulesBtn">Понятно</button>
     </div>
@@ -2173,9 +2157,6 @@
     <div class="intro-text" id="kidsC4ResultText" style="text-align:center; min-height:22px; margin-top:10px;"></div>
     <button type="button" class="btn btn-primary" id="kidsC4NextRoundBtn" style="display:none;">Следующий раунд →</button>
 
-    <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-pause" id="kidsC4ExitBtn">Пауза</button>
-    </div>
   </section>
 
   <!-- ===== ЧЕТЫРЕ В РЯД (ДЕТИ): ИТОГИ ===== -->
@@ -2198,7 +2179,7 @@
         <li>Побеждает тот, кто первым соберёт четыре свои шашки подряд — по горизонтали, вертикали или диагонали.</li>
         <li>Если все 42 клетки заполнены, а линии нет — ничья.</li>
         <li>Счёт побед и ничьих ведётся по всей партии — итог покажем при завершении.</li>
-        <li>«Пауза» сохранит счёт и поле — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит счёт и поле — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeKidsC4RulesBtn">Понятно</button>
     </div>
@@ -2371,9 +2352,6 @@
       <span id="soloBattleshipStatBot">Бот: 0 побед</span>
     </div>
 
-    <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-pause" id="soloBattleshipExitBtn">Пауза</button>
-    </div>
   </section>
 
   <!-- ===== МОРСКОЙ БОЙ (ДЛЯ ОДНОГО): ИТОГИ ===== -->
@@ -2425,9 +2403,6 @@
     <div class="intro-text" id="soloC4ResultText" style="text-align:center; min-height:22px; margin-top:10px;"></div>
     <button type="button" class="btn btn-primary" id="soloC4NextRoundBtn" style="display:none;">Следующий раунд →</button>
 
-    <div class="bingo-actions-row bingo-actions-bottom">
-      <button type="button" class="btn btn-secondary btn-pause" id="soloC4ExitBtn">Пауза</button>
-    </div>
   </section>
 
   <!-- ===== ЧЕТЫРЕ В РЯД (ДЛЯ ОДНОГО): ИТОГИ ===== -->
@@ -2450,7 +2425,7 @@
         <li>Побеждает тот, кто первым соберёт четыре свои шашки подряд — по горизонтали, вертикали или диагонали.</li>
         <li>Если все 42 клетки заполнены, а линии нет — ничья.</li>
         <li>Счёт побед и ничьих ведётся по всей партии — итог покажем при завершении.</li>
-        <li>«Пауза» сохранит счёт и поле — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит счёт и поле — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeSoloC4RulesBtn">Понятно</button>
     </div>
@@ -2502,7 +2477,6 @@
     </div>
     <div class="td-actions-row" style="margin-top:10px;">
       <button type="button" class="btn btn-secondary" id="tdLevelUpBtn" data-tooltip="Горячее">🔥 Горячее</button>
-      <button type="button" class="btn btn-secondary btn-pause" id="tdPauseBtn">Пауза</button>
     </div>
   
         </div>
@@ -2645,7 +2619,6 @@
         <button type="button" class="btn btn-secondary btn-pause" id="timerPauseBtn" style="display:none;">⏸ Пауза</button>
         <button type="button" class="btn btn-primary" id="timerNextBtn" style="display:none;">Следующее задание</button>
         <button type="button" class="btn btn-secondary" id="timerSkipBtn">❄️ Отказ</button>
-        <button type="button" class="btn btn-secondary btn-pause" id="timerExitBtn">Пауза</button>
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary" id="timerHotterBtn" style="display:none;" data-tooltip="Горячее">🔥 Горячее</button>
@@ -2881,10 +2854,8 @@
         <button type="button" class="btn btn-primary" id="partyFantsDoneBtn">✅ Выполнено</button>
         <button type="button" class="btn btn-secondary" id="partyFantsSkipBtn">🚫 Отказ</button>
       </div>
-      <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-pause" id="partyFantsExitBtn">Пауза</button>
-      </div>
     </div>
+  </section>
   </section>
 
   <!-- ===== ФАНТЫ: ИТОГИ ИГРЫ ===== -->
@@ -2942,9 +2913,6 @@
         <button type="button" class="btn btn-secondary" id="partyTdSkipBtn">🚫 Отказ</button>
       </div>
 
-      <div class="timer-actions-bottom" style="margin-top:10px;">
-        <button type="button" class="btn btn-secondary btn-pause" id="partyTdExitBtn">Пауза</button>
-      </div>
     </div>
 </section>
 
@@ -3014,8 +2982,7 @@
     <div class="wishlist-actions-row" id="famZnayuHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="famZnayuHandoffStartBtn">Начать</button>
     </div>
-    <button type="button" class="btn btn-secondary btn-pause" id="famZnayuExitBtn" style="margin-top:10px;">Пауза</button>
-  
+
         </div>
 </section>
 
@@ -3057,9 +3024,6 @@
       <div class="timer-actions-top">
         <button type="button" class="btn btn-secondary" id="luckyRandomBtn">🎲 Случайно</button>
         <button type="button" class="btn btn-secondary" id="luckyHideTasksBtn">🙈 Скрыть задания</button>
-      </div>
-      <div class="timer-actions-bottom">
-        <button type="button" class="btn btn-secondary btn-pause" id="luckyExitBtn">Пауза</button>
       </div>
     </div>
   </section>
@@ -3147,10 +3111,7 @@
     <div class="wishlist-actions-row" id="partyQuizHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="partyQuizHandoffStartBtn">Начать</button>
     </div>
-    <div class="quiz-pause-row">
-      <button type="button" class="btn btn-secondary btn-pause" id="partyQuizExitBtn">Пауза</button>
-    </div>
-  
+
         </div>
 </section>
 
@@ -3217,7 +3178,7 @@
         <li>На каждый вопрос — 4 варианта ответа, верный только один. Кнопки «Пропустить» нет — нужно успеть выбрать вариант, пока идёт отсчёт времени.</li>
         <li>Если время вышло, а ответ не выбран — вопрос засчитывается как неверный.</li>
         <li>В конце — таблица результатов: место, имя, число верных ответов и общее время, потраченное на ответы. Если по числу верных ответов победитель не определился — побеждает тот, кто отвечал быстрее.</li>
-        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closePartyQuizRulesBtn">Понятно</button>
     </div>
@@ -3282,10 +3243,6 @@
       </div>
 
 
-    <div class="quiz-pause-row">
-      <button type="button" class="btn btn-secondary btn-pause" id="soloQuizExitBtn">Пауза</button>
-    </div>
-  
         </div>
 </section>
 
@@ -3308,7 +3265,7 @@
         <li>На каждый вопрос — 4 варианта ответа. Не успели выбрать за отведённое время — вопрос засчитывается как неверный.</li>
         <li>Тап по карточке озвучивает вопрос вслух, если это поддерживает браузер.</li>
         <li>В конце — итог: сколько вопросов угадано и сколько заняло времени.</li>
-        <li>«Пауза» сохранит прогресс — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит прогресс — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeSoloQuizRulesBtn">Понятно</button>
     </div>
@@ -3575,8 +3532,7 @@
     <div class="wishlist-actions-row" id="wishlistHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="wishlistHandoffStartBtn">Начать</button>
     </div>
-    <button type="button" class="btn btn-secondary btn-pause" id="wishlistExitBtn" style="margin-top:10px;">Пауза</button>
-  
+
         </div>
 </section>
 
@@ -3628,8 +3584,7 @@
     <div class="wishlist-actions-row" id="znayuHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="znayuHandoffStartBtn">Начать</button>
     </div>
-    <button type="button" class="btn btn-secondary btn-pause" id="znayuExitBtn" style="margin-top:10px;">Пауза</button>
-  
+
         </div>
 </section>
 
@@ -3694,9 +3649,7 @@
     <div class="wishlist-actions-row" id="quizHandoffRow" style="display:none;">
       <button type="button" class="btn btn-primary" id="quizHandoffStartBtn">Начать</button>
     </div>
-    <div class="quiz-pause-row">
-      <button type="button" class="btn btn-secondary btn-pause" id="quizExitBtn">Пауза</button>
-    </div>
+  </section>
   </section>
 
   <!-- ===== ВИКТОРИНА (ПАРЫ 18+): ИТОГИ ИГРЫ ===== -->
@@ -3720,7 +3673,7 @@
         <li>На каждый вопрос — 4 варианта ответа, верный только один. Кнопки «Пропустить» нет — нужно успеть выбрать вариант, пока идёт отсчёт времени.</li>
         <li>Если время вышло, а ответ не выбран — вопрос засчитывается как неверный.</li>
         <li>В конце — таблица результатов: место, имя, число верных ответов и общее время, потраченное на ответы. Если по числу верных ответов победитель не определился — побеждает тот, кто отвечал быстрее.</li>
-        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeQuizRulesBtn">Понятно</button>
     </div>
@@ -3841,7 +3794,7 @@
         <li>Задание смущает или пока не по силам? Смело жмите «🚫 Отказ» — колода подкинет следующее, но балл за этот ход упущен.</li>
         <li>Что-то особенно зацепило? Нажмите ☆ — сохраните находку в избранном и вернитесь к ней в другой раз.</li>
         <li>Чувствуете, как разгорается огонёк? Жмите «Горячее» — и игра станет ещё смелее.</li>
-        <li>Нужна передышка? «Пауза» сохранит счёт и уровень — вернётесь и продолжите с того же места. А захотите завершить вечер — «Закончить игру» покажет итог.</li>
+        <li>Нужна передышка? Стрелка «←» сохранит счёт и уровень — вернётесь и продолжите с того же места. А захотите завершить вечер — «Закончить игру» покажет итог.</li>
         <li>Говорите друг с другом открыто и берегите границы партнёра — остановиться можно в любой момент, и это нормально.</li>
       </ol>
       <button class="btn btn-primary" id="closeRulesBtn">Понятно</button>
@@ -3991,7 +3944,7 @@
         <li>Выполнили или ответили честно? Нажмите «Готово» — балл засчитан, ход переходит партнёру.</li>
         <li>Задание не по силам? Нажмите «🚫 Отказ» — балл не засчитывается, но игра продолжается.</li>
         <li>«🔥 Горячее» меняет уровень смелости прямо в игре, без возврата в настройки.</li>
-        <li>«Пауза» сохранит счёт и уровень — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит счёт и уровень — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeTdRulesBtn">Понятно</button>
     </div>
@@ -4013,7 +3966,7 @@
         <li>Игра завершается сама, как только собрано 5 любых линий или отмечены все 25 клеток — на экране появится окно с итогом партии и единственным бонусом-призом за победу: особым заданием, которое не пересекается с обычными клетками поля и его можно выполнить позже, в другой раз или в другом месте.</li>
         <li>«🌟 Новая игра» начнёт всё заново с уровня «Нежное».</li>
         <li>«🎲 Случайно» подсветит контуром случайную ещё не отмеченную клетку — подсказка, что сделать дальше. Подсветка снимается следующим касанием экрана.</li>
-        <li>«Пауза» сохранит прогресс карты и вернёт в главное меню. «Закончить игру» покажет короткие итоги (сколько заданий отмечено, сколько линий собрано) перед сбросом партии.</li>
+        <li>Стрелка «←» сохранит прогресс карты и вернёт в главное меню. «Закончить игру» покажет короткие итоги (сколько заданий отмечено, сколько линий собрано) перед сбросом партии.</li>
         <li>Полученный финальный приз добавляется в блок «🎁 Бонусные задания» под картой — он никуда не пропадает после игры. Выполнили — нажмите на текст задания, оно зачеркнётся. Кнопка «✕» удаляет пункт из списка.</li>
       </ol>
       <button class="btn btn-primary" id="closeBingoRulesBtn">Понятно</button>
@@ -4149,7 +4102,7 @@
         <li>Игроки ходят по очереди — имя того, чья очередь, показано над карточкой.</li>
         <li>Выполнили задание — нажмите «✅ Выполнено», очко засчитано, и очередь переходит следующему игроку с новой карточкой. Не хотите выполнять — «🚫 Отказ», очко не засчитывается, но игра продолжается.</li>
         <li>Счёт по каждому игроку виден вверху экрана всё время — отдельного окна с итогами нет, игра продолжается, пока вы сами не решите закончить.</li>
-        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closePartyFantsRulesBtn">Понятно</button>
     </div>
@@ -4166,7 +4119,7 @@
         <li>Под карточкой игрок нажимает «🤔 Правда» (ответить на вопрос вслух) или «🎯 Действие» (выполнить задание) — карточка покажет вопрос или задание.</li>
         <li>Ответили или выполнили — нажмите «✅ Выполнено», очко засчитано, и очередь переходит следующему игроку. Не хотите — «🚫 Отказ», очко не засчитывается, но игра продолжается.</li>
         <li>Счёт по каждому игроку виден вверху экрана всё время — отдельного окна с итогами нет, игра продолжается, пока вы сами не решите закончить.</li>
-        <li>«Пауза» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит счёт и очередь — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closePartyTdRulesBtn">Понятно</button>
     </div>
@@ -4183,7 +4136,7 @@
         <li>Передавайте телефон друг другу по очереди, не подглядывая в чужие ответы. У каждого вопроса три варианта ответа — выбирайте тот, что ближе всего (герой — как есть, угадывающий — свою версию).</li>
         <li>Когда оба игрока семьи ответили — показывается только количество верных угадываний, без подробностей, кто что выбрал.</li>
         <li>После того как все семьи сыграли, откроется таблица результатов — семья с наибольшим числом угадываний побеждает.</li>
-        <li>«Пауза» сохранит прогресс — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
+        <li>Стрелка «←» сохранит прогресс — на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
       <button class="btn btn-primary" id="closeFamZnayuRulesBtn">Понятно</button>
     </div>
@@ -4203,7 +4156,7 @@
         <li>Как только на поле собирается целая линия (ряд или столбец — всего их 10), уровень автоматически повышается — сначала после 1-й линии, потом после 3-й. Уже отмеченные клетки не меняются, обновляются только пустые. Промежуточных заданий за собранную линию нет — только аплодисменты.</li>
         <li>Уровни идут по нарастающей: 💗 «Нежно» → 😏 «Игриво» → 🔥 «Дерзко». Чем выше уровень, тем откровеннее и смелее задания — разрешены поцелуи и касания любых мест тела, включая без одежды, но без прямого секса и без обнажения гениталий.</li>
                 <li>Партия завершается сама, как только собрано 5 линий или отмечены все 25 клеток — побеждает команда, отметившая больше клеток. После основной игры — только одно финальное задание: его выполняет проигравшая команда (если ничьей нет) перед всей компанией. Победившая команда отдельного задания не получает.</li>
-        <li>«Пауза» сохранит поле и очередь — на главном экране появится «Продолжить игру» или «Закончить игру» (без показа итогов, только для незавершённой партии).</li>
+        <li>Стрелка «←» сохранит поле и очередь — на главном экране появится «Продолжить игру» или «Закончить игру» (без показа итогов, только для незавершённой партии).</li>
       </ol>
       <button class="btn btn-primary" id="closeLuckyRulesBtn">Понятно</button>
     </div>
@@ -4279,7 +4232,7 @@
         <li>Ответили на все 10 — появится карточка «Передайте телефон», второй игрок нажимает «Начать» и отвечает на те же вопросы.</li>
         <li>После ответов обоих покажутся вопросы, где ваши варианты совпали — узнаете, в чём вы действительно сходитесь. Если где-то выбрали соседние варианты (например, 1-й и 2-й), это отдельно посчитается как «Почти совпало» — без указания, что именно за вопрос.</li>
         <li>Кнопка «💜 Совпадения» в настройках показывает все совпадения, накопленные за все прошлые игры, а не только за последний раунд.</li>
-        <li>«Пауза» в любой момент сохранит прогресс — продолжить можно позже кнопкой «Продолжить игру» на главном экране.</li>
+        <li>Стрелка «←» в любой момент сохранит прогресс — продолжить можно позже кнопкой «Продолжить игру» на главном экране.</li>
       </ol>
       <button class="btn btn-primary" id="closeZnayuRulesBtn">Понятно</button>
     </div>
@@ -4493,7 +4446,7 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20260929b"></script>
 <script src="cards/capitals.js?v=20260929c"></script>
-<script src="games/core.js?v=20261021r"></script>
+<script src="games/core.js?v=20260922a"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -4509,42 +4462,42 @@
 <script src="games/stats.js?v=20260929a"></script>
 <script src="games/twister.js?v=20260921j"></script>
 <script src="games/party-hangman.js?v=20260921e"></script>
-<script src="games/solo-quiz.js?v=20261021b"></script>
+<script src="games/solo-quiz.js?v=20260922a"></script>
 <script src="games/solo-memory.js?v=20260921j"></script>
 <script src="games/solo-xo.js?v=20260921j"></script>
-  <script src="games/solo-connect4.js?v=20260921j"></script>
-<script src="games/shop.js?v=20260929b"></script>
+  <script src="games/solo-connect4.js?v=20260922a"></script>
+<script src="games/shop.js?v=20260922a"></script>
 <script src="games/business-observer.js?v=20260830w"></script>
 <script src="games/party-roulette.js?v=20260925f"></script>
 <script src="games/business-lemonade.js?v=20260920d"></script>
 <script src="games/kids-xo.js?v=20260913a"></script>
 <script src="games/kids-battleship.js?v=20260913a"></script>
-<script src="games/kids-connect4.js?v=20260921j"></script>
-<script src="games/solo-battleship.js?v=20260830u"></script>
+<script src="games/kids-connect4.js?v=20260922a"></script>
+<script src="games/solo-battleship.js?v=20260922a"></script>
 <script src="cards/wish-roulette-cards.js?v=20261021s"></script>
-<script src="games/wish-roulette.js?v=20261021q"></script>
-<script src="games/truth-dare.js?v=20260930d"></script>
+<script src="games/wish-roulette.js?v=20260922a"></script>
+<script src="games/truth-dare.js?v=20260922a"></script>
 <script src="games/bingo.js?v=20260930d"></script>
-<script src="games/timer-game.js?v=20260930d"></script>
+<script src="games/timer-game.js?v=20260922a"></script>
 <script src="games/krokodil.js?v=20261021s"></script>
 <script src="games/memes.js?v=20260913b"></script>
 <script src="games/party-never.js?v=20260830u"></script>
-<script src="games/party-fants.js?v=20260925f"></script>
-<script src="games/party-td.js?v=20260921j"></script>
-<script src="games/fam-znayu.js?v=20260913a"></script>
-<script src="games/lucky.js?v=20260929d"></script>
-<script src="games/kids-memory.js?v=20260925f"></script>
-<script src="games/kids-krokodil.js?v=20260925f"></script>
+<script src="games/party-fants.js?v=20260922a"></script>
+<script src="games/party-td.js?v=20260922a"></script>
+<script src="games/fam-znayu.js?v=20260922a"></script>
+<script src="games/lucky.js?v=20260922a"></script>
+<script src="games/kids-memory.js?v=20260922a"></script>
+<script src="games/kids-krokodil.js?v=20260922a"></script>
 <script src="games/kids-memes.js?v=20260913b"></script>
 <script src="games/kids-flash.js?v=20260929a"></script>
 <script src="games/kids-flash-time.js?v=20260929a"></script>
-<script src="games/kids-saper.js?v=20260929c"></script>
-<script src="games/kids-td.js?v=20260921j"></script>
-<script src="games/quiz.js?v=20261021b"></script>
-<script src="games/party-quiz.js?v=20261021b"></script>
-<script src="games/kids-quiz.js?v=20261021b"></script>
-<script src="games/wishlist.js?v=20260930c"></script>
-<script src="games/znayu.js?v=20260930c"></script>
+<script src="games/kids-saper.js?v=20260922a"></script>
+<script src="games/kids-td.js?v=20260922a"></script>
+<script src="games/quiz.js?v=20260922a"></script>
+<script src="games/party-quiz.js?v=20260922a"></script>
+<script src="games/kids-quiz.js?v=20260922a"></script>
+<script src="games/wishlist.js?v=20260922a"></script>
+<script src="games/znayu.js?v=20260922a"></script>
 <script src="games/ideas.js?v=20260929h"></script>
 <script src="games/sexquest.js?v=20260927x"></script>
 <script src="games/passionmap.js?v=20260927a"></script>

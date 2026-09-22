@@ -360,10 +360,6 @@ document.getElementById('soloQuizSetupStartBtn').addEventListener('click', ()=>{
   goToSoloQuizGame();
 });
 document.getElementById('soloQuizSetupExitBtn').addEventListener('click', ()=>{ exitSoloQuizSetup(); });
-document.getElementById('soloQuizExitBtn').addEventListener('click', ()=>{
-  pauseSoloQuizGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 document.getElementById('closeSoloQuizSummaryBtn').addEventListener('click', ()=>{ exitSoloQuizGame(); });
 (document.getElementById('soloQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('soloQuizRulesModal'); });
 setupRulesModal('soloQuizRulesModal', 'closeSoloQuizRulesBtn');

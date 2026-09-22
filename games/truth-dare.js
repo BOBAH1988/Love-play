@@ -286,10 +286,6 @@ document.getElementById('tdDareBtn').addEventListener('click', ()=>{ if(tdLocked
 document.getElementById('tdDoneBtn').addEventListener('click', ()=>{ if(tdLocked) return; playSuccessSound(); tdNextTurn(true); });
 document.getElementById('tdSkipBtn').addEventListener('click', ()=>{ if(tdLocked) return; playFailSound(); tdNextTurn(false); });
 document.getElementById('tdLevelUpBtn').addEventListener('click', ()=>{ if(tdLocked) return; tdChangeLevel(1); });
-document.getElementById('tdPauseBtn').addEventListener('click', ()=>{
-  playSuccessSound();
-  pauseTdGame();
-});
 (document.getElementById('tdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('tdRulesModal'); });
 setupRulesModal('tdRulesModal', 'closeTdRulesBtn');
 

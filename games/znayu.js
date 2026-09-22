@@ -371,10 +371,6 @@ document.getElementById('znayuHandoffStartBtn').addEventListener('click', ()=>{
   saveState();
   startZnayuPlayer(next);
 });
-document.getElementById('znayuExitBtn').addEventListener('click', ()=>{
-  pauseZnayuGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 document.getElementById('closeZnayuSummaryBtn').addEventListener('click', ()=>{
   hideModal('znayuSummaryModal');
   resetZnayuQuiz();

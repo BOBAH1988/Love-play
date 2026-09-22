@@ -416,9 +416,6 @@ function updateKidsSaperHideTasksBtn(){
   if(!btn) return;
   btn.textContent = state.kidsSaperTasksHidden ? '👀 Показать задания' : '🙈 Скрыть задания';
 }
-// Кнопка «Пауза» в разметке была, а обработчика у неё не было вовсе — кнопка
-// молча ничего не делала, хотя функция паузы существовала (см. pauseKidsSaperGame).
-document.getElementById('kidsSaperPauseBtn').addEventListener('click', ()=>{ pauseKidsSaperGame(); });
 document.getElementById('kidsSaperSetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToKidsSaperGame(); });
 document.getElementById('kidsSaperSetupExitBtn').addEventListener('click', ()=>{ exitKidsSaperSetup(); });
 (document.getElementById('kidsSaperSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('kidsSaperRulesModal'); });

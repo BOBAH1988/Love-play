@@ -267,7 +267,6 @@ function finishSoloC4Game(){
 }
 document.getElementById('soloC4SetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToSoloC4Game(); });
 document.getElementById('soloC4SetupExitBtn').addEventListener('click', ()=>{ exitSoloC4Setup(); });
-document.getElementById('soloC4ExitBtn').addEventListener('click', ()=>{ pauseSoloC4Game(); });
 document.getElementById('closeSoloC4SummaryBtn').addEventListener('click', ()=>{
   hideModal('soloC4SummaryModal');
   exitSoloC4Game();

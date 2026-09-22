@@ -281,7 +281,6 @@ document.getElementById('soloBattleshipSetupStartBtn').addEventListener('click',
   playSuccessSound(); startSoloBattleshipGame();
 });
 document.getElementById('soloBattleshipSetupExitBtn').addEventListener('click', ()=>{ exitSoloBattleshipSetup(); });
-document.getElementById('soloBattleshipExitBtn').addEventListener('click', ()=>{ pauseSoloBattleshipGame(); });
 document.getElementById('closeSoloBattleshipSummaryBtn').addEventListener('click', ()=>{
   hideModal('soloBattleshipSummaryModal');
   exitSoloBattleshipGame();

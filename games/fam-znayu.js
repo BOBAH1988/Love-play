@@ -446,10 +446,6 @@ document.getElementById('famZnayuHandoffStartBtn').addEventListener('click', ()=
   saveState();
   startFamZnayuPlayer(next);
 });
-document.getElementById('famZnayuExitBtn').addEventListener('click', ()=>{
-  pauseFamZnayuGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 document.getElementById('closeFamZnayuSummaryBtn').addEventListener('click', ()=>{ exitFamZnayuGame(); });
 (document.getElementById('famZnayuSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('famZnayuRulesModal'); });
 setupRulesModal('famZnayuRulesModal', 'closeFamZnayuRulesBtn');

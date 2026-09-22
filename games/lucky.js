@@ -528,10 +528,6 @@ document.getElementById('luckyHideTasksBtn').addEventListener('click', ()=>{
   renderLuckyGrid();
   playSuccessSound();
 });
-document.getElementById('luckyExitBtn').addEventListener('click', ()=>{
-  pauseLuckyGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 document.getElementById('luckyLevelUpAcceptBtn').addEventListener('click', ()=>{
   playSuccessSound();
   hideModal('luckyLevelUpModal');

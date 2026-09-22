@@ -230,10 +230,6 @@ document.getElementById('partyTdSkipBtn').addEventListener('click', ()=>{
   saveState();
   partyTdNextTurn();
 });
-document.getElementById('partyTdExitBtn').addEventListener('click', ()=>{
-  pausePartyTdGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 (document.getElementById('partyTdSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyTdRulesModal'); });
 setupRulesModal('partyTdRulesModal', 'closePartyTdRulesBtn');
 

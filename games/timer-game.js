@@ -421,11 +421,6 @@ document.getElementById('timerNextBtn').addEventListener('click', ()=>{
   mtUpdateScoreUI();
   mtDrawCard();
 });
-document.getElementById('timerExitBtn').addEventListener('click', ()=>{
-  pauseTimerGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
-(document.getElementById('timerSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('timerRulesModal'); });
 setupRulesModal('timerRulesModal', 'closeTimerRulesBtn');
 
 

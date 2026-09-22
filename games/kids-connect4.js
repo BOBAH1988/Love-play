@@ -225,7 +225,6 @@ function finishKidsC4Game(){
 }
 document.getElementById('kidsC4SetupStartBtn').addEventListener('click', ()=>{ playSuccessSound(); goToKidsC4Game(); });
 document.getElementById('kidsC4SetupExitBtn').addEventListener('click', ()=>{ exitKidsC4Setup(); });
-document.getElementById('kidsC4ExitBtn').addEventListener('click', ()=>{ pauseKidsC4Game(); });
 document.getElementById('closeKidsC4SummaryBtn').addEventListener('click', ()=>{
   hideModal('kidsC4SummaryModal');
   exitKidsC4Game();

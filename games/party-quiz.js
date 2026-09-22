@@ -451,10 +451,6 @@ document.getElementById('partyQuizHandoffStartBtn').addEventListener('click', ()
   playSuccessSound();
   showPartyQuizQuestion();
 });
-document.getElementById('partyQuizExitBtn').addEventListener('click', ()=>{
-  pausePartyQuizGame();
-  showToast('Игра на паузе — прогресс сохранён');
-});
 document.getElementById('closePartyQuizSummaryBtn').addEventListener('click', ()=>{ exitPartyQuizGame(); });
 (document.getElementById('partyQuizSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('partyQuizRulesModal'); });
 setupRulesModal('partyQuizRulesModal', 'closePartyQuizRulesBtn');
