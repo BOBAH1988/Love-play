@@ -460,8 +460,8 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
       // files вместе с url (иначе TypeError), а files + text — разрешает.
       // Если платформа подпись с файлом не принимает, отправляем файл без неё:
       // видео в чате важнее подписи.
-      const withText = { files:[file], text: shareText, title:'🎲 Давай попробовать' };
-      const fileOnly = { files:[file], title:'🎲 Давай попробовать' };
+      const withText = { files:[file], text: shareText, title:'🎲 Давай попробуем' };
+      const fileOnly = { files:[file], title:'🎲 Давай попробуем' };
       const payload = canShareData(withText) ? withText : (canShareData(fileOnly) ? fileOnly : null);
       if(payload){
         try{
@@ -484,7 +484,7 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
   try{
     if(navigator.share){
       await shareWithTimeout({
-        title: '🎲 Давай попробовать',
+        title: '🎲 Давай попробуем',
         text: 'Смотри, какое видео выпало в «Видеорулетке» 😉',
         url: shareUrl
       });
