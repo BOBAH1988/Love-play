@@ -302,26 +302,48 @@ document.getElementById('videoFavoritesBtn').addEventListener('click', ()=>{
   drawVideoCard(videoLevel || 1);
 });
 
+// Ссылка-вход в приложение: ?mode=video&e=…&level=… — ею делится кнопка ⤴
+// (см. обработчик ниже), читает её games/init.js при загрузке.
+// e — ключ видео для поиска в каталоге получателя: путь на Яндекс Диске
+// (стабилен между устройствами), затем имя файла, затем id карточки
+// (работает только на том же устройстве) — в этом приоритете.
+function videoEntryKey(c){
+  if(!c) return '';
+  return c.yandexPath || c.name || videoCardId(c) || '';
+}
+function videoEntryPointUrl(card, level){
+  const params = new URLSearchParams();
+  params.set('mode', 'video');
+  const key = videoEntryKey(card);
+  if(key) params.set('e', String(key));
+  const lvl = parseInt(level, 10);
+  if(isFinite(lvl) && lvl >= 1) params.set('level', String(lvl));
+  // Адрес приложения без прежних параметров и якоря — ссылка самодостаточна.
+  return location.origin + location.pathname + '?' + params.toString();
+}
+
 // Кнопка ⤴ «Поделиться видео» — стандартное системное меню «Поделиться»
 // (Web Share API, как в Telegram), на десктопе — фолбэк: копирование ссылки
-// в буфер обмена. Делимся ссылкой на текущее видео (currentVideoCard.video —
-// прямая ссылка с Яндекс Диска; у локальных роликов это blob-ссылка, она
-// имеет смысл только на этом устройстве — что честно отражаем в тосте).
+// в буфер обмена. Делимся ссылкой на саму игру с указанием текущего видео,
+// чтобы по ней можно было открыть «Видеорулетку» в том же виде.
+// Ссылка собирается из текущего адреса приложения + параметров ?mode=video&e=…
+// (id видео) и &level=… (уровень) — и для локальных роликов тоже работает,
+// потому что по ней открывается приложение, а не сам файл.
 document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
   if(!currentVideoCard || !currentVideoCard.video){
     playErrorSound();
     showToast('Сначала откройте видео');
     return;
   }
-  const url = currentVideoCard.video;
-  if(url.indexOf('blob:') === 0){
-    showToast('Локальное видео нельзя отправить ссылкой — оно доступно только на этом устройстве');
-    return;
-  }
+  // Ссылка ведёт в приложение (?mode=video&e=…&level=…), а не на сам файл:
+  // по ней у получателя откроется «Видеорулетка» — с этого же ролика, если
+  // видео есть в его каталоге, иначе с этого же уровня. Так ссылка работает
+  // и для локальных роликов (blob-адрес другого устройства не откроет).
+  const shareUrl = videoEntryPointUrl(currentVideoCard, videoLevel);
   const shareData = {
     title: 'Давай играй',
     text: 'Смотри, какое видео выпало в «Видеорулетке» 😉',
-    url: url
+    url: shareUrl
   };
   try{
     if(navigator.share){
@@ -330,11 +352,11 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
       return;
     }
     if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareUrl);
       showToast('Ссылка скопирована');
       return;
     }
-    showToast('Ссылка: ' + url);
+    showToast('Ссылка: ' + shareUrl);
   }catch(e){
     // Пользователь закрыл системное меню — не ошибка.
     if(e && e.name === 'AbortError') return;
@@ -466,9 +488,13 @@ function updateVideoLevelBtn(){
   // Кнопку «Горячее» не блокируем на максимальном уровне: внутри уровня
   // могут быть ещё папки подуровней (Level 6-2 …), и шагать по ним можно.
   // Если идти дальше некуда — обработчик сам покажет тост.
+  // 🔥 в строке ответов и 🔥 в блоке «Дополнительно» делают одно и то же
+  // (общий обработчик videoHotAction), поэтому и состояние у них общее —
+  // разойтись оно не должно.
   const btn = document.getElementById('videoLevelUpBtn');
-  if(!btn) return;
-  btn.disabled = false;
+  if(btn) btn.disabled = false;
+  const quickBtn = document.getElementById('videoHotBtn');
+  if(quickBtn) quickBtn.disabled = false;
 }
 function drawVideoCard(level, announceEmpty){
   videoLevel = level;
@@ -813,7 +839,7 @@ function renderVideoCard(card, level){
   updateFavoriteBtn();
 }
 
-async function goToVideoGame(){
+async function goToVideoGame(entry){
   abandonPausedSession('davay');
   abandonPausedSession('td');
   abandonPausedSession('bingo');
@@ -852,6 +878,13 @@ async function goToVideoGame(){
   // раньше видеорулетка всегда начинала с уровня 1, и выбранное в настройках
   // игнорировалось.
   videoLevel = davaySelectedLevel();
+  // Ссылка-вход может нести свой уровень (?level=): он приоритетнее выбранного
+  // в «Уровнях заданий», но только для этого запуска — state.davaySelectedLevel
+  // не переписываем, настройки игрока остаются как были.
+  if(entry){
+    const lvl = parseInt(entry.level, 10);
+    if(isFinite(lvl) && lvl >= 1 && lvl <= VIDEO_MAX_LEVEL) videoLevel = lvl;
+  }
   videoSubLevel = 1;
   state.videoUsed = {};
   state.videoHidden = [];
@@ -892,8 +925,59 @@ async function goToVideoGame(){
   // — не чёрный экран: обработчик error у <video> (см. setupVideoPlayerElement)
   // пересоздаёт адрес именно этого файла одним запросом и перезапускает ролик,
   // оверлей «Загрузка видео…» всё это время перед глазами игрока.
-  drawVideoCard(videoLevel);
+  // Вход по ссылке ?mode=video&e=…: показываем ролик из ссылки, если ключ
+  // нашёлся в каталоге этого устройства; иначе — обычный случайный старт.
+  const entryCard = entry && entry.key ? findVideoCardByEntryKey(entry.key) : null;
+  if(entryCard){
+    showVideoCardDirect(entryCard);
+  } else {
+    drawVideoCard(videoLevel);
+  }
   refreshYandexLinks(true).catch(()=>{});
+}
+
+// Поиск карточки каталога по ключу из ссылки-входа (videoEntryKey): ключ
+// сравнивается с каждым полем по отдельности — у получателя запись может нести
+// те же данные под другим приоритетом (путь на Диске появился после
+// синхронизации, а у отправителя была только имя файла).
+function findVideoCardByEntryKey(key){
+  if(!key) return null;
+  const k = String(key);
+  return getDavayCardsList().find(c =>
+    String(c.yandexPath || '') === k ||
+    String(c.name || '') === k ||
+    String(videoCardId(c) || '') === k
+  ) || null;
+}
+// Показать конкретное видео каталога вместо случайного первого показа —
+// используется только входом по ссылке (см. goToVideoGame(entry)). Повторяет
+// хвост drawVideoCard: уровень/подуровень карточки, отметка «показано»
+// (чтобы «Следующее» не вернуло тот же ролик сразу), история для свайпов.
+function showVideoCardDirect(card){
+  videoLevel = card.level;
+  const sub = davayCardSubLevel(card);
+  videoSubLevel = sub > 0 ? sub : 1;
+  updateVideoLevelBtn();
+  if(!state.videoUsed) state.videoUsed = {};
+  const usedKey = state.videoRandomMode ? '*' : String(videoLevel);
+  const used = state.videoUsed[usedKey] || [];
+  if(!used.includes(videoCardId(card))) used.push(videoCardId(card));
+  state.videoUsed[usedKey] = used;
+  currentVideoCard = card;
+  saveState();
+  videoHistory.push(card);
+  videoHistoryPos = videoHistory.length - 1;
+  renderVideoCard(card, videoLevel);
+}
+// Вход по ссылке-входа ?mode=video&e=…&level=… — вызывается из init.js после
+// полной инициализации. Протокол повторяет кнопку «🎥 Видеорулетка»
+// (davaySetupVideoBtn): снять чужую паузу, снять флаги, открыть игру.
+async function openVideoFromLink(entry){
+  if(blockedByDavayPause()) return;
+  state.pausedMode = null;
+  saveState();
+  if(typeof updateResumeUI === 'function') updateResumeUI();
+  await goToVideoGame(entry);
 }
 
 // Уровень, с которого нужно начать просмотр избранного видео из "Видеорулетки" —

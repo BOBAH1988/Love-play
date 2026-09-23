@@ -1396,6 +1396,78 @@ function checkStyles(html) {
     /else if\(davaySubLevel > 0\)/.test(davaySrc2)
       && /else if\(videoSubLevel > 0/.test(videoSrc2),
     'отбор карточек по подуровню пропал из draw-функций');
+  // ── Кнопки уровня «Видеорулетки» ─────────────────────────────────────────
+  // 🔥 «Горячее» продублирована: быстрая кнопка в верхнем ряду (сразу после
+  // «Следующее») и иконка в блоке «Дополнительно». Обработчик обязан быть один
+  // (videoHotAction) — две копии одного действия разъехались бы при правке.
+  const hotIdx = davayHtml.indexOf('id="videoHotBtn"');
+  check('кнопка 🔥 «Горячее» стоит сразу после «Следующее»',
+    hotIdx > davayHtml.indexOf('id="doneBtn"') && hotIdx < davayHtml.indexOf('id="favoriteBtn"'),
+    'videoHotBtn потерялась или уехала из верхнего ряда «Видеорулетки»');
+  check('две кнопки 🔥 используют общий обработчик videoHotAction',
+    davayTimerSrc.includes("getElementById('videoLevelUpBtn').addEventListener('click', videoHotAction)")
+      && davayTimerSrc.includes("getElementById('videoHotBtn').addEventListener('click', videoHotAction)"),
+    'кнопки 🔥 снова с разными обработчиками — поведение разъедется');
+  // «Горячее» и «Повысить уровень» переехали из верхнего ряда в блок
+  // «Дополнительно»: в разметке они должны стоять между «Дополнительно» и
+  // последней кнопкой этого блока (pauseBtn), а обёртки .video-level-row
+  // больше нет — она отнимала у карточки отдельную строку.
+  const menuStart = davayHtml.indexOf('id="videoExtraToggle"');
+  const menuEnd = davayHtml.indexOf('id="pauseBtn"');
+  const inExtraMenu = (id) => {
+    const i = davayHtml.indexOf(`id="${id}"`);
+    return i > menuStart && i < menuEnd;
+  };
+  check('кнопки уровня перенесены в блок «Дополнительно»',
+    !davayHtml.includes('video-level-row')
+      && inExtraMenu('videoLevelUpBtn') && inExtraMenu('videoNextBtn'),
+    '«Горячее»/«Повысить уровень» вернулись в верхний ряд или пропали из «Дополнительно»');
+  check('у кнопок 🔥 и ⬆️ есть подсказка data-tt',
+    ['videoHotBtn', 'videoLevelUpBtn', 'videoNextBtn'].every((id) => {
+      const btn = davayHtml.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`));
+      return btn && /data-tt="[^"]+"/.test(btn[0]);
+    }),
+    'по одной иконке назначение кнопки не читается — нужна подсказка');
+  // Порядок в раскрытом «Дополнительно»: 🔥 (8) → ⬆️ (9) → 🔊 (10) … 🚫 (14).
+  // Без своего `order` кнопка-иконка получает 0 и встаёт в начало ряда — перед
+  // «Следующее», как когда-то случилось с 🔀.
+  const ordLevelUp = videoOrder('videoLevelUpBtn');
+  const ordNextLevel = videoOrder('videoNextBtn');
+  check('в «Дополнительно» первыми идут 🔥 и ⬆️, затем 🔊',
+    ordLevelUp === 8 && ordNextLevel === 9 && ordMute === 10 && ordRandom === 11
+      && ordLoop === 12 && videoOrder('videoFullscreenBtn') === 13 && videoOrder('dislikeBtn') === 14,
+    `порядки: 🔥 ${ordLevelUp} → ⬆️ ${ordNextLevel} → 🔊 ${ordMute} → 🔀 ${ordRandom} → 🔁 ${ordLoop}`);
+  check('🔥 «Горячее» скрыта вне «Видеорулетки»',
+    /#videoHotBtn\{display:none;\}/.test(css)
+      && /#game\.video-mode #videoHotBtn\{display:flex;\}/.test(css),
+    'быстрая кнопка 🔥 видна в других играх');
+  // ── Ссылка-вход «Поделиться видео» (?mode=video&e=…&level=…) ──────────────
+  check('кнопка ⤴ делится ссылкой-входом на игру, а не файлом',
+    videoSrc2.includes('function videoEntryPointUrl(card, level)')
+      && /videoShareBtn'\)\.addEventListener\('click', async[\s\S]{0,1500}?videoEntryPointUrl\(currentVideoCard, videoLevel\)/.test(videoSrc2),
+    'шеринг снова отправляет прямую ссылку на видеофайл — локальные ролики так не открыть');
+  const initSrc = read('games/init.js');
+  check('ссылка-вход открывает «Видеорулетку» на нужном ролике',
+    videoSrc2.includes('function findVideoCardByEntryKey(key)')
+      && videoSrc2.includes('function showVideoCardDirect(card)')
+      && videoSrc2.includes('function openVideoFromLink(entry)')
+      && initSrc.includes("linkParams.get('mode')") && initSrc.includes("linkParams.get('e')")
+      && initSrc.includes('openVideoFromLink(entry)'),
+    'распаковка ?mode=video потерялась — по ссылке откроется обычный старт');
+  // Прочитанные параметры убираем из адресной строки: иначе каждое обновление
+  // страницы снова открывало бы «Видеорулетку» поверх меню.
+  check('параметры ссылки-входа чистит replaceState',
+    initSrc.includes("linkUrl.searchParams.delete('mode')")
+      && initSrc.includes('history.replaceState'),
+    'параметры ?mode=video остаются в адресе и повторяют вход при каждом обновлении');
+  // Заголовок игры (#gameLevelLabel) гаснет на время тоста и обязан вернуться:
+  // раньше видимость возвращал только режим «Предложи партнёру», и после любого
+  // тоста в «Видеорулетке» название игры пропадало до следующего turn-обновления.
+  check('после тоста название игры снова видно (не только в «Предложи партнёру»)',
+    coreSrc.includes('function restoreGameLevelLabelAfterToast(levelLabel)')
+      && /showToast\._tm = setTimeout\(\(\)=>\{[\s\S]{0,200}?restoreGameLevelLabelAfterToast\(levelLabel\)/.test(coreSrc)
+      && /else if\(gameScreenHasTitle\(\)\)\{[\s\S]{0,200}?display = 'block'/.test(coreSrc),
+    'заголовок «Видеорулетки» снова исчезает после первого тоста');
   // Видео карточки обязано гаснуть ДО перезаписи innerHTML: плееры создаются
   // внутри карточки, и любая её смена (карточка «Передайте телефон», заглушка,
   // фолбэк ошибки, следующее видео) отрывает играющий <video> от DOM — он
@@ -1429,7 +1501,8 @@ function checkStyles(html) {
   // уходит в фон, просроченную ссылку чинит обработчик error у <video>.
   // Проверяем порядок вызовов в goToVideoGame.
   check('массовое обновление ссылок уходит в фон после отрисовки карточки',
-    videoSrc2.includes('drawVideoCard(videoLevel);\n  refreshYandexLinks(true)')
+    videoSrc2.includes('drawVideoCard(videoLevel);')
+      && videoSrc2.includes('refreshYandexLinks(true).catch(()=>{})')
       && !videoSrc2.includes('await refreshYandexLinks(true)'),
     'goToVideoGame снова ждёт refreshYandexLinks до показа первого видео');
   // Индикаторы загрузки слиты в одну точку экрана: заглушка «Загрузка видео…»

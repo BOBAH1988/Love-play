@@ -1331,7 +1331,7 @@ applyKidsModeRestrictions();
 // «Горячее» в «Видеорулетке»: следующая папка Яндекса внутри уровня
 // («Level 1-1 …» → «Level 1-2 …»), а когда своих папок в уровне больше нет —
 // следующий уровень.
-document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
+function videoHotAction(){
   const sub = nextDavaySubLevel(videoLevel, videoSubLevel);
   if(!sub && videoLevel >= VIDEO_MAX_LEVEL){
     playErrorSound();
@@ -1347,11 +1347,16 @@ document.getElementById('videoLevelUpBtn').addEventListener('click', ()=>{
     if(!switchVideoLevel(next, 1)) return;
     showToast(`Уровень повышен: ${next}`);
   }
-});
+}
+// Кнопок «Горячее» в «Видеорулетке» две — 🔥 сразу после «Следующее» (в один
+// тап) и такая же иконка в блоке «Дополнительно». Обработчик у них общий:
+// две копии одного действия разъехались бы при первой же правке.
+document.getElementById('videoLevelUpBtn').addEventListener('click', videoHotAction);
+document.getElementById('videoHotBtn').addEventListener('click', videoHotAction);
 // «Повысить уровень» в «Видеорулетке»: всегда строго на следующий уровень
 // (Level 1-1 → Level 2-1), подуровни пропускает — парная к «Горячему» кнопка
 // (в «Давай попробуем» та же логика у davayNextBtn).
-document.getElementById('videoNextBtn').addEventListener('click', ()=>{
+function videoNextLevelAction(){
   if(videoLevel >= VIDEO_MAX_LEVEL){
     playErrorSound();
     showToast('Это максимальный уровень 🔥');
@@ -1360,7 +1365,8 @@ document.getElementById('videoNextBtn').addEventListener('click', ()=>{
   playLevelUpSound();
   if(!switchVideoLevel(videoLevel + 1, 1)) return;
   showToast(`Уровень повышен: ${videoLevel}`);
-});
+}
+document.getElementById('videoNextBtn').addEventListener('click', videoNextLevelAction);
 // Кнопки уровней «Давай попробуем»: «Горячее» шагает по папкам Яндекса внутри
 // уровня, «Повысить уровень» — всегда строго на следующий уровень (Level 1-1 →
 // Level 2-1), подуровни пропускает. Нажатие посреди раунда не блокируется:

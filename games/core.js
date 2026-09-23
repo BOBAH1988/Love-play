@@ -1004,11 +1004,27 @@ function showToast(msg, duration){
   if(duration === 0) return;
   showToast._tm = setTimeout(()=>{
     t.classList.remove('show');
-    if(levelLabel && isPlaceholderMode()){
-      const lvl = PHOTO_LEVELS.find(l => l.id === photoLevel);
-      levelLabel.style.display = lvl ? 'block' : 'none';
-    }
+    restoreGameLevelLabelAfterToast(levelLabel);
   }, duration || 1800);
+}
+// Тост показывается поверх заголовка (#gameLevelLabel лежит вверху экрана),
+// поэтому showToast гасит его на время тоста. По окончании тоста видимость
+// возвращает эта функция — иначе заголовок пропадает навсегда: раньше возврат
+// стоял только для режима «Предложи партнёру», и после любого тоста в
+// «Видеорулетке» («Показываю все видео», «Спасибо что делитесь!» …) название
+// игры исчезало до следующего updateTurnUI.
+function restoreGameLevelLabelAfterToast(levelLabel){
+  if(!levelLabel) levelLabel = document.getElementById('gameLevelLabel');
+  if(!levelLabel) return;
+  if(isPlaceholderMode()){
+    // В «Предложи партнёру» метка показывает уровень — возвращаем по photoLevel.
+    const lvl = PHOTO_LEVELS.find(l => l.id === photoLevel);
+    levelLabel.style.display = lvl ? 'block' : 'none';
+  } else if(gameScreenHasTitle()){
+    // Остальные режимы #game («Видеорулетка», «Давай попробуем», «Фанты») —
+    // текст названия уже записан updateTurnUI, возвращаем только видимость.
+    levelLabel.style.display = 'block';
+  }
 }
 /* Коррекция позиции подсказки [data-tt], чтобы не вылезала за края экрана. */
 function fixTooltipPosition(el){

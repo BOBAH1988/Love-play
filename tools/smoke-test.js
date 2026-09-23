@@ -2106,6 +2106,164 @@ test('Магазин: скрытая подсказка сохраняется �
 });
 
 
+console.log('\n=== Кнопки уровня и ссылка «Поделиться видео» ===');
+
+// 🔥 «Горячее» в «Видеорулетке» продублирована: быстрая кнопка в верхнем ряду
+// (сразу после «Следующее», в один тап) и такая же иконка в блоке
+// «Дополнительно». Действие одно — и обработчик обязан быть один: две копии
+// этого кода разошлись бы при первой же правке уровня/подуровней.
+test('Сценарий: две кнопки 🔥 «Горячее» делят один обработчик', () => {
+  const quick = getElById(stub, 'videoHotBtn');
+  const inMenu = getElById(stub, 'videoLevelUpBtn');
+  assert(!!quick && !!inMenu, 'кнопки 🔥 должны быть в разметке (быстрая и в «Дополнительно»)');
+  if (!quick || !inMenu) return;
+  const handlersOf = (el) => (el._getHandlers().get('click') || []).map((h) => h.handler);
+  const quickHandlers = handlersOf(quick);
+  const menuHandlers = handlersOf(inMenu);
+  assert(quickHandlers.length === 1 && menuHandlers.length === 1,
+    'на каждой кнопке 🔥 ровно один обработчик клика');
+  assert(quickHandlers[0] === menuHandlers[0],
+    '🔥 в строке ответов и 🔥 в «Дополнительно» должны звать одну и ту же функцию');
+});
+
+// Кнопка 🔥 должна шагать как «Горячее»: сначала на следующую папку внутри
+// уровня («Level 1-1 …» → «Level 1-2 …»), а когда своих папок больше нет —
+// на следующий уровень. Сам переход подменяем шпионом: важно, какие аргументы
+// уходят в общий switchVideoLevel (он вызывает draw-функцию игры).
+const clickQuickHot = (stubRef) => {
+  const btn = getElById(stubRef, 'videoHotBtn');
+  const handlers = btn._getHandlers().get('click') || [];
+  handlers.forEach(({ handler }) => handler({}));
+};
+const withVideoHotSpy = (cards, body) => {
+  const list = global.getDavayCardsList();
+  const savedList = list.slice();
+  const savedSwitch = global.switchVideoLevel;
+  const savedToast = global.showToast;
+  const savedLevelSound = global.playLevelUpSound;
+  const calls = [];
+  try {
+    list.length = 0;
+    cards.forEach((c) => list.push(c));
+    global.switchVideoLevel = (level, sub) => { calls.push([level, sub]); return true; };
+    global.showToast = () => {};
+    global.playLevelUpSound = () => {};
+    body(calls);
+  } finally {
+    global.switchVideoLevel = savedSwitch;
+    global.showToast = savedToast;
+    global.playLevelUpSound = savedLevelSound;
+    list.length = 0;
+    savedList.forEach((c) => list.push(c));
+  }
+};
+
+test('Сценарий: 🔥 «Горячее» шагает на следующую папку уровня', () => {
+  withVideoHotSpy([
+    { id: 'a', name: 'a.webm', level: 1, video: 'v1', yandexPath: 'disk:/Level 1-1 Разогрев/a.webm' },
+    { id: 'b', name: 'b.webm', level: 1, video: 'v2', yandexPath: 'disk:/Level 1-2 Ласки легкие/b.webm' },
+  ], (calls) => {
+    clickQuickHot(stub);
+    assert(calls.length === 1,
+      `нажатие 🔥 должно сделать один переход, сделано: ${calls.length}`);
+    assert(calls[0] && calls[0][0] === 1 && calls[0][1] === 2,
+      `🔥 должна уйти на подуровень 2 того же уровня, а ушла на ${JSON.stringify(calls[0])}`);
+  });
+});
+
+test('Сценарий: 🔥 «Горячее» без папок в уровне поднимает на следующий уровень', () => {
+  // В уровне 1 только папка подуровня 1 — своих папок выше нет: шаг идёт в
+  // следующий уровень целиком, на его первый подуровень.
+  withVideoHotSpy([
+    { id: 'a', name: 'a.webm', level: 1, video: 'v1', yandexPath: 'disk:/Level 1-1 Разогрев/a.webm' },
+  ], (calls) => {
+    clickQuickHot(stub);
+    assert(calls[0] && calls[0][0] === 2 && calls[0][1] === 1,
+      `без папок в уровне 🔥 должна уйти на уровень 2 подуровень 1, а ушла на ${JSON.stringify(calls[0])}`);
+  });
+});
+
+// Ссылка-вход ?mode=video&e=…&level=… — проверяем полный круг: собрали ссылку,
+// распаковали параметры, нашли по ним карточку каталога. Ключ — путь на Яндекс
+// Диске, затем имя файла, затем id (работает на том же устройстве).
+test('Сценарий: ссылка-вход «Поделиться видео» ведёт на тот же ролик', () => {
+  if (typeof global.videoEntryPointUrl !== 'function' ||
+      typeof global.findVideoCardByEntryKey !== 'function') {
+    assert(false, 'videoEntryPointUrl/findVideoCardByEntryKey недоступны глобально');
+    return;
+  }
+  const card = {
+    id: 'card-1', name: 'demo.webm', level: 3,
+    video: 'disk:/Level 3-2 Близость/f.webm',
+    yandexPath: 'disk:/Level 3-2 Близость/f.webm',
+  };
+  const url = global.videoEntryPointUrl(card, 3);
+  assert(url.indexOf('https://example.test/?') === 0,
+    `ссылка должна вести на приложение, а не на файл: ${url}`);
+  const params = new URLSearchParams(url.split('?')[1]);
+  assert(params.get('mode') === 'video', 'без ?mode=video получатель не попадёт в «Видеорулетку»');
+  assert(params.get('level') === '3', `уровень потерялся: ${params.get('level')}`);
+  assert(params.get('e') === card.yandexPath, `ключ видео потерялся: ${params.get('e')}`);
+
+  // Каталог получателя: у него та же запись может нести данные в другом поле
+  // (путь на Диске появляется только после синхронизации) — ключ сравнивается
+  // с каждым полем по отдельности, а не только с приоритетным.
+  const list = global.getDavayCardsList();
+  const saved = list.slice();
+  list.length = 0;
+  list.push(card);
+  try {
+    assert(global.findVideoCardByEntryKey(params.get('e')) === card,
+      'по ключу из ссылки (путь на Диске) ролик должен находиться');
+    assert(global.findVideoCardByEntryKey(card.name) === card,
+      'ключ по имени файла тоже должен работать');
+    assert(global.findVideoCardByEntryKey(card.id) === card,
+      'ключ по id карточки тоже должен работать');
+    assert(global.findVideoCardByEntryKey('нет-такого-видео') === null,
+      'чужой ключ не должен давать ложное совпадение');
+  } finally {
+    list.length = 0;
+    saved.forEach((c) => list.push(c));
+  }
+});
+
+// #gameLevelLabel гаснет на время тоста (тост показывается поверх заголовка) и
+// обязан вернуться: раньше видимость возвращал только режим «Предложи партнёру»,
+// и после любого тоста в «Видеорулетке» её название пропадало до следующего
+// turn-обновления.
+test('Сценарий: после тоста название игры снова видно и в «Видеорулетке»', () => {
+  if (typeof global.restoreGameLevelLabelAfterToast !== 'function') {
+    assert(false, 'restoreGameLevelLabelAfterToast недоступна глобально');
+    return;
+  }
+  const gameEl = getElById(stub, 'game');
+  const title = getElById(stub, 'gameLevelLabel');
+  const savedText = title.textContent;
+  try {
+    gameEl.classList.add('video-mode');
+    title.style.display = 'block';
+    title.textContent = '🎥 Видеорулетка';
+    global.showToast('Показываю все видео');
+    assert(title.style.display === 'none', 'тост должен гасить заголовок, пока висит');
+    global.restoreGameLevelLabelAfterToast(title);
+    assert(title.style.display === 'block',
+      'в «Видеорулетке» заголовок не вернулся после тоста');
+    assert(title.textContent === '🎥 Видеорулетка',
+      'возврат видимости не должен переписывать название игры');
+    // Режим «Предложи партнёру» по-прежнему показывает там уровень.
+    gameEl.classList.remove('video-mode');
+    gameEl.classList.add('placeholder-mode');
+    global.restoreGameLevelLabelAfterToast(title);
+    assert(title.style.display === 'block' || title.style.display === 'none',
+      'в placeholder-режиме видимость по-прежнему зависит от выбранного уровня');
+  } finally {
+    MODE_CLASSES.forEach((c) => gameEl.classList.remove(c));
+    title.style.display = 'block';
+    title.textContent = savedText;
+  }
+});
+
+
 console.log('\n=== Запуск тестов ===\n');
 
 tests.forEach(t => {

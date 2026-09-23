@@ -97,6 +97,28 @@ try{
   }
 }catch(e){}
 
+/* ============ ВХОД ПО ССЫЛКЕ «ПОДЕЛИТЬСЯ ВИДЕО» ============
+   Кнопка ⤴ в «Видеорулетке» шарит адрес приложения с параметрами
+   ?mode=video&e=…&level=… (videoEntryPointUrl в games/fants-video.js).
+   Читаем их здесь — в последнем скрипте, где доступны и loadState, и все
+   игры. Прочитанное сразу убираем из адресной строки (replaceState, как _r
+   выше): иначе каждое обновление страницы снова открывало бы видеорулетку. */
+try{
+  const linkParams = new URLSearchParams(location.search);
+  if(linkParams.get('mode') === 'video'){
+    const entry = {
+      key: linkParams.get('e') || '',
+      level: linkParams.get('level')
+    };
+    const linkUrl = new URL(location.href);
+    linkUrl.searchParams.delete('mode');
+    linkUrl.searchParams.delete('e');
+    linkUrl.searchParams.delete('level');
+    history.replaceState(null, '', linkUrl.pathname + linkUrl.search + linkUrl.hash);
+    if(typeof openVideoFromLink === 'function') openVideoFromLink(entry);
+  }
+}catch(e){}
+
 /* ============ СТАТИСТИКА: ОТМЕТКА ОТКРЫТИЯ ============
    Считаем уникальные дни использования. Вызов здесь, в последнем скрипте:
    к этому моменту модуль статистики уже загружен, а приложение готово
