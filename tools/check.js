@@ -1473,7 +1473,7 @@ function checkStyles(html) {
   check('кнопка ⤴ делится ссылкой-входом, когда файл приложить нельзя',
     videoSrc2.includes('function videoEntryPointUrl(card, level)')
       && /videoEntryPointUrl\(currentVideoCard, videoLevel\)/.test(videoSrc2)
-      && videoSrc2.includes("if(e && e.name === 'AbortError') return;"),
+      && /if\(e && \(e\.name === 'AbortError' \|\| e\.code === 20 \|\| \(e\.message && \/abort\|cancel\/i\.test\(e\.message\)\)\)\) return;/.test(videoSrc2),
     'нет фолбэка ссылкой-входом — на десктопе и для нечитаемых роликов поделиться нечем');
   check('ссылка-вход сокращается через clck.ru перед отправкой',
     videoSrc2.includes('function shortenShareUrl(url)')

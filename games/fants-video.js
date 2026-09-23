@@ -470,7 +470,9 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
           return;
         }catch(e){
           // Игрок закрыл системное меню — не ошибка и не повод слать ссылку.
-          if(e && e.name === 'AbortError') return;
+          // На iOS/Android имя ошибки может отличаться от 'AbortError',
+          // поэтому проверяем по содержимому сообщения и коду.
+          if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
           // Платформа отказала уже на отправке — ниже уйдёт ссылка.
         }
       }
@@ -497,7 +499,8 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
     showToast('Ссылка: ' + shareUrl);
   }catch(e){
     // Пользователь закрыл системное меню — не ошибка.
-    if(e && e.name === 'AbortError') return;
+    // На iOS/Android имя ошибки может отличаться от 'AbortError'.
+    if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
     showToast('Не удалось поделиться — попробуйте позже');
   }
 });
@@ -833,8 +836,12 @@ function setupVideoPlayerElement(video, card, level, reuse){
   if(card) card.hrefRefreshed = false;
   video.muted = !videoSoundOn;
   video.loop = !state.videoAutoAdvance;
-  video.src = card.video;
-  video.load();
+  if(reuse){
+    // Меняем src у уже существующего элемента вместо пересоздания — именно
+    // это позволяет iOS не закрывать нативный полноэкранный плеер.
+    video.src = card.video;
+    video.load();
+  }
   // Ролик грузится — показываем «Загрузка видео…» поверх чёрного прямоугольника.
   showVideoCardLoading();
   // Атрибут autoplay сам по себе не всегда срабатывает для видео,
