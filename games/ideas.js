@@ -120,14 +120,14 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
     showToast('Сначала откройте карточку');
     return;
   }
-  const text = ideasCurrentCard.title + '\n' + ideasCurrentCard.text;
+  const appUrl = location.origin + location.pathname + '?mode=ideas';
+  const text = 'Вопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text;
   if(navigator.share){
     try{
-      await navigator.share({ title: ideasCurrentCard.title, text, url: location.href });
+      await navigator.share({ title:'🎲 Давай играй', text, url: appUrl });
       return;
     }catch(e){
-      if(e && e.name === 'AbortError') return;
-      // Falls through to clipboard
+      if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
     }
   }
   if(navigator.clipboard && navigator.clipboard.writeText){
