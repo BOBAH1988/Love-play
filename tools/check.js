@@ -1441,11 +1441,36 @@ function checkStyles(html) {
     /#videoHotBtn\{display:none;\}/.test(css)
       && /#game\.video-mode #videoHotBtn\{display:flex;\}/.test(css),
     'быстрая кнопка 🔥 видна в других играх');
-  // ── Ссылка-вход «Поделиться видео» (?mode=video&e=…&level=…) ──────────────
-  check('кнопка ⤴ делится ссылкой-входом на игру, а не файлом',
+  // ── Кнопка ⤴ «Поделиться видео» ───────────────────────────────────────────
+  // В Telegram должно приезжать ВИДЕО, а не только текст: к сообщению
+  // прикладывается сам ролик (navigator.share с files). Раньше уходила лишь
+  // ссылка на страницу приложения, и чат получал один текст — статическая
+  // страница видео в превью ссылки отдать не может (og:video требует серверной
+  // подстановки, а сайт лежит на GitHub Pages без бэкенда).
+  check('кнопка ⤴ прикладывает к сообщению сам ролик (share с files)',
+    videoSrc2.includes('async function videoShareFile(card)')
+      && videoSrc2.includes('navigator.canShare({ files:[new File(')
+      && /const withText = \{ files:\[file\], text: shareText/.test(videoSrc2)
+      && /await navigator\.share\(payload\)/.test(videoSrc2),
+    'шеринг снова отправляет только ссылку — в Telegram придёт текст без видео');
+  // Файл и url в одной нагрузке — TypeError по спецификации Web Share, меню
+  // просто не откроется. Поэтому ссылка-вход уходит в text, а url остаётся
+  // только у фолбэка без файлов.
+  check('файл не отправляется вместе с url',
+    /files:\[file\][^}]*\}/.test(videoSrc2)
+      && !/files:\[file\][^}]*url:/.test(videoSrc2)
+      && /navigator\.share\(\{\s*title: 'Давай играй',\s*\n\s*text: [^\n]+,\s*\n\s*url: appUrl/.test(videoSrc2),
+    'files и url в одной нагрузке — системное меню «Поделиться» упадёт с TypeError');
+  check('слишком большой ролик не читается в память',
+    /VIDEO_SHARE_MAX_BYTES = \d+ \* 1024 \* 1024/.test(videoSrc2)
+      && /content-length/.test(videoSrc2)
+      && /blob\.size > VIDEO_SHARE_MAX_BYTES/.test(videoSrc2),
+    'нет ограничения размера файла — большое видео уронит страницу при отправке');
+  check('кнопка ⤴ делится ссылкой-входом, когда файл приложить нельзя',
     videoSrc2.includes('function videoEntryPointUrl(card, level)')
-      && /videoShareBtn'\)\.addEventListener\('click', async[\s\S]{0,1500}?videoEntryPointUrl\(currentVideoCard, videoLevel\)/.test(videoSrc2),
-    'шеринг снова отправляет прямую ссылку на видеофайл — локальные ролики так не открыть');
+      && /videoEntryPointUrl\(currentVideoCard, videoLevel\)/.test(videoSrc2)
+      && videoSrc2.includes("if(e && e.name === 'AbortError') return;"),
+    'нет фолбэка ссылкой-входом — на десктопе и для нечитаемых роликов поделиться нечем');
   const initSrc = read('games/init.js');
   check('ссылка-вход открывает «Видеорулетку» на нужном ролике',
     videoSrc2.includes('function findVideoCardByEntryKey(key)')

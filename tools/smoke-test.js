@@ -41,6 +41,14 @@ function test(name, fn) {
   tests.push({ name, fn });
 }
 
+// Асинхронные сценарии: проверка ждёт промисы (например, чтение ролика перед
+// отправкой в мессенджер). Собираются отдельно и выполняются после
+// синхронных — так их await не влияет на порядок и состояние остальных тестов.
+const asyncTests = [];
+function testAsync(name, fn) {
+  asyncTests.push({ name, fn });
+}
+
 function assert(condition, message) {
   if (condition) {
     passed++;
@@ -2227,6 +2235,162 @@ test('Сценарий: ссылка-вход «Поделиться видео�
   }
 });
 
+// Telegram принимает видео файлом, поэтому к сообщению прикладывается сам ролик
+// (navigator.share с files), а ссылка-вход уходит подписью. Раньше уходила
+// только ссылка на страницу приложения — статическая страница видео в превью
+// ссылки отдать не может (og:video требует серверной подстановки), и в чат
+// приходил один текст. Сначала проверяем помощники, которые готовят файл:
+// имя и тип определяют, как мессенджер покажет ролик.
+test('Сценарий: имя и тип файла для отправки видео определяются верно', () => {
+  if (typeof global.videoShareFileName !== 'function' ||
+      typeof global.videoShareFileType !== 'function') {
+    assert(false, 'videoShareFileName/videoShareFileType недоступны глобально');
+    return;
+  }
+  // Родное имя ролика — приоритет: по нему получатель узнаёт файл.
+  assert(global.videoShareFileName({ name: 'clip.webm', video: 'https://disk.yandex.ru/x' }) === 'clip.webm',
+    'имя ролика должно уходить в сообщение как есть');
+  // У облачных карточек имя есть не всегда — берём его из подписанной ссылки.
+  assert(global.videoShareFileName({ video: 'https://downloader.disk.yandex.ru/disk/abc/11173961a.webm?sign=1' }) === '11173961a.webm',
+    'без имени файл надо назвать по ссылке, иначе в чат уйдёт безымянный «video»');
+  assert(global.videoShareFileName({}) === 'video.mp4',
+    'запасное имя должно быть осмысленным');
+  // Тип: сперва родной тип ответа, затем — по расширению (Яндекс отдаёт
+  // content-type верно, но у локальных роликов его может не быть).
+  assert(global.videoShareFileType({ type: 'video/webm' }, 'x.mp4') === 'video/webm',
+    'родной тип ответа приоритетнее расширения');
+  assert(global.videoShareFileType({ type: '' }, 'x.webm') === 'video/webm',
+    'webm без типа должен распознаваться по расширению');
+  assert(global.videoShareFileType({ type: '' }, 'x.mov') === 'video/quicktime',
+    'mov без типа должен распознаваться по расширению');
+  assert(global.videoShareFileType({ type: '' }, 'x.mp4') === 'video/mp4',
+    'неизвестное расширение должно давать video/mp4');
+});
+
+// Прикладывать файл можно только там, где платформа это умеет
+// (navigator.canShare с files). Проверяем, что отказ ведёт к фолбэку, а не к
+// попытке отправить файл — иначе меню «Поделиться» просто не откроется.
+test('Сценарий: файл прикладывается только при поддержке платформой', () => {
+  if (typeof global.shareSupportsFiles !== 'function') {
+    assert(false, 'shareSupportsFiles недоступна глобально');
+    return;
+  }
+  const nav = global.navigator;
+  const savedCanShare = nav.canShare;
+  try {
+    delete nav.canShare;
+    assert(global.shareSupportsFiles() === false,
+      'без navigator.canShare отправка файлов не поддерживается — нужен фолбэк ссылкой');
+    nav.canShare = () => false;
+    assert(global.shareSupportsFiles() === false,
+      'платформа, отклоняющая files, должна получать ссылку');
+    nav.canShare = () => true;
+    assert(global.shareSupportsFiles() === true,
+      'поддерживающая files платформа должна получать сам ролик');
+  } finally {
+    if (savedCanShare === undefined) delete nav.canShare;
+    else nav.canShare = savedCanShare;
+  }
+});
+
+// Сквозная проверка нажатия ⤴ — от карточки до системного меню «Поделиться».
+// Это ровно тот сценарий, из которого пришла жалоба: в Telegram приезжал один
+// текст без видео. Раньше к сообщению шла только ссылка на страницу приложения,
+// поэтому тест обязан упасть, если files из нагрузки пропадут.
+testAsync('Сценарий: ⤴ открывает меню «Поделиться» с самим роликом', async () => {
+  const nav = global.navigator;
+  const saved = { share: nav.share, canShare: nav.canShare, fetch: global.fetch };
+  const card = {
+    id: 'card-share', name: 'clip.webm', level: 2,
+    video: 'https://example.test/videos/clip.webm',
+    yandexPath: 'disk:/Level 2-1 Близость/clip.webm',
+  };
+  let shared = null;
+  let fetched = '';
+  try {
+    // currentVideoCard объявлен через `let` в контексте скриптов — из теста его
+    // не достать ни через global, ни через window, только eval'ом там же.
+    eval(`currentVideoCard = ${JSON.stringify(card)};`);
+    global.fetch = (url) => {
+      fetched = String(url);
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => '2048' },
+        blob: () => Promise.resolve({ size: 2048, type: 'video/webm' }),
+      });
+    };
+    nav.canShare = (data) => !!(data && data.files && data.files.length);
+    nav.share = (data) => { shared = data; return Promise.resolve(); };
+
+    getElById(stub, 'videoShareBtn').click();
+    // Обработчик асинхронный: он читает ролик и лишь потом зовёт share.
+    for (let i = 0; i < 100 && !shared; i++) await new Promise((r) => setTimeout(r, 5));
+
+    assert(!!shared, 'после нажатия ⤴ системное меню «Поделиться» так и не открылось');
+    if (shared) {
+      const files = shared.files;
+      assert(Array.isArray(files) && files.length === 1,
+        'к сообщению должен прикладываться сам ролик (files) — иначе в Telegram уйдёт только текст');
+      const file = files && files[0];
+      assert(file && file.name === 'clip.webm',
+        `файл должен уходить с родным именем ролика, получено «${file && file.name}»`);
+      assert(file && file.type === 'video/webm',
+        `тип файла должен быть video/webm, получено «${file && file.type}»`);
+      // Ссылка-вход остаётся подписью: по ней получатель откроет ту же игру на
+      // том же ролике, если он есть в его каталоге.
+      assert(String(shared.text || '').indexOf('mode=video') > -1,
+        `в подписи должна остаться ссылка-вход, получено: ${shared.text}`);
+      assert(shared.url === undefined,
+        'url вместе с files запрещён спецификацией — меню упало бы с TypeError');
+    }
+    assert(fetched === card.video,
+      `ролик должен читаться по ссылке карточки, запрос ушёл на: ${fetched}`);
+  } finally {
+    nav.share = saved.share;
+    if (saved.canShare === undefined) delete nav.canShare; else nav.canShare = saved.canShare;
+    global.fetch = saved.fetch;
+    eval('currentVideoCard = null;');
+  }
+});
+
+// Большой ролик в память не читается: blob целиком лежит в памяти вкладки, и
+// видео на сотни мегабайт уронит страницу на телефоне. Такой ролик должен
+// молча уйти ссылкой-входом.
+testAsync('Сценарий: слишком большой ролик уходит ссылкой, а не файлом', async () => {
+  const saved = { fetch: global.fetch, share: global.navigator.share, canShare: global.navigator.canShare };
+  const card = {
+    id: 'card-big', name: 'big.mp4', level: 1,
+    video: 'https://example.test/videos/big.mp4', yandexPath: 'disk:/big.mp4',
+  };
+  let shared = null;
+  try {
+    eval(`currentVideoCard = ${JSON.stringify(card)};`);
+    global.fetch = () => Promise.resolve({
+      ok: true,
+      headers: { get: () => String(500 * 1024 * 1024) },
+      blob: () => Promise.resolve({ size: 500 * 1024 * 1024, type: 'video/mp4' }),
+    });
+    global.navigator.canShare = () => true;
+    global.navigator.share = (data) => { shared = data; return Promise.resolve(); };
+
+    getElById(stub, 'videoShareBtn').click();
+    for (let i = 0; i < 100 && !shared; i++) await new Promise((r) => setTimeout(r, 5));
+
+    assert(!!shared, 'без отправки игрок остался бы без кнопки «Поделиться» вообще');
+    if (shared) {
+      assert(!shared.files, 'полугигабайтный ролик нельзя тянуть в память вкладки');
+      assert(shared.url && shared.url.indexOf('mode=video') > -1,
+        'фолбэк обязан делиться ссылкой-входом — иначе поделиться нечем');
+    }
+  } finally {
+    global.fetch = saved.fetch;
+    global.navigator.share = saved.share;
+    if (saved.canShare === undefined) delete global.navigator.canShare;
+    else global.navigator.canShare = saved.canShare;
+    eval('currentVideoCard = null;');
+  }
+});
+
 // #gameLevelLabel гаснет на время тоста (тост показывается поверх заголовка) и
 // обязан вернуться: раньше видимость возвращал только режим «Предложи партнёру»,
 // и после любого тоста в «Видеорулетке» её название пропадало до следующего
@@ -2276,15 +2440,27 @@ tests.forEach(t => {
   }
 });
 
-console.log('\n=== Итог ===');
-console.log(`Пройдено: ${passed}`);
-console.log(`Ошибок: ${failed}`);
-console.log(`Всего тестов: ${tests.length}`);
+(async () => {
+  for (const t of asyncTests) {
+    name = t.name;
+    try {
+      await t.fn();
+    } catch (e) {
+      failed++;
+      console.log(`  ✗ ${t.name}: неожиданная ошибка: ${e.message}`);
+    }
+  }
 
-if (failed > 0) {
-  console.log('\n❌ Есть ошибки — см. выше');
-  process.exit(1);
-} else {
-  console.log('\n✅ Все тесты пройдены');
-  process.exit(0);
-}
+  console.log('\n=== Итог ===');
+  console.log(`Пройдено: ${passed}`);
+  console.log(`Ошибок: ${failed}`);
+  console.log(`Всего тестов: ${tests.length + asyncTests.length}`);
+
+  if (failed > 0) {
+    console.log('\n❌ Есть ошибки — см. выше');
+    process.exit(1);
+  } else {
+    console.log('\n✅ Все тесты пройдены');
+    process.exit(0);
+  }
+})();

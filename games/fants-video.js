@@ -322,41 +322,143 @@ function videoEntryPointUrl(card, level){
   return location.origin + location.pathname + '?' + params.toString();
 }
 
+// Поддерживает ли платформа отправку файлов (Web Share API второго уровня).
+// Проверяем ДО чтения ролика: если файлы не поддержаны (например, десктопный
+// браузер), незачем тянуть мегабайты видео — поделимся ссылкой.
+function shareSupportsFiles(){
+  if(typeof navigator.share !== 'function') return false;
+  if(typeof navigator.canShare !== 'function') return false;
+  try{
+    // canShare принимает только настоящий File — для проверки годится пустой.
+    return navigator.canShare({ files:[new File([''], 'probe.txt', { type:'text/plain' })] });
+  }catch(e){
+    return false;
+  }
+}
+
+// Имя и тип файла для отправки: родное имя ролика, а если его нет — из адреса.
+function videoShareFileName(card){
+  const name = String((card && card.name) || '');
+  if(name) return name;
+  const fromUrl = String((card && card.video) || '').split('?')[0].split('/').pop() || '';
+  return fromUrl || 'video.mp4';
+}
+function videoShareFileType(blob, name){
+  if(blob && blob.type) return blob.type;
+  if(/\.webm$/i.test(name)) return 'video/webm';
+  if(/\.mov$/i.test(name)) return 'video/quicktime';
+  if(/\.m4v$/i.test(name)) return 'video/x-m4v';
+  return 'video/mp4';
+}
+
+// Размер ролика, который ещё можно прочитать в память и отдать в мессенджер.
+// Большие файлы тянуть нельзя: blob целиком лежит в памяти вкладки, и видео на
+// сотни мегабайт уронит страницу на телефоне. Такие ролики делим ссылкой.
+const VIDEO_SHARE_MAX_BYTES = 100 * 1024 * 1024;
+
+// Сам ролик как File — его и получает мессенджер (Telegram принимает файлом,
+// поэтому в чате появляется видео, а не только текст). Локальное видео с
+// телефона читаем по blob-адресу, облачное — по подписанной ссылке Яндекса:
+// она отдаёт `Access-Control-Allow-Origin: *`, поэтому fetch из браузера не
+// блокируется (проверено на реальной ссылке в облаке — ответ приходит с
+// `Content-Type: video/webm` и `Access-Control-Allow-Origin: *`).
+// Не удалось прочитать (ролик удалён, ссылка устарела, сеть, слишком большой
+// файл) — возвращаем null, и кнопка ⤴ отправит ссылку-вход (обработчик ниже).
+async function videoShareFile(card){
+  if(!card || !card.video) return null;
+  try{
+    const resp = await fetch(card.video, { mode:'cors' });
+    if(!resp || !resp.ok) return null;
+    // Размер проверяем по заголовку — до вычитывания тела: иначе большой ролик
+    // успеет занять память ещё до отказа от отправки.
+    const declared = Number((resp.headers && resp.headers.get && resp.headers.get('content-length')) || 0);
+    if(declared > VIDEO_SHARE_MAX_BYTES) return null;
+    const blob = await resp.blob();
+    if(!blob || !blob.size || blob.size > VIDEO_SHARE_MAX_BYTES) return null;
+    const name = videoShareFileName(card);
+    return new File([blob], name, { type: videoShareFileType(blob, name) });
+  }catch(e){
+    return null;
+  }
+}
+
+// Проверка конкретной нагрузки перед отправкой: помимо поддержки файлов у
+// платформ бывают свои ограничения (размер, набор полей). canShare отвечает
+// на тот же вопрос, что и share, но без открытия меню — поэтому спрашиваем
+// именно у платформы, а не угадываем.
+function canShareData(data){
+  if(typeof navigator.canShare !== 'function') return false;
+  try{
+    return !!navigator.canShare(data);
+  }catch(e){
+    return false;
+  }
+}
+
 // Кнопка ⤴ «Поделиться видео» — стандартное системное меню «Поделиться»
 // (Web Share API, как в Telegram), на десктопе — фолбэк: копирование ссылки
-// в буфер обмена. Делимся ссылкой на саму игру с указанием текущего видео,
-// чтобы по ней можно было открыть «Видеорулетку» в том же виде.
-// Ссылка собирается из текущего адреса приложения + параметров ?mode=video&e=…
-// (id видео) и &level=… (уровень) — и для локальных роликов тоже работает,
-// потому что по ней открывается приложение, а не сам файл.
+// в буфер обмена. К сообщению прикладывается САМ ролик (navigator.share с
+// files), а ссылка-вход на игру уходит подписью: получатель видит видео прямо
+// в чате и может открыть игру на том же ролике.
+// Раньше отправлялась только ссылка-вход (?mode=video&e=…&level=…), и в
+// мессенджер приходил один текст: страница приложения — статический сайт, в
+// превью ссылки видео отдать нечем (og:video требует серверной подстановки).
 document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
   if(!currentVideoCard || !currentVideoCard.video){
     playErrorSound();
     showToast('Сначала откройте видео');
     return;
   }
-  // Ссылка ведёт в приложение (?mode=video&e=…&level=…), а не на сам файл:
+  // Ссылка-вход ведёт в приложение (?mode=video&e=…&level=…), а не на файл:
   // по ней у получателя откроется «Видеорулетка» — с этого же ролика, если
-  // видео есть в его каталоге, иначе с этого же уровня. Так ссылка работает
-  // и для локальных роликов (blob-адрес другого устройства не откроет).
-  const shareUrl = videoEntryPointUrl(currentVideoCard, videoLevel);
-  const shareData = {
-    title: 'Давай играй',
-    text: 'Смотри, какое видео выпало в «Видеорулетке» 😉',
-    url: shareUrl
-  };
+  // видео есть в его каталоге, иначе с этого же уровня.
+  const appUrl = videoEntryPointUrl(currentVideoCard, videoLevel);
+  const shareText = 'Смотри, какое видео выпало в «Видеорулетке» 😉\n' + appUrl;
+  // 1) Прикладываем сам ролик. Ссылки на видео Яндекса отдают CORS-разрешение,
+  //    поэтому файл читается прямо в браузере.
+  if(shareSupportsFiles()){
+    showToast('Готовим видео…');
+    const file = await videoShareFile(currentVideoCard);
+    if(file){
+      // Ссылку кладём в text, а не в url: спецификация Web Share запрещает
+      // files вместе с url (иначе TypeError), а files + text — разрешает.
+      // Если платформа подпись с файлом не принимает, отправляем файл без неё:
+      // видео в чате важнее подписи.
+      const withText = { files:[file], text: shareText, title:'Давай играй' };
+      const fileOnly = { files:[file], title:'Давай играй' };
+      const payload = canShareData(withText) ? withText : (canShareData(fileOnly) ? fileOnly : null);
+      if(payload){
+        try{
+          await navigator.share(payload);
+          showToast('Спасибо, что делитесь! 💛');
+          return;
+        }catch(e){
+          // Игрок закрыл системное меню — не ошибка и не повод слать ссылку.
+          if(e && e.name === 'AbortError') return;
+          // Платформа отказала уже на отправке — ниже уйдёт ссылка.
+        }
+      }
+    }
+  }
+  // 2) Файл приложить нельзя (нет поддержки, ролик не прочитался, слишком
+  //    большой) — делимся ссылкой-входом: получатель откроет «Видеорулетку»
+  //    на том же ролике.
   try{
     if(navigator.share){
-      await navigator.share(shareData);
+      await navigator.share({
+        title: 'Давай играй',
+        text: 'Смотри, какое видео выпало в «Видеорулетке» 😉',
+        url: appUrl
+      });
       showToast('Спасибо, что делитесь! 💛');
       return;
     }
     if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(appUrl);
       showToast('Ссылка скопирована');
       return;
     }
-    showToast('Ссылка: ' + shareUrl);
+    showToast('Ссылка: ' + appUrl);
   }catch(e){
     // Пользователь закрыл системное меню — не ошибка.
     if(e && e.name === 'AbortError') return;

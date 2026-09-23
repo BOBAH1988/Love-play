@@ -305,13 +305,27 @@ function createDomStub(html, { trackHandlers = false } = {}) {
   global.requestIdleCallback = (cb) => setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 50 }), 0);
   global.cancelIdleCallback = (id) => clearTimeout(id);
 
-  global.Blob = function Blob() { return { size: 0, type: '' }; };
+  // Браузерные Blob/File хранят куски и их размер, а File — ещё имя и тип.
+  // Заглушки это повторяют: код отправки видео проверяет blob.size и отдаёт
+  // файл с именем ролика, и на пустых объектах такие проверки ничего не значат.
+  global.Blob = function Blob(parts, opts) {
+    const list = Array.isArray(parts) ? parts : [];
+    let size = 0;
+    list.forEach((p) => {
+      if (p && typeof p.size === 'number') size += p.size;
+      else size += String(p == null ? '' : p).length;
+    });
+    return { size, type: (opts && opts.type) || '' };
+  };
+  global.File = function File(parts, name, opts) {
+    const base = global.Blob(parts, opts);
+    return { name: String(name || ''), type: base.type, size: base.size };
+  };
   global.URL.createObjectURL = () => 'blob:stub';
   global.URL.revokeObjectURL = () => {};
   global.FileReader = function FileReader() {
     return { readAsText() {}, readAsDataURL() {}, readAsArrayBuffer() {}, addEventListener() {}, result: null };
   };
-  global.File = function File() { return {}; };
   global.FormData = function FormData() { return { append() {}, delete() {}, get() { return null; } }; };
 
   global.CustomEvent = function CustomEvent(type, opts) { this.type = type; this.detail = opts && opts.detail; };
