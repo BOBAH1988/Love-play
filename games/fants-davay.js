@@ -902,6 +902,45 @@ document.getElementById('davaySetupSoundBtn').addEventListener('click', ()=>{
   setDavaySoundOn(!davaySoundOn);
 });
 
+// Кнопка «Поделиться» в «Давай попробуем» — делимся ссылкой на текущий уровень/видео.
+document.getElementById('davayShareBtn').addEventListener('click', async ()=>{
+  if(!currentDavayCard){
+    playErrorSound();
+    showToast('Сначала откройте видео');
+    return;
+  }
+  const params = new URLSearchParams();
+  params.set('mode', 'davay');
+  const key = currentDavayCard.yandexPath || currentDavayCard.name || davayCardId(currentDavayCard) || '';
+  if(key) params.set('e', String(key));
+  const lvl = parseInt(davayLevel, 10);
+  if(isFinite(lvl) && lvl >= 1) params.set('level', String(lvl));
+  const appUrl = location.origin + location.pathname + '?' + params.toString();
+  const shareUrl = await shortenShareUrl(appUrl);
+  const levelInfo = davayLevelInfo(davayLevel);
+  const shareText = `Попробуй это в «Давай попробуем» — ${levelInfo.name} 😉\n` + shareUrl;
+  try{
+    if(navigator.share){
+      await shareWithTimeout({
+        title: '🎲 Давай играй',
+        text: shareText,
+        url: shareUrl
+      });
+      showToast('Спасибо, что делитесь! 💛');
+      return;
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(shareUrl);
+      showToast('Ссылка скопирована');
+      return;
+    }
+    showToast('Ссылка: ' + shareUrl);
+  }catch(e){
+    if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
+    showToast('Не удалось поделиться — попробуйте позже');
+  }
+});
+
 // Автопереключение и полноэкранный режим в "Давай попробуем" убраны вместе
 // с блоком "Дополнительно" — только звук (davayMuteBtn) остался, сразу в
 // основном ряду кнопок. davayFullscreenActive/davayNativeFullscreenActive

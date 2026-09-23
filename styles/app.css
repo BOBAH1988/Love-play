@@ -2381,6 +2381,9 @@
   #game.davay-mode #davayNextBtn{flex:1.4;}
   /* Кнопка звука — в той же строке уровней, фиксированной ширины. */
   #game.davay-mode #davayMuteBtn{flex:0 0 44px; width:44px; padding:0; font-size:16px;}
+  /* Кнопка «Поделиться» — в той же строке, рядом со звуком. */
+  #davayShareBtn{display:none;}
+  #game.davay-mode #davayShareBtn{display:flex; flex:0 0 44px; width:44px; padding:0; font-size:18px;}
   /* Ряд с именами игроков над карточкой: кто сейчас отвечает — выбор игрока
      сделан заранее на странице настройки, кнопки тут только для отображения. */
   .davay-player-row{display:none;}
