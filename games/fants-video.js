@@ -1071,10 +1071,28 @@ async function goToVideoGame(entry){
   // карточка рисуется сразу, иначе — рисуемся после загрузки.
   // Первый ролик (и все последующие при быстром переходе) не ждёт
   // чтения IndexedDB, пока каталог уже был загруж ранее.
-  const tryDraw = () => {
-    const entryCard = entry && entry.key ? findVideoCardByEntryKey(entry.key) : null;
+  const tryDraw = async () => {
+    let entryCard = entry && entry.key ? findVideoCardByEntryKey(entry.key) : null;
+    if(!entryCard && entry && entry.key && typeof importYandexVideos === 'function'){
+      // Вход по ссылке, а ролика нет в каталоге: чаще всего это новый телефон,
+      // где синхронизацию с Диском ещё не нажимали. Молча подтягиваем облако
+      // один раз и ищем снова — иначе игра падает в демо-ролик, хотя видео
+      // на Диске есть (жалоба: «у получателя демо, у меня всё хорошо»).
+      try{
+        showToast('Подгружаем видео из облака…');
+        await importYandexVideos();
+        entryCard = findVideoCardByEntryKey(entry.key);
+      }catch(e){}
+    }
     if(entryCard){
       showVideoCardDirect(entryCard);
+    } else if(entry && entry.key){
+      // Ролик так и не нашёлся (удалён с Диска, чужое локальное видео,
+      // гость без интернета): демо здесь НЕ включаем — оно только для случая
+      // «своих видео нет вовсе», а молчаливый демо-ролик вместо присланного
+      // выглядит как сломанная игра. Показываем заглушку с честной подсказкой.
+      renderVideoPlaceholderCard();
+      showToast('Это видео не найдено в каталоге — нажмите «Следующее» или синхронизируйте видео на странице «Давай попробуем»');
     } else {
       drawVideoCard(videoLevel);
     }
