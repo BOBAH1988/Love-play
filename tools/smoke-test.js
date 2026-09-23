@@ -2371,8 +2371,8 @@ testAsync('Сценарий: слишком большой ролик уходи
     eval(`currentVideoCard = ${JSON.stringify(card)};`);
     global.fetch = (url) => {
       if(String(url).indexOf('clck.ru') > -1){
-        // Сокращатель недоступен в тесте — возвращаем оригинал.
-        return Promise.resolve({ ok: false, text: () => Promise.resolve('') });
+        // Сокращатель сокращает — возвращаем короткую ссылку.
+        return Promise.resolve({ ok: true, text: () => Promise.resolve('https://clck.ru/short') });
       }
       return Promise.resolve({
         ok: true,
@@ -2389,8 +2389,10 @@ testAsync('Сценарий: слишком большой ролик уходи
     assert(!!shared, 'без отправки игрок остался бы без кнопки «Поделиться» вообще');
     if (shared) {
       assert(!shared.files, 'полугигабайтный ролик нельзя тянуть в память вкладки');
-      assert(shared.url && shared.url.indexOf('mode=video') > -1,
-        'фолбэк обязан делиться ссылкой-входом — иначе поделиться нечем');
+      assert(shared.url === 'https://clck.ru/short',
+        'сокращённая ссылка должна попасть в url — иначе в Telegram уйдёт длинная ссылка из 70+ символов');
+      assert(shared.title === '🎲 Давай играй',
+        'заголовок поделиться должен содержать иконку 🎲');
     }
   } finally {
     global.fetch = saved.fetch;

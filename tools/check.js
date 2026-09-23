@@ -1477,7 +1477,7 @@ function checkStyles(html) {
     'нет фолбэка ссылкой-входом — на десктопе и для нечитаемых роликов поделиться нечем');
   check('ссылка-вход сокращается через clck.ru перед отправкой',
     videoSrc2.includes('function shortenShareUrl(url)')
-      && videoSrc2.includes("'https://clck.ru/-?url='")
+      && videoSrc2.includes("'https://clck.ru/--?url='")
       && /await shortenShareUrl\(appUrl\)/.test(videoSrc2)
       && /const shareUrl = await shortenShareUrl\(appUrl\)/.test(videoSrc2),
     'ссылка-вход не сокращается — в Telegram она слишком длинная');

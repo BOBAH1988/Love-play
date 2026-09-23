@@ -404,8 +404,8 @@ function canShareData(data){
 // оригинал: шеринг всё равно работает, просто длиннее.
 async function shortenShareUrl(url){
   try{
-    const resp = await fetch('https://clck.ru/-?url=' + encodeURIComponent(url), {
-      method: 'POST',
+    const resp = await fetch('https://clck.ru/--?url=' + encodeURIComponent(url), {
+      method: 'GET',
       referrerPolicy: 'no-referrer'
     });
     if(resp.ok){
