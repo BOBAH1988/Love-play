@@ -121,23 +121,24 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
     return;
   }
   const appUrl = location.origin + location.pathname + '?mode=ideas';
-  const text = 'Вопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text;
-  if(navigator.share){
-    try{
-      await navigator.share({ title:'🎲 Давай играй', text, url: appUrl });
+  const shareUrl = await shortenShareUrl(appUrl);
+  const shareText = 'Вопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text + '\n\n' + shareUrl;
+  try{
+    if(navigator.share){
+      await shareWithTimeout({ title:'🎲 Давай играй', text: shareText, url: shareUrl });
+      showToast('Спасибо, что делитесь! 💛');
       return;
-    }catch(e){
-      if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
     }
-  }
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    try{
-      await navigator.clipboard.writeText(text);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(shareText);
       showToast('Скопировано в буфер обмена');
       return;
-    }catch(e){}
+    }
+    showToast(shareText);
+  }catch(e){
+    if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
+    showToast('Не удалось поделиться — попробуйте позже');
   }
-  showToast(text);
 });
 openRulesModal('ideasGameRulesBtn', 'ideasRulesModal');
 setupRulesModal('ideasRulesModal', 'closeIdeasRulesBtn');
