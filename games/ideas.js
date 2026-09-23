@@ -120,9 +120,13 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
     showToast('Сначала откройте карточку');
     return;
   }
-  const appUrl = location.origin + location.pathname + '?mode=ideas';
+  const params = new URLSearchParams();
+  params.set('mode', 'ideas');
+  const key = ideasCurrentCard.title || '';
+  if(key) params.set('q', encodeURIComponent(key));
+  const appUrl = location.origin + location.pathname + '?' + params.toString();
   const shareUrl = await shortenShareUrl(appUrl);
-  const shareText = '🎲 Давай играй\n\nВопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text + '\n\n' + shareUrl;
+  const shareText = '🎲 Давай играй\nВопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text + '\n\n' + shareUrl;
   // Пробуем Web Share API (mobile Safari/Chrome, PWA на iOS/Android)
   if(navigator.share){
     try{
@@ -150,5 +154,36 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
 });
 openRulesModal('ideasGameRulesBtn', 'ideasRulesModal');
 setupRulesModal('ideasRulesModal', 'closeIdeasRulesBtn');
+
+// Вход по ссылке-входа ?mode=ideas&q=… — вызывается из init.js после
+// полной инициализации. Открывает игру и ищет карточку по заголовку.
+async function openIdeasFromLink(question){
+  goToIdeasGame();
+  if(question){
+    const pool = getIdeasPool();
+    const decoded = decodeURIComponent(question);
+    const card = pool.find(c => c.title === decoded);
+    if(card){
+      ideasCurrentCard = card;
+      fadeSwapEl('ideasCard', (el)=>{
+        el.innerHTML = `
+          <div class="card-inner">
+            <div class="card-body">
+              <div class="card-icon">💬</div>
+              <div class="card-split-title" id="ideasCardTitle">${card.title}</div>
+              <div class="card-text" id="ideasCardText">${card.text}</div>
+            </div>
+            <div class="quiz-tts-hint" id="ideasTtsHint">🔊</div>
+          </div>
+        `;
+      }, ()=>{
+        if(state.autoSpeak) speakIdeasCard();
+      });
+      return;
+    }
+  }
+  // Если вопрос не найден — просто открываем игру с первой карточкой
+  drawIdeaCard();
+}
 
 

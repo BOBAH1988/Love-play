@@ -117,6 +117,14 @@ try{
     history.replaceState(null, '', linkUrl.pathname + linkUrl.search + linkUrl.hash);
     if(typeof openVideoFromLink === 'function') openVideoFromLink(entry);
   }
+  if(linkParams.get('mode') === 'ideas'){
+    const question = linkParams.get('q') || '';
+    const linkUrl = new URL(location.href);
+    linkUrl.searchParams.delete('mode');
+    linkUrl.searchParams.delete('q');
+    history.replaceState(null, '', linkUrl.pathname + linkUrl.search + linkUrl.hash);
+    if(typeof openIdeasFromLink === 'function') openIdeasFromLink(question);
+  }
 }catch(e){}
 
 /* ============ СТАТИСТИКА: ОТМЕТКА ОТКРЫТИЯ ============
