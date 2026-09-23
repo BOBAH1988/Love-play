@@ -1463,7 +1463,7 @@ function checkStyles(html) {
   check('файл не отправляется вместе с url',
     /files:\[file\][^}]*\}/.test(videoSrc2)
       && !/files:\[file\][^}]*url:/.test(videoSrc2)
-      && /(?:navigator\.share|shareWithTimeout)\(\{\s*title: '🎲 Давай играй',\s*\n\s*text: [^\n]+,\s*\n\s*url: shareUrl/.test(videoSrc2),
+      && /(?:navigator\.share|shareWithTimeout)\(\{\s*title: '🎲 Давай попробовать',\s*\n\s*text: [^\n]+,\s*\n\s*url: shareUrl/.test(videoSrc2),
     'files и url в одной нагрузке — системное меню «Поделиться» упадёт с TypeError');
   check('слишком большой ролик не читается в память',
     /VIDEO_SHARE_MAX_BYTES = \d+ \* 1024 \* 1024/.test(videoSrc2)
@@ -1482,8 +1482,8 @@ function checkStyles(html) {
       && /const shareUrl = await shortenShareUrl\(appUrl\)/.test(videoSrc2),
     'ссылка-вход не сокращается — в Telegram она слишком длинная');
   check('заголовок поделиться содержит иконку 🎲',
-    videoSrc2.includes("title:'🎲 Давай играй'")
-      && /title: '🎲 Давай играй'/.test(videoSrc2),
+    videoSrc2.includes("title:'🎲 Давай попробовать'")
+      && /title: '🎲 Давай попробовать'/.test(videoSrc2),
     'заголовок поделиться без иконки кубика');
   const initSrc = read('games/init.js');
   check('ссылка-вход открывает «Видеорулетку» на нужном ролике',
