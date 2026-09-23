@@ -1455,7 +1455,7 @@ function checkStyles(html) {
     videoSrc2.includes('async function videoShareFile(card)')
       && videoSrc2.includes('navigator.canShare({ files:[new File(')
       && /const withText = \{ files:\[file\], text: shareText/.test(videoSrc2)
-      && /await navigator\.share\(payload\)/.test(videoSrc2),
+      && /await (?:navigator\.share|shareWithTimeout)\(payload\)/.test(videoSrc2),
     'шеринг снова отправляет только ссылку — в Telegram придёт текст без видео');
   // Файл и url в одной нагрузке — TypeError по спецификации Web Share, меню
   // просто не откроется. Поэтому ссылка-вход уходит в text, а url остаётся
@@ -1463,7 +1463,7 @@ function checkStyles(html) {
   check('файл не отправляется вместе с url',
     /files:\[file\][^}]*\}/.test(videoSrc2)
       && !/files:\[file\][^}]*url:/.test(videoSrc2)
-      && /navigator\.share\(\{\s*title: '🎲 Давай играй',\s*\n\s*text: [^\n]+,\s*\n\s*url: shareUrl/.test(videoSrc2),
+      && /(?:navigator\.share|shareWithTimeout)\(\{\s*title: '🎲 Давай играй',\s*\n\s*text: [^\n]+,\s*\n\s*url: shareUrl/.test(videoSrc2),
     'files и url в одной нагрузке — системное меню «Поделиться» упадёт с TypeError');
   check('слишком большой ролик не читается в память',
     /VIDEO_SHARE_MAX_BYTES = \d+ \* 1024 \* 1024/.test(videoSrc2)

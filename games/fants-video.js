@@ -385,6 +385,18 @@ async function videoShareFile(card){
   }
 }
 
+// Web Share API на некоторых платформах (iOS, отдельные Android-версии)
+// зависает навсегда — меню «Поделиться» не закрывается и не вызывает
+// колбэк. Через 10 секунд считаем отправку неудачной и переключаемся
+// на передачу ссылки (шаг 2 ниже).
+function shareWithTimeout(payload, timeoutMs){
+  return Promise.race([
+    navigator.share(payload),
+    new Promise((_, reject)=>{
+      setTimeout(()=>reject(new Error('share-timeout')), timeoutMs || 10000);
+    })
+  ]);
+}
 // Проверка конкретной нагрузки перед отправкой: помимо поддержки файлов у
 // платформ бывают свои ограничения (размер, набор полей). canShare отвечает
 // на тот же вопрос, что и share, но без открытия меню — поэтому спрашиваем
@@ -453,7 +465,7 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
       const payload = canShareData(withText) ? withText : (canShareData(fileOnly) ? fileOnly : null);
       if(payload){
         try{
-          await navigator.share(payload);
+          await shareWithTimeout(payload);
           showToast('Спасибо, что делитесь! 💛');
           return;
         }catch(e){
@@ -469,7 +481,7 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
   //    на том же ролике.
   try{
     if(navigator.share){
-      await navigator.share({
+      await shareWithTimeout({
         title: '🎲 Давай играй',
         text: 'Смотри, какое видео выпало в «Видеорулетке» 😉',
         url: shareUrl
