@@ -821,12 +821,8 @@ function setupVideoPlayerElement(video, card, level, reuse){
   if(card) card.hrefRefreshed = false;
   video.muted = !videoSoundOn;
   video.loop = !state.videoAutoAdvance;
-  if(reuse){
-    // Меняем src у уже существующего элемента вместо пересоздания — именно
-    // это позволяет iOS не закрывать нативный полноэкранный плеер.
-    video.src = card.video;
-    video.load();
-  }
+  video.src = card.video;
+  video.load();
   // Ролик грузится — показываем «Загрузка видео…» поверх чёрного прямоугольника.
   showVideoCardLoading();
   // Атрибут autoplay сам по себе не всегда срабатывает для видео,
@@ -950,7 +946,7 @@ function renderVideoCard(card, level){
     el.innerHTML = `
       <div class="card-inner">
         <div class="card-split-media" id="videoMedia">
-          <video src="${card.video}" id="videoPlayer" playsinline autoplay referrerpolicy="no-referrer"></video>
+          <video src="${card.video}" id="videoPlayer" playsinline autoplay preload="auto" referrerpolicy="no-referrer" fetchpriority="high"></video>
           <div class="video-loading" id="videoLoading"><span class="video-loading-icon">🎬</span><span class="video-loading-text">Загрузка видео…</span></div>
         </div>
       </div>
@@ -1044,22 +1040,24 @@ async function goToVideoGame(entry){
   updateVideoFavoritesBtn();
   updateVideoRandomBtn();
   requestWakeLock();
-  await ensureImportedDavayVideosLoaded();
-  // Массовое переподписание ссылок Яндекса (десятки запросов к API, секунды
-  // ожидания) больше не задерживает первый ролик: карточка рисуется сразу,
-  // а обновление ссылок уходит в фон уже после отрисовки. Просроченная ссылка
-  // — не чёрный экран: обработчик error у <video> (см. setupVideoPlayerElement)
-  // пересоздаёт адрес именно этого файла одним запросом и перезапускает ролик,
-  // оверлей «Загрузка видео…» всё это время перед глазами игрока.
-  // Вход по ссылке ?mode=video&e=…: показываем ролик из ссылки, если ключ
-  // нашёлся в каталоге этого устройства; иначе — обычный случайный старт.
-  const entryCard = entry && entry.key ? findVideoCardByEntryKey(entry.key) : null;
-  if(entryCard){
-    showVideoCardDirect(entryCard);
+  // Каталог видео загружаем не блокируя запуск: если уже в памяти —
+  // карточка рисуется сразу, иначе — рисуемся после загрузки.
+  // Первый ролик (и все последующие при быстром переходе) не ждёт
+  // чтения IndexedDB, пока каталог уже был загруж ранее.
+  const tryDraw = () => {
+    const entryCard = entry && entry.key ? findVideoCardByEntryKey(entry.key) : null;
+    if(entryCard){
+      showVideoCardDirect(entryCard);
+    } else {
+      drawVideoCard(videoLevel);
+    }
+    refreshYandexLinks(true).catch(()=>{});
+  };
+  if(importedDavayVideosLoaded){
+    tryDraw();
   } else {
-    drawVideoCard(videoLevel);
+    ensureImportedDavayVideosLoaded().then(tryDraw);
   }
-  refreshYandexLinks(true).catch(()=>{});
 }
 
 // Поиск карточки каталога по ключу из ссылки-входа (videoEntryKey): ключ
@@ -1159,7 +1157,6 @@ async function goToVideoFavoritesView(){
   state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = true;
-  await ensureImportedDavayVideosLoaded();
   videoLevel = pickVideoFavoritesStartLevel();
   videoSubLevel = 1;
   state.videoUsed = {};
@@ -1181,7 +1178,14 @@ async function goToVideoFavoritesView(){
   updateMuteBtn();
   updateVideoFavoritesBtn();
   requestWakeLock();
-  drawVideoCard(videoLevel);
+  // Не блокируем запуск на чтении каталога — рисуем карточку
+  // сразу или после загрузки (если ранее не была загружена).
+  const tryDraw = () => drawVideoCard(videoLevel);
+  if(importedDavayVideosLoaded){
+    tryDraw();
+  } else {
+    ensureImportedDavayVideosLoaded().then(tryDraw);
+  }
 }
 
 function exitVideoGame(){

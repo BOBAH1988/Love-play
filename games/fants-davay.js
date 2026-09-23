@@ -1461,16 +1461,23 @@ async function goToDavayGame(){
   updateLevelUI();
   updateMuteBtn();
   requestWakeLock();
-  await ensureImportedDavayVideosLoaded();
-  // .catch обязателен: без него сбой запроса станет необработанным отказом
-  // промиса, а тот пишется в журнал ошибок и вытесняет настоящие исключения.
-  refreshYandexLinks(true).catch(()=>{}); // ссылки Яндекса живут минуты — обновляем при входе
-  resetDavayQuiz();
-  updateDavayPlayerButtons();
-  updateDavayFavoritesBtn();
-  // Кто начинает первым — уже выбрано на странице настройки, повторный
-  // выбор в самой игре не нужен: сразу запускаем вопросы для этого игрока.
-  startDavayQuizPlayer(pickStartingPlayerValue(state.davayStarter));
+  // Аналогично Видеорулетке: не блокируем запуск на чтении каталога.
+  const tryStart = () => {
+    // .catch обязателен: без него сбой запроса станет необработанным отказом
+    // промиса, а тот пишется в журнал ошибок и вытесняет настоящие исключения.
+    refreshYandexLinks(true).catch(()=>{});
+    resetDavayQuiz();
+    updateDavayPlayerButtons();
+    updateDavayFavoritesBtn();
+    // Кто начинает первым — уже выбрано на странице настройки, повторный
+    // выбор в самой игре не нужен: сразу запускаем вопросы для этого игрока.
+    startDavayQuizPlayer(pickStartingPlayerValue(state.davayStarter));
+  };
+  if(importedDavayVideosLoaded){
+    tryStart();
+  } else {
+    ensureImportedDavayVideosLoaded().then(tryStart);
+  }
 }
 
 // toDavaySetup=true — выйти не на главный экран, а сразу в меню настроек
