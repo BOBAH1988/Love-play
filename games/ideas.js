@@ -122,7 +122,7 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
   }
   const appUrl = location.origin + location.pathname + '?mode=ideas';
   const shareUrl = await shortenShareUrl(appUrl);
-  const shareText = 'Вопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text + '\n\n' + shareUrl;
+  const shareText = '🎲 Давай играй\n\nВопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text + '\n\n' + shareUrl;
   try{
     if(navigator.share){
       await shareWithTimeout({ title:'🎲 Давай играй', text: shareText, url: shareUrl });
