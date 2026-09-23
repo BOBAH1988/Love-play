@@ -2468,13 +2468,13 @@
     display:none;
   }
   #game.davay-mode #pauseBtn{order:6; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
-  /* Кнопки-иконки скрытого блока «Дополнительно»: первыми идут 🔥 «Горячее» и
-     ⬆️ «Повысить уровень» (текстовые кнопки переехали сюда из верхнего ряда),
-     затем переключатели 🔊 звук, 🔀 случайный порядок, 🔁 автоповтор, ⛶ полный
-     экран и 🚫 «не показывать». Иконки на 30% крупнее прежних 16px (20.8px):
-     блок раскрывают редко, и мелкие глифы в нём легко спутать между собой. */
-  #game.video-mode #videoLevelUpBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
-  #game.video-mode #videoNextBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  /* Кнопки-иконки скрытого блока «Дополнительно»: первыми идут ⬆️ «Повысить
+     уровень», затем 🔥 «Горячее» (текстовые кнопки переехали сюда из верхнего
+     ряда), затем переключатели 🔊 звук, 🔀 случайный порядок, 🔁 автоповтор,
+     ⛶ полный экран и 🚫 «не показывать». Иконки на 30% крупнее прежних 16px
+     (20.8px): блок раскрывают редко, и мелкие глифы в нём легко спутать. */
+  #game.video-mode #videoNextBtn{order:8; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoLevelUpBtn{order:9; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
   #game.video-mode #videoMuteBtn{order:10; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
   /* Место кнопки 🔀 задаёт именно `order`, а не разметка: в раскрытом блоке
      «Дополнительно» `.row2` становится `display:contents`, и все кнопки

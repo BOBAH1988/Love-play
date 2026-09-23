@@ -1422,21 +1422,25 @@ function checkStyles(html) {
     !davayHtml.includes('video-level-row')
       && inExtraMenu('videoLevelUpBtn') && inExtraMenu('videoNextBtn'),
     '«Горячее»/«Повысить уровень» вернулись в верхний ряд или пропали из «Дополнительно»');
-  check('у кнопок 🔥 и ⬆️ есть подсказка data-tt',
-    ['videoHotBtn', 'videoLevelUpBtn', 'videoNextBtn'].every((id) => {
-      const btn = davayHtml.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`));
-      return btn && /data-tt="[^"]+"/.test(btn[0]);
-    }),
-    'по одной иконке назначение кнопки не читается — нужна подсказка');
-  // Порядок в раскрытом «Дополнительно»: 🔥 (8) → ⬆️ (9) → 🔊 (10) … 🚫 (14).
+  const hintOf = (id) => {
+    const btn = davayHtml.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`));
+    const tt = btn && btn[0].match(/data-tt="([^"]+)"/);
+    return tt ? tt[1] : '';
+  };
+  check('у кнопок 🔥 и ⬆️ подсказки с нужным текстом',
+    hintOf('videoHotBtn') === 'Горячее: следующая папка уровня 🔥'
+      && hintOf('videoLevelUpBtn') === 'Задания горячее'
+      && hintOf('videoNextBtn') === 'Следующий уровень',
+    `подсказки: быстрая 🔥 «${hintOf('videoHotBtn')}», меню 🔥 «${hintOf('videoLevelUpBtn')}», ⬆️ «${hintOf('videoNextBtn')}»`);
+  // Порядок в раскрытом «Дополнительно»: ⬆️ (8) → 🔥 (9) → 🔊 (10) … 🚫 (14).
   // Без своего `order` кнопка-иконка получает 0 и встаёт в начало ряда — перед
   // «Следующее», как когда-то случилось с 🔀.
   const ordLevelUp = videoOrder('videoLevelUpBtn');
   const ordNextLevel = videoOrder('videoNextBtn');
-  check('в «Дополнительно» первыми идут 🔥 и ⬆️, затем 🔊',
-    ordLevelUp === 8 && ordNextLevel === 9 && ordMute === 10 && ordRandom === 11
+  check('в «Дополнительно» первыми идут ⬆️ и 🔥, затем 🔊',
+    ordNextLevel === 8 && ordLevelUp === 9 && ordMute === 10 && ordRandom === 11
       && ordLoop === 12 && videoOrder('videoFullscreenBtn') === 13 && videoOrder('dislikeBtn') === 14,
-    `порядки: 🔥 ${ordLevelUp} → ⬆️ ${ordNextLevel} → 🔊 ${ordMute} → 🔀 ${ordRandom} → 🔁 ${ordLoop}`);
+    `порядки: ⬆️ ${ordNextLevel} → 🔥 ${ordLevelUp} → 🔊 ${ordMute} → 🔀 ${ordRandom} → 🔁 ${ordLoop}`);
   check('🔥 «Горячее» скрыта вне «Видеорулетки»',
     /#videoHotBtn\{display:none;\}/.test(css)
       && /#game\.video-mode #videoHotBtn\{display:flex;\}/.test(css),
