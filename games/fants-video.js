@@ -415,11 +415,19 @@ function canShareData(data){
 // быть короткой. Если сокращение не удалось (CORS, сеть, лимит) — возвращаем
 // оригинал: шеринг всё равно работает, просто длиннее.
 async function shortenShareUrl(url){
+  // Без таймаута зависший clck.ru держал кнопку «Поделиться» без отклика
+  // десятки секунд (на телефоне шторка ОС открывалась уже после потери user
+  // activation — «5 секунд тишины, потом бесконечная подготовка»).
+  // AbortController + 2.5с: не успел — отдаём оригинальную ссылку.
   try{
+    const ctrl = new AbortController();
+    const tm = setTimeout(()=>ctrl.abort(), 2500);
     const resp = await fetch('https://clck.ru/--?url=' + encodeURIComponent(url), {
       method: 'GET',
-      referrerPolicy: 'no-referrer'
+      referrerPolicy: 'no-referrer',
+      signal: ctrl.signal
     });
+    clearTimeout(tm);
     if(resp.ok){
       const text = await resp.text();
       const short = text.trim();

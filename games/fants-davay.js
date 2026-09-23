@@ -918,7 +918,10 @@ document.getElementById('davayShareBtn').addEventListener('click', async ()=>{
   const appUrl = location.origin + location.pathname + '?' + params.toString();
   const shareUrl = await shortenShareUrl(appUrl);
   const levelInfo = davayLevelInfo(davayLevel);
-  const shareText = `Попробуй это в «Давай попробуем» — ${levelInfo.name} 😉\n` + shareUrl;
+  // Ссылка уходит только полем url — в text она дублировалась, и Android
+  // склеивал text+url в двойную ссылку (шторка «Поделиться» зависала в
+  // «Подготовка…»). Для clipboard ссылка приклеивается к тексту отдельно.
+  const shareText = `Попробуй это в «Давай попробуем» — ${levelInfo.name} 😉`;
   try{
     if(navigator.share){
       await shareWithTimeout({
@@ -930,7 +933,7 @@ document.getElementById('davayShareBtn').addEventListener('click', async ()=>{
       return;
     }
     if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(shareText + '\n' + shareUrl);
       showToast('Ссылка скопирована');
       return;
     }

@@ -126,7 +126,11 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
   if(key) params.set('q', encodeURIComponent(key));
   const appUrl = location.origin + location.pathname + '?' + params.toString();
   const shareUrl = await shortenShareUrl(appUrl);
-  const shareText = '🎲 Давай играй\nВопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text + '\n\n' + shareUrl;
+  // Ссылка уходит только полем url: в text она дублировалась, и Android
+  // склеивал text+url в «двойную» ссылку — шторка «Поделиться» зависала
+  // в состоянии «Подготовка…». Для clipboard/toast ссылка приклеивается отдельно.
+  const shareText = '🎲 Давай играй\nВопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text;
+  const shareMsg = shareText + '\n\n' + shareUrl;
   // Пробуем Web Share API (mobile Safari/Chrome, PWA на iOS/Android)
   if(navigator.share){
     try{
@@ -142,7 +146,7 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
   // Фолбэк: буфер обмена (работает везде, где есть права)
   if(navigator.clipboard && navigator.clipboard.writeText){
     try{
-      await navigator.clipboard.writeText(shareText);
+      await navigator.clipboard.writeText(shareMsg);
       showToast('Скопировано в буфер обмена');
       return;
     }catch(e){
@@ -150,7 +154,7 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
     }
   }
   // Последний фолбэк: показываем текст в тосте
-  showToast(shareText);
+  showToast(shareMsg);
 });
 openRulesModal('ideasGameRulesBtn', 'ideasRulesModal');
 setupRulesModal('ideasRulesModal', 'closeIdeasRulesBtn');
