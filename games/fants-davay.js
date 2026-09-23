@@ -918,22 +918,21 @@ document.getElementById('davayShareBtn').addEventListener('click', async ()=>{
   const appUrl = location.origin + location.pathname + '?' + params.toString();
   const shareUrl = await shortenShareUrl(appUrl);
   const levelInfo = davayLevelInfo(davayLevel);
-  // Ссылка уходит только полем url — в text она дублировалась, и Android
-  // склеивал text+url в двойную ссылку (шторка «Поделиться» зависала в
-  // «Подготовка…»). Для clipboard ссылка приклеивается к тексту отдельно.
-  const shareText = `Попробуй это в «Давай попробуем» — ${levelInfo.name} 😉`;
+  // Формат как в «Видеорулетке»: ссылка — последней строкой text, поле url не
+  // задаём — text+url Android склеивал в двойную ссылку, а на части устройств
+  // url у получателя терялся. В clipboard уходит тот же текст.
+  const shareText = `Попробуй это в «Давай попробуем» — ${levelInfo.name} 😉\n` + shareUrl;
   try{
     if(navigator.share){
       await shareWithTimeout({
         title: '🎲 Давай играй',
-        text: shareText,
-        url: shareUrl
+        text: shareText
       });
       showToast('Спасибо, что делитесь! 💛');
       return;
     }
     if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(shareText + '\n' + shareUrl);
+      await navigator.clipboard.writeText(shareText);
       showToast('Ссылка скопирована');
       return;
     }

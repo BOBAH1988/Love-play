@@ -126,15 +126,16 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
   if(key) params.set('q', encodeURIComponent(key));
   const appUrl = location.origin + location.pathname + '?' + params.toString();
   const shareUrl = await shortenShareUrl(appUrl);
-  // Ссылка уходит только полем url: в text она дублировалась, и Android
-  // склеивал text+url в «двойную» ссылку — шторка «Поделиться» зависала
-  // в состоянии «Подготовка…». Для clipboard/toast ссылка приклеивается отдельно.
+  // Формат как в «Видеорулетке»: ссылка — последней строкой text (файловая
+  // нагрузка там тоже несёт ссылку в text). Поле url не задаём: text+url
+  // склеивался Android в «двойную» ссылку, а на части устройств url в
+  // EXTRA_TEXT от получателя терялся — в чате оставался голый текст.
   const shareText = '🎲 Давай играй\nВопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text;
   const shareMsg = shareText + '\n\n' + shareUrl;
   // Пробуем Web Share API (mobile Safari/Chrome, PWA на iOS/Android)
   if(navigator.share){
     try{
-      await shareWithTimeout({ title:'🎲 Давай играй', text: shareText, url: shareUrl });
+      await shareWithTimeout({ title:'🎲 Давай играй', text: shareMsg });
       showToast('Спасибо, что делитесь! 💛');
       return;
     }catch(e){
