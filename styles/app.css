@@ -3661,6 +3661,7 @@
   .timer-actions-top #whatToPlayFavBtn{
     flex:0 0 var(--btn-height); width:var(--btn-height); padding:0; font-size:22px;
   }
+  #ideasGame #ideasShareBtn{display:flex; flex:0 0 44px; width:44px; padding:0; font-size:18px;}
   /* Автоозвучка "Мемасиков" и "Флеш карт" удалена, управление перенесено в меню. */
    /* "Дополнительно" в "Флеш картах": сворачиваемая строка с автоозвучкой,
       правилами и выходом под кнопкой-переключателем. */

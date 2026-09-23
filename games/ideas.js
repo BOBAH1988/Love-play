@@ -114,6 +114,31 @@ document.getElementById('ideasNextBtn').addEventListener('click', ()=>{
   drawIdeaCard();
 });
 document.getElementById('ideasExitBtn').addEventListener('click', ()=>{ exitIdeasGame(); });
+document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
+  if(!ideasCurrentCard){
+    playErrorSound();
+    showToast('Сначала откройте карточку');
+    return;
+  }
+  const text = ideasCurrentCard.title + '\n' + ideasCurrentCard.text;
+  if(navigator.share){
+    try{
+      await navigator.share({ title: ideasCurrentCard.title, text, url: location.href });
+      return;
+    }catch(e){
+      if(e && e.name === 'AbortError') return;
+      // Falls through to clipboard
+    }
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    try{
+      await navigator.clipboard.writeText(text);
+      showToast('Скопировано в буфер обмена');
+      return;
+    }catch(e){}
+  }
+  showToast(text);
+});
 openRulesModal('ideasGameRulesBtn', 'ideasRulesModal');
 setupRulesModal('ideasRulesModal', 'closeIdeasRulesBtn');
 

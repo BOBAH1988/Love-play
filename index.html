@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261021w">
+<link rel="stylesheet" href="styles/app.css?v=20261022a">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-09-23 · v454';
+        window.APP_BUILD = '2026-09-23 · v455';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -1168,6 +1168,7 @@
     <div class="timer-actions-row">
       <div class="timer-actions-top">
         <button type="button" class="btn btn-primary" id="ideasNextBtn">Далее</button>
+        <button type="button" class="btn btn-secondary btn-square" id="ideasShareBtn" aria-label="Поделиться" data-tt="Поделиться">⤴</button>
       </div>
       <div class="timer-actions-bottom">
         <button type="button" class="btn btn-secondary btn-pause" id="ideasExitBtn">Выход</button>
@@ -4502,7 +4503,7 @@
 <script src="games/kids-quiz.js?v=20260922a"></script>
 <script src="games/wishlist.js?v=20260922a"></script>
 <script src="games/znayu.js?v=20260922a"></script>
-<script src="games/ideas.js?v=20260929h"></script>
+<script src="games/ideas.js?v=20261001d"></script>
 <script src="games/sexquest.js?v=20260927x"></script>
 <script src="games/passionmap.js?v=20260927a"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
