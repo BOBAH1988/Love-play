@@ -123,22 +123,30 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
   const appUrl = location.origin + location.pathname + '?mode=ideas';
   const shareUrl = await shortenShareUrl(appUrl);
   const shareText = '🎲 Давай играй\n\nВопросы про это:\n\n' + ideasCurrentCard.title + '\n' + ideasCurrentCard.text + '\n\n' + shareUrl;
-  try{
-    if(navigator.share){
+  // Пробуем Web Share API (mobile Safari/Chrome, PWA на iOS/Android)
+  if(navigator.share){
+    try{
       await shareWithTimeout({ title:'🎲 Давай играй', text: shareText, url: shareUrl });
       showToast('Спасибо, что делитесь! 💛');
       return;
+    }catch(e){
+      // Любая ошибка кроме отмены пользователем — идём в фолбэк
+      if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
+      // На macOS PWA/Safari navigator.share может существовать, но падать — игнорируем и падаем в clipboard
     }
-    if(navigator.clipboard && navigator.clipboard.writeText){
+  }
+  // Фолбэк: буфер обмена (работает везде, где есть права)
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    try{
       await navigator.clipboard.writeText(shareText);
       showToast('Скопировано в буфер обмена');
       return;
+    }catch(e){
+      // Нет прав на буфер — показываем текст в тосте
     }
-    showToast(shareText);
-  }catch(e){
-    if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
-    showToast('Не удалось поделиться — попробуйте позже');
   }
+  // Последний фолбэк: показываем текст в тосте
+  showToast(shareText);
 });
 openRulesModal('ideasGameRulesBtn', 'ideasRulesModal');
 setupRulesModal('ideasRulesModal', 'closeIdeasRulesBtn');
