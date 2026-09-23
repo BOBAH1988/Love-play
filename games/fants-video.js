@@ -398,6 +398,25 @@ function canShareData(data){
   }
 }
 
+// Сокращаем ссылку-вход через clck.ru — yandexPath в параметре ?e= может
+// занимать 70+ символов (особенно с кириллицей), а в Telegram ссылка должна
+// быть короткой. Если сокращение не удалось (CORS, сеть, лимит) — возвращаем
+// оригинал: шеринг всё равно работает, просто длиннее.
+async function shortenShareUrl(url){
+  try{
+    const resp = await fetch('https://clck.ru/-?url=' + encodeURIComponent(url), {
+      method: 'POST',
+      referrerPolicy: 'no-referrer'
+    });
+    if(resp.ok){
+      const text = await resp.text();
+      const short = text.trim();
+      if(short && short.startsWith('http') && short.length < url.length) return short;
+    }
+  }catch(e){}
+  return url;
+}
+
 // Кнопка ⤴ «Поделиться видео» — стандартное системное меню «Поделиться»
 // (Web Share API, как в Telegram), на десктопе — фолбэк: копирование ссылки
 // в буфер обмена. К сообщению прикладывается САМ ролик (navigator.share с
@@ -406,6 +425,7 @@ function canShareData(data){
 // Раньше отправлялась только ссылка-вход (?mode=video&e=…&level=…), и в
 // мессенджер приходил один текст: страница приложения — статический сайт, в
 // превью ссылки видео отдать нечем (og:video требует серверной подстановки).
+// Ссылка сокращается через clck.ru перед отправкой (shortenShareUrl).
 document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
   if(!currentVideoCard || !currentVideoCard.video){
     playErrorSound();
@@ -416,7 +436,8 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
   // по ней у получателя откроется «Видеорулетка» — с этого же ролика, если
   // видео есть в его каталоге, иначе с этого же уровня.
   const appUrl = videoEntryPointUrl(currentVideoCard, videoLevel);
-  const shareText = 'Смотри, какое видео выпало в «Видеорулетке» 😉\n' + appUrl;
+  const shareUrl = await shortenShareUrl(appUrl);
+  const shareText = 'Смотри, какое видео выпало в «Видеорулетке» 😉\n' + shareUrl;
   // 1) Прикладываем сам ролик. Ссылки на видео Яндекса отдают CORS-разрешение,
   //    поэтому файл читается прямо в браузере.
   if(shareSupportsFiles()){
@@ -427,8 +448,8 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
       // files вместе с url (иначе TypeError), а files + text — разрешает.
       // Если платформа подпись с файлом не принимает, отправляем файл без неё:
       // видео в чате важнее подписи.
-      const withText = { files:[file], text: shareText, title:'Давай играй' };
-      const fileOnly = { files:[file], title:'Давай играй' };
+      const withText = { files:[file], text: shareText, title:'🎲 Давай играй' };
+      const fileOnly = { files:[file], title:'🎲 Давай играй' };
       const payload = canShareData(withText) ? withText : (canShareData(fileOnly) ? fileOnly : null);
       if(payload){
         try{
@@ -449,19 +470,19 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
   try{
     if(navigator.share){
       await navigator.share({
-        title: 'Давай играй',
+        title: '🎲 Давай играй',
         text: 'Смотри, какое видео выпало в «Видеорулетке» 😉',
-        url: appUrl
+        url: shareUrl
       });
       showToast('Спасибо, что делитесь! 💛');
       return;
     }
     if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(appUrl);
+      await navigator.clipboard.writeText(shareUrl);
       showToast('Ссылка скопирована');
       return;
     }
-    showToast('Ссылка: ' + appUrl);
+    showToast('Ссылка: ' + shareUrl);
   }catch(e){
     // Пользователь закрыл системное меню — не ошибка.
     if(e && e.name === 'AbortError') return;

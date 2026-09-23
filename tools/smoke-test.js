@@ -2312,6 +2312,10 @@ testAsync('Сценарий: ⤴ открывает меню «Поделить�
     // не достать ни через global, ни через window, только eval'ом там же.
     eval(`currentVideoCard = ${JSON.stringify(card)};`);
     global.fetch = (url) => {
+      if(String(url).indexOf('clck.ru') > -1){
+        // Сокращатель недоступен в тесте — возвращаем оригинал.
+        return Promise.resolve({ ok: false, text: () => Promise.resolve('') });
+      }
       fetched = String(url);
       return Promise.resolve({
         ok: true,
@@ -2365,11 +2369,17 @@ testAsync('Сценарий: слишком большой ролик уходи
   let shared = null;
   try {
     eval(`currentVideoCard = ${JSON.stringify(card)};`);
-    global.fetch = () => Promise.resolve({
-      ok: true,
-      headers: { get: () => String(500 * 1024 * 1024) },
-      blob: () => Promise.resolve({ size: 500 * 1024 * 1024, type: 'video/mp4' }),
-    });
+    global.fetch = (url) => {
+      if(String(url).indexOf('clck.ru') > -1){
+        // Сокращатель недоступен в тесте — возвращаем оригинал.
+        return Promise.resolve({ ok: false, text: () => Promise.resolve('') });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => String(500 * 1024 * 1024) },
+        blob: () => Promise.resolve({ size: 500 * 1024 * 1024, type: 'video/mp4' }),
+      });
+    };
     global.navigator.canShare = () => true;
     global.navigator.share = (data) => { shared = data; return Promise.resolve(); };
 
