@@ -2317,13 +2317,13 @@
   }
   #levelDownBtn{display:none;}
   #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
-  #videoMuteBtn, #videoLoopBtn, #videoRandomBtn, #videoFavoritesBtn, #videoFullscreenBtn,
+  #videoMuteBtn, #videoLoopBtn, #videoRandomBtn, #videoFullscreenBtn,
   #davayMuteBtn{display:none;}
   /* ⤴ «Поделиться видео» — только в «Видеорулетке», рядом с сердечком. */
   #videoShareBtn{display:none;}
   /* 🔥 «Горячее» — быстрая кнопка «Видеорулетки» сразу после «Следующее». */
   #videoHotBtn{display:none;}
-  #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoRandomBtn, #game.video-mode #videoFavoritesBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
+  #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoRandomBtn, #game.video-mode #videoFullscreenBtn{display:flex;}
   #game.video-mode #videoShareBtn{display:flex;}
   #game.video-mode #videoHotBtn{display:flex;}
   #game.davay-mode #davayMuteBtn{display:flex;}
@@ -2334,11 +2334,14 @@
   #game.video-mode #videoLevelUpBtn, #game.video-mode #videoNextBtn{display:flex;}
   #game.davay-mode #davayLevelUpBtn{display:flex;}
   /* «Видеорулетка»: строка 1 — «Следующее» + 🔥 «Горячее» + ☆ лайк + ⤴ поделиться
-     + ⭐ смотреть избранное + «Выход»; кнопки уровня 🔥 «Горячее» и
+     + «Выход»; кнопки уровня 🔥 «Горячее» и
      ⬆️ «Повысить уровень» — иконками в нижнем блоке «Дополнительно» (раньше
      они занимали отдельную строку сверху и отнимали место у карточки).
-     Блок «Дополнительно» скрыт по умолчанию и раскрывается кнопкой.
-     В «Давай попробуем» такого блока нет — все кнопки сразу в одних строках. */
+     Кнопка ⭐ «смотреть избранное» удалена: избранное в «Видеорулетке»
+     недоступно (нет способа добавить видео в избранное — только сердечко
+     🤍 есть в «Давай попробуем»). Блок «Дополнительно» скрыт по умолчанию и
+     раскрывается кнопкой. В «Давай попробуем» такого блока нет — все кнопки
+     сразу в одних строках. */
   #game.video-mode .controls, #game.davay-mode .controls{flex-direction:row; flex-wrap:wrap; align-items:stretch; gap:6px;}
   #game.video-mode .row1, #game.davay-mode .row1{display:contents;}
   #game.video-mode .row2{display:none;}
@@ -2357,9 +2360,8 @@
   /* 🔥 «Горячее» — сразу после «Следующее»: самый частый шаг по уровням в один тап. */
   #game.video-mode #videoHotBtn{order:2; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
   #game.video-mode #favoriteBtn{order:3; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
-  /* ⤴ «Поделиться видео» — сразу после сердечка, до ⭐ «смотреть избранное». */
+  /* ⤴ «Поделиться видео» — сразу после сердечка. */
   #game.video-mode #videoShareBtn{order:4; flex:0 0 44px; width:44px; padding:0; font-size:18px;}
-  #game.video-mode #videoFavoritesBtn{order:5; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
   #game.video-mode #pauseBtn{order:6; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
   /* В "Давай попробуем" вместо "Следующее" — заголовок и три кнопки ответов;
      "Избранное" (сердечко) хранит видео, на которые оба игрока независимо
@@ -2489,8 +2491,7 @@
      Класс `active` ставит JS (`updateVideoLoopBtn`/`updateVideoRandomBtn`),
      поэтому стиль должен быть одинаковым: игрок понимает состояние кнопки и
      без подсказки data-tt. */
-  #game.video-mode #videoLoopBtn.active, #game.video-mode #videoFavoritesBtn.active,
-  #game.video-mode #videoRandomBtn.active{
+  #game.video-mode #videoLoopBtn.active, #game.video-mode #videoRandomBtn.active{
     background:rgba(255,255,255,.35); border-color:rgba(255,255,255,.5);
   }
   /* Видео растягиваем абсолютным позиционированием, а НЕ height:100%.

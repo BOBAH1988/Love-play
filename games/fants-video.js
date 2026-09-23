@@ -284,12 +284,15 @@ function toggleVideoFullscreen(){
 document.getElementById('videoFullscreenBtn').addEventListener('click', toggleVideoFullscreen);
 
 function updateVideoFavoritesBtn(){
+  // Кнопка ⭐ «смотреть избранное» удалена из «Видеорулетки»: логика избранного
+  // остаётся только в «Давай попробуем» (сердечко 🤍 на карточке). Осталась
+  // заготовка, чтобы вызовы из других мест не падали.
   const btn = document.getElementById('videoFavoritesBtn');
   if(!btn) return;
   btn.classList.toggle('active', !!state.videoFavoritesOnly);
   btn.setAttribute('aria-label', state.videoFavoritesOnly ? 'Показывать все видео' : 'Только избранное');
 }
-document.getElementById('videoFavoritesBtn').addEventListener('click', ()=>{
+document.getElementById('videoFavoritesBtn')?.addEventListener('click', ()=>{
   if(!state.videoFavoritesOnly && (state.videoLiked||[]).length===0){
     playErrorSound();
     showToast('Сначала добавьте видео в избранное сердечком 🤍');
