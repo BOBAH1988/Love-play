@@ -312,10 +312,9 @@ let state = {
   // Желания, исключённые крестиком из чек-листа — не участвуют в случайной
   // выдаче (но по-прежнему доступны для ручного выбора, см. sexquest.js).
   sexQuestExcluded:[],
-  // Карта страсти — независимая игра (games/passionmap.js): та же структура
-  // состояния, что у секс-квеста, но свои ключи passionMap*.
+  // Карта страсти — независимая игра (games/passionmap.js): свои ключи
+  // passionMap* для текущей партии и сохранённой истории.
   passionMapQueue:[], passionMapIndex:0, passionMapScore:0, passionMapResults:[], passionMapChecklists:[],
-  passionMapCount:1, passionMapMode:'random', passionMapManualIds:[], passionMapExcluded:[],
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании"
@@ -1788,11 +1787,7 @@ function performFullReset(){
    state.sexQuestPlayMode = 'smooth';
    state.sexQuestManualIds = [];
    state.sexQuestExcluded = [];
-   state.passionMapCount = 1;
-   state.passionMapMode = 'random';
-   state.passionMapManualIds = [];
-   state.passionMapExcluded = [];
-   state.bizObsQuestionCount = 5;
+  state.bizObsQuestionCount = 5;
    state.bizObsCurrentPlayerIndex = 0;
    state.kidsKrokodilMode = 'word';
    state.kidsKrokodilRoundSeconds = 180;
@@ -2077,7 +2072,6 @@ function performFullReset(){
     'renderKidsQuizAnswerTimeGroup', 'renderKidsQuizQuestionCountGroup',
     'renderShopModeGroup', 'renderPhotoSetupLevels',
     'renderSexQuestCountGroup', 'renderSexQuestModeGroup',
-    'renderPassionMapCountGroup', 'renderPassionMapModeGroup',
     'renderBizObsQuestionCountGroup',
     'renderFlashModeGroup', 'renderFlashThemeGroup', 'renderFlashTimeSubGroup', 'renderFlashCountGroup',
     'renderKidsKrokodilModeGroup', 'renderKidsKrokodilDurationGroup', 'renderKidsKrokodilWordsCountGroup',

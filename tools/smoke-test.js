@@ -426,6 +426,22 @@ criticalElements.forEach(id => {
   });
 });
 
+console.log('\n=== Проверка настройки «Карты страсти» ===');
+
+test('«Карта страсти»: настройка содержит только «Начать» и «Выход»', () => {
+  const setupHtml = (html.match(/<section id="passionMapSetup" class="screen">([\s\S]*?)<\/section>/) || ['', ''])[1];
+  const oldIds = [
+    'passionMapCountGroup', 'passionMapModeGroup', 'passionMapPickBtn',
+    'passionMapHistoryBtn', 'passionMapSetupRulesBtn',
+  ];
+  const remaining = oldIds.filter(id => setupHtml.includes(`id="${id}"`));
+  assert(setupHtml.includes('id="passionMapStartBtn"'), 'кнопка «Начать» должна остаться');
+  assert(setupHtml.includes('id="passionMapSetupExitBtn"'), 'кнопка «Выход» должна остаться');
+  assert(remaining.length === 0, `настройка всё ещё содержит старые блоки: ${remaining.join(', ')}`);
+  assert(!/Количество вопросов|Выбор вопросов|Случайно|Пройденные|Правила/.test(setupHtml),
+    'на экране настройки остался текст удалённых блоков');
+});
+
 console.log('\n=== Проверка элементов рулетки (история бага с missing markup) ===');
 
 const rouletteElements = [

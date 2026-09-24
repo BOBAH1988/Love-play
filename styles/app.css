@@ -2985,40 +2985,6 @@
   }
   .pmap-item-del:active{ background:rgba(255,99,110,.3); }
   .pmap-step-agreed{ color:#4cd964; font-weight:700; }
-  #passionMapHistoryBtn:disabled{ opacity:.4; cursor:default; }
-  .pmap-pick-list{
-    display:flex; flex-direction:column; gap:8px; margin:14px 0;
-    text-align:left; max-height:50vh; overflow-y:auto;
-  }
-  .pmap-pick-item{
-    display:flex; align-items:center; gap:10px; cursor:pointer;
-    background:rgba(43,15,46,.06); border:1px solid rgba(43,15,46,.12);
-    border-radius:14px; padding:10px 12px;
-  }
-  .pmap-pick-item.on{ border-color:var(--accent); background:rgba(255,94,142,.14); }
-  .pmap-pick-item.disabled{ opacity:.4; cursor:default; }
-  .pmap-pick-check{
-    width:20px; height:20px; border-radius:50%; flex-shrink:0;
-    border:2px solid rgba(43,15,46,.25);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .pmap-pick-item.on .pmap-pick-check{ background:var(--accent); border-color:var(--accent); }
-  .pmap-pick-item.on .pmap-pick-check::after{
-    content:'✓'; font-size:12px; font-weight:900; color:#2b0f2e; line-height:1;
-  }
-  .pmap-pick-title{ flex:1; font-size:14px; font-weight:700; color:#2b0f2e; }
-  /* Крестик справа — исключает желание из случайной выдачи (не из ручного
-     выбора), поэтому не участвует в клике по всей строке
-     (см. stopPropagation в passionmap.js). */
-  .pmap-pick-exclude{
-    flex-shrink:0; width:26px; height:26px; border-radius:50%;
-    border:1px solid rgba(43,15,46,.2); background:transparent; color:#8a6a80;
-    font-size:13px; font-weight:900; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; padding:0;
-  }
-  .pmap-pick-exclude.on{ background:#ff5e6c; border-color:#ff5e6c; color:#fff; }
-  .pmap-pick-item.excluded{ opacity:.55; }
-  .pmap-pick-item.excluded .pmap-pick-title{ text-decoration:line-through; }
   /* "Почти совпало" в итогах "Тайных ответов" — крупнее, по центру и с
      хорошо заметным отступом сверху (заметно ниже интро-текста), но без
      абсолютного позиционирования — чтобы не наезжать на текст рядом,

@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260923d">
+<link rel="stylesheet" href="styles/app.css?v=20261022c">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-02 · v471';
+  window.APP_BUILD = '2026-10-02 · v472';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -1283,30 +1283,7 @@
     <h1 class="title">🎀 Карта страсти</h1>
     <div class="subtitle">Карта желаний для двоих — идём по маршруту шаг за шагом, без давления</div>
 
-    <div class="field">
-      <label>Количество вопросов</label>
-      <div class="starter-group timer-duration-group" id="passionMapCountGroup">
-        <button type="button" class="starter-btn mode-btn" data-value="1">1</button>
-        <button type="button" class="starter-btn mode-btn" data-value="3">3</button>
-        <button type="button" class="starter-btn mode-btn" data-value="5">5</button>
-        <button type="button" class="starter-btn mode-btn" data-value="all">Все</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <div class="starter-group" id="passionMapModeGroup">
-        <button type="button" class="starter-btn mode-btn" data-value="manual" id="passionMapPickBtn">📋 Выбор вопросов</button>
-        <button type="button" class="starter-btn mode-btn" data-value="random">🔀 Случайно</button>
-      </div>
-    </div>
-
     <button class="btn btn-primary" id="passionMapStartBtn" style="margin-top:16px;">Начать</button>
-
-    <div class="toggle-row" style="margin-top:10px;">
-      <button type="button" class="toggle-pill" id="passionMapHistoryBtn">✅ Пройденные</button>
-      <button type="button" class="toggle-pill" id="passionMapSetupRulesBtn">📖 Правила</button>
-    </div>
-
     <button class="btn btn-secondary" id="passionMapSetupExitBtn" style="margin-top:10px;">Выход</button>
   </section>
 
@@ -1349,7 +1326,7 @@
     <div class="summary-stats" style="text-align:left;">
       <ul class="pmap-summary-list" id="passionMapSummaryList"></ul>
     </div>
-    <div class="intro-text">Маршрут этой партии сохранён — его можно открыть позже на странице настройки игры, кнопка «✅ Пройденные».</div>
+    <div class="intro-text">Маршрут этой партии сохранён.</div>
     <button class="btn btn-primary" id="passionMapSummaryExitBtn" style="margin-top:10px;">В меню</button>
   </section>
 
@@ -3906,24 +3883,14 @@
       <div class="modal-title">🎀 Правила игры «Карта страсти»</div>
       <div class="intro-text">Цель — мягко, без давления и дискомфорта, пройти карту желаний друг друга.</div>
       <ol class="modal-rules">
-        <li>По очереди открываются точки карты с описанием желания — сколько именно и как выбраны, настраивается перед стартом.</li>
+        <li>По очереди открываются точки карты с описанием желания. Настройки количества и способа выбора на этой странице сейчас не задаются.</li>
         <li>Кнопкой «▶ Начать» запускается цепочка мягких шагов навстречу: первый шаг мягко намекает на саму цель желания, а с каждым отказом предложение становится всё проще и безопаснее, на каждом свой маленький вопрос «Да/Нет».</li>
         <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
         <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
-        <li>После партии итоги сохраняются в «✅ Пройденные» — там видно, на каком шаге остановились в прошлый раз, чтобы продолжить с него, а не начинать заново.</li>
+        <li>После партии показываются итоги. Список «✅ Пройденные» пока недоступен с экрана настройки; история сохраняется в данных приложения.</li>
         <li>«Выход» вернёт в меню игры. Чек-лист прерванной партии не сохраняется — доиграть её позже нельзя.</li>
       </ol>
       <button class="btn btn-primary" id="closePassionMapRulesBtn">Понятно</button>
-    </div>
-  </div>
-
-  <!-- ===== КАРТА СТРАСТИ: ВЫБОР ЖЕЛАНИЙ ВРУЧНУЮ ===== -->
-  <div class="modal-overlay" id="passionMapPickModal">
-    <div class="modal-card">
-      <div class="modal-title">📋 Выбор вопросов</div>
-      <div class="intro-text" id="passionMapPickHint">Отметьте желания для партии</div>
-      <div class="pmap-pick-list" id="passionMapPickList"></div>
-      <button class="btn btn-primary" id="passionMapPickDoneBtn">Готово</button>
     </div>
   </div>
 
@@ -4456,7 +4423,7 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20260929b"></script>
 <script src="cards/capitals.js?v=20260929c"></script>
-<script src="games/core.js?v=20261021x"></script>
+<script src="games/core.js?v=20261022a"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -4510,7 +4477,7 @@
 <script src="games/znayu.js?v=20260922a"></script>
 <script src="games/ideas.js?v=20261002c"></script>
 <script src="games/sexquest.js?v=20260927x"></script>
-<script src="games/passionmap.js?v=20260927a"></script>
+<script src="games/passionmap.js?v=20261022b"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20260929k"></script>
 <script src="games/capitals.js?v=20260929d"></script>
@@ -4534,7 +4501,7 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20260923e').then(function (reg) {
+        navigator.serviceWorker.register('./sw.js?v=20261022d').then(function (reg) {
           // Мягкая проверка обновления при каждом запуске: reg.update() в фоне
           // спрашивает сервер, есть ли новый sw.js. Если да — браузер ставит его
           // в reg.waiting (старый воркер при этом НЕ трогаем: офлайн не ломается).

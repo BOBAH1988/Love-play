@@ -38,130 +38,17 @@ function getPassionMapWishes(){
   return (typeof PASSIONMAP_WISHES !== 'undefined' && Array.isArray(PASSIONMAP_WISHES)) ? PASSIONMAP_WISHES : [];
 }
 
-const PASSIONMAP_COUNT_VALUES = ['1','3','5','all'];
-
-function passionMapResolvedCount(){
-  const total = getPassionMapWishes().length;
-  if(state.passionMapCount === 'all') return total;
-  return Math.min(state.passionMapCount, total);
-}
+const PASSIONMAP_DEFAULT_COUNT = 1;
 
 function goToPassionMapSetup(){
-  goToGameSetup('passionMapSetup', null, ()=>{
-    updatePassionMapHistoryBtn();
-    renderPassionMapCountGroup();
-    renderPassionMapModeGroup();
-  });
+  goToGameSetup('passionMapSetup');
 }
-
-function renderPassionMapCountGroup(){
-  if(!PASSIONMAP_COUNT_VALUES.includes(String(state.passionMapCount))){ state.passionMapCount = 1; saveState(); }
-  document.querySelectorAll('#passionMapCountGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', btn.dataset.value === String(state.passionMapCount));
-  });
-}
-document.querySelectorAll('#passionMapCountGroup .starter-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    state.passionMapCount = btn.dataset.value === 'all' ? 'all' : parseInt(btn.dataset.value, 10);
-    // «Все» делает ручной выбор бессмысленным (играются все точки карты) —
-    // возвращаем случайный режим; для остальных значений урезаем ручной
-    // выбор до нового лимита.
-    if(state.passionMapCount === 'all'){
-      state.passionMapMode = 'random';
-    } else if(state.passionMapManualIds && state.passionMapManualIds.length > state.passionMapCount){
-      state.passionMapManualIds = state.passionMapManualIds.slice(0, state.passionMapCount);
-    }
-    saveState();
-    renderPassionMapCountGroup();
-    renderPassionMapModeGroup();
-    renderPassionMapPickList();
-  });
-});
-function renderPassionMapModeGroup(){
-  if(state.passionMapMode !== 'manual' && state.passionMapMode !== 'random'){ state.passionMapMode = 'random'; saveState(); }
-  const pickBtn = document.getElementById('passionMapPickBtn');
-  const isAll = state.passionMapCount === 'all';
-  if(pickBtn) pickBtn.disabled = isAll;
-  document.querySelectorAll('#passionMapModeGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', btn.dataset.value === state.passionMapMode);
-  });
-}
-document.getElementById('passionMapPickBtn').addEventListener('click', ()=>{
-  if(state.passionMapCount === 'all'){
-    showToast('При выборе «Все» играются все точки карты');
-    return;
-  }
-  state.passionMapMode = 'manual';
-  saveState();
-  renderPassionMapModeGroup();
-  renderPassionMapPickList();
-  showModal('passionMapPickModal');
-});
-document.querySelectorAll('#passionMapModeGroup .starter-btn[data-value="random"]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    state.passionMapMode = 'random';
-    saveState();
-    renderPassionMapModeGroup();
-  });
-});
-
-function renderPassionMapPickList(){
-  const wrap = document.getElementById('passionMapPickList');
-  if(!wrap) return;
-  const limit = passionMapResolvedCount();
-  const hint = document.getElementById('passionMapPickHint');
-  if(hint) hint.textContent = `Отметьте до ${limit} ${limit===1 ? 'желания' : 'желаний'} для партии`;
-  if(!state.passionMapManualIds) state.passionMapManualIds = [];
-  if(!state.passionMapExcluded) state.passionMapExcluded = [];
-  const selected = state.passionMapManualIds;
-  const excluded = state.passionMapExcluded;
-  wrap.innerHTML = '';
-  getPassionMapWishes().forEach(wish=>{
-    const on = selected.includes(wish.id);
-    const isExcluded = excluded.includes(wish.id);
-    const atLimit = !on && selected.length >= limit;
-    const div = document.createElement('div');
-    div.className = 'pmap-pick-item' + (on ? ' on' : '') + (atLimit ? ' disabled' : '') + (isExcluded ? ' excluded' : '');
-    div.innerHTML = `
-      <div class="pmap-pick-check"></div>
-      <div class="pmap-pick-title">${wish.title}</div>
-      <button type="button" class="pmap-pick-exclude${isExcluded ? ' on' : ''}" title="Исключить из случайной выдачи">✕</button>
-    `;
-    div.addEventListener('click', ()=>{
-      const idx = selected.indexOf(wish.id);
-      if(idx >= 0){
-        selected.splice(idx, 1);
-      } else {
-        if(selected.length >= limit){ showToast(`Можно выбрать не больше ${limit}`); return; }
-        selected.push(wish.id);
-      }
-      saveState();
-      renderPassionMapPickList();
-    });
-    div.querySelector('.pmap-pick-exclude').addEventListener('click', (e)=>{
-      e.stopPropagation();
-      const idx = excluded.indexOf(wish.id);
-      if(idx >= 0) excluded.splice(idx, 1);
-      else excluded.push(wish.id);
-      saveState();
-      renderPassionMapPickList();
-    });
-    wrap.appendChild(div);
-  });
-}
-document.getElementById('passionMapPickDoneBtn').addEventListener('click', ()=>{
-  hideModal('passionMapPickModal');
-});
-document.getElementById('passionMapPickModal').addEventListener('click', (e)=>{
-  if(e.target.id === 'passionMapPickModal') e.currentTarget.classList.remove('show');
-});
 function exitPassionMapSetup(){
   document.getElementById('passionMapSetup').classList.remove('active');
   document.getElementById('setup').classList.add('active');
   showSetupView('twoPlayerView');
 }
 document.getElementById('passionMapSetupExitBtn').addEventListener('click', ()=>{ exitPassionMapSetup(); });
-(document.getElementById('passionMapSetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{ showModal('passionMapRulesModal'); });
 setupRulesModal('passionMapRulesModal', 'closePassionMapRulesBtn');
 
 
@@ -175,17 +62,8 @@ function pmapShuffleIds(ids){
 }
 
 function buildPassionMapQueue(){
-  if(state.passionMapMode === 'manual' && state.passionMapManualIds && state.passionMapManualIds.length){
-    return pmapShuffleIds(state.passionMapManualIds);
-  }
   const allIds = getPassionMapWishes().map(w=>w.id);
-  const excluded = state.passionMapExcluded || [];
-  // Если исключено абсолютно всё (крайний случай) — падать некуда, играем
-  // полным пулом, иначе игра вообще не сможет начаться.
-  let pool = allIds.filter(id => !excluded.includes(id));
-  if(pool.length === 0) pool = allIds;
-  const count = state.passionMapCount === 'all' ? pool.length : Math.min(state.passionMapCount, pool.length);
-  return pmapShuffleIds(pool).slice(0, count);
+  return pmapShuffleIds(allIds).slice(0, PASSIONMAP_DEFAULT_COUNT);
 }
 
 function startPassionMapGame(){
@@ -460,12 +338,6 @@ function finishPausedPassionMapGame(){
 }
 
 document.getElementById('passionMapStartBtn').addEventListener('click', ()=>{
-  if(state.passionMapMode === 'manual' && (!state.passionMapManualIds || !state.passionMapManualIds.length)){
-    showToast('Выберите хотя бы одно желание');
-    renderPassionMapPickList();
-    showModal('passionMapPickModal');
-    return;
-  }
   playSuccessSound();
   startPassionMapGame();
 });
@@ -483,12 +355,6 @@ document.getElementById('passionMapStartPlayBtn').addEventListener('click', ()=>
 });
 
 /* ============ КАРТА ПУТЕШЕСТВИЙ (ИСТОРИЯ ПРОШЛЫХ ИГР) ============ */
-function updatePassionMapHistoryBtn(){
-  const btn = document.getElementById('passionMapHistoryBtn');
-  if(!btn) return;
-  const has = !!(state.passionMapChecklists && state.passionMapChecklists.length);
-  btn.disabled = !has;
-}
 function formatPassionMapDate(ts){
   const d = new Date(ts);
   const pad = n => String(n).padStart(2, '0');
@@ -558,7 +424,5 @@ document.getElementById('passionMapHistoryList').addEventListener('click', (e)=>
 function exitPassionMapHistory(){
   document.getElementById('passionMapHistory').classList.remove('active');
   document.getElementById('passionMapSetup').classList.add('active');
-  updatePassionMapHistoryBtn(); // после удалений кнопка «✅ Пройденные» может стать неактивной
 }
-document.getElementById('passionMapHistoryBtn').addEventListener('click', ()=>{ goToPassionMapHistory(); });
 document.getElementById('passionMapHistoryExitBtn').addEventListener('click', ()=>{ exitPassionMapHistory(); });
