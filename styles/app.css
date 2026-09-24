@@ -2319,8 +2319,12 @@
   #game.placeholder-mode #levelDownBtn{display:flex; flex:1; font-size:14px;}
   #videoMuteBtn, #videoLoopBtn, #videoRandomBtn, #videoFullscreenBtn,
   #davayMuteBtn{display:none;}
-  /* ⤴ «Поделиться видео» — только в «Видеорулетке», рядом с сердечком. */
+  /* ⤴ «Поделиться видео» — только в «Видеорулетке», рядом с сердечком.
+     ⤴ «Поделиться» (фото) — только в «Предложи партнеру», все уровни
+     (включая просмотр избранного — карточку из избранного тоже можно отправить). */
   #videoShareBtn{display:none;}
+  #photoShareBtn{display:none;}
+  #game.placeholder-mode #photoShareBtn{display:flex;}
   /* 🔥 «Горячее» — быстрая кнопка «Видеорулетки» сразу после «Следующее». */
   #videoHotBtn{display:none;}
   #game.video-mode #videoMuteBtn, #game.video-mode #videoLoopBtn, #game.video-mode #videoRandomBtn, #game.video-mode #videoFullscreenBtn{display:flex;}

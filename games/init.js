@@ -125,6 +125,19 @@ try{
     history.replaceState(null, '', linkUrl.pathname + linkUrl.search + linkUrl.hash);
     if(typeof openIdeasFromLink === 'function') openIdeasFromLink(question);
   }
+  // «Предложи партнеру»: ?mode=photo&level=…&c=… — как у «Вопросов про это»,
+  // параметры сразу убираем из адресной строки, иначе каждое обновление
+  // страницы снова открывало бы карточку по ссылке.
+  if(linkParams.get('mode') === 'photo'){
+    const photoLevelParam = linkParams.get('level') || '';
+    const photoCardParam = linkParams.get('c') || '';
+    const linkUrl = new URL(location.href);
+    linkUrl.searchParams.delete('mode');
+    linkUrl.searchParams.delete('level');
+    linkUrl.searchParams.delete('c');
+    history.replaceState(null, '', linkUrl.pathname + linkUrl.search + linkUrl.hash);
+    if(typeof openPhotoFromLink === 'function') openPhotoFromLink(photoLevelParam, photoCardParam);
+  }
 }catch(e){}
 
 /* ============ СТАТИСТИКА: ОТМЕТКА ОТКРЫТИЯ ============

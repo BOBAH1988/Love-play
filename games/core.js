@@ -3293,6 +3293,89 @@ document.getElementById('photoRandomToggleBtn').addEventListener('click', ()=>{
   if(!state.photoFavView) drawPhotoCard(photoLevel);
 });
 
+/* ============ «ПОДЕЛИТЬСЯ» КАРТОЧКОЙ («Предложи партнеру», все уровни) ============
+ * Кнопка ⤴ в том же ряду, что «Следующая»/☆ — видна во всех 12 модулях,
+ * включая просмотр избранного (CSS: #game.placeholder-mode #photoShareBtn).
+ * Формат сообщения — как в «Вопросы про это» (games/ideas.js): одна строка
+ * «🎲 Давай играй», заголовок модуля, текст карточки, ссылка последней
+ * строкой text; поле url не задаём — Android склеивал text+url в «двойную»
+ * ссылку. Ссылка-вход ?mode=photo&level=N&c=<cardKey> распаковывается
+ * в games/init.js → openPhotoFromLink: получатель откроет ту же карточку. */
+document.getElementById('photoShareBtn').addEventListener('click', async ()=>{
+  if(!currentPhotoCard){
+    playErrorSound();
+    showToast('Сначала откройте карточку');
+    return;
+  }
+  const params = new URLSearchParams();
+  params.set('mode', 'photo');
+  params.set('level', String(currentPhotoCard.level || photoLevel));
+  params.set('c', photoCardKey(currentPhotoCard));
+  const appUrl = location.origin + location.pathname + '?' + params.toString();
+  const shareUrl = await shortenShareUrl(appUrl);
+  const lvl = PHOTO_LEVELS.find(l => l.id === (currentPhotoCard.level || photoLevel));
+  const moduleName = lvl ? lvl.name : 'Предложи партнеру';
+  // Текст карточки: title есть не у всех модулей (фото-карточки часто без него).
+  const cardText = [currentPhotoCard.title, currentPhotoCard.text]
+    .filter(Boolean).join('\n');
+  const shareText = '🎲 Давай играй\nПредложи партнеру — ' + moduleName + ':\n\n' + cardText;
+  const shareMsg = shareText + '\n\n' + shareUrl;
+  if(navigator.share){
+    try{
+      // title не передаём: он уже первой строкой shareMsg — вместе с text
+      // Android/Telegram даёт двойное «🎲 Давай играй».
+      await shareWithTimeout({ text: shareMsg });
+      showToast('Спасибо, что делитесь! 💛');
+      return;
+    }catch(e){
+      // Отмена пользователем — не ошибка, фолбэки не нужны.
+      if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
+    }
+  }
+  // Фолбэк: буфер обмена (десктоп, PWA без прав share).
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    try{
+      await navigator.clipboard.writeText(shareMsg);
+      showToast('Скопировано в буфер обмена');
+      return;
+    }catch(e){
+      // Нет прав на буфер — показываем текст в тосте.
+    }
+  }
+  showToast(shareMsg);
+});
+
+/* ============ ВХОД ПО ССЫЛКЕ «ПОДЕЛИТЬСЯ КАРТОЧКОЙ» ============
+ * Вызывается из games/init.js после полной инициализации (?mode=photo).
+ * Открывает игру на нужном уровне и показывает именно ту карточку, которой
+ * поделились: level из ссылки выбирает модуль, key (photoCardKey — путь к фото
+ * или L<ур>-<№>) ищет карточку в колоде. Если карточка не найдена (изменилась
+ * колода) — просто открываем уровень со случайной карточкой, не ошибкой.
+ * Протекст заимствован у openVideoFromLink (fants-video.js): та же защита
+ * от чужой паузы и сброс pausedMode. */
+function openPhotoFromLink(level, key){
+  if(blockedByDavayPause()) return;
+  state.pausedMode = null;
+  saveState();
+  if(typeof updateResumeUI === 'function') updateResumeUI();
+  const lvl = parseInt(level, 10);
+  if(lvl >= 1 && lvl <= PHOTO_MAX_LEVEL) state.photoSelectedLevel = lvl;
+  saveState();
+  // Вход по ссылке стартует с главного экрана, а не с настройки игры:
+  // goToPlaceholderGame гасит только #photoSetup, и #setup остался бы активным
+  // вместе с #game (два активных экрана — «экран делится на две части»).
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
+  goToPlaceholderGame();
+  if(!key) return;
+  const card = getPhotoCardsList().find(c =>
+    (c.level || 0) === (lvl || 0) && photoCardKey(c) === key);
+  if(card){
+    currentPhotoCard = card;
+    photoLevel = card.level;
+    renderPhotoCard(card, card.level);
+  }
+}
+
 /* ============ ИЗБРАННОЕ / "СДЕЛАНО" ============ */
 function updateOwnedBtn(){
   const btn = document.getElementById('sexshopOwnedBtn');

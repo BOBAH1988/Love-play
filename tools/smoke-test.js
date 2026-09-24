@@ -2532,6 +2532,79 @@ testAsync('Сценарий: «Вопросы про это» отправляю
   }
 });
 
+// «Предложи партнеру»: кнопка ⤴ есть на всех уровнях и шарит карточку тем же
+// форматом, что «Вопросы про это» — одна строка «🎲 Давай играй», без поля url
+// (Android склеивал text+url в «двойную» ссылку), ссылка-вход ?mode=photo
+// последней строкой, чтобы получатель открыл ту же карточку.
+testAsync('Сценарий: «Предложи партнеру» отправляет карточку по ссылке', async () => {
+  const nav = global.navigator;
+  const saved = { share: nav.share, fetch: global.fetch };
+  const card = {
+    level: 3, rank: 7,
+    title: 'Поза «Качели»',
+    text: 'Описание позы для уровня «Сближение».',
+  };
+  let shared = null;
+  let shortenedReq = '';
+  try {
+    eval(`currentPhotoCard = ${JSON.stringify(card)};`);
+    global.fetch = (url) => {
+      if (String(url).indexOf('clck.ru') > -1) {
+        // Запрос clck.ru несёт исходную ссылку-вход параметром url= —
+        // проверяем по нему, что в адрес уложены mode/level/c.
+        shortenedReq = String(url);
+        return Promise.resolve({ ok: true, text: () => Promise.resolve('https://clck.ru/short') });
+      }
+      return saved.fetch(url);
+    };
+    nav.share = (data) => { shared = data; return Promise.resolve(); };
+
+    getElById(stub, 'photoShareBtn').click();
+    for (let i = 0; i < 100 && !shared; i++) await new Promise((r) => setTimeout(r, 5));
+
+    assert(!!shared, 'кнопка ⤴ в «Предложи партнеру» не открыла системное меню');
+    if (shared) {
+      assert(shared.title === undefined,
+        'title вместе с text даёт двойное «🎲 Давай играй» в Android/Telegram');
+      assert(shared.url === undefined,
+        'поле url нельзя задавать вместе с text — Android склеивает «двойную» ссылку');
+      const text = String(shared.text || '');
+      assert(text.indexOf('🎲 Давай играй\nПредложи партнеру — ') === 0,
+        `сообщение должно начинаться с названия и имени модуля, получено: ${text}`);
+      assert((text.match(/🎲 Давай играй/g) || []).length === 1,
+        'название должно встречаться один раз');
+      assert(text.indexOf(card.title) > -1 && text.indexOf(card.text) > -1,
+        'в сообщении должны остаться название и текст карточки');
+      assert(decodeURIComponent(shortenedReq).indexOf('mode=photo') > -1
+          && decodeURIComponent(shortenedReq).indexOf('level=3') > -1,
+        `ссылка-вход должна вести на уровень карточки (?mode=photo&level=3), запрос: ${shortenedReq}`);
+      assert(text.indexOf('https://clck.ru/short') > -1,
+        'сокращённая ссылка должна остаться последней строкой');
+    }
+  } finally {
+    nav.share = saved.share;
+    global.fetch = saved.fetch;
+    eval('currentPhotoCard = null;');
+  }
+});
+
+// Без открытой карточки шарить нечего: кнопка не должна уходить в системное
+// меню с пустым текстом — игрок получает тост-подсказку.
+test('Сценарий: «Предложи партнеру» без карточки не открывает меню шеринга', () => {
+  const nav = global.navigator;
+  const savedShare = nav.share;
+  let shared = false;
+  try {
+    eval('currentPhotoCard = null;');
+    nav.share = () => { shared = true; return Promise.resolve(); };
+    getElById(stub, 'photoShareBtn').click();
+    assert(!shared, 'при пустой карточке системное меню открывать нельзя');
+  } finally {
+    nav.share = savedShare;
+  }
+});
+
+
 // #gameLevelLabel гаснет на время тоста (тост показывается поверх заголовка) и
 // обязан вернуться: раньше видимость возвращал только режим «Предложи партнёру»,
 // и после любого тоста в «Видеорулетке» её название пропадало до следующего
