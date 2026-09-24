@@ -833,6 +833,20 @@ function checkStyles(html) {
     const openC = (css.match(/\/\*/g) || []).length;
     const closeC = (css.match(/\*\//g) || []).length;
     check('нет незакрытых комментариев в CSS', openC === closeC, `/* : ${openC}, */ : ${closeC}`);
+
+    // iOS WebKit может ненадолго удерживать :hover/:active на нажатой кнопке.
+    // Без :not() общие правила перекрывают answer-correct/answer-wrong, а
+    // transform от общего .btn может оставить кнопку увеличенной/уменьшенной.
+    const safeAnswerPseudoState = (state) => new RegExp(
+      `\\.znayu-answers \\.znayu-answer-btn:not\\(\\.answer-correct\\):not\\(\\.answer-wrong\\):${state}\\s*\\{`
+    ).test(css);
+    const stableAnswerResult = (result) => new RegExp(
+      `\\.znayu-answers \\.znayu-answer-btn\\.${result}\\s*\\{[^}]*transform:none;`
+    ).test(css);
+    check('состояния кнопок ответа не перекрывают результат',
+      safeAnswerPseudoState('hover') && safeAnswerPseudoState('active') &&
+        stableAnswerResult('answer-correct') && stableAnswerResult('answer-wrong'),
+      'общие :hover/:active должны исключать результат, а answer-correct/answer-wrong — сбрасывать transform');
   }
 
   // Service Worker обязан обновлять стили сразу, а не «со второй загрузки»:

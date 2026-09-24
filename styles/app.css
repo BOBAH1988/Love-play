@@ -2804,12 +2804,16 @@
                transform var(--btn-transition-duration) var(--btn-transition-ease),
                box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
   }
-  .znayu-answers .znayu-answer-btn:hover{
+  /* На сенсорных устройствах WebKit (в частности, iOS standalone) может
+     ненадолго оставлять :hover/:active после нажатия. Эти состояния должны
+     работать только до получения результата: их более специфичные правила
+     иначе перекрывают зелёную/красную подсветку .answer-*. */
+  .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):hover{
     background:rgba(43,15,46,.1);
     transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
     box-shadow:var(--btn-raise-shadow);
   }
-  .znayu-answers .znayu-answer-btn:active{
+  .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
     background:rgba(43,15,46,.14);
     transform:translateY(0) scale(var(--btn-active-scale));
     box-shadow:0 2px 8px rgba(0,0,0,.4);
@@ -2831,13 +2835,15 @@
      ответов "Тайных ответов" (.znayu-question-text/.znayu-answers/
      .znayu-answer-btn), добавляя подсветку результата после выбора:
      зелёным — верный вариант, красным — выбранный неверный. */
-  .znayu-answer-btn.answer-correct{
+  .znayu-answers .znayu-answer-btn.answer-correct{
     background:rgba(76,217,100,.85); color:#2b0f2e; border-color:#2ecc55;
     box-shadow:0 0 0 2px rgba(46,204,85,.55), 0 6px 16px rgba(0,0,0,.25);
+    transform:none;
   }
-  .znayu-answer-btn.answer-wrong{
+  .znayu-answers .znayu-answer-btn.answer-wrong{
     background:rgba(255,69,58,.85); color:#2b0f2e; border-color:#ff453a;
     box-shadow:0 0 0 2px rgba(255,69,58,.55), 0 6px 16px rgba(0,0,0,.25);
+    transform:none;
   }
   /* Специфичность выше, чем у общего .btn:disabled{opacity:.5} (иначе он
      перебивает это правило по порядку в файле) — после ответа кнопки должны
