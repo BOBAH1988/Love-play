@@ -2017,6 +2017,19 @@
   /* Имена игроков компании — как в блоке "Игры для пар 18+": по 2 в ряд,
      поля покороче, вместо одной колонки во всю ширину. */
   #partyPlayersList, #kidsPlayersList, #businessPlayersList{display:flex; flex-wrap:wrap; gap:8px 10px;}
+  /* В бизнес-группе поле участника и добавление нового участника стоят
+     в одной строке. Список может переноситься сам, если участников станет
+     несколько, поэтому кнопка не растягивается и не выталкивает поле. */
+  .business-players-row{
+    display:flex; align-items:flex-start; gap:8px;
+  }
+  .business-players-row #businessPlayersList{
+    flex:1 1 auto; min-width:0;
+  }
+  .business-players-row #businessAddPlayerBtn{
+    flex:0 0 auto; width:auto; min-width:max-content;
+    margin-top:0!important; white-space:nowrap;
+  }
   .krokodil-player-row{
     display:flex; align-items:center; gap:6px;
     flex:1 1 calc(50% - 5px); min-width:118px;

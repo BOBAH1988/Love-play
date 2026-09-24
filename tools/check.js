@@ -176,12 +176,20 @@ function checkMarkup(html) {
     /bizObsIndex\s*%\s*perPlayer\s*===\s*0\s*&&\s*bizObsPlayersList\(\)\.length\s*>\s*1/.test(observer) &&
     /if\s*\(players\.length\s*>\s*1\)\s*bizObsShowHandoffCard\(\);\s*else\s*bizObsShowQuestion\(\);/.test(observer),
     '«Оцени бизнес» должен сразу показывать вопрос при одном участнике');
-  check('старая пара бизнес-участников мигрирует в одного',
+  check('старый дефолтный список бизнес-игр мигрирует в одного',
     /MIGRATIONS\[4\]\s*=\s*function/.test(core) &&
     /s\.businessPlayers\.length\s*===\s*2/.test(core) &&
     /s\.businessPlayers\[0\]\s*===\s*businessDefaultName\(0\)/.test(core) &&
     /s\.businessPlayers\s*=\s*\[businessDefaultName\(0\)\]/.test(core),
     'миграция должна сокращать только старую автоматическую пару, не ручные имена');
+
+  // Поле «Предприниматель» и добавление участника должны быть одной строкой.
+  const businessPlayerRow = /<div\s+class="business-players-row">[\s\S]*?<div\s+id="businessPlayersList"><\/div>[\s\S]*?<button[^>]+id="businessAddPlayerBtn"[^>]*>[^<]*Добавить участника[^<]*<\/button>[\s\S]*?<\/div>/.test(html);
+  check('разметка поля участника и кнопки добавления общая',
+    businessPlayerRow,
+    !businessPlayerRow
+      ? 'нет общего .business-players-row вокруг списка и кнопки'
+      : '');
 
   // Меню «☰» не должно возвращать пункты, дублирующие автоматику.
   // «Обновить приложение» повторял плашку #updateToast, которую Service Worker
@@ -896,6 +904,11 @@ function checkStyles(html) {
     // задают только свой фон, поэтому любое #id ... .znayu-answer-btn — регресс:
     // именно такие правила раньше делали кнопки разными в iOS standalone.
     const cssWithoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    const businessPlayerRowCss = /\.business-players-row\s*\{[^}]*display:\s*flex;[^}]*\}/.test(cssWithoutComments) &&
+      /\.business-players-row\s+#businessAddPlayerBtn\s*\{[^}]*flex:\s*0\s+0\s+auto;[^}]*\}/.test(cssWithoutComments);
+    check('CSS поля участника и кнопки добавления задаёт один ряд',
+      businessPlayerRowCss,
+      'CSS не фиксирует flex-ряд или кнопка добавления может растягиваться');
     const unifiedAnswerStyle = /\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:\s*#fff;\s*color:\s*#2b0f2e;[^}]*border-color:\s*rgba\(43,15,46,\.2\);/.test(cssWithoutComments);
     const scopedAnswerStyle = /#[A-Za-z][A-Za-z0-9_-]*[^{}]*\.znayu-answer-btn[^{}]*\{/.test(cssWithoutComments);
     check('кнопки ответов во всех играх используют единый стиль',

@@ -260,6 +260,16 @@ test('«Крокодил»: в обеих версиях у игровых кн�
   });
 });
 
+test('Бизнес-игры: поле участника и кнопка добавления находятся в одном ряду', () => {
+  const row = /<div\s+class="business-players-row">[\s\S]*?<div\s+id="businessPlayersList"><\/div>[\s\S]*?<button[^>]+id="businessAddPlayerBtn"[^>]*>[^<]*Добавить участника[^<]*<\/button>[\s\S]*?<\/div>/;
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  assert(row.test(html), 'список и кнопка должны быть внутри общего .business-players-row');
+  assert(/\.business-players-row\s*\{[^}]*display:\s*flex;/.test(css),
+    '.business-players-row должен быть flex-рядом');
+  assert(/\.business-players-row\s+#businessAddPlayerBtn\s*\{[^}]*flex:\s*0\s+0\s+auto;/.test(css),
+    'кнопка добавления не должна растягиваться и выталкивать поле');
+});
+
 test('Бизнес-игры: по умолчанию доступен один «Предприниматель»', () => {
   const previous = state.businessPlayers;
   try {
