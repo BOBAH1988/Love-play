@@ -1463,7 +1463,7 @@ function checkStyles(html) {
   check('файл не отправляется вместе с url',
     /files:\[file\][^}]*\}/.test(videoSrc2)
       && !/files:\[file\][^}]*url:/.test(videoSrc2)
-      && /(?:navigator\.share|shareWithTimeout)\(\{\s*title: '🎲 Давай попробуем',\s*\n\s*text: [^\n]+,\s*\n\s*url: shareUrl/.test(videoSrc2),
+      && /(?:navigator\.share|shareWithTimeout)\(\{\s*title: '🎲 Давай играй',\s*\n\s*text: [^,\n]+,\s*\n\s*url: shareUrl/.test(videoSrc2),
     'files и url в одной нагрузке — системное меню «Поделиться» упадёт с TypeError');
   check('слишком большой ролик не читается в память',
     /VIDEO_SHARE_MAX_BYTES = \d+ \* 1024 \* 1024/.test(videoSrc2)
@@ -1481,10 +1481,12 @@ function checkStyles(html) {
       && /await shortenShareUrl\(appUrl\)/.test(videoSrc2)
       && /const shareUrl = await shortenShareUrl\(appUrl\)/.test(videoSrc2),
     'ссылка-вход не сокращается — в Telegram она слишком длинная');
-  check('заголовок поделиться содержит иконку 🎲',
-    videoSrc2.includes("title:'🎲 Давай попробуем'")
-      && /title: '🎲 Давай попробуем'/.test(videoSrc2),
-    'заголовок поделиться без иконки кубика');
+  check('заголовок поделиться — «🎲 Давай играй»',
+    videoSrc2.includes("title:'🎲 Давай играй'")
+      && /title: '🎲 Давай играй'/.test(videoSrc2)
+      && videoSrc2.includes("const shareMessage = '🎲 Давай играй\\nПопробуем? 😉'")
+      && videoSrc2.includes("text: shareMessage"),
+    'сообщение должно начинаться с названия приложения и приглашения «Попробуем?»');
   const initSrc = read('games/init.js');
   check('ссылка-вход открывает «Видеорулетку» на нужном ролике',
     videoSrc2.includes('function findVideoCardByEntryKey(key)')

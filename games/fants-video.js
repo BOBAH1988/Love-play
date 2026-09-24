@@ -457,7 +457,8 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
   // видео есть в его каталоге, иначе с этого же уровня.
   const appUrl = videoEntryPointUrl(currentVideoCard, videoLevel);
   const shareUrl = await shortenShareUrl(appUrl);
-  const shareText = 'Смотри, какое видео выпало в «Видеорулетке» 😉\n' + shareUrl;
+  const shareMessage = '🎲 Давай играй\nПопробуем? 😉';
+  const shareText = shareMessage + '\n' + shareUrl;
   // 1) Прикладываем сам ролик. Ссылки на видео Яндекса отдают CORS-разрешение,
   //    поэтому файл читается прямо в браузере.
   if(shareSupportsFiles()){
@@ -468,8 +469,8 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
       // files вместе с url (иначе TypeError), а files + text — разрешает.
       // Если платформа подпись с файлом не принимает, отправляем файл без неё:
       // видео в чате важнее подписи.
-      const withText = { files:[file], text: shareText, title:'🎲 Давай попробуем' };
-      const fileOnly = { files:[file], title:'🎲 Давай попробуем' };
+      const withText = { files:[file], text: shareText, title:'🎲 Давай играй' };
+      const fileOnly = { files:[file], title:'🎲 Давай играй' };
       const payload = canShareData(withText) ? withText : (canShareData(fileOnly) ? fileOnly : null);
       if(payload){
         try{
@@ -492,8 +493,8 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
   try{
     if(navigator.share){
       await shareWithTimeout({
-        title: '🎲 Давай попробуем',
-        text: 'Смотри, какое видео выпало в «Видеорулетке» 😉',
+        title: '🎲 Давай играй',
+        text: shareMessage,
         url: shareUrl
       });
       showToast('Спасибо, что делитесь! 💛');
