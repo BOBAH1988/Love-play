@@ -50,7 +50,7 @@ const STORAGE_KEY = 'couple-game-state-v1';
  * Старые шаги не удаляйте: у кого-то сохранение может быть с версии 1,
  * и ему нужно пройти весь путь по порядку.
  */
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 // Таблица миграций: ключ — номер версии, значение — функция (state) => void.
 // Версия 1 — стартовая: сюда вошли все проверки, которые раньше лежали
 // подряд в loadState() (поля сапёра и «Счастливого билета», имена игроков
@@ -148,6 +148,20 @@ MIGRATIONS[2] = function(s){
  */
 MIGRATIONS[3] = function(s){
   s.photoOrderMode = false;
+};
+/**
+ * Версия 4: в бизнес-группе по умолчанию остаётся один участник —
+ * «Предприниматель». Старый автоматический список из двух должностей
+ * сокращаем только тогда, когда он полностью совпадает с прежним дефолтом;
+ * имена, введённые вручную, сохраняем.
+ */
+MIGRATIONS[4] = function(s){
+  if(Array.isArray(s.businessPlayers) &&
+     s.businessPlayers.length === 2 &&
+     s.businessPlayers[0] === businessDefaultName(0) &&
+     s.businessPlayers[1] === businessDefaultName(1)){
+    s.businessPlayers = [businessDefaultName(0)];
+  }
 };
 // Дефолтные имена игроков «Игр для компании» — порядковые: «Первый», «Второй», …
 // до «Десятый» (список ограничен 10). Используется renderPartyPlayers() в
@@ -317,8 +331,9 @@ let state = {
   passionMapQueue:[], passionMapIndex:0, passionMapScore:0, passionMapResults:[], passionMapChecklists:[],
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
-  // Бизнес игры — список игроков отдельный от "Игры для компании"
-  businessPlayers:[businessDefaultName(0), businessDefaultName(1)],
+  // Бизнес игры — список игроков отдельный от "Игры для компании".
+  // По умолчанию один участник; дополнительных можно добавить кнопкой.
+  businessPlayers:[businessDefaultName(0)],
   // Оцени бизнес (тренажёр маржи/наценки/точки безубыточности, Уровень 2
   // "Наблюдатель") — вопросы генерируются на лету, игроки из businessPlayers
   // отвечают по очереди bizObsQuestionCount вопросов подряд, см. games/business-observer.js.
@@ -782,8 +797,8 @@ renderKidsPlayers();
 // Список игроков для "Бизнес игр" — тот же паттерн, что renderPartyPlayers/
 // renderKidsPlayers, но отдельное состояние (businessPlayers).
 function renderBusinessPlayers(){
-  if(!state.businessPlayers || state.businessPlayers.length < 2){
-    state.businessPlayers = [businessDefaultName(0), businessDefaultName(1)];
+  if(!state.businessPlayers || state.businessPlayers.length < 1){
+    state.businessPlayers = [businessDefaultName(0)];
   }
   const wrap = document.getElementById('businessPlayersList');
   if(!wrap) return;
@@ -801,14 +816,14 @@ function renderBusinessPlayers(){
       saveState();
     });
     row.appendChild(input);
-    if(state.businessPlayers.length > 2){
+    if(state.businessPlayers.length > 1){
       const rmBtn = document.createElement('button');
       rmBtn.type = 'button';
       rmBtn.className = 'krokodil-player-remove';
       rmBtn.setAttribute('aria-label', 'Удалить игрока');
       rmBtn.textContent = '✕';
       rmBtn.addEventListener('click', ()=>{
-        if(state.businessPlayers.length <= 2) return;
+        if(state.businessPlayers.length <= 1) return;
         state.businessPlayers.splice(idx, 1);
         saveState();
         renderBusinessPlayers();
@@ -821,7 +836,7 @@ function renderBusinessPlayers(){
   if(addBtn) addBtn.style.display = state.businessPlayers.length >= 10 ? 'none' : '';
 }
 document.getElementById('businessAddPlayerBtn').addEventListener('click', ()=>{
-  if(!state.businessPlayers) state.businessPlayers = [businessDefaultName(0), businessDefaultName(1)];
+  if(!state.businessPlayers) state.businessPlayers = [businessDefaultName(0)];
   if(state.businessPlayers.length >= 10) return;
   state.businessPlayers.push(businessDefaultName(state.businessPlayers.length));
   saveState();
@@ -1729,7 +1744,7 @@ function performFullReset(){
    // Имена игроков (команд) — сбрасываются на дефолтные, как обещано в диалоге
    // подтверждения ("имена команд… будут сброшены").
    state.kidsPlayers = ['Родитель','Ребёнок'];
-   state.businessPlayers = [businessDefaultName(0), businessDefaultName(1)];
+   state.businessPlayers = [businessDefaultName(0)];
    state.partyPlayers = [partyDefaultName(0), partyDefaultName(1)];
    state.name1 = 'Парень';
    state.name2 = 'Девушка';

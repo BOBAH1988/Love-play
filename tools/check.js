@@ -161,6 +161,28 @@ function checkMarkup(html) {
         ? 'в коде остались ▶ Начать раунд, ✅ Угадали или ➡️ Пропустить'
         : 'генерируемый выбор уровня не должен подставлять ${l.icon}');
 
+  // Бизнес-группа может работать с одним участником. Проверяем и дефолт,
+  // и миграцию старой автоматической пары, и запрет второго участника.
+  const core = read('games/core.js');
+  const observer = read('games/business-observer.js');
+  check('в бизнес-играх по умолчанию один «Предприниматель»',
+    /businessPlayers\s*:\s*\[businessDefaultName\(0\)\]/.test(core) &&
+    /businessPlayers\.length\s*<\s*1/.test(core) &&
+    /businessPlayers\.length\s*>\s*1/.test(core) &&
+    /businessPlayers\.length\s*<=\s*1\s*\)\s*return/.test(core),
+    'дефолт или минимальное число участников в businessPlayers снова стало 2');
+  check('режим одного участника не создаёт фиктивную передачу телефона',
+    /bizObsPlayersList\(\)\s*\{[\s\S]*?length\s*>=\s*1/.test(observer) &&
+    /bizObsIndex\s*%\s*perPlayer\s*===\s*0\s*&&\s*bizObsPlayersList\(\)\.length\s*>\s*1/.test(observer) &&
+    /if\s*\(players\.length\s*>\s*1\)\s*bizObsShowHandoffCard\(\);\s*else\s*bizObsShowQuestion\(\);/.test(observer),
+    '«Оцени бизнес» должен сразу показывать вопрос при одном участнике');
+  check('старая пара бизнес-участников мигрирует в одного',
+    /MIGRATIONS\[4\]\s*=\s*function/.test(core) &&
+    /s\.businessPlayers\.length\s*===\s*2/.test(core) &&
+    /s\.businessPlayers\[0\]\s*===\s*businessDefaultName\(0\)/.test(core) &&
+    /s\.businessPlayers\s*=\s*\[businessDefaultName\(0\)\]/.test(core),
+    'миграция должна сокращать только старую автоматическую пару, не ручные имена');
+
   // Меню «☰» не должно возвращать пункты, дублирующие автоматику.
   // «Обновить приложение» повторял плашку #updateToast, которую Service Worker
   // показывает сам; «Сообщить о проблеме» повторял кнопку на экране ошибки,

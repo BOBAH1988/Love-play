@@ -11,7 +11,8 @@
 // Числа каждый раз новые (не банк готовых вопросов), поэтому нельзя выучить
 // ответы — только сами формулы. Игроки берутся из общего списка "businessPlayers"
 // (уже собран на экране выбора игры) и отвечают по очереди, как в games/quiz.js,
-// только без таймера — это тренажёр на понимание, а не на скорость.
+// только без таймера — это тренажёр на понимание, а не на скорость. При одном
+// участнике телефон не передаётся: вопросы идут подряд.
 
 const BIZ_OBS_TYPES = [
   { icon:'☕', name:'Кофейня', priceMin:120, priceMax:220, costMin:0.25, costMax:0.4, fixedMin:60000, fixedMax:140000 },
@@ -27,7 +28,7 @@ const BIZ_OBS_TYPES = [
 let bizObsAnswered = false;
 
 function bizObsPlayersList(){
-  return (state.businessPlayers && state.businessPlayers.length >= 2) ? state.businessPlayers : [businessDefaultName(0), businessDefaultName(1)];
+  return (state.businessPlayers && state.businessPlayers.length >= 1) ? state.businessPlayers : [businessDefaultName(0)];
 }
 function bizObsFmtMoney(n){
   const rounded = Math.round(n);
@@ -287,7 +288,7 @@ function bizObsAdvanceQueue(){
     return;
   }
   const perPlayer = state.bizObsQuestionCount || 5;
-  if(state.bizObsIndex % perPlayer === 0){
+  if(state.bizObsIndex % perPlayer === 0 && bizObsPlayersList().length > 1){
     const n = bizObsPlayersList().length || 1;
     state.bizObsCurrentPlayerIndex = ((state.bizObsCurrentPlayerIndex || 0) + 1) % n;
     saveState();
@@ -330,7 +331,8 @@ function goToBizObsGame(){
   goToGame('bizObsSetup', 'bizObsGame');
   updateMuteBtn();
   requestWakeLock();
-  bizObsShowHandoffCard();
+  if(players.length > 1) bizObsShowHandoffCard();
+  else bizObsShowQuestion();
 }
 function exitBizObsGame(){
   hideModal('bizObsSummaryModal');

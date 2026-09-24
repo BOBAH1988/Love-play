@@ -260,6 +260,56 @@ test('«Крокодил»: в обеих версиях у игровых кн�
   });
 });
 
+test('Бизнес-игры: по умолчанию доступен один «Предприниматель»', () => {
+  const previous = state.businessPlayers;
+  try {
+    state.businessPlayers = ['Предприниматель'];
+    assert(state.businessPlayers.length === 1,
+      'у бизнес-игр должен быть один участник по умолчанию');
+    assert(global.bizObsPlayersList().length === 1,
+      '«Оцени бизнес» должен использовать список из одного участника');
+    global.renderBusinessPlayers();
+    assert(state.businessPlayers.length === 1,
+      'рендеринг не должен добавлять второго участника автоматически');
+  } finally {
+    state.businessPlayers = previous;
+  }
+});
+
+test('Бизнес-игры: старый дефолт мигрируется, ручные имена сохраняются', () => {
+  const oldDefault = { schemaVersion: 3, businessPlayers: ['Предприниматель', 'Управляющий'] };
+  global.applyMigrations(oldDefault);
+  assert(oldDefault.businessPlayers.length === 1 && oldDefault.businessPlayers[0] === 'Предприниматель',
+    'старая автоматическая пара должна стать одним участником');
+  const custom = { schemaVersion: 3, businessPlayers: ['Анна', 'Борис'] };
+  global.applyMigrations(custom);
+  assert(custom.businessPlayers.length === 2 && custom.businessPlayers[0] === 'Анна' && custom.businessPlayers[1] === 'Борис',
+    'миграция не должна менять вручную заданные имена');
+});
+
+test('«Оцени бизнес»: при одном участнике вопрос идёт без передачи телефона', () => {
+  const previousPlayers = state.businessPlayers;
+  const previousQueue = state.bizObsQueue;
+  const previousIndex = state.bizObsIndex;
+  const previousCount = state.bizObsQuestionCount;
+  try {
+    state.businessPlayers = ['Предприниматель'];
+    state.bizObsQuestionCount = 3;
+    state.bizObsIndex = 0;
+    global.goToBizObsGame();
+    const handoff = getElById(stub, 'bizObsHandoffRow');
+    assert(state.bizObsQueue.length === 3,
+      'для одного участника должна создаваться одна порция вопросов');
+    assert(handoff.style.display === 'none',
+      'при одном участнике карточка передачи телефона не должна показываться');
+  } finally {
+    state.businessPlayers = previousPlayers;
+    state.bizObsQueue = previousQueue;
+    state.bizObsIndex = previousIndex;
+    state.bizObsQuestionCount = previousCount;
+  }
+});
+
 test('«Игры для компании»: карточки используют общий ультрамариновый градиент', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
   const ids = [
