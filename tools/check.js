@@ -1073,6 +1073,22 @@ function checkStyles(html) {
   check('нет мёртвых правил значков строки пилюль «Давай попробуем»',
     !/davay-add-plus|davay-sound-icon/.test(css),
     'в CSS остались правила классов davay-add-plus/davay-sound-icon — таких элементов больше нет');
+  // «Предложи партнеру»: показ по порядку — режим по умолчанию (миграция
+  // MIGRATIONS[3], v469). Дефолт, сброс и статическая разметка кнопки
+  // обязаны согласовываться между собой: иначе игрок после сброса или
+  // в первом запуске видит не тот режим/иконку.
+  const photoCore = read('games/core.js');
+  check('«Предложи партнеру»: по умолчанию показ по порядку (дефолт true)',
+    /photoOrderMode:\s*true/.test(photoCore),
+    'дефолт state.photoOrderMode снова false — карточки пойдут в случайном порядке');
+  const photoResetBody = photoCore.slice(photoCore.indexOf('function performFullReset'));
+  check('«Предложи партнеру»: сброс прогресса возвращает показ по порядку',
+    /state\.photoOrderMode = true;/.test(photoResetBody.slice(0, photoResetBody.indexOf('\n}'))),
+    'performFullReset выставляет photoOrderMode=false — после сброса режим не тот');
+  check('«Предложи партнеру»: разметка кнопки соответствует дефолту (📶 «По порядку»)',
+    /id="photoRandomToggleBtn"[^>]*data-tt="По порядку"[^>]*>📶</.test(html)
+      && /id="photoRandomToggleBtn"[^>]*aria-label="Показ по порядку/.test(html),
+    'статическая разметка кнопки приведена к старому дефолту (🔀 «Случайный порядок») — до первого вызова updatePhotoRandomToggleBtn игрок видит не ту иконку');
   // Кнопка 🔀 «Случайный порядок» живёт в скрытом блоке «Дополнительно»
   // (row2) «Видеорулетки». Видимость и место задаёт CSS, а не разметка:
   // в раскрытом блоке `.row2` становится `display:contents`, и все кнопки

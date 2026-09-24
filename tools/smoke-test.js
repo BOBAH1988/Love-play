@@ -2605,6 +2605,35 @@ test('Сценарий: «Предложи партнеру» без карто�
 });
 
 
+// «Предложи партнеру»: показ по порядку — режим по умолчанию (миграция
+// MIGRATIONS[3], v469). Дефолт в state, сброс и иконка кнопки связаны:
+// после загрузки режим должен быть «по порядку», а один клик — перевести
+// показ в случайный и сменить иконку на 🔀.
+test('Сценарий: «Предложи партнеру» стартует «По порядку», клик переводит в случайный', () => {
+  const orderedBefore = eval('state.photoOrderMode');
+  assert(orderedBefore === true,
+    `после загрузки photoOrderMode должен быть true, получено: ${orderedBefore}`);
+  const gameEl = getElById(stub, 'game');
+  const btn = getElById(stub, 'photoRandomToggleBtn');
+  try {
+    // Обработчик кнопки начинается с if(!isPlaceholderMode()) return — без
+    // класса placeholder-mode клик молча вышел бы и ничего не переключил.
+    gameEl.classList.add('placeholder-mode');
+    global.updatePhotoRandomToggleBtn();
+    assert(btn.textContent === '📶' && btn.dataset.tt === 'По порядку',
+      `в режиме «по порядку» кнопка обязана показывать 📶 «По порядку», получено: ${btn.textContent} / ${btn.dataset.tt}`);
+    btn.click();
+    assert(eval('state.photoOrderMode') === false,
+      'один клик должен перевести показ в случайный порядок');
+    assert(btn.textContent === '🔀' && btn.dataset.tt === 'Случайный порядок',
+      `после клика кнопка обязана показывать 🔀 «Случайный порядок», получено: ${btn.textContent} / ${btn.dataset.tt}`);
+  } finally {
+    eval('state.photoOrderMode = true;');
+    global.updatePhotoRandomToggleBtn();
+    gameEl.classList.remove('placeholder-mode');
+  }
+});
+
 // #gameLevelLabel гаснет на время тоста (тост показывается поверх заголовка) и
 // обязан вернуться: раньше видимость возвращал только режим «Предложи партнёру»,
 // и после любого тоста в «Видеорулетке» её название пропадало до следующего

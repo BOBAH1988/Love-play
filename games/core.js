@@ -50,7 +50,7 @@ const STORAGE_KEY = 'couple-game-state-v1';
  * Старые шаги не удаляйте: у кого-то сохранение может быть с версии 1,
  * и ему нужно пройти весь путь по порядку.
  */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 // Таблица миграций: ключ — номер версии, значение — функция (state) => void.
 // Версия 1 — стартовая: сюда вошли все проверки, которые раньше лежали
 // подряд в loadState() (поля сапёра и «Счастливого билета», имена игроков
@@ -138,6 +138,17 @@ MIGRATIONS[2] = function(s){
   s.sexQuestMode = 'random';
   s.sexQuestPlayMode = 'smooth';
 };
+/**
+ * Версия 3: «Предложи партнеру» — показ по порядку стал режимом по умолчанию
+ * (запрос владельца, 2026-10-02). Применяется один раз ко всем сейвам:
+ * поле photoOrderMode уже лежит в localStorage со старым значением false,
+ * и без миграции новые дефолты до существующих игроков не дошли бы.
+ * Осознанный выбор «случайный порядок» перезаписывается — так задумано
+ * (как у MIGRATIONS[2], запрос владельца).
+ */
+MIGRATIONS[3] = function(s){
+  s.photoOrderMode = true;
+};
 // Дефолтные имена игроков «Игр для компании» — порядковые: «Первый», «Второй», …
 // до «Десятый» (список ограничен 10). Используется renderPartyPlayers() в
 // games/krokodil.js и всеми играми компании как фолбэк вместо прежних «Игрок N».
@@ -181,7 +192,7 @@ let state = {
   /* Рулетка желаний */
   wrSelectedLevel:1, wrScore1:0, wrScore2:0, wrGameMode:'interesting', wrSimpleTurn:0, /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правду/Действие перед ходом */
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
-  photoOrderMode:false, photoSeqIndex:{},
+  photoOrderMode:true, photoSeqIndex:{},
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false,
   videoRandomMode:false, videoSoundOn:false,
   videoDbMigrated:false, videoResetAt:0,
@@ -1747,7 +1758,7 @@ function performFullReset(){
    state.score1 = 0;
    state.score2 = 0;
    state.gameType = 'fanty';
-   state.photoOrderMode = false;
+   state.photoOrderMode = true;
    state.tdSelectedLevel = 3;
    state.bingoSelectedLevel = 1;
    state.timerSelectedLevel = 1;
@@ -3263,10 +3274,10 @@ function closeImageZoom(){
 document.getElementById('imageZoomModal').addEventListener('click', closeImageZoom);
 
 /* ============ "ПО ПОРЯДКУ" / СЛУЧАЙНО ("Предложи партнеру") ============ */
-// Кнопка рядом с "Следующая" — по умолчанию карточки идут в случайном
-// порядке (как раньше); при выключении рандома показ переключается на
-// последовательный, от карточки №1, отдельно для каждого уровня
-// (state.photoSeqIndex[level]), см. drawPhotoCard.
+// Кнопка рядом с "Следующая" — по умолчанию карточки идут по порядку
+// от №1 (дефолт photoOrderMode:true, миграция MIGRATIONS[3]); переключатель
+// переводит показ в случайный (из непоказанного пула), отдельно для каждого
+// уровня хранится указатель порядка (state.photoSeqIndex[level]), см. drawPhotoCard.
 function updatePhotoRandomToggleBtn(){
   const btn = document.getElementById('photoRandomToggleBtn');
   if(!btn) return;
