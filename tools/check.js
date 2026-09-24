@@ -139,6 +139,28 @@ function checkMarkup(html) {
   const dupes = [...new Set(allIds.filter((id, i) => allIds.indexOf(id) !== i))];
   check('нет дублирующихся id', dupes.length === 0, `дубли: ${dupes.join(', ')}`);
 
+  // В обеих версиях «Крокодила» игровые действия остаются текстовыми:
+  // карточки и итоги могут иметь иконки, но подписи кнопок — нет.
+  const crocodileButtonIds = [
+    'kidsKrokodilStartRoundBtn', 'kidsKrokodilGuessedBtn', 'kidsKrokodilSkipBtn',
+    'krokodilStartRoundBtn', 'krokodilGuessedBtn', 'krokodilSkipBtn',
+  ];
+  const crocodileLabels = ['Начать раунд', 'Угадали', 'Пропустить', 'Начать раунд', 'Угадали', 'Пропустить'];
+  const crocodileSources = html + read('games/krokodil.js') + read('games/kids-krokodil.js');
+  const cleanCrocodileButtons = crocodileButtonIds.every((id, i) => {
+    const re = new RegExp(`<button\\b[^>]*id="${id}"[^>]*>\\s*${crocodileLabels[i]}\\s*</button>`);
+    return re.test(html);
+  });
+  const noActionIcons = !/▶ Начать раунд|✅ Угадали|➡️ Пропустить/.test(crocodileSources);
+  const cleanGeneratedLevels = /class="lname">\$\{l\.name\}<\/div>/.test(read('games/krokodil.js'));
+  check('кнопки «Крокодила» без декоративных иконок',
+    cleanCrocodileButtons && noActionIcons && cleanGeneratedLevels,
+    !cleanCrocodileButtons
+      ? 'подписи кнопок хода должны быть: Начать раунд / Угадали / Пропустить'
+      : !noActionIcons
+        ? 'в коде остались ▶ Начать раунд, ✅ Угадали или ➡️ Пропустить'
+        : 'генерируемый выбор уровня не должен подставлять ${l.icon}');
+
   // Меню «☰» не должно возвращать пункты, дублирующие автоматику.
   // «Обновить приложение» повторял плашку #updateToast, которую Service Worker
   // показывает сам; «Сообщить о проблеме» повторял кнопку на экране ошибки,

@@ -259,7 +259,7 @@ function kkrNextPlayerRound(){
   document.getElementById('kidsKrokodilStartRoundBtn').style.display = 'flex';
   fadeSwapEl('kidsKrokodilCard', (el)=>{
     el.className = 'card';
-    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «▶ Начать раунд»</div></div></div>`;
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «Начать раунд»</div></div></div>`;
   });
 }
 function goToKidsKrokodilGame(){
@@ -284,7 +284,7 @@ function goToKidsKrokodilGame(){
   document.getElementById('kidsKrokodilRoundSummary').style.display = 'none';
   fadeSwapEl('kidsKrokodilCard', (el)=>{
     el.className = 'card';
-    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «▶ Начать раунд»</div></div></div>`;
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «Начать раунд»</div></div></div>`;
   });
   updateMuteBtn();
   requestWakeLock();

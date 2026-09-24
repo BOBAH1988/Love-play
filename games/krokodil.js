@@ -80,7 +80,7 @@ function renderKrokodilSetupLevels(){
   (typeof KROKODIL_LEVELS !== 'undefined' ? KROKODIL_LEVELS : []).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'level-toggle' + (state.krokodilSelectedLevel === l.id ? ' on' : '');
-    div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
+    div.innerHTML = `<div class="lname">${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
     div.addEventListener('click', ()=>{
       state.krokodilSelectedLevel = l.id;
       saveState();
@@ -346,7 +346,7 @@ function krNextPlayerRound(){
   document.getElementById('krokodilStartRoundBtn').style.display = 'flex';
   fadeSwapEl('krokodilCard', (el)=>{
     el.className = 'card';
-    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «▶ Начать раунд»</div></div></div>`;
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «Начать раунд»</div></div></div>`;
   });
 }
 function goToKrokodilGame(){
@@ -377,7 +377,7 @@ function goToKrokodilGame(){
   document.getElementById('krokodilRoundSummary').style.display = 'none';
   fadeSwapEl('krokodilCard', (el)=>{
     el.className = 'card';
-    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «▶ Начать раунд»</div></div></div>`;
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «Начать раунд»</div></div></div>`;
   });
   updateMuteBtn();
   requestWakeLock();
@@ -424,7 +424,7 @@ function resumeKrokodilGame(){
   document.getElementById('krokodilRoundSummary').style.display = 'none';
   fadeSwapEl('krokodilCard', (el)=>{
     el.className = 'card';
-    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «▶ Начать раунд»</div></div></div>`;
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon">🐊</div><div class="card-text">Нажмите «Начать раунд»</div></div></div>`;
   });
   updateMuteBtn();
   requestWakeLock();

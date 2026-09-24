@@ -246,6 +246,20 @@ test('«Арифметика»: карточка собрана как у ост
     'все кнопки ответов должны использовать единый непрозрачный белый стиль с тёмным текстом');
 });
 
+test('«Крокодил»: в обеих версиях у игровых кнопок нет иконок', () => {
+  [
+    ['kidsKrokodilStartRoundBtn', 'Начать раунд'],
+    ['kidsKrokodilGuessedBtn', 'Угадали'],
+    ['kidsKrokodilSkipBtn', 'Пропустить'],
+    ['krokodilStartRoundBtn', 'Начать раунд'],
+    ['krokodilGuessedBtn', 'Угадали'],
+    ['krokodilSkipBtn', 'Пропустить'],
+  ].forEach(([id, label]) => {
+    const re = new RegExp(`<button\\b[^>]*id="${id}"[^>]*>\\s*${label}\\s*</button>`);
+    assert(re.test(html), `${id}: ожидалась подпись «${label}» без иконки`);
+  });
+});
+
 test('«Игры с детьми»: карточки и витрина используют тёмно-бирюзовый фон', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
   const group = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(css);
