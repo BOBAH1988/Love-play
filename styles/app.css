@@ -1743,30 +1743,30 @@
   }
   .shop-register-card .shop-cart-list, .shop-register-card .shop-cart-total{ color:#fff; }
   /* Карточка "Крокодила" — вместо обычного белого фона с чёрным текстом
-     спокойный сине-голубой градиент вместо обычного плоского бело-чёрного
+     ультрамариновый градиент вместо обычного плоского бело-чёрного
      оформления и белый текст, чтобы слово выделялось на карточке. */
   #krokodilCard{
-    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
     color:#fff;
   }
   #krokodilCard .card-text{color:#fff;}
   /* Карточка "Твистера" — та же заливка и цвет текста, что у "Крокодила". */
   #twisterCard{
-    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
     color:#fff;
   }
   #twisterCard .card-text{color:#fff;}
   #twisterCard .card-split-title{color:#fff;}
-  /* Карточка "Мемасиков" — то же оформление, что у "Крокодила" (синий
+  /* Карточка "Мемасиков" — то же оформление, что у "Крокодила" (ультрамариновый
      градиент + белый текст по центру), но без иконки — просто текст ситуации. */
   #memesCard{
-    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
     color:#fff;
   }
   #memesCard .card-text{color:#fff;}
   /* Карточка "Я никогда не" (компания) — тот же стандарт, что у "Мемасиков". */
   #partyNeverCard{
-    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
     color:#fff;
   }
   #partyNeverCard .card-text{color:#fff;}
@@ -1878,10 +1878,10 @@
     hyphens:auto;
   }
   /* Карточка "Фанты" (компания) — тот же стиль-стандарт, что у "Крокодила"/
-     "Мемасиков" (синий градиент, белый текст по центру), без иконки —
+     "Мемасиков" (ультрамариновый градиент, белый текст по центру), без иконки —
      задание достаточно длинное само по себе, как у "Мемасиков". */
   #partyFantsCard{
-    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
     color:#fff;
   }
   #partyFantsCard .card-text{color:#fff;}
@@ -1894,7 +1894,7 @@
   /* Карточка "Правда/Действие" (компания) — тот же карточный стандарт, плюс
      значок сверху, показывающий, что выбрал игрок: Правда или Действие. */
   #partyTdCard{
-    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
     color:#fff;
   }
   #partyTdCard .card-text{color:#fff;}
@@ -1915,15 +1915,15 @@
     line-height:1.4;
     text-shadow:0 3px 12px rgba(0,0,0,.3);
   }
-  /* Карточки группы «Компания» сохраняют общий синий фон. Отдельного цвета
-     кнопок нет: все .znayu-answer-btn оформляет общий компонент ниже. */
+  /* Карточки группы «Компания» сохраняют общий ультрамариновый фон. Отдельного
+     цвета кнопок нет: все .znayu-answer-btn оформляет общий компонент ниже. */
   #famZnayuCard{
-    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
     color:#fff;
   }
   #famZnayuCard .card-text{color:#fff;}
   #partyQuizCard{
-    background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
+    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
     color:#fff;
   }
   /* Вопрос «Викторины» выделяется тёплым золотым; стиль кнопок ответов

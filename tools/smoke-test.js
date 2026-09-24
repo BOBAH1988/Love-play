@@ -260,6 +260,21 @@ test('«Крокодил»: в обеих версиях у игровых кн�
   });
 });
 
+test('«Игры для компании»: карточки используют общий ультрамариновый градиент', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  const ids = [
+    'krokodilCard', 'twisterCard', 'memesCard', 'partyNeverCard',
+    'partyFantsCard', 'partyTdCard', 'famZnayuCard', 'partyQuizCard',
+  ];
+  const gradient = 'linear-gradient\\(160deg,\\s*#5b4bd6,\\s*#34278f\\s+55%,\\s*#171547\\)';
+  const allUseUltramarine = ids.every((id) => {
+    const re = new RegExp(`#${id}\\s*\\{[^}]*background:\\s*${gradient}`);
+    return re.test(css);
+  });
+  assert(allUseUltramarine, 'все восемь карточек группы «Игры для компании» должны использовать ультрамариновый градиент');
+  assert(!/#4a90c2|#2c5a7a/.test(css), 'старый тёмно-синий градиент не должен оставаться в стилях');
+});
+
 test('«Игры с детьми»: карточки и витрина используют тёмно-бирюзовый фон', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
   const group = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(css);

@@ -882,6 +882,25 @@ function checkStyles(html) {
         ? 'найдено правило #id ... .znayu-answer-btn — цвет кнопки не должен зависеть от карточки'
         : 'общий .znayu-answer-btn должен иметь непрозрачный белый фон, тёмный текст и общую рамку');
 
+    // Карточки игр компании используют общий ультрамариновый градиент.
+    // Проверяем все восемь карточек: одна забытая карточка снова сделает группу
+    // визуально неоднородной, а отдельный старый градиент — вернёт старый оттенок.
+    const companyCardIds = [
+      'krokodilCard', 'twisterCard', 'memesCard', 'partyNeverCard',
+      'partyFantsCard', 'partyTdCard', 'famZnayuCard', 'partyQuizCard',
+    ];
+    const ultramarineGradient = 'linear-gradient\\(160deg,\\s*#5b4bd6,\\s*#34278f\\s+55%,\\s*#171547\\)';
+    const companyCardsUseUltramarine = companyCardIds.every((id) => {
+      const re = new RegExp(`#${id}\\s*\\{[^}]*background:\\s*${ultramarineGradient}`);
+      return re.test(cssWithoutComments);
+    });
+    const oldCompanyBlue = /#4a90c2|#2c5a7a/.test(cssWithoutComments);
+    check('фон карточек игр компании использует ультрамариновый градиент',
+      companyCardsUseUltramarine && !oldCompanyBlue,
+      !companyCardsUseUltramarine
+        ? 'ожидается градиент #5b4bd6 → #34278f → #171547 у всех карточек группы'
+        : 'старый синий градиент #4a90c2/#2c5a7a ещё используется');
+
     // Детская «Викторина» и витрина «Магазина» используют единый
     // тёмно-бирюзовый фон группы, одинаковый в браузере и PWA. Standalone
     // не должен перекрашивать карточки детей отдельными правилами.
