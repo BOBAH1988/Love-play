@@ -1153,7 +1153,7 @@
   .shop-showcase-item{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:2px; padding:7px 2px 6px; border-radius:12px;
-    background:linear-gradient(160deg, #2a817c, #155f68 55%, #0b303b);
+    background:linear-gradient(160deg, #2b837f, #176e76 55%, #0d3741);
     border:2px solid rgba(255,255,255,.25); color:#fff; text-align:center;
     cursor:pointer; min-height:74px;
   }
@@ -1723,7 +1723,7 @@
      Детская «Викторина» использует его же, без отдельного светлого фона;
      кнопки ответов по-прежнему оформляет общий белый компонент. */
   #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #kidsQuizCard, #flashCard, #whatToPlayCard, .shop-register-card{
-    background:linear-gradient(160deg, #2a817c, #155f68 55%, #0b303b);
+    background:linear-gradient(160deg, #2b837f, #176e76 55%, #0d3741);
     color:#fff;
   }
   /* Обучающие игры: одинаковая синяя подложка внутри группы. Ответы всех

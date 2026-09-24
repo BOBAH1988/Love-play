@@ -248,8 +248,8 @@ test('«Арифметика»: карточка собрана как у ост
 
 test('«Игры с детьми»: карточки и витрина используют тёмно-бирюзовый фон', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
-  const group = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2a817c,\s*#155f68\s+55%,\s*#0b303b/.test(css);
-  const shop = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2a817c,\s*#155f68\s+55%,\s*#0b303b/.test(css);
+  const group = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(css);
+  const shop = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(css);
   assert(group, 'детская «Викторина» должна входить в общий тёмно-бирюзовый блок группы');
   assert(shop, 'витрина «Магазина» должна использовать тот же тёмно-бирюзовый градиент');
   assert(!/#kidsQuizCard\s*\{[^}]*\bbackground\s*:/.test(css),

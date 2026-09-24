@@ -863,14 +863,14 @@ function checkStyles(html) {
     // Детская «Викторина» и витрина «Магазина» используют единый
     // тёмно-бирюзовый фон группы, одинаковый в браузере и PWA. Standalone
     // не должен перекрашивать карточки детей отдельными правилами.
-    const kidsQuizInTurquoiseGroup = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2a817c,\s*#155f68\s+55%,\s*#0b303b/.test(cssWithoutComments);
-    const shopUsesTurquoise = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2a817c,\s*#155f68\s+55%,\s*#0b303b/.test(cssWithoutComments);
+    const kidsQuizInTurquoiseGroup = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(cssWithoutComments);
+    const shopUsesTurquoise = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(cssWithoutComments);
     const separateKidsQuizBackground = /#kidsQuizCard\s*\{[^}]*\bbackground\s*:/.test(cssWithoutComments);
     const pwaKidsCardStyle = /pwa-standalone[^{}]*#kids[A-Za-z0-9_-]*Card|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#kids[A-Za-z0-9_-]*Card/.test(cssWithoutComments);
     check('фон группы «Игры с детьми» одинаков в браузере и PWA',
       kidsQuizInTurquoiseGroup && shopUsesTurquoise && !separateKidsQuizBackground && !pwaKidsCardStyle,
       !kidsQuizInTurquoiseGroup || !shopUsesTurquoise
-        ? 'ожидается общий тёмно-бирюзовый градиент #2a817c → #155f68 → #0b303b'
+        ? 'ожидается общий тёмно-бирюзовый градиент #2b837f → #176e76 → #0d3741'
         : separateKidsQuizBackground
           ? 'у #kidsQuizCard снова есть отдельный background — включите карточку в общий бирюзовый блок'
           : pwaKidsCardStyle
