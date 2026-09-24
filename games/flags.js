@@ -1,7 +1,7 @@
 // games/flags.js — Игра "Флаги" (обучающая игра: угадать страну по флагу).
 // Запускается из экрана настроек в хабе обучающих игр. Однопользовательский режим.
 
-const FLAGS_COUNT_VALUES = [5, 10, 25, 50];
+const FLAGS_COUNT_VALUES = [5, 10, 25];
 
 let flagsIntervalId = null;
 let flagsDeadline = 0;
@@ -64,7 +64,7 @@ function flagsQuestionHtml(item, answersHtml){
   return `<div class="card-inner"><div class="flags-card-media">${flagHtml}</div><div class="card-body"><div class="znayu-question-text">Выберите страну по флагу</div></div><div class="znayu-answers">${answersHtml}</div><div class="quiz-tts-hint" id="flagsTtsHint">🔊</div></div>`;
 }
 function updateFlagsProgressUI(){
-  const total = state.flagsQueue.length || (FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 5);
+  const total = state.flagsQueue.length || (FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 10);
   const current = Math.min((state.flagsIndex || 0) + 1, total);
   const label = document.getElementById('flagsProgressLabel');
   const fill = document.getElementById('flagsProgressFill');
@@ -261,7 +261,7 @@ function renderFlagsLevelGroup(){
 function renderFlagsCountGroup(){
   const count = Number(state.flagsQuestionCount);
   if(!FLAGS_COUNT_VALUES.includes(count)){
-    state.flagsQuestionCount = 5;
+    state.flagsQuestionCount = 10;
     saveState();
   }
   document.querySelectorAll('#flagsCountGroup .starter-btn').forEach(btn=>{

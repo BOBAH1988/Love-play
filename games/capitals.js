@@ -2,7 +2,7 @@
 // Запускается из экрана настроек в хабе обучающих игр. Однопользовательский режим.
 // Аналог «Флагов», но вместо флага — название страны, нужно выбрать столицу.
 
-const CAPITALS_COUNT_VALUES = [5, 10, 25, 50];
+const CAPITALS_COUNT_VALUES = [5, 10, 25];
 
 let capitalsIntervalId = null;
 let capitalsDeadline = 0;
@@ -65,7 +65,7 @@ function capitalsQuestionHtml(item, answersHtml){
   return `<div class="card-inner"><div class="flags-card-media">${flagHtml}</div><div class="card-body"><div class="znayu-question-text">Столица ${item.country}</div></div><div class="znayu-answers">${answersHtml}</div><div class="quiz-tts-hint" id="capitalsTtsHint">🔊</div></div>`;
 }
 function updateCapitalsProgressUI(){
-  const total = state.capitalsQueue.length || (CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 5);
+  const total = state.capitalsQueue.length || (CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 10);
   const current = Math.min((state.capitalsIndex || 0) + 1, total);
   const label = document.getElementById('capitalsProgressLabel');
   const fill = document.getElementById('capitalsProgressFill');
@@ -263,7 +263,7 @@ function renderCapitalsLevelGroup(){
 function renderCapitalsCountGroup(){
   const count = Number(state.capitalsQuestionCount);
   if(!CAPITALS_COUNT_VALUES.includes(count)){
-    state.capitalsQuestionCount = 5;
+    state.capitalsQuestionCount = 10;
     saveState();
   }
   document.querySelectorAll('#capitalsCountGroup .starter-btn').forEach(btn=>{

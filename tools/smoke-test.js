@@ -148,7 +148,7 @@ test('Данные «Флагов» загружены и формируют о�
   try {
     state.flagsSelectedLevel = 1;
     state.flagsUsed = {};
-    [5, 10, 25, 50].forEach(count => {
+    [5, 10, 25].forEach(count => {
       state.flagsQuestionCount = count;
       global.drawFlagsQueue();
       assert(state.flagsQueue && state.flagsQueue.length === count,
@@ -425,7 +425,7 @@ test('Данные «Столиц» загружены и формируют о�
   try {
     state.capitalsSelectedLevel = 1;
     state.capitalsUsed = {};
-    [5, 10, 25, 50].forEach(count => {
+    [5, 10, 25].forEach(count => {
       state.capitalsQuestionCount = count;
       global.drawCapitalsQueue();
       assert(state.capitalsQueue && state.capitalsQueue.length === count,
@@ -443,6 +443,30 @@ test('Данные «Столиц» загружены и формируют о�
     state.capitalsUsed = previousUsed;
     state.capitalsQueue = previousQueue;
     state.capitalsIndex = previousIndex;
+  }
+});
+
+test('«Флаги»/«Столицы»: вариант 50 удалён, старое значение заменяется на 10', () => {
+  const previousCounts = {
+    flagsQuestionCount: state.flagsQuestionCount,
+    capitalsQuestionCount: state.capitalsQuestionCount,
+  };
+  try {
+    [
+      ['flagsCountGroup', 'flagsQuestionCount', 'renderFlagsCountGroup'],
+      ['capitalsCountGroup', 'capitalsQuestionCount', 'renderCapitalsCountGroup'],
+    ].forEach(([groupId, stateKey, renderFn]) => {
+      const group = new RegExp(`id="${groupId}"[^>]*>([\\s\\S]*?)</div>`).exec(html);
+      const values = group ? [...group[1].matchAll(/data-value="(\d+)"/g)].map(match => Number(match[1])) : [];
+      assert(values.join(',') === '5,10,25',
+        `${groupId}: ожидались только варианты 5, 10 и 25`);
+      state[stateKey] = 50;
+      global[renderFn]();
+      assert(state[stateKey] === 10,
+        `${stateKey}: старое значение 50 должно заменяться на 10`);
+    });
+  } finally {
+    Object.assign(state, previousCounts);
   }
 });
 

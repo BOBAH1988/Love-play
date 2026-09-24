@@ -191,6 +191,24 @@ function checkMarkup(html) {
       ? 'нет общего .business-players-row вокруг списка и кнопки'
       : '');
 
+  // В «Флагах» и «Столицах» удалён вариант 50 карточек. Проверяем не
+  // отдельную строку, а полный набор значений: так кнопка не вернётся ни
+  // как data-value="50", ни под другим текстом.
+  const countGroupValues = (id) => {
+    const match = new RegExp(`id="${id}"[^>]*>([\\s\\S]*?)</div>`).exec(html);
+    return match ? [...match[1].matchAll(/data-value="(\d+)"/g)].map(item => Number(item[1])) : [];
+  };
+  const flagsCountValues = countGroupValues('flagsCountGroup');
+  const capitalsCountValues = countGroupValues('capitalsCountGroup');
+  const countValuesOk = flagsCountValues.join(',') === '5,10,25' && capitalsCountValues.join(',') === '5,10,25';
+  const runtimeValuesOk = /const FLAGS_COUNT_VALUES = \[5, 10, 25\];/.test(read('games/flags.js')) &&
+    /const CAPITALS_COUNT_VALUES = \[5, 10, 25\];/.test(read('games/capitals.js'));
+  check('в настройках «Флагов» и «Столиц» только 5/10/25 карточек',
+    countValuesOk && runtimeValuesOk,
+    !countValuesOk
+      ? 'в группах #flagsCountGroup/#capitalsCountGroup ожидались только 5, 10 и 25'
+      : 'runtime-списки размеров должны совпадать с настройками');
+
   // Меню «☰» не должно возвращать пункты, дублирующие автоматику.
   // «Обновить приложение» повторял плашку #updateToast, которую Service Worker
   // показывает сам; «Сообщить о проблеме» повторял кнопку на экране ошибки,
