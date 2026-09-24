@@ -2605,14 +2605,13 @@ test('Сценарий: «Предложи партнеру» без карто�
 });
 
 
-// «Предложи партнеру»: показ по порядку — режим по умолчанию (миграция
-// MIGRATIONS[3], v469). Дефолт в state, сброс и иконка кнопки связаны:
-// после загрузки режим должен быть «по порядку», а один клик — перевести
-// показ в случайный и сменить иконку на 🔀.
-test('Сценарий: «Предложи партнеру» стартует «По порядку», клик переводит в случайный', () => {
+// «Предложи партнеру»: дефолт — случайный порядок с иконкой 📶; нажатие
+// включает показ по порядку и меняет иконку на 🔀 (перестановка иконок —
+// запрос владельца, v470). Дефолт в state, сброс и иконка связаны.
+test('Сценарий: «Предложи партнеру» стартует случайно (📶), клик включает порядок (🔀)', () => {
   const orderedBefore = eval('state.photoOrderMode');
-  assert(orderedBefore === true,
-    `после загрузки photoOrderMode должен быть true, получено: ${orderedBefore}`);
+  assert(orderedBefore === false,
+    `после загрузки photoOrderMode должен быть false, получено: ${orderedBefore}`);
   const gameEl = getElById(stub, 'game');
   const btn = getElById(stub, 'photoRandomToggleBtn');
   try {
@@ -2620,15 +2619,18 @@ test('Сценарий: «Предложи партнеру» стартует �
     // класса placeholder-mode клик молча вышел бы и ничего не переключил.
     gameEl.classList.add('placeholder-mode');
     global.updatePhotoRandomToggleBtn();
-    assert(btn.textContent === '📶' && btn.dataset.tt === 'По порядку',
-      `в режиме «по порядку» кнопка обязана показывать 📶 «По порядку», получено: ${btn.textContent} / ${btn.dataset.tt}`);
+    assert(btn.textContent === '📶' && btn.dataset.tt === 'Случайный порядок',
+      `в случайном режиме кнопка обязана показывать 📶 «Случайный порядок», получено: ${btn.textContent} / ${btn.dataset.tt}`);
     btn.click();
-    assert(eval('state.photoOrderMode') === false,
-      'один клик должен перевести показ в случайный порядок');
-    assert(btn.textContent === '🔀' && btn.dataset.tt === 'Случайный порядок',
-      `после клика кнопка обязана показывать 🔀 «Случайный порядок», получено: ${btn.textContent} / ${btn.dataset.tt}`);
+    assert(eval('state.photoOrderMode') === true,
+      'один клик должен включить показ по порядку');
+    assert(btn.textContent === '🔀' && btn.dataset.tt === 'По порядку',
+      `после клика кнопка обязана показывать 🔀 «По порядку», получено: ${btn.textContent} / ${btn.dataset.tt}`);
+    btn.click();
+    assert(eval('state.photoOrderMode') === false && btn.textContent === '📶',
+      'второй клик должен вернуть случайный порядок и иконку 📶');
   } finally {
-    eval('state.photoOrderMode = true;');
+    eval('state.photoOrderMode = false;');
     global.updatePhotoRandomToggleBtn();
     gameEl.classList.remove('placeholder-mode');
   }

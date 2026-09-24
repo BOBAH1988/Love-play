@@ -139,15 +139,15 @@ MIGRATIONS[2] = function(s){
   s.sexQuestPlayMode = 'smooth';
 };
 /**
- * Версия 3: «Предложи партнеру» — показ по порядку стал режимом по умолчанию
- * (запрос владельца, 2026-10-02). Применяется один раз ко всем сейвам:
- * поле photoOrderMode уже лежит в localStorage со старым значением false,
- * и без миграции новые дефолты до существующих игроков не дошли бы.
- * Осознанный выбор «случайный порядок» перезаписывается — так задумано
- * (как у MIGRATIONS[2], запрос владельца).
+ * Версия 3: «Предложи партнеру» — иконки кнопки порядка переставлены местами
+ * и закреплён дефолт «случайный порядок» (запрос владельца, 2026-10-02):
+ * 📶 показывается в случайном режиме (дефолт), 🔀 — в режиме «по порядку».
+ * Миграция возвращает photoOrderMode к дефолту false у всех сейвов —
+ * принудительно, как у MIGRATIONS[2]: осознанный выбор перезаписывается,
+ * чтобы поведение после обновления было одинаковым у всех.
  */
 MIGRATIONS[3] = function(s){
-  s.photoOrderMode = true;
+  s.photoOrderMode = false;
 };
 // Дефолтные имена игроков «Игр для компании» — порядковые: «Первый», «Второй», …
 // до «Десятый» (список ограничен 10). Используется renderPartyPlayers() в
@@ -192,7 +192,7 @@ let state = {
   /* Рулетка желаний */
   wrSelectedLevel:1, wrScore1:0, wrScore2:0, wrGameMode:'interesting', wrSimpleTurn:0, /* 'fanty' — случайный тип карты; 'td' — игрок выбирает Правду/Действие перед ходом */
   photoUsed:{}, photoHidden:[], photoDone:[], sexshopOwned:[], photoSelectedLevel:1, photoFavView:false,
-  photoOrderMode:true, photoSeqIndex:{},
+  photoOrderMode:false, photoSeqIndex:{},
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false,
   videoRandomMode:false, videoSoundOn:false,
   videoDbMigrated:false, videoResetAt:0,
@@ -1758,7 +1758,7 @@ function performFullReset(){
    state.score1 = 0;
    state.score2 = 0;
    state.gameType = 'fanty';
-   state.photoOrderMode = true;
+   state.photoOrderMode = false;
    state.tdSelectedLevel = 3;
    state.bingoSelectedLevel = 1;
    state.timerSelectedLevel = 1;
@@ -3274,10 +3274,11 @@ function closeImageZoom(){
 document.getElementById('imageZoomModal').addEventListener('click', closeImageZoom);
 
 /* ============ "ПО ПОРЯДКУ" / СЛУЧАЙНО ("Предложи партнеру") ============ */
-// Кнопка рядом с "Следующая" — по умолчанию карточки идут по порядку
-// от №1 (дефолт photoOrderMode:true, миграция MIGRATIONS[3]); переключатель
-// переводит показ в случайный (из непоказанного пула), отдельно для каждого
-// уровня хранится указатель порядка (state.photoSeqIndex[level]), см. drawPhotoCard.
+// Кнопка рядом с "Следующая" — по умолчанию карточки случайны (дефолт
+// photoOrderMode:false), иконка в этом состоянии 📶; нажатие включает показ
+// по порядку от №1 и меняет иконку на 🔀 (перестановка иконок — запрос
+// владельца, 2026-10-02). Указатель порядка хранится отдельно для каждого
+// уровня (state.photoSeqIndex[level]), см. drawPhotoCard.
 function updatePhotoRandomToggleBtn(){
   const btn = document.getElementById('photoRandomToggleBtn');
   if(!btn) return;
@@ -3287,7 +3288,9 @@ function updatePhotoRandomToggleBtn(){
   }
   btn.style.display = 'flex';
   const ordered = !!state.photoOrderMode;
-  btn.textContent = ordered ? '📶' : '🔀';
+  // Иконки переставлены местами по запросу владельца (2026-10-02):
+  // случайный порядок (дефолт) — 📶, «по порядку» — 🔀.
+  btn.textContent = ordered ? '🔀' : '📶';
   btn.setAttribute('aria-label', ordered ? 'Показ по порядку — нажмите для случайного' : 'Случайный порядок — нажмите для показа по порядку');
   btn.dataset.tt = ordered ? 'По порядку' : 'Случайный порядок';
 }
