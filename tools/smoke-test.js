@@ -2359,14 +2359,79 @@ testAsync('Сценарий: ⤴ открывает меню «Поделить�
         `в подписи должна остаться ссылка-вход, получено: ${shared.text}`);
       assert(shared.url === undefined,
         'url вместе с files запрещён спецификацией — меню упало бы с TypeError');
-      assert(shared.title === '🎲 Давай играй',
-        'заголовок поделиться должен быть «🎲 Давай играй»');
+      assert(shared.title === undefined,
+        'в файловом payload поле title не должно передаваться: Telegram на Android зависает на смешанном file+text+title');
       assert(String(shared.text || '').indexOf('🎲 Давай играй\nПопробуем? 😉\n') === 0,
         `текст подписи должен начинаться с «🎲 Давай играй / Попробуем? 😉», получено: ${shared.text}`);
     }
     assert(fetched === card.video,
       `ролик должен читаться по ссылке карточки, запрос ушёл на: ${fetched}`);
   } finally {
+    nav.share = saved.share;
+    if (saved.canShare === undefined) delete nav.canShare; else nav.canShare = saved.canShare;
+    global.fetch = saved.fetch;
+    eval('currentVideoCard = null;');
+  }
+});
+
+// Первое нажатие ⤴ не должно уходить в ссылочный фолбэк, пока системное окно
+// ещё открыто: раньше Promise.race по таймауту запускал второй navigator.share()
+// поверх первого, и Telegram застревал на «Загрузка 100%». Этот сценарий
+// специально держит первый share-промис незавершённым и кликает второй раз.
+testAsync('Сценарий: первое нажатие ⤴ не запускает второй системный вызов', async () => {
+  const nav = global.navigator;
+  const saved = { share: nav.share, canShare: nav.canShare, fetch: global.fetch };
+  const card = {
+    id: 'card-once', name: 'once.webm', level: 1,
+    video: 'https://example.test/videos/once.webm', yandexPath: 'disk:/once.webm',
+  };
+  let calls = 0;
+  let firstPayload = null;
+  let resolveShare = null;
+  try {
+    eval(`currentVideoCard = ${JSON.stringify(card)};`);
+    global.fetch = (url) => {
+      if (String(url).indexOf('clck.ru') > -1) {
+        return Promise.resolve({ ok: false, text: () => Promise.resolve('') });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => '4096' },
+        blob: () => Promise.resolve({ size: 4096, type: 'video/webm' }),
+      });
+    };
+    nav.canShare = (data) => !!(data && data.files && data.files.length);
+    nav.share = (data) => {
+      calls++;
+      if (!firstPayload) firstPayload = data;
+      return new Promise((resolve) => { resolveShare = resolve; });
+    };
+
+    const btn = getElById(stub, 'videoShareBtn');
+    btn.click();
+    for (let i = 0; i < 100 && calls === 0; i++) await new Promise((r) => setTimeout(r, 5));
+    assert(calls === 1, `системное меню должно открыться один раз, вызовов: ${calls}`);
+
+    // Пока первое меню не закрыто, второе нажатие не должно открывать
+    // конкурирующее системное меню со ссылкой.
+    btn.click();
+    await new Promise((r) => setTimeout(r, 30));
+    assert(calls === 1,
+      `пока открыто первое меню, второй navigator.share запускать нельзя, вызовов: ${calls}`);
+
+    assert(firstPayload && firstPayload.files && firstPayload.files.length === 1,
+      'первый вызов должен нести сам ролик');
+    assert(firstPayload && firstPayload.title === undefined,
+      'у файлового payload не должно быть title — Telegram зависает на file+text+title');
+    assert(String((firstPayload && firstPayload.text) || '').indexOf('🎲 Давай играй\nПопробуем? 😉') === 0,
+      'текст первого вызова должен начинаться с «🎲 Давай играй / Попробуем? 😉»');
+
+    if (resolveShare) resolveShare();
+    await new Promise((r) => setTimeout(r, 30));
+    assert(calls === 1,
+      `после закрытия меню ссылочный фолбэк не должен открывать второе меню, вызовов: ${calls}`);
+  } finally {
+    if (resolveShare) resolveShare();
     nav.share = saved.share;
     if (saved.canShare === undefined) delete nav.canShare; else nav.canShare = saved.canShare;
     global.fetch = saved.fetch;

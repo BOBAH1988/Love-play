@@ -121,6 +121,10 @@ let videoSubLevel = 1;
 let currentVideoCard = null;
 let videoHistory = []; // для свайпов влево/вправо между уже показанными видео
 let videoHistoryPos = -1;
+// Пока открыт системный picker, второй обработчик не должен запускать новый
+// navigator.share(): Android/Telegram иногда оставляет первый вызов в
+// «Загрузка 100%», а конкурирующий второй вызов только ухудшает состояние.
+let videoShareInProgress = false;
 // Отдаём свои «живые» карточки общему коду (см. collectLiveVideoCards в
 // fants-davay.js): при обновлении ссылок на Яндекс Диске они должны получить
 // свежий адрес, иначе показанное видео останется с мёртвой ссылкой и плеер
@@ -447,70 +451,91 @@ async function shortenShareUrl(url){
 // превью ссылки видео отдать нечем (og:video требует серверной подстановки).
 // Ссылка сокращается через clck.ru перед отправкой (shortenShareUrl).
 document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
+  if(videoShareInProgress) return;
   if(!currentVideoCard || !currentVideoCard.video){
     playErrorSound();
     showToast('Сначала откройте видео');
     return;
   }
-  // Ссылка-вход ведёт в приложение (?mode=video&e=…&level=…), а не на файл:
-  // по ней у получателя откроется «Видеорулетка» — с этого же ролика, если
-  // видео есть в его каталоге, иначе с этого же уровня.
-  const appUrl = videoEntryPointUrl(currentVideoCard, videoLevel);
-  const shareUrl = await shortenShareUrl(appUrl);
-  const shareMessage = '🎲 Давай играй\nПопробуем? 😉';
-  const shareText = shareMessage + '\n' + shareUrl;
-  // 1) Прикладываем сам ролик. Ссылки на видео Яндекса отдают CORS-разрешение,
-  //    поэтому файл читается прямо в браузере.
-  if(shareSupportsFiles()){
-    showToast('Готовим видео…');
-    const file = await videoShareFile(currentVideoCard);
-    if(file){
-      // Ссылку кладём в text, а не в url: спецификация Web Share запрещает
-      // files вместе с url (иначе TypeError), а files + text — разрешает.
-      // Если платформа подпись с файлом не принимает, отправляем файл без неё:
-      // видео в чате важнее подписи.
-      const withText = { files:[file], text: shareText, title:'🎲 Давай играй' };
-      const fileOnly = { files:[file], title:'🎲 Давай играй' };
-      const payload = canShareData(withText) ? withText : (canShareData(fileOnly) ? fileOnly : null);
-      if(payload){
-        try{
-          await shareWithTimeout(payload);
-          showToast('Спасибо, что делитесь! 💛');
-          return;
-        }catch(e){
-          // Игрок закрыл системное меню — не ошибка и не повод слать ссылку.
-          // На iOS/Android имя ошибки может отличаться от 'AbortError',
-          // поэтому проверяем по содержимому сообщения и коду.
-          if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
-          // Платформа отказала уже на отправке — ниже уйдёт ссылка.
+  videoShareInProgress = true;
+  try{
+    // Ссылка-вход ведёт в приложение (?mode=video&e=…&level=…), а не на файл:
+    // по ней у получателя откроется «Видеорулетка» — с этого же ролика, если
+    // видео есть в его каталоге, иначе с этого же уровня.
+    const appUrl = videoEntryPointUrl(currentVideoCard, videoLevel);
+    const shareUrl = await shortenShareUrl(appUrl);
+    const shareMessage = '🎲 Давай играй\nПопробуем? 😉';
+    const shareText = shareMessage + '\n' + shareUrl;
+    // 1) Прикладываем сам ролик. Ссылки на видео Яндекса отдают CORS-разрешение,
+    //    поэтому файл читается прямо в браузере.
+    if(shareSupportsFiles()){
+      showToast('Готовим видео…');
+      const file = await videoShareFile(currentVideoCard);
+      if(file){
+        // Ссылку кладём в text, а не в url: спецификация Web Share запрещает
+        // files вместе с url (иначе TypeError), а files + text — разрешает.
+        // title здесь намеренно не передаём: Telegram на Android иногда
+        // застревает на загрузке смешанного payload file+text+title. Нужное
+        // название уже находится первыми строками text.
+        const withText = { files:[file], text: shareText };
+        const fileOnly = { files:[file] };
+        const payload = canShareData(withText) ? withText : (canShareData(fileOnly) ? fileOnly : null);
+        if(payload){
+          try{
+            // Один клик — один системный вызов. Promise.race здесь больше не
+            // нужен: его таймер не отменяет уже открытый picker, а следующий
+            // вызов конфликтует с ним и оставляет Telegram на «Загрузка 100%».
+            await navigator.share(payload);
+            showToast('Спасибо, что делитесь! 💛');
+            return;
+          }catch(e){
+            // Игрок закрыл системное меню — не ошибка и не повод слать ссылку.
+            // На iOS/Android имя ошибки может отличаться от 'AbortError',
+            // поэтому проверяем по содержимому сообщения и коду.
+            if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
+            // Системный вызов уже был предпринят. Второе системное меню после
+            // ошибки только конкурирует с ним, поэтому ограничиваемся
+            // безопасным копированием текста в буфер обмена.
+            if(navigator.clipboard && navigator.clipboard.writeText){
+              try{
+                await navigator.clipboard.writeText(shareText);
+                showToast('Ссылка скопирована — отправьте её в Telegram');
+                return;
+              }catch(copyError){}
+            }
+            showToast('Не удалось поделиться — попробуйте позже');
+            return;
+          }
         }
       }
     }
-  }
-  // 2) Файл приложить нельзя (нет поддержки, ролик не прочитался, слишком
-  //    большой) — делимся ссылкой-входом: получатель откроет «Видеорулетку»
-  //    на том же ролике.
-  try{
-    if(navigator.share){
-      await shareWithTimeout({
-        title: '🎲 Давай играй',
-        text: shareMessage,
-        url: shareUrl
-      });
-      showToast('Спасибо, что делитесь! 💛');
-      return;
+    // 2) Файл приложить нельзя (нет поддержки, ролик не прочитался, слишком
+    //    большой) — делимся ссылкой-входом: получатель откроет «Видеорулетку»
+    //    на том же ролике.
+    try{
+      if(navigator.share){
+        await shareWithTimeout({
+          title: '🎲 Давай играй',
+          text: shareMessage,
+          url: shareUrl
+        });
+        showToast('Спасибо, что делитесь! 💛');
+        return;
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('Ссылка скопирована');
+        return;
+      }
+      showToast('Ссылка: ' + shareUrl);
+    }catch(e){
+      // Пользователь закрыл системное меню — не ошибка.
+      // На iOS/Android имя ошибки может отличаться от 'AbortError'.
+      if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
+      showToast('Не удалось поделиться — попробуйте позже');
     }
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(shareUrl);
-      showToast('Ссылка скопирована');
-      return;
-    }
-    showToast('Ссылка: ' + shareUrl);
-  }catch(e){
-    // Пользователь закрыл системное меню — не ошибка.
-    // На iOS/Android имя ошибки может отличаться от 'AbortError'.
-    if(e && (e.name === 'AbortError' || e.code === 20 || (e.message && /abort|cancel/i.test(e.message)))) return;
-    showToast('Не удалось поделиться — попробуйте позже');
+  }finally{
+    videoShareInProgress = false;
   }
 });
 

@@ -1454,9 +1454,20 @@ function checkStyles(html) {
   check('кнопка ⤴ прикладывает к сообщению сам ролик (share с files)',
     videoSrc2.includes('async function videoShareFile(card)')
       && videoSrc2.includes('navigator.canShare({ files:[new File(')
-      && /const withText = \{ files:\[file\], text: shareText/.test(videoSrc2)
-      && /await (?:navigator\.share|shareWithTimeout)\(payload\)/.test(videoSrc2),
-    'шеринг снова отправляет только ссылку — в Telegram придёт текст без видео');
+      && /const withText = \{ files:\[file\], text: shareText \}/.test(videoSrc2)
+      && /const fileOnly = \{ files:\[file\] \}/.test(videoSrc2)
+      && /await navigator\.share\(payload\)/.test(videoSrc2)
+      && !/shareWithTimeout\(payload\)/.test(videoSrc2)
+      && videoSrc2.includes('let videoShareInProgress = false;')
+      && /if\(videoShareInProgress\) return;/.test(videoSrc2),
+    'шеринг снова отправляет только ссылку или запускает второй системный вызов');
+  // Свежий Android/Telegram нестабильно обрабатывает file+text+title: окно
+  // застревает на «Загрузка 100%». Название уже есть в text, поэтому title
+  // в файловом payload не передаём.
+  check('файловый payload не передаёт title',
+    !/const withText = \{ files:\[file\], text: shareText, title:/.test(videoSrc2)
+      && !/const fileOnly = \{ files:\[file\], title:/.test(videoSrc2),
+    'title вместе с файлом снова уходит в Web Share — Telegram может зависнуть на загрузке');
   // Файл и url в одной нагрузке — TypeError по спецификации Web Share, меню
   // просто не откроется. Поэтому ссылка-вход уходит в text, а url остаётся
   // только у фолбэка без файлов.
@@ -1482,7 +1493,7 @@ function checkStyles(html) {
       && /const shareUrl = await shortenShareUrl\(appUrl\)/.test(videoSrc2),
     'ссылка-вход не сокращается — в Telegram она слишком длинная');
   check('заголовок поделиться — «🎲 Давай играй»',
-    videoSrc2.includes("title:'🎲 Давай играй'")
+    videoSrc2.includes("title: '🎲 Давай играй'")
       && /title: '🎲 Давай играй'/.test(videoSrc2)
       && videoSrc2.includes("const shareMessage = '🎲 Давай играй\\nПопробуем? 😉'")
       && videoSrc2.includes("text: shareMessage"),
