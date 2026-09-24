@@ -1085,14 +1085,15 @@ function checkStyles(html) {
   check('«Предложи партнеру»: сброс прогресса возвращает случайный порядок',
     /state\.photoOrderMode = false;/.test(photoResetBody.slice(0, photoResetBody.indexOf('\n}'))),
     'performFullReset выставляет photoOrderMode=true — после сброса режим не тот');
-  check('«Предложи партнеру»: иконки переставлены — случайный 📶, по порядку 🔀',
+  check('«Предложи партнеру»: иконки и подсказки переставлены — 📶 «По порядку», 🔀 «Случайный порядок»',
     /ordered \? '🔀' : '📶'/.test(photoCore)
+      && /btn\.dataset\.tt = ordered \? 'Случайный порядок' : 'По порядку'/.test(photoCore)
       && /MIGRATIONS\[3\] = function\(s\)\{\s*\n\s*s\.photoOrderMode = false;/.test(photoCore),
-    'updatePhotoRandomToggleBtn или MIGRATIONS[3] не соответствуют перестановке иконок/дефолту');
-  check('«Предложи партнеру»: разметка кнопки соответствует дефолту (📶 «Случайный порядок»)',
-    /id="photoRandomToggleBtn"[^>]*data-tt="Случайный порядок"[^>]*>📶</.test(html)
-      && /id="photoRandomToggleBtn"[^>]*aria-label="Случайный порядок/.test(html),
-    'статическая разметка кнопки приведена не к дефолтному состоянию — до первого вызова updatePhotoRandomToggleBtn игрок видит не ту подписку');
+    'updatePhotoRandomToggleBtn (иконки/подсказки) или MIGRATIONS[3] не соответствуют запросу владельца');
+  check('«Предложи партнеру»: разметка кнопки соответствует дефолту (📶 «По порядку»)',
+    /id="photoRandomToggleBtn"[^>]*data-tt="По порядку"[^>]*>📶</.test(html)
+      && /id="photoRandomToggleBtn"[^>]*aria-label="По порядку/.test(html),
+    'статическая разметка кнопки приведена не к дефолтному состоянию — до первого вызова updatePhotoRandomToggleBtn игрок видит не ту подсказку');
   // Кнопка 🔀 «Случайный порядок» живёт в скрытом блоке «Дополнительно»
   // (row2) «Видеорулетки». Видимость и место задаёт CSS, а не разметка:
   // в раскрытом блоке `.row2` становится `display:contents`, и все кнопки

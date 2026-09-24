@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-        window.APP_BUILD = '2026-10-02 · v470';
+  window.APP_BUILD = '2026-10-02 · v471';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -1109,7 +1109,7 @@
       <div class="row1">
         <button class="btn btn-primary" id="doneBtn">💕 Готово</button>
         <button type="button" class="btn btn-secondary btn-square" id="videoHotBtn" aria-label="Горячее" data-tt="Горячее: следующая папка уровня 🔥">🔥</button>
-        <button type="button" class="btn btn-secondary btn-square" id="photoRandomToggleBtn" aria-label="Случайный порядок — нажмите для показа по порядку" data-tt="Случайный порядок">📶</button>
+        <button type="button" class="btn btn-secondary btn-square" id="photoRandomToggleBtn" aria-label="По порядку — нажмите для показа по порядку" data-tt="По порядку">📶</button>
         <button class="btn btn-secondary" id="skipBtn">🚫 Отказ</button>
         <div class="davay-level-row" id="davayLevelRow">
           <button type="button" class="btn btn-secondary" id="davayLevelUpBtn" aria-label="Повысить уровень" data-tooltip="Горячее">Горячее</button>
@@ -4456,7 +4456,7 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20260929b"></script>
 <script src="cards/capitals.js?v=20260929c"></script>
-<script src="games/core.js?v=20261021w"></script>
+<script src="games/core.js?v=20261021x"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -4534,7 +4534,7 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20260923d').then(function (reg) {
+        navigator.serviceWorker.register('./sw.js?v=20260923e').then(function (reg) {
           // Мягкая проверка обновления при каждом запуске: reg.update() в фоне
           // спрашивает сервер, есть ли новый sw.js. Если да — браузер ставит его
           // в reg.waiting (старый воркер при этом НЕ трогаем: офлайн не ломается).

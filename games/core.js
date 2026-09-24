@@ -3288,11 +3288,12 @@ function updatePhotoRandomToggleBtn(){
   }
   btn.style.display = 'flex';
   const ordered = !!state.photoOrderMode;
-  // Иконки переставлены местами по запросу владельца (2026-10-02):
-  // случайный порядок (дефолт) — 📶, «по порядку» — 🔀.
+  // Иконки и подсказки переставлены местами по запросу владельца (2026-10-02):
+  // случайный порядок (дефолт) — 📶, «по порядку» — 🔀; подсказка называет
+  // то, что включится по нажатию: 🔀 → «Случайный порядок», 📶 → «По порядку».
   btn.textContent = ordered ? '🔀' : '📶';
-  btn.setAttribute('aria-label', ordered ? 'Показ по порядку — нажмите для случайного' : 'Случайный порядок — нажмите для показа по порядку');
-  btn.dataset.tt = ordered ? 'По порядку' : 'Случайный порядок';
+  btn.setAttribute('aria-label', ordered ? 'Случайный порядок — нажмите для случайного показа' : 'По порядку — нажмите для показа по порядку');
+  btn.dataset.tt = ordered ? 'Случайный порядок' : 'По порядку';
 }
 document.getElementById('photoRandomToggleBtn').addEventListener('click', ()=>{
   if(!isPlaceholderMode()) return;

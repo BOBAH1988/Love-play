@@ -2605,9 +2605,10 @@ test('Сценарий: «Предложи партнеру» без карто�
 });
 
 
-// «Предложи партнеру»: дефолт — случайный порядок с иконкой 📶; нажатие
-// включает показ по порядку и меняет иконку на 🔀 (перестановка иконок —
-// запрос владельца, v470). Дефолт в state, сброс и иконка связаны.
+// «Предложи партнеру»: дефолт — случайный порядок с иконкой 📶 и подсказкой
+// «По порядку»; нажатие включает порядок, ставит 🔀 и подсказку «Случайный
+// порядок» (подсказка называет, что включится; перестановка — запрос
+// владельца, v471). Дефолт в state, сброс и иконка связаны.
 test('Сценарий: «Предложи партнеру» стартует случайно (📶), клик включает порядок (🔀)', () => {
   const orderedBefore = eval('state.photoOrderMode');
   assert(orderedBefore === false,
@@ -2619,16 +2620,16 @@ test('Сценарий: «Предложи партнеру» стартует �
     // класса placeholder-mode клик молча вышел бы и ничего не переключил.
     gameEl.classList.add('placeholder-mode');
     global.updatePhotoRandomToggleBtn();
-    assert(btn.textContent === '📶' && btn.dataset.tt === 'Случайный порядок',
-      `в случайном режиме кнопка обязана показывать 📶 «Случайный порядок», получено: ${btn.textContent} / ${btn.dataset.tt}`);
+    assert(btn.textContent === '📶' && btn.dataset.tt === 'По порядку',
+      `в случайном режиме кнопка обязана показывать 📶 с подсказкой «По порядку», получено: ${btn.textContent} / ${btn.dataset.tt}`);
     btn.click();
     assert(eval('state.photoOrderMode') === true,
       'один клик должен включить показ по порядку');
-    assert(btn.textContent === '🔀' && btn.dataset.tt === 'По порядку',
-      `после клика кнопка обязана показывать 🔀 «По порядку», получено: ${btn.textContent} / ${btn.dataset.tt}`);
+    assert(btn.textContent === '🔀' && btn.dataset.tt === 'Случайный порядок',
+      `после клика кнопка обязана показывать 🔀 с подсказкой «Случайный порядок», получено: ${btn.textContent} / ${btn.dataset.tt}`);
     btn.click();
-    assert(eval('state.photoOrderMode') === false && btn.textContent === '📶',
-      'второй клик должен вернуть случайный порядок и иконку 📶');
+    assert(eval('state.photoOrderMode') === false && btn.textContent === '📶' && btn.dataset.tt === 'По порядку',
+      'второй клик должен вернуть случайный порядок, иконку 📶 и подсказку «По порядку»');
   } finally {
     eval('state.photoOrderMode = false;');
     global.updatePhotoRandomToggleBtn();
