@@ -246,10 +246,12 @@ test('«Арифметика»: карточка собрана как у ост
     'все кнопки ответов должны использовать единый непрозрачный белый стиль с тёмным текстом');
 });
 
-test('«Игры с детьми»: карточки используют общий зелёный фон', () => {
+test('«Игры с детьми»: карточки и витрина используют тёмно-бирюзовый фон', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
-  const group = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#5ecf93,\s*#23784f/.test(css);
-  assert(group, 'детская «Викторина» должна входить в общий зелёный блок группы');
+  const group = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2a817c,\s*#155f68\s+55%,\s*#0b303b/.test(css);
+  const shop = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2a817c,\s*#155f68\s+55%,\s*#0b303b/.test(css);
+  assert(group, 'детская «Викторина» должна входить в общий тёмно-бирюзовый блок группы');
+  assert(shop, 'витрина «Магазина» должна использовать тот же тёмно-бирюзовый градиент');
   assert(!/#kidsQuizCard\s*\{[^}]*\bbackground\s*:/.test(css),
     'у детской «Викторины» не должно быть отдельного более светлого фона');
   assert(!/pwa-standalone[^{}]*#kids[A-Za-z0-9_-]*Card|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#kids[A-Za-z0-9_-]*Card/.test(css),

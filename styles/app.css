@@ -1153,7 +1153,7 @@
   .shop-showcase-item{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:2px; padding:7px 2px 6px; border-radius:12px;
-    background:linear-gradient(160deg, #5ecf93, #23784f 55%, var(--bg2));
+    background:linear-gradient(160deg, #2a817c, #155f68 55%, #0b303b);
     border:2px solid rgba(255,255,255,.25); color:#fff; text-align:center;
     cursor:pointer; min-height:74px;
   }
@@ -1719,11 +1719,11 @@
     background:linear-gradient(160deg, #b03e7d, #5e1f47 55%, var(--bg2));
     color:#fff;
   }
-  /* Карточки «Игр с детьми» — один общий зелёный градиент. В том числе
-     детская «Викторина»: отдельный светлый фон был заметнее в PWA и ломал
-     одинаковое восприятие группы. Кнопки ответов оформляет общий компонент. */
+  /* Карточки «Игр с детьми» — один общий тёмно-бирюзовый градиент.
+     Детская «Викторина» использует его же, без отдельного светлого фона;
+     кнопки ответов по-прежнему оформляет общий белый компонент. */
   #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #kidsQuizCard, #flashCard, #whatToPlayCard, .shop-register-card{
-    background:linear-gradient(160deg, #5ecf93, #23784f 55%, var(--bg2));
+    background:linear-gradient(160deg, #2a817c, #155f68 55%, #0b303b);
     color:#fff;
   }
   /* Обучающие игры: одинаковая синяя подложка внутри группы. Ответы всех

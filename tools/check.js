@@ -860,19 +860,22 @@ function checkStyles(html) {
         ? 'найдено правило #id ... .znayu-answer-btn — цвет кнопки не должен зависеть от карточки'
         : 'общий .znayu-answer-btn должен иметь непрозрачный белый фон, тёмный текст и общую рамку');
 
-    // Детская «Викторина» — обычная карточка зелёной группы, не светлый
-    // отдельный экран. Standalone тоже не должен перекрашивать карточки детей:
-    // иначе Safari и установленная PWA снова разойдутся после обновления CSS.
-    const kidsQuizInGreenGroup = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#5ecf93,\s*#23784f/.test(cssWithoutComments);
+    // Детская «Викторина» и витрина «Магазина» используют единый
+    // тёмно-бирюзовый фон группы, одинаковый в браузере и PWA. Standalone
+    // не должен перекрашивать карточки детей отдельными правилами.
+    const kidsQuizInTurquoiseGroup = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2a817c,\s*#155f68\s+55%,\s*#0b303b/.test(cssWithoutComments);
+    const shopUsesTurquoise = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2a817c,\s*#155f68\s+55%,\s*#0b303b/.test(cssWithoutComments);
     const separateKidsQuizBackground = /#kidsQuizCard\s*\{[^}]*\bbackground\s*:/.test(cssWithoutComments);
     const pwaKidsCardStyle = /pwa-standalone[^{}]*#kids[A-Za-z0-9_-]*Card|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#kids[A-Za-z0-9_-]*Card/.test(cssWithoutComments);
-    check('фон карточек группы «Игры с детьми» одинаков в браузере и PWA',
-      kidsQuizInGreenGroup && !separateKidsQuizBackground && !pwaKidsCardStyle,
-      separateKidsQuizBackground
-        ? 'у #kidsQuizCard снова есть отдельный background — включите карточку в общий зелёный блок'
-        : pwaKidsCardStyle
-          ? 'в standalone-правилах появился отдельный стиль карточки игры с детьми'
-          : '#kidsQuizCard должен входить в общий зелёный блок группы');
+    check('фон группы «Игры с детьми» одинаков в браузере и PWA',
+      kidsQuizInTurquoiseGroup && shopUsesTurquoise && !separateKidsQuizBackground && !pwaKidsCardStyle,
+      !kidsQuizInTurquoiseGroup || !shopUsesTurquoise
+        ? 'ожидается общий тёмно-бирюзовый градиент #2a817c → #155f68 → #0b303b'
+        : separateKidsQuizBackground
+          ? 'у #kidsQuizCard снова есть отдельный background — включите карточку в общий бирюзовый блок'
+          : pwaKidsCardStyle
+            ? 'в standalone-правилах появился отдельный стиль карточки игры с детьми'
+            : 'детские карточки и витрина должны использовать тёмно-бирюзовый градиент');
   }
 
   // Service Worker обязан обновлять стили сразу, а не «со второй загрузки»:
