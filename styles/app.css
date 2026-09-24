@@ -1341,15 +1341,8 @@
   }
   .biz-result-highlight.biz-loss{ color:#ff6b6b; }
   .biz-quiz-progress{ text-align:center; font-size:13px; color:#cba0bf; margin-bottom:10px; }
-  /* Мини-проверка "Лимонадного ларька" лежит прямо на тёмном фоне экрана
-     (без карточки-обёртки) — кнопки .znayu-answer-btn по умолчанию тёмные
-     полупрозрачные (рассчитаны на светлую карточку), поэтому здесь были
-     невидимы. Перекрашены в светлые полупрозрачные — тот же приём, что и
-     у карточек "Знаю тебя"/"Викторины" в компании. */
-  #bizPhaseQuiz .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
-    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
-  }
-  #bizPhaseQuiz .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
+  /* Кнопки мини-проверки используют единый компонент .znayu-answer-btn из
+     конца файла; локальных цветовых исключений здесь намеренно нет. */
   /* Шкала дней вверху экрана — видна на всех шагах, чтобы было понятно,
      где в партии сейчас находишься. */
   .biz-day-bar{ margin:8px 0 4px; }
@@ -1719,78 +1712,24 @@
   #card .rating-pill.rating-men{
     background:rgba(94,158,255,.28); color:#d6e8ff;
   }
-  /* "Тайные ответы" — тоже переиспользует компонент вопрос/ответы
-     (.znayu-answers), который по умолчанию рассчитан на светлый фон
-     (тёмные полупрозрачные кнопки) — на тёмном фоне этой карточки варианты
-     ответа были почти нечитаемы. Тот же приём, что и у остальных карточек
-     с этим компонентом (Викторины, "Знаю тебя" и т.д.). */
-  #znayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
-    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
-  }
-  #znayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
-  #znayuCard .znayu-skip-btn:not(.answer-correct):not(.answer-wrong){
-    color:rgba(255,255,255,.85); border-color:rgba(255,255,255,.4);
-  }
-  /* Карточка "Викторины" — переиспользует компонент вопрос/ответы
-     (.znayu-answers), кнопки которого по умолчанию тёмные полупрозрачные
-     (рассчитаны на светлый фон) — здесь перекрашены в светлые полупрозрачные,
-     тот же приём, что и у карточек "Знаю тебя"/"Викторины" в компании. */
+  /* «Тайные ответы» наследует розовый фон группы «Для двоих» из блока выше;
+     у «Викторины» свой более тёмный оттенок. Кнопки ответов у обеих карточек
+     одинаковые и оформляются общим компонентом ниже. */
   #quizCard{
     background:linear-gradient(160deg, #b03e7d, #5e1f47 55%, var(--bg2));
     color:#fff;
   }
-  #quizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
-    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
-  }
-  #quizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
-  /* Карточки "Игры с детьми" — спокойный зелёный градиент вместо белого фона.
-     Большинство карточек (Правда/Действие, Крокодил, Мемасики, Во что
-     поиграть, Магазин) простые — иконка/текст, поэтому берём насыщенный
-     вариант с белым текстом, как у карточек компании. Карточка Викторины
-     переиспользует компонент вопрос/ответы (.znayu-answers) — он рассчитан
-     на светлый фон (тёмные полупрозрачные кнопки поверх карточки), поэтому
-     для неё — светлый мятный оттенок того же зелёного тона вместо тёмного. */
+  /* Карточки «Игр с детьми» — спокойный зелёный градиент. У детской
+     «Викторины» светлый мятный оттенок той же группы; кнопки ответов у всех
+     карточек оформляет общий компонент, а не цвет карточки. */
   #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #flashCard, #whatToPlayCard, .shop-register-card{
     background:linear-gradient(160deg, #5ecf93, #23784f 55%, var(--bg2));
     color:#fff;
   }
-  /* ===== Обучающие игры: тёмно-голубой фон карточек =====
-     Флаги, Столицы и Английский язык получают единую тёмно-голубую подложку
-     вместо белой (.card → var(--card-bg)) и зелёной (#flashCard, правило выше).
-     Текст: у «Флагов»/«Столиц» остаётся тёмным (#2b0f2e от .card), у «Английского» —
-     белым (color:#fff правила выше); оба варианта читаются на голубом.
-     Кнопки ответов .znayu-* осветлены (см. правило ниже). */
+  /* Обучающие игры: одинаковая синяя подложка внутри группы. Ответы всех
+     карточек используют общий компонент, как викторины и бизнес-игры. */
   #flagsCard, #capitalsCard, #flashCard, #timesTableCard{
     background:linear-gradient(160deg, #8aa9c9, #6f8fb0 55%, #4f6b8a);
-  }
-  /* Кнопки ответов на тёмно-голубых карточках — светлые, как у остальных игр
-     с тёмной карточкой (#znayuCard, #quizCard): белая полупрозрачная подложка
-     и белый текст вместо дефолтной тёмной схемы для светлого фона.
-     Базовая прозрачность чуть выше (.18 против .14), чтобы кнопки читались
-     заметно светлее фона карточки. Верный/неверный вариант (answer-correct/
-     answer-wrong) не трогаем — там свои яркие зелёный/красный. */
-  /* Кнопки ответов на тёмно-голубых карточках — светлые с тёмным текстом:
-     почти белая полупрозрачная подложка (как «светлее» у других карточек,
-     но плотнее — .8, иначе тёмный текст теряется на голубом) и текст
-     #2b0f2e, как у дефолтной схемы для светлого фона. Верный/неверный
-     вариант (answer-correct/answer-wrong) не трогаем — там свои цвета. */
-  #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong),
-  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
-    background:rgba(255,255,255,.8); color:#2b0f2e; border-color:rgba(43,15,46,.22);
-  }
-  #flagsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active,
-  #capitalsCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
-    background:rgba(255,255,255,.92);
-  }
-  /* Кнопки ответов «Таблицы умножения» — как у «Викторины» (#quizCard):
-      белая полупрозрачная подложка .14 и белый текст вместо светлой схемы
-      (.8 с тёмным текстом) остальных обучающих карточек. Верный/неверный
-      вариант (answer-correct/answer-wrong) не трогаем — там свои цвета. */
-  #timesTableCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
-    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
-  }
-  #timesTableCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
-    background:rgba(255,255,255,.24);
   }
   /* Задание «Таблицы умножения» — пример (7 × 8 = ?) занимает место вопроса
      (.znayu-question-text, как у «Флагов»/«Столиц»), но крупнее обычного
@@ -1979,38 +1918,20 @@
     line-height:1.4;
     text-shadow:0 3px 12px rgba(0,0,0,.3);
   }
-  /* Карточка "Знаю тебя" (компания) — тот же стандарт, что у "Крокодила".
-     JS (games/fam-znayu.js) на экране вопроса подменяет содержимое карточки
-     на .znayu-question-text + .znayu-answers (тот же компонент, что и у
-     Викторины) — кнопки ответов по умолчанию тёмные (рассчитаны на светлый
-     фон), поэтому тоже перекрашены в светлые полупрозрачные. */
+  /* Карточки группы «Компания» сохраняют общий синий фон. Отдельного цвета
+     кнопок нет: все .znayu-answer-btn оформляет общий компонент ниже. */
   #famZnayuCard{
     background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
     color:#fff;
   }
   #famZnayuCard .card-text{color:#fff;}
-  #famZnayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
-    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
-  }
-  #famZnayuCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
-  /* Карточка "Викторины" (компания) — тот же тёмно-синий стандарт, что и у
-     остальных карточек компании. Кнопки ответов (.znayu-answer-btn) по
-     умолчанию тёмные полупрозрачные (рассчитаны на светлый фон) — здесь
-     перекрашены в светлые полупрозрачные, чтобы остаться читаемыми на
-     тёмном фоне карточки. */
   #partyQuizCard{
     background:linear-gradient(160deg, #4a90c2, #2c5a7a 55%, var(--bg2));
     color:#fff;
   }
-  /* Текст вопроса — тёплый золотой вместо плоского белого, чтобы не
-     сливаться с холодным сине-голубым фоном карточки; кнопки ответов
-     остаются белыми (не вопрос, читаются нормально на своём полупрозрачном
-     фоне). */
+  /* Вопрос «Викторины» выделяется тёплым золотым; стиль кнопок ответов
+     остаётся общим и не зависит от цвета карточки. */
   #partyQuizCard .znayu-question-text{ color:#ffd166; }
-  #partyQuizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong){
-    background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.3);
-  }
-  #partyQuizCard .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{ background:rgba(255,255,255,.24); }
   /* Крупные кнопки выбора «Правда/Действие» НАД полем — используется только
      детской П/Д (kidsTdChoiceRow). В компании выбор переехал под карточку на
      .td-actions-row (единая система с парной П/Д). */
@@ -2793,13 +2714,13 @@
     padding:0 4px; margin-bottom:4px;
   }
   .znayu-answers{display:flex; flex-direction:column; gap:10px; width:100%; margin-top:14px;}
-  /* Кнопки ответов лежат прямо на белой карточке — обычный .btn-secondary
-     (белый текст на полупрозрачно-белом фоне) рассчитан на тёмный фон
-     приложения и на карточке был практически невидим. Берём ту же тёмную-
-     на-светлом схему, что и у кнопок внутри .modal-card. */
+  /* ЕДИНЫЙ компонент кнопок ответов для всех игр. Варианты не наследуют
+     цвет карточки: одинаковые непрозрачные фон, тёмный текст и рамка читаются
+     на белом, розовом, зелёном, синем и других фонах. Менять цвет кнопок
+     через #id или класс группы нельзя — различаться должен только фон карточки. */
   .znayu-answers .znayu-answer-btn{
     width:100%; white-space:normal; height:auto; min-height:var(--btn-height); padding:10px 14px; line-height:1.3;
-    background:rgba(43,15,46,.06); color:#2b0f2e; border-color:rgba(43,15,46,.15);
+    background:#fff; color:#2b0f2e; border-color:rgba(43,15,46,.2);
     transition:background-color var(--btn-transition-duration) var(--btn-transition-ease),
                transform var(--btn-transition-duration) var(--btn-transition-ease),
                box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
@@ -2809,12 +2730,12 @@
      работать только до получения результата: их более специфичные правила
      иначе перекрывают зелёную/красную подсветку .answer-*. */
   .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):hover{
-    background:rgba(43,15,46,.1);
+    background:#f8f1f7;
     transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
     box-shadow:var(--btn-raise-shadow);
   }
   .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
-    background:rgba(43,15,46,.14);
+    background:#efe3ed;
     transform:translateY(0) scale(var(--btn-active-scale));
     box-shadow:0 2px 8px rgba(0,0,0,.4);
   }
@@ -2824,24 +2745,26 @@
   .znayu-skip-btn{
     width:100%;
     margin-top:14px;
-    background:transparent;
+    background:#fff;
     border:1px dashed rgba(43,15,46,.35);
-    color:rgba(43,15,46,.6);
+    color:#2b0f2e;
     font-size:13px;
     min-height:auto; padding:8px 14px;
   }
-  .znayu-skip-btn:active{ background:rgba(43,15,46,.08); }
+  .znayu-skip-btn:not(:hover):not(:active){ box-shadow:none; }
+  .znayu-skip-btn:hover{ background:#f8f1f7; }
+  .znayu-skip-btn:active{ background:#efe3ed; }
   /* Викторина (пары/компания/дети) — переиспользует карточку и кнопки
      ответов "Тайных ответов" (.znayu-question-text/.znayu-answers/
      .znayu-answer-btn), добавляя подсветку результата после выбора:
      зелёным — верный вариант, красным — выбранный неверный. */
   .znayu-answers .znayu-answer-btn.answer-correct{
-    background:rgba(76,217,100,.85); color:#2b0f2e; border-color:#2ecc55;
+    background:#4cd964; color:#2b0f2e; border-color:#2ecc55;
     box-shadow:0 0 0 2px rgba(46,204,85,.55), 0 6px 16px rgba(0,0,0,.25);
     transform:none;
   }
   .znayu-answers .znayu-answer-btn.answer-wrong{
-    background:rgba(255,69,58,.85); color:#2b0f2e; border-color:#ff453a;
+    background:#ff453a; color:#2b0f2e; border-color:#ff453a;
     box-shadow:0 0 0 2px rgba(255,69,58,.55), 0 6px 16px rgba(0,0,0,.25);
     transform:none;
   }

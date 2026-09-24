@@ -240,10 +240,10 @@ test('«Арифметика»: карточка собрана как у ост
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
   assert(/#timesTableCard,/.test(css) || /, #timesTableCard/.test(css),
     '«Арифметика» должна входить в блок тёмно-голубых карточек обучающих игр');
-  assert(/#timesTableCard \.znayu-answers/.test(css),
-    'кнопки ответов «Таблицы» должны использовать схему «Викторины» (полупрозрачные, белый текст)');
-  assert(/#timesTableCard \.znayu-answers \.znayu-answer-btn:not\(\.answer-correct\):not\(\.answer-wrong\)\{\s*background:rgba\(255,255,255,\.14\); color:#fff/.test(css),
-    'кнопки «Таблицы» — как у #quizCard (.14, белый текст), а не светлая схема обучающих карточек');
+  assert(!/#timesTableCard\s+\.znayu-answers\s+\.znayu-answer-btn/.test(css),
+    'у «Арифметики» не должно быть отдельного цвета кнопок — используется общий компонент');
+  assert(/\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:#fff;\s*color:#2b0f2e/.test(css),
+    'все кнопки ответов должны использовать единый непрозрачный белый стиль с тёмным текстом');
 });
 
 test('«Арифметика»: темы «Сложение» и «Вычитание» — примеры от 0 до 20', () => {

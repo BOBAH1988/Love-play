@@ -847,6 +847,18 @@ function checkStyles(html) {
       safeAnswerPseudoState('hover') && safeAnswerPseudoState('active') &&
         stableAnswerResult('answer-correct') && stableAnswerResult('answer-wrong'),
       'общие :hover/:active должны исключать результат, а answer-correct/answer-wrong — сбрасывать transform');
+
+    // Все игры с вариантами ответа используют один компонент. Конкретные карточки
+    // задают только свой фон, поэтому любое #id ... .znayu-answer-btn — регресс:
+    // именно такие правила раньше делали кнопки разными в iOS standalone.
+    const cssWithoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    const unifiedAnswerStyle = /\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:\s*#fff;\s*color:\s*#2b0f2e;[^}]*border-color:\s*rgba\(43,15,46,\.2\);/.test(cssWithoutComments);
+    const scopedAnswerStyle = /#[A-Za-z][A-Za-z0-9_-]*[^{}]*\.znayu-answer-btn[^{}]*\{/.test(cssWithoutComments);
+    check('кнопки ответов во всех играх используют единый стиль',
+      unifiedAnswerStyle && !scopedAnswerStyle,
+      scopedAnswerStyle
+        ? 'найдено правило #id ... .znayu-answer-btn — цвет кнопки не должен зависеть от карточки'
+        : 'общий .znayu-answer-btn должен иметь непрозрачный белый фон, тёмный текст и общую рамку');
   }
 
   // Service Worker обязан обновлять стили сразу, а не «со второй загрузки»:
