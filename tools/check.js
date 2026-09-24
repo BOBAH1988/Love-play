@@ -1490,6 +1490,9 @@ function checkStyles(html) {
   check('showToast умеет не гаснуть (duration === 0)',
     /if\(duration === 0\) return;/.test(coreSrc),
     'showToast не поддерживает постоянный тост — «Синхронизируем…» снова исчезает');
+  check('обычный тост скрывается через 1,2 секунды',
+    /duration\s*\|\|\s*1200\);/.test(coreSrc),
+    'стандартная задержка showToast снова не 1200 мс');
   check('окно синхронизации открыто до результата и закрыто после',
     /syncModal\.classList\.add\('show'\)/.test(davaySrc2)
       && /syncModal\.classList\.remove\('show'\)/.test(davaySrc2)

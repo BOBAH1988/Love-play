@@ -1030,7 +1030,7 @@ function showToast(msg, duration){
   showToast._tm = setTimeout(()=>{
     t.classList.remove('show');
     restoreGameLevelLabelAfterToast(levelLabel);
-  }, duration || 1800);
+  }, duration || 1200);
 }
 // Тост показывается поверх заголовка (#gameLevelLabel лежит вверху экрана),
 // поэтому showToast гасит его на время тоста. По окончании тоста видимость
