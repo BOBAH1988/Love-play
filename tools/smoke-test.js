@@ -246,6 +246,16 @@ test('«Арифметика»: карточка собрана как у ост
     'все кнопки ответов должны использовать единый непрозрачный белый стиль с тёмным текстом');
 });
 
+test('«Игры с детьми»: карточки используют общий зелёный фон', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  const group = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#5ecf93,\s*#23784f/.test(css);
+  assert(group, 'детская «Викторина» должна входить в общий зелёный блок группы');
+  assert(!/#kidsQuizCard\s*\{[^}]*\bbackground\s*:/.test(css),
+    'у детской «Викторины» не должно быть отдельного более светлого фона');
+  assert(!/pwa-standalone[^{}]*#kids[A-Za-z0-9_-]*Card|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#kids[A-Za-z0-9_-]*Card/.test(css),
+    'PWA не должна перекрашивать карточки группы «Игры с детьми»');
+});
+
 test('«Арифметика»: темы «Сложение» и «Вычитание» — примеры от 0 до 20', () => {
   const prevTopic = state.timesTableTopic;
   const prevLevel = state.timesTableSelectedLevel;

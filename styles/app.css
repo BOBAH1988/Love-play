@@ -1719,10 +1719,10 @@
     background:linear-gradient(160deg, #b03e7d, #5e1f47 55%, var(--bg2));
     color:#fff;
   }
-  /* Карточки «Игр с детьми» — спокойный зелёный градиент. У детской
-     «Викторины» светлый мятный оттенок той же группы; кнопки ответов у всех
-     карточек оформляет общий компонент, а не цвет карточки. */
-  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #flashCard, #whatToPlayCard, .shop-register-card{
+  /* Карточки «Игр с детьми» — один общий зелёный градиент. В том числе
+     детская «Викторина»: отдельный светлый фон был заметнее в PWA и ломал
+     одинаковое восприятие группы. Кнопки ответов оформляет общий компонент. */
+  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #kidsQuizCard, #flashCard, #whatToPlayCard, .shop-register-card{
     background:linear-gradient(160deg, #5ecf93, #23784f 55%, var(--bg2));
     color:#fff;
   }
@@ -1742,9 +1742,6 @@
     color:#fff;
   }
   .shop-register-card .shop-cart-list, .shop-register-card .shop-cart-total{ color:#fff; }
-  #kidsQuizCard{
-    background:linear-gradient(160deg, #e3f8ec, #b9ecce 55%, #8fdfb0);
-  }
   /* Карточка "Крокодила" — вместо обычного белого фона с чёрным текстом
      спокойный сине-голубой градиент вместо обычного плоского бело-чёрного
      оформления и белый текст, чтобы слово выделялось на карточке. */
