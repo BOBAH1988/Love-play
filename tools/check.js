@@ -1317,6 +1317,7 @@ function checkStyles(html) {
       && /await Promise\.all\(missing\.map/.test(davaySrc),
     'чтение папок снова последовательное — синхронизация медленная');
   // Оверлей «Загрузка видео…» на карточке плеера обеих видео-игр прячется на playing.
+  const ideasSrc = read('games/ideas.js');
   const videoSrc2 = read('games/fants-video.js');
   const davaySrc2 = read('games/fants-davay.js');
   check('«Видеорулетка» показывает оверлей загрузки видео',
@@ -1498,6 +1499,11 @@ function checkStyles(html) {
       && videoSrc2.includes("const shareMessage = '🎲 Давай играй\\nПопробуем? 😉'")
       && videoSrc2.includes("text: shareMessage"),
     'сообщение должно начинаться с названия приложения и приглашения «Попробуем?»');
+  check('«Вопросы про это» не дублируют название при шаринге',
+    ideasSrc.includes("await shareWithTimeout({ text: shareMsg })")
+      && !/shareWithTimeout\(\{ title:/.test(ideasSrc)
+      && /const shareText = '🎲 Давай играй\\nВопросы про это:/.test(ideasSrc),
+    'title вместе с text даёт двойное «🎲 Давай играй» в Android/Telegram');
   const initSrc = read('games/init.js');
   check('ссылка-вход открывает «Видеорулетку» на нужном ролике',
     videoSrc2.includes('function findVideoCardByEntryKey(key)')

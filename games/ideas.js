@@ -135,7 +135,10 @@ document.getElementById('ideasShareBtn').addEventListener('click', async ()=>{
   // Пробуем Web Share API (mobile Safari/Chrome, PWA на iOS/Android)
   if(navigator.share){
     try{
-      await shareWithTimeout({ title:'🎲 Давай играй', text: shareMsg });
+      // title здесь намеренно не передаём: он уже первой строкой shareMsg.
+      // Android/Telegram добавляет title к text — в чате получалось два
+      // «🎲 Давай играй» подряд.
+      await shareWithTimeout({ text: shareMsg });
       showToast('Спасибо, что делитесь! 💛');
       return;
     }catch(e){

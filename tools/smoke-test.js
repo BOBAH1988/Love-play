@@ -2487,6 +2487,51 @@ testAsync('Сценарий: слишком большой ролик уходи
   }
 });
 
+// «Вопросы про это»: название уже первой строкой text. Если передать его ещё и
+// полем title, Android/Telegram добавляет title к text — в чат приходит
+// «🎲 Давай играй» дважды (жалоба игрока). Проверяем единый формат.
+testAsync('Сценарий: «Вопросы про это» отправляют название один раз', async () => {
+  const nav = global.navigator;
+  const saved = { share: nav.share, fetch: global.fetch };
+  const card = {
+    title: 'Почему рефрактерный период у мужчин у всех разный?',
+    text: 'Время восстановления после оргазма зависит от возраста, здоровья, уровня возбуждения, стресса и индивидуальной физиологии. Единой нормы продолжительности не существует.',
+  };
+  let shared = null;
+  try {
+    eval(`ideasCurrentCard = ${JSON.stringify(card)};`);
+    global.fetch = (url) => {
+      if (String(url).indexOf('clck.ru') > -1) {
+        return Promise.resolve({ ok: true, text: () => Promise.resolve('https://clck.ru/short') });
+      }
+      return saved.fetch(url);
+    };
+    nav.share = (data) => { shared = data; return Promise.resolve(); };
+
+    getElById(stub, 'ideasShareBtn').click();
+    for (let i = 0; i < 100 && !shared; i++) await new Promise((r) => setTimeout(r, 5));
+
+    assert(!!shared, 'кнопка ⤴ в «Вопросах про это» не открыла системное меню');
+    if (shared) {
+      assert(shared.title === undefined,
+        'title вместе с text даёт двойное «🎲 Давай играй» в Android/Telegram');
+      const text = String(shared.text || '');
+      assert(text.indexOf('🎲 Давай играй\nВопросы про это:\n\n') === 0,
+        `сообщение должно начинаться с одного названия и заголовка игры, получено: ${text}`);
+      assert((text.match(/🎲 Давай играй/g) || []).length === 1,
+        `название должно встречаться один раз, получено: ${text}`);
+      assert(text.indexOf(card.title) > -1 && text.indexOf(card.text) > -1,
+        'в сообщении должны остаться вопрос и ответ');
+      assert(text.indexOf('https://clck.ru/short') > -1,
+        'сокращённая ссылка должна остаться последней строкой');
+    }
+  } finally {
+    nav.share = saved.share;
+    global.fetch = saved.fetch;
+    eval('ideasCurrentCard = null;');
+  }
+});
+
 // #gameLevelLabel гаснет на время тоста (тост показывается поверх заголовка) и
 // обязан вернуться: раньше видимость возвращал только режим «Предложи партнёру»,
 // и после любого тоста в «Видеорулетке» её название пропадало до следующего
