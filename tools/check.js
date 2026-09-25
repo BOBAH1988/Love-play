@@ -261,17 +261,16 @@ function checkMarkup(html) {
       `${inHtml ? 'остался в разметке' : ''}${inHtml && inJs ? ' и ' : ''}${inJs ? 'остался обработчик в games/*.js' : ''} — ${why}`);
   }
 
-  // Версия кэша под кнопкой сброса берётся из APP_BUILD, который проверяется
-  // против CACHE_NAME в checkVersions; в меню нельзя оставлять отдельную копию.
-  const resetMenuPos = html.indexOf('id="menuResetBtn"');
+  const menuTitlePos = html.indexOf('class="modal-title menu-modal-title"');
   const cacheVersionPos = html.indexOf('id="menuCacheVersion"');
+  const resetMenuPos = html.indexOf('id="menuResetBtn"');
   const timer = read('games/fants-timer.js');
-  check('под сбросом в меню показана версия кэша',
-    resetMenuPos >= 0 && cacheVersionPos > resetMenuPos &&
-      /id="menuCacheVersion"[^>]*>версии v\d+<\/div>/.test(html) &&
+  check('после заголовка меню показана версия кэша',
+    menuTitlePos >= 0 && cacheVersionPos > menuTitlePos && cacheVersionPos < resetMenuPos &&
+      /id="menuCacheVersion"[^>]*>версии v\d+<\/span>/.test(html) &&
       /APP_BUILD/.test(timer) &&
       /textContent\s*=\s*['"]версии ['"]/.test(timer),
-    'версия кэша отсутствует или не выводится из APP_BUILD');
+    'версия кэша отсутствует или не выводится из APP_BUILD рядом с заголовком меню');
 
   // Убрав дублирующий вход, легко снести и саму возможность: проверяем, что
   // просмотр избранного «Давай попробуем» по-прежнему открывается с экрана

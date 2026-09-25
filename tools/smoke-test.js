@@ -620,7 +620,7 @@ criticalElements.forEach(id => {
   });
 });
 
-test('Меню: под сбросом отображается версия кэша', () => {
+test('Меню: после ⚙️ Меню отображается версия кэша', () => {
   const menuBtn = getElById(stub, 'globalMenuBtn');
   const menu = getElById(stub, 'globalMenuModal');
   const version = getElById(stub, 'menuCacheVersion');
@@ -630,7 +630,7 @@ test('Меню: под сбросом отображается версия кэ
     menuBtn.click();
     assert(menu.classList.contains('show'), 'кнопка меню должна открывать окно');
     assert(version.textContent === 'версии v499',
-      `под сбросом должна показываться строка «версии v499», получено «${version.textContent}»`);
+      `после заголовка меню должна показываться строка «версии v499», получено «${version.textContent}»`);
   } finally {
     if (previousBuild === undefined) delete global.APP_BUILD;
     else global.APP_BUILD = previousBuild;
