@@ -902,20 +902,37 @@ document.getElementById('davaySetupSoundBtn').addEventListener('click', ()=>{
   setDavaySoundOn(!davaySoundOn);
 });
 
-// Кнопка «Поделиться» в «Давай попробуем» — делимся ссылкой на текущий уровень/видео.
+// Ссылка-вход «Давай попробуем» на конкретный ролик. Ключ выбирается так же,
+// как у «Видеорулетки»: путь на Диске переживает смену подписанного адреса,
+// имя/id нужны для старых и локальных записей.
+function davayEntryPointUrl(card, level){
+  const params = new URLSearchParams();
+  params.set('mode', 'davay');
+  const key = card && (card.yandexPath || card.name || davayCardId(card));
+  if(key) params.set('e', String(key));
+  const lvl = parseInt(level, 10);
+  if(isFinite(lvl) && lvl >= 1 && lvl <= DAVAY_MAX_LEVEL) params.set('level', String(lvl));
+  return location.origin + location.pathname + '?' + params.toString();
+}
+function findDavayCardByEntryKey(key){
+  if(!key) return null;
+  const k = String(key);
+  return getDavayCardsList().find(c =>
+    String(c.yandexPath || '') === k ||
+    String(c.name || '') === k ||
+    String(davayCardId(c) || '') === k
+  ) || null;
+}
+
+// Кнопка «Поделиться» в «Давай попробуем» — делимся ссылкой на текущий
+// уровень/видео. В отличие от «Видеорулетки», сам файл не прикладывается.
 document.getElementById('davayShareBtn').addEventListener('click', async ()=>{
   if(!currentDavayCard){
     playErrorSound();
     showToast('Сначала откройте видео');
     return;
   }
-  const params = new URLSearchParams();
-  params.set('mode', 'davay');
-  const key = currentDavayCard.yandexPath || currentDavayCard.name || davayCardId(currentDavayCard) || '';
-  if(key) params.set('e', String(key));
-  const lvl = parseInt(davayLevel, 10);
-  if(isFinite(lvl) && lvl >= 1) params.set('level', String(lvl));
-  const appUrl = location.origin + location.pathname + '?' + params.toString();
+  const appUrl = davayEntryPointUrl(currentDavayCard, davayLevel);
   const shareUrl = await shortenShareUrl(appUrl);
   const levelInfo = davayLevelInfo(davayLevel);
   // Формат как в «Видеорулетке»: ссылка — последней строкой text, поле url не
@@ -1473,8 +1490,12 @@ document.getElementById('photoSetupStartBtn').addEventListener('click', ()=>{
 });
 
 
-async function goToDavayGame(){
+async function goToDavayGame(entry){
   state.pausedMode = null;
+  const linkedLevel = entry && parseInt(entry.level, 10);
+  const selectedLevel = isFinite(linkedLevel) && linkedLevel >= 1 && linkedLevel <= DAVAY_MAX_LEVEL
+    ? linkedLevel
+    : davaySelectedLevel();
   const n1raw = document.getElementById('name1').value.trim();
   const n2raw = document.getElementById('name2').value.trim();
   state.name1 = n1raw || 'Парень';
@@ -1486,7 +1507,8 @@ async function goToDavayGame(){
   state.levelTurnCounts = {1:0, 2:0}; state.pendingLevelUp = false;
   state.completedCount = 0; state.skippedCount = 0;
   state.inProgress = true;
-  davayLevel = davaySelectedLevel();
+  davayLevel = selectedLevel;
+  state.davaySelectedLevel = selectedLevel;
   state.davayUsed = {};
   state.davayHidden = [];
   davayHistory = [];
@@ -1507,23 +1529,59 @@ async function goToDavayGame(){
   updateLevelUI();
   updateMuteBtn();
   requestWakeLock();
-  // Аналогично Видеорулетке: не блокируем запуск на чтении каталога.
-  const tryStart = () => {
-    // .catch обязателен: без него сбой запроса станет необработанным отказом
-    // промиса, а тот пишется в журнал ошибок и вытесняет настоящие исключения.
-    refreshYandexLinks(true).catch(()=>{});
+  // Аналогично Видеорулетке: не блокируем запуск на чтении каталога. При
+  // ссылке на облачный ролик получатель мог ещё ни разу не синхронизировать
+  // каталог, поэтому один раз подтягиваем публичную папку и ищем ключ снова.
+  const tryStart = async () => {
     resetDavayQuiz();
     updateDavayPlayerButtons();
     updateDavayFavoritesBtn();
-    // Кто начинает первым — уже выбрано на странице настройки, повторный
-    // выбор в самой игре не нужен: сразу запускаем вопросы для этого игрока.
+    let directCard = entry && findDavayCardByEntryKey(entry.key);
+    if(!directCard && entry && entry.key){
+      try{
+        showToast('Подгружаем видео из облака…');
+        await importYandexVideos();
+        directCard = findDavayCardByEntryKey(entry.key);
+      }catch(e){}
+    }
+    if(directCard){
+      // Ссылка ведёт на конкретный ролик. Ставим его первым в общей очереди,
+      // чтобы оба игрока оценивали именно присланный видеоряд. Остальные
+      // ролики выбираются случайно, как при обычном запуске.
+      const linkedLevel = normalizeDavayLevel(directCard.level);
+      davayLevel = linkedLevel;
+      state.davaySelectedLevel = linkedLevel;
+      const linkedSub = davayCardSubLevel(directCard);
+      davaySubLevel = linkedSub > 0 ? linkedSub : 1;
+      updateDavayLevelBtn();
+      updateLevelUI();
+      const directId = davayCardId(directCard);
+      const pool = getDavayQuizPool();
+      const rest = shuffle(pool.filter(c => davayCardId(c) !== directId)).slice(0, 9);
+      state.davayQuizQueue = [directId].concat(rest.map(c => davayCardId(c)));
+      if(state.davayQuizQueue.length < 10){
+        showToast(`Пока доступно только ${state.davayQuizQueue.length} видео — используем их`);
+      }
+      startDavayQuizPlayer(pickStartingPlayerValue(state.davayStarter));
+      return;
+    }
+    // Старая ссылка без ключа или удалённый ролик: открываем выбранный уровень.
     startDavayQuizPlayer(pickStartingPlayerValue(state.davayStarter));
   };
   if(importedDavayVideosLoaded){
-    tryStart();
+    await tryStart();
   } else {
-    ensureImportedDavayVideosLoaded().then(tryStart);
+    await ensureImportedDavayVideosLoaded();
+    await tryStart();
   }
+}
+
+async function openDavayFromLink(entry){
+  if(blockedByDavayPause()) return;
+  state.pausedMode = null;
+  saveState();
+  if(typeof updateResumeUI === 'function') updateResumeUI();
+  await goToDavayGame(entry);
 }
 
 // toDavaySetup=true — выйти не на главный экран, а сразу в меню настроек

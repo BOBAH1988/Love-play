@@ -182,6 +182,39 @@ function checkMarkup(html) {
     /s\.businessPlayers\[0\]\s*===\s*businessDefaultName\(0\)/.test(core) &&
     /s\.businessPlayers\s*=\s*\[businessDefaultName\(0\)\]/.test(core),
     'миграция должна сокращать только старую автоматическую пару, не ручные имена');
+  // check.js извлекает правила и проверяет, что обе кнопки описаны. Здесь
+  // закрепляем конкретный текст: правила — то, что читает игрок, а не комментарий.
+  const rulesText = (id) => {
+    const start = html.indexOf(`id="${id}"`);
+    if (start < 0) return '';
+    const end = html.indexOf('<!-- =====', start + id.length + 3);
+    return html.slice(start, end > start ? end : html.length);
+  };
+  check('правила «Вопросов про это» соответствуют кнопкам',
+    /Кнопка ⤴ «Поделиться» рядом с «Далее»/.test(rulesText('ideasRulesModal')) &&
+      !/ideasFavBtn|ideasFavViewBtn|⭐ Избранное/.test(rulesText('ideasRulesModal')),
+    'в правилах осталось старое избранное или пропущена реальная кнопка ⤴');
+  check('правила «Оцени бизнес» объясняют список и дефолт',
+    /По умолчанию в нём один «Предприниматель»/.test(rulesText('bizObsRulesModal')) &&
+      /Добавить участника/.test(rulesText('bizObsRulesModal')) &&
+      /до 10 человек/.test(rulesText('bizObsRulesModal')),
+    'правила не синхронизированы с дефолтом из одного участника и лимитом 10');
+
+  // Кнопка ⤴ в «Давай попробуем» обещает ссылку на текущий ролик. Проверяем
+  // не только наличие обработчика, но и полный вход: mode=davay/e/level,
+  // очистка URL, поиск по трём ключам и Cloud-синхронизация на чужом телефоне.
+  const davayShareRules = rulesText('davayRulesModal');
+  const initShareSrc = read('games/init.js');
+  check('«Давай попробуем»: ссылка открывает текущий ролик',
+    /function davayEntryPointUrl\(card, level\)/.test(read('games/fants-davay.js')) &&
+      /function findDavayCardByEntryKey\(key\)/.test(read('games/fants-davay.js')) &&
+      /async function openDavayFromLink\(entry\)/.test(read('games/fants-davay.js')) &&
+      /state\.davayQuizQueue\s*=\s*\[directId\]/.test(read('games/fants-davay.js')) &&
+      /await importYandexVideos\(\)/.test(read('games/fants-davay.js')) &&
+      /linkParams\.get\('mode'\) === 'davay'/.test(initShareSrc) &&
+      /openDavayFromLink\(entry\)/.test(initShareSrc) &&
+      /Кнопка ⤴ в «Давай попробуем»/.test(davayShareRules),
+    'ссылка mode=davay должна находить ролик, синхронизировать облако при необходимости и открываться первым');
 
   // Поле «Предприниматель» и добавление участника должны быть одной строкой.
   const businessPlayerRow = /<div\s+class="business-players-row">[\s\S]*?<div\s+id="businessPlayersList"><\/div>[\s\S]*?<button[^>]+id="businessAddPlayerBtn"[^>]*>[^<]*Добавить участника[^<]*<\/button>[\s\S]*?<\/div>/.test(html);

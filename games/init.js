@@ -105,6 +105,18 @@ try{
    выше): иначе каждое обновление страницы снова открывало бы видеорулетку. */
 try{
   const linkParams = new URLSearchParams(location.search);
+  if(linkParams.get('mode') === 'davay'){
+    const entry = {
+      key: linkParams.get('e') || '',
+      level: linkParams.get('level')
+    };
+    const linkUrl = new URL(location.href);
+    linkUrl.searchParams.delete('mode');
+    linkUrl.searchParams.delete('e');
+    linkUrl.searchParams.delete('level');
+    history.replaceState(null, '', linkUrl.pathname + linkUrl.search + linkUrl.hash);
+    if(typeof openDavayFromLink === 'function') openDavayFromLink(entry);
+  }
   if(linkParams.get('mode') === 'video'){
     const entry = {
       key: linkParams.get('e') || '',

@@ -2481,6 +2481,56 @@ test('Сценарий: ссылка-вход «Поделиться видео�
   }
 });
 
+test('Сценарий: ссылка-вход «Давай попробуем» ведёт на тот же ролик', async () => {
+  if (typeof global.davayEntryPointUrl !== 'function' ||
+      typeof global.findDavayCardByEntryKey !== 'function' ||
+      typeof global.openDavayFromLink !== 'function') {
+    assert(false, 'davayEntryPointUrl/findDavayCardByEntryKey/openDavayFromLink недоступны');
+    return;
+  }
+  const card = {
+    id: 'davay-1', name: 'demo.webm', level: 3,
+    video: 'disk:/Level 3-2 Близость/d.webm',
+    yandexPath: 'disk:/Level 3-2 Близость/d.webm',
+  };
+  const url = global.davayEntryPointUrl(card, 3);
+  const params = new URLSearchParams(url.split('?')[1]);
+  assert(params.get('mode') === 'davay', 'без ?mode=davay ссылка не откроет нужную игру');
+  assert(params.get('level') === '3', `уровень потерялся: ${params.get('level')}`);
+  assert(params.get('e') === card.yandexPath, `ключ ролика потерялся: ${params.get('e')}`);
+
+  const list = global.getDavayCardsList();
+  const saved = list.slice();
+  list.length = 0;
+  list.push(card);
+  try {
+    assert(global.findDavayCardByEntryKey(params.get('e')) === card, 'поиск по пути Диска не работает');
+    assert(global.findDavayCardByEntryKey(card.name) === card, 'поиск по имени файла не работает');
+    assert(global.findDavayCardByEntryKey(card.id) === card, 'поиск по id карточки не работает');
+    assert(global.findDavayCardByEntryKey('чужой ключ') === null, 'чужой ключ не должен давать совпадение');
+
+    const savedQueue = eval('state.davayQuizQueue');
+    const savedLevel = eval('davayLevel');
+    const savedSub = eval('davaySubLevel');
+    const savedSelected = eval('state.davaySelectedLevel');
+    const savedInProgress = eval('state.inProgress');
+    const savedPaused = eval('state.pausedMode');
+    try {
+      await global.openDavayFromLink({ key: card.id, level: '3' });
+      assert(eval('davayLevel') === 3, `вход должен выбрать уровень ролика, получен ${eval('davayLevel')}`);
+      assert(eval('davaySubLevel') === 2, `вход должен выбрать подуровень ролика, получен ${eval('davaySubLevel')}`);
+      assert(eval('state.davayQuizQueue[0]') === card.id,
+        `присланный ролик должен быть первым в очереди, очередь: ${JSON.stringify(eval('state.davayQuizQueue'))}`);
+    } finally {
+      eval(`state.davayQuizQueue = savedQueue; davayLevel = savedLevel; davaySubLevel = savedSub;
+        state.davaySelectedLevel = savedSelected; state.inProgress = savedInProgress; state.pausedMode = savedPaused;`);
+    }
+  } finally {
+    list.length = 0;
+    saved.forEach(c => list.push(c));
+  }
+});
+
 // Вход по ссылке на чужом телефоне: ролика может не быть в каталоге
 // (синхронизацию с Диском там ещё не нажимали). Проверяем, что игра в этом
 // случае молча подтягивает облако и ищет снова, а не падает в демо-ролик
