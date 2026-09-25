@@ -294,6 +294,7 @@ function checkMarkup(html) {
     pwaRegSyntaxOk &&
       /UPDATE_POLL_MS\s*=\s*5\s*\*\s*60\s*\*\s*1000/.test(pwaRegCode) &&
       /registration\.update\(\)/.test(pwaRegCode) &&
+      /updateViaCache\s*:\s*['"]none['"]/.test(pwaRegCode) &&
       /document\.addEventListener\('visibilitychange'/.test(pwaRegCode) &&
       /window\.addEventListener\('pageshow'/.test(pwaRegCode) &&
       /window\.addEventListener\('focus'/.test(pwaRegCode) &&
@@ -1104,11 +1105,14 @@ function checkStyles(html) {
     'в activate нет защиты текущего CACHE_NAME');
   check('SW предкэшивает игры и стили из index.html',
     /cards\|games\|styles/.test(sw) &&
-      /cache\.addAll\(urls\)/.test(sw) &&
+      /cache\.addAll\(cacheRequests\)/.test(sw) &&
+      /new Request\(url,\s*\{\s*cache:\s*['"]no-store['"]\s*\}\)/.test(sw) &&
       !/cache\.add\(/.test(sw) &&
       !/ctx\.skipWaiting\(\)/.test(sw) &&
       /cache\.put\(PRECACHE_MANIFEST_URL/.test(sw) &&
       /cache\.match\(PRECACHE_MANIFEST_URL/.test(sw) &&
+      /if \(url\.pathname\.endsWith\('sw\.js'\)\)[\s\S]{0,180}fetch\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw) &&
+      /if \(request\.mode === 'navigate'\)[\s\S]{0,500}fetch\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw) &&
       !/fetch\s*\(/.test(activateSw),
     'нужен атомарный precache, локальный манифест и активация без сетевого fetch');
   check('офлайн-заглушка вместо пустого ответа',

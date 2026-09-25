@@ -31,7 +31,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v497';
+const CACHE_NAME = 'veselye-igry-cache-v498';
 
 // Корень приложения относительно адреса воркера: sw.js лежит в корне, поэтому
 // './' относительно его адреса — это корень и в деплое в корень домена ('/'),
@@ -118,7 +118,11 @@ self.addEventListener('install', (event) => {
     // Раньше ошибки отдельных precache-запросов подавлялись, поэтому новый
     // воркер мог активироваться с неполным кэшем — приложение открывалось без
     // игровых скриптов.
-    await cache.addAll(urls);
+    // Даже precache должен обходить HTTP-кеш: иначе install новой версии
+    // может положить в кэш старый ответ с тем же URL (GitHub Pages держит
+    // max-age=600). Request с no-store сохраняет транзакционность addAll.
+    const cacheRequests = urls.map((url) => new Request(url, { cache: 'no-store' }));
+    await cache.addAll(cacheRequests);
     await cache.put(PRECACHE_MANIFEST_URL, new Response(JSON.stringify(urls), {
       headers: { 'Content-Type': 'application/json; charset=utf-8' }
     }));
@@ -204,7 +208,7 @@ self.addEventListener('fetch', (event) => {
 // Навигация (открытие страницы) — network-first.
     if (request.mode === 'navigate') {
       event.respondWith(
-        fetch(request)
+        fetch(request, { cache: 'no-store' })
           .then((response) => {
             const copy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
@@ -221,7 +225,7 @@ self.addEventListener('fetch', (event) => {
 
     // sw.js — всегда из сети, чтобы обновления применялись мгновенно.
     if (url.pathname.endsWith('sw.js')) {
-      event.respondWith(fetch(request));
+      event.respondWith(fetch(request, { cache: 'no-store' }));
       return;
     }
 
@@ -236,7 +240,7 @@ self.addEventListener('fetch', (event) => {
     // пустого ответа (respondWith(undefined) ронял загрузку скрипта — белый экран).
     if (url.pathname.startsWith(ROOT + 'games/') || url.pathname.startsWith(ROOT + 'styles/') || url.pathname.startsWith(ROOT + 'cards/')) {
       event.respondWith(
-        fetch(request)
+        fetch(request, { cache: 'no-store' })
           .then((response) => {
             if (response && response.status === 200) {
               const copy = response.clone();
@@ -251,7 +255,7 @@ self.addEventListener('fetch', (event) => {
     // Остальные ресурсы — stale-while-revalidate.
     event.respondWith(
       caches.match(request).then((cached) => {
-        const network = fetch(request)
+        const network = fetch(request, { cache: 'no-store' })
           .then((response) => {
             if (response && response.status === 200) {
               const copy = response.clone();

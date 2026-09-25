@@ -3116,6 +3116,11 @@ testAsync('PWA: обновление обнаруживается в актив�
   let resolvePendingUpdate = null;
   let pollCallback = null;
   let pollDelay = 0;
+  let registerOptions = null;
+  const pendingTimeouts = [];
+  const flushPendingTimeouts = () => {
+    while (pendingTimeouts.length) pendingTimeouts.shift()();
+  };
   const windowListeners = {};
   const documentListeners = {};
   const updateToast = { hidden: true };
@@ -3148,8 +3153,8 @@ testAsync('PWA: обновление обнаруживается в актив�
     navigator: {
       onLine: true,
       serviceWorker: {
-        controller: {},
-        register() { return Promise.resolve(registration); }
+        controller: null,
+        register(_scriptUrl, options) { registerOptions = options; return Promise.resolve(registration); }
       }
     },
     location: windowStub.location,
@@ -3157,7 +3162,7 @@ testAsync('PWA: обновление обнаруживается в актив�
     window: windowStub,
     Date: { now() { return now; } },
     Promise,
-    setTimeout(fn) { fn(); return 1; },
+    setTimeout(fn) { pendingTimeouts.push(fn); return pendingTimeouts.length; },
     setInterval(fn, delay) { pollCallback = fn; pollDelay = delay; return 1; },
     console
   };
@@ -3166,16 +3171,24 @@ testAsync('PWA: обновление обнаруживается в актив�
   await new Promise(resolve => setImmediate(resolve));
 
   assert(updateCalls === 1, 'проверка обновления должна выполняться сразу после регистрации');
+  assert(registerOptions && registerOptions.updateViaCache === 'none',
+    'регистрация должна запрещать HTTP-кеш для проверки Service Worker');
   assert(pollCallback && pollDelay === 5 * 60 * 1000,
     'для активной PWA нужен видимый опрос каждые пять минут');
 
   const firstWorker = { state: 'installing', addEventListener(type, fn) { this[type] = fn; } };
   registration.installing = firstWorker;
   registration.updatefound();
-  registration.waiting = firstWorker;
+  // Имитируем порядок браузера: statechange может прийти раньше, чем
+  // registration.waiting окончательно ссылается на установленного worker.
+  registration.waiting = null;
   firstWorker.state = 'installed';
   firstWorker.statechange();
-  assert(updateToast.hidden === false, 'установленный waiting-воркер должен открыть плашку');
+  assert(updateToast.hidden === true, 'до появления registration.waiting плашка не должна показываться');
+  registration.waiting = firstWorker;
+  // Дополнительный deferred-check после statechange должен показать toast.
+  flushPendingTimeouts();
+  assert(updateToast.hidden === false, 'отложенная проверка должна показать установленный waiting-воркер');
 
   closeUpdateBtn.click();
   assert(updateToast.hidden === true, 'крестик должен закрыть плашку');
