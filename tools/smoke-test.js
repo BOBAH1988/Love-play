@@ -888,6 +888,100 @@ test('Сценарий: викторина озвучивает вопрос и 
   }
 });
 
+testAsync('Сценарий: ответ отменяет озвучку теста и отложенный запуск речи', async () => {
+  const saved = {};
+  const stateKeys = [
+    'autoSpeak', 'mute',
+    'quizQueue', 'quizIndex', 'quizCurrentPlayerIndex', 'quizCorrect', 'quizTimeMs',
+    'partyQuizQueue', 'partyQuizIndex', 'partyQuizCurrentPlayerIndex', 'partyQuizCorrect', 'partyQuizTimeMs', 'partyPlayers',
+    'kidsQuizQueue', 'kidsQuizIndex', 'kidsQuizCurrentPlayerIndex', 'kidsQuizCorrect', 'kidsQuizTimeMs', 'kidsPlayers', 'kidsAge',
+    'soloQuizQueue', 'soloQuizIndex', 'soloQuizCorrect', 'soloQuizTimeMs',
+    'flagsQueue', 'flagsIndex', 'flagsCorrect', 'flagsTimeMs', 'flagsAnswerSeconds',
+    'capitalsQueue', 'capitalsIndex', 'capitalsCorrect', 'capitalsTimeMs', 'capitalsAnswerSeconds',
+    'timesTableQueue', 'timesTableIndex', 'timesTableCorrect', 'timesTableTimeMs', 'timesTableSelectedLevel',
+  ];
+  stateKeys.forEach(key => { saved[key] = state[key]; });
+  const originalUtterance = global.SpeechSynthesisUtterance;
+  const originalSynth = window.speechSynthesis;
+  const originalFade = global.fadeSwapEl;
+  let cancels = 0;
+  const spoken = [];
+  try {
+    global.SpeechSynthesisUtterance = function(text) { this.text = text; };
+    window.speechSynthesis = {
+      speaking: true, pending: false, getVoices: () => [],
+      cancel() { cancels++; },
+      speak(utter) { spoken.push(utter.text); },
+    };
+    global.fadeSwapEl = (id, render, onDone) => {
+      render(getElById(stub, id));
+      if(onDone) onDone();
+    };
+    state.autoSpeak = false;
+
+    const run = (label, setup, show, stopInterval, speak, answer) => {
+      setup();
+      show();
+      stopInterval();
+      const before = cancels;
+      speak();
+      answer();
+      assert(cancels > before, `${label}: ответ должен вызвать stopSpeech/cancel()`);
+      assert(spoken.length === 0, `${label}: отложенная озвучка не должна запускаться после ответа`);
+    };
+
+    run('Викторина для двоих', () => {
+      state.quizQueue = [{ q:'Вопрос', a:['1','2','3','4'] }];
+      state.quizIndex = 0; state.quizCurrentPlayerIndex = 0;
+      state.quizCorrect = []; state.quizTimeMs = [];
+    }, showQuizQuestion, stopQuizInterval, speakQuizCard, () => answerQuizQuestion(0));
+
+    run('Викторина для компании', () => {
+      state.partyQuizQueue = [{ q:'Вопрос', a:['1','2','3','4'] }];
+      state.partyQuizIndex = 0; state.partyQuizCurrentPlayerIndex = 0;
+      state.partyQuizCorrect = []; state.partyQuizTimeMs = []; state.partyPlayers = ['Игрок 1','Игрок 2'];
+    }, showPartyQuizQuestion, stopPartyQuizInterval, speakPartyQuizCard, () => answerPartyQuizQuestion(0));
+
+    run('Викторина для детей', () => {
+      state.kidsQuizQueue = [{ q:'Вопрос', a:['1','2','3','4'] }];
+      state.kidsQuizIndex = 0; state.kidsQuizCurrentPlayerIndex = 0;
+      state.kidsQuizCorrect = []; state.kidsQuizTimeMs = []; state.kidsPlayers = ['Родитель','Ребёнок']; state.kidsAge = 1;
+    }, showKidsQuizQuestion, stopKidsQuizInterval, speakKidsQuizCard, () => answerKidsQuizQuestion(0));
+
+    run('Викторина для одного', () => {
+      state.soloQuizQueue = [{ q:'Вопрос', a:['1','2','3','4'] }];
+      state.soloQuizIndex = 0; state.soloQuizCorrect = 0; state.soloQuizTimeMs = 0;
+    }, showSoloQuizQuestion, stopSoloQuizInterval, speakSoloQuizCard, () => answerSoloQuizQuestion(0));
+
+    run('Флаги', () => {
+      state.flagsQueue = [{ level:1, a:['1','2','3','4'] }];
+      state.flagsIndex = 0; state.flagsCorrect = 0; state.flagsTimeMs = 0; state.flagsAnswerSeconds = 10;
+    }, showFlagsQuestion, stopFlagsInterval, speakFlagsCard, () => answerFlagsQuestion(0));
+
+    run('Столицы', () => {
+      state.capitalsQueue = [{ level:1, country:'Страна', a:['1','2','3','4'] }];
+      state.capitalsIndex = 0; state.capitalsCorrect = 0; state.capitalsTimeMs = 0; state.capitalsAnswerSeconds = 10;
+    }, showCapitalsQuestion, stopCapitalsInterval, speakCapitalsCard, () => answerCapitalsQuestion(0));
+
+    run('Арифметика', () => {
+      state.timesTableQueue = [{ a:2, b:3, op:'multiply', level:1 }];
+      state.timesTableIndex = 0; state.timesTableCorrect = 0; state.timesTableTimeMs = 0; state.timesTableSelectedLevel = 1; state.mute = false;
+    }, showTimesTableQuestion, stopTimesTableInterval, speakTimesTableCard, () => answerTimesTableQuestion(0));
+
+    await new Promise(resolve => setTimeout(resolve, 80));
+    assert(spoken.length === 0, 'после ответа не должно быть запоздалого воспроизведения');
+  } finally {
+    stopQuizInterval(); stopPartyQuizInterval(); stopKidsQuizInterval(); stopSoloQuizInterval();
+    stopFlagsInterval(); stopCapitalsInterval(); stopTimesTableInterval();
+    stopQuizSpeech(); stopPartyQuizSpeech(); stopKidsQuizSpeech(); stopSoloQuizSpeech();
+    stopFlagsSpeech(); stopCapitalsSpeech(); stopTimesTableSpeech();
+    global.SpeechSynthesisUtterance = originalUtterance;
+    window.speechSynthesis = originalSynth;
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 test('Сценарий: «Вопросы про это» озвучивают карточку автоматически и по тапу', () => {
   const saved = {};
   ['ideasUsed', 'autoSpeak'].forEach(key => { saved[key] = state[key]; });

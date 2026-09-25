@@ -17,6 +17,7 @@ let soloQuizDurationMs = 3000;
 let soloQuizAnswered = false;
 let soloQuizQuestionStartedAt = 0;
 let soloQuizCurrentOptions = [];
+let soloQuizSpeechTimerId = null; // отложенный старт озвучки после cancel()
 let soloQuizShowingQuestion = false;
 
 function getSoloQuizCardsList(level){
@@ -206,6 +207,7 @@ function answerSoloQuizQuestion(choiceIdx){
   if(soloQuizAnswered) return;
   soloQuizAnswered = true;
   stopSoloQuizInterval();
+  stopSoloQuizSpeech();
   const elapsed = Math.min(Date.now() - soloQuizQuestionStartedAt, soloQuizDurationMs);
   state.soloQuizTimeMs = (state.soloQuizTimeMs || 0) + elapsed;
   const isCorrect = choiceIdx >= 0 && soloQuizCurrentOptions[choiceIdx] && soloQuizCurrentOptions[choiceIdx].correct;
@@ -316,6 +318,7 @@ function pickSoloQuizVoice(){
   return female || pool[0] || null;
 }
 function stopSoloQuizSpeech(){
+  if(soloQuizSpeechTimerId){ clearTimeout(soloQuizSpeechTimerId); soloQuizSpeechTimerId = null; }
   stopSpeech('soloQuizTtsHint');
 }
 function speakSoloQuizCard(){
@@ -330,6 +333,7 @@ function speakSoloQuizCard(){
   if(voice) utter.voice = voice;
   const hint = document.getElementById('soloQuizTtsHint');
   const fire = ()=>{
+    soloQuizSpeechTimerId = null;
     const current = state.soloQuizQueue && state.soloQuizQueue[state.soloQuizIndex];
     if(current !== item) return; // вопрос уже сменился — не озвучиваем устаревший текст
     if(hint) hint.classList.add('speaking');
@@ -345,7 +349,7 @@ function speakSoloQuizCard(){
   // нужно прервать уже звучащую фразу (смена вопроса на лету).
   if(synth.speaking || synth.pending){
     synth.cancel();
-    setTimeout(fire, 50);
+    soloQuizSpeechTimerId = setTimeout(fire, 50);
   } else {
     fire();
   }

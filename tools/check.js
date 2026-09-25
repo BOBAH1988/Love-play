@@ -1360,6 +1360,28 @@ function checkStyles(html) {
   check('в fants-timer.js нет дублей звуковых функций',
     !/function (playSuccessSound|playErrorSound|playTimerAlarm|getAudioCtx)\s*\(/.test(timerSrc),
     'звуковые функции определяются в двух местах — рассинхрон неизбежен');
+  // Во всех играх с голосовым тестом ответ должен немедленно отменять речь.
+  // Иначе SpeechSynthesis успевает дочитать вопрос/варианты поверх следующей
+  // карточки, особенно если ответ нажат во время отложенного запуска `fire`.
+  const answerSpeechStops = [
+    ['games/quiz.js', 'answerQuizQuestion', 'stopQuizSpeech'],
+    ['games/party-quiz.js', 'answerPartyQuizQuestion', 'stopPartyQuizSpeech'],
+    ['games/kids-quiz.js', 'answerKidsQuizQuestion', 'stopKidsQuizSpeech'],
+    ['games/solo-quiz.js', 'answerSoloQuizQuestion', 'stopSoloQuizSpeech'],
+    ['games/flags.js', 'answerFlagsQuestion', 'stopFlagsSpeech'],
+    ['games/capitals.js', 'answerCapitalsQuestion', 'stopCapitalsSpeech'],
+    ['games/times-table.js', 'answerTimesTableQuestion', 'stopTimesTableSpeech'],
+  ];
+  const missingAnswerSpeechStops = answerSpeechStops.filter(([file, answerFn, stopFn]) => {
+    const src = read(file);
+    const start = src.indexOf(`function ${answerFn}(`);
+    const next = src.indexOf('\nfunction ', start + 1);
+    const body = start >= 0 ? src.slice(start, next > start ? next : src.length) : '';
+    return !new RegExp(`\\b${stopFn}\\s*\\(`).test(body);
+  });
+  check('ответ во всех играх с озвучкой останавливает речь',
+    missingAnswerSpeechStops.length === 0,
+    `не вызывается stopSpeech: ${missingAnswerSpeechStops.map(([file, answerFn]) => `${file}:${answerFn}`).join(', ')}`);
   // Единый звук видео: кнопка «Звук» на настройке «Давай попробуем» и кнопки
   // 🔊 в обеих играх обязаны писать одну настройку. Раньше
   // state.videoSoundOn жил отдельно — включённый на настройке звук не

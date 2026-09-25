@@ -11,6 +11,7 @@ let kidsQuizDurationMs = 3000;
 let kidsQuizAnswered = false;
 let kidsQuizQuestionStartedAt = 0;
 let kidsQuizCurrentOptions = [];
+let kidsQuizSpeechTimerId = null; // отложенный старт озвучки после cancel()
 // Пока true — по карточке показан именно вопрос (не хендофф и не заглушка),
 // поэтому тап по ней озвучивает текст задания (см. speakKidsQuizCard).
 let kidsQuizShowingQuestion = false;
@@ -239,6 +240,7 @@ function answerKidsQuizQuestion(choiceIdx){
   if(kidsQuizAnswered) return;
   kidsQuizAnswered = true;
   stopKidsQuizInterval();
+  stopKidsQuizSpeech();
   const elapsed = Math.min(Date.now() - kidsQuizQuestionStartedAt, kidsQuizDurationMs);
   const idx = state.kidsQuizCurrentPlayerIndex || 0;
   if(!state.kidsQuizCorrect) state.kidsQuizCorrect = [];
@@ -407,6 +409,7 @@ function pickKidsQuizVoice(){
   return female || pool[0] || null;
 }
 function stopKidsQuizSpeech(){
+  if(kidsQuizSpeechTimerId){ clearTimeout(kidsQuizSpeechTimerId); kidsQuizSpeechTimerId = null; }
   stopSpeech('kidsQuizTtsHint');
 }
 function speakKidsQuizCard(){
@@ -421,6 +424,7 @@ function speakKidsQuizCard(){
   if(voice) utter.voice = voice;
   const hint = document.getElementById('kidsQuizTtsHint');
   const fire = ()=>{
+    kidsQuizSpeechTimerId = null;
     const current = state.kidsQuizQueue && state.kidsQuizQueue[state.kidsQuizIndex];
     if(current !== item) return; // вопрос уже сменился — не озвучиваем устаревший текст
     if(hint) hint.classList.add('speaking');
@@ -436,7 +440,7 @@ function speakKidsQuizCard(){
   // нужно прервать уже звучащую фразу (смена вопроса на лету).
   if(synth.speaking || synth.pending){
     synth.cancel();
-    setTimeout(fire, 50);
+    kidsQuizSpeechTimerId = setTimeout(fire, 50);
   } else {
     fire();
   }

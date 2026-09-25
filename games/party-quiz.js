@@ -10,6 +10,7 @@ let partyQuizDurationMs = 3000;
 let partyQuizAnswered = false;
 let partyQuizQuestionStartedAt = 0;
 let partyQuizCurrentOptions = [];
+let partyQuizSpeechTimerId = null; // отложенный старт озвучки после cancel()
 // Пока true — по карточке показан именно вопрос (не хендофф и не заглушка),
 // поэтому тап по ней озвучивает текст задания (см. speakPartyQuizCard).
 let partyQuizShowingQuestion = false;
@@ -238,6 +239,7 @@ function answerPartyQuizQuestion(choiceIdx){
   if(partyQuizAnswered) return;
   partyQuizAnswered = true;
   stopPartyQuizInterval();
+  stopPartyQuizSpeech();
   const elapsed = Math.min(Date.now() - partyQuizQuestionStartedAt, partyQuizDurationMs);
   const idx = state.partyQuizCurrentPlayerIndex || 0;
   if(!state.partyQuizCorrect) state.partyQuizCorrect = [];
@@ -403,6 +405,7 @@ function pickPartyQuizVoice(){
   return female || pool[0] || null;
 }
 function stopPartyQuizSpeech(){
+  if(partyQuizSpeechTimerId){ clearTimeout(partyQuizSpeechTimerId); partyQuizSpeechTimerId = null; }
   stopSpeech('partyQuizTtsHint');
 }
 function speakPartyQuizCard(){
@@ -417,6 +420,7 @@ function speakPartyQuizCard(){
   if(voice) utter.voice = voice;
   const hint = document.getElementById('partyQuizTtsHint');
   const fire = ()=>{
+    partyQuizSpeechTimerId = null;
     const current = state.partyQuizQueue && state.partyQuizQueue[state.partyQuizIndex];
     if(current !== item) return; // вопрос уже сменился — не озвучиваем устаревший текст
     if(hint) hint.classList.add('speaking');
@@ -432,7 +436,7 @@ function speakPartyQuizCard(){
   // нужно прервать уже звучащую фразу (смена вопроса на лету).
   if(synth.speaking || synth.pending){
     synth.cancel();
-    setTimeout(fire, 50);
+    partyQuizSpeechTimerId = setTimeout(fire, 50);
   } else {
     fire();
   }

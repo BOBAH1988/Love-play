@@ -82,6 +82,7 @@ function stopTimesTableSpeakTimer(){
   }
 }
 function stopTimesTableSpeech(){
+  stopTimesTableSpeakTimer();
   try{
     if(window.speechSynthesis) window.speechSynthesis.cancel();
   }catch(e){}

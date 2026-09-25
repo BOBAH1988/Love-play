@@ -121,6 +121,7 @@ function answerCapitalsQuestion(choiceIdx){
   if(capitalsAnswered) return;
   capitalsAnswered = true;
   stopCapitalsInterval();
+  stopCapitalsSpeech();
   const elapsed = Math.min(Date.now() - capitalsQuestionStartedAt, capitalsDurationMs);
   if(!state.capitalsCorrect) state.capitalsCorrect = 0;
   if(!state.capitalsTimeMs) state.capitalsTimeMs = 0;

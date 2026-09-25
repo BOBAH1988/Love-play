@@ -120,6 +120,7 @@ function answerFlagsQuestion(choiceIdx){
   if(flagsAnswered) return;
   flagsAnswered = true;
   stopFlagsInterval();
+  stopFlagsSpeech();
   const elapsed = Math.min(Date.now() - flagsQuestionStartedAt, flagsDurationMs);
   if(!state.flagsCorrect) state.flagsCorrect = 0;
   if(!state.flagsTimeMs) state.flagsTimeMs = 0;
