@@ -75,7 +75,7 @@ PWA без сборки: `index.html` (разметка), `games/*.js` (логи
 ```bash
 node tools/check.js            # 295 структурных проверок
 node tools/check.js --verbose  # с деталями
-node tools/smoke-test.js       # 143 сценария (исполняют код)
+node tools/smoke-test.js       # 144 сценария (исполняют код)
 ```
 
 check.js проверяет структуру, smoke-test — что сценарии работают.

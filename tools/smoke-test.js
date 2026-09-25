@@ -507,12 +507,14 @@ test('Колоды «Флагов»/«Столиц» покрывают все S
 });
 
 test('«Арифметика»: очередь на уровнях и размерах партии', () => {
+  const prevTopic = state.timesTableTopic;
   const prevLevel = state.timesTableSelectedLevel;
   const prevCount = state.timesTableQuestionCount;
   const prevUsed = state.timesTableUsed;
   const prevQueue = state.timesTableQueue;
   const prevIndex = state.timesTableIndex;
   try {
+    state.timesTableTopic = 'multiply';
     [1, 2, 3].forEach(level => {
       state.timesTableSelectedLevel = level;
       state.timesTableUsed = {};
@@ -535,6 +537,49 @@ test('«Арифметика»: очередь на уровнях и разме
   } catch (e) {
     assert(false, `ошибка: ${e.message}`);
   } finally {
+    state.timesTableTopic = prevTopic;
+    state.timesTableSelectedLevel = prevLevel;
+    state.timesTableQuestionCount = prevCount;
+    state.timesTableUsed = prevUsed;
+    state.timesTableQueue = prevQueue;
+    state.timesTableIndex = prevIndex;
+  }
+});
+
+test('«Арифметика»: вопросы идут от простых к сложным', () => {
+  const prevTopic = state.timesTableTopic;
+  const prevLevel = state.timesTableSelectedLevel;
+  const prevCount = state.timesTableQuestionCount;
+  const prevUsed = state.timesTableUsed;
+  const prevQueue = state.timesTableQueue;
+  const prevIndex = state.timesTableIndex;
+  try {
+    state.timesTableSelectedLevel = 1;
+    state.timesTableUsed = {};
+    ['add', 'subtract', 'multiply', 'divide'].forEach(topic => {
+      [5, 10, 25, 50].forEach(count => {
+        state.timesTableTopic = topic;
+        state.timesTableQuestionCount = count;
+        global.drawTimesTableQueue();
+        const queue = state.timesTableQueue || [];
+        assert(queue.length === count,
+          `тема «${topic}», ${count} карточек: очередь должна содержать ${count} вопросов`);
+        const scores = queue.map(global.timesTableDifficulty);
+        assert(scores.every((score, i) => i === 0 || score >= scores[i - 1]),
+          `тема «${topic}», ${count} карточек: сложность не должна уменьшаться по ходу партии`);
+        const keys = queue.map(global.timesTableCardKey);
+        assert(new Set(keys).size === keys.length,
+          `тема «${topic}», ${count} карточек: в партии не должно быть повторов`);
+        assert(global.timesTableDifficultyStage(queue[0]) === 0,
+          `тема «${topic}», ${count} карточек: первая карточка должна быть простой`);
+        assert(global.timesTableDifficultyStage(queue[queue.length - 1]) === 3,
+          `тема «${topic}», ${count} карточек: последняя карточка должна быть сложной`);
+      });
+    });
+  } catch (e) {
+    assert(false, `ошибка: ${e.message}`);
+  } finally {
+    state.timesTableTopic = prevTopic;
     state.timesTableSelectedLevel = prevLevel;
     state.timesTableQuestionCount = prevCount;
     state.timesTableUsed = prevUsed;

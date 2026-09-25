@@ -1,5 +1,6 @@
 // games/times-table.js — Игра «Арифметика» (обучающая, по образцу «Столиц»).
 // Вопросы генерируются программно с 4 вариантами ответа.
+// Внутри партии очередь идёт от простых примеров к более сложным.
 // Рабочие темы: «Умножение» (a × b, 1–10), «Деление» (a ÷ b с целым ответом, 1–10),
 // «Сложение» (a + b, 0–20) и «Вычитание» (a − b, 0–20, ответ неотрицательный).
 // Запускается из экрана настроек в хабе обучающих игр. Однопользовательский режим, без паузы.
@@ -29,15 +30,16 @@ let timesTableSpeakTimerId = null;
 
 function timesTableRange(){
   // Диапазон цифр зависит от темы: «Умножение» и «Деление» — 1–10,
-  // «Сложение» и «Вычитание» — 0–20. От уровня сложности зависит
-  // только время на ответ (см. timesTableLevelAnswerSeconds).
+  // Сложность растёт по позиции карточки, а не по выбранному времени ответа.
+  // «Уровень» в state — это прежнее имя звёздной настройки, поэтому оставляем
+  // его для обратной совместимости сохранений.
   const topic = timesTableTopic();
   if(topic === 'add' || topic === 'subtract') return [0, 20];
   return [1, 10];
 }
 
 function timesTableLevelAnswerSeconds(level){
-  // Время на ответ зависит от уровня сложности:
+  // Время на ответ зависит от выбранной звёздной настройки:
   //   ⭐  — 5 секунд,
   //   ⭐⭐ — 3 секунды,
   //   ⭐⭐⭐ — 1,5 секунды.
@@ -64,6 +66,118 @@ function timesTableUsedKey(){
 function timesTableCardKey(card){
   const op = card && card.op === 'divide' ? '÷' : card && card.op === 'subtract' ? '−' : 'x';
   return `${op}${card.a}x${card.b}`;
+}
+
+function timesTableOperands(item){
+  // Для деления оцениваем делитель и частное, а не делимое: 56 ÷ 8
+  // не сложнее 8 ÷ 8 только потому, что делимое получилось большим.
+  if(item && item.op === 'divide') return [item.b, item.a / item.b];
+  return [item.a, item.b];
+}
+
+function timesTableDifficulty(item){
+  // Сначала учитывается больший множитель/число, затем меньший. Поэтому
+  // 2 + 1 и 3 + 2 идут раньше 5 + 7 и 9 + 3, а внутри одной ступени
+  // примеры с одинаковой оценкой можно свободно перемешивать.
+  const [first, second] = timesTableOperands(item);
+  const larger = Math.max(first, second);
+  const smaller = Math.min(first, second);
+  return larger * 100 + smaller;
+}
+
+function timesTableDifficultyStage(item){
+  const [first, second] = timesTableOperands(item);
+  const larger = Math.max(first, second);
+  if(larger <= 3) return 0;
+  if(larger <= 5) return 1;
+  if(larger <= 7) return 2;
+  return 3;
+}
+
+function timesTableIsStarter(item){
+  // Первые карточки не начинаем с нулевых примеров: для обучения полезнее
+  // сразу дать положительные случаи вроде 2 + 1 и 3 + 2.
+  const [first, second] = timesTableOperands(item);
+  return first >= 1 && second >= 1 && Math.max(first, second) <= 3;
+}
+
+function timesTableBuildCandidates(topic, minA, maxB){
+  const candidates = [];
+  const add = (a, b) => candidates.push({ a, b, op: topic });
+  if(topic === 'divide'){
+    // Делимое строим как b × q, поэтому частное всегда целое.
+    for(let b = minA; b <= maxB; b++){
+      for(let q = minA; q <= maxB; q++) add(b * q, b);
+    }
+  } else if(topic === 'subtract'){
+    for(let a = minA; a <= maxB; a++){
+      for(let b = minA; b <= a; b++) add(a, b);
+    }
+  } else {
+    for(let a = minA; a <= maxB; a++){
+      for(let b = minA; b <= maxB; b++) add(a, b);
+    }
+  }
+  return candidates;
+}
+
+function timesTableProgressionStages(total){
+  if(total <= 0) return [];
+  if(total <= 2) return Array(total).fill(0);
+  // Две первые карточки — разминка. Оставшиеся ступени распределяем
+  // плавно от средней сложности к максимальной, без скачка в самом конце.
+  const stages = [0, 0];
+  const remaining = total - 2;
+  for(let i = 0; i < remaining; i++){
+    stages.push(Math.min(3, Math.ceil((i + 1) * 3 / remaining)));
+  }
+  return stages;
+}
+
+function timesTableSelectProgressive(candidates, total, usedKeys){
+  const used = usedKeys instanceof Set ? usedKeys : new Set(usedKeys || []);
+  const available = candidates.filter(item => !used.has(timesTableCardKey(item)));
+  // Как и раньше, сначала стараемся не повторять вопросы из прошлых партий;
+  // если доступных примеров не хватает, добавляем использованные только когда
+  // очередь нельзя собрать из ещё не показанных вопросов.
+  const source = available.length >= total ? available : candidates;
+  const stages = timesTableProgressionStages(total);
+  const starterCount = Math.min(2, total);
+  const selected = [];
+  const selectedKeys = new Set();
+  let lastStage = 0;
+
+  function availablePool(minStage, startersOnly = false){
+    const matches = item => !selectedKeys.has(timesTableCardKey(item))
+      && (!startersOnly || timesTableIsStarter(item))
+      && (startersOnly || timesTableDifficultyStage(item) >= minStage);
+    let pool = available.filter(matches);
+    if(pool.length === 0) pool = source.filter(matches);
+    if(pool.length === 0) return [];
+    const availableStage = Math.min(...pool.map(timesTableDifficultyStage));
+    return pool.filter(item => timesTableDifficultyStage(item) === availableStage);
+  }
+
+  for(let i = 0; i < total; i++){
+    let pool = i < starterCount ? availablePool(0, true) : [];
+    if(pool.length === 0){
+      const targetStage = Math.max(stages[i] || 0, lastStage);
+      pool = availablePool(targetStage);
+    }
+    if(pool.length === 0) pool = availablePool(lastStage);
+    if(pool.length === 0) pool = source.filter(item => !selectedKeys.has(timesTableCardKey(item)));
+    // Защитный fallback для повреждённого/пустого состояния с историей.
+    if(pool.length === 0) pool = source;
+    const item = pool[Math.floor(Math.random() * pool.length)];
+    selected.push(item);
+    selectedKeys.add(timesTableCardKey(item));
+    lastStage = Math.max(lastStage, timesTableDifficultyStage(item));
+  }
+
+  // Порядок внутри одинаковой сложности остаётся случайным, но следующая
+  // карточка никогда не должна быть проще предыдущей.
+  selected.sort((a, b) => timesTableDifficulty(a) - timesTableDifficulty(b));
+  return selected;
 }
 
 function stopTimesTableInterval(){
@@ -94,42 +208,14 @@ function drawTimesTableQueue(){
   const usedKey = timesTableUsedKey();
   const [minA, maxB] = timesTableRange();
   const total = TIMES_TABLE_COUNT_VALUES.includes(Number(state.timesTableQuestionCount)) ? Number(state.timesTableQuestionCount) : 10;
-  state.timesTableUsed[usedKey] = state.timesTableUsed[usedKey] || [];
-  const usedKeys = new Set(state.timesTableUsed[usedKey]);
-  const queue = [];
-  const seen = new Set();
-  // Пул уникальных пар: для вычитания a ≥ b — треугольное число,
-  // для остальных тем — квадрат диапазона.
-  const span = maxB - minA + 1;
-  const poolSize = topic === 'subtract' ? span * (span + 1) / 2 : span * span;
-  let guard = 0;
-  while(queue.length < total && guard < total * 30){
-    guard++;
-    let a, b;
-    if(topic === 'divide'){
-      // Деление — зеркало умножения: подбираем делитель b и частное q
-      // из 1–10, делимое a = b * q — ответ всегда целый.
-      b = minA + Math.floor(Math.random() * span);
-      const q = minA + Math.floor(Math.random() * span);
-      a = b * q;
-    } else if(topic === 'subtract'){
-      // Вычитание: оба числа из 0–20, ответ неотрицательный (a ≥ b).
-      b = minA + Math.floor(Math.random() * span);
-      a = b + Math.floor(Math.random() * (maxB - b + 1));
-    } else {
-      // Умножение (1–10) и Сложение (0–20): любая пара из диапазона.
-      a = minA + Math.floor(Math.random() * span);
-      b = minA + Math.floor(Math.random() * span);
-    }
-    const key = topic === 'divide' ? `÷${a}x${b}` : topic === 'subtract' ? `−${a}x${b}` : `${a}x${b}`;
-    if(seen.size >= poolSize){
-      // Пул темы исчерпан — добираем повторами (как во «Флагах»).
-    } else if(seen.has(key)) continue;
-    if(usedKeys.has(key) && seen.size + usedKeys.size < poolSize) continue;
-    seen.add(key);
-    queue.push({ a, b, op: topic, level: Number(state.timesTableSelectedLevel) || 1 });
+  if(!state.timesTableUsed || typeof state.timesTableUsed !== 'object' || Array.isArray(state.timesTableUsed)){
+    state.timesTableUsed = {};
   }
-  state.timesTableQueue = queue;
+  state.timesTableUsed[usedKey] = Array.isArray(state.timesTableUsed[usedKey]) ? state.timesTableUsed[usedKey] : [];
+  const candidates = timesTableBuildCandidates(topic, minA, maxB);
+  const selected = timesTableSelectProgressive(candidates, total, new Set(state.timesTableUsed[usedKey]));
+  const selectedLevel = Number(state.timesTableSelectedLevel) || 1;
+  state.timesTableQueue = selected.map(item => ({ ...item, level: selectedLevel }));
   state.timesTableIndex = 0;
 }
 
