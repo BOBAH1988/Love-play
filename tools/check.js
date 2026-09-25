@@ -265,12 +265,14 @@ function checkMarkup(html) {
   const cacheVersionPos = html.indexOf('id="menuCacheVersion"');
   const resetMenuPos = html.indexOf('id="menuResetBtn"');
   const timer = read('games/fants-timer.js');
-  check('после заголовка меню показана версия кэша',
+  const menuTitleCss = /\.menu-modal-card \.modal-title\s*\{[^}]*justify-content:\s*center;[^}]*\}/.test(read('styles/app.css'));
+  check('после заголовка меню по центру показана версия кэша',
     menuTitlePos >= 0 && cacheVersionPos > menuTitlePos && cacheVersionPos < resetMenuPos &&
       /id="menuCacheVersion"[^>]*>версии v\d+<\/span>/.test(html) &&
       /APP_BUILD/.test(timer) &&
-      /textContent\s*=\s*['"]версии ['"]/.test(timer),
-    'версия кэша отсутствует или не выводится из APP_BUILD рядом с заголовком меню');
+      /textContent\s*=\s*['"]версии ['"]/.test(timer) &&
+      menuTitleCss,
+    'версия кэша отсутствует, не центрирована или не выводится из APP_BUILD рядом с заголовком меню');
 
   // Убрав дублирующий вход, легко снести и саму возможность: проверяем, что
   // просмотр избранного «Давай попробуем» по-прежнему открывается с экрана
