@@ -2764,12 +2764,14 @@
   }
   .znayu-answers{display:flex; flex-direction:column; gap:10px; width:100%; margin-top:14px;}
   /* ЕДИНЫЙ компонент кнопок ответов для всех игр. Варианты не наследуют
-     цвет карточки: одинаковые полупрозрачный белый фон (30%), тёмный текст
-     и рамка. Менять цвет кнопок через #id или класс группы нельзя —
-     различаться должен только фон карточки. */
+     цвет карточки: одинаковый полупрозрачный белый фон (30%) и полностью
+     непрозрачный тёмный текст с общей рамкой. Прозрачность задаём только
+     цветом фона — opacity на кнопке одновременно затемнял бы подпись.
+     Менять цвет кнопок через #id или класс группы нельзя — различаться
+     должен только фон карточки. */
   .znayu-answers .znayu-answer-btn{
     width:100%; white-space:normal; height:auto; min-height:var(--btn-height); padding:10px 14px; line-height:1.3;
-    background:rgba(255,255,255,.3); color:#2b0f2e; border-color:rgba(43,15,46,.2);
+    background:rgba(255,255,255,.3); color:#2b0f2e; opacity:1; border-color:rgba(43,15,46,.2);
     transition:background-color var(--btn-transition-duration) var(--btn-transition-ease),
                transform var(--btn-transition-duration) var(--btn-transition-ease),
                box-shadow var(--btn-transition-duration) var(--btn-transition-ease);
@@ -2779,12 +2781,12 @@
      работать только до получения результата: их более специфичные правила
      иначе перекрывают зелёную/красную подсветку .answer-*. */
   .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):hover{
-    background:rgba(248,241,247,.3);
+    background:rgba(255,255,255,.42);
     transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
     box-shadow:var(--btn-raise-shadow);
   }
   .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
-    background:rgba(239,227,237,.3);
+    background:rgba(255,255,255,.5);
     transform:translateY(0) scale(var(--btn-active-scale));
     box-shadow:0 2px 8px rgba(0,0,0,.4);
   }
@@ -2794,33 +2796,33 @@
   .znayu-skip-btn{
     width:100%;
     margin-top:14px;
-    background:#fff;
+    background:rgba(255,255,255,.3);
     border:1px dashed rgba(43,15,46,.35);
-    color:#2b0f2e;
+    color:#2b0f2e; opacity:1;
     font-size:13px;
     min-height:auto; padding:8px 14px;
   }
   .znayu-skip-btn:not(:hover):not(:active){ box-shadow:none; }
-  .znayu-skip-btn:hover{ background:#f8f1f7; }
-  .znayu-skip-btn:active{ background:#efe3ed; }
+  .znayu-skip-btn:hover{ background:rgba(255,255,255,.42); }
+  .znayu-skip-btn:active{ background:rgba(255,255,255,.5); }
   /* Викторина (пары/компания/дети) — переиспользует карточку и кнопки
      ответов "Тайных ответов" (.znayu-question-text/.znayu-answers/
      .znayu-answer-btn), добавляя подсветку результата после выбора:
      зелёным — верный вариант, красным — выбранный неверный. */
   .znayu-answers .znayu-answer-btn.answer-correct{
-    background:#4cd964; color:#2b0f2e; border-color:#2ecc55;
+    background:#4cd964; color:#2b0f2e; border-color:#2ecc55; opacity:1;
     box-shadow:0 0 0 2px rgba(46,204,85,.55), 0 6px 16px rgba(0,0,0,.25);
     transform:none;
   }
   .znayu-answers .znayu-answer-btn.answer-wrong{
-    background:#ff453a; color:#2b0f2e; border-color:#ff453a;
+    background:#ff453a; color:#2b0f2e; border-color:#ff453a; opacity:1;
     box-shadow:0 0 0 2px rgba(255,69,58,.55), 0 6px 16px rgba(0,0,0,.25);
     transform:none;
   }
   /* Специфичность выше, чем у общего .btn:disabled{opacity:.5} (иначе он
      перебивает это правило по порядку в файле) — после ответа кнопки должны
      оставаться яркими (правильный/неправильный вариант), а не тускнеть. */
-  .znayu-answers .znayu-answer-btn:disabled{opacity:.9; pointer-events:none;}
+  .znayu-answers .znayu-answer-btn:disabled{opacity:1; pointer-events:none;}
   /* Озвучка вопроса по тапу на карточку — та же иконка-подсказка 🔊, что и
      .memes-tts-hint в "Мемасиках", только под своим именем для карточек
      Викторины (пары/компания/дети): карточка кликабельна (см. #quizCard и
