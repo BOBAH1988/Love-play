@@ -1032,12 +1032,18 @@ function checkStyles(html) {
       'CSS не фиксирует flex-ряд или кнопка добавления может растягиваться');
     const unifiedAnswerStyle = /\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:\s*rgba\(255,255,255,\.3\);[^}]*color:\s*#2b0f2e;[^}]*opacity:\s*1;[^}]*border-color:\s*rgba\(43,15,46,\.2\);/.test(cssWithoutComments);
     const opaqueDisabledAnswers = /\.znayu-answers\s+\.znayu-answer-btn:disabled\s*\{[^}]*opacity:\s*1;/.test(cssWithoutComments);
+    const answerRule = cssWithoutComments.match(/\.znayu-answers\s+\.znayu-answer-btn\s*\{([^}]*)\}/);
+    const pwaSafeAnswerStyle = !!answerRule &&
+      /color-scheme:\s*light;/.test(answerRule[1]) &&
+      /-webkit-text-fill-color:\s*currentColor;/.test(answerRule[1]) &&
+      /filter:\s*none;/.test(answerRule[1]);
+    const pwaScopedAnswerStyle = /pwa-standalone[^{}]*\.znayu-answer-btn|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*\.znayu-answer-btn/.test(cssWithoutComments);
     const scopedAnswerStyle = /#[A-Za-z][A-Za-z0-9_-]*[^{}]*\.znayu-answer-btn[^{}]*\{/.test(cssWithoutComments);
     check('кнопки ответов во всех играх используют единый стиль',
-      unifiedAnswerStyle && opaqueDisabledAnswers && !scopedAnswerStyle,
+      unifiedAnswerStyle && opaqueDisabledAnswers && pwaSafeAnswerStyle && !pwaScopedAnswerStyle && !scopedAnswerStyle,
       scopedAnswerStyle
         ? 'найдено правило #id ... .znayu-answer-btn — цвет кнопки не должен зависеть от карточки'
-        : 'общий .znayu-answer-btn должен иметь полупрозрачный белый фон 30%, непрозрачный тёмный текст и общую рамку');
+        : 'общий .znayu-answer-btn должен иметь полупрозрачный белый фон 30%, непрозрачный тёмный текст, общую рамку и PWA-safe сброс нативного затемнения');
 
     // Карточки игр компании используют общий ультрамариновый градиент.
     // Проверяем все восемь карточек: одна забытая карточка снова сделает группу

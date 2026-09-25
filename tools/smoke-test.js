@@ -253,6 +253,11 @@ test('«Арифметика»: карточка собрана как у ост
     'у «Арифметики» не должно быть отдельного цвета кнопок — используется общий компонент');
   assert(/\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:rgba\(255,255,255,\.3\);[^}]*color:#2b0f2e;[^}]*opacity:1;/.test(css),
     'все кнопки ответов должны иметь полупрозрачный белый фон 30% и непрозрачный тёмный текст');
+  const answerRule = css.match(/\.znayu-answers\s+\.znayu-answer-btn\s*\{([^}]*)\}/);
+  assert(answerRule && /color-scheme:\s*light/.test(answerRule[1]) &&
+    /-webkit-text-fill-color:\s*currentColor/.test(answerRule[1]) &&
+    /filter:\s*none/.test(answerRule[1]),
+    'кнопки ответов должны явно сбрасывать нативное затемнение WebKit в standalone');
   assert(/\.znayu-answers\s+\.znayu-answer-btn:disabled\{opacity:1;/.test(css),
     'после ответа подписи кнопок не должны затемняться через opacity');
 });
@@ -626,11 +631,11 @@ test('Меню: по центру после ⚙️ Меню отображае�
   const version = getElById(stub, 'menuCacheVersion');
   const previousBuild = global.APP_BUILD;
   try {
-    global.APP_BUILD = '2026-09-25 · v499';
+    global.APP_BUILD = '2026-09-25 · v500';
     menuBtn.click();
     assert(menu.classList.contains('show'), 'кнопка меню должна открывать окно');
-    assert(version.textContent === 'версии v499',
-      `по центру после заголовка меню должна показываться строка «версии v499», получено «${version.textContent}»`);
+    assert(version.textContent === 'версии v500',
+      `по центру после заголовка меню должна показываться строка «версии v500», получено «${version.textContent}»`);
   } finally {
     if (previousBuild === undefined) delete global.APP_BUILD;
     else global.APP_BUILD = previousBuild;
