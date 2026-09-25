@@ -3224,6 +3224,9 @@ testAsync('PWA: обновление обнаруживается в актив�
   registration.waiting = firstWorker;
   // Дополнительный deferred-check после statechange должен показать toast.
   flushPendingTimeouts();
+  // Плашка показывается после сверки сборок worker'ов (микротаска), а не
+  // синхронно: раньше проверка была мгновенной, и тест ловил её сразу.
+  await new Promise(resolve => setImmediate(resolve));
   assert(updateToast.hidden === false, 'отложенная проверка должна показать установленный waiting-воркер');
 
   closeUpdateBtn.click();
@@ -3242,6 +3245,10 @@ testAsync('PWA: обновление обнаруживается в актив�
   secondWorker.state = 'installed';
   secondWorker.statechange();
   registration.installing = null;
+  // Закрываем плашку крестиком от предыдущего шага, чтобы следующая проверка
+  // была не замаскирована её открытым состоянием.
+  closeUpdateBtn.click();
+  await new Promise(resolve => setImmediate(resolve));
   assert(updateToast.hidden === false, 'новая waiting-версия должна показываться сразу');
 
   registration.waiting = null;
@@ -3260,6 +3267,137 @@ testAsync('PWA: обновление обнаруживается в актив�
   assert(updateCalls === 3, 'updateCheckInFlight должен блокировать параллельные lifecycle-вызовы');
   resolvePendingUpdate();
   await new Promise(resolve => setImmediate(resolve));
+});
+
+// Ложное «Доступна новая версия» сразу после обновления. Сценарий повторяет
+// то, что делал браузер: ставил в waiting копию worker'а с тем же байткодом
+// (причина — query-версия в register()), из-за чего плашка всплывала второй
+// раз, а «Обновить» ничего не менял. Сверка CACHE_NAME обязана такой worker
+// отсеять, а настоящую новую сборку — показать.
+testAsync('PWA: дубликат worker’а с той же сборкой не показывает плашку обновления', async () => {
+  const start = html.indexOf('navigator.serviceWorker.register');
+  const scriptStart = html.lastIndexOf('<script>', start);
+  const scriptEnd = html.indexOf('</script>', start);
+  assert(start >= 0 && scriptStart >= 0 && scriptEnd > start,
+    'не найден блок регистрации Service Worker');
+
+  // Мини-реализация MessageChannel: sw.js отвечает на GET_CACHE_NAME через
+  // переданный порт (port2), страница читает ответ в port1.onmessage.
+  class FakeMessageChannel {
+    constructor() {
+      const port1 = { onmessage: null };
+      this.port1 = port1;
+      this.port2 = {
+        postMessage(data) {
+          // Ответ доставляется асинхронно, как в настоящем браузере.
+          setImmediate(() => { if (port1.onmessage) port1.onmessage({ data }); });
+        }
+      };
+    }
+  }
+
+  let now = 1000000;
+  const updateToast = { hidden: true };
+  const updateBtn = { addEventListener(type, fn) { this[type] = fn; } };
+  const closeUpdateBtn = { addEventListener(type, fn) { this[type] = fn; } };
+  const windowListeners = {};
+  const documentListeners = {};
+
+  // Worker, отвечающий именем своей сборки — как это делает sw.js.
+  const makeWorker = (cacheName, state) => ({
+    state: state || 'installed',
+    scriptURL: 'https://app.test/sw.js',
+    addEventListener(type, fn) { this[type] = fn; },
+    postMessage(message, ports) {
+      assert(message && message.type === 'GET_CACHE_NAME',
+        `страница должна спрашивать сборку worker’а, отправлено ${JSON.stringify(message)}`);
+      const port = ports && ports[0];
+      if (!port) return;
+      port.postMessage({ type: 'CACHE_NAME', value: cacheName });
+    }
+  });
+  const flushReplies = async () => {
+    for (let i = 0; i < 6; i++) await new Promise(resolve => setImmediate(resolve));
+  };
+
+  const activeWorker = makeWorker('veselye-igry-cache-v504');
+  const registration = {
+    active: activeWorker,
+    waiting: null,
+    installing: null,
+    update() { return Promise.resolve(); },
+    addEventListener(type, fn) { this[type] = fn; }
+  };
+  const documentStub = {
+    visibilityState: 'visible',
+    getElementById(id) {
+      return {
+        updateToast, updateToastBtn: updateBtn,
+        updateToastCloseBtn: closeUpdateBtn,
+        updateSplash: { hidden: true }, updateSplashProgress: { textContent: '' }
+      }[id] || null;
+    },
+    addEventListener(type, fn) { (documentListeners[type] ||= []).push(fn); }
+  };
+  const windowStub = {
+    addEventListener(type, fn) { (windowListeners[type] ||= []).push(fn); },
+    location: { hostname: 'app.test', protocol: 'https:' }
+  };
+  const sandbox = {
+    navigator: {
+      onLine: true,
+      serviceWorker: { controller: activeWorker, register: () => Promise.resolve(registration) }
+    },
+    location: windowStub.location,
+    document: documentStub,
+    window: windowStub,
+    Date: { now: () => now },
+    // clearTimeout нужен блоку регистрации: он снимает таймаут ожидания ответа
+    // от worker'а, когда ответ пришёл.
+    Promise, MessageChannel: FakeMessageChannel, setTimeout, clearTimeout, setInterval, console
+  };
+  vm.runInNewContext(html.slice(scriptStart + '<script>'.length, scriptEnd), sandbox);
+  (windowListeners.load || []).forEach(fn => fn());
+  await new Promise(resolve => setImmediate(resolve));
+
+  // 1. Дубликат: тот же CACHE_NAME, что у активного worker’а. Обновления нет.
+  const duplicate = makeWorker('veselye-igry-cache-v504', 'installing');
+  registration.installing = duplicate;
+  registration.updatefound();
+  registration.installing = null;
+  registration.waiting = duplicate;
+  duplicate.state = 'installed';
+  duplicate.statechange();
+  await flushReplies();
+  assert(updateToast.hidden === true,
+    'worker с той же сборкой, что у активного, — это дубликат, а не обновление: плашка не должна показываться');
+
+  // 2. Настоящая новая версия: сборка отличается — плашка обязана появиться.
+  const fresh = makeWorker('veselye-igry-cache-v505', 'installing');
+  registration.waiting = null;
+  registration.installing = fresh;
+  registration.updatefound();
+  registration.installing = null;
+  registration.waiting = fresh;
+  fresh.state = 'installed';
+  fresh.statechange();
+  await flushReplies();
+  assert(updateToast.hidden === false,
+    'worker с новой сборкой — настоящее обновление, плашка должна показаться');
+
+  // 3. Дубликат не должен блокировать поиск следующей версии: раньше
+  //    checkForUpdate выходил по registration.waiting, и update() не вызывался.
+  let updateCalls = 0;
+  registration.update = () => { updateCalls++; return Promise.resolve(); };
+  registration.waiting = makeWorker('veselye-igry-cache-v504', 'installed');
+  // Разводим часы за UPDATE_MIN_GAP_MS, иначе проверка выйдет по
+  // «недавно уже проверяли» и нужного вызова update() не будет.
+  now += 31000;
+  (windowListeners.focus || []).forEach(fn => fn());
+  await new Promise(resolve => setImmediate(resolve));
+  await flushReplies();
+  assert(updateCalls > 0,
+    'висящий в waiting дубликат не должен заблокировать проверку новой версии');
 });
 
 testAsync('PWA: «Обновить» активирует waiting-worker и не сносит офлайн-кэш', async () => {

@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-26 · v503';
+  window.APP_BUILD = '2026-09-26 · v504';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v503</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v504</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -4507,15 +4507,24 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20260925n', { updateViaCache: 'none' }).then(function (reg) {
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(function (reg) {
           // Проверяем обновление не только при запуске: PWA может оставаться
           // открытым в фоне, пока браузер не запускает navigation/load.
           // registration.update() явно просит браузер проверить sw.js; новый
           // воркер останется waiting, а плашка появится после установки.
           // updateViaCache: 'none' переводит проверку main/imported scripts
           // в режим no-cache. На GitHub Pages max-age=600, поэтому полагаться
-          // только на Cache-Control здесь нельзя: query-версия и no-store в SW
-          // не дают старому байткоду закрепиться в регистрации.
+          // только на Cache-Control здесь нельзя.
+          //
+          // ВАЖНО: register() идёт БЕЗ query-версии (?v=). По спецификации
+          // Service Worker браузер прерывает установку нового worker'а, только
+          // если совпадают И scriptURL, И байты скрипта. С ?v= менялся только
+          // scriptURL при побайтово том же sw.js, условие прерывания не
+          // выполнялось, и браузер ставил в waiting копию текущего worker'а:
+          // сразу после обновления всплывало второе окно «Доступна новая
+          // версия», а повторное «Обновить» ничего не меняло. Свежесть sw.js
+          // обеспечивают updateViaCache: 'none' и ветка fetch для sw.js с
+          // no-store в самом sw.js.
           var registration = reg;
           var UPDATE_POLL_MS = 5 * 60 * 1000;
           var UPDATE_MIN_GAP_MS = 30 * 1000;
@@ -4524,10 +4533,74 @@
           var dismissedWaitingWorker = null;
           var notifiedWaitingWorker = null;
           var notifiedWaitingUrl = null;
+          // Сборка (CACHE_NAME), для которой плашка уже показана. Именно она,
+          // а не scriptURL, служит признаком «это уже показывали»: адрес
+          // регистрации стабилен и общий у всех версий.
+          var notifiedWaitingBuild = null;
+          // Worker, сборка которого сейчас запрашивается: защита от трёх
+          // отложенных проверок подряд (сейчас, +0 мс, +250 мс).
+          var checkingWaitingWorker = null;
           var watchedInstallingWorker = null;
           var updateBtn = document.getElementById('updateToastBtn');
           var updateToast = document.getElementById('updateToast');
           var closeUpdateBtn = document.getElementById('updateToastCloseBtn');
+          // Спрашиваем у worker'а имя его кэша (CACHE_NAME в sw.js). Нужно,
+          // чтобы отличить настоящее обновление от дубликата: браузер иногда
+          // ставит в waiting копию worker'а с тем же байткодом (например, при
+          // смене query-версии регистрации). Такой копии плашка не нужна —
+          // обновлять нечего, и повторное «Обновить» лишь перезагружает
+          // приложение. Отвечает только тот worker, который знает про
+          // GET_CACHE_NAME; у дубликата ответа нет или он совпадает с активным.
+          function askWorkerCacheName(worker){
+            if(!worker || typeof worker.postMessage !== 'function') return Promise.resolve(null);
+            if(typeof MessageChannel !== 'function') return Promise.resolve(null);
+            return new Promise(function(resolve){
+              var done = false;
+              function finish(value){
+                if(done) return; done = true;
+                resolve(value || null);
+              }
+              var channel = new MessageChannel();
+              // Таймаут: старый воркер может не знать GET_CACHE_NAME. Тогда
+              // имя остаётся неизвестным, и мы ведём себя как раньше — плашку
+              // показываем: лучше лишняя плашка, чем потерянное обновление.
+              var timer = setTimeout(function(){ finish(null); }, 1000);
+              channel.port1.onmessage = function(e){
+                clearTimeout(timer);
+                finish(e.data && e.data.value);
+              };
+              try{
+                worker.postMessage({ type:'GET_CACHE_NAME' }, [channel.port2]);
+              }catch(e){
+                clearTimeout(timer);
+                finish(null);
+              }
+            });
+          }
+
+          // waiting-воркер — дубликат активного, если это один и тот же объект
+          // либо оба отчитались одинаковым CACHE_NAME. Такой worker не является
+          // обновлением, и его незачем активировать по кнопке «Обновить».
+          // waitingBuild — уже полученная сборка waiting'а, чтобы не спрашивать
+          // его второй раз.
+          function isDuplicateOfActive(waiting, waitingBuild){
+            var active = registration && registration.active;
+            if(!waiting || !active) return Promise.resolve(false);
+            if(waiting === active) return Promise.resolve(true);
+            var waitingName = waitingBuild || null;
+            return (waitingName ? Promise.resolve(waitingName) : askWorkerCacheName(waiting))
+              .then(function(name){
+                return Promise.all([Promise.resolve(name), askWorkerCacheName(active)]);
+              })
+              .then(function(names){
+                // Ответа нет — неизвестно, дубликат это или нет. Не блокируем
+                // обновление: показываем плашку, как раньше.
+                if(!names[0] || !names[1]) return false;
+                return names[0] === names[1];
+              });
+          }
+
+
 
           // Плашка показывается один раз для конкретного waiting-воркера.
           // Раньше одинаковая проверка выполнялась после каждого события
@@ -4536,15 +4609,32 @@
           function showUpdateToastIfWaiting(){
             var waiting = registration && registration.waiting;
             if(!waiting || window.__pwaUpdateInProgress === true) return;
-            // Некоторые браузеры отдают новый JS-объект для того же worker
-            // при повторном чтении registration.waiting. Сверяем ещё и URL
-            // скрипта, иначе одна и та же плашка может появиться снова.
+            if(waiting === dismissedWaitingWorker) return;
+            // Пока идёт сверка, не запускаем её повторно для того же worker'а:
+            // иначе три отложенные проверки (сейчас, +0 мс, +250 мс) покажут
+            // одну и ту же плашку трижды.
+            if(waiting === checkingWaitingWorker) return;
+            checkingWaitingWorker = waiting;
             var waitingUrl = waiting.scriptURL || '';
-            if(waiting === dismissedWaitingWorker || waiting === notifiedWaitingWorker ||
-               (waitingUrl && waitingUrl === notifiedWaitingUrl)) return;
-            notifiedWaitingWorker = waiting;
-            notifiedWaitingUrl = waitingUrl || null;
-            if(updateToast) updateToast.hidden = false;
+            askWorkerCacheName(waiting).then(function(waitingBuild){
+              checkingWaitingWorker = null;
+              // Пока спрашивали, registration.waiting мог смениться — решение
+              // по устаревшему worker'у показывать нельзя.
+              if((registration && registration.waiting) !== waiting) return;
+              if(waiting === notifiedWaitingWorker) return;
+              // Идентичность — по сборке, а НЕ по scriptURL. С версии v504
+              // адрес регистрации стабилен (без ?v=), и все версии делят один
+              // URL: сравнение по URL сочло бы новую сборку «уже показанной»
+              // и обновление потерялось бы.
+              if(waitingBuild && waitingBuild === notifiedWaitingBuild) return;
+              notifiedWaitingWorker = waiting;
+              notifiedWaitingUrl = waitingUrl || null;
+              notifiedWaitingBuild = waitingBuild || null;
+              isDuplicateOfActive(waiting, waitingBuild).then(function(isDuplicate){
+                if(isDuplicate) return;
+                if(updateToast) updateToast.hidden = false;
+              });
+            });
           }
 
           function scheduleUpdateToastCheck(){
@@ -4575,8 +4665,15 @@
 
           function checkForUpdate(reason){
             showUpdateToastIfWaiting();
-            if(!registration || window.__pwaUpdateInProgress === true || navigator.onLine === false || registration.waiting ||
-               registration.installing || updateCheckInFlight) return;
+            if(!registration || window.__pwaUpdateInProgress === true || navigator.onLine === false || registration.installing ||
+               updateCheckInFlight) return;
+            // Ветку с waiting пропускаем, НЕ блокируя проверку. Раньше любой
+            // waiting-воркер останавливал update() здесь, и если это был
+            // дубликат (тот же байткод, что у активного), плашка не
+            // показывалась — а следующая настоящая версия так и не находилась:
+            // браузер не ставит второго worker'а поверх уже занятого waiting.
+            // Проверять безопасно: update() не создаст нового worker'а, если
+            // scriptURL и байты не изменились.
             var now = Date.now();
             // Несколько событий возврата (focus + visibility + pageshow) могут
             // прийти одновременно; не делаем несколько сетевых проверок подряд.

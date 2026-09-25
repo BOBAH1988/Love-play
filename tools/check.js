@@ -1170,6 +1170,45 @@ function checkStyles(html) {
   check('офлайн-заглушка вместо пустого ответа',
     /function offlineResponse\(\)/.test(sw) && /cached \|\| offlineResponse\(\)/.test(sw),
     'в sw.js нет fallback-заглушки offlineResponse');
+
+  // Ложное «Доступна новая версия» после обновления. Причина была в
+  // register('./sw.js?v=…'): по спецификации браузер прерывает установку
+  // нового worker'а, только если совпадают И scriptURL, И байты скрипта.
+  // С ?v= менялся лишь scriptURL при том же байткоде, браузер ставил в
+  // waiting копию активного worker'а, и плашка всплывала повторно, а кнопка
+  // «Обновить» ничего не меняла. Закрепляем обе части решения: стабильный
+  // URL регистрации и сверку сборок worker'ов перед показом плашки.
+  const registerCall = html.match(/serviceWorker\.register\(\s*['"]([^'"]+)['"]/);
+  check('Service Worker регистрируется без query-версии ?v=',
+    !!registerCall && !/[?&]v=/.test(registerCall[1]),
+    `register() идёт по адресу «${registerCall ? registerCall[1] : '?'}» — ?v= в URL заставляет браузер ставить в waiting дубликат worker'а и показывать ложную плашку обновления`);
+  check('плашка не показывается для worker’а с той же сборкой, что у активного',
+    /function askWorkerCacheName\(/.test(html) &&
+      /function isDuplicateOfActive\(/.test(html) &&
+      /GET_CACHE_NAME/.test(html) &&
+      /isDuplicateOfActive\(waiting, waitingBuild\)\.then\(function\(isDuplicate\)\{/.test(html) &&
+      /if\(isDuplicate\) return;/.test(html) &&
+      /if\(updateToast\) updateToast\.hidden = false;/.test(html) &&
+      /type\s*===?\s*['"]GET_CACHE_NAME['"]/.test(sw) &&
+      /port\.postMessage\(\{\s*type:\s*['"]CACHE_NAME['"],\s*value:\s*CACHE_NAME\s*\}\)/.test(sw),
+    'нужна сверка CACHE_NAME у waiting- и активного worker’а перед показом плашки (GET_CACHE_NAME в sw.js)');
+  // Идентичность worker'а — по сборке, а не по scriptURL. Адрес регистрации
+  // теперь стабилен и общий у всех версий, поэтому сравнение по URL сочло бы
+  // настоящее обновление уже показанным и потеряло бы его.
+  check('повторная плашка отсеивается по сборке, а не по адресу скрипта',
+    /var notifiedWaitingBuild = null;/.test(html) &&
+      /waitingBuild && waitingBuild === notifiedWaitingBuild/.test(html) &&
+      /var checkingWaitingWorker = null;/.test(html),
+    'нужна сверка по notifiedWaitingBuild и защита checkingWaitingWorker от повторных проверок');
+  // Дубликат в waiting не должен останавливать проверку новых версий: раньше
+  // update() выходил по registration.waiting, и после пропущенного обновления
+  // следующая настоящая версия уже не находилась.
+  const checkForUpdateBody = html.slice(html.indexOf('function checkForUpdate(reason)'));
+  check('проверка обновлений не блокируется висящим в waiting дубликатом',
+    !/navigator\.onLine === false \|\|\s*registration\.waiting/.test(checkForUpdateBody) &&
+      /registration\.installing/.test(checkForUpdateBody) &&
+      /updateCheckInFlight/.test(checkForUpdateBody),
+    'checkForUpdate снова выходит по registration.waiting — залипший дубликат навсегда заблокирует обновления');
   // Навигационные маркеры: перед каждой секцией стоит комментарий с путём
   // к файлу логики. Это позволяет найти код игры, не читая весь index.html
   // (файл на 4000+ строк). Проверяем, что маркер не врёт.

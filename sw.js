@@ -34,7 +34,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v503';
+const CACHE_NAME = 'veselye-igry-cache-v504';
 
 // Корень приложения относительно адреса воркера: sw.js лежит в корне, поэтому
 // './' относительно его адреса — это корень и в деплое в корень домена ('/'),
@@ -182,9 +182,24 @@ self.addEventListener('activate', (event) => {
 // проверка манифеста не проходила, кэш оставался неполным, а плашка
 // «Доступна новая версия» появлялась снова. Теперь waiting-worker сам
 // получает команду и корректно активируется через clients.claim().
+//
+// Тот же обработчик отвечает на GET_CACHE_NAME: страница сверяет сборку
+// waiting-воркера с активным и не показывает плашку, если worker'ы
+// побайтово одинаковы (ложное «Доступна новая версия» после обновления).
 self.addEventListener('message', (event) => {
-  if (event && event.data && event.data.type === 'SKIP_WAITING') {
+  if (!event || !event.data) return;
+  if (event.data.type === 'SKIP_WAITING') {
     event.waitUntil(ctx.skipWaiting());
+    return;
+  }
+  // Сборка этого воркера. Страница спрашивает её у waiting- и у активного
+  // worker'а, чтобы отличить настоящее обновление от дубликата: смена версии
+  // регистрации заставляет браузер поставить в waiting копию того же
+  // байт-кода, и такая копия не должна показывать плашку. Отвечаем на порт
+  // из event.ports — иначе страница будет ждать своего таймаута.
+  if (event.data.type === 'GET_CACHE_NAME') {
+    const port = event.ports && event.ports[0];
+    if (port) port.postMessage({ type: 'CACHE_NAME', value: CACHE_NAME });
   }
 });
 
