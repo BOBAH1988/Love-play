@@ -574,6 +574,8 @@ test('«Арифметика»: вопросы идут от простых к �
           `тема «${topic}», ${count} карточек: первая карточка должна быть простой`);
         assert(global.timesTableDifficultyStage(queue[queue.length - 1]) === 3,
           `тема «${topic}», ${count} карточек: последняя карточка должна быть сложной`);
+        assert(queue.slice(Math.min(2, count)).every(q => q.a > 0 && q.b > 0),
+          `тема «${topic}», ${count} карточек: после разминки не должно быть примеров с нулём`);
       });
     });
   } catch (e) {

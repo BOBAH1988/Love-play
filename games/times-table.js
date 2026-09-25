@@ -88,7 +88,11 @@ function timesTableDifficulty(item){
 function timesTableDifficultyStage(item){
   const [first, second] = timesTableOperands(item);
   const larger = Math.max(first, second);
-  if(larger <= 3) return 0;
+  const smaller = Math.min(first, second);
+  // 0 + 20 / 20 − 0 не считаем усложнением: такие примеры остаются в
+  // допустимом диапазоне, но после разминки выбираются только с двумя
+  // положительными числами.
+  if(smaller === 0 || larger <= 3) return 0;
   if(larger <= 5) return 1;
   if(larger <= 7) return 2;
   return 3;
