@@ -2762,7 +2762,15 @@
     font-size:19px; font-weight:700; line-height:1.35; text-align:center;
     padding:0 4px; margin-bottom:4px;
   }
-  .znayu-answers{display:flex; flex-direction:column; gap:10px; width:100%; margin-top:14px;}
+  .znayu-answers{
+    display:flex; flex-direction:column; gap:10px; width:100%; margin-top:14px;
+    /* Светлая схема объявляется на КОНТЕЙНЕРЕ, а не только на кнопке. В
+       standalone-PWA WKWebView применяет тёмное оформление форм ко всем
+       потомкам контекста color-scheme, поэтому сброс только на самой кнопке
+       оставлял её затемнённой. Контейнер с кнопками ответов всегда лежит на
+       белой карточке, так что light здесь совпадает с базовым видом. */
+    color-scheme:light;
+  }
   /* ЕДИНЫЙ компонент кнопок ответов для всех игр. Варианты не наследуют
      цвет карточки: одинаковый полупрозрачный белый фон (30%) и полностью
      непрозрачный тёмный текст с общей рамкой. Прозрачность задаём только
@@ -2772,9 +2780,11 @@
   .znayu-answers .znayu-answer-btn{
     width:100%; white-space:normal; height:auto; min-height:var(--btn-height); padding:10px 14px; line-height:1.3;
     background:rgba(255,255,255,.3); color:#2b0f2e; opacity:1; border-color:rgba(43,15,46,.2);
-    /* Явно сбрасываем нативное затемнение disabled-кнопок WebKit в standalone:
-       цвет текста и прозрачность не должны зависеть от режима PWA. */
-    -webkit-appearance:none; -webkit-text-fill-color:currentColor;
+    /* Явно сбрасываем нативное затемнение кнопок WebKit в standalone: цвет
+       текста, заливку и прозрачность задаёт наш CSS, а не тема системы.
+       appearance дублирует -webkit-appearance для движков, где вычисляется
+       уже стандартное свойство. */
+    -webkit-appearance:none; appearance:none; -webkit-text-fill-color:currentColor;
     color-scheme:light; filter:none;
     transition:background-color var(--btn-transition-duration) var(--btn-transition-ease),
                transform var(--btn-transition-duration) var(--btn-transition-ease),
@@ -2805,6 +2815,11 @@
     color:#2b0f2e; opacity:1;
     font-size:13px;
     min-height:auto; padding:8px 14px;
+    /* Тот же светлый контекст, что и у вариантов ответа: кнопка стоит рядом
+       с .znayu-answers и окрашена так же, значит и оформление WebKit должно
+       совпадать, иначе в standalone она одна останется тёмной. */
+    color-scheme:light; -webkit-appearance:none; appearance:none;
+    -webkit-text-fill-color:currentColor; filter:none;
   }
   .znayu-skip-btn:not(:hover):not(:active){ box-shadow:none; }
   .znayu-skip-btn:hover{ background:rgba(255,255,255,.42); }

@@ -1033,10 +1033,16 @@ function checkStyles(html) {
     const unifiedAnswerStyle = /\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:\s*rgba\(255,255,255,\.3\);[^}]*color:\s*#2b0f2e;[^}]*opacity:\s*1;[^}]*border-color:\s*rgba\(43,15,46,\.2\);/.test(cssWithoutComments);
     const opaqueDisabledAnswers = /\.znayu-answers\s+\.znayu-answer-btn:disabled\s*\{[^}]*opacity:\s*1;/.test(cssWithoutComments);
     const answerRule = cssWithoutComments.match(/\.znayu-answers\s+\.znayu-answer-btn\s*\{([^}]*)\}/);
+    const answersContainer = cssWithoutComments.match(/\.znayu-answers\s*\{([^}]*)\}/);
+    // Светлая схема нужна и на кнопке, и на контейнере: в standalone-PWA
+    // WKWebView красит формы по color-scheme контекста, и сброс только на
+    // кнопке оставлял её затемнённой (проверено на реальном устройстве).
     const pwaSafeAnswerStyle = !!answerRule &&
       /color-scheme:\s*light;/.test(answerRule[1]) &&
       /-webkit-text-fill-color:\s*currentColor;/.test(answerRule[1]) &&
-      /filter:\s*none;/.test(answerRule[1]);
+      /(?:^|[;\s])appearance:\s*none;/.test(answerRule[1]) &&
+      /filter:\s*none;/.test(answerRule[1]) &&
+      !!answersContainer && /color-scheme:\s*light;/.test(answersContainer[1]);
     const pwaScopedAnswerStyle = /pwa-standalone[^{}]*\.znayu-answer-btn|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*\.znayu-answer-btn/.test(cssWithoutComments);
     const scopedAnswerStyle = /#[A-Za-z][A-Za-z0-9_-]*[^{}]*\.znayu-answer-btn[^{}]*\{/.test(cssWithoutComments);
     check('кнопки ответов во всех играх используют единый стиль',
