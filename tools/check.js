@@ -601,6 +601,40 @@ function checkDocs() {
     .filter((anchor) => !headings.has(anchor));
   check('все ссылки-якоря в README рабочие', broken.length === 0, `битые: ${broken.join(', ')}`);
 
+  // Свежий журнал изменений обязан оставаться настоящей таблицей. Раньше
+  // массовая замена дат/хешей склеила соседние строки и смешала три колонки,
+  // из-за чего ревизию нельзя было однозначно сопоставить с коммитом.
+  // Берём верхний актуальный блок таблицы до первой старой строки без
+  // короткого хеша. Конкретные даты не хардкодим: проверка продолжает
+  // работать после следующих релизов, но ловит склейку колонок и повторы.
+  const criticalStart = md.indexOf('### Критические исправления');
+  const recentJournalLines = [];
+  const journalRow = /^\| \d{4}-\d{2}-\d{2} \| `([0-9a-f]{7})` \|/;
+  const anyJournalRow = /^\| \d{4}-\d{2}-\d{2} \|/;
+  if (criticalStart >= 0) {
+    for (const line of md.slice(criticalStart).split('\n')) {
+      if (journalRow.test(line)) {
+        recentJournalLines.push(line);
+      } else if (anyJournalRow.test(line)) {
+        break;
+      }
+    }
+  }
+  const malformedRecentJournal = recentJournalLines.filter(line => {
+    const cells = line.split('|').slice(1, -1);
+    return cells.length !== 3 || !/^`[0-9a-f]{7}`$/.test(cells[1].trim());
+  });
+  const recentHashes = recentJournalLines
+    .map(line => (line.split('|')[2] || '').trim().replace(/`/g, ''))
+    .filter(hash => /^[0-9a-f]{7}$/.test(hash));
+  const duplicateRecentHashes = [...new Set(recentHashes.filter((hash, i) => recentHashes.indexOf(hash) !== i))];
+  check('свежие записи журнала — корректные строки таблицы',
+    recentJournalLines.length > 0 && malformedRecentJournal.length === 0,
+    `повреждено строк: ${malformedRecentJournal.length}`);
+  check('в журнале нет повторяющихся коммитов',
+    duplicateRecentHashes.length === 0,
+    `повторы: ${duplicateRecentHashes.join(', ')}`);
+
   check('AGENTS.md существует', exists('AGENTS.md'), 'файл с правилами проекта не найден');
 }
 
