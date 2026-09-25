@@ -1167,6 +1167,53 @@ function checkStyles(html) {
       !/unregister\(/.test(hardUpdateBody) &&
       !/caches\.delete\(/.test(hardUpdateBody),
     'hardUpdateApp должен отправлять SKIP_WAITING и ждать controllerchange, не удаляя precache');
+  // Прямой вызов игровой функции из core.js роняет клик с голым
+  // «ReferenceError: goToX is not defined», если games/<игра>.js не выполнился
+  // (обрыв сети, смена кэша Service Worker). Вместо этого вызов идёт через
+  // callGameEntry(), который проверяет наличие функции и объясняет игроку,
+  // что перезапустить приложение. Тот же класс лечили для звуков (fde17a5).
+  const coreJs = read('games/core.js');
+  const rawGameCalls = [...coreJs.matchAll(/^ {2}(goTo[A-Za-z0-9_]+)\(\);/gm)].map(m => m[1]);
+  check('игры из хаба запускаются через callGameEntry, а не прямым вызовом',
+    rawGameCalls.length === 0,
+    `прямые вызовы вернулись (${rawGameCalls.length}): ${rawGameCalls.slice(0, 5).join(', ')} — без защиты от незагруженного модуля`);
+  check('незагруженный модуль игры объясняется игроку, а не падает ReferenceError',
+    /function callGameEntry\(fnName\)\{/.test(coreJs) &&
+      /typeof fn === 'function'/.test(coreJs) &&
+      /function showAppLoadError\(fnName\)\{/.test(coreJs) &&
+      /Не загрузился модуль игры: нет функции/.test(coreJs) &&
+      /classList\.add\('show'\)/.test(coreJs.slice(coreJs.indexOf('function showAppLoadError'))),
+    'нужен безопасный резолвер callGameEntry с понятным окном showAppLoadError');
+  // Проверять надо по typeof, а не try/catch: отсутствующее имя — это
+  // ReferenceError при разборе идентификатора, до входа в тело функции.
+  // Отсутствующее имя — это ReferenceError при разборе идентификатора, ДО входа
+  // в тело, поэтому try/catch его не ловит: единственная защита — проверка
+  // typeof. А try/catch внутри ветки «функция есть» ловит уже другое — ошибку
+  // внутри самой игры, и это полезно, поэтому проверка требует именно typeof
+  // ПЕРЕД вызовом, а не запрещает try вообще.
+  const callGameEntryBody = coreJs.slice(coreJs.indexOf('function callGameEntry('), coreJs.indexOf('function showAppLoadError('));
+  check('отсутствие функции проверяется до вызова (typeof, а не try/catch)',
+    /typeof fn === 'function'[\s\S]{0,120}?fn\(\)/.test(callGameEntryBody) &&
+      /Не загрузился модуль игры/.test(callGameEntryBody),
+    'callGameEntry должен проверять наличие функции через typeof до вызова: try/catch не ловит ReferenceError при разборе имени');
+
+  // Инициализация: скрипты игр грузятся синхронно, но при обрыве сети любой
+  // из них может не выполниться. Тогда половина кнопок хаба не работает.
+  // Проверяем, что каждая игра, чья функция зовётся из хаба, реально
+  // подключена в index.html — иначе это гарантированный ReferenceError.
+  const hubGameFns = [...new Set([...coreJs.matchAll(/callGameEntry\('(goTo[A-Za-z0-9_]+)'\)/g)].map(m => m[1]))];
+  const lateScripts = Object.keys(hubGameFns.reduce((acc, fn) => {
+    for (const file of fs.readdirSync(path.join(ROOT, 'games'))) {
+      if (!file.endsWith('.js')) continue;
+      if (new RegExp(`^function ${fn}\\b`, 'm').test(read(path.join('games', file)))) acc[file] = true;
+    }
+    return acc;
+  }, {}));
+  const notConnected = lateScripts.filter(file => !new RegExp(`src="games/${file.replace('.', '\\.')}\\?v=`).test(html));
+  check('все игры, запускаемые из хаба, подключены в index.html',
+    notConnected.length === 0,
+    `не подключены: ${notConnected.join(', ')} — клик по ним упадёт с ReferenceError`);
+
   check('офлайн-заглушка вместо пустого ответа',
     /function offlineResponse\(\)/.test(sw) && /cached \|\| offlineResponse\(\)/.test(sw),
     'в sw.js нет fallback-заглушки offlineResponse');

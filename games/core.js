@@ -847,26 +847,26 @@ renderBusinessPlayers();
 document.getElementById('gameBusiness1Btn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToBusinessLemonadeSetup();
+  callGameEntry('goToBusinessLemonadeSetup');
 });
 // "Оцени бизнес" — goToBizObsSetup() определена в games/business-observer.js.
 document.getElementById('gameBizObserverBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToBizObsSetup();
+  callGameEntry('goToBizObsSetup');
 });
 // "Секс квест" реализован (см. games/sexquest.js: goToSexQuestSetup).
 // "Карта секса" пока остаётся заглушкой.
 document.getElementById('gameSexQuestBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToSexQuestSetup();
+  callGameEntry('goToSexQuestSetup');
 });
 // «Карта страсти» — независимая игра (см. games/passionmap.js: goToPassionMapSetup).
 document.getElementById('gameSexMapBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToPassionMapSetup();
+  callGameEntry('goToPassionMapSetup');
 });
 // Возраст ребёнка — общий переключатель для игр раздела "Игры с детьми",
 // которым важен возраст (сейчас — "Правда/Действие"): 1=5 лет, 2=7 лет,
@@ -890,31 +890,31 @@ renderKidsAgeGroup();
 document.getElementById('gameKidsMemoryBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsMemorySetup();
+  callGameEntry('goToKidsMemorySetup');
 });
 // "Во что поиграть?" — goToWhatToPlayGame() определена в games/whattoplay.js.
 document.getElementById('gameKidsWhatToPlayBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToWhatToPlayGame();
+  callGameEntry('goToWhatToPlayGame');
 });
 // "Крокодил" (дети) — goToKidsKrokodilSetup() определена в games/kids-krokodil.js.
 document.getElementById('gameKidsKrokodilBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsKrokodilSetup();
+  callGameEntry('goToKidsKrokodilSetup');
 });
 // "Мемасики" (дети) — goToKidsMemesSetup() определена в games/kids-memes.js.
 document.getElementById('gameKidsMemesBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsMemesSetup();
+  callGameEntry('goToKidsMemesSetup');
 });
 // "Магазин" (бизнес) — goToShopSetup() определена в games/shop.js.
 document.getElementById('gameShopBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToShopSetup();
+  callGameEntry('goToShopSetup');
 });
 // "Настольные игры" (дети) — подменю с Крестиками-ноликами и Морским боем,
 // чтобы не загромождать общий список "Игры с детьми" лишними иконками.
@@ -932,78 +932,78 @@ document.getElementById('kidsBoardGamesExitBtn').addEventListener('click', ()=>{
 document.getElementById('gameKidsXoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsXoSetup();
+  callGameEntry('goToKidsXoSetup');
 });
 // "Морской бой" (дети) — goToKidsBattleshipSetup() определена в games/kids-battleship.js.
 document.getElementById('gameKidsBattleshipBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsBattleshipSetup();
+  callGameEntry('goToKidsBattleshipSetup');
 });
 // «Четыре в ряд» (дети) — goToKidsC4Setup() определена в games/kids-connect4.js.
 document.getElementById('gameKidsC4Btn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsC4Setup();
+  callGameEntry('goToKidsC4Setup');
 });
 // "Правда/Действие" (дети) — goToKidsTdSetup() определена в games/kids-td.js.
 document.getElementById('gameKidsTdBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsTdSetup();
+  callGameEntry('goToKidsTdSetup');
 });
 document.getElementById('gameKidsQuizBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsQuizSetup();
+  callGameEntry('goToKidsQuizSetup');
 });
 // "Морской бой" (игры для одного) — goToSoloBattleshipSetup() определена в games/solo-battleship.js.
 document.getElementById('gameSoloBattleshipBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToSoloBattleshipSetup();
+  callGameEntry('goToSoloBattleshipSetup');
 });
 // «Четыре в ряд» (соло, против бота) — goToSoloC4Setup() определена в games/solo-connect4.js.
 document.getElementById('gameSoloC4Btn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToSoloC4Setup();
+  callGameEntry('goToSoloC4Setup');
 });
 // "Английский язык" (обучающие игры) — goToFlashSetup() определена в games/kids-flash.js.
 document.getElementById('gameLearningFlashBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToFlashSetup();
+  callGameEntry('goToFlashSetup');
 });
 // «Время» (обучающая игра — часы) — goToFlashTimeSetup() определена в games/kids-flash-time.js.
 document.getElementById('gameFlashTimeBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToFlashTimeSetup();
+  callGameEntry('goToFlashTimeSetup');
 });
 // "Флаги" (обучающая игра) — goToFlagsSetup() определена в games/flags.js.
 document.getElementById('gameFlagsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToFlagsSetup();
+  callGameEntry('goToFlagsSetup');
 });
 // "Столицы" (обучающая игра) — goToCapitalsSetup() определена в games/capitals.js.
 document.getElementById('gameCapitalsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToCapitalsSetup();
+  callGameEntry('goToCapitalsSetup');
 });
 // «Таблица умножения» (обучающая игра) — goToTimesTableSetup() определена в games/times-table.js.
 document.getElementById('gameTimesTableBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToTimesTableSetup();
+  callGameEntry('goToTimesTableSetup');
 });
 // "Сапёр" (дети) — goToKidsSaperGame() определена в games/kids-saper.js.
 document.getElementById('gameKidsMinesweeperBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKidsSaperGame();
+  callGameEntry('goToKidsSaperGame');
 });
 
 /* ============ УТИЛИТЫ ============ */
@@ -1444,16 +1444,16 @@ function abandonPausedFantySession(){ abandonPausedSession('fanty'); }
 document.getElementById('gameFantyBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToFantySetup();
+  callGameEntry('goToFantySetup');
 });
 document.getElementById('gameDavayBtn').addEventListener('click', ()=>{
   playSuccessSound();
-  goToDavaySetup();
+  callGameEntry('goToDavaySetup');
 });
 document.getElementById('gamePhotoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToPhotoSetup();
+  callGameEntry('goToPhotoSetup');
 });
 // "Викторина" пока не сделана — по одной временной заглушке в каждом из
 // трёх разделов (Игры для пар 18+ / Игры для компании / Игры с детьми),
@@ -1461,117 +1461,117 @@ document.getElementById('gamePhotoBtn').addEventListener('click', ()=>{
 document.getElementById('gameQuizBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToQuizSetup();
+  callGameEntry('goToQuizSetup');
 });
 document.getElementById('gameIdeasBtn').addEventListener('click', ()=>{
   // Сброс чужой паузы делает сам goToGame() — здесь только проверка
   // «сначала завершите прошлую партию» и переход.
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToIdeasGame();
+  callGameEntry('goToIdeasGame');
 });
 document.getElementById('gameWrBtn').addEventListener('click', ()=>{
   state.pausedMode = null;
   state.inProgress = false;
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToWrSetup();
+  callGameEntry('goToWrSetup');
 });
 document.getElementById('gameBingoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToBingoGame();
+  callGameEntry('goToBingoGame');
 });
 document.getElementById('gameTimerBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToTimerSetup();
+  callGameEntry('goToTimerSetup');
 });
 document.getElementById('gameKrokodilBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToKrokodilSetup();
+  callGameEntry('goToKrokodilSetup');
 });
 document.getElementById('gameMemesBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToMemesSetup();
+  callGameEntry('goToMemesSetup');
 });
 document.getElementById('gamePartyFantsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToPartyFantsSetup();
+  callGameEntry('goToPartyFantsSetup');
 });
 document.getElementById('gamePartyTdBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToPartyTdSetup();
+  callGameEntry('goToPartyTdSetup');
 });
 document.getElementById('gameFamZnayuBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToFamZnayuSetup();
+  callGameEntry('goToFamZnayuSetup');
 });
 document.getElementById('gameLuckyBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToLuckySetup();
+  callGameEntry('goToLuckySetup');
 });
 document.getElementById('gamePartyQuizBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToPartyQuizSetup();
+  callGameEntry('goToPartyQuizSetup');
 });
 document.getElementById('gameTwisterBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToTwisterGame();
+  callGameEntry('goToTwisterGame');
 });
 // "Виселица" (игры для одного) — goToPartyHangmanGame() определена в games/party-hangman.js.
 document.getElementById('gamePartyHangmanBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToPartyHangmanGame();
+  callGameEntry('goToPartyHangmanGame');
 });
 // "Викторина" (игры для одного) — goToSoloQuizSetup() определена в games/solo-quiz.js.
 document.getElementById('gameSoloQuizBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToSoloQuizSetup();
+  callGameEntry('goToSoloQuizSetup');
 });
 // "Мемори" (игры для одного) — goToSoloMemorySetup() определена в games/solo-memory.js.
 document.getElementById('gameSoloMemoryBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToSoloMemorySetup();
+  callGameEntry('goToSoloMemorySetup');
 });
 // "Крестики нолики" (игры для одного, против бота) — goToSoloXoSetup() определена в games/solo-xo.js.
 document.getElementById('gameSoloXoBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToSoloXoSetup();
+  callGameEntry('goToSoloXoSetup');
 });
 // "Рулетка" (компания) — goToPartyRouletteGame() определена в games/party-roulette.js.
 document.getElementById('gamePartyRouletteBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToPartyRouletteGame();
+  callGameEntry('goToPartyRouletteGame');
 });
 // "Я никогда не" (компания) — goToPartyNeverSetup() определена в games/party-never.js.
 document.getElementById('gamePartyNeverBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToPartyNeverSetup();
+  callGameEntry('goToPartyNeverSetup');
 });
 document.getElementById('gameWishlistBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToWishlistSetup();
+  callGameEntry('goToWishlistSetup');
 });
 document.getElementById('gameZnayuBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
-  goToZnayuSetup();
+  callGameEntry('goToZnayuSetup');
 });
 function goToFantySetup(){
   goToGameSetup('fantySetup', null, ()=>{
@@ -3434,7 +3434,7 @@ function openPhotoFromLink(level, key){
   // goToPlaceholderGame гасит только #photoSetup, и #setup остался бы активным
   // вместе с #game (два активных экрана — «экран делится на две части»).
   document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
-  goToPlaceholderGame();
+  callGameEntry('goToPlaceholderGame');
   if(!key) return;
   const card = getPhotoCardsList().find(c =>
     (c.level || 0) === (lvl || 0) && photoCardKey(c) === key);
@@ -3769,6 +3769,74 @@ function hideAppError(){
   __pendingErrorReport = null;
   const modal = document.getElementById('appErrorModal');
   if(modal) modal.classList.remove('show');
+}
+
+/* ============ НЕЗАГРУЖЕННЫЙ МОДУЛЬ ИГРЫ ============
+   Функции игр (goTo*) живут в отдельных файлах games/*.js, а кнопки хаба
+   вызывают их из core.js — файла, который подключается РАНЬШЕ всех игровых.
+   Пока модуль загружается, это не мешает: вызов происходит по клику. Но если
+   games/<игра>.js не выполнился (обрыв сети, смена кэша Service Worker, битая
+   выдача), функция не существует — и клик падал с голым
+   «ReferenceError: goToPartyQuizSetup is not defined». Игрок видел
+   английскую техническую ошибку вместо понятного объяснения.
+
+   Тот же класс уже лечили для звуков (fde17a5: звуковой движок перенесли из
+   fants-timer.js в core.js). Переносить в core.js 47 игровых функций нельзя —
+   это логика самих игр. Поэтому вызовы хаба идут через callGameEntry(): он
+   проверяет наличие функции и объясняет игроку, что делать, вместо ReferenceError.
+
+   Проверка по typeof, а не по try/catch: отсутствующая функция — это ReferenceError
+   при разборе идентификатора, до входа в тело, и перехватить его можно только
+   проверкой. Шаблон тот же, что у callGame() в games/game-registry.js. */
+function callGameEntry(fnName){
+  const fn = window[fnName];
+  if(typeof fn === 'function'){
+    try{
+      fn();
+      return true;
+    }catch(e){
+      logAppError({
+        time: new Date().toISOString(),
+        message: 'Ошибка при запуске игры ' + fnName + ': ' + ((e && e.message) || e),
+        source: (e && e.stack) ? String(e.stack).split('\n')[1]?.trim() || '' : '',
+      });
+      showAppError((e && e.message) || String(e), '');
+      return false;
+    }
+  }
+  // Модуль не выполнился: честно говорим, что делать, и оставляем след в журнале.
+  const info = {
+    time: new Date().toISOString(),
+    message: 'Не загрузился модуль игры: нет функции ' + fnName,
+    source: 'games/*.js не выполнился при загрузке страницы',
+  };
+  try{ console.warn('[Love-play] game module missing:', fnName); }catch(_){}
+  logAppError(info);
+  showAppLoadError(fnName);
+  return false;
+}
+
+// Окно сбоя для незагруженного модуля. Отдельная функция, а не showAppError(),
+// потому что текст здесь другой: «Произошла ошибка: …» смущало бы — никакой
+// ошибки не произошло, просто часть приложения не загрузилась. Кнопка
+// «🔄 Перезапустить приложение» в этом окне уже есть и перезагружает страницу
+// по уникальному адресу ?_r=… — этого достаточно, чтобы модуль загрузился.
+function showAppLoadError(fnName){
+  const modal = document.getElementById('appErrorModal');
+  if(!modal) return; // разметка не готова — след уже в журнале
+  const textEl = document.getElementById('appErrorText');
+  if(textEl){
+    textEl.textContent = 'Часть приложения не загрузилась, поэтому игра не открылась. '
+      + 'Нажмите «Перезапустить приложение» — это ничего не потеряет: прогресс сохранён.';
+  }
+  const detailsEl = document.getElementById('appErrorDetails');
+  if(detailsEl){
+    // Технические детали — только на localhost, как и в showAppError().
+    const isDev = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+    detailsEl.textContent = 'missing: ' + fnName;
+    detailsEl.style.display = isDev ? 'block' : 'none';
+  }
+  modal.classList.add('show');
 }
 
 // Непойманные синхронные ошибки.

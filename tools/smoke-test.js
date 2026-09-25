@@ -3269,6 +3269,63 @@ testAsync('PWA: обновление обнаруживается в актив�
   await new Promise(resolve => setImmediate(resolve));
 });
 
+// Игрок нажал игру, а games/<игра>.js не выполнился при загрузке (обрыв сети,
+// смена кэша Service Worker). Раньше клик падал с голым
+// «ReferenceError: goToPartyQuizSetup is not defined» — игрок видел
+// английскую техническую ошибку и не понимал, что делать. Теперь вызов идёт
+// через callGameEntry(): модуль отсутствует → понятное окно с перезапуском.
+test('Незагруженный модуль игры: понятное окно вместо ReferenceError', () => {
+  if (typeof global.callGameEntry !== 'function') {
+    assert(false, 'callGameEntry недоступна глобально');
+    return;
+  }
+  const modal = getElById(stub, 'appErrorModal');
+  const textEl = getElById(stub, 'appErrorText');
+  const detailsEl = getElById(stub, 'appErrorDetails');
+  const savedLog = global.localStorage.getItem('couple-game-error-log-v1');
+  // Заведомо несуществующая функция: имитируем невыполнившийся party-quiz.js.
+  // Имя вымышленное намеренно: реальные goTo* всех подключённых игр в тестовой
+  // среде существуют, а нужен именно случай «модуль не выполнился».
+  const missing = 'goToMissingModuleProbe';
+  assert(typeof global[missing] !== 'function',
+    'тест бессмыслен: функция не должна существовать');
+  const started = global.callGameEntry(missing);
+  assert(started === false, 'отсутствующий модуль не должен считаться запуском игры');
+  assert(modal && modal.classList.contains('show'),
+    'при незагруженном модуле должно открыться окно сбоя');
+  const text = textEl ? textEl.textContent : '';
+  assert(/не загрузилась/i.test(text),
+    `игроку нужно объяснение вместо ReferenceError, получено: «${text}»`);
+  assert(/[Пп]ерезапустить приложение/.test(text),
+    `в окне должно быть сказано, что делать, получено: «${text}»`);
+  assert(!/is not defined|ReferenceError/.test(text),
+    `техническая ошибка не должна попадать к игроку: «${text}»`);
+  // След в журнале: по нему видно, КАКОЙ модуль не загрузился.
+  const logged = JSON.parse(global.localStorage.getItem('couple-game-error-log-v1') || '[]');
+  assert(logged.some(e => (e.message || '').includes(missing)),
+    `в журнале ошибок должен быть след с именем ${missing}`);
+  if (savedLog === null) global.localStorage.removeItem('couple-game-error-log-v1');
+  else global.localStorage.setItem('couple-game-error-log-v1', savedLog);
+  if (modal) modal.classList.remove('show');
+});
+
+// Обычный случай: функция на месте — вызов идёт напрямую и ничего не ломает.
+test('Загруженный модуль игры: вызов работает как раньше', () => {
+  if (typeof global.callGameEntry !== 'function') {
+    assert(false, 'callGameEntry недоступна глобально');
+    return;
+  }
+  const modal = getElById(stub, 'appErrorModal');
+  let called = 0;
+  global.__testGameEntryProbe = () => { called++; };
+  const started = global.callGameEntry('__testGameEntryProbe');
+  assert(started === true, 'функция на месте — вызов должен считаться успешным');
+  assert(called === 1, `функция должна быть вызвана ровно один раз, вызвана ${called} раз`);
+  assert(!(modal && modal.classList.contains('show')),
+    'при успешном запуске игры окно сбоя показываться не должно');
+  delete global.__testGameEntryProbe;
+});
+
 // Ложное «Доступна новая версия» сразу после обновления. Сценарий повторяет
 // то, что делал браузер: ставил в waiting копию worker'а с тем же байткодом
 // (причина — query-версия в register()), из-за чего плашка всплывала второй
