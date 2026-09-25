@@ -1030,7 +1030,14 @@ function checkStyles(html) {
     check('CSS поля участника и кнопки добавления задаёт один ряд',
       businessPlayerRowCss,
       'CSS не фиксирует flex-ряд или кнопка добавления может растягиваться');
-    const unifiedAnswerStyle = /\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:\s*rgba\(255,255,255,\.3\);[^}]*color:\s*#2b0f2e;[^}]*opacity:\s*1;[^}]*border-color:\s*rgba\(43,15,46,\.2\);/.test(cssWithoutComments);
+    // Кнопка ответов обязана быть НЕПРОЗРАЧНОЙ и светлой. Прежний
+    // rgba(255,255,255,.3) смешивался с тёмным градиентом карточки и давал
+    // грязно-серый фон, из-за чего подписи выглядели затемнёнными и в
+    // браузере, и в PWA. Поэтому проверяем именно непрозрачный цвет.
+    const unifiedAnswerStyle = /\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:\s*#f2e3ee;[^}]*color:\s*#2b0f2e;[^}]*opacity:\s*1;[^}]*border-color:\s*rgba\(43,15,46,\.25\);/.test(cssWithoutComments);
+    const translucentAnswerBg = /\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:\s*rgba\(/.test(cssWithoutComments);
+    const skipRule = cssWithoutComments.match(/\.znayu-skip-btn\s*\{([^}]*)\}/);
+    const opaqueSkipBtn = !!skipRule && /background:\s*#f2e3ee;/.test(skipRule[1]) && !/background:\s*rgba\(/.test(skipRule[1]);
     const opaqueDisabledAnswers = /\.znayu-answers\s+\.znayu-answer-btn:disabled\s*\{[^}]*opacity:\s*1;/.test(cssWithoutComments);
     const answerRule = cssWithoutComments.match(/\.znayu-answers\s+\.znayu-answer-btn\s*\{([^}]*)\}/);
     const answersContainer = cssWithoutComments.match(/\.znayu-answers\s*\{([^}]*)\}/);
@@ -1046,10 +1053,12 @@ function checkStyles(html) {
     const pwaScopedAnswerStyle = /pwa-standalone[^{}]*\.znayu-answer-btn|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*\.znayu-answer-btn/.test(cssWithoutComments);
     const scopedAnswerStyle = /#[A-Za-z][A-Za-z0-9_-]*[^{}]*\.znayu-answer-btn[^{}]*\{/.test(cssWithoutComments);
     check('кнопки ответов во всех играх используют единый стиль',
-      unifiedAnswerStyle && opaqueDisabledAnswers && pwaSafeAnswerStyle && !pwaScopedAnswerStyle && !scopedAnswerStyle,
+      unifiedAnswerStyle && !translucentAnswerBg && opaqueSkipBtn && opaqueDisabledAnswers && pwaSafeAnswerStyle && !pwaScopedAnswerStyle && !scopedAnswerStyle,
       scopedAnswerStyle
         ? 'найдено правило #id ... .znayu-answer-btn — цвет кнопки не должен зависеть от карточки'
-        : 'общий .znayu-answer-btn должен иметь полупрозрачный белый фон 30%, непрозрачный тёмный текст, общую рамку и PWA-safe сброс нативного затемнения');
+        : translucentAnswerBg || !opaqueSkipBtn
+          ? 'фон кнопок ответов и «Не хочу отвечать» должен быть непрозрачным: полупрозрачный белый смешивается с тёмным фоном карточки и выглядит затемнённым'
+          : 'общий .znayu-answer-btn должен иметь непрозрачный светлый фон, непрозрачный тёмный текст, общую рамку и PWA-safe сброс нативного затемнения');
 
     // Карточки игр компании используют общий ультрамариновый градиент.
     // Проверяем все восемь карточек: одна забытая карточка снова сделает группу

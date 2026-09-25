@@ -251,8 +251,16 @@ test('«Арифметика»: карточка собрана как у ост
     '«Арифметика» должна входить в блок тёмно-голубых карточек обучающих игр');
   assert(!/#timesTableCard\s+\.znayu-answers\s+\.znayu-answer-btn/.test(css),
     'у «Арифметики» не должно быть отдельного цвета кнопок — используется общий компонент');
-  assert(/\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:rgba\(255,255,255,\.3\);[^}]*color:#2b0f2e;[^}]*opacity:1;/.test(css),
-    'все кнопки ответов должны иметь полупрозрачный белый фон 30% и непрозрачный тёмный текст');
+  // Фон кнопок ответов обязан быть непрозрачным: rgba(255,255,255,.3) поверх
+  // тёмного градиента карточки давал грязно-серый фон, и подписи выглядели
+  // затемнёнными (одинаково в браузере и в PWA).
+  assert(/\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:#f2e3ee;[^}]*color:#2b0f2e;[^}]*opacity:1;/.test(css),
+    'все кнопки ответов должны иметь непрозрачный светлый фон и непрозрачный тёмный текст');
+  assert(!/\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:rgba\(/.test(css),
+    'фон кнопок ответов не должен быть полупрозрачным — он смешивается с тёмной карточкой');
+  const skipRule = css.match(/\.znayu-skip-btn\s*\{([^}]*)\}/);
+  assert(skipRule && /background:#f2e3ee;/.test(skipRule[1]) && !/background:rgba\(/.test(skipRule[1]),
+    'кнопка «Не хочу отвечать» должна иметь такой же непрозрачный светлый фон');
   const answerRule = css.match(/\.znayu-answers\s+\.znayu-answer-btn\s*\{([^}]*)\}/);
   const answersContainer = css.match(/\.znayu-answers\s*\{([^}]*)\}/);
   assert(answerRule && /color-scheme:\s*light/.test(answerRule[1]) &&

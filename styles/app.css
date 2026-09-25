@@ -2764,23 +2764,26 @@
   }
   .znayu-answers{
     display:flex; flex-direction:column; gap:10px; width:100%; margin-top:14px;
-    /* Светлая схема объявляется на КОНТЕЙНЕРЕ, а не только на кнопке. В
+    /* Светлая схема объявляется на КОНТЕЙНЕРЕ, а не только на кнопке: в
        standalone-PWA WKWebView применяет тёмное оформление форм ко всем
        потомкам контекста color-scheme, поэтому сброс только на самой кнопке
-       оставлял её затемнённой. Контейнер с кнопками ответов всегда лежит на
-       белой карточке, так что light здесь совпадает с базовым видом. */
+       оставлял её затемнённой. Контейнер лежит и на тёмных, и на белой
+       карточке, но сами кнопки непрозрачные, поэтому light безопасен везде. */
     color-scheme:light;
   }
-  /* ЕДИНЫЙ компонент кнопок ответов для всех игр. Варианты не наследуют
-     цвет карточки: одинаковый полупрозрачный белый фон (30%) и полностью
-     непрозрачный тёмный текст с общей рамкой. Прозрачность задаём только
-     цветом фона — opacity на кнопке одновременно затемнял бы подпись.
+  /* ЕДИНЫЙ компонент кнопок ответов для всех игр. Кнопка СВЕТЛАЯ и
+     НЕПРОЗРАЧНАЯ: тёмный текст на 30% белом поверх тёмного градиента
+     карточки давал грязно-серый muddy-фон, и подписи выглядели затемнёнными
+     (и в браузере, и в PWA — это был не баг WebKit, а сам цвет). Непрозрачная
+     светлая подложка одинаково контрастна на любом фоне: на тёмных карточках
+     (парные, компания, дети, одиночная) и на белой #bizObsCard. Прозрачность НЕ
+     задаём даже цветом фона — иначе фон карточки снова протекает в кнопку.
      Менять цвет кнопок через #id или класс группы нельзя — различаться
      должен только фон карточки. */
   .znayu-answers .znayu-answer-btn{
     width:100%; white-space:normal; height:auto; min-height:var(--btn-height); padding:10px 14px; line-height:1.3;
-    background:rgba(255,255,255,.3); color:#2b0f2e; opacity:1; border-color:rgba(43,15,46,.2);
-    /* Явно сбрасываем нативное затемнение кнопок WebKit в standalone: цвет
+    background:#f2e3ee; color:#2b0f2e; opacity:1; border-color:rgba(43,15,46,.25);
+    /* Явно сбрасываем нативное оформление кнопок WebKit в standalone: цвет
        текста, заливку и прозрачность задаёт наш CSS, а не тема системы.
        appearance дублирует -webkit-appearance для движков, где вычисляется
        уже стандартное свойство. */
@@ -2795,12 +2798,12 @@
      работать только до получения результата: их более специфичные правила
      иначе перекрывают зелёную/красную подсветку .answer-*. */
   .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):hover{
-    background:rgba(255,255,255,.42);
+    background:#f8eef5;
     transform:translateY(var(--btn-hover-y)) scale(var(--btn-hover-scale));
     box-shadow:var(--btn-raise-shadow);
   }
   .znayu-answers .znayu-answer-btn:not(.answer-correct):not(.answer-wrong):active{
-    background:rgba(255,255,255,.5);
+    background:#e7d2e0;
     transform:translateY(0) scale(var(--btn-active-scale));
     box-shadow:0 2px 8px rgba(0,0,0,.4);
   }
@@ -2810,20 +2813,20 @@
   .znayu-skip-btn{
     width:100%;
     margin-top:14px;
-    background:rgba(255,255,255,.3);
+    background:#f2e3ee;
     border:1px dashed rgba(43,15,46,.35);
     color:#2b0f2e; opacity:1;
     font-size:13px;
     min-height:auto; padding:8px 14px;
-    /* Тот же светлый контекст, что и у вариантов ответа: кнопка стоит рядом
-       с .znayu-answers и окрашена так же, значит и оформление WebKit должно
-       совпадать, иначе в standalone она одна останется тёмной. */
+    /* Тот же светлый непрозрачный фон, что и у вариантов ответа: кнопка стоит
+       рядом с .znayu-answers и окрашена так же — иначе в standalone она одна
+       осталась бы тёмной, а полупрозрачный белый снова дал бы muddy-тон. */
     color-scheme:light; -webkit-appearance:none; appearance:none;
     -webkit-text-fill-color:currentColor; filter:none;
   }
   .znayu-skip-btn:not(:hover):not(:active){ box-shadow:none; }
-  .znayu-skip-btn:hover{ background:rgba(255,255,255,.42); }
-  .znayu-skip-btn:active{ background:rgba(255,255,255,.5); }
+  .znayu-skip-btn:hover{ background:#f8eef5; }
+  .znayu-skip-btn:active{ background:#e7d2e0; }
   /* Викторина (пары/компания/дети) — переиспользует карточку и кнопки
      ответов "Тайных ответов" (.znayu-question-text/.znayu-answers/
      .znayu-answer-btn), добавляя подсветку результата после выбора:
