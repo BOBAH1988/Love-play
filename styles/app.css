@@ -2529,6 +2529,38 @@
   #favoriteBtn.active{
     background:linear-gradient(135deg,#ffd27a,#ffb347); color:#5c3a00; border-color:transparent;
   }
+  /* «Предложи партнёру»: на узком экране (особенно в PWA) ряд под карточкой
+     должен оставаться в границах экрана. Текстовая кнопка может сжиматься,
+     а иконки получают нулевые внутренние отступы и базовую ширину 44px. */
+  #game.placeholder-mode .row1{
+    min-width:0;
+    gap:clamp(4px, 1.5vw, 10px);
+  }
+  #game.placeholder-mode .row1 .btn{
+    min-width:0;
+  }
+  #game.placeholder-mode .row1 #doneBtn{
+    flex:1 1 auto;
+    width:auto;
+    min-width:0;
+    padding:0 clamp(4px, 2vw, 12px);
+    font-size:clamp(14px, 4vw, 17px);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  #game.placeholder-mode .row1 .btn.btn-square,
+  #game.placeholder-mode .row1 #photoRandomToggleBtn,
+  #game.placeholder-mode .row1 #sexshopOwnedBtn,
+  #game.placeholder-mode .row1 #favoriteBtn,
+  #game.placeholder-mode .row1 #photoShareBtn{
+    flex:0 1 44px;
+    width:44px;
+    min-width:40px;
+    padding:0;
+    overflow:hidden;
+  }
+
   .row2{display:flex; gap:8px; align-items:stretch;}
   .row2 .btn{flex:1; height:40px; padding:0 10px;}
   .row2 #levelUpBtn{flex:1; font-size:14px;}

@@ -970,6 +970,13 @@ function checkStyles(html) {
           : pwaKidsCardStyle
             ? 'в standalone-правилах появился отдельный стиль карточки игры с детьми'
             : 'детские карточки и витрина должны использовать тёмно-бирюзовый градиент');
+    const photoRowCompact = /#game\.placeholder-mode \.row1\s*\{[^}]*min-width:\s*0;[^}]*gap:\s*clamp\(4px/.test(css);
+    const photoTextCompact = /#game\.placeholder-mode \.row1 #doneBtn\s*\{[^}]*flex:\s*1\s+1\s+auto;[^}]*min-width:\s*0;[^}]*text-overflow:\s*ellipsis/.test(css);
+    const photoIconsCompact = /#game\.placeholder-mode \.row1 \.btn\.btn-square,[\s\S]*?#game\.placeholder-mode \.row1 #photoShareBtn\s*\{[^}]*flex:\s*0\s+1\s+44px;[^}]*width:\s*44px;[^}]*min-width:\s*40px;[^}]*padding:\s*0/.test(css);
+    check('кнопки «Предложи партнёру» ужимаются на узком экране',
+      photoRowCompact && photoTextCompact && photoIconsCompact,
+      'для placeholder-mode нужны сжимаемый текстовый ряд и иконки без внутренних отступов');
+
   }
 
   // Service Worker обязан обновлять стили сразу, а не «со второй загрузки»:

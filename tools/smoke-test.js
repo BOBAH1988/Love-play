@@ -766,6 +766,16 @@ test('Сценарий: кнопки «Пауза»/«Выход» скрыты 
   assert(/#game:not\(\.video-mode\):not\(\.davay-mode\):not\(\.placeholder-mode\) #pauseBtn\{display:none;\}/.test(css),
     'в «Фантах» кнопка «Пауза» тоже должна остаться скрытой');
 });
+test('Сценарий: кнопки «Предложи партнёру» сжимаются на узком экране', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  const rowCompact = /#game\.placeholder-mode \.row1\s*\{[^}]*min-width:\s*0;[^}]*gap:\s*clamp\(4px/.test(css);
+  const textCompact = /#game\.placeholder-mode \.row1 #doneBtn\s*\{[^}]*flex:\s*1\s+1\s+auto;[^}]*min-width:\s*0;[^}]*text-overflow:\s*ellipsis/.test(css);
+  const iconsCompact = /#game\.placeholder-mode \.row1 \.btn\.btn-square,[\s\S]*?#game\.placeholder-mode \.row1 #photoShareBtn\s*\{[^}]*flex:\s*0\s+1\s+44px;[^}]*width:\s*44px;[^}]*min-width:\s*40px;[^}]*padding:\s*0/.test(css);
+  assert(rowCompact && textCompact && iconsCompact,
+    'в «Предложи партнёру» текстовая кнопка должна сжиматься, а иконки — иметь нулевые внутренние отступы');
+});
+
+
 
 test('Сценарий: стрелка «←» в «Давай попробуем» ставит на паузу именно эту игру', () => {
   // Кнопку «Пауза» убрали, значит «←» обязана обрабатывать davay-режим сама.
