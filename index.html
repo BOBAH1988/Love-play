@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-25 · v500';
+  window.APP_BUILD = '2026-09-25 · v501';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v500</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v501</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -4429,7 +4429,7 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20260929b"></script>
 <script src="cards/capitals.js?v=20260929c"></script>
-<script src="games/core.js?v=20260925a"></script>
+<script src="games/core.js?v=20260925b"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -4507,7 +4507,7 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20260925k', { updateViaCache: 'none' }).then(function (reg) {
+        navigator.serviceWorker.register('./sw.js?v=20260925l', { updateViaCache: 'none' }).then(function (reg) {
           // Проверяем обновление не только при запуске: PWA может оставаться
           // открытым в фоне, пока браузер не запускает navigation/load.
           // registration.update() явно просит браузер проверить sw.js; новый
@@ -4522,18 +4522,28 @@
           var updateCheckInFlight = false;
           var lastUpdateCheckAt = 0;
           var dismissedWaitingWorker = null;
+          var notifiedWaitingWorker = null;
+          var notifiedWaitingUrl = null;
           var watchedInstallingWorker = null;
           var updateBtn = document.getElementById('updateToastBtn');
           var updateToast = document.getElementById('updateToast');
           var closeUpdateBtn = document.getElementById('updateToastCloseBtn');
 
+          // Плашка показывается один раз для конкретного waiting-воркера.
+          // Раньше одинаковая проверка выполнялась после каждого события
+          // updatefound и каждого возврата в приложение: при неудачной
+          // активации игрок видел одну и ту же плашку несколько раз подряд.
           function showUpdateToastIfWaiting(){
             var waiting = registration && registration.waiting;
-            // Сам факт waiting означает, что новый worker успешно установился
-            // рядом со старым. Не требуем controller: после перезапуска/жёсткой
-            // навигации страница может быть ещё не под контролем SW, хотя
-            // обновление уже готово и его нужно предложить.
-            if(!waiting || waiting === dismissedWaitingWorker) return;
+            if(!waiting || window.__pwaUpdateInProgress === true) return;
+            // Некоторые браузеры отдают новый JS-объект для того же worker
+            // при повторном чтении registration.waiting. Сверяем ещё и URL
+            // скрипта, иначе одна и та же плашка может появиться снова.
+            var waitingUrl = waiting.scriptURL || '';
+            if(waiting === dismissedWaitingWorker || waiting === notifiedWaitingWorker ||
+               (waitingUrl && waitingUrl === notifiedWaitingUrl)) return;
+            notifiedWaitingWorker = waiting;
+            notifiedWaitingUrl = waitingUrl || null;
             if(updateToast) updateToast.hidden = false;
           }
 
@@ -4565,7 +4575,7 @@
 
           function checkForUpdate(reason){
             showUpdateToastIfWaiting();
-            if(!registration || navigator.onLine === false || registration.waiting ||
+            if(!registration || window.__pwaUpdateInProgress === true || navigator.onLine === false || registration.waiting ||
                registration.installing || updateCheckInFlight) return;
             var now = Date.now();
             // Несколько событий возврата (focus + visibility + pageshow) могут

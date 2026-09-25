@@ -1614,29 +1614,34 @@ document.getElementById('resumeBtn').addEventListener('click', ()=>{
    из меню «☰» убран: он дублировал эту автоматику. Служебная #updateAppBtn
    в скрытом блоке осталась запасным путём (обработчик ниже).
 
-   Почему офлайн — особый случай. Обычный сценарий: снимаем Service Worker,
-   стираем кэши, перезагружаем страницу по уникальному адресу — браузер
-   обязан сходить в сеть и получить свежие файлы. Но если в этот момент нет
-   интернета, перезагрузка уходит «в пустоту»: кэш уже удалён, и приложение
-   не откроется вовсе. Поэтому без сети НИЧЕГО не трогаем и честно говорим
-   об этом — старый кэш лучше, чем неработающее приложение.
+   Новая версия приходит как worker в состоянии waiting. Кнопка «Обновить»
+   отправляет ему SKIP_WAITING: worker активируется и забирает текущие
+   вкладки через clients.claim(). Только после controllerchange страница
+   перезагружается с уникальным адресом ?_r=… — так навигация получает
+   свежий index.html и новую версию APP_BUILD.
 
-   Индикация. Игрок жмёт «Обновить» — интерфейс сразу перекрывает экран
-   #updateSplash (спиннер + «Обновляю приложение…»): мгновенный отклик,
-   случайные нажатия по «полуживым» кнопкам исключены. После перезагрузки
-   тот же экран остаётся виден (флаг в sessionStorage), пока init.js не
-   закончит загрузку, — вместо «кнопки есть, но не работают». */
+   Регистрацию и кэши при этом не снимаем: новый worker уже установил
+   полный транзакционный precache, и удаление всех кэшей до активации
+   оставляло его неполным. Из-за этого плашка появлялась снова, а версия
+   после «Обновления» не менялась.
+
+   Без сети обновление ничего не удаляет и честно сообщает об этом: старый
+   кэш лучше, чем неработающее приложение. Индикация #updateSplash
+   включается сразу после нажатия, чтобы случайные нажатия по ещё не
+   обновлённым кнопкам не проходили. */
 async function hardUpdateApp(){
   // navigator.onLine === false — достоверный признак отсутствия сети.
   // Значение true ничего не гарантирует, но в этом случае обычный сценарий
   // безопасен: если сеть на самом деле отвалилась, сработает .catch ниже.
   if(navigator.onLine === false){
     showToast('Нет интернета — обновление возможно только онлайн');
-    return;
+    return false;
   }
+  // Защита от нескольких нажатий и от повторного входа из обработчика.
+  if(window.__pwaUpdateInProgress === true) return false;
+  window.__pwaUpdateInProgress = true;
   // Экран обновления показываем ДО любых сетевых действий: на медленной сети
-  // unregister+delete занимают заметное время, и без сплеша страница выглядит
-  // «зависшей», а кнопки — сломанными.
+  // активация worker занимает заметное время.
   const splash = document.getElementById('updateSplash');
   if(splash){
     splash.hidden = false;
@@ -1644,30 +1649,67 @@ async function hardUpdateApp(){
     if(prog) prog.textContent = 'Готовим обновление…';
   }
   try{
-    if('caches' in window){
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k=>caches.delete(k)));
+    let registration = null;
+    let waiting = null;
+    if('serviceWorker' in navigator && typeof navigator.serviceWorker.getRegistration === 'function'){
+      registration = await navigator.serviceWorker.getRegistration();
+      waiting = registration && registration.waiting;
     }
-    // Service Worker снимается после чистки кэшей: у нового воркера не будет
-    // ни одного препятствия взять управление страницей сразу (clients.claim),
-    // и загрузка свежих файлов начнётся с первой же перезагрузки.
-    if('serviceWorker' in navigator){
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r=>r.unregister()));
+    if(!waiting){
+      // Служебная кнопка может быть нажата без плашки. Не сносим офлайн-кэш:
+      // уникальная навигация всё равно обходит сетевой кэш index.html.
+      sessionStorage.setItem('appJustUpdated', '1');
+      const url = new URL(location.href);
+      url.searchParams.set('_r', Date.now());
+      location.replace(url.toString());
+      return true;
     }
-    // Флаг читают: инлайновый скрипт в index.html (показ сплеша сразу,
-    // до загрузки скриптов) и games/init.js (тост «Обновлено до последней версии»).
-    sessionStorage.setItem('appJustUpdated', '1');
+
+    let reloadStarted = false;
+    let reloadFallbackTimer = 0;
+    const reloadAfterControllerChange = () => {
+      if(reloadStarted) return;
+      reloadStarted = true;
+      if(reloadFallbackTimer){
+        clearTimeout(reloadFallbackTimer);
+        reloadFallbackTimer = 0;
+      }
+      // Флаг ставим только перед реальной перезагрузкой. При неудачной
+      // активации он не должен превратить следующий обычный запуск в
+      // «уже обновлённый».
+      sessionStorage.setItem('appJustUpdated', '1');
+      const url = new URL(location.href);
+      // Параметр _r=… делает адрес уникальным: так браузер гарантированно
+      // обходит кэш навигации. Служебный параметр убирает init.js после загрузки.
+      url.searchParams.set('_r', Date.now());
+      location.replace(url.toString());
+    };
+    if(typeof navigator.serviceWorker.addEventListener === 'function'){
+      navigator.serviceWorker.addEventListener('controllerchange', reloadAfterControllerChange, { once:true });
+    }
+    if(typeof waiting.postMessage !== 'function') throw new Error('waiting worker не поддерживает postMessage');
+    // Не вызываем unregister/delete: worker должен активироваться сам,
+    // сохранив собственный полный precache.
+    waiting.postMessage({ type:'SKIP_WAITING' });
+    // Страховка для браузеров, которые не прислали controllerchange.
+    reloadFallbackTimer = setTimeout(() => {
+      reloadFallbackTimer = 0;
+      if(reloadStarted) return;
+      if(!registration || !registration.waiting){
+        reloadAfterControllerChange();
+      }else{
+        window.__pwaUpdateInProgress = false;
+        if(splash) splash.hidden = true;
+        showToast('Не удалось обновить — попробуйте ещё раз');
+      }
+    }, 5000);
+    return true;
   }catch(e){
+    window.__pwaUpdateInProgress = false;
     if(splash) splash.hidden = true;
     showToast('Не удалось обновить — попробуйте ещё раз');
-    return;
+    return false;
   }
-  // Параметр _r=… делает адрес уникальным: так браузер гарантированно
-  // обходит кэш навигации. Служебный параметр убирает init.js после загрузки.
-  const url = new URL(location.href);
-  url.searchParams.set('_r', Date.now());
-  location.replace(url.toString());
 }
 // Служебная кнопка в скрытом блоке (исторически использовалась для ручного
 // обновления при отладке). Обработчик висит с проверкой на существование:

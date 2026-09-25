@@ -631,11 +631,11 @@ test('Меню: по центру после ⚙️ Меню отображае�
   const version = getElById(stub, 'menuCacheVersion');
   const previousBuild = global.APP_BUILD;
   try {
-    global.APP_BUILD = '2026-09-25 · v500';
+    global.APP_BUILD = '2026-09-25 · v501';
     menuBtn.click();
     assert(menu.classList.contains('show'), 'кнопка меню должна открывать окно');
-    assert(version.textContent === 'версии v500',
-      `по центру после заголовка меню должна показываться строка «версии v500», получено «${version.textContent}»`);
+    assert(version.textContent === 'версии v501',
+      `по центру после заголовка меню должна показываться строка «версии v501», получено «${version.textContent}»`);
   } finally {
     if (previousBuild === undefined) delete global.APP_BUILD;
     else global.APP_BUILD = previousBuild;
@@ -3248,6 +3248,64 @@ testAsync('PWA: обновление обнаруживается в актив�
   assert(updateCalls === 3, 'updateCheckInFlight должен блокировать параллельные lifecycle-вызовы');
   resolvePendingUpdate();
   await new Promise(resolve => setImmediate(resolve));
+});
+
+testAsync('PWA: «Обновить» активирует waiting-worker и не сносит офлайн-кэш', async () => {
+  assert(typeof global.hardUpdateApp === 'function', 'hardUpdateApp недоступна глобально');
+  const sw = global.navigator.serviceWorker;
+  const oldGetRegistration = sw.getRegistration;
+  const oldGetRegistrations = sw.getRegistrations;
+  const oldAddEventListener = sw.addEventListener;
+  const oldUnregister = sw.unregister;
+  const oldReplace = global.location.replace;
+  const oldCacheDelete = global.caches.delete;
+  const oldUpdateFlag = global.sessionStorage.getItem('appJustUpdated');
+  let postedMessage = null;
+  let unregisterCalls = 0;
+  let cacheDeleteCalls = 0;
+  let controllerChangeHandler = null;
+  let replacedUrl = null;
+  let replaceCalls = 0;
+  const registration = { waiting: { postMessage(message) { postedMessage = message; } } };
+
+  sw.getRegistration = () => Promise.resolve(registration);
+  sw.getRegistrations = () => { unregisterCalls++; return Promise.resolve([]); };
+  sw.unregister = () => { unregisterCalls++; return Promise.resolve(true); };
+  sw.addEventListener = (type, handler) => {
+    if (type === 'controllerchange') controllerChangeHandler = handler;
+  };
+  global.location.replace = (url) => { replacedUrl = url; replaceCalls++; };
+  global.caches.delete = () => { cacheDeleteCalls++; return Promise.resolve(true); };
+  try {
+    const started = await global.hardUpdateApp();
+    assert(started === true, 'обновление должно запуститься');
+    assert(postedMessage && postedMessage.type === 'SKIP_WAITING',
+      `waiting-worker должен получить SKIP_WAITING, получено ${JSON.stringify(postedMessage)}`);
+    assert(unregisterCalls === 0, 'обновление не должно снимать регистрацию Service Worker');
+    assert(cacheDeleteCalls === 0, 'обновление не должно удалять кэши');
+    assert(typeof controllerChangeHandler === 'function',
+      'до controllerchange нельзя перезагружать страницу');
+    registration.waiting = null;
+    controllerChangeHandler();
+    assert(replacedUrl && /[?&]_r=\d+/.test(replacedUrl),
+      `после controllerchange должна быть перезагрузка с _r, получено ${replacedUrl}`);
+    assert(global.sessionStorage.getItem('appJustUpdated') === '1',
+      'флаг успешного обновления должен ставиться перед reload');
+    controllerChangeHandler();
+    assert(replaceCalls === 1,
+      'повторный controllerchange не должен запускать вторую перезагрузку');
+  } finally {
+    sw.getRegistration = oldGetRegistration;
+    sw.getRegistrations = oldGetRegistrations;
+    sw.addEventListener = oldAddEventListener;
+    if (oldUnregister === undefined) delete sw.unregister;
+    else sw.unregister = oldUnregister;
+    global.location.replace = oldReplace;
+    global.caches.delete = oldCacheDelete;
+    if (oldUpdateFlag === null) global.sessionStorage.removeItem('appJustUpdated');
+    else global.sessionStorage.setItem('appJustUpdated', oldUpdateFlag);
+    global.window.__pwaUpdateInProgress = false;
+  }
 });
 
 console.log('\n=== Запуск тестов ===\n');

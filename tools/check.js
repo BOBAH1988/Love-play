@@ -1122,18 +1122,36 @@ function checkStyles(html) {
   check('SW не удаляет текущий кэш при активации',
     /if \(name !== CACHE_NAME\) await caches\.delete\(name\)/.test(sw),
     'в activate нет защиты текущего CACHE_NAME');
+  // Активация worker'а теперь запускается только по команде страницы через
+  // сообщение SKIP_WAITING. Проверяем, что skipWaiting есть именно в
+  // message-обработчике, но отсутствует в install/activate: иначе новая
+  // версия снова вытеснит старую посреди сессии.
+  const installSw = sw.slice(sw.indexOf("self.addEventListener('install'"), sw.indexOf("self.addEventListener('activate'"));
+  const messageSw = sw.slice(sw.indexOf("self.addEventListener('message'"), sw.indexOf('// Офлайн-заглушка'));
+  const skipWaitingByMessage = /event\.data[\s\S]{0,200}SKIP_WAITING[\s\S]{0,200}ctx\.skipWaiting\(\)/.test(messageSw);
   check('SW предкэшивает игры и стили из index.html',
     /cards\|games\|styles/.test(sw) &&
       /cache\.addAll\(cacheRequests\)/.test(sw) &&
       /new Request\(url,\s*\{\s*cache:\s*['"]no-store['"]\s*\}\)/.test(sw) &&
       !/cache\.add\(/.test(sw) &&
-      !/ctx\.skipWaiting\(\)/.test(sw) &&
+      skipWaitingByMessage &&
+      !/ctx\.skipWaiting\(\)/.test(installSw) &&
+      !/fetch\s*\(/.test(activateSw) &&
       /cache\.put\(PRECACHE_MANIFEST_URL/.test(sw) &&
       /cache\.match\(PRECACHE_MANIFEST_URL/.test(sw) &&
       /if \(url\.pathname\.endsWith\('sw\.js'\)\)[\s\S]{0,180}fetch\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw) &&
-      /if \(request\.mode === 'navigate'\)[\s\S]{0,500}fetch\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw) &&
-      !/fetch\s*\(/.test(activateSw),
+      /if \(request\.mode === 'navigate'\)[\s\S]{0,500}fetch\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw),
     'нужен атомарный precache, локальный манифест и активация без сетевого fetch');
+
+  const coreUpdate = read('games/core.js');
+  const hardUpdateBody = coreUpdate.slice(coreUpdate.indexOf('async function hardUpdateApp'), coreUpdate.indexOf('// Служебная кнопка в скрытом блоке'));
+  check('обновление PWA активирует waiting-worker без снятия регистрации',
+    /waiting\.postMessage\(\s*\{\s*type\s*:\s*['"]SKIP_WAITING['"]/.test(hardUpdateBody) &&
+      /controllerchange/.test(hardUpdateBody) &&
+      !/getRegistrations\(\)/.test(hardUpdateBody) &&
+      !/unregister\(/.test(hardUpdateBody) &&
+      !/caches\.delete\(/.test(hardUpdateBody),
+    'hardUpdateApp должен отправлять SKIP_WAITING и ждать controllerchange, не удаляя precache');
   check('офлайн-заглушка вместо пустого ответа',
     /function offlineResponse\(\)/.test(sw) && /cached \|\| offlineResponse\(\)/.test(sw),
     'в sw.js нет fallback-заглушки offlineResponse');

@@ -192,6 +192,7 @@ function createDomStub(html, { trackHandlers = false } = {}) {
     vibrate() {}, standalone: false,
     serviceWorker: {
       getRegistrations: () => Promise.resolve([]),
+      getRegistration: () => Promise.resolve(null),
       register: () => Promise.resolve({ addEventListener() {}, update() {} }),
       addEventListener() {}, controller: null, ready: Promise.resolve({}),
     },
