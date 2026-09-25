@@ -516,6 +516,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(!menuBtn || !menuModal) return;
 
   menuBtn.addEventListener('click', ()=>{
+    updateMenuCacheVersion();
     menuModal.classList.add('show');
     updateMuteBtn();
     updateAutoSpeakBtn();
@@ -528,6 +529,16 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   });
 
   const closeMenu = ()=> menuModal.classList.remove('show');
+
+  function updateMenuCacheVersion(){
+    const versionEl = document.getElementById('menuCacheVersion');
+    if(!versionEl) return;
+    // APP_BUILD синхронизирован с суффиксом CACHE_NAME в tools/check.js.
+    // Поэтому из него безопасно показать именно версию кэша, не дублируя число.
+    const match = String(window.APP_BUILD || '').match(/v\d+$/);
+    versionEl.textContent = 'версии ' + (match ? match[0] : 'v?');
+  }
+  updateMenuCacheVersion();
 
   document.getElementById('menuRulesBtn').addEventListener('click', ()=>{
     closeMenu();

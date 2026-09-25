@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260925g">
+<link rel="stylesheet" href="styles/app.css?v=20260925h">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-25 · v498';
+  window.APP_BUILD = '2026-09-25 · v499';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -212,7 +212,10 @@
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon">📖</span>Правила игр</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuAboutBtn"><span class="menu-icon">💡</span>О проекте</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuStatsBtn"><span class="menu-icon">📊</span>Статистика</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑️</span>Сбросить весь прогресс</button>
+        <div class="menu-reset-item">
+          <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑️</span>Сбросить весь прогресс</button>
+          <div class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v499</div>
+        </div>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon">📤</span>Экспортировать данные</button>
         <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon">📥</span>Импортировать данные</button>
       </div>
@@ -4432,7 +4435,7 @@
       <script src="games/fants-video.js?v=20261002f"></script>
 <script src="games/fants-davay.js?v=20260925a"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20261023a"></script>
+<script src="games/fants-timer.js?v=20261023b"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
@@ -4503,7 +4506,7 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20260925i', { updateViaCache: 'none' }).then(function (reg) {
+        navigator.serviceWorker.register('./sw.js?v=20260925j', { updateViaCache: 'none' }).then(function (reg) {
           // Проверяем обновление не только при запуске: PWA может оставаться
           // открытым в фоне, пока браузер не запускает navigation/load.
           // registration.update() явно просит браузер проверить sw.js; новый

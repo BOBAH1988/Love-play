@@ -3773,6 +3773,11 @@
   }
   .menu-list .btn-secondary:hover{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.15);}
   .menu-list .btn-secondary:active{background:rgba(255,255,255,.12);}
+  .menu-reset-item{display:flex; flex-direction:column; gap:2px;}
+  .menu-cache-version{
+    padding-left:44px; color:rgba(255,255,255,.45);
+    font-size:11px; line-height:1.2; text-align:left;
+  }
   /* Иконки меню — фиксированная ширина 32px, все иконки в одном столбике */
   .menu-icon{
     font-size:15px; width:32px; min-width:32px; text-align:center; flex-shrink:0;
