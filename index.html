@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-26 · v505';
+  window.APP_BUILD = '2026-09-26 · v506';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v505</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v506</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -4540,6 +4540,9 @@
           // Worker, сборка которого сейчас запрашивается: защита от трёх
           // отложенных проверок подряд (сейчас, +0 мс, +250 мс).
           var checkingWaitingWorker = null;
+          // Флаг тихой активации: страница уже на этой версии, worker надо
+          // только активировать. Один раз за сессию.
+          var activatingSilently = false;
           var watchedInstallingWorker = null;
           var updateBtn = document.getElementById('updateToastBtn');
           var updateToast = document.getElementById('updateToast');
@@ -4578,26 +4581,56 @@
             });
           }
 
-          // waiting-воркер — дубликат активного, если это один и тот же объект
-          // либо оба отчитались одинаковым CACHE_NAME. Такой worker не является
-          // обновлением, и его незачем активировать по кнопке «Обновить».
-          // waitingBuild — уже полученная сборка waiting'а, чтобы не спрашивать
-          // его второй раз.
-          function isDuplicateOfActive(waiting, waitingBuild){
-            var active = registration && registration.active;
-            if(!waiting || !active) return Promise.resolve(false);
-            if(waiting === active) return Promise.resolve(true);
-            var waitingName = waitingBuild || null;
-            return (waitingName ? Promise.resolve(waitingName) : askWorkerCacheName(waiting))
-              .then(function(name){
-                return Promise.all([Promise.resolve(name), askWorkerCacheName(active)]);
-              })
-              .then(function(names){
-                // Ответа нет — неизвестно, дубликат это или нет. Не блокируем
-                // обновление: показываем плашку, как раньше.
-                if(!names[0] || !names[1]) return false;
-                return names[0] === names[1];
-              });
+          // Номер версии, работающей прямо сейчас на экране: из window.APP_BUILD
+          // (index.html). Нужен, чтобы понять, стоит ли вообще беспокоить игрока.
+          function pageBuild(){
+            var m = /(?:^|[\s·])v(\d+)\s*$/.exec(String(window.APP_BUILD || ''));
+            return m ? m[1] : null;
+          }
+          // Номер версии из CACHE_NAME воркера: 'veselye-igry-cache-vNNN' → 'NNN'.
+          function buildNumber(cacheName){
+            var m = /v(\d+)$/.exec(String(cacheName || ''));
+            return m ? m[1] : null;
+          }
+
+          // Показывать ли плашку — решает сравнение НЕ с активным worker'ом,
+          // а с той версией, которая уже работает на экране.
+          //
+          // Раньше waiting сравнивался только с registration.active. Это давало
+          // ложную плашку: навигация network-first, поэтому страница почти
+          // всегда уже новая (index.html приходит из сети), а worker отстаёт
+          // до нажатия кнопки. Игрок видел «Доступна новая версия», сидя уже на
+          // этой версии, а «Обновить» лишь перезагружал её же — то есть
+          // «ничего не происходит». Именно это и было жалобой.
+          //
+          // Правильный вопрос: «работает ли страница уже на этой версии?»
+          // Если да — обновлять нечего, и worker надо просто тихо активировать.
+          // Запрашивается ОДИН ответ (у waiting), а не два: решение быстрее и
+          // не зависит от старого worker'а, который может не знать про
+          // GET_CACHE_NAME и ответить «неизвестно».
+          function needsUpdatePrompt(waitingBuild){
+            var mine = pageBuild();
+            if(!mine) return Promise.resolve(true);  // свою версию не знаем — не блокируем обновление
+            var theirs = buildNumber(waitingBuild);
+            if(!theirs) return Promise.resolve(true); // ответа нет — не блокируем обновление
+            return Promise.resolve(theirs !== mine);
+          }
+
+          // worker той же версии, что уже на экране: игроку показывать нечего.
+          // Но офлайн-кэш мог остаться от прежнего worker'а, поэтому активируем
+          // его молча (SKIP_WAITING). Подмены контента не происходит — страница
+          // уже на этой версии, — так что перезагрузка не нужна и прерывать
+          // игрока незачем. clients.claim() здесь не вызовет controllerchange:
+          // страница уже под управлением worker'а той же регистрации.
+          function activateSilently(waiting){
+            if(activatingSilently || !waiting) return;
+            if(typeof waiting.postMessage !== 'function') return;
+            activatingSilently = true;
+            try{
+              waiting.postMessage({ type:'SKIP_WAITING' });
+            }catch(e){
+              activatingSilently = false;
+            }
           }
 
 
@@ -4630,9 +4663,16 @@
               notifiedWaitingWorker = waiting;
               notifiedWaitingUrl = waitingUrl || null;
               notifiedWaitingBuild = waitingBuild || null;
-              isDuplicateOfActive(waiting, waitingBuild).then(function(isDuplicate){
-                if(isDuplicate) return;
-                if(updateToast) updateToast.hidden = false;
+              needsUpdatePrompt(waitingBuild).then(function(needed){
+                if(needed){
+                  if(updateToast) updateToast.hidden = false;
+                  return;
+                }
+                // Страница уже на этой версии: плашка «Доступна новая версия»
+                // была бы враньём, а «Обновить» просто перезагрузил бы её же.
+                // Тихо активируем worker, чтобы доехать офлайн-кэш.
+                if(updateToast) updateToast.hidden = true;
+                activateSilently(waiting);
               });
             });
           }

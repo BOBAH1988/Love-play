@@ -34,7 +34,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v505';
+const CACHE_NAME = 'veselye-igry-cache-v506';
 
 // Корень приложения относительно адреса воркера: sw.js лежит в корне, поэтому
 // './' относительно его адреса — это корень и в деплое в корень домена ('/'),
@@ -124,8 +124,21 @@ self.addEventListener('install', (event) => {
     // Даже precache должен обходить HTTP-кеш: иначе install новой версии
     // может положить в кэш старый ответ с тем же URL (GitHub Pages держит
     // max-age=600). Request с no-store сохраняет транзакционность addAll.
+    //
+    // Перекачиваем ТОЛЬКО то, чего в кэше ещё нет. Раньше install каждый раз
+    // тянул весь precache заново — около 4,1 МБ и 93 файла (cards 2,5 МБ,
+    // games 1,4 МБ, styles 232 КБ), из-за чего обновление заметно замедлялось.
+    // Ссылка включает ?v= проверенной версии, поэтому совпадение URL означает
+    // и совпадение содержимого: адрес с тем же ?v= отдаёт тот же байт-код.
+    // Всё остальное (addAll по полному списку) остаётся нетронутым, чтобы
+    // install оставался транзакционным и атомарным.
     const cacheRequests = urls.map((url) => new Request(url, { cache: 'no-store' }));
-    await cache.addAll(cacheRequests);
+    const missing = [];
+    for (const req of cacheRequests) {
+      if (await cache.match(req.url)) continue; // уже в кэше — не качаем
+      missing.push(req);
+    }
+    if (missing.length) await cache.addAll(missing);
     await cache.put(PRECACHE_MANIFEST_URL, new Response(JSON.stringify(urls), {
       headers: { 'Content-Type': 'application/json; charset=utf-8' }
     }));

@@ -1146,7 +1146,9 @@ function checkStyles(html) {
   const skipWaitingByMessage = /event\.data[\s\S]{0,200}SKIP_WAITING[\s\S]{0,200}ctx\.skipWaiting\(\)/.test(messageSw);
   check('SW предкэшивает игры и стили из index.html',
     /cards\|games\|styles/.test(sw) &&
-      /cache\.addAll\(cacheRequests\)/.test(sw) &&
+      // addAll идёт по списку недостающих: полный список (urls) используется
+      // и для пропуска уже закэшированного, и для локального манифеста.
+      /if \(missing\.length\) await cache\.addAll\(missing\)/.test(sw) &&
       /new Request\(url,\s*\{\s*cache:\s*['"]no-store['"]\s*\}\)/.test(sw) &&
       !/cache\.add\(/.test(sw) &&
       skipWaitingByMessage &&
@@ -1157,6 +1159,17 @@ function checkStyles(html) {
       /if \(url\.pathname\.endsWith\('sw\.js'\)\)[\s\S]{0,180}fetch\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw) &&
       /if \(request\.mode === 'navigate'\)[\s\S]{0,500}fetch\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw),
     'нужен атомарный precache, локальный манифест и активация без сетевого fetch');
+  // Установка не должна заново качать весь precache (~4,1 МБ, 93 файла): от
+  // этого обновление заметно замедлялось. Пропускать нужно только уже
+  // закэшированное, и искать обязательно В ИМЕННО ЭТОМ кэше (CACHE_NAME), а не
+  // во всём хранилище: иначе новый worker пропустил бы файлы, которых нет
+  // именно в его кэше, и активировался бы с неполным precache.
+  const installBody = installSw;
+  check('install не перекачивает уже закэшированные файлы precache',
+    /if \(await cache\.match\(req\.url\)\) continue;/.test(installBody) &&
+      /if \(missing\.length\) await cache\.addAll\(missing\)/.test(installBody) &&
+      !/caches\.match\(/.test(installBody),
+    'install должен пропускать файлы, уже лежащие в CACHE_NAME, и не искать по всему хранилищу');
 
   const coreUpdate = read('games/core.js');
   const hardUpdateBody = coreUpdate.slice(coreUpdate.indexOf('async function hardUpdateApp'), coreUpdate.indexOf('// Служебная кнопка в скрытом блоке'));
@@ -1229,16 +1242,29 @@ function checkStyles(html) {
   check('Service Worker регистрируется без query-версии ?v=',
     !!registerCall && !/[?&]v=/.test(registerCall[1]),
     `register() идёт по адресу «${registerCall ? registerCall[1] : '?'}» — ?v= в URL заставляет браузер ставить в waiting дубликат worker'а и показывать ложную плашку обновления`);
-  check('плашка не показывается для worker’а с той же сборкой, что у активного',
-    /function askWorkerCacheName\(/.test(html) &&
-      /function isDuplicateOfActive\(/.test(html) &&
-      /GET_CACHE_NAME/.test(html) &&
-      /isDuplicateOfActive\(waiting, waitingBuild\)\.then\(function\(isDuplicate\)\{/.test(html) &&
-      /if\(isDuplicate\) return;/.test(html) &&
-      /if\(updateToast\) updateToast\.hidden = false;/.test(html) &&
+  // Плашка нужна, когда сборка waiting-воркера ОТЛИЧАЕТСЯ от сборки самой
+  // страницы (window.APP_BUILD). Раньше сравнение шло с registration.active —
+  // и это давало ложное окно: навигация network-first, поэтому страница уже
+  // свежая, а worker отстаёт. Игрок видел «Доступна новая версия», сидя на этой
+  // версии, а «Обновить» перезагружал её же — «ничего не происходит».
+  check('плашка не показывается, когда страница уже на этой версии',
+    /function needsUpdatePrompt\(waitingBuild\)\{/.test(html) &&
+      /function pageBuild\(\)\{/.test(html) &&
+      /window\.APP_BUILD/.test(html) &&
+      /function buildNumber\(cacheName\)\{/.test(html) &&
+      /needsUpdatePrompt\(waitingBuild\)\.then\(function\(needed\)\{/.test(html) &&
+      /if\(needed\)\{[\s\S]{0,200}updateToast\.hidden = false;/.test(html) &&
       /type\s*===?\s*['"]GET_CACHE_NAME['"]/.test(sw) &&
       /port\.postMessage\(\{\s*type:\s*['"]CACHE_NAME['"],\s*value:\s*CACHE_NAME\s*\}\)/.test(sw),
-    'нужна сверка CACHE_NAME у waiting- и активного worker’а перед показом плашки (GET_CACHE_NAME в sw.js)');
+    'нужно сверять сборку waiting-воркера со сборкой страницы (APP_BUILD), а не только с активным worker’ом');
+  // worker той же версии, что на экране, активируется молча: офлайн-кэш
+  // доезжает, а игрока не беспокоят и не прерывают перезагрузкой.
+  check('worker той же версии активируется без перезагрузки и без плашки',
+    /function activateSilently\(waiting\)\{/.test(html) &&
+      /var activatingSilently = false;/.test(html) &&
+      /activateSilently\(waiting\);/.test(html) &&
+      /if\(updateToast\) updateToast\.hidden = true;[\s\S]{0,120}activateSilently\(/.test(html),
+    'нужен тихий SKIP_WAITING для worker’а, совпадающего со сборкой страницы');
   // Идентичность worker'а — по сборке, а не по scriptURL. Адрес регистрации
   // теперь стабилен и общий у всех версий, поэтому сравнение по URL сочло бы
   // настоящее обновление уже показанным и потеряло бы его.

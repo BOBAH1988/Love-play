@@ -3360,14 +3360,17 @@ testAsync('PWA: дубликат worker’а с той же сборкой не 
   const windowListeners = {};
   const documentListeners = {};
 
-  // Worker, отвечающий именем своей сборки — как это делает sw.js.
+  // Worker, отвечающий именем своей сборки — как это делает sw.js. Все
+  // postMessage складываются в messages: по ним видно, что страница решила
+  // worker активировать тихо (SKIP_WAITING).
   const makeWorker = (cacheName, state) => ({
     state: state || 'installed',
     scriptURL: 'https://app.test/sw.js',
+    messages: [],
     addEventListener(type, fn) { this[type] = fn; },
     postMessage(message, ports) {
-      assert(message && message.type === 'GET_CACHE_NAME',
-        `страница должна спрашивать сборку worker’а, отправлено ${JSON.stringify(message)}`);
+      this.messages.push(message);
+      if (!message || message.type !== 'GET_CACHE_NAME') return;
       const port = ports && ports[0];
       if (!port) return;
       port.postMessage({ type: 'CACHE_NAME', value: cacheName });
@@ -3398,7 +3401,11 @@ testAsync('PWA: дубликат worker’а с той же сборкой не 
   };
   const windowStub = {
     addEventListener(type, fn) { (windowListeners[type] ||= []).push(fn); },
-    location: { hostname: 'app.test', protocol: 'https:' }
+    location: { hostname: 'app.test', protocol: 'https:' },
+    // Сборка страницы: плашка показывается, только если worker НЕ совпадает с
+    // ней. Раньше сравнение шло с активным worker'ом, и на network-first
+    // навигации это давало ложное окно (страница уже свежая, worker отстаёт).
+    APP_BUILD: '2026-09-26 · v504'
   };
   const sandbox = {
     navigator: {
@@ -3417,7 +3424,9 @@ testAsync('PWA: дубликат worker’а с той же сборкой не 
   (windowListeners.load || []).forEach(fn => fn());
   await new Promise(resolve => setImmediate(resolve));
 
-  // 1. Дубликат: тот же CACHE_NAME, что у активного worker’а. Обновления нет.
+  // 1. Worker той же сборки, что и страница (v504). Обновлять нечего —
+  //    страница уже на этой версии. Плашки быть не должно, worker должен
+  //    получить SKIP_WAITING молча, чтобы доехал офлайн-кэш.
   const duplicate = makeWorker('veselye-igry-cache-v504', 'installing');
   registration.installing = duplicate;
   registration.updatefound();
@@ -3427,7 +3436,9 @@ testAsync('PWA: дубликат worker’а с той же сборкой не 
   duplicate.statechange();
   await flushReplies();
   assert(updateToast.hidden === true,
-    'worker с той же сборкой, что у активного, — это дубликат, а не обновление: плашка не должна показываться');
+    'страница уже на этой версии: плашка «Доступна новая версия» — враньё, показывать её нельзя');
+  assert(duplicate.messages.some(m => m && m.type === 'SKIP_WAITING'),
+    'worker той же версии должен активироваться тихо (SKIP_WAITING), иначе офлайн-кэш не доедет');
 
   // 2. Настоящая новая версия: сборка отличается — плашка обязана появиться.
   const fresh = makeWorker('veselye-igry-cache-v505', 'installing');
