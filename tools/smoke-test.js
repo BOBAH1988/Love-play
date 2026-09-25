@@ -2493,12 +2493,11 @@ test('Сценарий: вход по ссылке подтягивает обл
     'ненайденный ролик из ссылки должен давать заглушку с подсказкой, а не демо');
 });
 
-// Telegram принимает видео файлом, поэтому к сообщению прикладывается сам ролик
-// (navigator.share с files), а ссылка-вход уходит подписью. Раньше уходила
-// только ссылка на страницу приложения — статическая страница видео в превью
-// ссылки отдать не может (og:video требует серверной подстановки), и в чат
-// приходил один текст. Сначала проверяем помощники, которые готовят файл:
-// имя и тип определяют, как мессенджер покажет ролик.
+// Telegram принимает видео файлом, поэтому системному меню отдаётся сам ролик
+// (navigator.share с files). Раньше уходила только ссылка на страницу приложения —
+// статическая страница видео в превью ссылки отдать не может, и в чат приходил
+// один текст. Сначала проверяем помощники, которые готовят файл: имя и тип
+// определяют, как мессенджер покажет ролик.
 test('Сценарий: имя и тип файла для отправки видео определяются верно', () => {
   if (typeof global.videoShareFileName !== 'function' ||
       typeof global.videoShareFileType !== 'function') {
@@ -2598,16 +2597,15 @@ testAsync('Сценарий: ⤴ открывает меню «Поделить�
         `файл должен уходить с родным именем ролика, получено «${file && file.name}»`);
       assert(file && file.type === 'video/webm',
         `тип файла должен быть video/webm, получено «${file && file.type}»`);
-      // Ссылка-вход остаётся подписью: по ней получатель откроет ту же игру на
-      // том же ролике, если он есть в его каталоге.
-      assert(String(shared.text || '').indexOf('mode=video') > -1,
-        `в подписи должна остаться ссылка-вход, получено: ${shared.text}`);
+      // В одной нагрузке Android оставляет системное меню открытым даже после
+      // передачи файла. Поэтому файловая ветка содержит только files, а ссылка
+      // используется отдельно лишь когда прикрепить файл не удалось.
       assert(shared.url === undefined,
         'url вместе с files запрещён спецификацией — меню упало бы с TypeError');
       assert(shared.title === undefined,
-        'в файловом payload поле title не должно передаваться: Telegram на Android зависает на смешанном file+text+title');
-      assert(String(shared.text || '').indexOf('🎲 Давай играй\nПопробуем? 😉\n') === 0,
-        `текст подписи должен начинаться с «🎲 Давай играй / Попробуем? 😉», получено: ${shared.text}`);
+        'title вместе с files оставляет нативное меню открытым на части Android-оболочек');
+      assert(shared.text === undefined,
+        'text вместе с files оставляет нативное меню открытым даже после отправки ролика');
     }
     assert(fetched === card.video,
       `ролик должен читаться по ссылке карточки, запрос ушёл на: ${fetched}`);
@@ -2667,9 +2665,9 @@ testAsync('Сценарий: первое нажатие ⤴ не запуска
     assert(firstPayload && firstPayload.files && firstPayload.files.length === 1,
       'первый вызов должен нести сам ролик');
     assert(firstPayload && firstPayload.title === undefined,
-      'у файлового payload не должно быть title — Telegram зависает на file+text+title');
-    assert(String((firstPayload && firstPayload.text) || '').indexOf('🎲 Давай играй\nПопробуем? 😉') === 0,
-      'текст первого вызова должен начинаться с «🎲 Давай играй / Попробуем? 😉»');
+      'у файлового payload не должно быть title — системное меню может остаться открытым');
+    assert(firstPayload && firstPayload.text === undefined,
+      'у файлового payload не должно быть text — файл отправляется отдельной нагрузкой');
 
     if (resolveShare) resolveShare();
     await new Promise((r) => setTimeout(r, 30));
@@ -2681,6 +2679,73 @@ testAsync('Сценарий: первое нажатие ⤴ не запуска
     if (saved.canShare === undefined) delete nav.canShare; else nav.canShare = saved.canShare;
     global.fetch = saved.fetch;
     eval('currentVideoCard = null;');
+  }
+});
+
+// Видеокарточка должна начинать загрузку сразу, не после общего 220-мс fade.
+// Создаём элемент #card с .card-inner: обычный вызов отложил бы paint на таймере,
+// а immediate вызывает его синхронно.
+test('Сценарий: видеокарточка рисуется сразу, без ожидания 220 мс', () => {
+  const card = getElById(stub, 'card');
+  const inner = document.createElement('div');
+  inner.className = 'card-inner';
+  const oldQuery = card.querySelector;
+  let paints = 0;
+  card.querySelector = (selector) => selector === '.card-inner' ? inner : oldQuery.call(card, selector);
+  try {
+    global.fadeSwapCard(() => { paints++; }, true);
+    assert(paints === 1,
+      'режим immediate должен создать <video> и начать загрузку в текущем кадре, не через setTimeout(220)');
+  } finally {
+    card.querySelector = oldQuery;
+  }
+});
+
+
+
+// Оверлей исчезает, как только доступен первый кадр. На iOS autoplay может
+// быть отклонён, поэтому событие playing иногда не наступает вовсе. Одновременно
+// проверяем, что новый <video> с src в разметке не вызывает повторный load().
+test('Сценарий: оверлей загрузки видео скрывается по canplay', () => {
+  const saved = {
+    showVideo: global.showVideoCardLoading,
+    hideVideo: global.hideVideoCardLoading,
+    showDavay: global.showDavayCardLoading,
+    hideDavay: global.hideDavayCardLoading,
+  };
+  try {
+    ['video', 'davay'].forEach((mode) => {
+      const loading = { style: { display: '' } };
+      const handlers = new Map();
+      let loads = 0;
+      const video = {
+        muted: false,
+        loop: false,
+        error: null,
+        addEventListener(type, handler) { handlers.set(type, handler); },
+        play() { return Promise.resolve(); },
+        pause() {},
+        load() { loads++; },
+      };
+      if (mode === 'video') {
+        global.showVideoCardLoading = () => { loading.style.display = ''; };
+        global.hideVideoCardLoading = () => { loading.style.display = 'none'; };
+        global.setupVideoPlayerElement(video, { source: 'local' }, 1, false);
+      } else {
+        global.showDavayCardLoading = () => { loading.style.display = ''; };
+        global.hideDavayCardLoading = () => { loading.style.display = 'none'; };
+        global.setupDavayPlayerElement(video, { source: 'local' }, 1, false);
+      }
+      assert(loads === 0, `новый ${mode}-плеер не должен повторно вызывать load() для src из разметки`);
+      handlers.get('canplay')();
+      assert(loading.style.display === 'none',
+        `«${mode}Loading» должен скрываться по canplay, даже если playing не наступит`);
+    });
+  } finally {
+    global.showVideoCardLoading = saved.showVideo;
+    global.hideVideoCardLoading = saved.hideVideo;
+    global.showDavayCardLoading = saved.showDavay;
+    global.hideDavayCardLoading = saved.hideDavay;
   }
 });
 

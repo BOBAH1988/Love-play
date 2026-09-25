@@ -3023,7 +3023,7 @@ function stopCardVideos(){
     }catch(err){}
   });
 }
-function fadeSwapCard(paintFn){
+function fadeSwapCard(paintFn, immediate){
   const el = document.getElementById('card');
   const inner = el.querySelector('.card-inner');
   const doPaint = ()=>{
@@ -3041,7 +3041,10 @@ function fadeSwapCard(paintFn){
     }
     cardTransitionLocked = false;
   };
-  if(inner){
+  // Видео просит immediate: не ждём 220 мс до paint, иначе новый <video>
+  // не успевает начать загрузку одновременно со сменой карточки. Обычные
+  // текстовые карточки сохраняют прежний плавный переход.
+  if(inner && !immediate){
     cardTransitionLocked = true;
     inner.classList.add('card-hidden');
     setTimeout(doPaint, 220);

@@ -1503,19 +1503,36 @@ function checkStyles(html) {
     /await Promise\.all\(cachedPromises\.map/.test(davaySrc)
       && /await Promise\.all\(missing\.map/.test(davaySrc),
     'чтение папок снова последовательное — синхронизация медленная');
-  // Оверлей «Загрузка видео…» на карточке плеера обеих видео-игр прячется на playing.
+  // Оверлей «Загрузка видео…» на карточке плеера обеих видео-игр.
+  // Новые проверки ниже также фиксируют, что он скрывается по canplay.
+  const coreSrc = read('games/core.js');
   const ideasSrc = read('games/ideas.js');
   const videoSrc2 = read('games/fants-video.js');
   const davaySrc2 = read('games/fants-davay.js');
   check('«Видеорулетка» показывает оверлей загрузки видео',
-    videoSrc2.includes('id="videoLoading"') && videoSrc2.includes('hideVideoCardLoading()'),
-    'на карточке «Видеорулетки» нет оверлея «Загрузка видео…»');
+    videoSrc2.includes('id="videoLoading"')
+      && videoSrc2.includes("video.addEventListener('canplay', hideVideoCardLoading")
+      && videoSrc2.includes('hideVideoCardLoading()'),
+    'на карточке «Видеорулетки» нет оверлея «Загрузка видео…», скрываемого по canplay');
   check('«Давай попробуем» показывает оверлей загрузки видео',
-    davaySrc2.includes('id="davayLoading"') && davaySrc2.includes('hideDavayCardLoading()'),
-    'на карточке «Давай попробуем» нет оверлея «Загрузка видео…»');
+    davaySrc2.includes('id="davayLoading"')
+      && davaySrc2.includes("video.addEventListener('canplay', hideDavayCardLoading")
+      && davaySrc2.includes('hideDavayCardLoading()'),
+    'на карточке «Давай попробуем» нет оверлея «Загрузка видео…», скрываемого по canplay');
+  check('видеокарточка рисуется сразу, без ожидания анимации 220 мс',
+    /function fadeSwapCard\(paintFn, immediate\)/.test(coreSrc)
+      && /if\(inner && !immediate\)/.test(coreSrc)
+      && /function renderVideoCard[\s\S]*?fadeSwapCard\([\s\S]*?},\s*true\);/.test(videoSrc2)
+      && /function renderDavayCard[\s\S]*?fadeSwapCard\([\s\S]*?},\s*true\);/.test(davaySrc2)
+      && videoSrc2.includes('<video src="${card.video}" id="videoPlayer" playsinline autoplay preload="auto"')
+      && davaySrc2.includes('<video src="${card.url || card.video}" id="davayPlayer" playsinline autoplay preload="auto"'),
+    'новый <video> снова ждёт 220 мс внутри fadeSwapCard или потерял preload/fetchpriority');
+  check('новый <video> не загружается повторно через load()',
+    /function setupVideoPlayerElement[\s\S]*?if\(reuse\)\{[\s\S]*?video\.src = card\.video;[\s\S]*?video\.load\(\);/.test(videoSrc2)
+      && /function setupDavayPlayerElement[\s\S]*?if\(reuse\)\{[\s\S]*?video\.src = card\.url \|\| card\.video;[\s\S]*?video\.load\(\);/.test(davaySrc2),
+    'load() снова вызывается для нового элемента с src в разметке — браузер может начать загрузку дважды');
   // Тост синхронизации не гаснет, пока работа идёт: showToast поддерживает
   // duration === 0 (держится до следующего showToast), а обработчик им пользуется.
-  const coreSrc = read('games/core.js');
   check('showToast умеет не гаснуть (duration === 0)',
     /if\(duration === 0\) return;/.test(coreSrc),
     'showToast не поддерживает постоянный тост — «Синхронизируем…» снова исчезает');
@@ -1645,27 +1662,26 @@ function checkStyles(html) {
   check('кнопка ⤴ прикладывает к сообщению сам ролик (share с files)',
     videoSrc2.includes('async function videoShareFile(card)')
       && videoSrc2.includes('navigator.canShare({ files:[new File(')
-      && /const withText = \{ files:\[file\], text: shareText \}/.test(videoSrc2)
-      && /const fileOnly = \{ files:\[file\] \}/.test(videoSrc2)
+      && /const payload = \{ files:\[file\] \}/.test(videoSrc2)
       && /await navigator\.share\(payload\)/.test(videoSrc2)
       && !/shareWithTimeout\(payload\)/.test(videoSrc2)
       && videoSrc2.includes('let videoShareInProgress = false;')
       && /if\(videoShareInProgress\) return;/.test(videoSrc2),
     'шеринг снова отправляет только ссылку или запускает второй системный вызов');
-  // Свежий Android/Telegram нестабильно обрабатывает file+text+title: окно
-  // застревает на «Загрузка 100%». Название уже есть в text, поэтому title
-  // в файловом payload не передаём.
-  check('файловый payload не передаёт title',
-    !/const withText = \{ files:\[file\], text: shareText, title:/.test(videoSrc2)
-      && !/const fileOnly = \{ files:\[file\], title:/.test(videoSrc2),
-    'title вместе с файлом снова уходит в Web Share — Telegram может зависнуть на загрузке');
+  // Смешанный payload files+text (и тем более files+text+title) на части
+  // Android-оболочек отправляет файл, но оставляет системное меню открытым.
+  // Поэтому файловая ветка содержит ровно одно поле files; ссылка используется
+  // только когда файл прикрепить нельзя.
+  check('файловый payload содержит только files, без text/title/url',
+    /const payload = \{ files:\[file\] \};\s*if\(canShareData\(payload\)\)/.test(videoSrc2)
+      && !/const payload = \{ files:\[file\][^}]*\b(?:text|title|url):/.test(videoSrc2),
+    'файл снова смешан с текстом/title/url — системное меню может не закрыться после отправки');
   // Файл и url в одной нагрузке — TypeError по спецификации Web Share, меню
-  // просто не откроется. Поэтому ссылка-вход уходит в text, а url остаётся
-  // только у фолбэка без файлов.
+  // просто не откроется. Ссылка используется только в отдельной ветке без files.
   check('файл не отправляется вместе с url',
-    /files:\[file\][^}]*\}/.test(videoSrc2)
-      && !/files:\[file\][^}]*url:/.test(videoSrc2)
-      && /(?:navigator\.share|shareWithTimeout)\(\{\s*title: '🎲 Давай играй',\s*\n\s*text: [^,\n]+,\s*\n\s*url: shareUrl/.test(videoSrc2),
+    /const payload = \{ files:\[file\] \}/.test(videoSrc2)
+      && !/const payload = \{ files:\[file\][^}]*url:/.test(videoSrc2)
+      && /shareWithTimeout\(\{\s*title: '🎲 Давай играй',\s*\n\s*text: shareMessage,\s*\n\s*url: shareUrl/.test(videoSrc2),
     'files и url в одной нагрузке — системное меню «Поделиться» упадёт с TypeError');
   check('слишком большой ролик не читается в память',
     /VIDEO_SHARE_MAX_BYTES = \d+ \* 1024 \* 1024/.test(videoSrc2)

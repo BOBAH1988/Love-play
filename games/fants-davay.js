@@ -1097,7 +1097,7 @@ function setupDavayPlayerElement(video, card, level, reuse){
   if(card) card.hrefRefreshed = false;
   video.muted = !davaySoundOn;
   video.loop = !state.davayAutoAdvance;
-    if(reuse){
+  if(reuse){
     video.src = card.url || card.video;
     video.load();
   }
@@ -1152,8 +1152,11 @@ function setupDavayPlayerElement(video, card, level, reuse){
     if(media2) media2.innerHTML = '<div class="card-icon">🎬</div>';
     if(card.source === 'yandex') davayVideoDiagnostics(video, card, 'Давай попробуем');
   }, {once:true});
-  // Видео пошло — закрываем окно диагностики от прошлой ошибки, чтобы оно
-  // не перекрывало рабочий ролик. Оверлей «Загрузка видео…» тоже прячем.
+  // Первый кадр уже готов — не держим «Загрузка видео…» поверх него до
+  // playing: на iOS autoplay иногда отклоняется, хотя canplay уже пришёл.
+  video.addEventListener('canplay', hideDavayCardLoading, {once:true});
+  // Видео пошло — окно диагностики от прошлой ошибки не должно перекрывать
+  // рабочий ролик. Оверлей «Загрузка видео…» уже скрыт на canplay.
   video.addEventListener('playing', ()=>{
     if(typeof hideAppError === 'function') hideAppError();
     hideDavayCardLoading();
@@ -1177,6 +1180,8 @@ function renderDavayCard(card, level){
     updateFavoriteBtn();
     return;
   }
+  // Создаём новый <video> сразу: общий fade-экран ждёт 220 мс и на видео
+  // превращается в заметную задержку перед началом загрузки.
   fadeSwapCard((el)=>{
     // card-empty не ставим — его .card-inner{align-items:center} сжимал бы
     // контейнер плеера по ширине и видео получило бы нулевой размер.
@@ -1185,7 +1190,7 @@ function renderDavayCard(card, level){
     el.innerHTML = `
       <div class="card-inner">
         <div class="card-split-media" id="davayMedia">
-                     <video src="${card.url || card.video}" id="davayPlayer" playsinline autoplay referrerpolicy="no-referrer"></video>
+          <video src="${card.url || card.video}" id="davayPlayer" playsinline autoplay preload="auto" referrerpolicy="no-referrer" fetchpriority="high"></video>
           <div class="video-loading" id="davayLoading"><span class="video-loading-icon">🎬</span><span class="video-loading-text">Загрузка видео…</span></div>
         </div>
       </div>
@@ -1194,7 +1199,7 @@ function renderDavayCard(card, level){
     if(video) setupDavayPlayerElement(video, card, level, false);
     updateDavayMuteBtn();
     updateDavayFavoritesBtn();
-  });
+  }, true);
   updateFavoriteBtn();
 }
 

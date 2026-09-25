@@ -443,9 +443,10 @@ async function shortenShareUrl(url){
 
 // Кнопка ⤴ «Поделиться видео» — стандартное системное меню «Поделиться»
 // (Web Share API, как в Telegram), на десктопе — фолбэк: копирование ссылки
-// в буфер обмена. К сообщению прикладывается САМ ролик (navigator.share с
-// files), а ссылка-вход на игру уходит подписью: получатель видит видео прямо
-// в чате и может открыть игру на том же ролике.
+// в буфер обмена. Если платформа умеет отправлять файлы, передаём САМ ролик
+// отдельной нагрузкой { files:[file] } без text/title/url: смешанные payload
+// на части Android-оболочек отправляли файл, но оставляли меню открытым.
+// Ссылка-вход на игру используется только когда файл приложить нельзя.
 // Раньше отправлялась только ссылка-вход (?mode=video&e=…&level=…), и в
 // мессенджер приходил один текст: страница приложения — статический сайт, в
 // превью ссылки видео отдать нечем (og:video требует серверной подстановки).
@@ -463,27 +464,22 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
     // по ней у получателя откроется «Видеорулетка» — с этого же ролика, если
     // видео есть в его каталоге, иначе с этого же уровня.
     const appUrl = videoEntryPointUrl(currentVideoCard, videoLevel);
-    const shareUrl = await shortenShareUrl(appUrl);
     const shareMessage = '🎲 Давай играй\nПопробуем? 😉';
-    const shareText = shareMessage + '\n' + shareUrl;
+    const shareText = shareMessage + '\n' + appUrl;
     // 1) Прикладываем сам ролик. Ссылки на видео Яндекса отдают CORS-разрешение,
     //    поэтому файл читается прямо в браузере.
     if(shareSupportsFiles()){
       showToast('Готовим видео…');
       const file = await videoShareFile(currentVideoCard);
       if(file){
-        // Ссылку кладём в text, а не в url: спецификация Web Share запрещает
-        // files вместе с url (иначе TypeError), а files + text — разрешает.
-        // title здесь намеренно не передаём: Telegram на Android иногда
-        // застревает на загрузке смешанного payload file+text+title. Нужное
-        // название уже находится первыми строками text.
-        const withText = { files:[file], text: shareText };
-        const fileOnly = { files:[file] };
-        const payload = canShareData(withText) ? withText : (canShareData(fileOnly) ? fileOnly : null);
-        if(payload){
+        // Не смешиваем файл с текстом: payload files+text на части
+        // Android-оболочек оставляет нативное меню открытым даже после
+        // передачи файла. Ссылка-вход остаётся резервной веткой ниже.
+        const payload = { files:[file] };
+        if(canShareData(payload)){
           try{
-            // Один клик — один системный вызов. Promise.race здесь больше не
-            // нужен: его таймер не отменяет уже открытый picker, а следующий
+            // Один клик — один системный вызов. Promise.race здесь не нужен:
+            // его таймер не закрывает уже открытый picker, а следующий
             // вызов конфликтует с ним и оставляет Telegram на «Загрузка 100%».
             await navigator.share(payload);
             showToast('Спасибо, что делитесь! 💛');
@@ -509,6 +505,7 @@ document.getElementById('videoShareBtn').addEventListener('click', async ()=>{
         }
       }
     }
+    const shareUrl = await shortenShareUrl(appUrl);
     // 2) Файл приложить нельзя (нет поддержки, ролик не прочитался, слишком
     //    большой) — делимся ссылкой-входом: получатель откроет «Видеорулетку»
     //    на том же ролике.
@@ -950,9 +947,12 @@ function setupVideoPlayerElement(video, card, level, reuse){
       davayVideoDiagnostics(video, card, 'Видеорулетка');
     }
   }, {once:true});
+  // Первый кадр уже готов — не держим «Загрузка видео…» поверх него до
+  // playing: на iOS autoplay иногда отклоняется, хотя canplay уже пришёл.
+  video.addEventListener('canplay', hideVideoCardLoading, {once:true});
   // Видео пошло — окно диагностики (если было открыто после прошлой ошибки)
   // закрываем сами: игрок уже видит рабочий ролик, отчёт ему больше не нужен
-  // и только перекрывал бы картинку. Оверлей «Загрузка видео…» тоже прячем.
+  // и только перекрывал бы картинку. Оверлей «Загрузка видео…» уже скрыт на canplay.
   video.addEventListener('playing', ()=>{
     if(typeof hideAppError === 'function') hideAppError();
     hideVideoCardLoading();
@@ -989,6 +989,8 @@ function renderVideoCard(card, level){
     updateFavoriteBtn();
     return;
   }
+  // Создаём новый <video> сразу: общий fade-экран ждёт 220 мс и на видео
+  // превращается в заметную задержку перед началом загрузки.
   fadeSwapCard((el)=>{
     // Класс card-empty здесь НЕ ставим: он для пустых карточек-заглушек, а
     // его правило .card-inner{align-items:center} сжимало контейнер плеера
@@ -1010,7 +1012,7 @@ function renderVideoCard(card, level){
     updateVideoLoopBtn();
     updateVideoRandomBtn();
     updateVideoFavoritesBtn();
-  });
+  }, true);
   updateFavoriteBtn();
 }
 
