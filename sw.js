@@ -9,6 +9,8 @@
  *    (cards/*.js, games/*.js, styles/*.css с их версионным ?v=…), плюс ядро
  *    (index.html, манифест, иконки). Список собирается автоматически из
  *    index.html, поэтому при добавлении новой игры файл sw.js править не нужно.
+ *    Установка транзакционная: ошибка любого обязательного файла оставляет
+ *    старый воркер активным, а не создаёт частично рабочий новый кэш.
  *    Огромные папки фото (photos_poses/photos_shop) намеренно НЕ качаем
  *    заранее — они подтягиваются по мере использования (см. fetch-обработчик).
  *    Раньше games/* и styles/* не предкэшировались: после обновления воркера
@@ -24,13 +26,12 @@
  *        (мгновенно), параллельно тянем сетевую версию и обновляем кэш.
  *  - Активация: удаляем только кэши СТАРЫХ версий (текущий CACHE_NAME не
  *    трогаем) и вычищаем устаревшие записи games/cards/styles старых ?v=…
- *    версий (смена версии в index.html добавляет в тот же кэш новые URL
- *    вместо перезаписи — без очистки кэш пух бы бесконечно).
+ *    версий по локальному манифесту precache, без сетевого fetch.
  *
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v488';
+const CACHE_NAME = 'veselye-igry-cache-v489';
 
 // Корень приложения относительно адреса воркера: sw.js лежит в корне, поэтому
 // './' относительно его адреса — это корень и в деплое в корень домена ('/'),
@@ -62,36 +63,43 @@ const PRECACHE_URLS = [
   './icon-512.png',
   ...FLAG_CODES.map(code => `./flags-svg/flag-${code}.svg`)
 ];
+const PRECACHE_MANIFEST_URL = new URL('./__precache-manifest.json', self.location.href).href;
+const INDEX_URL = new URL('./index.html', self.location.href).href;
+
 
 // Собирает полный список предкэшируемых ресурсов: базовый набор + все
 // cards/*.js, games/*.js и styles/*.css, на которые ссылается текущий
-// index.html (с их версией ?v=…). Без полного предкэша запуск без интернета
-// после обновления воркера оставлял приложение без скриптов — белый экран.
+// index.html (с их версией ?v=…). Если index.html недоступен или неполон,
+// precache не считается успешным: новый воркер не должен вытеснить старый.
 async function collectAssetUrls() {
   const urls = new Set(PRECACHE_URLS);
-  try {
-    const res = await fetch('./index.html');
-    const html = await res.text();
-    // Берём любой src/href и оставляем только наши файлы (games/*, cards/*,
-    // styles/*). Иконки уже лежат в PRECACHE_URLS, отдельно тянуть их из
-    // разметки не нужно.
-    // Обычный RegExp.exec в цикле вместо String.matchAll — сборка/линтер без
-    // es2020 не ругается, а поведение одинаковое.
-const re = /(?:src|href)="([^"]+)"/g;
-     let m;
-     while ((m = re.exec(html)) !== null) {
-       const raw = m[1];
-       try {
-         const u = new URL(raw, self.location.href);
-         if (u.origin !== self.location.origin) continue;
-         const rel = u.pathname.slice(ROOT.length);
-         if (/^(?:cards|games|styles)\//.test(rel)) {
-           urls.add('./' + rel + u.search);
-         }
-       } catch (e) { /* пропускаем некорректные/внешние ссылки */ }
-     }
-  } catch (e) { /* ок — используем базовый набор */ }
-  return urls;
+  const res = await fetch(INDEX_URL, { cache: 'no-store' });
+  if (!res || !res.ok) throw new Error('index.html unavailable');
+  const html = await res.text();
+  let hasCore = false;
+  let hasInit = false;
+  // Берём любой src/href и оставляем только наши файлы (games/*, cards/*,
+  // styles/*). Иконки уже лежат в PRECACHE_URLS, отдельно тянуть их из
+  // разметки не нужно.
+  // Обычный RegExp.exec в цикле вместо String.matchAll — сборка/линтер без
+  // es2020 не ругается, а поведение одинаковое.
+  const re = /(?:src|href)="([^"]+)"/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const raw = m[1];
+    try {
+      const u = new URL(raw, self.location.href);
+      if (u.origin !== self.location.origin) continue;
+      const rel = u.pathname.slice(ROOT.length);
+      if (/^(?:cards|games|styles)\//.test(rel)) {
+        if (rel === 'games/core.js') hasCore = true;
+        if (rel === 'games/init.js') hasInit = true;
+        urls.add('./' + rel + u.search);
+      }
+    } catch (e) { /* пропускаем некорректные/внешние ссылки */ }
+  }
+  if (!hasCore || !hasInit) throw new Error('index.html has no complete app scripts');
+  return [...new Set([...urls].map((u) => new URL(u, self.location.href).href))];
 }
 
 // Нормализует URL к виду "путь относительно корня приложения + search" для
@@ -105,41 +113,61 @@ self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const urls = await collectAssetUrls();
     const cache = await caches.open(CACHE_NAME);
-    // Каждый элемент кэшируем независимо: если какой-то файл не
-    // загрузится, установка не провалится целиком (cache.addAll обрушил бы
-    // весь install при одной ошибке).
-    await Promise.all(
-      [...urls].map((u) => cache.add(u).catch(() => {}))
-    );
-    await ctx.skipWaiting();
-  })().catch(() => ctx.skipWaiting()));
+    // addAll атомарен для установки: если хоть один обязательный файл не
+    // скачался, install отклоняется и старый воркер/кэш остаются в силе.
+    // Раньше ошибки отдельных precache-запросов подавлялись, поэтому новый
+    // воркер мог активироваться с неполным кэшем — приложение открывалось без
+    // игровых скриптов.
+    await cache.addAll(urls);
+    await cache.put(PRECACHE_MANIFEST_URL, new Response(JSON.stringify(urls), {
+      headers: { 'Content-Type': 'application/json; charset=utf-8' }
+    }));
+    // Не вызываем skipWaiting: новая версия ждёт нажатия кнопки «Обновить».
+    // Иначе новый кэш может вытеснить старый прямо посреди открытой сессии.
+  })());
 });
 
 self.addEventListener('activate', (event) => {
-   event.waitUntil((async () => {
-     // Удаляем кэши СТАРЫХ версий. Текущий CACHE_NAME не трогаем: раньше
-     // здесь удалялись ВСЕ кэши без исключений — после обновления воркера
-     // прогретый офлайн-кэш исчезал, и при запуске без интернета приложение
-     // показывало белый экран (скрипты игр не находились в кэше).
-     const cacheNames = await caches.keys();
-     for (const name of cacheNames) {
-       if (name !== CACHE_NAME) await caches.delete(name);
-     }
-     // Очищаем устаревшие записи games/*, cards/*, styles/*
-     const expected = await collectAssetUrls();
-     const expectedNorms = new Set([...expected].map(normUrl));
-     const cache = await caches.open(CACHE_NAME);
-     const reqs = await cache.keys();
-     await Promise.all(reqs.map((req) => {
-       const rel = normUrl(req.url);
-       if (/^(?:games|cards|styles)\//.test(rel) && !expectedNorms.has(rel)) {
-         return cache.delete(req);
-       }
-       return null;
-     }));
-     await ctx.clients.claim();
-   })().catch(() => {}));
- });
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    // Список актуальных ресурсов берём только из локального манифеста,
+    // созданного успешным install. Сетевой fetch здесь недопустим: при
+    // офлайне он раньше возвращал урезанный список и удалял скрипты.
+    let expected = null;
+    try {
+      const manifestResponse = await cache.match(PRECACHE_MANIFEST_URL);
+      if (manifestResponse) {
+        const parsed = await manifestResponse.json();
+        if (Array.isArray(parsed) && parsed.length > 0) expected = parsed;
+      }
+    } catch (e) { /* неполный cache — старые кэши не трогаем */ }
+
+    if (!expected) return;
+    // Удаляем старые кэши лишь после проверки, что текущий precache полон.
+    const complete = (await Promise.all(expected.map(async (u) => {
+      try { return !!(await cache.match(new URL(u, self.location.href).href)); }
+      catch (e) { return false; }
+    }))).every(Boolean);
+    if (!complete) return;
+
+    const cacheNames = await caches.keys();
+    for (const name of cacheNames) {
+      if (name !== CACHE_NAME) await caches.delete(name);
+    }
+    // В текущем кэше удаляем только старые ?v= записи локальных
+    // скриптов/стилей, перечисленные не в локальном манифесте.
+    const expectedNorms = new Set(expected.map(normUrl));
+    const reqs = await cache.keys();
+    await Promise.all(reqs.map((req) => {
+      const rel = normUrl(req.url);
+      if (/^(?:games|cards|styles)\//.test(rel) && !expectedNorms.has(rel)) {
+        return cache.delete(req);
+      }
+      return null;
+    }));
+    await ctx.clients.claim();
+  })().catch(() => {}));
+});
 
 // Офлайн-заглушка: отдаётся, когда и сети нет, и в кэше нет нужного файла.
 // Без неё iOS в standalone-режиме показывает пустой белый экран, и игрок
@@ -184,7 +212,7 @@ self.addEventListener('fetch', (event) => {
           })
           .catch(() =>
             caches.match(request)
-              .then((cached) => cached || caches.match('./index.html'))
+              .then((cached) => cached || caches.match(INDEX_URL))
               .then((cached) => cached || offlineResponse())
           )
       );

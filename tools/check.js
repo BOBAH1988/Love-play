@@ -992,16 +992,23 @@ function checkStyles(html) {
   check('SW грузит колоды карточек network-first',
     /startsWith\(ROOT \+ 'cards\/'\)/.test(sw),
     "в sw.js нет ветки для ROOT + 'cards/'");
-  // Белый экран офлайн: активация воркера раньше удаляла ВСЕ кэши — после
-  // обновления у игрока вычищался прогретый офлайн-кэш, и без интернета
-  // приложение стартовало пустым. Плюс respondWith(undefined) при отсутствии
-  // файла в кэше ронял загрузку скрипта. Оба регресса зафиксированы здесь.
+  // Белый экран офлайн: activate раньше удаляла все кэши, а install проглатывал
+  // ошибки precache и всё равно активировал новый воркер. Повторный сетевой
+  // fetch в activate особенно опасен: офлайн возвращал урезанный список и удалял
+  // games/cards/styles. Оба класса регрессий закреплены здесь.
+  const activateSw = sw.slice(sw.indexOf("self.addEventListener('activate'"), sw.indexOf('// Офлайн-заглушка'));
   check('SW не удаляет текущий кэш при активации',
     /if \(name !== CACHE_NAME\) await caches\.delete\(name\)/.test(sw),
     'в activate нет защиты текущего CACHE_NAME');
-  check('SW предкэширует игры и стили из index.html',
-    /cards\|games\|styles/.test(sw),
-    'collectAssetUrls не собирает games/* и styles/*');
+  check('SW предкэшивает игры и стили из index.html',
+    /cards\|games\|styles/.test(sw) &&
+      /cache\.addAll\(urls\)/.test(sw) &&
+      !/cache\.add\(/.test(sw) &&
+      !/ctx\.skipWaiting\(\)/.test(sw) &&
+      /cache\.put\(PRECACHE_MANIFEST_URL/.test(sw) &&
+      /cache\.match\(PRECACHE_MANIFEST_URL/.test(sw) &&
+      !/fetch\s*\(/.test(activateSw),
+    'нужен атомарный precache, локальный манифест и активация без сетевого fetch');
   check('офлайн-заглушка вместо пустого ответа',
     /function offlineResponse\(\)/.test(sw) && /cached \|\| offlineResponse\(\)/.test(sw),
     'в sw.js нет fallback-заглушки offlineResponse');
