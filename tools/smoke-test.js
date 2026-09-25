@@ -344,6 +344,17 @@ test('«Игры для компании»: карточки использую�
   assert(!/#4a90c2|#2c5a7a/.test(css), 'старый тёмно-синий градиент не должен оставаться в стилях');
 });
 
+test('«Игры для одного»: карточка «Викторины» использует ярко-синий градиент', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
+  const card = /#soloQuizCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2f80ed,\s*#1557c0\s+55%,\s*#08275f\)/.test(css);
+  const text = /#soloQuizCard\s*\{[^}]*color:\s*#fff;/.test(css) &&
+    /#soloQuizCard\s+\.znayu-question-text\s*\{[^}]*color:\s*#fff;/.test(css);
+  assert(card, 'карточка одиночной «Викторины» должна иметь ярко-синий градиент');
+  assert(text, 'текст одиночной «Викторины» должен быть белым на синей карточке');
+  assert(!/pwa-standalone[^{}]*#soloQuizCard|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#soloQuizCard/.test(css),
+    'PWA не должна отдельно перекрашивать карточку одиночной «Викторины»');
+});
+
 test('«Игры с детьми»: карточки и витрина используют тёмно-бирюзовый фон', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
   const group = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(css);

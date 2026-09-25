@@ -1043,6 +1043,18 @@ function checkStyles(html) {
         ? 'ожидается градиент #5b4bd6 → #34278f → #171547 у всех карточек группы'
         : 'старый синий градиент #4a90c2/#2c5a7a ещё используется');
 
+    const soloQuizUsesBrightBlue = /#soloQuizCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2f80ed,\s*#1557c0\s+55%,\s*#08275f\)/.test(cssWithoutComments);
+    const soloQuizHasWhiteText = /#soloQuizCard\s*\{[^}]*color:\s*#fff;/.test(cssWithoutComments) &&
+      /#soloQuizCard\s+\.znayu-question-text\s*\{[^}]*color:\s*#fff;/.test(cssWithoutComments);
+    const soloPwaCardStyle = /pwa-standalone[^{}]*#soloQuizCard|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#soloQuizCard/.test(cssWithoutComments);
+    check('фон карточки «Викторины» для одного — ярко-синий градиент',
+      soloQuizUsesBrightBlue && soloQuizHasWhiteText && !soloPwaCardStyle,
+      !soloQuizUsesBrightBlue
+        ? 'ожидается градиент #2f80ed → #1557c0 → #08275f для #soloQuizCard'
+        : !soloQuizHasWhiteText
+          ? 'вопрос и текст карточки должны быть белыми на синем фоне'
+          : 'в standalone не должно быть отдельного переопределения #soloQuizCard');
+
     // Детская «Викторина» и витрина «Магазина» используют единый
     // тёмно-бирюзовый фон группы, одинаковый в браузере и PWA. Standalone
     // не должен перекрашивать карточки детей отдельными правилами.
