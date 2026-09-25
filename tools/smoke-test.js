@@ -27,6 +27,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 const { loadAppScripts, getElById } = require('./dom-stub');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -2983,6 +2984,116 @@ test('Сценарий: после тоста название игры снов
   }
 });
 
+
+testAsync('PWA: обновление обнаруживается в активной сессии и после возврата из фона', async () => {
+  const start = html.indexOf('navigator.serviceWorker.register');
+  const scriptStart = html.lastIndexOf('<script>', start);
+  const scriptEnd = html.indexOf('</script>', start);
+  assert(start >= 0 && scriptStart >= 0 && scriptEnd > start,
+    'не найден блок регистрации Service Worker');
+
+  let now = 100000;
+  let updateCalls = 0;
+  let updatePromise = Promise.resolve();
+  let resolvePendingUpdate = null;
+  let pollCallback = null;
+  let pollDelay = 0;
+  const windowListeners = {};
+  const documentListeners = {};
+  const updateToast = { hidden: true };
+  const updateBtn = { hidden: false, addEventListener(type, fn) { this[type] = fn; } };
+  const closeUpdateBtn = { hidden: false, addEventListener(type, fn) { this[type] = fn; } };
+  const elements = {
+    updateToast,
+    updateToastBtn: updateBtn,
+    updateToastCloseBtn: closeUpdateBtn,
+    updateSplash: { hidden: true },
+    updateSplashProgress: { textContent: '' }
+  };
+  const registration = {
+    active: {},
+    waiting: null,
+    installing: null,
+    update() { updateCalls++; return updatePromise; },
+    addEventListener(type, fn) { this[type] = fn; }
+  };
+  const documentStub = {
+    visibilityState: 'visible',
+    getElementById(id) { return elements[id] || null; },
+    addEventListener(type, fn) { (documentListeners[type] ||= []).push(fn); }
+  };
+  const windowStub = {
+    addEventListener(type, fn) { (windowListeners[type] ||= []).push(fn); },
+    location: { hostname: 'app.test', protocol: 'https:', reload() {} }
+  };
+  const sandbox = {
+    navigator: {
+      onLine: true,
+      serviceWorker: {
+        controller: {},
+        register() { return Promise.resolve(registration); }
+      }
+    },
+    location: windowStub.location,
+    document: documentStub,
+    window: windowStub,
+    Date: { now() { return now; } },
+    Promise,
+    setTimeout(fn) { fn(); return 1; },
+    setInterval(fn, delay) { pollCallback = fn; pollDelay = delay; return 1; },
+    console
+  };
+  vm.runInNewContext(html.slice(scriptStart + '<script>'.length, scriptEnd), sandbox);
+  (windowListeners.load || []).forEach(fn => fn());
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert(updateCalls === 1, 'проверка обновления должна выполняться сразу после регистрации');
+  assert(pollCallback && pollDelay === 5 * 60 * 1000,
+    'для активной PWA нужен видимый опрос каждые пять минут');
+
+  const firstWorker = { state: 'installing', addEventListener(type, fn) { this[type] = fn; } };
+  registration.installing = firstWorker;
+  registration.updatefound();
+  registration.waiting = firstWorker;
+  firstWorker.state = 'installed';
+  firstWorker.statechange();
+  assert(updateToast.hidden === false, 'установленный waiting-воркер должен открыть плашку');
+
+  closeUpdateBtn.click();
+  assert(updateToast.hidden === true, 'крестик должен закрыть плашку');
+  now += 31000;
+  (documentListeners.visibilitychange || []).forEach(fn => fn());
+  (windowListeners.pageshow || []).forEach(fn => fn());
+  (windowListeners.focus || []).forEach(fn => fn());
+  assert(updateToast.hidden === true, 'тот же waiting-воркер не должен повторно мучить игрока после крестика');
+
+  const secondWorker = { state: 'installing', addEventListener(type, fn) { this[type] = fn; } };
+  registration.waiting = null;
+  registration.installing = secondWorker;
+  registration.updatefound();
+  registration.waiting = secondWorker;
+  secondWorker.state = 'installed';
+  secondWorker.statechange();
+  registration.installing = null;
+  assert(updateToast.hidden === false, 'новая waiting-версия должна показываться сразу');
+
+  registration.waiting = null;
+  now += 5 * 60 * 1000 + 1;
+  pollCallback();
+  assert(updateCalls === 2, 'видимый периодический опрос должен проверять sw.js');
+  await new Promise(resolve => setImmediate(resolve));
+
+  now += 31000;
+  updatePromise = new Promise(resolve => { resolvePendingUpdate = resolve; });
+  (documentListeners.visibilitychange || []).forEach(fn => fn());
+  (windowListeners.focus || []).forEach(fn => fn());
+  assert(updateCalls === 3, 'первый lifecycle-вызов должен начать сетевую проверку');
+  (windowListeners.pageshow || []).forEach(fn => fn());
+  (windowListeners.online || []).forEach(fn => fn());
+  assert(updateCalls === 3, 'updateCheckInFlight должен блокировать параллельные lifecycle-вызовы');
+  resolvePendingUpdate();
+  await new Promise(resolve => setImmediate(resolve));
+});
 
 console.log('\n=== Запуск тестов ===\n');
 

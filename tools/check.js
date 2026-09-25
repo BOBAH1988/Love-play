@@ -243,9 +243,31 @@ function checkMarkup(html) {
     /id="updateToastCloseBtn"/.test(html),
     'нет #updateToastCloseBtn — плашку нельзя закрыть без обновления');
   check('крестик плашки обновления обработан',
-    /getElementById\('updateToastCloseBtn'\)/.test(html) &&
-      /updateToastCloseBtn'\)[\s\S]{0,400}addEventListener/.test(html),
+    /closeUpdateBtn\s*&&\s*!closeUpdateBtn\.__bound[\s\S]{0,300}closeUpdateBtn\.addEventListener/.test(html),
     'крестик есть в разметке, но обработчик закрытия не подключён');
+
+  // Установленная PWA может не перезагружаться неделями. Поэтому одна
+  // проверка reg.update() на load недостаточна: пока воркер активен, нужен
+  // редкий видимый опрос и обязательная проверка при возврате в приложение.
+  const pwaRegStart = html.indexOf('navigator.serviceWorker.register');
+  const pwaRegScriptStart = html.lastIndexOf('<script>', pwaRegStart);
+  const pwaRegScriptEnd = html.indexOf('</script>', pwaRegStart);
+  const pwaRegCode = pwaRegStart >= 0 && pwaRegScriptStart >= 0 && pwaRegScriptEnd > pwaRegStart
+    ? html.slice(pwaRegScriptStart + '<script>'.length, pwaRegScriptEnd)
+    : '';
+  let pwaRegSyntaxOk = false;
+  try { new Function(pwaRegCode); pwaRegSyntaxOk = true; } catch (e) { /* detail ниже */ }
+  check('PWA проверяет обновление без полного перезапуска',
+    pwaRegSyntaxOk &&
+      /UPDATE_POLL_MS\s*=\s*5\s*\*\s*60\s*\*\s*1000/.test(pwaRegCode) &&
+      /registration\.update\(\)/.test(pwaRegCode) &&
+      /document\.addEventListener\('visibilitychange'/.test(pwaRegCode) &&
+      /window\.addEventListener\('pageshow'/.test(pwaRegCode) &&
+      /window\.addEventListener\('focus'/.test(pwaRegCode) &&
+      /window\.addEventListener\('online'/.test(pwaRegCode) &&
+      /updateCheckInFlight/.test(pwaRegCode) &&
+      /dismissedWaitingWorker/.test(pwaRegCode),
+    'нужен синтаксически валидный опрос раз в 5 минут, lifecycle-события и защита от параллельных update()');
 
   // Кнопки импорта видео на странице настройки «Давай попробуем»: подпись в
   // разметке и упоминание в правилах игры должны совпадать — игрок ищет
