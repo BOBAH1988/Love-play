@@ -927,13 +927,13 @@ function checkStyles(html) {
     check('CSS поля участника и кнопки добавления задаёт один ряд',
       businessPlayerRowCss,
       'CSS не фиксирует flex-ряд или кнопка добавления может растягиваться');
-    const unifiedAnswerStyle = /\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:\s*#fff;\s*color:\s*#2b0f2e;[^}]*border-color:\s*rgba\(43,15,46,\.2\);/.test(cssWithoutComments);
+    const unifiedAnswerStyle = /\.znayu-answers\s+\.znayu-answer-btn\s*\{[^}]*background:\s*rgba\(255,255,255,\.3\);\s*color:\s*#2b0f2e;[^}]*border-color:\s*rgba\(43,15,46,\.2\);/.test(cssWithoutComments);
     const scopedAnswerStyle = /#[A-Za-z][A-Za-z0-9_-]*[^{}]*\.znayu-answer-btn[^{}]*\{/.test(cssWithoutComments);
     check('кнопки ответов во всех играх используют единый стиль',
       unifiedAnswerStyle && !scopedAnswerStyle,
       scopedAnswerStyle
         ? 'найдено правило #id ... .znayu-answer-btn — цвет кнопки не должен зависеть от карточки'
-        : 'общий .znayu-answer-btn должен иметь непрозрачный белый фон, тёмный текст и общую рамку');
+        : 'общий .znayu-answer-btn должен иметь полупрозрачный белый фон 30%, тёмный текст и общую рамку');
 
     // Карточки игр компании используют общий ультрамариновый градиент.
     // Проверяем все восемь карточек: одна забытая карточка снова сделает группу
