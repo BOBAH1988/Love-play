@@ -191,6 +191,14 @@ test('«Арифметика»: выбор темы — все 4 темы раб
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   assert(/id="timesTableTopicGroup"/.test(html),
     'в настройках «Арифметики» должна быть группа Тем (id="timesTableTopicGroup")');
+  const arithmeticSetup = html.slice(
+    html.indexOf('<section id="timesTableSetup"'),
+    html.indexOf('<!-- ===== ФЛАГИ: ИГРА =====')
+  );
+  assert(/<label>Время ответа<\/label>/.test(arithmeticSetup),
+    'в настройках «Арифметики» выбор времени должен называться «Время ответа»');
+  assert(!/<label>Уровень сложности<\/label>/.test(arithmeticSetup),
+    'старый заголовок «Уровень сложности» в «Арифметике» должен быть заменён');
   ['multiply', 'divide', 'add', 'subtract'].forEach(v => {
     assert(new RegExp('id="timesTableTopicGroup"[\\s\\S]{0,600}data-value="' + v + '"').test(html),
       `в группе Тем должна быть кнопка data-value="${v}"`);
