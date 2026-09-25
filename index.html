@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-02 · v484';
+  window.APP_BUILD = '2026-10-02 · v485';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -4391,7 +4391,7 @@
 <script src="cards/cards_desires_women.js?v=20260829g"></script>
 <script src="cards/cards_desires_men.js?v=20260829g"></script>
 <script src="cards/cards_sex_coach_tips.js?v=20260829g"></script>
-<script src="cards/cards_sex_coach_qa.js?v=20260829g"></script>
+<script src="cards/cards_sex_coach_qa.js?v=20261022w"></script>
 <script src="cards/cards_kamasutra_caresses.js?v=20260829g"></script>
 <script src="cards/cards_kamasutra_positions.js?v=20260829g"></script>
 <script src="cards/cards_video.js?v=20260829g"></script>
@@ -4501,7 +4501,7 @@
     var isSecure = (location.protocol === 'https:' || isLocalhost);
     if (isSecure) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js?v=20261022x').then(function (reg) {
+        navigator.serviceWorker.register('./sw.js?v=20261022y').then(function (reg) {
           // Мягкая проверка обновления при каждом запуске: reg.update() в фоне
           // спрашивает сервер, есть ли новый sw.js. Если да — браузер ставит его
           // в reg.waiting (старый воркер при этом НЕ трогаем: офлайн не ломается).
