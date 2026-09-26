@@ -90,8 +90,15 @@ function createDomStub(html, { trackHandlers = false } = {}) {
           if (x === 'active' && screenIds.has(id)) noteScreenActive(id);
         }),
         remove: (...c) => c.forEach((x) => classes.delete(x)),
+        // По спецификации DOM аргумент force обязателен: true — добавить,
+        // false — удалить, а БЕЗ второго аргумента класс переключается.
+        // Раньше здесь стояло `if (force) ... else delete`, то есть toggle(c)
+        // без аргумента удалял класс вместо переключения. Расхождение с
+        // браузером маскировало ошибки: код, который в реальности переключал
+        // класс, в тестах выглядел работающим и наоборот.
         toggle: (c, force) => {
-          if (force) {
+          const shouldAdd = (force === undefined) ? !classes.has(c) : !!force;
+          if (shouldAdd) {
             classes.add(c);
             if (c === 'active' && screenIds.has(id)) noteScreenActive(id);
           } else {
@@ -99,6 +106,13 @@ function createDomStub(html, { trackHandlers = false } = {}) {
           }
         },
         contains: (c) => classes.has(c),
+      },
+      // className в стабе отсутствовал, хотя в браузере есть. Тесты, читавшие
+      // element.className, получали undefined и не могли ничего проверить.
+      get className() { return [...classes].join(' '); },
+      set className(v) {
+        classes.clear();
+        String(v).split(/\s+/).filter(Boolean).forEach(x => classes.add(x));
       },
       _text: '',
       _html: '',

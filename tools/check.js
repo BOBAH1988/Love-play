@@ -2483,6 +2483,46 @@ function checkGlobalHandlers(html) {
         RegExp(`'${sid}'`).test(setupOnlyBlock),
         `экран не в списке SETUP_ONLY_SCREENS — «←» может уйти в generic-fallback → хаб`);
     }
+    // Инвариант вместо перечисления: ВСЕ записи PARENT_BACK, а не только
+    // захардкоженные шесть, обязаны указывать на существующую функцию и на
+    // реальный экран в разметке. Раньше проверялись только шесть экранов из
+    // девяти, поэтому опечатка в новой записи (переименовали экран или
+    // функцию) оставалась незамеченной, а «←» на таком экране молчал.
+    const htmlLocal = read('index.html');
+    for (const { screen: sid, fn } of backPairs) {
+      check(`PARENT_BACK[${sid}] → ${fn} существует`,
+        new RegExp(`function\\s+${fn}\\s*\\(`).test(allJsLocal),
+        `функция ${fn} не найдена — «←» из ${sid} ничего не вызовет`);
+      check(`экран ${sid} из PARENT_BACK есть в разметке`,
+        new RegExp(`<section\\s+id="${sid}"`).test(htmlLocal),
+        `экран #${sid} не найден в index.html — запись в карте устарела`);
+    }
+    check('PARENT_BACK не пуст', backPairs.length > 0, 'в карте нет ни одной записи');
+    // Опечатка в id внутри SETUP_ONLY_SCREENS или PARENT_BACK не должна
+    // проходить молча: такой экран в разметке не существует, запись ничего не
+    // делает, а стрелка с настоящего экрана уходит не туда. Сверяем обе
+    // таблицы с разметкой.
+    const htmlIds = new Set([...htmlLocal.matchAll(/<section\s+id="([^"]+)"/g)].map((m) => m[1]));
+    // Берём ТОЛЬКО тело множества SETUP_ONLY_SCREENS. Предыдущая версия
+    // брала всё от 'const SETUP_ONLY_SCREENS' до 'function returnToGroup', и в
+    // этот диапазон попадали чужие строки (SUBGROUP, карта PARENT_BACK,
+    // объявления функций) — проверка ругалась на них как на экраны.
+    const soloBodyMatch = timerSrcLocal.match(/const SETUP_ONLY_SCREENS\s*=\s*new Set\(\[([\s\S]*?)\]\)/);
+    const soloIds = soloBodyMatch
+      ? [...soloBodyMatch[1].matchAll(/'([A-Za-z0-9_]+)'/g)].map((m) => m[1])
+      : [];
+    const bogusSolo = soloIds.filter((sid) => !htmlIds.has(sid));
+    check(
+      `все экраны SETUP_ONLY_SCREENS существуют (${soloIds.length})`,
+      bogusSolo.length === 0,
+      `нет таких секций в index.html: ${bogusSolo.join(', ')}`
+    );
+    const bogusBack = backPairs.filter((p) => !htmlIds.has(p.screen));
+    check(
+      `все экраны PARENT_BACK существуют (${backPairs.length})`,
+      bogusBack.length === 0,
+      `нет таких секций в index.html: ${bogusBack.map((p) => p.screen).join(', ')}`
+    );
   }
 
 }

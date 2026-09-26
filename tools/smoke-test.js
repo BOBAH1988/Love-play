@@ -2282,6 +2282,84 @@ test('Стрелка «←» с экрана настройки «Пройдит
   }
 });
 
+test('Стрелка «←» не застревает ни на одном экране настройки', () => {
+  // ГЛАВНЫЙ РЕГРЕСС навигации. Список экранов берётся ИЗ РАЗМЕТКИ (все
+  // секции, чей id оканчивается на Setup), а не из ручного списка, поэтому
+  // новая игра попадает в проверку сама. Именно такой список раньше закрывал
+  // четыре игры, и «Пройдите тест» в него не вошёл: его стрелка молча
+  // возвращала экран настроек сам на себя, и ни один тест этого не замечал.
+  //
+  // Проверяем самое слабое место — «стрелка ничего не делает»: после нажатия
+  // исходный экран настройки НЕ должен остаться активным. Куда именно уводит
+  // стрелка (в хаб или в меню другой игры) — не важно, важно, что игрок уходит.
+  const screenIds = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => m[1]);
+  const setupScreens = screenIds.filter(id => id.endsWith('Setup'));
+  assert(setupScreens.length > 0, 'в разметке не нашлось экранов настройки');
+  const screens = screenIds.map(id => document.getElementById(id));
+  const originalQuery = document.querySelectorAll;
+  const originalSingleQuery = document.querySelector;
+  const clear = () => screens.forEach(el => el.classList.remove('active'));
+  const active = () => screens.filter(el => el.classList.contains('active'));
+  document.querySelectorAll = function(selector){
+    if(selector === '.screen.active') return active();
+    if(selector === '.screen') return screens;
+    return originalQuery.call(this, selector);
+  };
+  document.querySelector = function(selector){
+    if(selector === '.screen.active') return active()[0] || null;
+    return originalSingleQuery.call(this, selector);
+  };
+  const back = document.getElementById('globalBackBtn');
+  const modals = ['globalMenuModal','rulesHubModal','summaryModal','pauseMenuModal'];
+  const stuck = [];
+  const noExit = [];
+  try {
+    for(const setupId of setupScreens){
+      // Чистое состояние перед каждой проверкой: хаб открыт, модалки закрыты,
+      // никакая чужая партия не висит (иначе стрелка уйдёт в её паузу).
+      clear();
+      modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if(modal) modal.classList.remove('show');
+      });
+      if(typeof restoreParentScreenId === 'function') restoreParentScreenId();
+      state.pausedMode = null;
+      state.inProgress = false;
+      state.lastSectionOnPause = null;
+      saveState();
+      showSetupView('twoPlayerView');
+
+      // Открываем экран настройки так, как это делает игра: точкой входа
+      // становится сам экран (иначе проверка была бы нечестной).
+      rememberReturnScreen(setupId, null);
+      clear();
+      document.getElementById(setupId).classList.add('active');
+
+      for(const { handler } of back._getHandlers().get('click')) handler({});
+
+      const stillActive = document.getElementById(setupId).classList.contains('active');
+      if(stillActive) stuck.push(setupId);
+      // Плюс страховка от «остались два активных экрана» — старый класс
+      // багов, когда выход гасил не всё.
+      if(active().length > 1) noExit.push(`${setupId} → активны ${active().map(el => el.id)}`);
+    }
+    assert(stuck.length === 0,
+      `стрелка «←» ничего не сделала на экранах: ${stuck.join(', ')}`);
+    assert(noExit.length === 0,
+      `после выхода осталось несколько активных экранов: ${noExit.join('; ')}`);
+  } finally {
+    clear();
+    modals.forEach(id => {
+      const modal = document.getElementById(id);
+      if(modal) modal.classList.remove('show');
+    });
+    state.pausedMode = null;
+    state.inProgress = false;
+    document.querySelectorAll = originalQuery;
+    document.querySelector = originalSingleQuery;
+  }
+});
+
 test('Стрелка: игры без паузы возвращаются на предыдущий экран', () => {
   const screenIds = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => m[1]);
   const screens = screenIds.map(id => document.getElementById(id));

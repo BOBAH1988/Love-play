@@ -946,20 +946,27 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   };
   // Экраны настроек (не запущенной партии) — для них "Назад" возвращает в
   // группу БЕЗ открытия меню паузы.
+  // Каждая запись здесь должна быть экраном, который реально есть в index.html.
+  // Убраны мёртвые id (bingoSetup, truthDareSetup, desireSetup, twisterSetup,
+  // partyHangmanSetup, partyRouletteSetup, partyMemesSetup, kidsFlashSetup,
+  // soloBsSetup) — таких секций в разметке давно нет, они только мешали
+  // читать таблицу и маскировали бы опечатки. На поведение не влияет:
+  // несуществующий экран не может стать активным. Сверку с разметкой делает
+  // проверка «все экраны SETUP_ONLY_SCREENS существуют» в tools/check.js.
   const SETUP_ONLY_SCREENS = new Set([
     'kidsBoardGamesMenu',
-    'fantySetup','photoSetup','bingoSetup','timerSetup','truthDareSetup','tdSetup',
-    'quizSetup','wishlistSetup','desireSetup','znayuSetup','sexQuestSetup',
+    'fantySetup','photoSetup','timerSetup','tdSetup',
+    'quizSetup','wishlistSetup','znayuSetup','sexQuestSetup',
     'sexQuestSummary','sexQuestHistory','shopSetup',
     'passionMapSetup','passionMapSummary','passionMapHistory',
     'compatTestSetup','compatTestSummary','compatTestHistory',
     'davaySetup','ideasGame','wrSetup',
-    'partyFantsSetup','partyTdSetup','partyQuizSetup','krokodilSetup','twisterSetup',
-    'partyHangmanSetup','partyRouletteSetup','partyNeverSetup','partyMemesSetup',
+    'partyFantsSetup','partyTdSetup','partyQuizSetup','krokodilSetup',
+    'partyNeverSetup',
     'famZnayuSetup','luckySetup',
     'kidsMemorySetup','kidsQuizSetup','kidsTdSetup','kidsSaperSetup','kidsXoSetup',
-    'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','kidsFlashSetup','flashTimeSetup',
-    'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBsSetup','soloBattleshipSetup','soloC4Setup',
+    'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','flashTimeSetup',
+    'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBattleshipSetup','soloC4Setup',
     'businessLemonadeSetup','bizObsSetup','flashSetup','flagsSetup',
   ]);
   function sectionForScreenId(sid){
