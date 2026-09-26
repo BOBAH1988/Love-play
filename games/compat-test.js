@@ -70,7 +70,9 @@ function exitCompatTestSetup(){
   exitGame('compatTestSetup', null);
 }
 document.getElementById('compatTestSetupExitBtn').addEventListener('click', ()=>{ exitCompatTestSetup(); });
-openRulesModal('compatTestSetupRulesBtn', 'compatTestRulesModal');
+// Кнопки «Правила» в самой игре нет: правила открываются из общего хаба
+// «Правила игр» в меню (см. RULES_HUB в games/fants-timer.js), как у всех
+// остальных игр. Модалка rulesModal здесь только показывается оттуда.
 setupRulesModal('compatTestRulesModal', 'closeCompatTestRulesBtn');
 
 /* ============ ПАРТИЯ ============ */
@@ -396,4 +398,3 @@ function exitCompatTestHistory(){
 }
 document.getElementById('compatTestHistoryBtn').addEventListener('click', ()=>{ goToCompatTestHistory(); });
 document.getElementById('compatTestHistoryExitBtn').addEventListener('click', ()=>{ exitCompatTestHistory(); });
-openRulesModal('compatTestHistoryRulesBtn', 'compatTestRulesModal');
