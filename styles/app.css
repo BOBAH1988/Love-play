@@ -2978,6 +2978,38 @@
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
     border-radius:14px; padding:12px 14px;
   }
+  /* "Пройдите тест": подсказка на карточке передачи телефона, вывод результата
+     и записи в "Пройденных". Кнопки ответов (.znayu-answer-btn) и карточка
+     (.card) переиспользуют общие компоненты — здесь только новые элементы. */
+  .compat-test-hint{ display:block; margin-top:8px; font-size:12px; color:rgba(255,255,255,.65); line-height:1.4; }
+  .compat-test-verdict{ font-size:15px; line-height:1.5; color:#fff; margin-bottom:12px; }
+  .compat-test-sums{ display:flex; flex-direction:column; gap:8px; }
+  .compat-test-sum-row{
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:8px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; padding:10px 12px;
+  }
+  .compat-test-sum-name{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; }
+  .compat-test-sum-values{ font-size:14px; color:#fff; }
+  .compat-test-sum-diff{ font-size:12px; color:rgba(255,255,255,.6); }
+  .compat-test-score{ font-size:34px; font-weight:800; color:var(--accent); text-align:center; line-height:1.1; }
+  .compat-test-score-title{ font-size:16px; font-weight:700; color:#fff; text-align:center; margin:4px 0 10px; }
+  .compat-test-history-entry{
+    position:relative;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px 44px 12px 14px;
+  }
+  .compat-test-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+  .compat-test-history-names{ font-size:13px; color:rgba(255,255,255,.6); margin-bottom:6px; }
+  .compat-test-history-text{ font-size:14px; color:#fff; line-height:1.45; }
+  .compat-test-history-del{
+    position:absolute; top:10px; right:10px;
+    flex-shrink:0; width:28px; height:28px; border-radius:50%;
+    border:1px solid rgba(255,99,110,.4); background:transparent; color:#ff8b96;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .compat-test-history-del:active{ background:rgba(255,99,110,.3); }
   .pmap-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
   .pmap-history-items{ list-style:none; display:flex; flex-direction:column; gap:10px; }
   .pmap-history-items > li + li{ border-top:1px solid rgba(255,255,255,.14); padding-top:10px; }

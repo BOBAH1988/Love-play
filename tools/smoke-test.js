@@ -2068,6 +2068,100 @@ test('Геометрия: название игры не уходит под к�
   });
 });
 
+test('Пройдите тест: оба теста считаются по ответам обоих игроков', () => {
+  // Сценарий целиком: игрок 1 отвечает на все утверждения, затем игрок 2
+  // отвечает на те же утверждения, после чего считается результат.
+  //
+  // Три особенности стаба (tools/dom-stub.js), из-за которых тест идёт не
+  // «как в браузере» — так же поступают тесты «Викторины»:
+  //  • fadeSwapEl рисует карточку через setTimeout → подменяем на синхронный;
+  //  • querySelectorAll на элементе всегда пустой, поэтому подсветку
+  //    выбранной кнопки проверить нельзя (она вешается через
+  //    querySelectorAll по #compatTestCard) — проверяем только сам расчёт.
+  const originalFade = global.fadeSwapEl;
+  const saved = {};
+  ['compatTestType', 'compatTestIndex', 'compatTestCurrentPlayer', 'compatTestAnswers', 'compatTestResult', 'compatTestHistory', 'autoSpeak']
+    .forEach(key => { saved[key] = state[key]; });
+  const card = getElById(stub, 'compatTestCard');
+  // Количество кнопок ответа в нарисованной карточке.
+  const answerCount = () => (card.innerHTML.match(/znayu-answer-btn/g) || []).length;
+
+  // Один полный проход обоих игроков выбранного типа теста.
+  const runTest = (type, answerFor) => {
+    state.compatTestType = type;
+    startCompatTestGame();
+    const total = compatTestItems().items.length;
+    const expectedButtons = compatTestItems().answers.length;
+    for(let player = 0; player < 2; player++){
+      // Перед вторым игроком телефон передаётся — хендофф обязан показаться.
+      if(player > 0){
+        assert(state.compatTestCurrentPlayer === 1, `${type}: ход должен перейти ко второму игроку`);
+        showCompatTestHandoff();
+      }
+      showCompatTestQuestion();
+      for(let i = 0; i < total; i++){
+        const buttons = answerCount();
+        assert(buttons === expectedButtons, `${type}: на вопросе ${i + 1} ожидалось ${expectedButtons} кнопок, есть ${buttons}`);
+        answerCompatTestQuestion(answerFor(player, i) % buttons);
+        advanceCompatTest();
+      }
+    }
+    // Оба игрока ответили на все утверждения — иначе расчёт бессмыслен.
+    const answers = state.compatTestAnswers || [];
+    assert((answers[0] || []).length === total && (answers[1] || []).length === total,
+      `${type}: ответов ${(answers[0] || []).length} и ${(answers[1] || []).length} при ${total} утверждениях`);
+  };
+
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+
+    // «На совместимость»: одинаковые ответы → М и К = 0 → «схожи характерами».
+    runTest('characters', () => 0);
+    assert(state.compatTestResult && state.compatTestResult.kind === 'characters', 'совместимость: результат не посчитан');
+    assert(state.compatTestResult.m === 0 && state.compatTestResult.k === 0,
+      `совместимость: при одинаковых ответах М и К должны быть 0, а не ${state.compatTestResult.m}/${state.compatTestResult.k}`);
+    assert(/гармоничная пара и схожи характерами/i.test(state.compatTestResult.verdict),
+      `совместимость: неожиданный вывод «${state.compatTestResult.verdict}»`);
+
+    // Разные ответы (верный/бывает/неверно по кругу) → разности ненулевые.
+    runTest('characters', (p, i) => (i + p) % 3);
+    assert(state.compatTestResult.m > 0 || state.compatTestResult.k > 0,
+      'совместимость: у разных ответов разности М и К не могут быть нулевыми');
+
+    // «На сексуальная совместимость»: одинаковые ответы → 100 из 100.
+    runTest('sexual', () => 1);
+    assert(state.compatTestResult && state.compatTestResult.kind === 'sexual', 'секс: результат не посчитан');
+    assert(state.compatTestResult.score === 100,
+      `секс: при одинаковых ответах ожидалось 100, получено ${state.compatTestResult.score}`);
+
+    // Разные ответы → индекс ниже 100.
+    runTest('sexual', (p, i) => (i + p * 2) % 5);
+    assert(state.compatTestResult.score < 100,
+      `секс: при разных ответах индекс должен быть ниже 100, получено ${state.compatTestResult.score}`);
+
+    // История: результаты сохранились, экран открывается.
+    const historyCount = state.compatTestHistory.length;
+    assert(historyCount >= 4, `в «Пройденных» должно быть ≥4 записи, а их ${historyCount}`);
+    goToCompatTestHistory();
+    assert(document.getElementById('compatTestHistory').classList.contains('active'), '«Пройденные» не открылись');
+
+    // Удаление из «Пройденных». Крестик ловится делегированием по .closest(),
+    // который стаб не эмулирует, поэтому проверяем ту же ветку кода напрямую
+    // и отдельно убеждаемся, что разметка кнопки с индексом есть.
+    const list = getElById(stub, 'compatTestHistoryList');
+    assert(/compat-test-history-del/.test(list.innerHTML), 'в «Пройденных» нет кнопки удаления');
+    assert(/data-idx="0"/.test(list.innerHTML), 'у кнопки удаления должен быть индекс записи');
+    const before = state.compatTestHistory.length;
+    document.getElementById('compatTestHistoryList')._getHandlers().get('click')
+      .forEach(({ handler }) => handler({ target: { closest: sel => sel === '.compat-test-history-del' ? { dataset: { idx: '0' } } : null } }));
+    assert(state.compatTestHistory.length === before - 1, 'удаление из «Пройденных» не сработало');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 test('Стрелка: игры без паузы возвращаются на предыдущий экран', () => {
   const screenIds = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => m[1]);
   const screens = screenIds.map(id => document.getElementById(id));

@@ -116,6 +116,13 @@ window.GAME_REGISTRY = [
     resume: 'resumePassionMapGame', finish: 'finishPausedPassionMapGame', back: 'finishPausedPassionMapGame',
     screens: ['passionMapGame'],
   },
+  {
+    // Партия короткая и личная, пауза не нужна: «←» прерывает тест и
+    // возвращает в настройки, результат при этом НЕ сохраняется.
+    mode: 'compatTest', title: '«Пройдите тест»', group: 'two', noPause: true, menuTitle: '🧪 Пройдите тест',
+    resume: 'resumeCompatTestGame', finish: 'finishPausedCompatTestGame', back: 'finishPausedCompatTestGame',
+    screens: ['compatTestGame'],
+  },
 
   // ─── Игры для компании ──────────────────────────────────────────────────
   {

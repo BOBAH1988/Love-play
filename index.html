@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260926a">
+<link rel="stylesheet" href="styles/app.css?v=20260926b">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-26 · v508';
+  window.APP_BUILD = '2026-09-26 · v509';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v508</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v509</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -352,6 +352,7 @@
           <button type="button" class="btn btn-menu-item" id="gameDavayBtn"><span class="menu-icon">🎬</span> Давай попробуем</button>
            <button type="button" class="btn btn-menu-item" id="gameSexQuestBtn"><span class="menu-icon">🧩</span> Пройди квест</button>
            <button type="button" class="btn btn-menu-item" id="gameSexMapBtn"><span class="menu-icon">🎀</span> Карта страсти</button>
+           <button type="button" class="btn btn-menu-item" id="gameCompatTestBtn"><span class="menu-icon">🧪</span> Пройдите тест</button>
         </div>
       </div>
 
@@ -3657,6 +3658,88 @@
     </div>
   </div>
 
+  <!-- ===== ПРОЙДИТЕ ТЕСТ: НАСТРОЙКА ===== -->
+  <!-- 📍 логика: games/compat-test.js | вопросы: cards/cards_compat_test.js -->
+  <section id="compatTestSetup" class="screen">
+    <h1 class="title">🧪 Пройдите тест</h1>
+    <div class="subtitle">Выберите тест — его пройдёте сначала вы, потом партнёр</div>
+
+    <div class="field">
+      <label>Тесты</label>
+      <div class="starter-group" id="compatTestTypeGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="characters">🤝 На совместимость</button>
+        <button type="button" class="starter-btn mode-btn" data-value="sexual">💋 На сексуальную совместимость</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="compatTestStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="compatTestHistoryBtn" style="margin-top:10px;">✅ Пройденные</button>
+    <button class="btn btn-secondary" id="compatTestSetupExitBtn" style="margin-top:10px;">Выход</button>
+    <button class="btn btn-secondary" id="compatTestSetupRulesBtn" style="margin-top:10px;">📖 Правила</button>
+  </section>
+
+  <!-- ===== ПРОЙДИТЕ ТЕСТ: ИГРА ===== -->
+  <section id="compatTestGame" class="screen">
+    <div class="game-level-label">🧪 Пройдите тест</div>
+    <div class="td-turn-label" id="compatTestTurnLabel">Отвечает: Игрок 1</div>
+    <div class="wishlist-progress-row" id="compatTestProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="compatTestProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="compatTestProgressLabel">0 / 16</div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="compatTestCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="znayu-question-text">Загрузка…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wishlist-actions-row" id="compatTestHandoffRow" style="display:none;">
+      <button type="button" class="btn btn-primary" id="compatTestHandoffStartBtn">Начать</button>
+    </div>
+  </section>
+
+  <!-- ===== ПРОЙДИТЕ ТЕСТ: ИТОГИ ===== -->
+  <section id="compatTestSummary" class="screen">
+    <h1 class="title" id="compatTestSummaryTitle">🧪 Тест</h1>
+    <div class="subtitle">Результат по ответам обоих</div>
+    <div class="summary-stats" style="text-align:left;">
+      <div id="compatTestSummaryList"></div>
+    </div>
+    <div class="intro-text" id="compatTestSummaryNote">Результат сохранён в «Пройденные».</div>
+    <button class="btn btn-primary" id="compatTestSummaryExitBtn" style="margin-top:10px;">В меню</button>
+  </section>
+
+  <!-- ===== ПРОЙДИТЕ ТЕСТ: ПРОЙДЕННЫЕ ===== -->
+  <section id="compatTestHistory" class="screen">
+    <h1 class="title">✅ Пройденные тесты</h1>
+    <div class="subtitle">Результаты прошлых прохождений</div>
+    <div class="pmap-history-wrap" id="compatTestHistoryList"></div>
+    <button class="btn btn-secondary" id="compatTestHistoryExitBtn" style="margin-top:10px;">Назад</button>
+    <button class="btn btn-secondary" id="compatTestHistoryRulesBtn" style="margin-top:10px;">📖 Правила</button>
+  </section>
+
+  <!-- ===== ПРАВИЛА "ПРОЙДИТЕ ТЕСТ" ===== -->
+  <div class="modal-overlay" id="compatTestRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🧪 Правила игры «Пройдите тест»</div>
+      <div class="intro-text">Здесь нет верных ответов: вы честно отвечаете на утверждения о себе. Сначала тест целиком проходит первый партнёр, затем второй отвечает на те же утверждения, и только после этого считается общий результат пары.</div>
+      <ol class="modal-rules">
+        <li>На экране настройки выберите тест в блоке «Тесты»: «На совместимость» (16 утверждений) или «На сексуальную совместимость» (25 утверждений), затем нажмите «Начать».</li>
+        <li>Первый партнёр отвечает на все утверждения подряд. Таймера и кнопки «Пропустить» нет — на каждое утверждение нужно выбрать один из вариантов ответа.</li>
+        <li>Когда утверждения первого партнёра закончились, телефон передаётся второму: он отвечает на те же утверждения. Свои ответы партнёры не видят.</li>
+        <li>В конце показывается результат, посчитанный по ответам обоих. «На совместимость»: суммы баллов отдельно по чётным и нечётным высказываниям у каждого, разности М и К и вывод по таблице методики. «На сексуальная совместимость»: от 0 до 100 — насколько ответы партнёров совпадают.</li>
+        <li>Результат сохраняется в «Пройденные» — их можно открыть с экрана настройки и удалить лишние крестиком. «Сбросить прогресс» на главном экране чистит историю.</li>
+        <li>Тесты — из опубликованных методик, но результат носит ознакомительный характер: он не является медицинским или психологическим диагнозом и не заменяет консультацию специалиста.</li>
+        <li>Стрелка «←» прерывает тест без сохранения результата — чтобы пройти заново.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeCompatTestRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== ПРАВИЛА "ВИКТОРИНА" (ПАРЫ 18+) ===== -->
   <div class="modal-overlay" id="quizRulesModal">
     <div class="modal-card">
@@ -4425,6 +4508,7 @@
 <script src="cards/cards_ideas.js?v=20260829g"></script>
 <script src="cards/cards_sexquest.js?v=20260922a"></script>
 <script src="cards/cards_passionmap.js?v=20260913a"></script>
+<script src="cards/cards_compat_test.js?v=20260926b"></script>
 <script src="cards/cards_whattoplay.js?v=20260928w"></script>
 <script src="cards/cards_kids_krokodil.js?v=20260911a"></script>
 <script src="cards/cards_kids_memes.js?v=20260911a"></script>
@@ -4434,18 +4518,18 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20260929b"></script>
 <script src="cards/capitals.js?v=20260929c"></script>
-<script src="games/core.js?v=20260926a"></script>
+<script src="games/core.js?v=20260926b"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
       <script src="games/fants-video.js?v=20261002f"></script>
 <script src="games/fants-davay.js?v=20260925a"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20261023b"></script>
+<script src="games/fants-timer.js?v=20260926a"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
-<script src="games/game-registry.js?v=20260929i"></script>
+<script src="games/game-registry.js?v=20260926a"></script>
 <!-- Локальная статистика: считает партии на этом устройстве, никуда не отправляет -->
 <script src="games/stats.js?v=20260929a"></script>
 <script src="games/twister.js?v=20260921j"></script>
@@ -4489,6 +4573,7 @@
 <script src="games/ideas.js?v=20261002c"></script>
 <script src="games/sexquest.js?v=20260927x"></script>
 <script src="games/passionmap.js?v=20261022b"></script>
+<script src="games/compat-test.js?v=20260926b"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20261022v"></script>
 <script src="games/capitals.js?v=20261022v"></script>

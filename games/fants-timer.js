@@ -951,6 +951,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'quizSetup','wishlistSetup','desireSetup','znayuSetup','sexQuestSetup',
     'sexQuestSummary','sexQuestHistory','shopSetup',
     'passionMapSetup','passionMapSummary','passionMapHistory',
+    'compatTestSetup','compatTestSummary','compatTestHistory',
     'davaySetup','ideasGame','wrSetup',
     'partyFantsSetup','partyTdSetup','partyQuizSetup','krokodilSetup','twisterSetup',
     'partyHangmanSetup','partyRouletteSetup','partyNeverSetup','partyMemesSetup',
@@ -991,6 +992,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'passionMapSummary':'exitPassionMapSummary',
     'sexQuestSetup':'exitSexQuestSetup',
     'passionMapSetup':'exitPassionMapSetup',
+    'compatTestHistory':'exitCompatTestHistory',
+    'compatTestSummary':'exitCompatTestSummary',
+    'compatTestSetup':'exitCompatTestSetup',
   };
   window.handleNestedBack = function(activeIds){
     const ids = activeIds || getActiveGameScreenIds();

@@ -329,6 +329,11 @@ let state = {
   // Карта страсти — независимая игра (games/passionmap.js): свои ключи
   // passionMap* для текущей партии и сохранённой истории.
   passionMapQueue:[], passionMapIndex:0, passionMapScore:0, passionMapResults:[], passionMapChecklists:[],
+  // Пройдите тест — два теста на совместимость; ответы копятся по каждому
+  // игроку отдельно (compatTestAnswers[0]/[1]), а compatTestHistory хранит
+  // уже посчитанные результаты, а не сырые ответы.
+  compatTestType:'characters', compatTestIndex:0, compatTestCurrentPlayer:0,
+  compatTestAnswers:[[],[]], compatTestResult:null, compatTestHistory:[],
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании".
@@ -867,6 +872,12 @@ document.getElementById('gameSexMapBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   callGameEntry('goToPassionMapSetup');
+});
+// «Пройдите тест» — два теста на совместимость (см. games/compat-test.js).
+document.getElementById('gameCompatTestBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  callGameEntry('goToCompatTestSetup');
 });
 // Возраст ребёнка — общий переключатель для игр раздела "Игры с детьми",
 // которым важен возраст (сейчас — "Правда/Действие"): 1=5 лет, 2=7 лет,
@@ -1987,6 +1998,13 @@ function performFullReset(){
   state.passionMapScore = 0;
   state.passionMapResults = [];
   state.passionMapChecklists = [];
+  // Пройдите тест — общий сброс чистит и историю результатов
+  state.compatTestType = 'characters';
+  state.compatTestIndex = 0;
+  state.compatTestCurrentPlayer = 0;
+  state.compatTestAnswers = [[], []];
+  state.compatTestResult = null;
+  state.compatTestHistory = [];
   // Во что поиграть? (дети)
   state.whatToPlayUsed = [];
   state.whatToPlayFavorites = [];
