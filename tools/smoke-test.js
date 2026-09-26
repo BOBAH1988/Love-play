@@ -2162,6 +2162,63 @@ test('Пройдите тест: оба теста считаются по от�
   }
 });
 
+test('Пройдите тест: все тесты из списка проходят обоими игроками', () => {
+  // Смысл проверки: COMPAT_TESTS, COMPAT_DATASETS и данные не должны
+  // разойтись. Раньше тестов было два, и смоук-тест закрывал только их —
+  // при добавлении набора без items или без записи в реестре ошибка была бы
+  // видна только игроку (пустая карточка или молчаливый сбой). Теперь
+  // проходим КАЖДЫЙ тест из списка целиком.
+  const originalFade = global.fadeSwapEl;
+  const saved = {};
+  ['compatTestType', 'compatTestIndex', 'compatTestCurrentPlayer', 'compatTestAnswers',
+   'compatTestResult', 'compatTestHistory', 'autoSpeak'].forEach(k => { saved[k] = state[k]; });
+  const card = getElById(stub, 'compatTestCard');
+  const buttonCount = () => (card.innerHTML.match(/znayu-answer-btn/g) || []).length;
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    assert(Array.isArray(COMPAT_TESTS) && COMPAT_TESTS.length >= 10,
+      `в COMPAT_TESTS должно быть не меньше 10 тестов, а их ${COMPAT_TESTS && COMPAT_TESTS.length}`);
+
+    for(const test of COMPAT_TESTS){
+      state.compatTestType = test.id;
+      const { items, answers } = compatTestItems();
+      assert(items.length > 0, `${test.id}: нет вопросов — набор не найден в COMPAT_DATASETS`);
+      assert(answers.length > 0, `${test.id}: нет вариантов ответа`);
+      assert(items.length === test.count,
+        `${test.id}: в списке count=${test.count}, а вопросов ${items.length}`);
+
+      startCompatTestGame();
+      const total = items.length;
+      for(let player = 0; player < 2; player++){
+        if(player > 0) showCompatTestHandoff();
+        showCompatTestQuestion();
+        for(let i = 0; i < total; i++){
+          const n = buttonCount();
+          assert(n === answers.length,
+            `${test.id}: на вопросе ${i + 1} ожидалось ${answers.length} кнопок, есть ${n}`);
+          answerCompatTestQuestion((i + player) % n);
+          advanceCompatTest();
+        }
+      }
+      assert(state.compatTestResult, `${test.id}: результат не посчитан`);
+      const answers2 = state.compatTestAnswers || [];
+      assert((answers2[0] || []).length === total && (answers2[1] || []).length === total,
+        `${test.id}: ответов ${(answers2[0] || []).length} и ${(answers2[1] || []).length} при ${total} вопросах`);
+      if(test.id === 'characters'){
+        assert(typeof state.compatTestResult.m === 'number' && typeof state.compatTestResult.k === 'number',
+          'characters: нет разностей М и К');
+      } else {
+        assert(typeof state.compatTestResult.score === 'number' && state.compatTestResult.score >= 0
+          && state.compatTestResult.score <= 100, `${test.id}: индекс вне 0–100`);
+      }
+    }
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 test('Стрелка: игры без паузы возвращаются на предыдущий экран', () => {
   const screenIds = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => m[1]);
   const screens = screenIds.map(id => document.getElementById(id));

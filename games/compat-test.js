@@ -34,6 +34,17 @@ function compatTestById(id){
 const COMPAT_DATASETS = {
   characters: { items: COMPAT_CHARACTERS, answers: COMPAT_CHARACTERS_ANSWERS, scale: 'characters' },
   sexual: { items: COMPAT_SEXUAL, answers: COMPAT_SEXUAL_ANSWERS, scale: 'agreement' },
+  // Восемь тем для пар. Вопросы написаны для этого приложения (см. шапку
+  // cards/cards_compat_test.js) — это не опубликованные методики и не их
+  // переводы. Все они считаются общей мерой совпадения ответов.
+  comfort: { items: COMPAT_COMFORT, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  chemistry: { items: COMPAT_CHEMISTRY, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  desire: { items: COMPAT_DESIRE, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  boundaries: { items: COMPAT_BOUNDARIES, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  fantasy: { items: COMPAT_FANTASY, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  touch: { items: COMPAT_TOUCH, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  talk: { items: COMPAT_TALK, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  ideal: { items: COMPAT_IDEAL, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
 };
 
 // Вопросы и варианты ответа выбранного теста. Неизвестный id или отсутствующий
