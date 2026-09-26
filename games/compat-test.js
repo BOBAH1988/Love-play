@@ -46,10 +46,16 @@ function goToCompatTestSetup(){
 }
 
 // Выбор теста: две плашки в блоке «Тесты». Разметка — общий компонент
-// уровней .level-toggle (иконка+название сверху, описание снизу, галочка
-// справа), как в «Фантах» и «Знаю тебя»: длинные названия в две строки
-// читаются там, где одна строка обрезалась. Сами данные (иконка, название,
-// описание) берутся из COMPAT_TESTS, чтобы тексты не расходились.
+// уровней .level-toggle (иконка+название сверху, галочка справа), как в
+// «Фантах» и «Знаю тебя», чтобы высота совпадала с остальными играми.
+//
+// Описание у плашек НЕ выводится намеренно. «На сеексуальную совместимость»
+// на узком экране занимает две строки, и любая подпись под ним поднимала бы
+// плашку выше стандартных 56px, которые держат уровни остальных игр (там
+// названия короткие: «Романтика», «До 12 лет», «18+»). Поэтому здесь только
+// название: без .ldesc плашка с двухстрочным названием укладывается ровно в
+// те же 56px, что и в остальных играх. Число утверждений и описание тестов
+// остались в правилах игры и в README.
 function renderCompatTestTypeGroup(){
   const wrap = document.getElementById('compatTestTypeGroup');
   if(!wrap) return;
@@ -62,7 +68,7 @@ function renderCompatTestTypeGroup(){
   tests.forEach(t=>{
     const div = document.createElement('div');
     div.className = 'level-toggle' + (state.compatTestType === t.id ? ' on' : '');
-    div.innerHTML = `<div class="lname">${t.icon} ${t.name}</div><div class="ldesc">${t.desc}</div><div class="level-check"></div>`;
+    div.innerHTML = `<div class="lname">${t.icon} ${t.name}</div><div class="level-check"></div>`;
     div.addEventListener('click', ()=>{
       state.compatTestType = t.id;
       saveState();
