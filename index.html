@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-26 · v514';
+  window.APP_BUILD = '2026-09-26 · v515';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v514</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v515</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -3666,10 +3666,7 @@
 
     <div class="field">
       <label>Тесты</label>
-      <div class="starter-group" id="compatTestTypeGroup">
-        <button type="button" class="starter-btn mode-btn" data-value="characters">💘 На совместимость</button>
-        <button type="button" class="starter-btn mode-btn" data-value="sexual">💋 На сексуальную совместимость</button>
-      </div>
+      <div class="levels" id="compatTestTypeGroup"></div>
     </div>
 
     <button class="btn btn-primary" id="compatTestStartBtn">Начать</button>
@@ -4571,7 +4568,7 @@
 <script src="games/ideas.js?v=20261002c"></script>
 <script src="games/sexquest.js?v=20260927x"></script>
 <script src="games/passionmap.js?v=20261022b"></script>
-<script src="games/compat-test.js?v=20260926e"></script>
+<script src="games/compat-test.js?v=20260927a"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20261022v"></script>
 <script src="games/capitals.js?v=20261022v"></script>

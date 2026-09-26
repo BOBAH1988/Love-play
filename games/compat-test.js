@@ -45,23 +45,32 @@ function goToCompatTestSetup(){
   });
 }
 
-// Выбор теста: две кнопки в блоке «Тесты».
+// Выбор теста: две плашки в блоке «Тесты». Разметка — общий компонент
+// уровней .level-toggle (иконка+название сверху, описание снизу, галочка
+// справа), как в «Фантах» и «Знаю тебя»: длинные названия в две строки
+// читаются там, где одна строка обрезалась. Сами данные (иконка, название,
+// описание) берутся из COMPAT_TESTS, чтобы тексты не расходились.
 function renderCompatTestTypeGroup(){
+  const wrap = document.getElementById('compatTestTypeGroup');
+  if(!wrap) return;
+  const tests = (typeof COMPAT_TESTS !== 'undefined' && Array.isArray(COMPAT_TESTS)) ? COMPAT_TESTS : [];
   if(!compatTestById(state.compatTestType)){
-    state.compatTestType = 'characters';
+    state.compatTestType = tests[0] ? tests[0].id : 'characters';
     saveState();
   }
-  document.querySelectorAll('#compatTestTypeGroup .starter-btn').forEach(btn=>{
-    btn.classList.toggle('on', btn.dataset.value === state.compatTestType);
+  wrap.innerHTML = '';
+  tests.forEach(t=>{
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (state.compatTestType === t.id ? ' on' : '');
+    div.innerHTML = `<div class="lname">${t.icon} ${t.name}</div><div class="ldesc">${t.desc}</div><div class="level-check"></div>`;
+    div.addEventListener('click', ()=>{
+      state.compatTestType = t.id;
+      saveState();
+      renderCompatTestTypeGroup();
+    });
+    wrap.appendChild(div);
   });
 }
-document.querySelectorAll('#compatTestTypeGroup .starter-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    state.compatTestType = btn.dataset.value;
-    saveState();
-    renderCompatTestTypeGroup();
-  });
-});
 
 function exitCompatTestSetup(){
   state.inProgress = false;
