@@ -2360,6 +2360,83 @@ test('Стрелка «←» не застревает ни на одном эк
   }
 });
 
+test('«Пройдите тест»: пауза сохраняет место, продолжение возвращает', () => {
+  // Фича: у игры появилось меню паузы. Проверяем полный цикл и главное —
+  // что «Продолжить игру» возвращает РОВНО туда, откуда ушли. Отдельная
+  // проверка фазы (вопрос или «Передайте телефон»): без неё игрок после
+  // паузы на хендоффе увидел бы вопрос, который ему не показывали.
+  const originalFade = global.fadeSwapEl;
+  const saved = {};
+  ['compatTestType', 'compatTestIndex', 'compatTestCurrentPlayer', 'compatTestAnswers',
+   'compatTestResult', 'compatTestHistory', 'compatTestPaused', 'inProgress', 'pausedMode', 'autoSpeak']
+    .forEach(k => { saved[k] = state[k]; });
+  const card = getElById(stub, 'compatTestCard');
+  const buttonCount = () => (card.innerHTML.match(/znayu-answer-btn/g) || []).length;
+  const pauseModal = document.getElementById('pauseMenuModal');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.compatTestType = 'comfort';
+    startCompatTestGame();
+    // Первый игрок отвечает на три утверждения.
+    showCompatTestQuestion();
+    for(let i = 0; i < 3; i++){ answerCompatTestQuestion(0); advanceCompatTest(); }
+    assert(state.compatTestIndex === 3, `после трёх ответов индекс должен быть 3, а ${state.compatTestIndex}`);
+
+    // 1. Пауза посреди вопроса.
+    showCompatTestQuestion();
+    pauseCompatTestGame();
+    assert(state.pausedMode === 'compatTest', `пауза должна выставить pausedMode='compatTest', а ${state.pausedMode}`);
+    assert(pauseModal.classList.contains('show'), 'меню паузы должно показаться');
+    assert(state.compatTestPaused && state.compatTestPaused.index === 3,
+      `в снимке паузы должен быть индекс 3, а ${state.compatTestPaused && state.compatTestPaused.index}`);
+    assert(!(state.compatTestPaused || {}).awaitingHandoff,
+      'мы остановились на вопросе, значит в снимке не должно быть флага хендоффа');
+    assert(!getElById(stub, 'compatTestGame').classList.contains('active'),
+      'игровой экран должен погаснуть на паузе');
+
+    // 2. «Продолжить игру» — тот же экран, тот же игрок, тот же индекс.
+    getElById(stub, 'resumeBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(state.pausedMode === null, 'после продолжения пауза должна сняться');
+    assert(!pauseModal.classList.contains('show'), 'меню паузы должно закрыться');
+    assert(getElById(stub, 'compatTestGame').classList.contains('active'),
+      'игровой экран должен снова стать активным');
+    assert(state.compatTestIndex === 3, `после продолжения индекс должен остаться 3, а ${state.compatTestIndex}`);
+    assert(state.compatTestCurrentPlayer === 0, 'должен продолжиться первый игрок');
+    assert(buttonCount() > 0, 'после продолжения должен показываться вопрос, а не пустая карточка');
+    assert((state.compatTestAnswers[0] || []).length === 3,
+      'ответы не должны потеряться при паузе');
+
+    // 3. Фаза «Передайте телефон» должна пережить паузу.
+    const { items } = compatTestItems();
+    for(let i = state.compatTestIndex; i < items.length; i++){ answerCompatTestQuestion(0); advanceCompatTest(); }
+    // Первый игрок закончил — показан хендофф второму.
+    assert(state.compatTestCurrentPlayer === 1, 'ход должен перейти ко второму игроку');
+    showCompatTestHandoff();
+    pauseCompatTestGame();
+    assert((state.compatTestPaused || {}).awaitingHandoff === true,
+      'пауза на карточке «Передайте телефон» обязана запомнить фазу хендоффа');
+    getElById(stub, 'resumeBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(getElById(stub, 'compatTestHandoffRow').style.display === 'flex',
+      'после продолжения должна снова быть карточка «Передайте телефон», а не вопрос');
+    assert(buttonCount() === 0, 'на хендоффе кнопок ответа быть не должно');
+
+    // 4. «Закончить игру» бросает тест без результата и возвращает в настройки.
+    const historyBefore = (state.compatTestHistory || []).length;
+    pauseCompatTestGame();
+    getElById(stub, 'finishGameBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(!state.inProgress, 'после «Закончить игру» inProgress должен быть снят');
+    assert(state.pausedMode === null, 'после «Закончить игру» пауза должна сняться');
+    assert(state.compatTestPaused === null, 'снимок паузы должен быть очищен');
+    assert((state.compatTestHistory || []).length === historyBefore,
+      'прерванный тест не должен попадать в «Пройденные»');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    if(pauseModal) pauseModal.classList.remove('show');
+    Object.assign(state, saved);
+  }
+});
+
 test('Стрелка: игры без паузы возвращаются на предыдущий экран', () => {
   const screenIds = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => m[1]);
   const screens = screenIds.map(id => document.getElementById(id));

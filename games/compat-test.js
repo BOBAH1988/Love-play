@@ -159,7 +159,12 @@ function startCompatTestGame(){
 }
 
 // Карточка «Передайте телефон»: ответы одного партнёра видит только он.
+// Показывается ли сейчас карточка «Передайте телефон» (true) или вопрос (false).
+// Нужно паузе: вернуться надо ровно туда же, откуда игрок ушёл, иначе после
+// «Продолжить игру» партнёру покажется вопрос, который он уже не видел.
+let compatTestAwaitingHandoff = false;
 function showCompatTestHandoff(){
+  compatTestAwaitingHandoff = true;
   const { items } = compatTestItems();
   const idx = state.compatTestCurrentPlayer || 0;
   const name = compatTestPlayers()[idx] || 'Игрок 1';
@@ -192,6 +197,7 @@ function updateCompatTestProgress(){
 }
 
 function showCompatTestQuestion(){
+  compatTestAwaitingHandoff = false;
   const { items, answers } = compatTestItems();
   const idx = state.compatTestCurrentPlayer || 0;
   const item = items[state.compatTestIndex];
@@ -390,21 +396,47 @@ function exitCompatTestSummary(){
 }
 document.getElementById('compatTestSummaryExitBtn').addEventListener('click', ()=>{ exitCompatTestSummary(); });
 // Выход по стрелке «←» из партии: прерываем без сохранения результата.
+// «Закончить игру» в меню паузы: тест бросается без сохранения результата.
+// Того же ждёт вызов из общего кода, если пауза открылась из чужой игры.
 function finishPausedCompatTestGame(){
   hideModal('pauseMenuModal');
   stopAllSounds();
   state.inProgress = false;
   state.pausedMode = null;
+  state.compatTestPaused = null;
   goToCompatTestSetup();
   saveState();
   updateResumeUI();
   showToast('Тест прерван — пройдите его заново');
 }
-// Продолжение из меню паузы. У игры noPause, поэтому сюда попадаем только
-// если партия была в процессе: возвращаемся на игровой экран и продолжаем
-// с текущего утверждения того партнёра, чей ход шёл.
+// Пауза: запоминаем, на каком месте остановились, и отдаём экран хабу —
+// общее меню паузы само покажется из updateResumeUI() по state.pausedMode.
+function pauseCompatTestGame(){
+  if(typeof stopAllSounds === 'function') stopAllSounds();
+  if(typeof stopSpeech === 'function') stopSpeech('compatTestTtsHint');
+  state.pausedMode = 'compatTest';
+  state.lastSectionOnPause = 'twoPlayerView';
+  state.compatTestPaused = {
+    index: state.compatTestIndex || 0,
+    player: state.compatTestCurrentPlayer || 0,
+    awaitingHandoff: compatTestAwaitingHandoff,
+  };
+  saveState();
+  document.getElementById('compatTestGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
+  updateResumeUI();
+}
+// Продолжение из меню паузы. Возвращаем ровно туда, откуда ушли: тот же
+// экран, тот же игрок, то же состояние экрана (вопрос или «Передайте
+// телефон») — иначе пришлось бы заново перебирать ответы.
 function resumeCompatTestGame(){
   state.pausedMode = null;
+  const d = state.compatTestPaused || {};
+  state.compatTestPaused = null;
+  state.compatTestIndex = typeof d.index === 'number' ? d.index : (state.compatTestIndex || 0);
+  state.compatTestCurrentPlayer = typeof d.player === 'number' ? d.player : (state.compatTestCurrentPlayer || 0);
+  const wasHandoff = !!d.awaitingHandoff;
   saveState();
   updateResumeUI();
   goToGame(null, 'compatTestGame');
@@ -412,11 +444,11 @@ function resumeCompatTestGame(){
   requestWakeLock();
   const { items } = compatTestItems();
   const idx = state.compatTestCurrentPlayer || 0;
-  // Уже отвеченные утверждения пропускаем — иначе экран откатился бы назад.
+  // Уже отвеченные утверждения не показываем повторно.
   const answered = ((state.compatTestAnswers || [])[idx] || []).length;
   if(state.compatTestIndex < answered) state.compatTestIndex = answered;
-  if(items[state.compatTestIndex]) showCompatTestQuestion();
-  else showCompatTestHandoff();
+  if(wasHandoff || !items[state.compatTestIndex]) showCompatTestHandoff();
+  else showCompatTestQuestion();
 }
 document.getElementById('compatTestStartBtn').addEventListener('click', ()=>{
   playSuccessSound();

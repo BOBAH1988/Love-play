@@ -117,10 +117,12 @@ window.GAME_REGISTRY = [
     screens: ['passionMapGame'],
   },
   {
-    // Партия короткая и личная, пауза не нужна: «←» прерывает тест и
-    // возвращает в настройки, результат при этом НЕ сохраняется.
-    mode: 'compatTest', title: '«Пройдите тест»', group: 'two', noPause: true, menuTitle: '💖 Пройдите тест',
-    resume: 'resumeCompatTestGame', finish: 'finishPausedCompatTestGame', back: 'finishPausedCompatTestGame',
+    // Пауза полноценная: тест личный и длинный (до 25 утверждений × 2
+    // игрока), прерывать его на полпути обидно — «←» открывает меню паузы,
+    // где можно продолжить с того же места или закрыть тест.
+    // back не задан: выход из партии делает «Закончить игру» в этом меню.
+    mode: 'compatTest', title: '«Пройдите тест»', group: 'two', menuTitle: '💖 Пройдите тест',
+    pause: 'pauseCompatTestGame', resume: 'resumeCompatTestGame', finish: 'finishPausedCompatTestGame',
     screens: ['compatTestGame'],
   },
 

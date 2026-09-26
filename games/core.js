@@ -334,6 +334,11 @@ let state = {
   // уже посчитанные результаты, а не сырые ответы.
   compatTestType:'characters', compatTestIndex:0, compatTestCurrentPlayer:0,
   compatTestAnswers:[[],[]], compatTestResult:null, compatTestHistory:[],
+  // compatTestPaused — снимок места остановки для меню паузы: индекс
+  // утверждения, номер игрока и показывалась ли карточка «Передайте
+  // телефон». Без последнего флага «Продолжить игру» мог вернуть игрока на
+  // вопрос, который он уже видел, или на хендофф там, где вопрос не показывали.
+  compatTestPaused:null,
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании".
@@ -2005,6 +2010,7 @@ function performFullReset(){
   state.compatTestAnswers = [[], []];
   state.compatTestResult = null;
   state.compatTestHistory = [];
+  state.compatTestPaused = null;
   // Во что поиграть? (дети)
   state.whatToPlayUsed = [];
   state.whatToPlayFavorites = [];
@@ -2659,6 +2665,26 @@ document.addEventListener('keydown', (e)=>{
   // Пауза имеет смысл только во время партии — вне игры стрелка не мешает.
   if(state.inProgress){
     e.preventDefault();
+    // Паузу берём из реестра по активному экрану, как это делает кнопка «←»
+    // в шапке. Раньше здесь стоял безусловный pauseGame() — то есть пауза
+    // ВСЕХ игр. Например во время «Пройдите тест» или «Тайных ответов»
+    // клавиша открывала меню «Пауза — 💘 Фанты», и «Продолжить игру»
+    // запускало совсем другую игру. Для экрана #game (это «Фанты») пауза
+    // остаётся прежней, а для остальных берётся своя.
+    let pauseFn = null;
+    // Активные игровые экраны берём напрямую: getActiveGameScreenIds()
+    // живёт внутри IIFE в games/fants-timer.js и отсюда недоступна.
+    document.querySelectorAll('.screen.active').forEach(sid=>{
+      if(pauseFn || sid.id === 'setup') return;
+      const g = gameByScreen(sid.id);
+      if(g && g.pause && typeof window[g.pause] === 'function') pauseFn = g.pause;
+    });
+    if(pauseFn){ window[pauseFn](); return; }
+    // Игры без паузы (noPause) выходят через свой back.
+    for(const el of document.querySelectorAll('.screen.active')){
+      const g = gameByScreen(el.id);
+      if(g && g.noPause && g.back && typeof window[g.back] === 'function'){ window[g.back](); return; }
+    }
     pauseGame();
   }
 });
