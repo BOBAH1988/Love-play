@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-26 · v507';
+  window.APP_BUILD = '2026-09-26 · v508';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v507</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэша">версии v508</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -1565,6 +1565,7 @@
         <li>«Выход» в любой момент вернёт в меню.</li>
         <li>Механические часы встречаются в трёх видах: с полным набором цифр (1-12), сокращённые (12, 3, 6, 9) и римские (I-XII).</li>
         <li>Разговорное время: карточка показывает фразу («полвторого», «четверть пятого»), ответ — время цифрами. И обратно — вопрос цифрами, ответ — разговорное выражение.</li>
+        <li>Варианты ответа специально похожие — это не опечатка. Среди них есть настоящие ошибки: перепутал разряды (10:20 прочитал как 20:10), перевернул цифры минут (16:45 → 16:54), потерял ноль (16:05 → 16:50) или посчитал по 12-часовой шкале (18:30 → 6:30). Сначала прочитай обе цифры, потом ищи совпадение.</li>
       </ol>
       <button class="btn btn-primary" id="closeFlashTimeRulesBtn">Понятно</button>
     </div>
@@ -4427,7 +4428,7 @@
 <script src="cards/cards_whattoplay.js?v=20260928w"></script>
 <script src="cards/cards_kids_krokodil.js?v=20260911a"></script>
 <script src="cards/cards_kids_memes.js?v=20260911a"></script>
-<script src="cards/cards_flash.js?v=20260929b"></script>
+<script src="cards/cards_flash.js?v=20260926b"></script>
 <script src="cards/cards_kids_saper.js?v=20260929c"></script>
 <script src="cards/cards_party_hangman.js?v=20260829g"></script>
 <script src="cards/cards_shop.js?v=20260928p"></script>

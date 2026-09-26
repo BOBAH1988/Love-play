@@ -2733,6 +2733,93 @@ function checkQuizNoRepeat() {
   );
 }
 
+// Карточки темы «Время» (games/kids-flash-time.js). Раньше варианты ответа
+// отличались только числом часов — минуты во всех четырёх были одинаковыми,
+// и задача сводилась к совпадению первых двух цифр. Теперь варианты — это
+// типичные ошибки ребёнка (перепутал разряды, перевернул цифры минут, взял
+// 12-часовую шкалу), и проверки ниже это закрепляют.
+function checkTimeCards() {
+  group('Карточки «Время»');
+  const src = read('cards/cards_flash.js');
+  const rows = [...src.matchAll(
+    /\{ theme: 'time', sub: '(\w+)', word: '([^']+)', translation: '([^']+)', options: \[([^\]]*)\], answer: (\d+) \}/g
+  )].map((m) => ({
+    sub: m[1],
+    word: m[2],
+    translation: m[3],
+    options: [...m[4].matchAll(/'([^']*)'/g)].map((x) => x[1]),
+    answer: Number(m[5]),
+  }));
+
+  check('карточки «Время» разобраны', rows.length > 0, 'theme: time не читается');
+  if (rows.length === 0) return;
+
+  const broken = rows.filter((c) =>
+    c.options.length !== 4 ||
+    new Set(c.options).size !== 4 ||
+    c.answer < 0 || c.answer > 3 ||
+    c.options[c.answer] !== c.translation);
+  check(
+    'в каждой карточке «Время» 4 разных варианта и верный = translation',
+    broken.length === 0,
+    `битых карточек: ${broken.length}${broken.length ? ' — например «' + broken[0].word + '»' : ''}`
+  );
+
+  // Главная беда прежних данных: все варианты с одинаковыми минутами (или, для
+  // механических, с одинаковым часом) — правильный выдавался по остаткам.
+  const digits = (t) => (t.match(/(\d+)\s*мин/) || [])[1];
+  const hoursOf = (t) => (t.match(/(\d+):/) || [])[1];
+  const sameMinutes = rows.filter((c) => {
+    const d = c.options.map(digits).filter(Boolean);
+    return d.length === 4 && new Set(d).size === 1;
+  });
+  check(
+    'в карточках «Время» варианты не отличаются только часами',
+    sameMinutes.length === 0,
+    `таких карточек: ${sameMinutes.length}${sameMinutes.length ? ' — например «' + sameMinutes[0].word + '»' : ''}`
+  );
+
+  const sameHours = rows.filter((c) => {
+    if (c.sub !== 'mech') return false;      // у механических варианты «H:MM»
+    const h = c.options.map(hoursOf).filter(Boolean);
+    return h.length === 4 && new Set(h).size === 1;
+  });
+  check(
+    'в механических карточках «Время» варианты не отличаются только минутами',
+    sameHours.length === 0,
+    `таких карточек: ${sameHours.length}${sameHours.length ? ' — например «' + sameHours[0].word + '»' : ''}`
+  );
+
+  // На 12-часовом циферблате 12:30 и 0:30 выглядят одинаково: такой вариант
+  // был бы вторым правильным ответом.
+  const shown = (h) => (h === 0 ? 12 : h > 12 ? h - 12 : h);
+  const twins = rows.filter((c) => {
+    if (c.sub !== 'mech') return false;
+    const m = c.translation.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return false;
+    return c.options.some((o) => {
+      if (o === c.translation) return false;
+      const q = o.match(/^(\d{1,2}):(\d{2})$/);
+      return q && shown(Number(q[1])) === shown(Number(m[1])) && q[2] === m[2];
+    });
+  });
+  check(
+    'в механических карточках «Время» нет неразличимого на циферблате варианта',
+    twins.length === 0,
+    `таких карточек: ${twins.length}${twins.length ? ' — например «' + twins[0].word + '»' : ''}`
+  );
+
+  // Правильный ответ не должен попадать в одну и ту же позицию подряд: в разных
+  // подтипах распределение должно быть близко к равномерному.
+  const dist = [0, 0, 0, 0];
+  rows.forEach((c) => { dist[c.answer]++; });
+  check(
+    'позиция верного ответа в карточках «Время» распределена равномерно',
+    dist.every((n) => n >= rows.length / 4 - rows.length / 4 * 0.35),
+    `распределение: ${dist.join(' / ')} из ${rows.length}`
+  );
+}
+
 function main() {
   const html = read('index.html');
   const { missingIds } = checkScripts(html);
@@ -2745,6 +2832,7 @@ function main() {
   checkRegistry();
   checkKidsQuizCards();
   checkPartyQuizCards();
+  checkTimeCards();
   checkQuizNoRepeat();
   checkPauseResetOnStart();
   checkExitNavigation();
