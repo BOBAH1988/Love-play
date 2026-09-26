@@ -1622,15 +1622,21 @@
      оформления, что и у карточек компании/детей, только в розовом тоне.
      Фон тёмный, поэтому текст (включая заголовок хода и плашку типа
      Правда/Действие) перекрашен в белый. */
-  #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard, #sexQuestCard, #passionMapCard{
+  #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard, #sexQuestCard, #passionMapCard, #compatTestCard{
     background:linear-gradient(160deg, #e0559a, #8a2f66 55%, var(--bg2));
     color:#fff;
   }
   #card .card-text, #tdCard .card-text, #timerCard .card-text,
   #wishlistCard .card-text, #znayuCard .card-text, #ideasCard .card-text, #sexQuestCard .card-text,
-  #passionMapCard .card-text{
+  #passionMapCard .card-text, #compatTestCard .card-text{
     color:#fff;
   }
+  /* Текст вопроса и подсказка в «Пройдите тест». Базовое .card светлое
+     (--card-bg + тёмный #2b0f2e), поэтому на тёмно-розовой карточке группы
+     «Для двоих» без этого текст был бы почти невидим. У «Викторины» тот
+     же вопрос перекрашен отдельным правилом — здесь то же самое. */
+  #compatTestCard .znayu-question-text{ color:#fff; }
+  #compatTestCard .compat-test-hint{ color:rgba(255,255,255,.7); }
   /* Заголовок "Ход игрока" и разделитель под ним рассчитаны на светлый фон
      карточки (тёмно-серый текст, тёмная линия) — на тёмном фоне этих карточек
      были почти невидимы. */
@@ -2981,7 +2987,10 @@
   /* "Пройдите тест": подсказка на карточке передачи телефона, вывод результата
      и записи в "Пройденных". Кнопки ответов (.znayu-answer-btn) и карточка
      (.card) переиспользуют общие компоненты — здесь только новые элементы. */
-  .compat-test-hint{ display:block; margin-top:8px; font-size:12px; color:rgba(255,255,255,.65); line-height:1.4; }
+  /* Цвет подсказки задан выше по #compatTestCard (на тёмно-розовой карточке),
+     поэтому здесь только раскладка — чтобы правило работало и на светлом фоне
+     без перекраски. */
+  .compat-test-hint{ display:block; margin-top:8px; font-size:12px; line-height:1.4; }
   .compat-test-verdict{ font-size:15px; line-height:1.5; color:#fff; margin-bottom:12px; }
   .compat-test-sums{ display:flex; flex-direction:column; gap:8px; }
   .compat-test-sum-row{
