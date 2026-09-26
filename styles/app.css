@@ -1321,6 +1321,10 @@
    #businessLemonadeGame .btn{ padding:8px 16px; font-size:14px; min-height:40px; }
    #businessLemonadeGame .btn-primary{ min-height:40px; }
    #businessLemonadeGame .starter-btn{ padding:6px 10px; font-size:13px; min-height:38px; }
+   /* Выбор объёма лимонада: четыре кнопки (10/20/30/40 стаканов) в общий ряд
+      не помещаются на узком экране — кладём их сеткой по две в строке. */
+   #businessLemonadeGame #bizLemonQuantityGroup{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+   #businessLemonadeGame #bizLemonQuantityGroup .starter-btn{ width:100%; max-width:none; }
    .biz-step-title{ font-size:18px; font-weight:800; margin:4px 0 10px; text-align:center; }
   .biz-breakdown-box{
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
@@ -1340,6 +1344,9 @@
     text-shadow:0 2px 8px rgba(0,0,0,.3);
   }
   .biz-result-highlight.biz-loss{ color:#ff6b6b; }
+  /* Красный акцент «так не делай» — общий для подсказок о прогнозе спроса и
+     для строки итогов о нераспроданных стаканах (класс ставится из JS). */
+  #businessLemonadeGame .biz-loss{ color:#ff9d9d; }
   .biz-quiz-progress{ text-align:center; font-size:13px; color:#cba0bf; margin-bottom:10px; }
   /* Кнопки мини-проверки используют единый компонент .znayu-answer-btn из
      конца файла; локальных цветовых исключений здесь намеренно нет. */

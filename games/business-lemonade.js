@@ -39,12 +39,16 @@ function bizDayOfWeek(day){ return BIZ_DAYS_OF_WEEK[(Math.max(1, day) - 1) % 7];
 
 // weekdayMult/weekendMult — во сколько раз меняется поток людей в будни и
 // в выходные (перемножается с погодным множителем demand).
+// perHour — сколько человек в среднем проходит мимо ларька за один час в
+// этом месте. Это базовый ПОТОК ПОКУПАТЕЛЕЙ: за день он умножается на
+// выбранное время работы, погоду, будни/выходные и событие (см. bizFootfall).
+// demand — во сколько раз поток меняется от погоды.
 const BIZ_LOCATIONS = {
-  school:  { name: 'У школы', icon: '🏫', rentPerHour: 9, hint: 'В будни многолюдно, по выходным почти пусто', demand: { hot: 1.0, normal: 1.0, rain: 0.9 }, weekdayMult: 1.3, weekendMult: 0.3 },
-  station: { name: 'У остановки', icon: '🚌', rentPerHour: 0, hint: 'Много спешащих мимо людей в будни, аренда бесплатная', demand: { hot: 1.0, normal: 1.0, rain: 0.95 }, weekdayMult: 1.25, weekendMult: 0.6 },
-  mall:    { name: 'У торгового центра', icon: '🏬', rentPerHour: 15, hint: 'Людно каждый день, но аренда подороже', demand: { hot: 1.0, normal: 1.05, rain: 1.1 }, weekdayMult: 1.0, weekendMult: 1.15 },
-  park:    { name: 'В парке', icon: '🌳', rentPerHour: 6, hint: 'По выходным сюда приходят гулять семьями', demand: { hot: 0.9, normal: 0.85, rain: 0.9 }, weekdayMult: 0.8, weekendMult: 1.3 },
-  beach:   { name: 'На пляже', icon: '🏖️', rentPerHour: 18, hint: 'Отлично в жару, но пусто в дождь', demand: { hot: 1.5, normal: 1.0, rain: 0.4 }, weekdayMult: 0.9, weekendMult: 1.2 },
+  school:  { name: 'У школы', icon: '🏫', rentPerHour: 9, hint: 'В будни многолюдно, по выходным почти пусто', perHour: 3.5, demand: { hot: 1.05, normal: 1.0, rain: 0.8 }, weekdayMult: 1.3, weekendMult: 0.35 },
+  station: { name: 'У остановки', icon: '🚌', rentPerHour: 0, hint: 'Много спешащих мимо людей в будни, аренда бесплатная', perHour: 3.2, demand: { hot: 0.95, normal: 1.0, rain: 0.85 }, weekdayMult: 1.25, weekendMult: 0.6 },
+  mall:    { name: 'У торгового центра', icon: '🏬', rentPerHour: 15, hint: 'Людно каждый день, но аренда подороже', perHour: 4.1, demand: { hot: 1.0, normal: 1.05, rain: 1.1 }, weekdayMult: 1.0, weekendMult: 1.15 },
+  park:    { name: 'В парке', icon: '🌳', rentPerHour: 6, hint: 'По выходным сюда приходят гулять семьями', perHour: 2.8, demand: { hot: 1.0, normal: 0.9, rain: 0.75 }, weekdayMult: 0.8, weekendMult: 1.3 },
+  beach:   { name: 'На пляже', icon: '🏖️', rentPerHour: 18, hint: 'Отлично в жару, но пусто в дождь', perHour: 2.5, demand: { hot: 1.5, normal: 1.0, rain: 0.3 }, weekdayMult: 0.9, weekendMult: 1.2 },
 };
 const BIZ_WEATHERS = [
   { key: 'hot', icon: '☀️', name: 'Жара' },
@@ -83,39 +87,49 @@ function bizCompetitorMult(price, competitorPrice){
 // Развитие стоит дороже, чем стартовый капитал (200 ₽) — сходу купить
 // ничего нельзя, сначала нужно честно заработать хотя бы день-два.
 // Цена улучшения фиксированная: партия больше не ограничена числом дней.
+// flow — приводит БОЛЬШЕ людей (вывеска и вторая тележка видны издалека),
+// conv — те, кто подошёл, чаще решается купить (вкуснее, веселее, быстрее).
 const BIZ_UPGRADES = {
-  recipe:      { name: '🧪 Улучшенный рецепт', basePrice: 220, mult: 0.10, desc: 'Вкуснее лимонад — +10% к числу покупателей' },
-  music:       { name: '🎵 Весёлая колонка', basePrice: 350, mult: 0.15, desc: '+15% к числу покупателей до конца партии' },
-  sign:        { name: '🪧 Яркая вывеска', basePrice: 500, mult: 0.20, desc: '+20% к числу покупателей до конца партии' },
-  seller:      { name: '🧑‍💼 Позвать друга помогать', basePrice: 750, mult: 0.30, desc: 'Меньше очередей — +30% к числу покупателей' },
-  secondStand: { name: '🛒 Вторая тележка', basePrice: 1250, mult: 0.50, desc: 'Продажи ещё в одном месте — +50% к числу покупателей' },
+  recipe:      { name: '🧪 Улучшенный рецепт', basePrice: 220, flow: 0,    conv: 0.12, desc: 'Вкуснее лимонад — чаще берут (+12% желающих купить)' },
+  music:       { name: '🎵 Весёлая колонка', basePrice: 350, flow: 0,    conv: 0.15, desc: 'Засвидетали у ларька — чаще берут (+15%)' },
+  sign:        { name: '🪧 Яркая вывеска', basePrice: 500, flow: 0.20, conv: 0,    desc: 'Видно издалека — мимо проходит больше людей (+20%)' },
+  seller:      { name: '🧑‍💼 Позвать друга помогать', basePrice: 750, flow: 0,    conv: 0.30, desc: 'Обслуживает быстро, очередь не отпугивает (+30%)' },
+  secondStand: { name: '🛒 Вторая тележка', basePrice: 1250, flow: 0.50, conv: 0,   desc: 'Торгуешь в двух местах — поток людей больше на 50%' },
 };
 // Цена улучшения фиксированная: партия больше не ограничена числом дней,
 // поэтому снижать стоимость к концу партии больше не нужно.
 function bizUpgradePrice(basePrice){
   return basePrice;
 }
-const BIZ_WORK_HOURS = [
-  { hours: 1, mult: 0.35 },
-  { hours: 3, mult: 0.7 },
-  { hours: 6, mult: 1.0 },
-];
-function bizHoursMult(hours){
-  const h = BIZ_WORK_HOURS.find(x => x.hours === hours);
-  return h ? h.mult : 1.0;
-}
-// Опции к напитку. costType 'perCup' — цена за каждый приготовленный стакан,
-// 'flatDay' — разовая плата за весь день независимо от количества стаканов.
-// weatherKey+onMult/offMult — опция влияет на спрос только в указанную
-// погоду, иначе не действует; обычный mult — действует всегда, пока включена.
+// Время работы: 1, 3 или 6 часов. Каждый лишний час — это новые прохожие,
+// поэтому в формуле потока часы входят линейно (см. bizFootfall), а аренда
+// считается по часам.
+const BIZ_WORK_HOURS = [1, 3, 6];
+// Опции к напитку. costType 'perCup' — цена за каждый ПРИГОТОВЛЕННЫЙ стакан
+// (даже если его никто не купит), 'flatDay' — разовая плата за весь день.
+// mult — во сколько раз опция повышает желание купить. Сила эффекта зависит
+// от контекста: ice сильнее всего в жару и мешает в прохладу, umbrella спасает
+// от солнца на пляже, colorCup и straw нравятся детям — у школы и в парке.
+// priceShield — насколько опция «оправдывает» высокую цену: с дорогими
+// добавками покупатель легче соглашается на неудобную цену.
 const BIZ_OPTIONS = {
-  ice:      { name: 'Лёд', icon: '🧊', costType: 'perCup', cost: 1, weatherKey: 'hot', onMult: 1.15, offMult: 0.9, hint: 'В жару разбирают быстрее' },
-  umbrella: { name: 'Зонтик', icon: '☂️', costType: 'perCup', cost: 1, mult: 1.06, hint: 'Красивая мелочь в стакане' },
-  colorCup: { name: 'Цветной стакан', icon: '🧋', costType: 'perCup', cost: 1, mult: 1.08, hint: 'Ярче — заметнее издалека' },
-  straw:    { name: 'Узорная трубочка', icon: '🥤', costType: 'perCup', cost: 1, mult: 1.05, hint: 'Приятная мелочь для покупателей' },
+  ice:      { name: 'Лёд', icon: '🧊', costType: 'perCup', cost: 2, priceShield: 0.08, hint: 'В жару берут охлаждённый: ×1.25 в жару, ×0.9 в прохладу' },
+  umbrella: { name: 'Зонтик', icon: '☂️', costType: 'perCup', cost: 1, priceShield: 0.06, hint: 'На пляже спасает от солнца: ×1.25 там, ×1.05 в остальных местах' },
+  colorCup: { name: 'Цветной стакан', icon: '🧋', costType: 'perCup', cost: 1, priceShield: 0.06, hint: 'Дети выбирают яркое: ×1.2 у школы и в парке, ×1.08 в остальных местах' },
+  straw:    { name: 'Узорная трубочка', icon: '🥤', costType: 'perCup', cost: 1, priceShield: 0.05, hint: 'Приятная мелочь: ×1.15 у школы и в парке, ×1.06 в остальных местах' },
 };
-// Доля раскупленных стаканов лимонада в зависимости от цены
-const BIZ_LEMONADE_DEMAND = { 10: 1, 20: 1, 30: 1, 40: 1, 50: 0.7, 60: 0.4, 70: 0.2 };
+// Спрос считается двумя шагами. Сначала ПОТОК — сколько человек вообще
+// пройдёт мимо за день (bizFootfall), потом КОНВЕРСИЯ — какая доля из них
+// реально купит стакан (bizConversion). Их произведение и есть число покупателей.
+const BIZ_BASE_CONVERSION = 0.75;   // доля прохожих, которые купят стакан при средней цене
+const BIZ_MAX_CONVERSION = 0.9;     // больше даже в идеале не покупают — все к одному ларьку не придут
+const BIZ_DEMAND_JITTER = 0.07;     // разброс дня: кто-то придёт не сразу, кто-то свернёт
+// Во сколько раз меняется желание купить в зависимости от цены. Промежутки
+// считаются по соседним точкам, поэтому таблица не привязана к кнопкам.
+const BIZ_PRICE_CONV = { 20: 1.20, 30: 1.0, 40: 0.80, 50: 0.60, 60: 0.42 };
+// Сколько стаканов игрок может приготовить за день. Кнопки строятся из этого
+// списка в renderBizQuantityGroup и отключаются, если лимонов в запасе меньше.
+const BIZ_CUP_CHOICES = [10, 20, 30, 40];
 
 // Лимоны — единственный продукт, который закупается заранее про запас (а не
 // свежим каждый день) и портится, если пролежит больше 3 дней. Покупка
@@ -327,6 +341,12 @@ function updateBizContextBar(){
   const ev = bizEventInfo();
   if(ev) chips.push(`${ev.icon} Событие`);
   if(state.businessLemonadeHours) chips.push(`⏰ ${state.businessLemonadeHours} ч`);
+  // Прогноз потока людей виден на всех шагах: именно он объясняет, почему
+  // в одном месте продаётся больше, а в другом меньше.
+  if(state.businessLemonadeHours && state.businessLemonadeLocation){
+    const fc = bizForecast();
+    chips.push(`👥 ≈${fc.people}`);
+  }
   const lemonStock = state.businessLemonadeLemonStock || 0;
   if(lemonStock > 0) chips.push(`🍋 ${lemonStock} шт.`);
   bar.innerHTML = chips.map(c => `<span class="biz-context-chip">${c}</span>`).join('');
@@ -476,10 +496,15 @@ function renderBizLocationList(){
     const on = state.businessLemonadeLocation === key;
     const flowMult = dow.weekend ? loc.weekendMult : loc.weekdayMult;
     const flowNote = flowMult >= 1.15 ? ' · сегодня людно' : (flowMult <= 0.6 ? ' · сегодня малолюдно' : '');
+    // Сколько человек проходит мимо за час именно сегодня: базовый поток
+    // места, умноженный на погоду и на сегодняшний день недели.
+    const weatherKey = state.businessLemonadeWeatherKey || 'normal';
+    const todayPerHour = loc.perHour * (loc.demand[weatherKey] || 1) * flowMult;
+    const perHourText = todayPerHour.toFixed(1).replace('.', ',');
     return `<button type="button" class="biz-location-item${on ? ' on' : ''}" data-key="${key}">
       <div class="biz-location-name">${loc.icon} ${loc.name}</div>
       <div class="biz-location-hint">${loc.hint}${flowNote}</div>
-      <div class="biz-location-rent">🏠 Аренда: ${loc.rentPerHour} ₽/час</div>
+      <div class="biz-location-rent">👥 Сегодня мимо проходит ≈ ${perHourText} чел./час · 🏠 Аренда: ${loc.rentPerHour} ₽/час</div>
     </button>`;
   }).join('');
   wrap.querySelectorAll('.biz-location-item').forEach(btn=>{
@@ -533,6 +558,7 @@ function renderBizHoursGroup(){
       preview.textContent = '';
     }
   }
+  updateBizFlowPreview();
 }
 document.querySelectorAll('#bizHoursGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -550,23 +576,89 @@ document.getElementById('bizToLemonsBtn').addEventListener('click', ()=>{
 renderBizLemonsPhase();
   goToBizPhase('bizPhaseLemons');
 });
-// Обработчик выбора количества стаканов лимонада
-function renderBizQuantityGroup(){
-  document.querySelectorAll('#bizLemonQuantityGroup .starter-btn').forEach(btn=>{
-    const v = parseInt(btn.dataset.value, 10);
-    const stock = state.businessLemonadeLemonStock || 0;
-    btn.classList.toggle('on', v === (state.businessLemonadeCups || 0));
-    btn.disabled = v > stock;
-  });
-  updateBizBuyBreakdownUI();
+/* ============ ШАГ 4: ПРОГНОЗ СПРОСА (общий для всех шагов) ============ */
+// Прогноз без разброса — честное ожидание, на нём игрок решает, сколько
+// готовить и какую цену ставить. Показывается на трёх шагах: время работы
+// (только поток людей — цена ещё не выбрана), приготовление и цена.
+function bizForecast(){
+  const fc = bizDemandForecast(state.businessLemonadePrice || 30, false);
+  fc.people = Math.round(fc.people);
+  fc.rangeText = (fc.buyersMin === fc.buyersMax) ? `${fc.buyers}` : `${fc.buyersMin}–${fc.buyersMax}`;
+  return fc;
 }
-document.querySelectorAll('#bizLemonQuantityGroup .starter-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    if(btn.disabled) return;
-    state.businessLemonadeCups = parseInt(btn.dataset.value, 10);
-    saveState();
-    renderBizQuantityGroup();
-  });
+// Поток людей известен уже после выбора места и времени — он не зависит от
+// цены, поэтому его можно показать до закупки лимонов.
+function updateBizFlowPreview(){
+  const el = document.getElementById('bizFlowPreview');
+  if(!el) return;
+  const hours = state.businessLemonadeHours;
+  if(!hours || !state.businessLemonadeLocation){ el.textContent = ''; return; }
+  const fc = bizForecast();
+  el.textContent = `👥 За ${hours} ч мимо ларька пройдёт ≈ ${fc.people} человек. Сколько из них купят стакан — зависит от цены и опций (это дальше).`;
+}
+// Прогноз покупателей на шаге «приготовление»: поток + желание купить при
+// текущей цене. Если приготовлено больше прогноза — прямое предупреждение,
+// что лишнее выбросят.
+function updateBizDemandHint(){
+  const el = document.getElementById('bizDemandHint');
+  if(!el) return;
+  const cups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
+  if(cups <= 0 || !state.businessLemonadeHours){ el.style.display = 'none'; return; }
+  const fc = bizForecast();
+  el.style.display = 'block';
+  if(fc.buyers >= cups){
+    el.textContent = `👥 Мимо пройдёт ≈ ${fc.people} человек, купят ≈ ${fc.rangeText} (если цена останется ${state.businessLemonadePrice} ₽) — твоих ${cups} стаканов хватит всем.`;
+  } else {
+    el.textContent = `👥 Мимо пройдёт ≈ ${fc.people} человек, но купят только ≈ ${fc.rangeText} (при цене ${state.businessLemonadePrice} ₽). Приготовив ${cups}, ты выбросишь примерно ${cups - fc.buyers} стак. — деньги на них уже потрачены.`;
+  }
+  el.classList.toggle('biz-loss', fc.buyers < cups);
+}
+// Развёрнутый прогноз на шаге «цена»: сравнение спроса с тем, что приготовлено,
+// и напоминание, что лишнее сгорает.
+function updateBizDemandPreview(){
+  const el = document.getElementById('bizDemandPreview');
+  if(!el) return;
+  const cups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
+  const price = state.businessLemonadePrice || 30;
+  const fc = bizForecast();
+  const parts = [
+    `👥 Мимо пройдёт ≈ ${fc.people} человек за ${state.businessLemonadeHours} ч.`,
+    `🍋 Купят ≈ ${fc.rangeText} стак. (цена ${price} ₽).`,
+  ];
+  if(cups > 0){
+    parts.push(fc.buyers >= cups
+      ? `✅ Твоих ${cups} стаканов хватит — все уйдут покупателям.`
+      : `⚠️ Покупателей меньше, чем стаканов: примерно ${cups - fc.buyers} из ${cups} останутся и сгорят. Попробуй приготовить ${Math.max(BIZ_CUP_CHOICES[0], Math.round(fc.buyers / 10) * 10)} стаканов или снизить цену.`);
+  }
+  el.textContent = parts.join(' ');
+  el.classList.toggle('biz-loss', cups > fc.buyers);
+}
+// Обработчик выбора количества стаканов лимонада. Кнопки строятся из
+// BIZ_CUP_CHOICES: сколько можно приготовить, столько и предлагаем, а лишние
+// (на которые не хватает лимонов в запасе) просто отключаются.
+function renderBizQuantityGroup(){
+  const wrap = document.getElementById('bizLemonQuantityGroup');
+  if(!wrap) return;
+  const stock = state.businessLemonadeLemonStock || 0;
+  // Если выбранного количества больше, чем позволяет запас (например, после
+  // покупки меньшего пакета), молча снижаем до ближайшего доступного.
+  const maxCups = Math.max(0, ...BIZ_CUP_CHOICES.filter(v => v <= stock));
+  if(!BIZ_CUP_CHOICES.includes(state.businessLemonadeCups) || state.businessLemonadeCups > stock){
+    state.businessLemonadeCups = maxCups || 0;
+  }
+  wrap.innerHTML = BIZ_CUP_CHOICES.map(v=>{
+    const on = v === state.businessLemonadeCups;
+    return `<button type="button" class="starter-btn mode-btn${on ? ' on' : ''}" data-value="${v}"${v > stock ? ' disabled' : ''}>${v} стаканов</button>`;
+  }).join('');
+  updateBizBuyBreakdownUI();
+  updateBizDemandHint();
+}
+document.getElementById('bizLemonQuantityGroup').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.starter-btn');
+  if(!btn || btn.disabled) return;
+  state.businessLemonadeCups = parseInt(btn.dataset.value, 10);
+  saveState();
+  renderBizQuantityGroup();
 });
 
 /* ============ ШАГ 3: ЗАКУПКА ЛИМОНОВ ПРО ЗАПАС ============ */
@@ -674,6 +766,8 @@ function renderBizOptionsGrid(){
       playNeutralSound();
       renderBizOptionsGrid();
       updateBizBuyBreakdownUI();
+      // Опции меняют спрос — прогноз покупателей должен обновиться сразу.
+      updateBizDemandHint();
     });
   });
 }
@@ -703,6 +797,12 @@ function updateBizBuyBreakdownUI(){
   if(lemonCups > 0){
     rowsHtml += `<div class="biz-breakdown-row"><span>🍋 Лимоны (из запаса)</span><span>${lemonCups} шт. · 0 ₽</span></div>`;
     rowsHtml += `<div class="biz-breakdown-row"><span>🧾 Лимонад: сахар + стаканчики</span><span>${lemonExpenses} ₽</span></div>`;
+  }
+  // Лимоны покупаются пачками, а в конце дня весь запас сгорает: показываем
+  // прямо в чеке, сколько купленного пропадёт зря.
+  const lemonStockLeft = (state.businessLemonadeLemonStock || 0) - lemonCups;
+  if(lemonStockLeft > 0){
+    rowsHtml += `<div class="biz-breakdown-row"><span>🗑 Лишние лимоны</span><span>${lemonStockLeft} шт. — пропадут в конце дня (деньги уже потрачены)</span></div>`;
   }
   Object.keys(BIZ_OPTIONS).forEach(key=>{
     if(!options[key]) return;
@@ -815,6 +915,8 @@ function renderBizPriceGroup(){
   document.querySelectorAll('#bizPriceGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.businessLemonadePrice || 30));
   });
+  // Прогноз покупателей зависит от цены сильнее всего — пересчитываем здесь.
+  updateBizDemandPreview();
 }
 document.querySelectorAll('#bizPriceGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -827,28 +929,100 @@ document.getElementById('bizSellBtn').addEventListener('click', ()=>{
   playSuccessSound();
   bizSellDay();
 });
-// Расчёт спроса на лимонад с учётом всех факторов
-function bizDrinkDemand(price, weatherKey, locationKey, options, dow, hours){
-   // Базовая таблица спроса от цены
-   const priceFrac = BIZ_LEMONADE_DEMAND[price] !== undefined ? BIZ_LEMONADE_DEMAND[price] : 1;
-   const loc = BIZ_LOCATIONS[locationKey] || BIZ_LOCATIONS.school;
-   const locWeatherMult = loc.demand[weatherKey] || 1;
-   const locDowMult = dow.weekend ? loc.weekendMult : loc.weekdayMult;
-   const ev = bizEventInfo();
-   const eventMult = ev ? ev.mult : 1;
-   const upgrades = state.businessLemonadeUpgrades || {};
-   let upgradeMult = 1;
-   Object.keys(BIZ_UPGRADES).forEach(k=>{ if(upgrades[k]) upgradeMult += BIZ_UPGRADES[k].mult; });
-   let optionsMult = 1;
-   if(options.ice){
-     // Лёд для лимонада
-     optionsMult *= (weatherKey === 'hot' ? 1.15 : 0.9);
-   }
-   if(options.umbrella) optionsMult *= 1.06;
-   if(options.colorCup) optionsMult *= 1.08;
-   if(options.straw) optionsMult *= 1.05;
-   const hMult = bizHoursMult(hours);
-   return priceFrac * locWeatherMult * locDowMult * eventMult * upgradeMult * optionsMult * hMult;
+/* ---------- СПРОС: сколько стаканов купят сегодня ----------
+   Считается в два шага, оба считаются ОДИН раз в день:
+   1) ПОТОК (bizFootfall) — сколько человек вообще пройдёт мимо за день:
+      место (perHour) × часы работы × погода × будни/выходные × событие ×
+      развитие, которое приводит людей (вывеска, вторая тележка);
+   2) КОНВЕРСИЯ (bizConversion) — какая доля прохожих купит стакан:
+      цена, конкурент, вкус (рецепт/колонка/помощник) и опции к напитку.
+   Покупатели = поток × конверсия. Стаканы продаются только тем, кто купил:
+   приготовил больше, чем купили, — остаток сгорает (см. bizSellDay). */
+function bizFootfall(locationKey, weatherKey, dow, hours){
+  const loc = BIZ_LOCATIONS[locationKey] || BIZ_LOCATIONS.school;
+  const locWeatherMult = loc.demand[weatherKey] || 1;
+  const locDowMult = dow.weekend ? loc.weekendMult : loc.weekdayMult;
+  const ev = bizEventInfo();
+  const eventMult = ev ? ev.mult : 1;
+  // Развитие, которое приводит ЛЮДЕЙ (а не увеличивает желание купить).
+  const upgrades = state.businessLemonadeUpgrades || {};
+  let upgradeFlow = 1;
+  Object.keys(BIZ_UPGRADES).forEach(k=>{ if(upgrades[k]) upgradeFlow += BIZ_UPGRADES[k].flow; });
+  // Часы работы: каждый лишний час — это новые прохожие, поэтому поток
+  // растёт пропорционально времени (1 / 3 / 6 часов).
+  return loc.perHour * hours * locWeatherMult * locDowMult * eventMult * upgradeFlow;
+}
+// Желание купить в зависимости от цены: между точками BIZ_PRICE_CONV
+// считается по линейной интерполяции, поэтому таблица не привязана к кнопкам.
+function bizPriceConvMult(price){
+  const pts = Object.keys(BIZ_PRICE_CONV).map(Number).sort((a,b)=>a-b);
+  const p = Math.max(pts[0], Math.min(pts[pts.length-1], Number(price) || pts[0]));
+  for(let i = 0; i < pts.length - 1; i++){
+    const lo = pts[i], hi = pts[i+1];
+    if(p <= hi){
+      const t = (p - lo) / (hi - lo);
+      return BIZ_PRICE_CONV[lo] + (BIZ_PRICE_CONV[hi] - BIZ_PRICE_CONV[lo]) * t;
+    }
+  }
+  return BIZ_PRICE_CONV[pts[pts.length-1]];
+}
+// Желание купить с учётом опций к напитку. Сила каждой опции зависит от
+// места и погоды: лёд спасает в жару, зонтик — на пляже, яркий стакан и
+// трубочка нравятся детям у школы и в парке. shield — насколько опции
+// «оправдывают» высокую цену.
+function bizOptionsConv(options, locationKey, weatherKey){
+  const opts = options || {};
+  const kidsPlace = locationKey === 'school' || locationKey === 'park';
+  let mult = 1, shield = 0;
+  if(opts.ice){
+    mult *= (weatherKey === 'hot' ? 1.25 : 0.9);
+    shield += BIZ_OPTIONS.ice.priceShield;
+  }
+  if(opts.umbrella){
+    mult *= (locationKey === 'beach' ? 1.25 : 1.05);
+    shield += BIZ_OPTIONS.umbrella.priceShield;
+  }
+  if(opts.colorCup){
+    mult *= (kidsPlace ? 1.2 : 1.08);
+    shield += BIZ_OPTIONS.colorCup.priceShield;
+  }
+  if(opts.straw){
+    mult *= (kidsPlace ? 1.15 : 1.06);
+    shield += BIZ_OPTIONS.straw.priceShield;
+  }
+  return { mult, shield: Math.min(0.5, shield) };
+}
+// Желание купить с учётом развития, которое влияет на вкус и скорость
+// обслуживания (рецепт, колонка, помощник), и конкурента по соседству.
+function bizConversion(price, options, weatherKey, locationKey){
+  const priceRaw = bizPriceConvMult(price);
+  const { mult: optMult, shield } = bizOptionsConv(options, locationKey, weatherKey);
+  // Доп. услуги делают высокую цену терпимее: снимается часть скидки за цену.
+  const priceMult = 1 + (priceRaw - 1) * (1 - shield);
+  const upgrades = state.businessLemonadeUpgrades || {};
+  let upgradeConv = 1;
+  Object.keys(BIZ_UPGRADES).forEach(k=>{ if(upgrades[k]) upgradeConv += BIZ_UPGRADES[k].conv; });
+  const competitorMult = bizCompetitorMult(price, state.businessLemonadeCompetitorPrice);
+  return Math.min(BIZ_MAX_CONVERSION, BIZ_BASE_CONVERSION * priceMult * optMult * upgradeConv * competitorMult);
+}
+// Полный прогноз дня. rollJitter=true добавляет разброс реального дня
+// (покупателей может оказаться чуть больше или меньше прогноза) — только
+// в момент продаж, в интерфейсе показываем честный прогноз без разброса.
+function bizDemandForecast(price, rollJitter){
+  const dow = bizDayOfWeek(state.businessLemonadeDay || 1);
+  const weatherKey = state.businessLemonadeWeatherKey || 'normal';
+  const locationKey = state.businessLemonadeLocation || 'school';
+  const hours = state.businessLemonadeHours || 1;
+  const people = bizFootfall(locationKey, weatherKey, dow, hours);
+  const conv = bizConversion(price, state.businessLemonadeOptions || {}, weatherKey, locationKey);
+  const expected = people * conv;
+  const factor = rollJitter ? (1 - BIZ_DEMAND_JITTER + Math.random() * BIZ_DEMAND_JITTER * 2) : 1;
+  return {
+    people, conv, expected,
+    buyers: Math.max(0, Math.round(expected * factor)),
+    buyersMin: Math.max(0, Math.round(expected * (1 - BIZ_DEMAND_JITTER))),
+    buyersMax: Math.max(0, Math.round(expected * (1 + BIZ_DEMAND_JITTER))),
+  };
 }
 
 // Расчёт расходов на лимонад (без аренды и опций)
@@ -872,14 +1046,17 @@ function bizSellDay(){
    const lemonCups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
  const lemonPrice = state.businessLemonadePrice || 30;
 
-  // Расчёт спроса на лимонад
-  const lemonDemand = lemonCups > 0 ? bizDrinkDemand(lemonPrice, weatherKey, locationKey, options, dow, hours) : 0;
+  // Расчёт спроса: сколько человек мимо пройдёт и сколько из них купит стакан.
+  // Разброс дня ролится один раз здесь — в прогнозе интерфейса его нет, поэтому
+  // фактические продажи отличаются от прогноза на пару стаканов.
+  const forecast = bizDemandForecast(lemonPrice, true);
+  const lemonBuyers = lemonCups > 0 ? forecast.buyers : 0;
+  const lemonPeople = lemonCups > 0 ? Math.round(forecast.people) : 0;
 
-  // Продажи лимонада
-  let lemonSold = 0;
-  if(lemonDemand > 0 && lemonCups > 0){
-    lemonSold = Math.max(0, Math.min(lemonCups, Math.round(lemonCups * Math.min(1, lemonDemand * 2))));
-  }
+  // Продажи: стакан покупает один человек, поэтому больше, чем купили
+  // покупателей, продать невозможно. Нераспроданный остаток сгорает.
+  const lemonSold = Math.max(0, Math.min(lemonCups, lemonBuyers));
+  const lemonUnsold = Math.max(0, lemonCups - lemonSold);
 
   // Расходы: аренда, опции, продукты для лимонада
   const rentPerHour = (BIZ_LOCATIONS[locationKey] || { rentPerHour: 0 }).rentPerHour;
@@ -928,6 +1105,7 @@ function bizSellDay(){
     locationName: loc ? loc.name : '—', locationIcon: loc ? loc.icon : '❔',
     weatherIcon: w.icon, weatherName: w.name,
     lemonCups, lemonPrice, lemonSold, lemonExpenses, lemonRevenue,
+    lemonPeople, lemonBuyers, lemonUnsold,
     rent, optionsCost, totalExpenses, totalRevenue, netProfit,
   };
 
@@ -950,6 +1128,16 @@ function bizSellDay(){
   document.getElementById('bizResLemonRevenue').textContent = `${lemonRevenue} ₽`;
   const lemonRow = document.getElementById('bizResLemonRow');
   if(lemonRow) lemonRow.style.display = lemonCups > 0 ? '' : 'none';
+  // Откуда взялись покупатели и что осталось: это и есть главный урок дня —
+  // приготовить больше, чем покупают, значит выбросить деньги в мусор.
+  document.getElementById('bizResLemonPeople').textContent = `${lemonPeople} человек прошло, купили ${lemonBuyers}`;
+  const unsoldEl = document.getElementById('bizResLemonUnsold');
+  if(unsoldEl){
+    unsoldEl.textContent = lemonUnsold > 0
+      ? `${lemonUnsold} стак. осталось — выброшено (в мусор ушли лимоны и ${lemonUnsold * (BIZ_SUGAR_PER_CUP + BIZ_CUP_PER_CUP)} ₽ на сахар и стаканчики)`
+      : 'Всё приготовленное продано — ничего не пропало!';
+    unsoldEl.classList.toggle('biz-loss', lemonUnsold > 0);
+  }
 
   // Общие расходы, выручка и прибыль
   document.getElementById('bizResExpenses').textContent = `${totalExpenses} ₽`;
@@ -1078,13 +1266,16 @@ function showBizSummaryModal(){
   renderBizWeekChart(log);
   // Данные по лимонаду из дневного лога
   const drinkStats = {
-    'Лимонад': { sold:0, cups:0, revenue:0 }
+    'Лимонад': { sold:0, cups:0, revenue:0, unsold:0, buyers:0 }
   };
   log.forEach(rec=>{
     if(rec.lemonCups > 0){
       drinkStats['Лимонад'].cups += rec.lemonCups || 0;
       drinkStats['Лимонад'].sold += rec.lemonSold || 0;
       drinkStats['Лимонад'].revenue += rec.lemonRevenue || 0;
+      // lemonUnsold появился вместе с прогнозом спроса; в старых записях его нет.
+      drinkStats['Лимонад'].unsold += rec.lemonUnsold || 0;
+      drinkStats['Лимонад'].buyers += rec.lemonBuyers || 0;
     }
   });
   const drinkIcons = { 'Лимонад': '🍋' };
@@ -1098,6 +1289,8 @@ function showBizSummaryModal(){
           <div class="biz-drink-title">${drinkIcons[key]} ${key}</div>
           <div class="biz-breakdown-row"><span>Приготовлено стаканов</span><span>${d.cups}</span></div>
           <div class="biz-breakdown-row"><span>Продано стаканов</span><span>${d.sold} из ${d.cups}</span></div>
+          <div class="biz-breakdown-row"><span>Покупателей всего</span><span>${d.buyers}</span></div>
+          <div class="biz-breakdown-row"><span>Испорчено (приготовил больше, чем купили)</span><span>${d.unsold} стак.</span></div>
           <div class="biz-breakdown-row"><span>Заработано (выручка)</span><span>${d.revenue} ₽</span></div>
         </div>
       `;

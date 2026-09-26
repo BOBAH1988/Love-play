@@ -3526,6 +3526,77 @@ testAsync('PWA: «Обновить» активирует waiting-worker и не
   }
 });
 
+// Лимонадный ларёк: продажи ограничены числом покупателей. Раньше продажи
+// считались долей от ПРИГОТОВЛЕННЫХ стаканов (cups × min(1, demand × 2)), и
+// при demand ≥ 0.5 выдавалось «всё продано» — оптимального объёма не было.
+// Сценарий держит новую модель «поток × конверсия» и проверяет, что при
+// высокой цене (мало покупателей) лишние стаканы действительно остаются.
+test('Лимонадный ларёк: лишние стаканы не продаются, прогноз сходится', () => {
+  assert(typeof bizSellDay === 'function', 'bizSellDay не загрузилась');
+  assert(typeof bizDemandForecast === 'function', 'bizDemandForecast не загрузилась');
+  const saveStateBackup = state.businessLemonadeDayLog;
+  const reserveBackup = state.businessLemonadeReserve;
+  const moneyBackup = state.businessLemonadeMoney;
+  const upgradesBackup = Object.assign({}, state.businessLemonadeUpgrades);
+  try {
+    // Дешёвый день: школьная столовая, дождь, 1 час, цена 60 ₽.
+    // Покупателей мало, поэтому 40 приготовленных стаканов НЕ продадутся.
+    state.businessLemonadeDay = 1;
+    state.businessLemonadeDayLog = [];
+    state.businessLemonadeReserve = 10000;
+    state.businessLemonadeMoney = 0;
+    state.businessLemonadeUpgrades = { sign:false, music:false, recipe:false, seller:false, secondStand:false };
+    state.businessLemonadeLocation = 'school';
+    state.businessLemonadeHours = 1;
+    state.businessLemonadeWeatherKey = 'rain';
+    state.businessLemonadeEventIdx = -1;
+    state.businessLemonadeCompetitorPrice = null;
+    state.businessLemonadeOptions = {};
+    state.businessLemonadePrice = 60;
+    state.businessLemonadeCups = 40;
+    state.businessLemonadeLemonStock = 40;
+    const forecast = bizDemandForecast(60, false);
+    bizSellDay();
+    const rec = state.businessLemonadeDayLog[0];
+    assert(rec && rec.lemonSold < rec.lemonCups,
+      `при 1 часе и дожде должно остаться нерасподанным: продано ${rec.lemonSold} из ${rec.lemonCups}`);
+    assert(rec.lemonUnsold === rec.lemonCups - rec.lemonSold,
+      `нерасподанных ${rec.lemonUnsold} ≠ ${rec.lemonCups} − ${rec.lemonSold}`);
+    assert(rec.lemonBuyers <= Math.max(forecast.buyersMax, 1),
+      `покупателей ${rec.lemonBuyers} заметно больше прогноза ${forecast.buyersMax}`);
+    assert(rec.lemonSold <= rec.lemonBuyers,
+      'продано больше, чем пришло покупателей');
+
+    // Тот же день, но дорогая цена не должна давать больше покупателей.
+    state.businessLemonadePrice = 20;
+    const cheap = bizDemandForecast(20, false);
+    assert(cheap.buyers > forecast.buyers,
+      `дешёвая цена должна давать больше покупателей (${cheap.buyers} против ${forecast.buyers})`);
+
+    // Лёд в жару полезен, в дождю — нет. Погоду переключаем ДО расчёта,
+    // иначе все четыре прогноза считаются для одной погоды.
+    state.businessLemonadeHours = 6;
+    state.businessLemonadeOptions = {};
+    state.businessLemonadeWeatherKey = 'hot';
+    const hot = bizDemandForecast(40, false);
+    state.businessLemonadeOptions = { ice: true };
+    const hotIce = bizDemandForecast(40, false);
+    state.businessLemonadeOptions = {};
+    state.businessLemonadeWeatherKey = 'rain';
+    const rain = bizDemandForecast(40, false);
+    state.businessLemonadeOptions = { ice: true };
+    const rainIce = bizDemandForecast(40, false);
+    assert(hotIce.buyers > hot.buyers, 'лёд в жару должен повышать спрос');
+    assert(rainIce.buyers < rain.buyers, 'лёд в дождь должен снижать спрос');
+  } finally {
+    state.businessLemonadeDayLog = saveStateBackup;
+    state.businessLemonadeReserve = reserveBackup;
+    state.businessLemonadeMoney = moneyBackup;
+    state.businessLemonadeUpgrades = upgradesBackup;
+    state.businessLemonadeOptions = {};
+  }
+});
+
 console.log('\n=== Запуск тестов ===\n');
 
 tests.forEach(t => {
