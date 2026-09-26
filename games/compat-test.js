@@ -103,11 +103,33 @@ function renderCompatTestTypeGroup(){
   });
 }
 
+// Выход с экрана настройки — прямо в хаб, раздел «Игры для пар 18+».
+//
+// Раньше здесь звался exitGame('compatTestSetup', null), и это ломало стрелку
+// «←»: goToGameSetup() запоминает точкой входа САМ compatTestSetup (это нужно,
+// чтобы выход из партии вёл в меню игры), а exitGame() на откате вызывает
+// returnToEntryScreen(), который активирует запомненный экран. То есть экран
+// настроек выключался и тут же включался заново — визуально ничего не
+// происходило. Хуже того, поведение зависело от того, что успело переписать
+// точку входа: то стрелка вела в хаб (но не в тот раздел), то не делала
+// ничего — отсюда «не всегда срабатывает».
+// Теперь тот же простой путь, что у «Пройди квест» и «Карты страсти»:
+// гасим экран, включаем #setup и открываем нужный раздел. Связанные флаги
+// inProgress и pausedMode снимаются вместе (правило из AGENTS.md: забытый
+// inProgress блокирует настройки в хабе).
 function exitCompatTestSetup(){
   state.inProgress = false;
   state.pausedMode = null;
+  state.lastSectionOnPause = null;
   saveState();
-  exitGame('compatTestSetup', null);
+  const pauseModal = document.getElementById('pauseMenuModal');
+  if(pauseModal) pauseModal.classList.remove('show');
+  document.querySelectorAll('.screen.active').forEach(el=>el.classList.remove('active'));
+  const setup = document.getElementById('setup');
+  if(setup) setup.classList.add('active');
+  showSetupView('twoPlayerView');
+  if(typeof updateResumeUI === 'function') updateResumeUI();
+  window.scrollTo(0, 0);
 }
 document.getElementById('compatTestSetupExitBtn').addEventListener('click', ()=>{ exitCompatTestSetup(); });
 // Кнопки «Правила» в самой игре нет: правила открываются из общего хаба

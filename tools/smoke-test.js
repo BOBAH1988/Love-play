@@ -2219,6 +2219,69 @@ test('Пройдите тест: все тесты из списка прохо�
   }
 });
 
+test('Стрелка «←» с экрана настройки «Пройдите тест» ведёт в хаб', () => {
+  // Регресс: exitCompatTestSetup() звал exitGame('compatTestSetup'), а тот
+  // через returnToEntryScreen() активировал ЗАПОМНЕННУЮ точку входа. А её
+  // точкой входа и был сам compatTestSetup (его ставит goToGameSetup), то
+  // есть экран включался заново и стрелка выглядела мёртвой. У соседних игр
+  // («Пройди квест», «Карта страсти») выход с настроек идёт прямо в хаб.
+  const screenIds = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => m[1]);
+  const screens = screenIds.map(id => document.getElementById(id));
+  const originalQuery = document.querySelectorAll;
+  const originalSingleQuery = document.querySelector;
+  const clear = () => screens.forEach(el => el.classList.remove('active'));
+  const active = () => screens.filter(el => el.classList.contains('active'));
+  document.querySelectorAll = function(selector){
+    if(selector === '.screen.active') return active();
+    if(selector === '.screen') return screens;
+    return originalQuery.call(this, selector);
+  };
+  document.querySelector = function(selector){
+    if(selector === '.screen.active') return active()[0] || null;
+    return originalSingleQuery.call(this, selector);
+  };
+  const back = document.getElementById('globalBackBtn');
+  try {
+    asFantyScreen();
+    // Модалки гасим: asFantyScreen() оставляет показанным меню паузы, и стрелка
+    // ушла бы в ветку «выход из паузы» (в хаб на главный экран) вместо
+    // «шаг назад». Так делает и соседний тест про стрелку.
+    ['globalMenuModal','rulesHubModal','summaryModal','pauseMenuModal'].forEach(id=>{
+      const modal = document.getElementById(id);
+      if(modal) modal.classList.remove('show');
+    });
+    // 1. Игрок в хабе, раздел «Игры для пар 18+» → открывает настройки теста.
+    clear();
+    if(typeof restoreParentScreenId === 'function') restoreParentScreenId();
+    showSetupView('twoPlayerView');
+    goToCompatTestSetup();
+    assert(active().map(el => el.id).join(',') === 'compatTestSetup',
+      `после открытия активен ${active().map(el => el.id)}, а нужен только compatTestSetup`);
+
+    // 2. Стрелка «←» должна увести в хаб, а не вернуть тот же экран.
+    state.inProgress = false;
+    for(const { handler } of back._getHandlers().get('click')) handler({});
+    const ids = active().map(el => el.id);
+    assert(ids.join(',') === 'setup',
+      `стрелка должна открыть #setup, а открыла «${ids.join(',') || 'ничего'}»`);
+    assert(!state.inProgress, 'после выхода с настроек inProgress должен быть снят');
+    assert(state.pausedMode === null, 'после выхода с настроек pausedMode должен быть снят');
+    const viewState = ['twoPlayerView','homeView','companyView'].map(id=>`${id}:${document.getElementById(id).classList.contains('section-open')?'open':'closed'}`).join(' ');
+    assert(document.getElementById('twoPlayerView').classList.contains('section-open'),
+      `должен быть открыт раздел «Игры для пар 18+»; ${viewState}; setup active=${document.getElementById('setup').classList.contains('active')}`);
+
+    // 3. Повторный заход и выход — тоже в хаб (страховка от «второй раз работает»).
+    goToCompatTestSetup();
+    for(const { handler } of back._getHandlers().get('click')) handler({});
+    assert(active().map(el => el.id).join(',') === 'setup',
+      `повторный выход должен снова открыть #setup, а открыл «${active().map(el => el.id).join(',') || 'ничего'}»`);
+  } finally {
+    clear();
+    document.querySelectorAll = originalQuery;
+    document.querySelector = originalSingleQuery;
+  }
+});
+
 test('Стрелка: игры без паузы возвращаются на предыдущий экран', () => {
   const screenIds = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => m[1]);
   const screens = screenIds.map(id => document.getElementById(id));
