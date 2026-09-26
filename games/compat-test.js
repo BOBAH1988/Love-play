@@ -107,7 +107,7 @@ function showCompatTestHandoff(){
   if(progress) progress.style.display = 'none';
   fadeSwapEl('compatTestCard', (el)=>{
     el.className = 'card';
-    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon znayu-handoff-icon">🧪</div><div class="card-text">Передайте телефон игроку «${name}»<br><span class="compat-test-hint">Отвечайте честно — результат считается по ответам обоих</span></div></div></div>`;
+    el.innerHTML = `<div class="card-inner"><div class="card-body"><div class="card-icon znayu-handoff-icon">💖</div><div class="card-text">Передайте телефон игроку «${name}»<br><span class="compat-test-hint">Отвечайте честно — результат считается по ответам обоих</span></div></div></div>`;
   });
   updateCompatTestProgress();
 }
@@ -286,7 +286,7 @@ function renderCompatTestSummary(){
   const result = state.compatTestResult || {};
   const players = compatTestPlayers();
   const title = document.getElementById('compatTestSummaryTitle');
-  if(title) title.textContent = `${test ? test.icon : '🧪'} ${test ? test.name : 'Тест'}`;
+  if(title) title.textContent = `${test ? test.icon : '💖'} ${test ? test.name : 'Тест'}`;
   const list = document.getElementById('compatTestSummaryList');
   if(!list) return;
   if(result.kind === 'characters'){

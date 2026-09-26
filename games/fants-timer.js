@@ -782,7 +782,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🎬','Давай попробуем','davayRulesModal'],
       ['🧩','Пройди квест','sexQuestRulesModal'],
       ['🎀','Карта страсти','passionMapRulesModal'],
-      ['🧪','Пройдите тест','compatTestRulesModal'],
+      ['💖','Пройдите тест','compatTestRulesModal'],
     ]},
     { icon:'🎉', name:'Игры для компании', games:[
       ['🐊','Крокодил','krokodilRulesModal'],

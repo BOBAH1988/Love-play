@@ -119,7 +119,7 @@ window.GAME_REGISTRY = [
   {
     // Партия короткая и личная, пауза не нужна: «←» прерывает тест и
     // возвращает в настройки, результат при этом НЕ сохраняется.
-    mode: 'compatTest', title: '«Пройдите тест»', group: 'two', noPause: true, menuTitle: '🧪 Пройдите тест',
+    mode: 'compatTest', title: '«Пройдите тест»', group: 'two', noPause: true, menuTitle: '💖 Пройдите тест',
     resume: 'resumeCompatTestGame', finish: 'finishPausedCompatTestGame', back: 'finishPausedCompatTestGame',
     screens: ['compatTestGame'],
   },
