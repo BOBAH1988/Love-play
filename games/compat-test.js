@@ -22,17 +22,31 @@ function compatTestById(id){
   const list = (typeof COMPAT_TESTS !== 'undefined' && Array.isArray(COMPAT_TESTS)) ? COMPAT_TESTS : [];
   return list.find(t=>t.id===id) || null;
 }
-// Вопросы и варианты ответа выбранного теста.
+// Реестр наборов: сколько бы тестов ни добавляли, движок работает с любым
+// числом. Раньше выбор был зашит на две ветки (if по 'sexual'), и третий тест
+// потребовал бы ещё одной ветки — теперь добавление теста это только данные.
+//
+//   items   — утверждения теста;
+//   answers — варианты ответа (обычно общие для всех тестов со scale:'agreement');
+//   scale   — способ подсчёта: 'characters' — методика с баллами и разностями
+//             М/К; 'agreement' — сколько баллов набирает пара за совпадение
+//             ответов (0–100).
+const COMPAT_DATASETS = {
+  characters: { items: COMPAT_CHARACTERS, answers: COMPAT_CHARACTERS_ANSWERS, scale: 'characters' },
+  sexual: { items: COMPAT_SEXUAL, answers: COMPAT_SEXUAL_ANSWERS, scale: 'agreement' },
+};
+
+// Вопросы и варианты ответа выбранного теста. Неизвестный id или отсутствующий
+// набор не должны ронять игру: возвращаем пустой список, а startCompatTestGame
+// покажет игроку понятное сообщение.
 function compatTestItems(){
-  if(state.compatTestType === 'sexual'){
-    return {
-      items: (typeof COMPAT_SEXUAL !== 'undefined' && Array.isArray(COMPAT_SEXUAL)) ? COMPAT_SEXUAL : [],
-      answers: (typeof COMPAT_SEXUAL_ANSWERS !== 'undefined' && Array.isArray(COMPAT_SEXUAL_ANSWERS)) ? COMPAT_SEXUAL_ANSWERS : [],
-    };
-  }
+  const test = compatTestById(state.compatTestType);
+  const key = test ? test.id : 'characters';
+  const ds = COMPAT_DATASETS[key] || null;
   return {
-    items: (typeof COMPAT_CHARACTERS !== 'undefined' && Array.isArray(COMPAT_CHARACTERS)) ? COMPAT_CHARACTERS : [],
-    answers: (typeof COMPAT_CHARACTERS_ANSWERS !== 'undefined' && Array.isArray(COMPAT_CHARACTERS_ANSWERS)) ? COMPAT_CHARACTERS_ANSWERS : [],
+    items: ds && Array.isArray(ds.items) ? ds.items : [],
+    answers: ds && Array.isArray(ds.answers) ? ds.answers : [],
+    scale: ds ? ds.scale : 'agreement',
   };
 }
 function compatTestPlayers(){
@@ -250,15 +264,17 @@ function compatCharactersResult(answersA, answersB){
     verdict: row[compatBand(k)] || 'Ответьте на все утверждения, чтобы увидеть результат.',
   };
 }
-// Тест HISC: 100 минус сумма модулей разностей ответов (0–100).
-function compatSexualResult(answersA, answersB){
+// Общая мера «agreement» — сколько баллов набирает пара за совпадение
+// ответов: 100 минус сумма модулей разностей, диапазон 0–100. Ею считаются
+// все тесты со scale:'agreement' (в том числе HISC).
+function compatAgreementResult(answersA, answersB){
   let diffSum = 0;
   answersA.forEach((v, i)=>{ diffSum += Math.abs(v - (answersB[i] ?? v)); });
   const score = Math.max(0, 100 - diffSum);
   const levels = (typeof COMPAT_SEXUAL_LEVELS !== 'undefined' && Array.isArray(COMPAT_SEXUAL_LEVELS)) ? COMPAT_SEXUAL_LEVELS : [];
   const level = levels.find(l=>score >= l.min) || levels[levels.length - 1] || { title:'', text:'' };
   return {
-    kind: 'sexual',
+    kind: 'agreement',
     score, diffSum,
     verdict: level.text,
     title: level.title,
@@ -268,8 +284,11 @@ function computeCompatTestResult(){
   const answers = state.compatTestAnswers || [[], []];
   const a = Array.isArray(answers[0]) ? answers[0] : [];
   const b = Array.isArray(answers[1]) ? answers[1] : [];
-  if(state.compatTestType === 'sexual') return compatSexualResult(a, b);
-  return compatCharactersResult(a, b);
+  // Способ подсчёта берём у набора теста (scale), а не у id: добавление нового
+  // теста не должно требовать правки здесь.
+  return compatTestItems().scale === 'characters'
+    ? compatCharactersResult(a, b)
+    : compatAgreementResult(a, b);
 }
 
 /* ============ ИТОГИ И СОХРАНЕНИЕ ============ */

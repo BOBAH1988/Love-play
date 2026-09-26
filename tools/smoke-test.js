@@ -2131,7 +2131,7 @@ test('Пройдите тест: оба теста считаются по от�
 
     // «На сексуальная совместимость»: одинаковые ответы → 100 из 100.
     runTest('sexual', () => 1);
-    assert(state.compatTestResult && state.compatTestResult.kind === 'sexual', 'секс: результат не посчитан');
+    assert(state.compatTestResult && state.compatTestResult.kind === 'agreement', 'секс: результат не посчитан');
     assert(state.compatTestResult.score === 100,
       `секс: при одинаковых ответах ожидалось 100, получено ${state.compatTestResult.score}`);
 
