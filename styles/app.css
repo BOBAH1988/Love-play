@@ -1630,13 +1630,13 @@
      оформления, что и у карточек компании/детей, только в розовом тоне.
      Фон тёмный, поэтому текст (включая заголовок хода и плашку типа
      Правда/Действие) перекрашен в белый. */
-  #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard, #sexQuestCard, #passionMapCard, #compatTestCard{
+  #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard, #sexQuestCard, #passionMapCard, #compatTestCard, #knowMoreCard{
     background:linear-gradient(160deg, #e0559a, #8a2f66 55%, var(--bg2));
     color:#fff;
   }
   #card .card-text, #tdCard .card-text, #timerCard .card-text,
   #wishlistCard .card-text, #znayuCard .card-text, #ideasCard .card-text, #sexQuestCard .card-text,
-  #passionMapCard .card-text, #compatTestCard .card-text{
+  #passionMapCard .card-text, #compatTestCard .card-text, #knowMoreCard .card-text{
     color:#fff;
   }
   /* Текст вопроса и подсказка в «Пройдите тест». Базовое .card светлое
@@ -1664,6 +1664,31 @@
   }
   #sexQuestCard .card-icon{ font-size:76px; }
   #passionMapCard .card-icon{ font-size:76px; }
+  /* «Узнай больше» (games/know-more.js) — карточка зоны тела. Названия и
+     подсказки рассчитаны на светлую карточку, поэтому на тёмно-розовой
+     перекрашены в белый. Кнопки оценки остаётся единый компонент
+     .znayu-answer-btn — свои стили для них заводить нельзя. */
+  #knowMoreCard .card-split-title{ color:#ffd166; font-size:19px; font-weight:800; }
+  #knowMoreCard .know-more-part{ color:rgba(255,255,255,.8); font-size:12px; margin-top:2px; }
+  #knowMoreCard .know-more-how{ color:#fff; font-size:15px; line-height:1.45; margin-top:10px; }
+  #knowMoreCard .know-more-rule{
+    color:rgba(255,255,255,.75); font-size:13px; margin-top:10px;
+    border-top:1px solid rgba(255,255,255,.2); padding-top:8px;
+  }
+  /* Окно итогов «Узнай больше» — две карты тела (по одной на партнёра) с
+     списком зон по отметкам. */
+  .know-more-result{ display:flex; flex-direction:column; gap:10px; text-align:left; }
+  .know-more-map{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px 14px;
+  }
+  .know-more-map-name{
+    font-size:13px; font-weight:800; color:#e8c9dd;
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;
+  }
+  .know-more-row + .know-more-row{ margin-top:8px; }
+  .know-more-row-title{ font-size:13px; font-weight:700; color:#fff; }
+  .know-more-row-text{ font-size:14px; color:rgba(255,255,255,.8); line-height:1.45; margin-top:2px; }
   /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт
      и "Старт") — тоже рассчитан на светлый фон, на тёмном был почти невидим. */
   #card .card-timer{ border-top-color:rgba(255,255,255,.18); }

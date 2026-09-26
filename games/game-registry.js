@@ -125,6 +125,13 @@ window.GAME_REGISTRY = [
     pause: 'pauseCompatTestGame', resume: 'resumeCompatTestGame', finish: 'finishPausedCompatTestGame',
     screens: ['compatTestGame'],
   },
+  {
+    // Паузы нет: партия короткая (12 ходов) и личная. Выход — сразу в настройки
+    // игры, несохранённая карта тела в историю не пишется.
+    mode: 'knowMore', title: '«Узнай больше»', group: 'two', noPause: true, menuTitle: '🧭 Узнай больше',
+    resume: 'resumeKnowMoreGame', finish: 'finishPausedKnowMoreGame', back: 'finishPausedKnowMoreGame',
+    screens: ['knowMoreGame'],
+  },
 
   // ─── Игры для компании ──────────────────────────────────────────────────
   {

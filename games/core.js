@@ -339,6 +339,12 @@ let state = {
   // телефон». Без последнего флага «Продолжить игру» мог вернуть игрока на
   // вопрос, который он уже видел, или на хендофф там, где вопрос не показывали.
   compatTestPaused:null,
+  // Узнай больше — партия: knowMoreStarter (0 = «Он» исследует первым,
+  // 1 = «Она»), knowMoreQueue (порядок зон тела в этой партии),
+  // knowMoreStep (номер хода) и knowMoreMarks — отметки по каждому
+  // партнёру отдельно (его ощущения записывает тот, кого исследовали).
+  // knowMoreHistory — сохранённые карты тела (см. games/know-more.js).
+  knowMoreStarter:0, knowMoreQueue:[], knowMoreStep:0, knowMoreMarks:[[],[]], knowMoreHistory:[],
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании".
@@ -883,6 +889,12 @@ document.getElementById('gameCompatTestBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   callGameEntry('goToCompatTestSetup');
+});
+// «Узнай больше» — карта тела партнёра (см. games/know-more.js).
+document.getElementById('gameKnowMoreBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  callGameEntry('goToKnowMoreSetup');
 });
 // Возраст ребёнка — общий переключатель для игр раздела "Игры с детьми",
 // которым важен возраст (сейчас — "Правда/Действие"): 1=5 лет, 2=7 лет,
@@ -2011,6 +2023,12 @@ function performFullReset(){
   state.compatTestResult = null;
   state.compatTestHistory = [];
   state.compatTestPaused = null;
+  // Узнай больше — общий сброс чистит текущую партию и историю карт
+  state.knowMoreStarter = 0;
+  state.knowMoreQueue = [];
+  state.knowMoreStep = 0;
+  state.knowMoreMarks = [[], []];
+  state.knowMoreHistory = [];
   // Во что поиграть? (дети)
   state.whatToPlayUsed = [];
   state.whatToPlayFavorites = [];

@@ -783,6 +783,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🧩','Пройди квест','sexQuestRulesModal'],
       ['🎀','Карта страсти','passionMapRulesModal'],
       ['💖','Пройдите тест','compatTestRulesModal'],
+      ['🧭','Узнай больше','knowMoreRulesModal'],
     ]},
     { icon:'🎉', name:'Игры для компании', games:[
       ['🐊','Крокодил','krokodilRulesModal'],
@@ -908,6 +909,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     sexQuestSummary:'twoPlayerView', sexQuestHistory:'twoPlayerView',
     passionMapSetup:'twoPlayerView', passionMapGame:'twoPlayerView',
     passionMapSummary:'twoPlayerView', passionMapHistory:'twoPlayerView',
+    compatTestSetup:'twoPlayerView', compatTestGame:'twoPlayerView',
+    compatTestSummary:'twoPlayerView', compatTestHistory:'twoPlayerView',
+    knowMoreSetup:'twoPlayerView', knowMoreGame:'twoPlayerView', knowMoreSummary:'twoPlayerView',
     shopSetup:'businessView', shopGame:'businessView', videoGame:'twoPlayerView',
     wrSetup:'twoPlayerView',
     partyFantsSetup:'companyView', partyFantsGame:'companyView',
@@ -960,6 +964,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'sexQuestSummary','sexQuestHistory','shopSetup',
     'passionMapSetup','passionMapSummary','passionMapHistory',
     'compatTestSetup','compatTestSummary','compatTestHistory',
+    'knowMoreSetup','knowMoreSummary',
     'davaySetup','ideasGame','wrSetup',
     'partyFantsSetup','partyTdSetup','partyQuizSetup','krokodilSetup',
     'partyNeverSetup',
@@ -1003,6 +1008,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'compatTestHistory':'exitCompatTestHistory',
     'compatTestSummary':'exitCompatTestSummary',
     'compatTestSetup':'exitCompatTestSetup',
+    'knowMoreSetup':'exitKnowMoreSetup',
+    'knowMoreSummary':'exitKnowMoreSummary',
   };
   window.handleNestedBack = function(activeIds){
     const ids = activeIds || getActiveGameScreenIds();

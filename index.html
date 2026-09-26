@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20260928a">
+<link rel="stylesheet" href="styles/app.css?v=20261022x">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-09-26 · v526';
+  window.APP_BUILD = '2026-10-22 · v527';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v524</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v527</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -353,6 +353,7 @@
            <button type="button" class="btn btn-menu-item" id="gameSexQuestBtn"><span class="menu-icon">🧩</span> Пройди квест</button>
            <button type="button" class="btn btn-menu-item" id="gameSexMapBtn"><span class="menu-icon">🎀</span> Карта страсти</button>
            <button type="button" class="btn btn-menu-item" id="gameCompatTestBtn"><span class="menu-icon">💖</span> Пройдите тест</button>
+           <button type="button" class="btn btn-menu-item" id="gameKnowMoreBtn"><span class="menu-icon">🧭</span> Узнай больше</button>
         </div>
       </div>
 
@@ -1342,6 +1343,63 @@
     <div class="subtitle">История прошлых партий — видно, где вы уже побывали на карте</div>
     <div class="pmap-history-wrap" id="passionMapHistoryList"></div>
     <button class="btn btn-secondary" id="passionMapHistoryExitBtn" style="margin-top:10px;">Назад</button>
+  </section>
+
+  <!-- ===== УЗНАЙ БОЛЬШЕ: НАСТРОЙКА ===== -->
+  <!-- 📍 логика: games/know-more.js | карточки: cards/cards_know_more.js -->
+  <section id="knowMoreSetup" class="screen">
+    <h1 class="title">🧭 Узнай больше</h1>
+    <div class="subtitle">Исследуйте друг друга по очереди — и отмечайте, что нравится каждому</div>
+
+    <div class="field">
+      <label>Кто исследует первым</label>
+      <div class="levels" id="knowMoreStarterGroup"></div>
+    </div>
+
+    <button class="btn btn-primary" id="knowMoreStartBtn">Начать</button>
+    <button class="btn btn-secondary" id="knowMoreSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== УЗНАЙ БОЛЬШЕ: ИГРА ===== -->
+  <!-- 📍 логика: games/know-more.js | карточки: cards/cards_know_more.js -->
+  <section id="knowMoreGame" class="screen">
+    <div class="game-level-label">🧭 Узнай больше</div>
+    <div class="td-turn-label" id="knowMoreTurnLabel">Исследует: Он · Отвечает: Она</div>
+    <div class="wishlist-progress-row" id="knowMoreProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="knowMoreProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="knowMoreProgressLabel">1 / 12</div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="knowMoreCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="card-icon">🧭</div>
+            <div class="card-split-title">Загрузка…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-actions-row">
+      <div class="timer-actions-top">
+        <button type="button" class="btn btn-primary" id="knowMoreNextBtn" hidden>Дальше</button>
+      </div>
+      <div class="timer-actions-bottom">
+        <button type="button" class="btn btn-secondary btn-exit" id="knowMoreExitBtn">Выход</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== УЗНАЙ БОЛЬШЕ: ИТОГИ ===== -->
+  <!-- 📍 логика: games/know-more.js | карточки: cards/cards_know_more.js -->
+  <section id="knowMoreSummary" class="screen">
+    <h1 class="title">🧭 Карта тела</h1>
+    <div class="subtitle">Что нравится каждому из вас</div>
+    <div class="know-more-result" id="knowMoreSummaryList"></div>
+    <div class="intro-text" id="knowMoreSummaryNote">Карта сохранена в приложении.</div>
+    <div class="intro-text" id="knowMoreSummaryPast"></div>
+    <button class="btn btn-primary" id="knowMoreSummaryExitBtn" style="margin-top:10px;">В меню</button>
   </section>
 
   <!-- ===== ВО ЧТО ПОИГРАТЬ? (ДЕТИ): ИГРА ===== -->
@@ -3746,6 +3804,25 @@
     </div>
   </div>
 
+  <!-- ===== ПРАВИЛА "УЗНАЙ БОЛЬШЕ" ===== -->
+  <div class="modal-overlay" id="knowMoreRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🧭 Правила игры «Узнай больше»</div>
+      <div class="intro-text">Партнёры по очереди исследуют тела друг друга и отмечают, что нравится каждому. Постепенно получается личная карта тела: что приятно, что нейтрально, а что лучше не трогать.</div>
+      <ol class="modal-rules">
+        <li>На экране настройки выберите, кто исследует первым — «Он» или «Она», — и нажмите «Начать». Остальные настройки пока не задаются.</li>
+        <li>На карточке показаны зона тела и подсказка исследователю: что и как делать руками. Подписью внизу отмечено, кто сейчас исследует, а кто отвечает.</li>
+        <li>Тот, кого исследуют, честно оценивает ощущение: «Очень приятно», «Приятно», «Нейтрально» или «Стоп — лучше не трогать». Отметка попадает в карту того, кого трогали, а не того, кто трогал.</li>
+        <li>После оценки появляется кнопка «Дальше» — на следующем ходу исследователь меняется, так что по очереди проходят оба партнёра.</li>
+        <li>Зоны идут от нежных к более чувствительным, внутри одного уровня порядок случайный: партия всегда начинается мягко и не повторяется.</li>
+        <li>Отметка «Стоп» — не провал, а результат: в итогах такая зона попадает в строку «Лучше не трогать». Игра про внимание к другому человеку, поэтому в любой момент можно сказать «стоп» и перейти дальше.</li>
+        <li>В конце открывается окно с картой тела обоих партнёров. Карта сохраняется в приложении; «Сбросить прогресс» на главном экране чистит её вместе с остальным прогрессом.</li>
+        <li>«Выход» и стрелка «←» прерывают партию: несохранённая карта в историю не попадает — чтобы довести её до конца, начните партию заново.</li>
+      </ol>
+      <button class="btn btn-primary" id="closeKnowMoreRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== ПРАВИЛА "ВИКТОРИНА" (ПАРЫ 18+) ===== -->
   <div class="modal-overlay" id="quizRulesModal">
     <div class="modal-card">
@@ -4515,6 +4592,7 @@
 <script src="cards/cards_sexquest.js?v=20260922a"></script>
 <script src="cards/cards_passionmap.js?v=20260913a"></script>
 <script src="cards/cards_compat_test.js?v=20260928b"></script>
+<script src="cards/cards_know_more.js?v=20261022x"></script>
 <script src="cards/cards_whattoplay.js?v=20260928w"></script>
 <script src="cards/cards_kids_krokodil.js?v=20260911a"></script>
 <script src="cards/cards_kids_memes.js?v=20260911a"></script>
@@ -4524,18 +4602,18 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20260929b"></script>
 <script src="cards/capitals.js?v=20260929c"></script>
-<script src="games/core.js?v=20260928a"></script>
+<script src="games/core.js?v=20261022x"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
       <script src="games/fants-video.js?v=20261002f"></script>
 <script src="games/fants-davay.js?v=20260925a"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20260928a"></script>
+<script src="games/fants-timer.js?v=20261022x"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
-<script src="games/game-registry.js?v=20260928a"></script>
+<script src="games/game-registry.js?v=20261022x"></script>
 <!-- Локальная статистика: считает партии на этом устройстве, никуда не отправляет -->
 <script src="games/stats.js?v=20260929a"></script>
 <script src="games/twister.js?v=20260921j"></script>
@@ -4580,6 +4658,7 @@
 <script src="games/sexquest.js?v=20260927x"></script>
 <script src="games/passionmap.js?v=20261022b"></script>
 <script src="games/compat-test.js?v=20260928d"></script>
+<script src="games/know-more.js?v=20261022x"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20261022v"></script>
 <script src="games/capitals.js?v=20261022v"></script>

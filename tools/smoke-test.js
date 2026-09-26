@@ -4029,7 +4029,150 @@ test('Лимонадный ларёк: лишние стаканы не прод
   }
 });
 
+console.log('\n=== «Узнай больше» ===');
+
+// Игра про карту тела: партнёры по очереди исследуют зоны, отметки пишутся
+// в карту ТОГО, кого исследовали. Проверяем обе части механики: чередование
+// ролей и адресность отметок — ошибка «пишем в карту исследователя» сделала
+// бы карту бессмысленной, и заметить её на экране невозможно.
+const knowMoreBackup = () => {
+  const saved = {};
+  ['knowMoreStarter', 'knowMoreQueue', 'knowMoreStep', 'knowMoreMarks', 'knowMoreHistory',
+   'inProgress', 'pausedMode'].forEach(k => { saved[k] = state[k]; });
+  return saved;
+};
+
+test('«Узнай больше»: отметка попадает в карту того, кого исследовали', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = knowMoreBackup();
+  const card = getElById(stub, 'knowMoreCard');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.knowMoreStarter = 0;   // первым исследует «Он», значит отвечает «Она»
+    startKnowMoreGame();
+    const zone = knowMoreCurrentZone();
+    assert(!!zone, 'на первом ходу должна быть зона');
+    assert((card.innerHTML.match(/znayu-answer-btn/g) || []).length === KNOW_MORE_SCALE.length,
+      'на карточке должно быть столько кнопок, сколько ступеней у шкалы');
+    assert(!!zone.how && card.innerHTML.includes(zone.name),
+      'карточка должна называть зону и показывать подсказку исследователю');
+
+    answerKnowMore(0); // «Очень приятно» → отметка 3
+    assert(knowMoreAwaitNext === true, 'после оценки карточка должна ждать «Дальше»');
+    assert(state.knowMoreMarks[1].length === 1 && state.knowMoreMarks[0].length === 0,
+      `отметка должна попасть в карту второго игрока, а карты: ${JSON.stringify(state.knowMoreMarks)}`);
+    assert(state.knowMoreMarks[1][0].score === 3, 'оценка должна сохраниться числом');
+
+    // Повторный клик по закрытой карточке не должен дописывать вторую отметку.
+    answerKnowMore(0);
+    assert(state.knowMoreMarks[1].length === 1, 'повторный клик не должен дописывать отметку');
+
+    // «Дальше» переводит ход: исследователь меняется, отвечает уже «Он».
+    advanceKnowMore();
+    assert(state.knowMoreStep === 1, 'после «Дальше» ход должен увеличиться');
+    assert(knowMoreExplorerIdx() === 1, 'исследователь должен смениться на второго');
+    answerKnowMore(3); // «Стоп» → 0
+    assert(state.knowMoreMarks[0].length === 1 && state.knowMoreMarks[0][0].score === 0,
+      'отметка «Стоп» должна попасть в карту первого игрока');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+
+test('«Узнай больше»: полный цикл партии и итоговая карта', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = knowMoreBackup();
+  const summary = getElById(stub, 'knowMoreSummary');
+  const list = getElById(stub, 'knowMoreSummaryList');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.knowMoreStarter = 0;
+    startKnowMoreGame();
+    const total = (state.knowMoreQueue || []).length;
+    assert(total === Math.min(KNOW_MORE_STEPS, KNOW_MORE_ZONES.length),
+      `в партии должно быть ${KNOW_MORE_STEPS} зон, а ${total}`);
+
+    // Первые зоны партии — нежные (level 1), иначе игра начинается сразу с
+    // чувствительных мест и обещание «мягкий старт» не выполняется.
+    const firstZone = KNOW_MORE_ZONES.find(z => z.id === state.knowMoreQueue[0]);
+    assert(firstZone && firstZone.level === 1,
+      `первой должна идти зона уровня 1, а ${firstZone && firstZone.name} (level ${firstZone && firstZone.level})`);
+
+    while (state.knowMoreStep < total){
+      answerKnowMore(state.knowMoreStep % 2);
+      advanceKnowMore();
+    }
+    assert(summary.classList.contains('active'), 'после последней зоны должно открыться окно итогов');
+    assert(!getElById(stub, 'knowMoreGame').classList.contains('active'),
+      'игровой экран должен погаснуть на итогах');
+    assert(!state.inProgress, 'после завершения партии inProgress должен быть снят');
+    assert(state.knowMoreMarks[0].length === total / 2 && state.knowMoreMarks[1].length === total / 2,
+      `оценок должно быть поровну, а ${state.knowMoreMarks[0].length}/${state.knowMoreMarks[1].length}`);
+    assert(/Он ·/.test(list.innerHTML) && /Она ·/.test(list.innerHTML),
+      'в итогах должна быть карта обоих партнёров');
+    assert(/Приятно/.test(list.innerHTML), 'в карте должны быть названия зон по отметкам');
+    assert((state.knowMoreHistory || []).length === 1, 'карта должна сохраниться в историю');
+
+    // История хранит копию отметок: правка текущей партии не должна менять
+    // уже сохранённую карту.
+    const savedScore = state.knowMoreHistory[0].marks[0][0].score;
+    state.knowMoreMarks[0][0].score = 0;
+    assert(state.knowMoreHistory[0].marks[0][0].score === savedScore,
+      'в истории лежит копия, а не ссылка на текущую партию');
+  } finally {
+
+test('«Узнай больше»: выход из партии не сохраняет карту', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = knowMoreBackup();
+  const screens = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => document.getElementById(m[1]));
+  const activeBefore = screens.filter(el => el.classList.contains('active'));
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.knowMoreStarter = 0;
+    startKnowMoreGame();
+    answerKnowMore(0);
+    const historyBefore = (state.knowMoreHistory || []).length;
+    finishPausedKnowMoreGame();
+    assert(!state.inProgress, 'после выхода inProgress должен быть снят');
+    assert(state.pausedMode === null, 'после выхода pausedMode должен быть снят');
+    assert(getElById(stub, 'knowMoreSetup').classList.contains('active'),
+      'выход должен вести в настройки игры, а не оставлять игровой экран');
+    assert(!getElById(stub, 'setup').classList.contains('active'),
+      'хаб не должен показываться поверх настроек игры — иначе экран разделится на две части');
+    assert((state.knowMoreHistory || []).length === historyBefore,
+      'прерванная партия не должна попасть в историю');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+    screens.forEach(el => el.classList.remove('active'));
+    activeBefore.forEach(el => el.classList.add('active'));
+  }
+});
+
+test('«Узнай больше»: экран настройки — «Он»/«Она» и «Начать», игра в реестре', () => {
+  // Экран настройки новой игры задаёт владелец: пока там только выбор
+  // «кто исследует первым» (две плашки) и кнопка «Начать». Если позже
+  // добавятся настройки, проверку нужно будет расширить.
+  const setupHtml = (html.match(/<section id="knowMoreSetup"[\s\S]*?<\/section>/) || [''])[0];
+  assert(/id="knowMoreStarterGroup"/.test(setupHtml), 'на настройке должен быть блок выбора «Он»/«Она»');
+  assert(/id="knowMoreStartBtn"[^>]*>Начать</.test(setupHtml), 'на настройке должна быть кнопка «Начать»');
+  assert(/id="knowMoreSetupExitBtn"[^>]*>Выход</.test(setupHtml), 'с экрана настроек должен быть выход');
+  const registry = window.GAME_REGISTRY || global.GAME_REGISTRY || [];
+  const entry = registry.find(g => g.mode === 'knowMore');
+  assert(!!entry, 'игра должна быть в реестре');
+  assert(entry && entry.group === 'two' && entry.noPause === true, 'игра для пар, без паузы');
+  assert(/knowMoreRulesModal/.test(read('games/fants-timer.js')), 'правила должны быть в хабе «Правила игр»');
+});
+
 console.log('\n=== Запуск тестов ===\n');
+
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 
 tests.forEach(t => {
   name = t.name;
