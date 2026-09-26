@@ -2437,6 +2437,69 @@ test('«Пройдите тест»: пауза сохраняет место, �
   }
 });
 
+test('«Пройдите тест»: по завершении открывается окно с результатом', () => {
+  // Проверяем, что окно итогов реально появляется и наполнено: раньше это
+  // ничем не проверялось, и пустой или незаполненный экран остался бы незаметным.
+  const originalFade = global.fadeSwapEl;
+  const saved = {};
+  ['compatTestType', 'compatTestIndex', 'compatTestCurrentPlayer', 'compatTestAnswers',
+   'compatTestResult', 'compatTestHistory', 'compatTestPaused', 'inProgress', 'pausedMode', 'autoSpeak']
+    .forEach(k => { saved[k] = state[k]; });
+  const card = getElById(stub, 'compatTestCard');
+  const buttonCount = () => (card.innerHTML.match(/znayu-answer-btn/g) || []).length;
+  const summary = getElById(stub, 'compatTestSummary');
+  const list = getElById(stub, 'compatTestSummaryList');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    // Тест на совпадение ответов: 0–100, окно обязано показывать балл и вывод.
+    state.compatTestType = 'comfort';
+    startCompatTestGame();
+    for(let player = 0; player < 2; player++){
+      if(player > 0) showCompatTestHandoff();
+      showCompatTestQuestion();
+      const { items } = compatTestItems();
+      for(let i = 0; i < items.length; i++){
+        answerCompatTestQuestion(player === 0 ? 0 : 0); // оба отвечают одинаково
+        advanceCompatTest();
+      }
+    }
+    assert(summary.classList.contains('active'), 'окно итогов должно стать активным');
+    assert(!getElById(stub, 'compatTestGame').classList.contains('active'),
+      'игровой экран должен погаснуть при переходе к итогам');
+    assert(/100\s*\/\s*100/.test(list.innerHTML), 'при полном совпадении должен показаться балл 100 из 100');
+    assert(list.innerHTML.length > 40, 'окно итогов не должно остаться почти пустым');
+    assert(state.compatTestHistory.length > 0, 'результат должен попасть в «Пройденные»');
+
+    // Разные ответы дают меньший балл и появляется список расхождений.
+    state.compatTestHistory = [];
+    state.compatTestType = 'comfort';
+    startCompatTestGame();
+    for(let player = 0; player < 2; player++){
+      if(player > 0) showCompatTestHandoff();
+      showCompatTestQuestion();
+      const { items } = compatTestItems();
+      for(let i = 0; i < items.length; i++){
+        answerCompatTestQuestion(player === 0 ? i % 4 : (i + 2) % 4);
+        advanceCompatTest();
+      }
+    }
+    const score = Number((list.innerHTML.match(/compat-test-score">(\d+)/) || [])[1]);
+    assert(Number.isFinite(score) && score < 100,
+      `при разных ответах балл должен быть ниже 100, а показан ${score}`);
+    assert(/расхожд|не совпал|отлича/i.test(list.innerHTML),
+      'окно должно перечислять, в чём именно партнёры разошлись');
+    // Регресс на чужие тексты: уровни интерпретации общие для всех тестов
+    // совпадения, и раньше в них осталась фраза про «интимную сферу» —
+    // тема «Насколько вам комфортно вместе» получала вывод не по предмету.
+    assert(!/интимн/i.test(list.innerHTML),
+      'вывод по теме «Насколько вам комфортно вместе» не должен упоминать интимную сферу');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 test('Стрелка: игры без паузы возвращаются на предыдущий экран', () => {
   const screenIds = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => m[1]);
   const screens = screenIds.map(id => document.getElementById(id));

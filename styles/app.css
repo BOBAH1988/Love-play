@@ -3011,6 +3011,29 @@
   .compat-test-sum-diff{ font-size:12px; color:rgba(255,255,255,.6); }
   .compat-test-score{ font-size:34px; font-weight:800; color:var(--accent); text-align:center; line-height:1.1; }
   .compat-test-score-title{ font-size:16px; font-weight:700; color:#fff; text-align:center; margin:4px 0 10px; }
+  /* Окно итогов «Пройдите тест»: карточка-контейнер + разбор расхождений.
+     Список ограничен по высоте и прокручивается — расхождений бывает до
+     всех 25 пунктов, и без этого итог не помещался бы на экран. */
+  .compat-test-result{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:16px; padding:14px; text-align:left;
+  }
+  .compat-test-diff-block{ margin-top:12px; border-top:1px solid rgba(255,255,255,.14); padding-top:10px; }
+  .compat-test-diff-head{ font-size:13px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; }
+  .compat-test-diff-sub{ font-size:12px; color:rgba(255,255,255,.65); margin-top:6px; }
+  .compat-test-diff-none{ font-size:13px; color:rgba(255,255,255,.75); margin-top:6px; }
+  .compat-test-diff-list{
+    list-style:none; margin:8px 0 0; padding:0;
+    max-height:min(46vh,420px); overflow-y:auto;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .compat-test-diff-list > li{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; padding:10px 12px;
+  }
+  .compat-test-diff-q{ font-size:13px; color:#fff; line-height:1.4; margin-bottom:6px; }
+  .compat-test-diff-a, .compat-test-diff-b{ font-size:12px; line-height:1.4; color:rgba(255,255,255,.75); }
+  .compat-test-diff-a b, .compat-test-diff-b b{ color:#e8c9dd; }
   .compat-test-history-entry{
     position:relative;
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);

@@ -354,6 +354,30 @@ function finishCompatTestGame(){
   document.getElementById('compatTestSummary').classList.add('active');
 }
 
+// Подпись варианта ответа по его баллу. В state хранятся только баллы (так
+// дешевле и надёжнее), а показать игроку нужно слова — восстанавливаем по шкале.
+function compatAnswerLabel(score){
+  const { answers } = compatTestItems();
+  const a = answers.find(x => x.score === score);
+  return a ? a.text : '—';
+}
+// Утверждения, где ответы партнёров разошлись. Это и есть то, ради чего
+// затевался тест: балл «74 из 100» сам по себе ничего не говорит, а список
+// конкретных расхождений — повод для разговора. Считается на лету из
+// накопленных ответов, в «Пройденные» не попадает: там хранится только итог.
+function compatDivergences(){
+  const { items } = compatTestItems();
+  const answers = state.compatTestAnswers || [[], []];
+  const a = answers[0] || [];
+  const b = answers[1] || [];
+  const out = [];
+  items.forEach((item, i)=>{
+    const x = a[i], y = b[i];
+    if(x === undefined || y === undefined || x === y) return;
+    out.push({ q: item.q, aText: compatAnswerLabel(x), bText: compatAnswerLabel(y) });
+  });
+  return { total: items.length, items: out, same: items.length - out.length };
+}
 function renderCompatTestSummary(){
   const test = compatTestById(state.compatTestType);
   const result = state.compatTestResult || {};
@@ -362,6 +386,22 @@ function renderCompatTestSummary(){
   if(title) title.textContent = `${test ? test.icon : '💖'} ${test ? test.name : 'Тест'}`;
   const list = document.getElementById('compatTestSummaryList');
   if(!list) return;
+  const diff = compatDivergences();
+  const diffHtml = `
+    <div class="compat-test-diff-block">
+      <div class="compat-test-diff-head">Совпали ответы: ${diff.same} из ${diff.total}</div>
+      ${diff.items.length ? `
+        <div class="compat-test-diff-sub">Расхождения — с ними стоит поговорить</div>
+        <ul class="compat-test-diff-list">
+          ${diff.items.map(d=>`
+            <li>
+              <div class="compat-test-diff-q">${d.q}</div>
+              <div class="compat-test-diff-a"><b>${players[0]}:</b> ${d.aText}</div>
+              <div class="compat-test-diff-b"><b>${players[1]}:</b> ${d.bText}</div>
+            </li>
+          `).join('')}
+        </ul>` : '<div class="compat-test-diff-none">Расхождений нет — ответы совпали на всех пунктах.</div>'}
+    </div>`;
   if(result.kind === 'characters'){
     list.innerHTML = `
       <div class="compat-test-verdict">${result.verdict}</div>
@@ -374,12 +414,14 @@ function renderCompatTestSummary(){
           </div>
         `).join('')}
       </div>
+      ${diffHtml}
     `;
   } else {
     list.innerHTML = `
       <div class="compat-test-score">${result.score} / 100</div>
       <div class="compat-test-score-title">${result.title || ''}</div>
       <div class="compat-test-verdict">${result.verdict || ''}</div>
+      ${diffHtml}
     `;
   }
   const note = document.getElementById('compatTestSummaryNote');
