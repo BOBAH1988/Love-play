@@ -138,7 +138,7 @@ const COMPAT_SEXUAL_LEVELS = [
 const COMPAT_TESTS = [
   {
     id: 'characters',
-    icon: '🫂',
+    icon: '💘',
     name: 'На совместимость',
     desc: '16 утверждений о привычках и характере. Покажет, насколько вы похожи и как ладно взаимодополняете друг друга.',
     count: 16,
