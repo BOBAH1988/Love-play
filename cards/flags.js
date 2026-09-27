@@ -1,12 +1,12 @@
 // cards/flags.js — данные для игры "Флаги" (games/flags.js).
 // FLAGS_LEVELS — 3 уровня сложности (id, name, desc, icon).
 // FLAGS_CARDS — { level, flag: путь к изображению флага (svg/png), a: [верный, ...3 неверных] },
-// все 43 флага из flags-svg/ распределены по уровням: 15 (лёгкий) / 14 (средний) / 14 (трудный).
+// все 89 флагов из flags-svg/ распределены по уровням: 27 (лёгкий) / 34 (средний) / 28 (трудный).
 
 const FLAGS_LEVELS = [
-  { id: 1, icon: '🟢', name: 'Лёгкий', desc: '15 стран с известными флагами' },
-  { id: 2, icon: '🟡', name: 'Средний', desc: 'Ещё 14 стран — узнайте флаг' },
-  { id: 3, icon: '🔴', name: 'Трудный', desc: 'Последние 14 стран — сложные флаги' },
+  { id: 1, icon: '🟢', name: 'Лёгкий', desc: '27 стран с известными флагами' },
+  { id: 2, icon: '🟡', name: 'Средний', desc: 'Ещё 34 страны — узнайте флаг' },
+  { id: 3, icon: '🔴', name: 'Трудный', desc: 'Ещё 28 стран — сложные флаги' },
 ];
 
 const FLAGS_CARDS = [
@@ -26,6 +26,19 @@ const FLAGS_CARDS = [
   { level: 1, flag: 'flags-svg/flag-ca.svg', a: ['Канада', 'США', 'Мексика', 'Перу'] },
   { level: 1, flag: 'flags-svg/flag-mx.svg', a: ['Мексика', 'Гватемала', 'Сальвадор', 'Коста-Рика'] },
   { level: 1, flag: 'flags-svg/flag-in.svg', a: ['Индия', 'Пакистан', 'Бангладеш', 'Шри-Ланка'] },
+  // ---------- Добавленные страны (уровень 1) ----------
+  { level: 1, flag: 'flags-svg/flag-dk.svg', a: ['Дания', 'Украина', 'Австрия', 'Румыния'] },
+  { level: 1, flag: 'flags-svg/flag-ua.svg', a: ['Украина', 'Греция', 'Швейцария', 'Венгрия'] },
+  { level: 1, flag: 'flags-svg/flag-gr.svg', a: ['Греция', 'Австрия', 'Румыния', 'Чехия'] },
+  { level: 1, flag: 'flags-svg/flag-at.svg', a: ['Австрия', 'Швейцария', 'Венгрия', 'Таиланд'] },
+  { level: 1, flag: 'flags-svg/flag-ch.svg', a: ['Швейцария', 'Румыния', 'Чехия', 'Вьетнам'] },
+  { level: 1, flag: 'flags-svg/flag-ro.svg', a: ['Румыния', 'Венгрия', 'Таиланд', 'Индонезия'] },
+  { level: 1, flag: 'flags-svg/flag-hu.svg', a: ['Венгрия', 'Чехия', 'Вьетнам', 'Турция'] },
+  { level: 1, flag: 'flags-svg/flag-cz.svg', a: ['Чехия', 'Таиланд', 'Индонезия', 'Дания'] },
+  { level: 1, flag: 'flags-svg/flag-th.svg', a: ['Таиланд', 'Вьетнам', 'Турция', 'Украина'] },
+  { level: 1, flag: 'flags-svg/flag-vn.svg', a: ['Вьетнам', 'Индонезия', 'Дания', 'Греция'] },
+  { level: 1, flag: 'flags-svg/flag-id.svg', a: ['Индонезия', 'Турция', 'Украина', 'Австрия'] },
+  { level: 1, flag: 'flags-svg/flag-tr.svg', a: ['Турция', 'Дания', 'Греция', 'Швейцария'] },
   // ---------- Уровень 2 ----------
   { level: 2, flag: 'flags-svg/flag-pl.svg', a: ['Польша', 'Германия', 'Чехия', 'Словакия'] },
   { level: 2, flag: 'flags-svg/flag-se.svg', a: ['Швеция', 'Норвегия', 'Дания', 'Финляндия'] },
@@ -41,6 +54,27 @@ const FLAGS_CARDS = [
   { level: 2, flag: 'flags-svg/flag-uz.svg', a: ['Узбекистан', 'Таджикистан', 'Киргизия', 'Туркмения'] },
   { level: 2, flag: 'flags-svg/flag-az.svg', a: ['Азербайджан', 'Грузия', 'Армения', 'Туркмения'] },
   { level: 2, flag: 'flags-svg/flag-pe.svg', a: ['Перу', 'Боливия', 'Колумбия', 'Эквадор'] },
+  // ---------- Добавленные страны (уровень 2) ----------
+  { level: 2, flag: 'flags-svg/flag-bg.svg', a: ['Болгария', 'Словения', 'Молдова', 'Алжир'] },
+  { level: 2, flag: 'flags-svg/flag-mt.svg', a: ['Мальта', 'Хорватия', 'Марокко', 'Тунис'] },
+  { level: 2, flag: 'flags-svg/flag-cl.svg', a: ['Чили', 'Молдова', 'Алжир', 'Иордания'] },
+  { level: 2, flag: 'flags-svg/flag-ar.svg', a: ['Аргентина', 'Марокко', 'Тунис', 'Болгария'] },
+  { level: 2, flag: 'flags-svg/flag-ph.svg', a: ['Филиппины', 'Алжир', 'Иордания', 'Мальта'] },
+  { level: 2, flag: 'flags-svg/flag-eg.svg', a: ['Египет', 'Тунис', 'Болгария', 'Чили'] },
+  { level: 2, flag: 'flags-svg/flag-il.svg', a: ['Израиль', 'Иордания', 'Мальта', 'Аргентина'] },
+  { level: 2, flag: 'flags-svg/flag-ee.svg', a: ['Эстония', 'Болгария', 'Чили', 'Филиппины'] },
+  { level: 2, flag: 'flags-svg/flag-lv.svg', a: ['Латвия', 'Мальта', 'Аргентина', 'Египет'] },
+  { level: 2, flag: 'flags-svg/flag-lt.svg', a: ['Литва', 'Чили', 'Филиппины', 'Израиль'] },
+  { level: 2, flag: 'flags-svg/flag-is.svg', a: ['Исландия', 'Аргентина', 'Египет', 'Эстония'] },
+  { level: 2, flag: 'flags-svg/flag-lu.svg', a: ['Люксембург', 'Филиппины', 'Израиль', 'Латвия'] },
+  { level: 2, flag: 'flags-svg/flag-sk.svg', a: ['Словакия', 'Египет', 'Эстония', 'Литва'] },
+  { level: 2, flag: 'flags-svg/flag-si.svg', a: ['Словения', 'Израиль', 'Латвия', 'Исландия'] },
+  { level: 2, flag: 'flags-svg/flag-hr.svg', a: ['Хорватия', 'Эстония', 'Литва', 'Люксембург'] },
+  { level: 2, flag: 'flags-svg/flag-md.svg', a: ['Молдова', 'Латвия', 'Исландия', 'Словакия'] },
+  { level: 2, flag: 'flags-svg/flag-ma.svg', a: ['Марокко', 'Литва', 'Люксембург', 'Словения'] },
+  { level: 2, flag: 'flags-svg/flag-dz.svg', a: ['Алжир', 'Исландия', 'Словакия', 'Хорватия'] },
+  { level: 2, flag: 'flags-svg/flag-tn.svg', a: ['Тунис', 'Люксембург', 'Словения', 'Молдова'] },
+  { level: 2, flag: 'flags-svg/flag-jo.svg', a: ['Иордания', 'Словакия', 'Хорватия', 'Марокко'] },
   // ---------- Уровень 3 ----------
   { level: 3, flag: 'flags-svg/flag-td.svg', a: ['Чад', 'Судан', 'Эфиопия', 'Эритрея'] },
   { level: 3, flag: 'flags-svg/flag-ne.svg', a: ['Нигер', 'Мали', 'Буркина-Фасо', 'Сенегал'] },
@@ -56,5 +90,20 @@ const FLAGS_CARDS = [
   { level: 3, flag: 'flags-svg/flag-sm.svg', a: ['Сан-Марино', 'Италия', 'Монако', 'Лихтенштейн'] },
   { level: 3, flag: 'flags-svg/flag-mc.svg', a: ['Монако', 'Франция', 'Польша', 'Мальта'] },
   { level: 3, flag: 'flags-svg/flag-st.svg', a: ['Сан-Томе и Принсипи', 'Кабо-Верде', 'Гана', 'Сьерра-Леоне'] },
+  // ---------- Добавленные страны (уровень 3) ----------
+  { level: 3, flag: 'flags-svg/flag-ae.svg', a: ['ОАЭ', 'Парагвай', 'Куба', 'Маврикий'] },
+  { level: 3, flag: 'flags-svg/flag-ir.svg', a: ['Иран', 'Коста-Рика', 'Ямайка', 'Беларусь'] },
+  { level: 3, flag: 'flags-svg/flag-la.svg', a: ['Лаос', 'Куба', 'Маврикий', 'Сербия'] },
+  { level: 3, flag: 'flags-svg/flag-kh.svg', a: ['Камбоджа', 'Ямайка', 'Беларусь', 'ОАЭ'] },
+  { level: 3, flag: 'flags-svg/flag-bd.svg', a: ['Бангладеш', 'Маврикий', 'Сербия', 'Иран'] },
+  { level: 3, flag: 'flags-svg/flag-ec.svg', a: ['Эквадор', 'Беларусь', 'ОАЭ', 'Лаос'] },
+  { level: 3, flag: 'flags-svg/flag-bo.svg', a: ['Боливия', 'Сербия', 'Иран', 'Камбоджа'] },
+  { level: 3, flag: 'flags-svg/flag-py.svg', a: ['Парагвай', 'ОАЭ', 'Лаос', 'Бангладеш'] },
+  { level: 3, flag: 'flags-svg/flag-cr.svg', a: ['Коста-Рика', 'Иран', 'Камбоджа', 'Эквадор'] },
+  { level: 3, flag: 'flags-svg/flag-cu.svg', a: ['Куба', 'Лаос', 'Бангладеш', 'Боливия'] },
+  { level: 3, flag: 'flags-svg/flag-jm.svg', a: ['Ямайка', 'Камбоджа', 'Эквадор', 'Парагвай'] },
+  { level: 3, flag: 'flags-svg/flag-mu.svg', a: ['Маврикий', 'Бангладеш', 'Боливия', 'Коста-Рика'] },
+  { level: 3, flag: 'flags-svg/flag-by.svg', a: ['Беларусь', 'Эквадор', 'Парагвай', 'Куба'] },
+  { level: 3, flag: 'flags-svg/flag-rs.svg', a: ['Сербия', 'Боливия', 'Коста-Рика', 'Ямайка'] },
 ];
 

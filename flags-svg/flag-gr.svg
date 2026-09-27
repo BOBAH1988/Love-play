@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-gr" viewBox="0 0 640 480">
+  <path fill="#0d5eaf" d="M0 0h640v53.33H0z"/>
+  <path fill="#fff" d="M0 53.33h640v53.33H0z"/>
+  <path fill="#0d5eaf" d="M0 106.66h640v53.33H0z"/>
+  <path fill="#fff" d="M0 159.99h640v53.33H0z"/>
+  <path fill="#0d5eaf" d="M0 213.32h640v53.33H0z"/>
+  <path fill="#fff" d="M0 266.65h640v53.33H0z"/>
+  <path fill="#0d5eaf" d="M0 319.98h640v53.33H0z"/>
+  <path fill="#fff" d="M0 373.31h640v53.33H0z"/>
+  <path fill="#0d5eaf" d="M0 426.64h640v53.33H0z"/>
+  <path fill="#0d5eaf" d="M0 0h213.33v213.33H0z"/>
+  <path fill="#fff" d="M80 0h53.33v213.33H80z"/>
+  <path fill="#fff" d="M0 80h213.33v53.33H0z"/>
+</svg>

@@ -16,7 +16,17 @@ let capitalsSpeechTimerId = null;  // отложенный старт озвуч
 
 function getCapitalsCardsList(level){
   if(typeof CAPITALS_CARDS === 'undefined' || !Array.isArray(CAPITALS_CARDS)) return [];
-  return CAPITALS_CARDS.filter(c => c.level === level);
+  // Одна страна — одна карточка (см. getFlagsCardsList — игра устроена так же).
+  const seen = new Set();
+  const cards = [];
+  CAPITALS_CARDS.forEach(c => {
+    if(c.level !== level) return;
+    const key = capitalsCardKey(c);
+    if(seen.has(key)) return;
+    seen.add(key);
+    cards.push(c);
+  });
+  return cards;
 }
 function capitalsCardKey(card){
   return card.country || `${card.level}:${card.a[0] || ''}`;
@@ -27,7 +37,7 @@ function stopCapitalsInterval(){
 function drawCapitalsQueue(){
   const level = Number(state.capitalsSelectedLevel) || 1;
   const all = getCapitalsCardsList(level);
-  const total = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 10;
+  const wanted = CAPITALS_COUNT_VALUES.includes(Number(state.capitalsQuestionCount)) ? Number(state.capitalsQuestionCount) : 10;
   if(all.length === 0){
     state.capitalsQueue = [];
     state.capitalsIndex = 0;
@@ -40,22 +50,21 @@ function drawCapitalsQueue(){
   let used = Array.isArray(state.capitalsUsed[level])
     ? state.capitalsUsed[level].filter(key => key !== undefined && key !== null && key !== '')
     : [];
+  // Без повторов внутри партии: пул непутанных стран, а если их не хватает на
+  // выбранное число вопросов — берём все, что есть, и честно об этом говорим
+  // (см. drawFlagsQueue: так же устроены «Флаги»).
   let pool = shuffle(all.filter(c => !used.includes(capitalsCardKey(c))));
-  const chosen = [];
-  let recycled = false;
-  while(chosen.length < total){
-    if(pool.length === 0){
-      pool = shuffle(all);
-      used = [];
-      if(!recycled){ showToast('Вопросы этого уровня показаны заново 🔀'); recycled = true; }
-    }
-    const take = Math.min(pool.length, total - chosen.length);
-    const part = pool.slice(0, take);
-    chosen.push(...part);
-    part.forEach(c => used.push(capitalsCardKey(c)));
-    pool = pool.slice(take);
+  if(pool.length === 0){
+    used = [];
+    pool = shuffle(all);
+    showToast('Вопросы этого уровня показаны заново 🔀');
   }
-  state.capitalsUsed[level] = used;
+  const total = Math.min(wanted, pool.length);
+  if(wanted > pool.length){
+    showToast(`На этом уровне ${pool.length} стран — столько и будет в партии`);
+  }
+  const chosen = pool.slice(0, total);
+  state.capitalsUsed[level] = used.concat(chosen.map(capitalsCardKey));
   state.capitalsQueue = chosen;
   state.capitalsIndex = 0;
   saveState();

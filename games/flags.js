@@ -15,7 +15,18 @@ let flagsSpeechTimerId = null;  // отложенный старт озвучк�
 
 function getFlagsCardsList(level){
   if(typeof FLAGS_CARDS === 'undefined' || !Array.isArray(FLAGS_CARDS)) return [];
-  return FLAGS_CARDS.filter(c => c.level === level);
+  // Одна страна — одна карточка. Если в данных вдруг окажутся два флага одной
+  // страны, в партию попадёт только первый: повтор в одной игре не нужен.
+  const seen = new Set();
+  const cards = [];
+  FLAGS_CARDS.forEach(c => {
+    if(c.level !== level) return;
+    const key = flagsCardKey(c);
+    if(seen.has(key)) return;
+    seen.add(key);
+    cards.push(c);
+  });
+  return cards;
 }
 function flagsCardKey(card){
   return card.flag || `${card.level}:${card.a[0] || ''}`;
@@ -26,7 +37,7 @@ function stopFlagsInterval(){
 function drawFlagsQueue(){
   const level = Number(state.flagsSelectedLevel) || 1;
   const all = getFlagsCardsList(level);
-  const total = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 10;
+  const wanted = FLAGS_COUNT_VALUES.includes(Number(state.flagsQuestionCount)) ? Number(state.flagsQuestionCount) : 10;
   if(all.length === 0){
     state.flagsQueue = [];
     state.flagsIndex = 0;
@@ -39,22 +50,23 @@ function drawFlagsQueue(){
   let used = Array.isArray(state.flagsUsed[level])
     ? state.flagsUsed[level].filter(key => key !== undefined && key !== null && key !== '')
     : [];
+  // Сначала — страны, которых ещё не было. Когда они кончились, начинаем круг
+  // заново, но НЕ добираем остаток повторными вопросами внутри одной партии:
+  // раньше пул перезапускался и докидывал те же флаги, из-за чего в игре на
+  // 25 вопросов один и тот же флаг показывался дважды (на уровне из 14 стран —
+  // до 11 повторов).
   let pool = shuffle(all.filter(c => !used.includes(flagsCardKey(c))));
-  const chosen = [];
-  let recycled = false;
-  while(chosen.length < total){
-    if(pool.length === 0){
-      pool = shuffle(all);
-      used = [];
-      if(!recycled){ showToast('Вопросы этого уровня показаны заново 🔀'); recycled = true; }
-    }
-    const take = Math.min(pool.length, total - chosen.length);
-    const part = pool.slice(0, take);
-    chosen.push(...part);
-    part.forEach(c => used.push(flagsCardKey(c)));
-    pool = pool.slice(take);
+  if(pool.length === 0){
+    used = [];
+    pool = shuffle(all);
+    showToast('Вопросы этого уровня показаны заново 🔀');
   }
-  state.flagsUsed[level] = used;
+  const total = Math.min(wanted, pool.length);
+  if(wanted > pool.length){
+    showToast(`На этом уровне ${pool.length} стран — столько и будет в партии`);
+  }
+  const chosen = pool.slice(0, total);
+  state.flagsUsed[level] = used.concat(chosen.map(flagsCardKey));
   state.flagsQueue = chosen;
   state.flagsIndex = 0;
   saveState();

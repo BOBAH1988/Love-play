@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-jo" viewBox="0 0 640 480">
+  <path fill="#000000" d="M0 0h640v160H0z"/>
+  <path fill="#fff" d="M0 160h640v160H0z"/>
+  <path fill="#007a3d" d="M0 320h640v160H0z"/>
+  <path fill="#ce1126" d="M0 0L250 240L0 480z"/>
+  <path fill="#fff" d="M95 185L105.4 218.4L138 205.7L118.4 234.7L148.6 252.2L113.8 255L118.9 289.6L95 264L71.1 289.6L76.2 255L41.4 252.2L71.6 234.7L52 205.7L84.6 218.4z"/>
+</svg>

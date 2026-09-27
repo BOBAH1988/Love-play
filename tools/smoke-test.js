@@ -148,8 +148,11 @@ test('Данные «Флагов» загружены и формируют о�
   const previousIndex = state.flagsIndex;
   try {
     state.flagsSelectedLevel = 1;
-    state.flagsUsed = {};
     [5, 10, 25].forEach(count => {
+      // История «уже показанных» общая для последовательных партий, поэтому
+      // её сбрасываем перед каждой: иначе третья партия считала бы вопросы,
+      // показанные двумя предыдущими, и не набирала бы нужного числа.
+      state.flagsUsed = {};
       state.flagsQuestionCount = count;
       global.drawFlagsQueue();
       assert(state.flagsQueue && state.flagsQueue.length === count,
@@ -463,8 +466,8 @@ test('Данные «Столиц» загружены и формируют о�
   const previousIndex = state.capitalsIndex;
   try {
     state.capitalsSelectedLevel = 1;
-    state.capitalsUsed = {};
     [5, 10, 25].forEach(count => {
+      state.capitalsUsed = {}; // см. комментарий в тесте «Флагов»
       state.capitalsQuestionCount = count;
       global.drawCapitalsQueue();
       assert(state.capitalsQueue && state.capitalsQueue.length === count,
@@ -509,15 +512,17 @@ test('«Флаги»/«Столицы»: вариант 50 удалён, ста�
   }
 });
 
-test('Колоды «Флагов»/«Столиц» покрывают все SVG-флаги ровно по одному разу (15/14/14)', () => {
+test('Колоды «Флагов»/«Столиц» покрывают все SVG-флаги ровно по одному разу', () => {
   const svgFiles = fs.readdirSync(path.join(ROOT, 'flags-svg'))
     .filter(f => f.endsWith('.svg'))
     .sort();
-  assert(svgFiles.length === 43, `в flags-svg/ должно быть 43 SVG-флага, найдено ${svgFiles.length}`);
+  assert(svgFiles.length >= 43, `в flags-svg/ должно быть не меньше 43 SVG-флага, найдено ${svgFiles.length}`);
   [['FLAGS_CARDS', 'Флагов'], ['CAPITALS_CARDS', 'Столиц']].forEach(([name, label]) => {
     const cards = eval(`typeof ${name} === "undefined" ? null : ${name}`);
-    assert(Array.isArray(cards) && cards.length === 43,
-      `колода «${label}» должна содержать все 43 карточки`);
+    assert(Array.isArray(cards) && cards.length === svgFiles.length,
+      `колода «${label}» должна содержать столько же карточек, сколько SVG-флагов (${svgFiles.length}), а не ${cards && cards.length}`);
+    // 4 разных варианта ответа обязательны: одинаковые варианты означают,
+    // что правильный ответ можно угадать, не зная страны.
     const perLevel = { 1: 0, 2: 0, 3: 0 };
     const seen = [];
     cards.forEach(card => {
@@ -526,14 +531,99 @@ test('Колоды «Флагов»/«Столиц» покрывают все S
       seen.push(card.flag);
       assert(Array.isArray(card.a) && card.a.length === 4,
         `у карточки «${card.country || card.flag}» должно быть 4 варианта ответа`);
+      assert(new Set(card.a).size === 4,
+        `у карточки «${card.country || card.flag}» варианты ответа не должны повторяться: ${(card.a || []).join(', ')}`);
     });
-    assert(perLevel[1] === 15 && perLevel[2] === 14 && perLevel[3] === 14,
-      `раскладка по уровням должна быть 15/14/14, фактическая ${perLevel[1]}/${perLevel[2]}/${perLevel[3]}`);
+    // Инвариант, а не числа: в каждом уровне должно быть не меньше 25 стран,
+    // иначе вариант «25 вопросов» не набирается без повторов (а повторов в
+    // партии быть не должно — см. следующий тест). Прежние проверки знали
+    // только 15/14/14 и падали на любом добавлении страны.
+    [1, 2, 3].forEach(level => {
+      assert(perLevel[level] >= 25,
+        `на уровне ${level} должно быть не меньше 25 стран, иначе 25 вопросов не наберутся без повторов; фактически ${perLevel[level]}`);
+    });
     assert(new Set(seen).size === seen.length, `флаги в колоде «${label}» не должны повторяться`);
     svgFiles.forEach(f => {
       assert(seen.includes(`flags-svg/${f}`), `флаг ${f} должен быть в колоде «${label}»`);
     });
   });
+});
+
+test('«Флаги»/«Столицы»: в одной партии не повторяется ни одна страна', () => {
+  // Регресс на баг: при 25 вопросах на уровне из 14 стран очередь достраивалась
+  // повторными вопросами, и один и тот же флаг показывался дважды. Проверка
+  // по инварианту: сколько бы стран ни добавили и сколько вопросов ни выбрали,
+  // повторов в партии быть не должно.
+  const cases = [
+    { label: 'Флаги', lvl: 'flagsSelectedLevel', cnt: 'flagsQuestionCount', used: 'flagsUsed', q: 'flagsQueue', key: 'flagsCardKey', draw: 'drawFlagsQueue' },
+    { label: 'Столицы', lvl: 'capitalsSelectedLevel', cnt: 'capitalsQuestionCount', used: 'capitalsUsed', q: 'capitalsQueue', key: 'capitalsCardKey', draw: 'drawCapitalsQueue' },
+  ];
+  const saved = {};
+  cases.forEach((c) => { ['lvl', 'cnt', 'used', 'q'].forEach((k) => { saved[`${c.label}.${k}`] = state[c[k]]; }); });
+  try {
+    cases.forEach(({ label, lvl, cnt, used, q, key, draw }) => {
+      [1, 2, 3].forEach((level) => {
+        [5, 10, 25].forEach((count) => {
+          state[lvl] = level; state[cnt] = count; state[used] = {};
+          global[draw]();
+          const keys = state[q].map((card) => global[key](card));
+          const dupes = keys.filter((k, i) => keys.indexOf(k) !== i);
+          assert(dupes.length === 0,
+            `${label}, уровень ${level}, ${count} вопросов: повторились страны ${[...new Set(dupes)].join(', ')}`);
+          // Выбранное число вопросов всегда набирается: уровень длиннее его.
+          assert(state[q].length === count,
+            `${label}, уровень ${level}: выбрано ${count} вопросов, а в партии ${state[q].length} — не хватает стран`);
+        });
+      });
+    });
+  } finally {
+    cases.forEach(({ label, lvl, cnt, used, q }) => {
+      state[lvl] = saved[`${label}.lvl`]; state[cnt] = saved[`${label}.cnt`];
+      state[used] = saved[`${label}.used`]; state[q] = saved[`${label}.q`];
+    });
+  }
+});
+
+test('«Флаги»/«Столицы»: маленький уровень не добирается повторными вопросами', () => {
+  // Настоящий регресс на механизм. Пока в уровне 27 стран, а максимум вопросов
+  // 25, повторы невозможны физически — значит, проверка «в обычной колоде
+  // повторов нет» ничего не доказывает. Поэтому здесь уровень урезается до
+  // трёх стран: если очередь снова начнёт добирать повторными вопросами, тест
+  // это увидит. Уровни карточек восстанавливаются в finally.
+  const cases = [
+    { label: 'Флаги', cards: 'FLAGS_CARDS', lvl: 'flagsSelectedLevel', cnt: 'flagsQuestionCount', used: 'flagsUsed', q: 'flagsQueue', key: 'flagsCardKey', draw: 'drawFlagsQueue' },
+    { label: 'Столицы', cards: 'CAPITALS_CARDS', lvl: 'capitalsSelectedLevel', cnt: 'capitalsQuestionCount', used: 'capitalsUsed', q: 'capitalsQueue', key: 'capitalsCardKey', draw: 'drawCapitalsQueue' },
+  ];
+  const saved = {};
+  cases.forEach((c) => { ['lvl', 'cnt', 'used', 'q'].forEach((k) => { saved[`${c.label}.${k}`] = state[c[k]]; }); });
+  const levels = cases.map(({ cards: name }) => eval(name).map((c) => c.level));
+  try {
+    cases.forEach(({ label, cards: name, lvl, cnt, used, q, key, draw }) => {
+      const cards = eval(name);
+      const original = levels[cases.findIndex((c) => c.cards === name)];
+      // Три страны получают отдельный уровень 7, остальные уходят на 8.
+      cards.forEach((c, i) => { c.level = i < 3 ? 7 : 8; });
+      state[lvl] = 7; state[cnt] = 25; state[used] = {};
+      global[draw]();
+      const keys = state[q].map((card) => global[key](card));
+      const dupes = keys.filter((k, i) => keys.indexOf(k) !== i);
+      assert(dupes.length === 0,
+        `${label}: уровень из 3 стран не должен повторяться, повторились ${[...new Set(dupes)].join(', ')}`);
+      assert(state[q].length === 3,
+        `${label}: в партии должно быть 3 уникальных вопроса, а получилось ${state[q].length}`);
+      cards.forEach((c, i) => { c.level = original[i]; });
+    });
+  } finally {
+    cases.forEach(({ cards: name }) => {
+      const cards = eval(name);
+      const original = levels[cases.findIndex((c) => c.cards === name)];
+      cards.forEach((c, i) => { c.level = original[i]; });
+    });
+    cases.forEach(({ label, lvl, cnt, used, q }) => {
+      state[lvl] = saved[`${label}.lvl`]; state[cnt] = saved[`${label}.cnt`];
+      state[used] = saved[`${label}.used`]; state[q] = saved[`${label}.q`];
+    });
+  }
 });
 
 test('«Арифметика»: очередь на уровнях и размерах партии', () => {
