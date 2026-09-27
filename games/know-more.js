@@ -144,7 +144,7 @@ function goToKnowMoreHistory(){
         .filter(it => it.receiver === idx && knowMoreZoneById(it.zoneId))
         .map(it => ({ zone: knowMoreZoneById(it.zoneId), score: it.score }));
       const lines = rows.length
-        ? rows.map(it => `${it.zone.icon || '🧭'} ${it.zone.name} — ${knowMoreLogScoreText(it.score)}`)
+        ? rows.map(it => `${it.zone.name} — ${knowMoreLogScoreText(it.score)}`)
         : ['—'];
       return `
         <div class="know-more-map">
@@ -257,7 +257,6 @@ function showKnowMoreTurn(){
   fadeSwapEl('knowMoreCard', (el)=>{
     el.className = 'card';
     el.innerHTML = `<div class="card-inner"><div class="card-body">
-      <div class="card-icon">${zone.icon || '🧭'}</div>
       <div class="card-split-title">${zone.name}</div>
       <div class="know-more-part">${zone.part || ''}</div>
       <div class="know-more-how">${zone.how || ''}</div>

@@ -4359,6 +4359,43 @@ test('«Узнай больше»: экран «Исследованные» н�
   }
 });
 
+test('«Узнай больше»: на карточке задания и в «Исследованных» нет иконок зон', () => {
+  // Владелец убрал иконки: они дублировали название зоны и отвлекали.
+  // Поле icon в данных осталось (вернуть иконки должно быть легко), но
+  // рисоваться оно больше не должно — иначе правка тихо откатится.
+  const prevMode = state.knowMoreMode;
+  const prevStarter = state.knowMoreStarter;
+  const prevLog = state.knowMoreLog;
+  const prevFade = global.fadeSwapEl;
+  try {
+    state.knowMoreMode = 0;
+    state.knowMoreStarter = 0;
+    state.knowMoreLog = [];
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    startKnowMoreGame();
+    const zoneId = state.knowMoreQueue[0];
+    const zone = KNOW_MORE_ZONES.find(z => z.id === zoneId);
+    const card = getElById(stub, 'knowMoreCard');
+    assert(!/class="card-icon"/.test(card.innerHTML),
+      'на карточке задания не должно быть иконки зоны');
+    assert(!card.innerHTML.includes(zone.icon),
+      `иконка зоны «${zone.icon}» не должна попадать в карточку задания`);
+    assert(card.innerHTML.includes(zone.name), 'название зоны на карточке остаться должно');
+    // Та же проверка для списка «Исследованные».
+    answerKnowMore(3);
+    goToKnowMoreHistory();
+    const listHtml = getElById(stub, 'knowMoreHistoryList').innerHTML;
+    assert(!listHtml.includes(zone.icon),
+      'в списке «Исследованные» иконка зоны тоже не нужна');
+    assert(listHtml.includes(zone.name), 'название зоны в списке остаться должно');
+  } finally {
+    state.knowMoreMode = prevMode;
+    state.knowMoreStarter = prevStarter;
+    state.knowMoreLog = prevLog;
+    global.fadeSwapEl = prevFade;
+  }
+});
+
 test('«Узнай больше»: «←» с «Исследованных» возвращает в настройки игры', () => {
   // Экран вложенный: без записи в PARENT_BACK стрелка увела бы в хаб мимо
   // настроек — ровно тот баг, который ловят проверки карт навигации.
