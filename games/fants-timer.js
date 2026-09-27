@@ -910,6 +910,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     compatTestSetup:'twoPlayerView', compatTestGame:'twoPlayerView',
     compatTestSummary:'twoPlayerView', compatTestHistory:'twoPlayerView',
     knowMoreSetup:'twoPlayerView', knowMoreGame:'twoPlayerView', knowMoreSummary:'twoPlayerView',
+    knowMoreHistory:'twoPlayerView',
     // Мёртвые id убраны (photoGame, davayGame, davayQuiz, videoGame,
     // twisterSetup, partyHangmanSetup, partyRouletteSetup, partyMemes* и др.):
     // таких секций в index.html давно нет, записи ничего не делали и только
@@ -974,7 +975,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'sexQuestSummary','sexQuestHistory','shopSetup',
     'passionMapSetup','passionMapSummary','passionMapHistory',
     'compatTestSetup','compatTestSummary','compatTestHistory',
-    'knowMoreSetup','knowMoreSummary',
+    'knowMoreSetup','knowMoreSummary','knowMoreHistory',
     'davaySetup','ideasGame','wrSetup',
     'partyFantsSetup','partyTdSetup','partyQuizSetup','krokodilSetup',
     'partyNeverSetup',
@@ -1046,6 +1047,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'compatTestSetup':'exitCompatTestSetup',
     'knowMoreSetup':'exitKnowMoreSetup',
     'knowMoreSummary':'exitKnowMoreSummary',
+    'knowMoreHistory':'exitKnowMoreHistory',
   };
   window.handleNestedBack = function(activeIds){
     const ids = activeIds || getActiveGameScreenIds();

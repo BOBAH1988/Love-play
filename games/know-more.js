@@ -55,25 +55,45 @@ function goToKnowMoreSetup(){
   goToGameSetup('knowMoreSetup', 'twoPlayerView', ()=>{ renderKnowMoreStarterGroup(); });
 }
 
-// Кто исследует первым. Две плашки — тот же компонент .level-toggle, что у
-// «Пройдите теста» и остальных игр. Под именем плашки показываем имя,
-// введённое в хабе (name1/name2): «Он» — это первый игрок из полей
-// «Имя мужчины»/«Имя женщины».
+// Кто исследует: три режима. Первый — «По очереди» (партия идёт как раньше,
+// роли меняются по ходу), два других — когда исследует только один партнёр.
+const KNOW_MORE_MODE = { ALTERNATE:0, HE:1, SHE:2 };
+
+// Список режимов для экрана настроек. Первым идёт «По очереди» — это
+// режим по умолчанию и то поведение, которое было до появления двух других.
+// Под именем «Он»/«Она» показываем имя, введённое в хабе (name1/name2).
+function knowMoreModeList(){
+  const players = knowMorePlayers();
+  return [
+    { value: KNOW_MORE_MODE.ALTERNATE, label: 'По очереди', desc: 'Исследуете друг друга по очереди' },
+    { value: KNOW_MORE_MODE.HE, label: 'Он', desc: `${players[0]} исследует` },
+    { value: KNOW_MORE_MODE.SHE, label: 'Она', desc: `${players[1]} исследует` },
+  ];
+}
+// Текущий режим. Значение из старого сохранения может быть любым числом —
+// в таком разумно вернуть «По очереди».
+function getKnowMoreMode(){
+  const mode = Number(state.knowMoreMode);
+  return knowMoreModeList().some(m => m.value === mode) ? mode : KNOW_MORE_MODE.ALTERNATE;
+}
+
+// Кто исследует настройку. Три плашки — тот же компонент .level-toggle, что у
+// «Пройдите теста» и остальных игр.
 function renderKnowMoreStarterGroup(){
   const wrap = document.getElementById('knowMoreStarterGroup');
   if(!wrap) return;
-  const players = knowMorePlayers();
-  if(state.knowMoreStarter !== 0 && state.knowMoreStarter !== 1){
-    state.knowMoreStarter = 0;
+  const mode = getKnowMoreMode();
+  if(state.knowMoreMode !== mode){
+    state.knowMoreMode = mode;
     saveState();
   }
   wrap.innerHTML = '';
-  ['Он', 'Она'].forEach((label, idx)=>{
+  knowMoreModeList().forEach(({ value, label, desc })=>{
     const div = document.createElement('div');
-    div.className = 'level-toggle' + (state.knowMoreStarter === idx ? ' on' : '');
-    div.innerHTML = `<div class="lname">${label}</div><div class="ldesc">${players[idx]}</div><div class="level-check"></div>`;
+    div.className = 'level-toggle' + (mode === value ? ' on' : '');
+    div.innerHTML = `<div class="lname">${label}</div><div class="ldesc">${desc}</div><div class="level-check"></div>`;
     div.addEventListener('click', ()=>{
-      state.knowMoreStarter = idx;
+      state.knowMoreMode = value;
       saveState();
       playSuccessSound();
       renderKnowMoreStarterGroup();
@@ -102,6 +122,51 @@ function exitKnowMoreSetup(){
 }
 document.getElementById('knowMoreSetupExitBtn').addEventListener('click', ()=>{ exitKnowMoreSetup(); });
 setupRulesModal('knowMoreRulesModal', 'closeKnowMoreRulesBtn');
+
+/* ============ ЭКРАН «ИССЛЕДОВАННЫЕ» ============ */
+// Список всего, что уже исследовали: накопительный, из всех партий. Отдельная
+// кнопка под «Начать», потому что перед новой партией полезно посмотреть, что
+// уже попробовали, и не повторяться.
+function knowMoreLogScoreText(score){
+  const found = KNOW_MORE_SCALE.find(s => s.score === score);
+  return found ? found.text : '—';
+}
+function goToKnowMoreHistory(){
+  const wrap = document.getElementById('knowMoreHistoryList');
+  const log = Array.isArray(state.knowMoreLog) ? state.knowMoreLog : [];
+  const players = knowMorePlayers();
+  if(!wrap) return;
+  if(log.length === 0){
+    wrap.innerHTML = '<div class="know-more-empty">Пока ничего не исследовано — начните первую партию.</div>';
+  } else {
+    wrap.innerHTML = players.map((name, idx)=>{
+      const rows = log
+        .filter(it => it.receiver === idx && knowMoreZoneById(it.zoneId))
+        .map(it => ({ zone: knowMoreZoneById(it.zoneId), score: it.score }));
+      const lines = rows.length
+        ? rows.map(it => `${it.zone.icon || '🧭'} ${it.zone.name} — ${knowMoreLogScoreText(it.score)}`)
+        : ['—'];
+      return `
+        <div class="know-more-map">
+          <div class="know-more-map-name">${idx === 0 ? 'Он' : 'Она'} · ${name} — исследовано зон: ${rows.length}</div>
+          <div class="know-more-row"><div class="know-more-row-text">${lines.join('<br>')}</div></div>
+        </div>`;
+    }).join('') + `<div class="intro-text">Всего отметок: ${log.length}. Список пополняется сразу после каждой оценки и не зависит от того, дошла ли партия до итогов.</div>`;
+  }
+  const setup = document.getElementById('knowMoreSetup');
+  const history = document.getElementById('knowMoreHistory');
+  if(setup) setup.classList.remove('active');
+  if(history) history.classList.add('active');
+  window.scrollTo(0, 0);
+}
+// Назад с экрана — на настройки игры. Отдельная функция нужна для карты
+// PARENT_BACK (games/fants-timer.js): по стрелке «←» идёт тот же путь, что и
+// по кнопке «Назад», иначе стрелка увела бы в хаб мимо настроек.
+function exitKnowMoreHistory(){
+  goToKnowMoreSetup();
+}
+document.getElementById('knowMoreHistoryBtn').addEventListener('click', ()=>{ goToKnowMoreHistory(); });
+document.getElementById('knowMoreHistoryExitBtn').addEventListener('click', ()=>{ exitKnowMoreHistory(); });
 
 /* ============ ПАРТИЯ ============ */
 // Очередь зон: сначала level 1, потом 2, потом 3; внутри одного уровня
@@ -145,9 +210,15 @@ document.getElementById('knowMoreStartBtn').addEventListener('click', ()=>{
   startKnowMoreGame();
 });
 
-// Кто исследует на текущем ходу, а кого исследуют. Роли чередуются: на первом
-// ходу исследует выбранный настройкой партнёр, дальше — другой.
+// Кто исследует на текущем ходу, а кого исследуют.
+// Режим «По очереди» — роли чередуются по ходу (как было раньше); на первом
+// ходу исследует партнёр из state.knowMoreStarter, он же остаётся стартовым
+// для партий, начатых до появления режимов. Режимы «Он»/«Она» — исследует
+// только этот партнёр, второй всё партию отвечает за свои ощущения.
 function knowMoreExplorerIdx(){
+  const mode = getKnowMoreMode();
+  if(mode === KNOW_MORE_MODE.HE) return 0;
+  if(mode === KNOW_MORE_MODE.SHE) return 1;
   const starter = (state.knowMoreStarter === 1) ? 1 : 0;
   return ((state.knowMoreStep || 0) % 2 === 0) ? starter : 1 - starter;
 }
@@ -211,6 +282,11 @@ function answerKnowMore(choiceIdx){
   const receiver = knowMoreReceiverIdx();
   if(!Array.isArray(state.knowMoreMarks[receiver])) state.knowMoreMarks[receiver] = [];
   state.knowMoreMarks[receiver].push({ zoneId: zone.id, score: scale.score });
+  // Накопительный список «Исследованные» пополняется сразу, а не в итогах:
+  // он должен пережить и прерванную партию — иначе ценность «мы это уже
+  // пробовали» терялась бы именно тогда, когда она нужнее всего.
+  if(!Array.isArray(state.knowMoreLog)) state.knowMoreLog = [];
+  state.knowMoreLog.push({ zoneId: zone.id, score: scale.score, receiver, date: Date.now() });
   knowMoreAwaitNext = true;
   const nextBtn = document.getElementById('knowMoreNextBtn');
   if(nextBtn) nextBtn.hidden = false;

@@ -1689,6 +1689,8 @@
   .know-more-row + .know-more-row{ margin-top:8px; }
   .know-more-row-title{ font-size:13px; font-weight:700; color:#fff; }
   .know-more-row-text{ font-size:14px; color:rgba(255,255,255,.8); line-height:1.45; margin-top:2px; }
+  /* Экран «Исследованные»: пустое состояние — обычный текст, без рамки. */
+  .know-more-empty{ font-size:15px; color:rgba(255,255,255,.75); line-height:1.5; text-align:left; }
   /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт
      и "Старт") — тоже рассчитан на светлый фон, на тёмном был почти невидим. */
   #card .card-timer{ border-top-color:rgba(255,255,255,.18); }

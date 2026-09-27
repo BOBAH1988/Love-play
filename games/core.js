@@ -339,12 +339,17 @@ let state = {
   // телефон». Без последнего флага «Продолжить игру» мог вернуть игрока на
   // вопрос, который он уже видел, или на хендофф там, где вопрос не показывали.
   compatTestPaused:null,
-  // Узнай больше — партия: knowMoreStarter (0 = «Он» исследует первым,
-  // 1 = «Она»), knowMoreQueue (порядок зон тела в этой партии),
-  // knowMoreStep (номер хода) и knowMoreMarks — отметки по каждому
-  // партнёру отдельно (его ощущения записывает тот, кого исследовали).
+  // Узнай больше — партия: knowMoreMode (0 = «По очереди», 1 = «Он»
+  // исследует», 2 = «Она исследует»), knowMoreStarter (0 = «Он» исследует
+  // первым, 1 = «Она» — оставлено для партий, начатых до появления режимов),
+  // knowMoreQueue (порядок зон тела в этой партии), knowMoreStep (номер хода)
+  // и knowMoreMarks — отметки по каждому партнёру отдельно (его ощущения
+  // записывает тот, кого исследовали).
   // knowMoreHistory — сохранённые карты тела (см. games/know-more.js).
-  knowMoreStarter:0, knowMoreQueue:[], knowMoreStep:0, knowMoreMarks:[[],[]], knowMoreHistory:[],
+  // knowMoreLog — накопительный список исследованных зон для экрана
+  // «Исследованные»: он переживает партию, поэтому знание о том, что уже
+  // пробовали, не теряется.
+  knowMoreMode:0, knowMoreStarter:0, knowMoreQueue:[], knowMoreStep:0, knowMoreMarks:[[],[]], knowMoreHistory:[], knowMoreLog:[],
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании".
@@ -2023,12 +2028,16 @@ function performFullReset(){
   state.compatTestResult = null;
   state.compatTestHistory = [];
   state.compatTestPaused = null;
-  // Узнай больше — общий сброс чистит текущую партию и историю карт
+  // Узнай больше — общий сброс чистит текущую партию и историю карт.
+  // Режим («по очереди» / кто исследует) НЕ сбрасываем: это настройка,
+  // которую игрок выбирал сам, как уровень сложности.
+  state.knowMoreMode = 0;
   state.knowMoreStarter = 0;
   state.knowMoreQueue = [];
   state.knowMoreStep = 0;
   state.knowMoreMarks = [[], []];
   state.knowMoreHistory = [];
+  state.knowMoreLog = [];
   // Во что поиграть? (дети)
   state.whatToPlayUsed = [];
   state.whatToPlayFavorites = [];

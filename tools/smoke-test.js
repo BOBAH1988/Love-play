@@ -4241,21 +4241,6 @@ test('«Узнай больше»: выход из партии не сохра�
   }
 });
 
-test('«Узнай больше»: экран настройки — «Он»/«Она» и «Начать», игра в реестре', () => {
-  // Экран настройки новой игры задаёт владелец: пока там только выбор
-  // «кто исследует первым» (две плашки) и кнопка «Начать». Если позже
-  // добавятся настройки, проверку нужно будет расширить.
-  const setupHtml = (html.match(/<section id="knowMoreSetup"[\s\S]*?<\/section>/) || [''])[0];
-  assert(/id="knowMoreStarterGroup"/.test(setupHtml), 'на настройке должен быть блок выбора «Он»/«Она»');
-  assert(/id="knowMoreStartBtn"[^>]*>Начать</.test(setupHtml), 'на настройке должна быть кнопка «Начать»');
-  assert(/id="knowMoreSetupExitBtn"[^>]*>Выход</.test(setupHtml), 'с экрана настроек должен быть выход');
-  const registry = window.GAME_REGISTRY || global.GAME_REGISTRY || [];
-  const entry = registry.find(g => g.mode === 'knowMore');
-  assert(!!entry, 'игра должна быть в реестре');
-  assert(entry && entry.group === 'two' && entry.noPause === true, 'игра для пар, без паузы');
-  assert(/knowMoreRulesModal/.test(read('games/fants-timer.js')), 'правила должны быть в хабе «Правила игр»');
-});
-
 console.log('\n=== Запуск тестов ===\n');
 
     global.fadeSwapEl = originalFade;
@@ -4263,6 +4248,138 @@ console.log('\n=== Запуск тестов ===\n');
   }
 });
 
+
+test('«Узнай больше»: экран настройки — режимы, «Исследованные», «Начать», игра в реестре', () => {
+  const setupHtml = (html.match(/<section id="knowMoreSetup"[\s\S]*?<\/section>/) || [''])[0];
+  assert(/id="knowMoreStarterGroup"/.test(setupHtml), 'на настройке должен быть блок выбора режима');
+  assert(/<label>Кто исследует<\/label>/.test(setupHtml),
+    'подпись должна быть «Кто исследует» (имя «Кто исследует первым» владелец сократил)');
+  assert(/id="knowMoreStartBtn"[^>]*>Начать</.test(setupHtml), 'на настройке должна быть кнопка «Начать»');
+  // Кнопка «Исследованные» — между «Начать» и «Выход», как просил владелец.
+  const startAt = setupHtml.indexOf('id="knowMoreStartBtn"');
+  const historyAt = setupHtml.indexOf('id="knowMoreHistoryBtn"');
+  const exitAt = setupHtml.indexOf('id="knowMoreSetupExitBtn"');
+  assert(historyAt > startAt && historyAt < exitAt,
+    'кнопка «Исследованные» должна стоять под «Начать» и выше «Выход»');
+  assert(/id="knowMoreSetupExitBtn"[^>]*>Выход</.test(setupHtml), 'с экрана настроек должен быть выход');
+  const registry = window.GAME_REGISTRY || global.GAME_REGISTRY || [];
+  const entry = registry.find(g => g.mode === 'knowMore');
+  assert(!!entry, 'игра должна быть в реестре');
+  assert(entry && entry.group === 'two' && entry.noPause === true, 'игра для пар, без паузы');
+  assert(/knowMoreRulesModal/.test(fs.readFileSync(path.join(ROOT, 'games/fants-timer.js'), 'utf8')),
+    'правила должны быть в хабе «Правила игр»');
+});
+
+test('«Узнай больше»: три режима, «По очереди» — первая и по умолчанию', () => {
+  const prev = state.knowMoreMode;
+  try {
+    const list = knowMoreModeList();
+    assert(list.length === 3, `должно быть три режима, а ${list.length}`);
+    assert(list[0].value === KNOW_MORE_MODE.ALTERNATE,
+      'первым должен идти режим «По очереди»');
+    assert(list.map(m => m.label).join(',') === 'По очереди,Он,Она',
+      `подписи режимов: ${list.map(m => m.label).join(',')}`);
+    state.knowMoreMode = 0;
+    assert(getKnowMoreMode() === KNOW_MORE_MODE.ALTERNATE, 'по умолчанию «По очереди»');
+    state.knowMoreMode = 7;
+    assert(getKnowMoreMode() === KNOW_MORE_MODE.ALTERNATE,
+      'неизвестное значение должно давать «По очереди», а не ломать партию');
+  } finally {
+    state.knowMoreMode = prev;
+  }
+});
+
+test('«Узнай больше»: в режимах «Он»/«Она» исследует только один партнёр', () => {
+  const prevMode = state.knowMoreMode;
+  const prevStep = state.knowMoreStep;
+  const prevStarter = state.knowMoreStarter;
+  try {
+    const explorerOverSteps = (mode) => {
+      state.knowMoreMode = mode;
+      return [0, 1, 2, 3].map((step) => { state.knowMoreStep = step; return knowMoreExplorerIdx(); });
+    };
+    assert(explorerOverSteps(KNOW_MORE_MODE.ALTERNATE).join(',') === '0,1,0,1',
+      'в режиме «По очереди» исследователь должен меняться по ходу');
+    assert(explorerOverSteps(KNOW_MORE_MODE.HE).join(',') === '0,0,0,0',
+      'в режиме «Он» исследует только первый партнёр на всех ходах');
+    assert(explorerOverSteps(KNOW_MORE_MODE.SHE).join(',') === '1,1,1,1',
+      'в режиме «Она» исследует только второй партнёр на всех ходах');
+    state.knowMoreMode = KNOW_MORE_MODE.HE;
+    state.knowMoreStep = 0;
+    assert(knowMoreReceiverIdx() === 1, 'в режиме «Он» отвечает вторая');
+    state.knowMoreMode = KNOW_MORE_MODE.SHE;
+    assert(knowMoreReceiverIdx() === 0, 'в режиме «Она» отвечает первый');
+  } finally {
+    state.knowMoreMode = prevMode;
+    state.knowMoreStep = prevStep;
+    state.knowMoreStarter = prevStarter;
+  }
+});
+
+test('«Узнай больше»: экран «Исследованные» накопливает зоны и открывается с настроек', () => {
+  const prevLog = state.knowMoreLog;
+  const prevMode = state.knowMoreMode;
+  const prevStep = state.knowMoreStep;
+  const prevMarks = state.knowMoreMarks;
+  const prevQueue = state.knowMoreQueue;
+  const prevFade = global.fadeSwapEl;
+  const activeBefore = [...document.querySelectorAll('.screen.active')].map(e => e.id);
+  try {
+    state.knowMoreLog = [];
+    goToKnowMoreHistory();
+    const list = getElById(stub, 'knowMoreHistoryList');
+    assert(getElById(stub, 'knowMoreHistory').classList.contains('active'), 'должен открыться экран «Исследованные»');
+    assert(/ничего не исследовано/.test(list.innerHTML), 'пустой список должен объяснять, что он пуст');
+    // Оценка в партии сразу попадает в накопительный список.
+    state.knowMoreMode = 0;
+    state.knowMoreStarter = 0;
+    // Партию запускаем штатно: она сбрасывает knowMoreAwaitNext, иначе ответ
+    // был бы проигнорирован как «уже отвеченный».
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    startKnowMoreGame();
+    const firstZoneId = state.knowMoreQueue[0];
+    answerKnowMore(3);
+    assert((state.knowMoreLog || []).length === 1,
+      `после оценки в списке «Исследованные» должна появиться запись, а их ${(state.knowMoreLog || []).length}`);
+    assert(state.knowMoreLog[0].zoneId === firstZoneId, 'в список пишется та зона, которую оценили');
+    assert(state.knowMoreLog[0].receiver === knowMoreReceiverIdx(),
+      'в записи должно быть, чью карту попала оценка');
+    goToKnowMoreHistory();
+    const zoneName = KNOW_MORE_ZONES.find(z => z.id === firstZoneId).name;
+    assert(list.innerHTML.includes(zoneName),
+      `в списке должно быть видно название зоны «${zoneName}»`);
+  } finally {
+    state.knowMoreLog = prevLog;
+    state.knowMoreMode = prevMode;
+    state.knowMoreStep = prevStep;
+    state.knowMoreMarks = prevMarks;
+    state.knowMoreQueue = prevQueue;
+    global.fadeSwapEl = prevFade;
+    activeBefore.forEach((id) => getElById(stub, id).classList.add('active'));
+  }
+});
+
+test('«Узнай больше»: «←» с «Исследованных» возвращает в настройки игры', () => {
+  // Экран вложенный: без записи в PARENT_BACK стрелка увела бы в хаб мимо
+  // настроек — ровно тот баг, который ловят проверки карт навигации.
+  const back = getElById(stub, 'globalBackBtn');
+  const prevLog = state.knowMoreLog;
+  const activeBefore = [...document.querySelectorAll('.screen.active')].map(e => e.id);
+  try {
+    document.querySelectorAll('.screen.active').forEach((el) => el.classList.remove('active'));
+    state.pausedMode = null; state.inProgress = false; state.lastSectionOnPause = null;
+    state.knowMoreLog = [];
+    goToKnowMoreHistory();
+    assert(getElById(stub, 'knowMoreHistory').classList.contains('active'), 'исходно активен экран «Исследованные»');
+    for (const { handler } of back._getHandlers().get('click')) handler({});
+    assert(getElById(stub, 'knowMoreSetup').classList.contains('active'),
+      'после «←» должен быть экран настроек игры, а не хаб');
+  } finally {
+    state.knowMoreLog = prevLog;
+    document.querySelectorAll('.screen.active').forEach((el) => el.classList.remove('active'));
+    activeBefore.forEach((id) => getElById(stub, id).classList.add('active'));
+  }
+});
 
 console.log('\n=== «Назад» ведёт в раздел своей игры (регресс) ===');
 
