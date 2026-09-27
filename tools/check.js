@@ -134,6 +134,40 @@ function checkMarkup(html) {
     `несбалансированы: ${broken.join(', ')}`
   );
 
+  // ─── Обработчики вешаются только на существующие элементы ─────────────
+  // `document.getElementById('x').addEventListener(...)` на отсутствующем
+  // элементе роняет ВЕСЬ модуль: скрипт выполняется по порядку, исключение
+  // прерывает его, и все кнопки игры ниже по файлу перестают работать.
+  //
+  // Как это выглядело у игрока: кнопка «Дальше» была удалена из разметки, а
+  // старый games/know-more.js остался в кэше браузера (страница открыта с
+  // диска, Service Worker не работает) — при загрузке он споткнулся о null.
+  // Ровно этот класс повторялся в отчётах об ошибках у четырех разных игр,
+  // поэтому он и проверяется статически: рассинхрон ловится ДО запуска.
+  //
+  // Исключение — id, которые игры создают сами через innerHTML (например
+  // timerBtn в карточке «Фантов»): в разметке их нет по определению.
+  const htmlIds = new Set([...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]));
+  const gameFiles = fs.readdirSync(path.join(ROOT, 'games')).filter((f) => f.endsWith('.js'));
+  const gameSrc = gameFiles.map((f) => read(path.join('games', f)));
+  const dynamicIds = new Set();
+  gameSrc.forEach((src) => {
+    for (const m of src.matchAll(/id=\\?["']([A-Za-z][\w]*)["']/g)) dynamicIds.add(m[1]);
+  });
+  const danglingHandlers = [];
+  gameSrc.forEach((src, i) => {
+    for (const m of src.matchAll(/getElementById\('([^']+)'\)\s*\.\s*addEventListener/g)) {
+      const id = m[1];
+      if (!htmlIds.has(id) && !dynamicIds.has(id)) danglingHandlers.push(`${gameFiles[i]}: #${id}`);
+    }
+  });
+  check(
+    `обработчики висят на существующих элементах (${gameFiles.length} файлов)`,
+    danglingHandlers.length === 0,
+    `этих id нет ни в index.html, ни среди создаваемых играми: ${danglingHandlers.join(', ')}. ` +
+    'Кнопка удалена из разметки, но обработчик остался (или наоборот) — весь модуль игры упадёт при загрузке.'
+  );
+
   // Дубли id ломают getElementById — он вернёт первый попавшийся элемент.
   const allIds = [...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]);
   const dupes = [...new Set(allIds.filter((id, i) => allIds.indexOf(id) !== i))];
