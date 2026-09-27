@@ -392,7 +392,8 @@ function exitKnowMoreSummary(){
 document.getElementById('knowMoreSummaryExitBtn').addEventListener('click', ()=>{ exitKnowMoreSummary(); });
 
 // Прерывание партии: несохранённая карта в историю не пишется — как у
-// остальных игр при выходе посреди партии. Стрелка «←» (noPause) ведёт сюда же.
+// остальных игр при выходе посреди партии. Сюда ведут кнопка «Выход» на
+// экране игры и «Закончить игру» в меню паузы.
 function finishPausedKnowMoreGame(){
   hideModal('pauseMenuModal');
   stopAllSounds();
@@ -406,9 +407,30 @@ function finishPausedKnowMoreGame(){
 }
 document.getElementById('knowMoreExitBtn').addEventListener('click', ()=>{ finishPausedKnowMoreGame(); });
 
-// Продолжение из меню паузы. У игры паузы нет (noPause), но реестр требует
-// функцию: кнопка «Продолжить игру» не должна падать, если партия окажется
-// на паузе. Возвращаем на последний показанный ход.
+// Пауза. Останавливаем озвучку, гасим экран игры и отдаём хаб: общее меню
+// паузы («Продолжить игру» / «Закончить игру») покажет updateResumeUI() по
+// state.pausedMode — так же, как у «Пройдите теста».
+//
+// Отдельное поле knowMorePaused не нужно: вся партия уже лежит в state
+// (knowMoreQueue, knowMoreStep, knowMoreMarks, knowMoreLog) и сохраняется
+// целиком. Сохраняем только номер хода — он же пригодится в отладке, если
+// партия когда-нибудь продолжится не с того места. В отличие от «Пройдите
+// теста» фазы экрана тут нет: оценка сразу переводит на следующую зону, то
+// есть на паузе всегда открыта свежая карточка без ответа.
+function pauseKnowMoreGame(){
+  if(typeof stopAllSounds === 'function') stopAllSounds();
+  state.pausedMode = 'knowMore';
+  state.lastSectionOnPause = 'twoPlayerView';
+  saveState();
+  document.getElementById('knowMoreGame').classList.remove('active');
+  document.getElementById('setup').classList.add('active');
+  showSetupView('twoPlayerView');
+  updateResumeUI();
+}
+
+// Продолжение из меню паузы: возвращаем ровно туда, откуда ушли. Отметки,
+// очередь и накопительный список «Исследованные» уже в state и переживают
+// паузу; заново их не строим — иначе оценки потерялись бы.
 function resumeKnowMoreGame(){
   state.pausedMode = null;
   saveState();
@@ -416,6 +438,8 @@ function resumeKnowMoreGame(){
   goToGame(null, 'knowMoreGame');
   updateMuteBtn();
   requestWakeLock();
+  // Если зон не осталось (пауза нажата у самой последней карточки), партия
+  // фактически доиграна — сразу показываем итоги, а не пустую карточку.
   if(knowMoreCurrentZone()) showKnowMoreTurn();
   else finishKnowMoreGame();
 }

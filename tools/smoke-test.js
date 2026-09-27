@@ -4274,7 +4274,11 @@ test('«Узнай больше»: экран настройки — режим�
   const registry = window.GAME_REGISTRY || global.GAME_REGISTRY || [];
   const entry = registry.find(g => g.mode === 'knowMore');
   assert(!!entry, 'игра должна быть в реестре');
-  assert(entry && entry.group === 'two' && entry.noPause === true, 'игра для пар, без паузы');
+  assert(entry && entry.group === 'two', 'игра для пар');
+  // Пауза есть: «←» открывает меню паузы, а не выкидывает из партии.
+  assert(entry && entry.pause === 'pauseKnowMoreGame' && entry.resume === 'resumeKnowMoreGame'
+    && entry.finish === 'finishPausedKnowMoreGame' && !entry.noPause,
+    'у игры должна быть полноценная пауза (pause/resume/finish) без noPause');
   assert(/knowMoreRulesModal/.test(fs.readFileSync(path.join(ROOT, 'games/fants-timer.js'), 'utf8')),
     'правила должны быть в хабе «Правила игр»');
 });
@@ -4405,6 +4409,77 @@ test('«Узнай больше»: на карточке задания и в «
     state.knowMoreStarter = prevStarter;
     state.knowMoreLog = prevLog;
     global.fadeSwapEl = prevFade;
+  }
+});
+
+test('«Узнай больше»: пауза сохраняет ход и отметки, «Закончить игру» — прерывает', () => {
+  // Пауза добавлена по просьбе владельца. Проверяем весь цикл целиком:
+  // «←» → меню паузы → «Продолжить игру» → та же зона и те же отметки, и
+  // отдельно «Закончить игру» → партия закрыта и в историю не попала.
+  const prevMode = state.knowMoreMode;
+  const prevStarter = state.knowMoreStarter;
+  const prevLog = state.knowMoreLog;
+  const prevHistory = state.knowMoreHistory;
+  const prevPaused = state.pausedMode;
+  const prevStep = state.knowMoreStep;
+  const prevMarks = state.knowMoreMarks;
+  const prevQueue = state.knowMoreQueue;
+  const prevFade = global.fadeSwapEl;
+  const activeBefore = [...document.querySelectorAll('.screen.active')].map(e => e.id);
+  const back = getElById(stub, 'globalBackBtn');
+  try {
+    state.knowMoreMode = 0;
+    state.knowMoreStarter = 0;
+    state.knowMoreLog = [];
+    state.knowMoreHistory = [];
+    state.pausedMode = null;
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    startKnowMoreGame();
+    answerKnowMore(3);
+    answerKnowMore(1);
+    const stepBefore = state.knowMoreStep;
+    const marksBefore = state.knowMoreMarks[0].length + state.knowMoreMarks[1].length;
+    assert(marksBefore === 2, `до паузы должно быть 2 отметки, а ${marksBefore}`);
+
+    // Стрелка «←» открывает меню паузы, а не выкидывает из партии.
+    for (const { handler } of back._getHandlers().get('click')) handler({});
+    assert(state.pausedMode === 'knowMore', 'после «←» партия должна встать на паузу');
+    assert(getElById(stub, 'pauseMenuModal').classList.contains('show'), 'меню паузы должно быть показано');
+    assert(!getElById(stub, 'knowMoreSetup').classList.contains('active'),
+      'пауза не должна выкидывать в настройки игры');
+    assert(state.knowMoreStep === stepBefore && state.knowMoreLog.length === 2,
+      'на паузе должны сохраниться номер хода и накопленные отметки');
+
+    // «Продолжить игру» — возврат ровно на тот же ход.
+    for (const { handler } of getElById(stub, 'resumeBtn')._getHandlers().get('click')) handler({});
+    assert(state.pausedMode === null, 'после продолжения партия не должна оставаться на паузе');
+    assert(getElById(stub, 'knowMoreGame').classList.contains('active'), 'должен открыться игровой экран');
+    assert(state.knowMoreStep === stepBefore, 'после паузы должен быть тот же номер хода');
+    assert(state.knowMoreMarks[0].length + state.knowMoreMarks[1].length === marksBefore,
+      'отметки не должны потеряться при паузе');
+    assert((getElById(stub, 'knowMoreCard').innerHTML.match(/znayu-answer-btn/g) || []).length === KNOW_MORE_SCALE.length,
+      'после паузы на карточке снова должна быть шкала оценки');
+
+    // «Закончить игру» из меню паузы — партия закрывается, карта не пишется.
+    for (const { handler } of back._getHandlers().get('click')) handler({});
+    for (const { handler } of getElById(stub, 'finishGameBtn')._getHandlers().get('click')) handler({});
+    assert(state.pausedMode === null && !state.inProgress, 'после «Закончить игру» партия закрыта');
+    assert(getElById(stub, 'knowMoreSetup').classList.contains('active'), 'должен открыться экран настроек');
+    assert((state.knowMoreHistory || []).length === 0,
+      'прерванная партия не должна попасть в историю карт');
+  } finally {
+    state.knowMoreMode = prevMode;
+    state.knowMoreStarter = prevStarter;
+    state.knowMoreLog = prevLog;
+    state.knowMoreHistory = prevHistory;
+    state.pausedMode = prevPaused;
+    state.knowMoreStep = prevStep;
+    state.knowMoreMarks = prevMarks;
+    state.knowMoreQueue = prevQueue;
+    global.fadeSwapEl = prevFade;
+    document.querySelectorAll('.screen.active').forEach((el) => el.classList.remove('active'));
+    activeBefore.forEach((id) => getElById(stub, id).classList.add('active'));
+    if (typeof updateResumeUI === 'function') updateResumeUI();
   }
 });
 

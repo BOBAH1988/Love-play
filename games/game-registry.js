@@ -133,10 +133,15 @@ window.GAME_REGISTRY = [
     screens: ['compatTestGame'],
   },
   {
-    // Паузы нет: партия короткая (12 ходов) и личная. Выход — сразу в настройки
-    // игры, несохранённая карта тела в историю не пишется.
-    mode: 'knowMore', title: '«Узнай больше»', group: 'two', noPause: true, menuTitle: '🧭 Узнай больше',
-    resume: 'resumeKnowMoreGame', finish: 'finishPausedKnowMoreGame', back: 'finishPausedKnowMoreGame',
+    // Пауза полноценная: партия из 12 зон личная, и прерывать её на середине
+    // обидно — «←» открывает меню паузы, откуда можно продолжить с того же
+    // хода или закрыть партию. Всё нужное для продолжения (очередь, номер
+    // хода, отметки, накопительный список) лежит в state, поэтому отдельного
+    // поля knowMorePaused не требуется.
+    // back не задан: выход из партии делает «Закончить игру» в этом меню
+    // (и кнопка «Выход» на экране игры — то же самое).
+    mode: 'knowMore', title: '«Узнай больше»', group: 'two', menuTitle: '🧭 Узнай больше',
+    pause: 'pauseKnowMoreGame', resume: 'resumeKnowMoreGame', finish: 'finishPausedKnowMoreGame',
     screens: ['knowMoreGame'],
   },
 
