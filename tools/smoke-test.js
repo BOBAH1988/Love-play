@@ -4148,20 +4148,18 @@ test('«Узнай больше»: отметка попадает в карту
       'карточка должна называть зону и показывать подсказку исследователю');
 
     answerKnowMore(0); // «Очень приятно» → отметка 3
-    assert(knowMoreAwaitNext === true, 'после оценки карточка должна ждать «Дальше»');
+    // Промежуточного окна нет: после оценки сразу показывается следующая зона.
+    assert(state.knowMoreStep === 1, 'после оценки партия должна сразу перейти к следующей зоне');
+    assert(!card.innerHTML.includes('Записали'),
+      'окна «Записали: …» между заданиями быть не должно');
+    assert((card.innerHTML.match(/znayu-answer-btn/g) || []).length === KNOW_MORE_SCALE.length,
+      'на следующей карточке снова должна быть шкала оценки');
     assert(state.knowMoreMarks[1].length === 1 && state.knowMoreMarks[0].length === 0,
       `отметка должна попасть в карту второго игрока, а карты: ${JSON.stringify(state.knowMoreMarks)}`);
     assert(state.knowMoreMarks[1][0].score === 3, 'оценка должна сохраниться числом');
-
-    // Повторный клик по закрытой карточке не должен дописывать вторую отметку.
-    answerKnowMore(0);
-    assert(state.knowMoreMarks[1].length === 1, 'повторный клик не должен дописывать отметку');
-
-    // «Дальше» переводит ход: исследователь меняется, отвечает уже «Он».
-    advanceKnowMore();
-    assert(state.knowMoreStep === 1, 'после «Дальше» ход должен увеличиться');
     assert(knowMoreExplorerIdx() === 1, 'исследователь должен смениться на второго');
     answerKnowMore(3); // «Стоп» → 0
+    assert(state.knowMoreStep === 2, 'вторая оценка должна перевести на третью зону');
     assert(state.knowMoreMarks[0].length === 1 && state.knowMoreMarks[0][0].score === 0,
       'отметка «Стоп» должна попасть в карту первого игрока');
   } finally {
@@ -4190,9 +4188,20 @@ test('«Узнай больше»: полный цикл партии и ито�
     assert(firstZone && firstZone.level === 1,
       `первой должна идти зона уровня 1, а ${firstZone && firstZone.name} (level ${firstZone && firstZone.level})`);
 
+    // Каждая оценка сама переводит на следующую зону, поэтому ходим в цикле по
+    // шагам: лишний advanceKnowMore() здесь пропустил бы зону. Счётчик
+    // итераций обязателен: если автопереход вернётся к ожиданию «Дальше»,
+    // цикл без него не закончился бы и повесил прогон вместо падения.
+    let guardKnowMore = 0;
     while (state.knowMoreStep < total){
       answerKnowMore(state.knowMoreStep % 2);
-      advanceKnowMore();
+      // Счётчик с break обязателен: если автоперехода не будет (вернётся
+      // ожидание «Дальше»), цикл без него не закончился бы и ПОВЕСИЛ прогон
+      // вместо падения — а зависший тест хуже упавшего.
+      if(++guardKnowMore > total){
+        assert(false, `после ${guardKnowMore} оценок ход так и не сдвинулся с ${state.knowMoreStep} — партия застряла`);
+        break;
+      }
     }
     assert(summary.classList.contains('active'), 'после последней зоны должно открыться окно итогов');
     assert(!getElById(stub, 'knowMoreGame').classList.contains('active'),
@@ -4338,11 +4347,14 @@ test('«Узнай больше»: экран «Исследованные» н�
     global.fadeSwapEl = (id, render) => render(getElById(stub, id));
     startKnowMoreGame();
     const firstZoneId = state.knowMoreQueue[0];
+    // Кому попадёт отметка — считаем ДО ответа: оценка сразу переводит ход, и
+    // после перехода получатель в режиме «По очереди» уже другой.
+    const receiverBefore = knowMoreReceiverIdx();
     answerKnowMore(3);
     assert((state.knowMoreLog || []).length === 1,
       `после оценки в списке «Исследованные» должна появиться запись, а их ${(state.knowMoreLog || []).length}`);
     assert(state.knowMoreLog[0].zoneId === firstZoneId, 'в список пишется та зона, которую оценили');
-    assert(state.knowMoreLog[0].receiver === knowMoreReceiverIdx(),
+    assert(state.knowMoreLog[0].receiver === receiverBefore,
       'в записи должно быть, чью карту попала оценка');
     goToKnowMoreHistory();
     const zoneName = KNOW_MORE_ZONES.find(z => z.id === firstZoneId).name;

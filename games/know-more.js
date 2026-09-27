@@ -10,10 +10,17 @@
 // оценивает ощущение по шкале. Оценка записывается в карту ТОГО, кого трогали;
 // на следующем ходу исследователь меняется.
 //
-// ПАРТИЯ. KNOW_MORE_STEPS зон, каждую исследует один из двоих, роли чередуются
-// по ходу — значит на «Он» и на «Она» приходится поровну исследованных зон.
-// Порядок зон — от нежных (level 1) к смелее (level 3), внутри уровня
-// случайно: партия всегда мягко начинается и плавно идёт дальше.
+// ПАРТИЯ. KNOW_MORE_STEPS зон, каждую исследует один из двоих. В режиме
+// «По очереди» роли чередуются по ходу — значит, на «Он» и на «Она»
+// приходится поровну исследованных зон; в режимах «Он» и «Она» исследует
+// только выбранный партнёр. Порядок зон — от нежных (level 1) к смелее
+// (level 3), внутри уровня случайно: партия всегда мягко начинается и плавно
+// идёт дальше.
+//
+// ТЕМП. Промежуточных окон между заданиями нет: после оценки сразу
+// показывается карточка следующей зоны (а после последней — итоги). Раньше
+// здесь было окно «Записали: …» с кнопкой «Дальше»; по решению владельца
+// оба убраны, потому что они задерживали партию лишним нажатием.
 //
 // ОЦЕНКИ. Шкала KNOW_MORE_SCALE: 3 — «Очень приятно», 2 — «Приятно»,
 // 1 — «Нейтрально», 0 — «Стоп, лучше не трогать». Отметка «Стоп» — не провал,
@@ -35,9 +42,9 @@ const KNOW_MORE_SCALE = [
   { score: 0, text: 'Стоп — лучше не трогать' },
 ];
 
-// После оценки карточка ждёт нажатия «Дальше». Флаг живёт в модуле (как
-// compatTestAwaitingHandoff), а не в state: это состояние одного экрана,
-// и сохранять его в localStorage незачем.
+// Защита от двойного тапа по кнопке оценки: между ответом и показом карточки
+// следующей зоны флаг закрыт. В state он не нужен — это состояние одного
+// экрана, сохранять его в localStorage незачем.
 let knowMoreAwaitNext = false;
 
 function getKnowMoreZones(){
@@ -246,10 +253,6 @@ function updateKnowMoreProgress(){
 
 function showKnowMoreTurn(){
   knowMoreAwaitNext = false;
-  // Кнопка «Дальше» появляется только после оценки — до неё на карточке
-  // есть только шкала ощущений.
-  const nextBtn = document.getElementById('knowMoreNextBtn');
-  if(nextBtn) nextBtn.hidden = true;
   const zone = knowMoreCurrentZone();
   if(!zone){ finishKnowMoreGame(); return; }
   const players = knowMorePlayers();
@@ -269,9 +272,11 @@ function showKnowMoreTurn(){
   updateKnowMoreProgress();
 }
 
-// Оценка записывается в карту ТОГО, кого исследовали. Повторный клик по уже
-// закрытой карточке не должен дописывать вторую оценку — поэтому ответ
-// блокируется флагом knowMoreAwaitNext до нажатия «Дальше».
+// Оценка записывается в карту ТОГО, кого исследовали, и партия сразу
+// переходит к следующей зоне: по решению владельца между заданиями нет
+// промежуточного окна «Записали: …» и кнопки «Дальше» — только карточка
+// следующего задания. Флаг knowMoreAwaitNext остаётся защитой от двойного
+// тапа по кнопке оценки: между ответом и показом новой карточки он закрыт.
 function answerKnowMore(choiceIdx){
   if(knowMoreAwaitNext) return;
   const scale = KNOW_MORE_SCALE[choiceIdx];
@@ -287,18 +292,10 @@ function answerKnowMore(choiceIdx){
   if(!Array.isArray(state.knowMoreLog)) state.knowMoreLog = [];
   state.knowMoreLog.push({ zoneId: zone.id, score: scale.score, receiver, date: Date.now() });
   knowMoreAwaitNext = true;
-  const nextBtn = document.getElementById('knowMoreNextBtn');
-  if(nextBtn) nextBtn.hidden = false;
   playSuccessSound();
   saveState();
-  const players = knowMorePlayers();
-  fadeSwapEl('knowMoreCard', (el)=>{
-    el.innerHTML = `<div class="card-inner"><div class="card-body">
-      <div class="card-icon">${scale.score >= 2 ? '💗' : '🤍'}</div>
-      <div class="card-split-title">${zone.name}</div>
-      <div class="know-more-part">Записали: ${players[receiver]} — ${scale.text}</div>
-    </div></div>`;
-  });
+  // Сразу следующее задание (или итоги, если зоны кончились).
+  advanceKnowMore();
 }
 
 function advanceKnowMore(){
@@ -311,10 +308,6 @@ function advanceKnowMore(){
   }
   showKnowMoreTurn();
 }
-document.getElementById('knowMoreNextBtn').addEventListener('click', ()=>{
-  playSuccessSound();
-  advanceKnowMore();
-});
 
 /* ============ ИТОГИ: КАРТА ТЕЛА ============ */
 // Раскладываем отметки одного партнёра по четырём спискам. Оценка хранится
