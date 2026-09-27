@@ -56,6 +56,17 @@ function knowMorePlayers(){
 function knowMoreZoneById(id){
   return getKnowMoreZones().find(z => z.id === id) || null;
 }
+// Чья это зона: у интимных зон есть поле body ('he' / 'she'). Подпись нужна
+// и на карточке («Его тело»), и в списках, где зоны идут вперемешку.
+function knowMoreZoneOwnerText(zone){
+  if(!zone || !zone.body) return '';
+  return zone.body === 'he' ? 'Его тело' : 'Её тело';
+}
+// Название зоны с пометкой чужого тела — для «Исследованных» и итогов.
+function knowMoreZoneLabel(zone){
+  if(!zone) return '';
+  return zone.body ? `${zone.name} (${zone.body === 'he' ? 'Он' : 'Она'})` : zone.name;
+}
 
 /* ============ ЭКРАН НАСТРОЙКИ ============ */
 function goToKnowMoreSetup(){
@@ -151,7 +162,7 @@ function goToKnowMoreHistory(){
         .filter(it => it.receiver === idx && knowMoreZoneById(it.zoneId))
         .map(it => ({ zone: knowMoreZoneById(it.zoneId), score: it.score }));
       const lines = rows.length
-        ? rows.map(it => `${it.zone.name} — ${knowMoreLogScoreText(it.score)}`)
+        ? rows.map(it => `${knowMoreZoneLabel(it.zone)} — ${knowMoreLogScoreText(it.score)}`)
         : ['—'];
       return `
         <div class="know-more-map">
@@ -260,6 +271,7 @@ function showKnowMoreTurn(){
   fadeSwapEl('knowMoreCard', (el)=>{
     el.className = 'card';
     el.innerHTML = `<div class="card-inner"><div class="card-body">
+      ${knowMoreZoneOwnerText(zone) ? `<div class="know-more-owner">${knowMoreZoneOwnerText(zone)}</div>` : ''}
       <div class="card-split-title">${zone.name}</div>
       <div class="know-more-part">${zone.part || ''}</div>
       <div class="know-more-how">${zone.how || ''}</div>
@@ -328,7 +340,7 @@ function knowMoreMapFor(playerIdx){
 }
 function knowMoreMapHtml(map){
   const row = (icon, title, list)=> list.length
-    ? `<div class="know-more-row"><div class="know-more-row-title">${icon} ${title}</div><div class="know-more-row-text">${list.map(z=>z.name).join(', ')}</div></div>`
+    ? `<div class="know-more-row"><div class="know-more-row-title">${icon} ${title}</div><div class="know-more-row-text">${list.map(knowMoreZoneLabel).join(', ')}</div></div>`
     : '';
   if(map.total === 0) return '<div class="know-more-row-text">Зоны не отмечены.</div>';
   return [

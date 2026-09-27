@@ -1669,6 +1669,12 @@
      перекрашены в белый. Кнопки оценки остаётся единый компонент
      .znayu-answer-btn — свои стили для них заводить нельзя. */
   #knowMoreCard .card-split-title{ color:#ffd166; font-size:19px; font-weight:800; }
+  /* Чьё тело исследуется — для зон, которые есть только у одного партнёра
+     («Мошонка», «Клитор»). Без подписи непонятно, кого сейчас трогают. */
+  #knowMoreCard .know-more-owner{
+    color:#e8c9dd; font-size:12px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.6px; margin-bottom:4px;
+  }
   #knowMoreCard .know-more-part{ color:rgba(255,255,255,.8); font-size:12px; margin-top:2px; }
   #knowMoreCard .know-more-how{ color:#fff; font-size:15px; line-height:1.45; margin-top:10px; }
   #knowMoreCard .know-more-rule{

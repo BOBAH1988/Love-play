@@ -4412,6 +4412,53 @@ test('«Узнай больше»: на карточке задания и в «
   }
 });
 
+test('«Узнай больше»: колода покрывает тела обоих партнёров, зоны не повторяются', () => {
+  // Инвариант на данные, а не на их количество: следующая добавленная зона
+  // попадёт сюда сама. Проверяем то, что ломает игру: повтор id (сломалась бы
+  // сохранённая карта), зону без подсказки и неверное значение body — по
+  // нему карточка печатает «Его тело»/«Её тело».
+  const zones = KNOW_MORE_ZONES;
+  assert(Array.isArray(zones) && zones.length >= 40,
+    `колода зон должна быть не меньше 40, а ${zones.length}`);
+  const ids = zones.map(z => z.id);
+  assert(new Set(ids).size === ids.length, 'id зон не должны повторяться');
+  const names = zones.map(z => z.name);
+  assert(new Set(names).size === names.length, 'названия зон не должны повторяться');
+  const badLevel = zones.filter(z => z.level !== 1 && z.level !== 2 && z.level !== 3);
+  assert(badLevel.length === 0, `уровень зоны должен быть 1..3: ${badLevel.map(z => z.name).join(', ')}`);
+  const noHow = zones.filter(z => typeof z.how !== 'string' || z.how.length < 40);
+  assert(noHow.length === 0, `у каждой зоны должна быть подсказка исследователю: ${noHow.map(z => z.name).join(', ')}`);
+  const badBody = zones.filter(z => z.body !== undefined && z.body !== 'he' && z.body !== 'she');
+  assert(badBody.length === 0, `body может быть только 'he' или 'she': ${badBody.map(z => z.name).join(', ')}`);
+  // Оба тела покрыты: иначе добавленные зоны были бы только про одну сторону.
+  const he = zones.filter(z => z.body === 'he');
+  const she = zones.filter(z => z.body === 'she');
+  assert(he.length >= 5, `зон только мужского тела должно быть не меньше 5, а ${he.length}`);
+  assert(she.length >= 5, `зон только женского тела должно быть не меньше 5, а ${she.length}`);
+  // Подсказки интимных зон обязаны говорить про согласие и лубрикан: это не
+  // украшение, а смысл игры — внимание к другому человеку, а не давление.
+  const intimate = zones.filter(z => z.body && z.level === 3);
+  const noLube = intimate.filter(z => !/лубрикан/i.test(z.how));
+  assert(noLube.length === 0, `в подсказках интимных зон должен упоминаться лубрикан: ${noLube.map(z => z.name).join(', ')}`);
+  // Прежние id не перенумеровывались: от них зависят сохранённые карты.
+  assert(zones.filter(z => z.id <= 24).length === 24,
+    'первые 24 зоны (из прошлых версий) должны сохранить свои id');
+});
+
+test('«Узнай больше»: карточка показывает, чьё тело исследуется', () => {
+  // Зоны вроде «Мошонка» и «Клитор» без подписи висели бы в воздухе.
+  const heZone = KNOW_MORE_ZONES.find(z => z.body === 'he');
+  const sheZone = KNOW_MORE_ZONES.find(z => z.body === 'she');
+  const common = KNOW_MORE_ZONES.find(z => !z.body);
+  assert(!!heZone && !!sheZone && !!common, 'в колоде должны быть зоны обоих тел и общие');
+  assert(knowMoreZoneOwnerText(heZone) === 'Его тело', `для мужской зоны ожидалось «Его тело», а ${knowMoreZoneOwnerText(heZone)}`);
+  assert(knowMoreZoneOwnerText(sheZone) === 'Её тело', `для женской зоны ожидалось «Её тело», а ${knowMoreZoneOwnerText(sheZone)}`);
+  assert(knowMoreZoneOwnerText(common) === '', 'у общей зоны подписи быть не должно');
+  assert(knowMoreZoneLabel(heZone).endsWith('(Он)'), `в списках мужская зона помечается (Он): ${knowMoreZoneLabel(heZone)}`);
+  assert(knowMoreZoneLabel(sheZone).endsWith('(Она)'), `в списках женская зона помечается (Она): ${knowMoreZoneLabel(sheZone)}`);
+  assert(!knowMoreZoneLabel(common).includes('('), `общая зона не должна получать пометку: ${knowMoreZoneLabel(common)}`);
+});
+
 test('«Узнай больше»: пауза сохраняет ход и отметки, «Закончить игру» — прерывает', () => {
   // Пауза добавлена по просьбе владельца. Проверяем весь цикл целиком:
   // «←» → меню паузы → «Продолжить игру» → та же зона и те же отметки, и
