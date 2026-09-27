@@ -4174,6 +4174,145 @@ console.log('\n=== Запуск тестов ===\n');
 });
 
 
+console.log('\n=== «Назад» ведёт в раздел своей игры (регресс) ===');
+
+// Общий инструмент для сценариев «←»: сбросить состояние, открыть нужный
+// экран и нажать кнопку. Сценарии ниже проверяют то, что НЕ ловила структура:
+// стрелка реально уводит игрока в раздел, которому принадлежит игра.
+const SETUP_SECTIONS = [
+  'homeView', 'twoPlayerView', 'companyView', 'kidsView',
+  'businessView', 'soloView', 'learningView',
+];
+const GROUP_TO_VIEW = {
+  two: 'twoPlayerView', party: 'companyView', kids: 'kidsView',
+  solo: 'soloView', business: 'businessView', learning: 'learningView',
+};
+function resetHub(sectionId) {
+  document.querySelectorAll('.screen.active').forEach((el) => el.classList.remove('active'));
+  document.getElementById('setup').classList.add('active');
+  SETUP_SECTIONS.forEach((id) => document.getElementById(id).classList.remove('section-open'));
+  if (sectionId) document.getElementById(sectionId).classList.add('section-open');
+  document.getElementById('pauseMenuModal').classList.remove('show');
+  document.getElementById('summaryModal').classList.remove('show');
+  state.pausedMode = null;
+  state.inProgress = false;
+  state.lastSectionOnPause = null;
+}
+function pressBackButton() {
+  const back = getElById(stub, 'globalBackBtn');
+  for (const { handler } of back._getHandlers().get('click')) handler({});
+}
+function openSetupView() {
+  return SETUP_SECTIONS.filter((id) => getElById(stub, id).classList.contains('section-open'));
+}
+function openGameScreens() {
+  return document.querySelectorAll('.screen.active')
+    .map((el) => el.id)
+    .filter((id) => id !== 'setup');
+}
+const registryEntries = () => window.GAME_REGISTRY || global.GAME_REGISTRY || [];
+
+test('«Назад»: экран настройки возвращает в раздел хаба и не пишет чужой lastSectionOnPause', () => {
+  // Экраны, которые ЛЕТЬ в обучающую/детскую/компанейскую группу, но долгое
+  // время не были в карте SECTION_FOR_SCREEN. Фолбэк отдавал 'twoPlayerView',
+  // и «←» писал в state.lastSectionOnPause раздел, в котором игрок не был.
+  const cases = [
+    { setup: 'capitalsSetup', view: 'learningView', name: '«Столицы»' },
+    { setup: 'timesTableSetup', view: 'learningView', name: '«Арифметика»' },
+    { setup: 'kidsC4Setup', view: 'kidsView', name: '«Четыре в ряд» (дети)' },
+    { setup: 'memesSetup', view: 'companyView', name: '«Мемасики» (компания)' },
+  ];
+  cases.forEach(({ setup, view, name }) => {
+    resetHub(view);
+    // Стартуем с ЧУЖОГО раздела: если «←» ничего не делает или пишет
+    // twoPlayerView по фолбэку, расхождение будет видно.
+    document.querySelectorAll('.screen.active').forEach((el) => el.classList.remove('active'));
+    getElById(stub, setup).classList.add('active');
+    pressBackButton();
+    assert(openSetupView().includes(view),
+      `${name}: с экрана настроек «←» должна вести в ${view}, а не в ${openSetupView().join(',') || 'никуда'}`);
+    assert(state.lastSectionOnPause !== 'twoPlayerView' || view === 'twoPlayerView',
+      `${name}: «←» записала в lastSectionOnPause чужой раздел twoPlayerView`);
+  });
+});
+
+test('«Назад»: из партии открывается раздел, которому игра принадлежит по реестру', () => {
+  // Раздел берётся из карты/реестра, а не из того, какой был открыт раньше.
+  // Раньше ветка-фолбэк раздел не открывала вовсе, и игрок оставался там,
+  // где случайно остался. Игры перебираются по реестру, а не вручную.
+  let checked = 0;
+  registryEntries().forEach((g) => {
+    const view = GROUP_TO_VIEW[g.group];
+    if (!view || !g.screens || !g.screens.length) return;
+    // У noPause-игр «←» ведёт в меню самой игры, а не в раздел хаба.
+    if (g.noPause && g.back) return;
+    const screenId = g.screens.find((sid) => getElById(stub, sid));
+    if (!screenId) return;
+    resetHub(view);
+    document.querySelectorAll('.screen.active').forEach((el) => el.classList.remove('active'));
+    getElById(stub, screenId).classList.add('active');
+    try { pressBackButton(); } catch (e) { assert(false, `${g.mode}: «←» упала — ${e.message}`); return; }
+    checked++;
+    const landed = openSetupView();
+    assert(landed.includes(view),
+      `${g.mode} (группа ${g.group}): «←» из ${screenId} открыла ${landed.join(',') || 'никуда'}, ожидался ${view}`);
+    // Мусорный раздел — источник жалобы «с разных мест выводит в меню для 2».
+    if (state.lastSectionOnPause) {
+      assert(state.lastSectionOnPause === view,
+        `${g.mode}: в lastSectionOnPause попал чужой раздел ${state.lastSectionOnPause} вместо ${view}`);
+    }
+  });
+  assert(checked >= 10, `проверено игр: ${checked} — список реестра обрезался, тест потерял смысл`);
+});
+
+test('Пауза «Крокодила» открывает «Игры для компании», а не «Игры для пар 18+»', () => {
+  // Регресс на группу реестра: у «Крокодила» стояло group: 'two' при кнопке
+  // в разделе «Игры для компании», поэтому пауза и возврат открывали
+  // «Игры для пар 18+» — то самое «назад ведёт не туда».
+  const entry = registryEntries().find((g) => g.mode === 'krokodil');
+  assert(entry && entry.group === 'party',
+    `у «Крокодила» группа должна быть party (раздел «Игры для компании»), а не ${entry && entry.group}`);
+  resetHub('twoPlayerView');
+  // Гасим хаб: иначе активны сразу два экрана, и стрелка уходит по ветке
+  // «вернуться в хаб», а не в паузу игры.
+  document.querySelectorAll('.screen.active').forEach((el) => el.classList.remove('active'));
+  getElById(stub, 'krokodilGame').classList.add('active');
+  state.inProgress = true;
+  pressBackButton();
+  assert(openSetupView().includes('companyView'),
+    `пауза «Крокодила» должна открыть companyView, получено ${openSetupView().join(',') || 'никуда'}`);
+  state.pausedMode = null;
+  state.inProgress = false;
+});
+
+test('«Назад»: раздел, оставшийся от прошлой игры, не влияет на выход из «Фантов»', () => {
+  // Сценарий жалобы: игрок выходил из «Столиц» (обучающие игры), затем
+  // запускал «Фанты», и по «←» из итогов попадал не в свой раздел.
+  resetHub('learningView');
+  getElById(stub, 'capitalsSetup').classList.add('active');
+  pressBackButton();
+  assert(state.lastSectionOnPause !== 'companyView' && state.lastSectionOnPause !== 'kidsView',
+    `после выхода из «Столиц» в lastSectionOnPause попал чужой раздел ${state.lastSectionOnPause}`);
+
+  // Реальный путь игрока: «Фанты» → «←» (пауза) → «Продолжить игру» → итоги → «←».
+  // Раздел для выхода берётся из lastSectionOnPause, который выставляет
+  // обработчик стрелки; «Столицы» не должны оставить там свой раздел.
+  resetHub('twoPlayerView');
+  document.querySelectorAll('.screen.active').forEach((el) => el.classList.remove('active'));
+  getElById(stub, 'game').classList.add('active');
+  pressBackButton();
+  assert(state.lastSectionOnPause === 'twoPlayerView',
+    `пауза «Фантов» должна запомнить twoPlayerView, а не ${state.lastSectionOnPause}`);
+  state.pausedMode = null;
+  document.querySelectorAll('.screen.active').forEach((el) => el.classList.remove('active'));
+  getElById(stub, 'game').classList.add('active');
+  getElById(stub, 'summaryModal').classList.add('show');
+  pressBackButton();
+  assert(openSetupView().includes('twoPlayerView'),
+    `выход из итогов «Фантов» должен открыть twoPlayerView, получено ${openSetupView().join(',') || 'никуда'}`);
+  assert(openGameScreens().length === 0, 'игровых экранов после выхода остаться не должно');
+});
+
 tests.forEach(t => {
   name = t.name;
   try {

@@ -677,9 +677,79 @@ function checkRegistry() {
   check('нет дублирующихся mode', dupes.length === 0, `дубли: ${dupes.join(', ')}`);
 
   const groups = [...src.matchAll(/group:\s*'([^']+)'/g)].map((m) => m[1]);
-  const allowed = ['two', 'party', 'kids', 'solo', 'business'];
+  // 'learning' — раздел «Обучающие игры»: там живут «Флаги», «Столицы»,
+  // «Арифметика», «Английский» и «Время». Раньше эти игры помечались
+  // group: 'two', хотя лежат в своём разделе, — пауза уводила в «Игры для
+  // пар 18+».
+  const allowed = ['two', 'party', 'kids', 'solo', 'business', 'learning'];
   const badGroup = groups.filter((g) => !allowed.includes(g));
   check('группы игр допустимы', badGroup.length === 0, `неизвестные: ${badGroup.join(', ')}`);
+
+  // ─── ИНВАРИАНТ: раздел игры = раздел её кнопки в хабе ────────────────
+  // Класс багов «←»/пауза ведут в чужое меню. Проверялось лишь, что группа
+  // входит в список допустимых, но НЕ то, что она совпадает с разделом, где
+  // реально лежит кнопка игры. Из-за этого «Крокодил» (кнопка в «Игре для
+  // компании», group: 'two') и «Виселица» (кнопка в «Игре для одного», group:
+  // 'party') открывали чужой раздел. Теперь сверяем по index.html.
+  const GROUP_TO_VIEW = {
+    two: 'twoPlayerView', party: 'companyView', kids: 'kidsView',
+    solo: 'soloView', business: 'businessView', learning: 'learningView',
+  };
+  const htmlForGroups = read('index.html');
+  // Раздел хаба для каждой кнопки game*Btn. Идём по строкам: текущий раздел
+  // меняет <div class="field-collapsible" id="...View">. Кнопки внутри
+  // вложенного экрана (подменю kidsBoardGamesMenu) пропускаем: их раздел
+  // задаёт точка входа, а не плитка хаба. Поэтому ведём стек открытых
+  // <section> и смотрим на БЛИЖАЙШИЙ экран, а не на счётчик вложенности:
+  // #setup сам является .screen, и простой счётчик принимал подменю за хаб.
+  const linesForGroups = htmlForGroups.split('\n');
+  let currentGroupView = 'homeView';
+  const sectionStack = [];
+  const btnGroupView = new Map();
+  linesForGroups.forEach((line) => {
+    const viewOpen = line.match(/<div class="field-collapsible[^"]*" id="([a-zA-Z]+View)"/);
+    if (viewOpen) currentGroupView = viewOpen[1];
+    [...line.matchAll(/<section\b[^>]*>/g)].forEach((m) => {
+      sectionStack.push({ id: (m[0].match(/id="([^"]+)"/) || [])[1], isScreen: /\bscreen\b/.test(m[0]) });
+    });
+    const btn = line.match(/<button[^>]*id="(game[A-Za-z0-9]+Btn)"/);
+    if (btn) {
+      const nearestScreen = [...sectionStack].reverse().find((s) => s.isScreen);
+      // Кнопка в хабе: ближайший экран — #setup (или экрана вовсе нет).
+      if (!nearestScreen || nearestScreen.id === 'setup') btnGroupView.set(btn[1], currentGroupView);
+    }
+    const closers = line.match(/<\/section>/g);
+    if (closers) for (let i = 0; i < closers.length; i += 1) sectionStack.pop();
+  });
+  // mode → {group, screens} по блокам реестра
+  const registryEntries = [];
+  src.split(/\n\s*\{\n/).slice(1).forEach((block) => {
+    const mode = block.match(/mode:\s*'([A-Za-z0-9]+)'/);
+    const group = block.match(/group:\s*'([a-z]+)'/);
+    const screens = block.match(/screens:\s*\[([^\]]*)\]/);
+    if (!mode || !group) return;
+    const ids = screens
+      ? [...screens[1].matchAll(/'([A-Za-z0-9_]+)'/g)].map((m) => m[1])
+      : [];
+    registryEntries.push({ mode: mode[1], group: group[1], screens: ids });
+  });
+  const groupMismatches = [];
+  btnGroupView.forEach((view, btnId) => {
+    // Кнопка gameXxxBtn соответствует mode xxx (gameKidsC4Btn → kidsC4).
+    const name = btnId.replace(/^game/, '').replace(/Btn$/, '');
+    const mode = name.charAt(0).toLowerCase() + name.slice(1);
+    const entry = registryEntries.find((e) => e.mode === mode);
+    if (!entry) return; // игра без паузы/реестра — проверяется отдельно
+    const expected = GROUP_TO_VIEW[entry.group];
+    if (expected && expected !== view) {
+      groupMismatches.push(`${mode}: group='${entry.group}' → ${expected}, а кнопка в ${view}`);
+    }
+  });
+  check(
+    `группа каждой игры совпадает с разделом её кнопки в хабе (${btnGroupView.size})`,
+    groupMismatches.length === 0,
+    groupMismatches.join('; ')
+  );
 
   // Все функции, на которые ссылается реестр, должны существовать в коде.
   const fnNames = [...src.matchAll(/(?:pause|resume|finish|finishEmpty|exitSummary):\s*'([A-Za-z_$][\w$]*)'/g)]
@@ -2522,6 +2592,48 @@ function checkGlobalHandlers(html) {
       `все экраны PARENT_BACK существуют (${backPairs.length})`,
       bogusBack.length === 0,
       `нет таких секций в index.html: ${bogusBack.map((p) => p.screen).join(', ')}`
+    );
+
+    // ─── ИНВАРИАНТ: у каждого экрана игры есть раздел хаба ───────────────
+    // SECTION_FOR_SCREEN решает, в какой раздел ведёт «←». Раньше её НИКТО
+    // не сверял с разметкой, а фолбэк sectionForScreenId() на неизвестный
+    // экран молча отдавал 'twoPlayerView'. В итоге восемь экранов
+    // (capitalsSetup/Game, timesTableSetup/Game, kidsC4Setup/Game,
+    // memesSetup/Game) отсутствовали в карте, «←» писал в
+    // state.lastSectionOnPause чужой раздел, и следующий выход из партии
+    // уводил игрока в «Игры для пар 18+». Проверка по ИНВАРИАНТУ, а не по
+    // списку: новая игра, добавленная в index.html, попадает сюда сама.
+    const sectionMapMatch = timerSrcLocal.match(/const SECTION_FOR_SCREEN\s*=\s*\{([\s\S]*?)\n\s*\};/);
+    // Ключ идёт перед двоеточием, значение — строка с id раздела. Ключей в
+    // строке бывает несколько (fantySetup:'twoPlayerView', game:'…'), поэтому
+    // разбираем все совпадения, а не только первое в строке.
+    const sectionIds = sectionMapMatch
+      ? [...sectionMapMatch[1].matchAll(/([A-Za-z0-9_]+)\s*:\s*'[a-zA-Z]+View'/g)].map((m) => m[1])
+      : [];
+    const sectionSet = new Set(sectionIds);
+    check(
+      `карта SECTION_FOR_SCREEN разобрана (${sectionIds.length})`,
+      sectionIds.length > 0,
+      'в fants-timer.js нет карты SECTION_FOR_SCREEN — «←» будет угадывать раздел'
+    );
+    // Все игровые экраны (всё, что class="screen", кроме самого хаба #setup).
+    const gameScreens = [...htmlLocal.matchAll(/<section[^>]*class="[^"]*\bscreen\b[^"]*"[^>]*id="([A-Za-z0-9_]+)"|<section[^>]*id="([A-Za-z0-9_]+)"[^>]*class="[^"]*\bscreen\b/g)]
+      .map((m) => m[1] || m[2])
+      .filter((sid) => sid && sid !== 'setup');
+    const uniqueGameScreens = [...new Set(gameScreens)];
+    const withoutSection = uniqueGameScreens.filter((sid) => !sectionSet.has(sid));
+    check(
+      `у всех экранов игры есть раздел хаба (${uniqueGameScreens.length})`,
+      withoutSection.length === 0,
+      `нет записи в SECTION_FOR_SCREEN (games/fants-timer.js) — «←» уведёт в «Игры для пар 18+»: ${withoutSection.join(', ')}`
+    );
+    // Обратная сверка: запись карты, которой нет в разметке, — опечатка или
+    // остаток после удаления экрана; она молча ничего не делает.
+    const bogusSection = sectionIds.filter((sid) => !htmlIds.has(sid));
+    check(
+      `все экраны SECTION_FOR_SCREEN существуют (${sectionIds.length})`,
+      bogusSection.length === 0,
+      `нет таких секций в index.html: ${bogusSection.join(', ')}`
     );
   }
 

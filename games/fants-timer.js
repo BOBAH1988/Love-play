@@ -894,16 +894,14 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   const SECTION_FOR_SCREEN = {
     kidsBoardGamesMenu:'kidsView',
     fantySetup:'twoPlayerView', game:'twoPlayerView',
-    photoSetup:'twoPlayerView', photoGame:'twoPlayerView',
+    photoSetup:'twoPlayerView',
     ideasGame:'twoPlayerView',
-    davaySetup:'twoPlayerView', davayGame:'twoPlayerView', davayQuiz:'twoPlayerView',
-    bingoSetup:'twoPlayerView', bingoGame:'twoPlayerView',
+    davaySetup:'twoPlayerView',
+    bingoGame:'twoPlayerView',
     timerSetup:'twoPlayerView', timerGame:'twoPlayerView',
-    truthDareSetup:'twoPlayerView', tdSetup:'twoPlayerView',
-    truthDareGame:'twoPlayerView', tdGame:'twoPlayerView',
+    tdSetup:'twoPlayerView', tdGame:'twoPlayerView',
     quizSetup:'twoPlayerView', quizGame:'twoPlayerView',
     wishlistSetup:'twoPlayerView', wishlistGame:'twoPlayerView',
-    desireSetup:'twoPlayerView', desireGame:'twoPlayerView',
     znayuSetup:'twoPlayerView', znayuGame:'twoPlayerView',
     sexQuestSetup:'twoPlayerView', sexQuestGame:'twoPlayerView',
     sexQuestSummary:'twoPlayerView', sexQuestHistory:'twoPlayerView',
@@ -912,33 +910,38 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     compatTestSetup:'twoPlayerView', compatTestGame:'twoPlayerView',
     compatTestSummary:'twoPlayerView', compatTestHistory:'twoPlayerView',
     knowMoreSetup:'twoPlayerView', knowMoreGame:'twoPlayerView', knowMoreSummary:'twoPlayerView',
-    shopSetup:'businessView', shopGame:'businessView', videoGame:'twoPlayerView',
+    // Мёртвые id убраны (photoGame, davayGame, davayQuiz, videoGame,
+    // twisterSetup, partyHangmanSetup, partyRouletteSetup, partyMemes* и др.):
+    // таких секций в index.html давно нет, записи ничего не делали и только
+    // мешали видеть опечатки. Сверку с разметкой делает tools/check.js.
+    shopSetup:'businessView', shopGame:'businessView',
     wrSetup:'twoPlayerView',
+    // «Мемы» — игра для компании (не путать с kidsMemes ниже).
+    memesSetup:'companyView', memesGame:'companyView',
     partyFantsSetup:'companyView', partyFantsGame:'companyView',
     partyTdSetup:'companyView', partyTdGame:'companyView',
     partyQuizSetup:'companyView', partyQuizGame:'companyView',
     krokodilSetup:'companyView', krokodilGame:'companyView',
-    twisterSetup:'companyView', twisterGame:'companyView',
-    partyHangmanSetup:'companyView', partyHangmanGame:'companyView',
-    partyRouletteSetup:'companyView', partyRouletteGame:'companyView',
+    twisterGame:'companyView',
+    // «Виселица» лежит в разделе «Игры для одного» (index.html), хотя её
+    // файлы и колода называются party-*. Здесь и в реестре — soloView, иначе
+    // «←» и пауза открывали бы «Игры для компании».
+    partyHangmanGame:'soloView',
+    partyRouletteGame:'companyView',
     partyNeverSetup:'companyView', partyNeverGame:'companyView',
-    partyMemesSetup:'companyView', partyMemesGame:'companyView',
     famZnayuSetup:'companyView', famZnayuGame:'companyView',
     luckySetup:'companyView', luckyGame:'companyView',
     kidsMemorySetup:'kidsView', kidsMemoryGame:'kidsView',
     kidsQuizSetup:'kidsView', kidsQuizGame:'kidsView',
-    kidsTdSetup:'kidsView', kidsTdGame:'kidsView', kidsTdChoice:'kidsView',
+    kidsTdSetup:'kidsView', kidsTdGame:'kidsView',
     kidsSaperSetup:'kidsView', kidsSaperGame:'kidsView',
     kidsXoSetup:'kidsView', kidsXoGame:'kidsView',
     kidsBattleshipSetup:'kidsView', kidsBattleshipGame:'kidsView',
     kidsKrokodilSetup:'kidsView', kidsKrokodilGame:'kidsView',
     kidsMemesSetup:'kidsView', kidsMemesGame:'kidsView',
-    kidsFlashSetup:'kidsView', kidsFlashGame:'kidsView',
-    kidsWhatToPlay:'kidsView',
     soloMemorySetup:'soloView', soloMemoryGame:'soloView',
     soloQuizSetup:'soloView', soloQuizGame:'soloView',
     soloXoSetup:'soloView', soloXoGame:'soloView',
-    soloBsSetup:'soloView', soloBsGame:'soloView',
     soloBattleshipSetup:'soloView', soloBattleshipGame:'soloView',
     soloC4Setup:'soloView', soloC4Game:'soloView',
     whatToPlayGame:'soloView',
@@ -947,6 +950,13 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     flashSetup:'learningView', flashGame:'learningView',
     flashTimeSetup:'learningView', flashTimeGame:'learningView',
     flagsSetup:'learningView', flagsGame:'learningView',
+    // Обучающая группа. Без этих записей фолбэк sectionForScreenId() отдавал
+    // 'twoPlayerView', и «←» писал в state.lastSectionOnPause раздел, в
+    // котором игрока не было (см. инвариант в tools/check.js).
+    capitalsSetup:'learningView', capitalsGame:'learningView',
+    timesTableSetup:'learningView', timesTableGame:'learningView',
+    // «Четыре в ряд» у детей — из подменю настольных игр, раздел kidsView.
+    kidsC4Setup:'kidsView', kidsC4Game:'kidsView',
   };
   // Экраны настроек (не запущенной партии) — для них "Назад" возвращает в
   // группу БЕЗ открытия меню паузы.
@@ -971,11 +981,30 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'famZnayuSetup','luckySetup',
     'kidsMemorySetup','kidsQuizSetup','kidsTdSetup','kidsSaperSetup','kidsXoSetup',
     'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','flashTimeSetup',
+    'kidsC4Setup','memesSetup',
     'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBattleshipSetup','soloC4Setup',
     'businessLemonadeSetup','bizObsSetup','flashSetup','flagsSetup',
+    // Обучающая группа: экраны настроек «Столиц» и «Арифметики». Без них
+    // стрелка «←» не считала экран экраном настройки и проваливалась в
+    // generic-ветку, которая писала в lastSectionOnPause чужой раздел.
+    'capitalsSetup','timesTableSetup',
   ]);
+  // Реестр игр (games/game-registry.js) оперирует ГРУППАМИ, хаб — ВИДАМИ.
+  // Соответствие нужно всем, кто берёт группу из реестра (пауза, возврат).
+  const GROUP_TO_VIEW = { two:'twoPlayerView', party:'companyView', kids:'kidsView', solo:'soloView', business:'businessView', learning:'learningView' };
   function sectionForScreenId(sid){
     if(SECTION_FOR_SCREEN[sid]) return SECTION_FOR_SCREEN[sid];
+    // ЭВристики по подстрокам — только запасной путь для экранов, которых нет
+    // ни в карте, ни в реестре (например, экраны без паузы). Раньше этот блок
+    // был единственным, и любая новая игра, добавленная в index.html без
+    // записи в SECTION_FOR_SCREEN, молча получала 'twoPlayerView': «←» писал
+    // в state.lastSectionOnPause чужой раздел, и следующий выход из партии
+    // уводил игрока в «Игры для пар 18+» (критический баг «назад ведёт не
+    // туда», повторялся трижды). Поэтому сначала — реестр игр.
+    if(typeof gameByScreen === 'function'){
+      const g = gameByScreen(sid);
+      if(g && g.group) return GROUP_TO_VIEW[g.group] || 'twoPlayerView';
+    }
     if(sid.includes('Saper')) return 'kidsView';
     if(sid.includes('Memory')) return sid.includes('Solo') ? 'soloView' : 'kidsView';
     if(sid.includes('Flash')) return sid.includes('Kids') ? 'kidsView' : 'learningView';
@@ -989,7 +1018,14 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     if(sid.includes('Lucky') || sid.includes('Hangman') || sid.includes('Twister') || sid.includes('Roulette') || sid.includes('Never')) return 'companyView';
     if(sid.includes('Business') || sid.includes('bizObs')) return 'businessView';
     if(sid.includes('What') || sid.includes('whatToPlay')) return 'soloView';
-    return 'twoPlayerView';
+    // Ничего не нашли. Раньше здесь был молчаливый return 'twoPlayerView' —
+    // он и прятал опечатки. Теперь это видно сразу в консоли разработчика, а
+    // в самом приложении ведём в хаб: раздел покажет updateResumeUI() по
+    // активной паузе, то есть игрок попадёт куда-то осмысленное.
+    if(typeof console !== 'undefined' && console.warn){
+      console.warn('sectionForScreenId: экран #' + sid + ' не описан ни в SECTION_FOR_SCREEN, ни в реестре игр — раздел хаба определён приблизительно. Добавь экран в карту (games/fants-timer.js).');
+    }
+    return 'homeView';
   }
   // Вложенные экраны игры (история, итоги): стрелка «←» — это «шаг назад»,
   // как штатная кнопка выхода этого экрана («Назад»/«В меню»), а не прыжок
@@ -1205,6 +1241,14 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       });
       if(setupEl2) setupEl2.classList.add('active');
       const mainId = screenIds.includes('game') ? 'game' : screenIds[0];
+      // Открываем раздел хаба, которому принадлежит игра. Раньше здесь
+      // раздел НЕ открывался вовсе — #setup показывался с тем разделом,
+      // который был открыт до (часто это homeView), то есть «←» из партии
+      // «Мемов» или «Четыре в ряд» оставляла игрока в чужом разделе. Для
+      // «Фантов» раздел подставит updateResumeUI() по state.pausedMode.
+      if(mainId !== 'game' && typeof showSetupView === 'function'){
+        showSetupView(sectionForScreenId(mainId));
+      }
       // Экран #game принадлежит «Фантам», поэтому выход из него — это пауза
       // «Фантов». Для остальных игр здесь оказываются только те, у которых
       // паузы нет вовсе (Рулетка желаний, Пройди квест, Карта страсти,

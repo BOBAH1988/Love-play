@@ -17,8 +17,11 @@
 //
 //   mode      — значение state.pausedMode (ключ игры в состоянии)
 //   title     — название для тостов и заголовка меню паузы
-//   group     — раздел хаба: two | party | kids | solo | business
-//               (куда вернуть игрока и какой список показать)
+//   group     — раздел хаба: two | party | kids | solo | business | learning
+//               (куда вернуть игрока и какой список показать). ОБЯЗАТЕЛЬНО
+//               совпадает с разделом, в котором лежит кнопка игры в index.html:
+//               несовпадение уводит паузу/возврат в чужое меню (проверяется
+//               в tools/check.js).
 //   pause     — поставить паузу (для PAUSE_MAP, по id экрана)
 //   resume    — продолжить сохранённую партию
 //   finish    — завершить партию (кнопка «Закончить игру»)
@@ -71,7 +74,11 @@ window.GAME_REGISTRY = [
     screens: ['bingoGame'],
   },
   {
-    mode: 'krokodil', title: '«Крокодил»', group: 'two', menuTitle: '🐊 Крокодил',
+    // Группа — раздел ХАБА, где лежит кнопка игры. Раньше здесь стояло 'two',
+    // хотя «Крокодил» — игра для компании: из-за этого пауза (getPausedGroup()
+    // → updateResumeUI()) открывала «Игры для пар 18+» вместо «Игры для
+    // компании». Правило сверяется с index.html в tools/check.js.
+    mode: 'krokodil', title: '«Крокодил»', group: 'party', menuTitle: '🐊 Крокодил',
     pause: 'pauseKrokodilGame', resume: 'resumeKrokodilGame', finish: 'finishKrokodilGame',
     exitSummary: 'showKrokodilExitSummary',
     isEmpty: () => (state.krokodilScores || []).reduce((a, b) => a + (b || 0), 0) === 0,
@@ -169,8 +176,11 @@ window.GAME_REGISTRY = [
     screens: ['partyRouletteGame'],
   },
   // Паузы нет: партия короткая, сохраняется только общий счёт.
+  // Группа 'solo', а не 'party': кнопка «Виселица» лежит в разделе
+  // «Игры для одного» (см. index.html и README), и пауза/возврат должны
+  // открывать именно его.
   {
-    mode: 'partyHangman', title: '«Виселица»', group: 'party', noPause: true, menuTitle: '🪢 Виселица',
+    mode: 'partyHangman', title: '«Виселица»', group: 'solo', noPause: true, menuTitle: '🪢 Виселица',
     resume: 'resumePartyHangmanGame', finish: 'finishPartyHangmanGame', back: 'exitPartyHangmanGame',
     screens: ['partyHangmanGame'],
   },
@@ -231,17 +241,17 @@ window.GAME_REGISTRY = [
     screens: ['businessLemonadeGame'],
   },
   {
-    mode: 'flags', title: '«Флаги»', group: 'two', menuTitle: '🇷🇺 Флаги',
+    mode: 'flags', title: '«Флаги»', group: 'learning', menuTitle: '🇷🇺 Флаги',
     noPause: true, back: 'exitFlagsGame',
     screens: ['flagsGame'],
   },
   {
-    mode: 'capitals', title: '«Столицы»', group: 'two', menuTitle: '🏛️ Столицы',
+    mode: 'capitals', title: '«Столицы»', group: 'learning', menuTitle: '🏛️ Столицы',
     noPause: true, back: 'exitCapitalsGame',
     screens: ['capitalsGame'],
   },
   {
-    mode: 'timesTable', title: '«Арифметика»', group: 'two', menuTitle: '🔢 Арифметика',
+    mode: 'timesTable', title: '«Арифметика»', group: 'learning', menuTitle: '🔢 Арифметика',
     noPause: true, back: 'exitTimesTableGame',
     screens: ['timesTableGame'],
   },
