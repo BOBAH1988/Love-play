@@ -710,6 +710,59 @@ test('«Арифметика»: вопросы идут от простых к �
   }
 });
 
+test('«Время»: варианты ответа — общий компонент, ответ засчитывается один раз', () => {
+  const prev = {
+    sub: state.flashTimeSub, pool: state.flashTimePool, index: state.flashTimeIndex,
+    score: state.flashTimeScore, errors: state.flashTimeErrors,
+  };
+  // Кнопка-имитация: заглушка DOM не умеет разбирать innerHTML, поэтому
+  // обработчику отдаём объект с теми же двумя свойствами, что использует игра.
+  const makeBtn = (correct) => {
+    const classes = [];
+    return {
+      classes,
+      getAttribute: (name) => (name === 'data-time-correct' ? (correct ? 'true' : 'false') : null),
+      classList: { add: (c) => classes.push(c) },
+    };
+  };
+  try {
+    state.flashTimeSub = 'digital';
+    const pool = getFlashTimePool();
+    assert(pool.length > 0, 'в колоде должны быть карточки режима «Цифровые»');
+    state.flashTimePool = pool.slice(0, 2);
+    state.flashTimeIndex = 0;
+    state.flashTimeScore = 0;
+    state.flashTimeErrors = 0;
+
+    renderFlashTimeCard(state.flashTimePool[0]);
+    const html = getElById(stub, 'flashTimeCard').innerHTML;
+    assert(/class="znayu-answers"/.test(html), 'варианты должны лежать в общем контейнере .znayu-answers');
+    assert((html.match(/znayu-answer-btn/g) || []).length === 4, 'на карточке должно быть 4 кнопки ответа общего компонента');
+    assert(!/flash-time-option/.test(html), 'собственные .flash-time-option должны быть заменены общим компонентом');
+
+    const correctBtn = makeBtn(true);
+    handleFlashTimeOption(correctBtn);
+    assert(state.flashTimeScore === 1 && state.flashTimeErrors === 0, 'верный ответ должен давать ровно одно очко');
+    assert(correctBtn.classes.includes('answer-correct'), 'верный ответ подсвечивается общим классом .answer-correct');
+    handleFlashTimeOption(makeBtn(false));
+    assert(state.flashTimeScore === 1 && state.flashTimeErrors === 0, 'после ответа повторный клик не должен засчитываться');
+
+    renderFlashTimeCard(state.flashTimePool[0]);
+    const wrongBtn = makeBtn(false);
+    handleFlashTimeOption(wrongBtn);
+    assert(state.flashTimeErrors === 1 && state.flashTimeScore === 1, 'неверный ответ должен попадать в ошибки, а не в счёт');
+    assert(wrongBtn.classes.includes('answer-wrong'), 'неверный ответ подсвечивается общим классом .answer-wrong');
+  } catch (e) {
+    assert(false, `ошибка: ${e.message}`);
+  } finally {
+    state.flashTimeSub = prev.sub;
+    state.flashTimePool = prev.pool;
+    state.flashTimeIndex = prev.index;
+    state.flashTimeScore = prev.score;
+    state.flashTimeErrors = prev.errors;
+  }
+});
+
 console.log('\n=== Проверка наличия критических DOM-элементов ===');
 
 const criticalElements = [

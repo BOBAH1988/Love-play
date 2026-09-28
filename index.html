@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261023a">
+<link rel="stylesheet" href="styles/app.css?v=20261023c">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-23 · v534';
+  window.APP_BUILD = '2026-10-23 · v535';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v534</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v535</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -1627,7 +1627,7 @@
       <ol class="modal-rules">
         <li>Выберите тип часов: цифровые, механические или разговорное время, и количество карточек за партию.</li>
         <li>На экране появится карточка со временем на циферблате (или разговорное выражение) и четыре варианта ответа.</li>
-        <li>Выберите, сколько сейчас времени — если верно, карточка подсветится зелёным.</li>
+        <li>Выберите, сколько сейчас времени — если верно, выбранный вариант ответа станет зелёным, а если нет — красным, и правильный ответ тоже подсветится зелёным.</li>
         <li>Если ошибётесь — покажем правильный ответ.</li>
         <li>Счёт правильных ответов и ошибок ведётся по всей партии.</li>
         <li>«Выход» в любой момент вернёт в меню.</li>
@@ -4657,7 +4657,7 @@
 <script src="games/kids-krokodil.js?v=20261022d"></script>
 <script src="games/kids-memes.js?v=20260913b"></script>
 <script src="games/kids-flash.js?v=20260929a"></script>
-<script src="games/kids-flash-time.js?v=20260929a"></script>
+<script src="games/kids-flash-time.js?v=20261023b"></script>
 <script src="games/kids-saper.js?v=20260922a"></script>
 <script src="games/kids-td.js?v=20260922a"></script>
 <script src="games/quiz.js?v=20261022v"></script>

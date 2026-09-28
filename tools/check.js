@@ -3004,6 +3004,21 @@ function checkTimeCards() {
     dist.every((n) => n >= rows.length / 4 - rows.length / 4 * 0.35),
     `распределение: ${dist.join(' / ')} из ${rows.length}`
   );
+
+  // Варианты ответа — общий компонент .znayu-answers/.znayu-answer-btn, как во
+  // всех остальных играх. Собственные .flash-time-option были полупрозрачными
+  // (rgba(255,255,255,.08) на тёмном фоне = «затемнённые» подписи), а
+  // :disabled{opacity:.5} гасил ещё и зелёную/красную подсветку результата.
+  const gameSrc = read('games/kids-flash-time.js');
+  const sharedAnswers = /class="znayu-answers"/.test(gameSrc) &&
+    /znayu-answer-btn/.test(gameSrc) &&
+    /answer-correct/.test(gameSrc) &&
+    /answer-wrong/.test(gameSrc);
+  check(
+    'в «Время» варианты ответа — общий компонент .znayu-answer-btn',
+    sharedAnswers && !/flash-time-option/.test(gameSrc + read('styles/app.css')),
+    'ожидаются .znayu-answers + .znayu-answer-btn с классами .answer-correct/.answer-wrong и ни одного .flash-time-option'
+  );
 }
 
 function main() {

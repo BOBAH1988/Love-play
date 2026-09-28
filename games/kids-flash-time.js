@@ -8,7 +8,10 @@
 // выбрать, сколько сейчас времени. После ответа — подсветка верно/неверно,
 // следующая карточка. Счёт побед/ошибок ведётся по всей партии.
 
-let flashTimeCurrentCard = null;
+// Ответ на текущей карточке уже выбран. Раньше это определялось поиском
+// .selected в разметке: обработчик нельзя было вызвать повторно из теста,
+// а в разметке оставался класс без стилей.
+let flashTimeAnswered = false;
 // Стили циферблата для механических часов
 const CLOCK_STYLES = ['full', 'short', 'roman'];
 const ROMAN_NUMERALS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
@@ -72,19 +75,16 @@ function getFlashTimePool(){
 function renderFlashTimeCard(card){
   const wrap = document.getElementById('flashTimeCard');
   if(!wrap) return;
-  flashTimeCurrentCard = card;
-  const optText = (w) => w;
-  // Для разговорного режима ответ — тоже разговорное слово («полвторого»,
-  // «четверть пятого»), красиво отформатировано. Иначе варианты искажаются,
-  // когда вариант равен прямой команде JS.
-  const optFormat = (optIdx, el) => {
-    if(card.sub === 'spoken' && el === optIdx){
-      return card.word;
-    }
-    return null;
-  };
+  flashTimeAnswered = false;
+  // Варианты идут порядком, в котором разданы игроку, и помечаются общим
+  // компонентом .znayu-answer-btn (как в «Викторине», «Флагов» и «Арифметике»):
+  // светлая непрозрачная кнопка с тёмным текстом. Свои полупрозрачные кнопки
+  // на тёмном фоне экрана выглядели затемнёнными.
   const sh = card.options.map((o,i)=>({o,c:i===card.answer}));
   for(let i=sh.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sh[i],sh[j]]=[sh[j],sh[i]]}
+  const answersHtml = sh.map(x=>
+    `<button type="button" class="btn btn-secondary znayu-answer-btn" data-time-correct="${x.c}">${x.o}</button>`
+  ).join('');
   wrap.innerHTML = `
     <div class="flash-time-display">
       ${card.sub === 'digital'
@@ -93,32 +93,26 @@ function renderFlashTimeCard(card){
           ? `<div class="flash-time-mechanical">${generateClockSVG(card.translation, null)}<div class="clock-style-hint">Механические</div></div>`
           : `<div class="flash-time-spoken">${card.word}</div>`}
     </div>
-    <div class="flash-time-options">
-      ${sh.map((x, i)=>{
-        const formatted = optFormat(i, x),
-        btnContent = formatted === null ? x.o : formatted;
-        return `<button type="button" class="flash-time-option" data-time-index="${i}" data-time-correct="${x.c}">${btnContent}</button>`;
-      }).join('')}
+    <div class="znayu-answers">
+      ${answersHtml}
     </div>
     <div class="flash-card-progress">${(state.flashTimeIndex || 0) + 1} / ${state.flashTimePool.length}</div>
   `;
 }
-function handleFlashTimeOption(btn, currentCard){
+function handleFlashTimeOption(btn){
   const wrap = document.getElementById('flashTimeCard');
   if(!wrap) return;
-  const alreadySelected = wrap.querySelector('.flash-time-option.selected');
-  if(alreadySelected) return;
-  const idx = parseInt(btn.getAttribute('data-time-index'), 10);
+  if(flashTimeAnswered) return;
+  flashTimeAnswered = true;
   const isCorrect = btn.getAttribute('data-time-correct') === 'true';
-  btn.classList.add('selected');
-  const allBtns = wrap.querySelectorAll('.flash-time-option');
+  const allBtns = wrap.querySelectorAll('.znayu-answer-btn');
   if(isCorrect){
-    btn.classList.add('correct');
+    btn.classList.add('answer-correct');
     playSuccessSound();
     state.flashTimeScore = (state.flashTimeScore || 0) + 1;
   } else {
-    btn.classList.add('wrong');
-    wrap.querySelectorAll('[data-time-correct="true"]').forEach(el=>{ el.classList.add('correct'); });
+    btn.classList.add('answer-wrong');
+    wrap.querySelectorAll('[data-time-correct="true"]').forEach(el=>{ el.classList.add('answer-correct'); });
     playFailSound();
     state.flashTimeErrors = (state.flashTimeErrors || 0) + 1;
   }
@@ -224,8 +218,9 @@ document.querySelectorAll('#flashTimeCountGroup .starter-btn').forEach(btn=>{
 });
 
 document.getElementById('flashTimeCard').addEventListener('click', (e)=>{
-  if(e.target.classList.contains('flash-time-option')){
-    handleFlashTimeOption(e.target, flashTimeCurrentCard);
+  const btn = e.target.closest ? e.target.closest('.znayu-answer-btn') : null;
+  if(btn && e.target.classList.contains('znayu-answer-btn')){
+    handleFlashTimeOption(btn);
     return;
   }
 });
