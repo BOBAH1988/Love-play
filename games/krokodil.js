@@ -175,17 +175,38 @@ function updateKrScoreUI(){
   const verb = (state.krokodilMode || 'word') === 'explain' ? 'Объясняет' : 'Показывает';
   if(turnLabel) turnLabel.textContent = verb + ': ' + turnName;
 }
-// Слово текущего раунда, тянется без повторов внутри уровня+режима, пока
-// пул не закончится — тот же принцип, что и во всех остальных играх
-// приложения. "Использованные" слова хранятся отдельным ключом на каждую
-// пару уровень+режим (krokodilUsed['2-word'], krokodilUsed['2-action'] и
-// т.д.), чтобы переключение "Слово"/"Действие" не путало прогресс показа.
+// Слова на партию: очередь krQueue строится один раз (krBuildQueue) и
+// перемешивается, а krDrawWord выдаёт её по одному — поэтому внутри партии
+// слово не повторяется, пока не закончилась колода уровня. Очередь
+// принадлежит только своей партии, при новой игре строится заново.
+let krQueue = [];
+let krQueueKey = '';
+// Колода всегда полная. Раньше из неё вычитались слова, показанные в прошлых
+// партиях (state.krokodilUsed), но это возвращало повторы: в партии на
+// 4 игроков показывается 100 слов из 110, значит на следующую партию оставалось
+// 10, очередь кончалась прямо в игре, и слова начинали повторяться уже во
+// второй партии. Память между партиями убрана — поле удалено и из core.js.
+function krBuildQueue(){
+  const level = state.krokodilSelectedLevel || 1;
+  const mode = state.krokodilMode || 'word';
+  krQueueKey = level + '-' + mode;
+  // Перемешивание Фишера—Йетса: sort(()=>Math.random()-0.5) в Node.js
+  // устарел и выдаёт неравномерный порядок.
+  krQueue = getKrCardsList(level, mode).slice();
+  for(let i=krQueue.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [krQueue[i],krQueue[j]] = [krQueue[j],krQueue[i]];
+  }
+}
+// Очередь пересобирается только когда сменился уровень или режим (переход
+// туда-обратно) либо колода показана целиком — о последнем честно сообщаем
+// тостом: без повторов «за игру» физически нельзя, если показов больше, чем
+// карточек (10 игроков × 10 заданий = 500 показов против 110 слов).
 function krDrawWord(){
   const level = state.krokodilSelectedLevel || 1;
   const mode = state.krokodilMode || 'word';
-  const usedKey = level + '-' + mode;
-  const all = getKrCardsList(level, mode);
-  if(all.length === 0){
+  const key = level + '-' + mode;
+  if(getKrCardsList(level, mode).length === 0){
     krCurrentCard = null;
     fadeSwapEl('krokodilCard', (el)=>{
       el.className = 'card';
@@ -193,18 +214,16 @@ function krDrawWord(){
     });
     return;
   }
-  if(!state.krokodilUsed) state.krokodilUsed = {};
-  let used = state.krokodilUsed[usedKey] || [];
-  let pool = all.filter(c=>!used.includes(c.text));
-  if(pool.length === 0){
-    pool = all;
-    used = [];
-    showToast('Слова этого уровня показаны заново 🔀');
+  if(krQueueKey !== key) krBuildQueue();
+  if(krQueue.length === 0){
+    showToast('Слова этого уровня закончились — начинаем новый круг 🔀');
+    krBuildQueue();
   }
-  const card = pool[Math.floor(Math.random()*pool.length)];
-  used.push(card.text);
-  state.krokodilUsed[usedKey] = used;
-  saveState();
+  const card = krQueue.shift();
+  if(!card){
+    krCurrentCard = null;
+    return;
+  }
   krCurrentCard = card;
   fadeSwapEl('krokodilCard', (el)=>{
     el.className = 'card';
@@ -364,6 +383,11 @@ function goToKrokodilGame(){
   state.krokodilSkipCounts = new Array(n).fill(0);
   state.krokodilTurnsPlayed = 0;
   state.krokodilCurrentPlayerIndex = Math.floor(Math.random() * n);
+  // Очередь слов — на каждую партию своя: без сброса новая игра продолжала бы
+  // чужую очередь и могла начаться с уже показанного слова.
+  krQueue = [];
+  krQueueKey = '';
+  krBuildQueue();
   state.inProgress = true;
   saveState();
   updateKrScoreUI();

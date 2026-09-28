@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-23 · v535';
+  window.APP_BUILD = '2026-10-23 · v536';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v535</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v536</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -4168,6 +4168,7 @@
         <li>Телефон берёт тот, кто будет объяснять слово. В режимах «Слово»/«Действие» нажмите «Начать раунд» и показывайте слово жестами, без слов; в режиме «Объясни словами» — то же самое, но объясняйте слово вслух своими словами, не называя само слово, однокоренные и переводы на другие языки. Как только зрители угадали — нажмите «Угадали», откроется следующее слово. Если слово не поддаётся — «Пропустить».</li>
         <li>В раунде ровно столько заданий, сколько выбрано в настройке «Количество заданий» — как только все показаны (угадано или пропущено), раунд завершится сам, даже если время ещё не вышло; если время истечёт раньше, слово на экране засчитывается как пропущенное и раунд тоже заканчивается.</li>
         <li>Передайте телефон следующему игроку и нажмите «Следующий игрок», затем «Начать раунд» для нового раунда.</li>
+        <li>Внутри одной партии слова не повторяются: игра заранее перемешивает всю колоду выбранного уровня и режима и выдаёт её по одному. Колода большая — 110 слов и 240 сценок на уровень, поэтому её хватает даже на 10 игроков. Если компания всё же успела раздать её целиком (например, при 10 игроках и 10 заданиях за раунд это 500 показов), игра честно сообщит тостом и начнёт новый круг по колоде.</li>
         <li>Каждый игрок показывает по 5 раундов по очереди — когда все отыграют свои 5, игра завершится и покажет итоговую таблицу результатов.</li>
         <li>Очки за угаданные слова копятся за каждым игроком отдельно — стрелка «←» сохранит счёт и игроков, на главном экране появится «Продолжить игру» или «Закончить игру».</li>
       </ol>
@@ -4587,7 +4588,7 @@
 <script src="cards/cards_timer.js?v=20260829g"></script>
 <script src="cards/cards_wishlist.js?v=20260829g"></script>
 <script src="cards/cards_znayu.js?v=20260829g"></script>
-<script src="cards/cards_krokodil.js?v=20260829g"></script>
+<script src="cards/cards_krokodil.js?v=20261023a"></script>
 <script src="cards/cards_memes.js?v=20260829g"></script>
 <script src="cards/cards_party_never.js?v=20260912a"></script>
 <script src="cards/cards_party_fants.js?v=20260829g"></script>
@@ -4613,7 +4614,7 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20261022y"></script>
 <script src="cards/capitals.js?v=20261022y"></script>
-<script src="games/core.js?v=20261022z"></script>
+<script src="games/core.js?v=20261023a"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -4646,7 +4647,7 @@
 <script src="games/truth-dare.js?v=20260922a"></script>
 <script src="games/bingo.js?v=20260930d"></script>
 <script src="games/timer-game.js?v=20260922a"></script>
-<script src="games/krokodil.js?v=20261022c"></script>
+<script src="games/krokodil.js?v=20261023a"></script>
 <script src="games/memes.js?v=20260913b"></script>
 <script src="games/party-never.js?v=20260830u"></script>
 <script src="games/party-fants.js?v=20260922a"></script>

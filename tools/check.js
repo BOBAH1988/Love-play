@@ -3021,6 +3021,84 @@ function checkTimeCards() {
   );
 }
 
+// Колода «Крокодила» (cards/cards_krokodil.js). Игроки жаловались, что слова
+// повторяются внутри одной партии. Причина была в размере пула: в режиме
+// «Слово» на уровень было 50 карточек, а партия на 4 игроков — это 100
+// показов (4 игрока × 5 раундов × 5 слов), то есть колода проходилась дважды.
+// Проверки ниже не дают пулу снова усохнуть и держат данные без дублей.
+function checkKrokodilCards() {
+  group('Колода «Крокодила»');
+  const src = read('cards/cards_krokodil.js');
+  const rows = [...src.matchAll(
+    /\{ level: (\d+), text: '([^']*)', icon: '([^']*)'(, mode: '(\w+)')? \}/g
+  )].map((m) => ({
+    level: Number(m[1]),
+    text: m[2],
+    icon: m[3],
+    mode: m[5] || 'action',
+  }));
+
+  check('карточки «Крокодила» разобраны', rows.length > 0, 'карточки не читаются');
+  if (rows.length === 0) return;
+
+  // Повтор в колоде = игрок увидит одно и то же слово дважды за партию.
+  const countBy = (key) => {
+    const m = new Map();
+    rows.forEach((c) => m.set(key(c), (m.get(key(c)) || 0) + 1));
+    return m;
+  };
+  const dupInPool = [...countBy((c) => c.level + '|' + c.mode + '|' + c.text.toLowerCase()).entries()]
+    .filter(([, n]) => n > 1);
+  check(
+    'в колоде «Крокодила» нет повторяющихся слов внутри уровня и режима',
+    dupInPool.length === 0,
+    `повторов: ${dupInPool.length}${dupInPool.length ? ' — например «' + dupInPool[0][0].split('|')[2] + '»' : ''}`
+  );
+  const dupGlobal = [...countBy((c) => c.text.toLowerCase()).entries()].filter(([, n]) => n > 1);
+  check(
+    'в колоде «Крокодила» нет слов, повторяющихся между уровнями',
+    dupGlobal.length === 0,
+    `повторов: ${dupGlobal.length}${dupGlobal.length ? ' — например «' + dupGlobal[0][0] + '»' : ''}`
+  );
+
+  // Партия на 4 игроков — 100 показов, плюс запас. Меньше 100 слов на уровень
+  // в режиме «Слово» означает повторы в партии (именно так и было: 50).
+  const MIN_POOL = 100;
+  const small = [1, 2, 3, 4].flatMap((level) =>
+    ['word', 'action']
+      .map((mode) => ({
+        key: `${level}/${mode}`,
+        n: rows.filter((c) => c.level === level && c.mode === mode).length,
+      }))
+      .filter((x) => x.n < MIN_POOL)
+  );
+  check(
+    `в каждом уровне и режиме не меньше ${MIN_POOL} карточек (иначе партия на 4 игроков повторит слова)`,
+    small.length === 0,
+    small.map((x) => `${x.key}: ${x.n}`).join(', ')
+  );
+
+  // У каждой карточки есть иконка-подсказка: она показывается над словом.
+  const noIcon = rows.filter((c) => !c.icon);
+  check(
+    'у всех карточек «Крокодила» есть иконка-подсказка',
+    noIcon.length === 0,
+    `без иконки: ${noIcon.length}`
+  );
+
+  // Слова берутся из очереди партии, а память между партиями удалена: именно
+  // она сужала очередь (в партии показывается 100 слов из 110, значит на
+  // следующую оставалось 10) и возвращала повторы уже во второй партии.
+  // Комментарии убираем: поле упоминается в объяснении, почему его убрали.
+  const game = read('games/krokodil.js').replace(/^\s*\/\/.*$/gm, '');
+  const usesQueue = /function krBuildQueue\(/.test(game) && /krQueue\.shift\(\)/.test(game);
+  check(
+    '«Крокодил» берёт слова из очереди партии и не помнит показанные между партиями',
+    usesQueue && !/krokodilUsed/.test(game),
+    'ожидается krBuildQueue + krQueue.shift() и ни одного упоминания krokodilUsed в коде'
+  );
+}
+
 function main() {
   const html = read('index.html');
   const { missingIds } = checkScripts(html);
@@ -3034,6 +3112,7 @@ function main() {
   checkKidsQuizCards();
   checkPartyQuizCards();
   checkTimeCards();
+  checkKrokodilCards();
   checkQuizNoRepeat();
   checkPauseResetOnStart();
   checkExitNavigation();

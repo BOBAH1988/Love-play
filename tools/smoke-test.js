@@ -763,6 +763,61 @@ test('«Время»: варианты ответа — общий компон�
   }
 });
 
+// Реальный сценарий партии: 4 игрока × 5 раундов × 5 слов = 100 показов.
+// Показывает слово на карточке (innerHTML заглушки) и следит, чтобы внутри
+// одной партии ни одно не показалось дважды. На прежней колоде режима
+// «Слово» (50 карточек) партия на 4 игроков проходила колоду дважды.
+// Проверяются и повторные партии подряд: прежняя память о показанных словах
+// копилась между партиями и сужала пул (после первой партии из 110 слов
+// оставалось 10), из-за чего повторы возвращались уже во второй игре.
+test('«Крокодил»: в одной партии слова не повторяются', () => {
+  const prevLevel = state.krokodilSelectedLevel;
+  const prevMode = state.krokodilMode;
+  const prevFade = global.fadeSwapEl;
+  const prevToast = global.showToast;
+  const wordOf = () => {
+    const html = getElById(stub, 'krokodilCard').innerHTML;
+    const m = /krokodil-word">([^<]*)</.exec(html);
+    return m ? m[1] : null;
+  };
+  const playParty = () => {
+    const shown = [];
+    for (let i = 0; i < 4 * 5 * 5; i++) {
+      krDrawWord();
+      const w = wordOf();
+      if (w === null) break;
+      shown.push(w);
+    }
+    return shown;
+  };
+  try {
+    global.fadeSwapEl = (id, render) => { render(getElById(stub, id)); };
+    global.showToast = () => {};
+    [1, 2, 3, 4].forEach((level) => {
+      ['word', 'action', 'explain'].forEach((mode) => {
+        state.krokodilSelectedLevel = level;
+        state.krokodilMode = mode;
+        // Три партии подряд: каждая стартует с новой очереди, как в игре
+        // (goToKrokodilGame строит очередь заново).
+        for (let party = 1; party <= 3; party++) {
+          krBuildQueue();
+          const shown = playParty();
+          const repeats = shown.length - new Set(shown).size;
+          assert(repeats === 0, `уровень ${level}, режим «${mode}», партия ${party}: повторов — ${repeats}`);
+          assert(shown.length === 100, `уровень ${level}, режим «${mode}», партия ${party}: показано ${shown.length} слов вместо 100`);
+        }
+      });
+    });
+  } catch (e) {
+    assert(false, `ошибка: ${e.message}`);
+  } finally {
+    state.krokodilSelectedLevel = prevLevel;
+    state.krokodilMode = prevMode;
+    global.fadeSwapEl = prevFade;
+    global.showToast = prevToast;
+  }
+});
+
 console.log('\n=== Проверка наличия критических DOM-элементов ===');
 
 const criticalElements = [

@@ -253,8 +253,9 @@ let state = {
   znayuStarter:'random', znayuQueue:[], znayuIndex:0, znayuAnswers:{},
   znayuActivePlayer:0, znayuP1Done:false, znayuP2Done:false, znayuPendingNext:0,
   znayuMatchHistory:[], znayuHidden:[],
-  // Крокодил
-  krokodilSelectedLevel:2, krokodilRoundSeconds:180, krokodilUsed:{},
+  // Крокодил. krokodilUsed больше нет: слова без повторов обеспечивает
+  // очередь партии krQueue в games/krokodil.js (переживает только свою игру).
+  krokodilSelectedLevel:2, krokodilRoundSeconds:180,
   krokodilMode:'word', krokodilWordsPerRound:5,
   partyPlayers:['Первый','Второй'], krokodilScores:[], krokodilSkipCounts:[], krokodilCurrentPlayerIndex:0,
   krokodilTurnsPlayed:0, krokodilRoundsPerPlayer:5,
@@ -1993,8 +1994,7 @@ function performFullReset(){
   state.znayuMatchHistory = [];
   state.znayuQueue = []; state.znayuIndex = 0; state.znayuAnswers = {};
   state.znayuActivePlayer = 0; state.znayuP1Done = false; state.znayuP2Done = false; state.znayuPendingNext = 0;
-  // Крокодил
-  state.krokodilUsed = {};
+  // Крокодил (счёт и ход; очередь слов живёт в games/krokodil.js)
   state.krokodilScores = []; state.krokodilSkipCounts = []; state.krokodilTurnsPlayed = 0; state.krokodilCurrentPlayerIndex = 0;
   // Мемасики
   state.memesUsed = {};
