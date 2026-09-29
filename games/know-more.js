@@ -166,7 +166,7 @@ function knowMoreLogScoreText(score){
 // показываются в итогах) и state.knowMoreMarks (отметки текущей партии): это
 // чужие экраны со своим смыслом, и стирание из них по нажатию крестика в
 // «Исследованных» было бы потерей данных, о которой игрок не просил. Счётчик
-// «исследовано зон» и «Всего отметок» пересчитываются сами — оба читают
+// «исследовано зон» в заголовке карточки пересчитывается сам — он читает
 // state.knowMoreLog.
 function removeKnowMoreLogEntry(index){
   const log = Array.isArray(state.knowMoreLog) ? state.knowMoreLog : [];
@@ -203,7 +203,7 @@ function goToKnowMoreHistory(){
           <div class="know-more-map-name">${idx === 0 ? 'Он' : 'Она'} · ${name} — исследовано зон: ${rows.length}</div>
           <div class="know-more-row"><div class="know-more-row-text">${rows.length ? rows.join('') : '—'}</div></div>
         </div>`;
-    }).join('') + `<div class="intro-text">Всего отметок: ${log.length}. Список пополняется сразу после каждой оценки и не зависит от того, дошла ли партия до итогов. Крестик убирает отметку, если зону оценили ошибочно.</div>`;
+    }).join('');
     wrap.querySelectorAll('[data-knowmore-del]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const idx = parseInt(btn.dataset.knowmoreDel, 10);
