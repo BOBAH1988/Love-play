@@ -4341,6 +4341,96 @@ const knowMoreBackup = () => {
   return saved;
 };
 
+// Очередь партии. Именно её строил сломанный «мешок»: сначала ВСЕ зоны
+// первого уровня, потом 12 первых элементов. После расширения колоды до 48 зон
+// их на первом уровне стало 15, и партия на 12 ходов целиком в нём умещалась —
+// уровни 2 и 3 не выпадали ни разу, и игрок видел «сначала 3 мягких, потом ещё
+// 3 мягких». Проверяем, что в партии есть все три уровня.
+test('«Узнай больше»: в партии есть зоны всех трёх уровней', () => {
+  const saved = knowMoreBackup();
+  const savedMode = state.knowMoreMode;
+  try {
+    state.knowMoreMode = KNOW_MORE_MODE.ALTERNATE;
+    state.knowMoreStarter = 0;
+    const queue = buildKnowMoreQueue();
+    assert(queue.length === KNOW_MORE_STEPS,
+      `партия должна состоять из ${KNOW_MORE_STEPS} зон, получилось ${queue.length}`);
+    assert(new Set(queue).size === queue.length,
+      'в одной партии зоны не должны повторяться');
+    const levels = queue.map(id => knowMoreZoneById(id).level);
+    [1, 2, 3].forEach(lv=>{
+      const count = levels.filter(l => l === lv).length;
+      assert(count > 0, `в партии должны быть зоны уровня ${lv}, а их ${count}`);
+    });
+    // Первый уровень не должен съедать всю партию — именно это и было видно
+    // игроку как «задания повторяются».
+    assert(levels.filter(l => l === 1).length < queue.length,
+      'уровень 1 не должен занимать всю партию — иначе смелые зоны недостижимы');
+    // Порядок партии — от нежных к смелее: уровни не убывают.
+    const sorted = [...levels].sort((a, b)=>a - b);
+    assert(JSON.stringify(levels) === JSON.stringify(sorted),
+      `уровни должны идти по возрастанию, получено: ${levels.join(',')}`);
+  } finally {
+    state.knowMoreMode = savedMode;
+    Object.assign(state, saved);
+  }
+});
+
+// Зона с полем body принадлежит только одному из партнёров, поэтому на ходу
+// «Она» зона «Его тело» неуместна (и наоборот). Проверяем все три режима.
+test('«Узнай больше»: зона соответствует тому, кто на ходу исследует', () => {
+  const saved = knowMoreBackup();
+  const savedMode = state.knowMoreMode;
+  try {
+    [[KNOW_MORE_MODE.ALTERNATE, 'по очереди'], [KNOW_MORE_MODE.HE, 'Он'], [KNOW_MORE_MODE.SHE, 'Она']].forEach(([mode, label])=>{
+      state.knowMoreMode = mode;
+      state.knowMoreStarter = 0;
+      // Партий много: зона выбирается случайно внутри уровня, поэтому разовая
+      // проверка могла бы случайно пройти на старой (сломанной) механике.
+      let mismatches = 0;
+      let sample = '';
+      for(let game = 0; game < 200; game++){
+        const queue = buildKnowMoreQueue();
+        queue.forEach((id, step)=>{
+          const zone = knowMoreZoneById(id);
+          if(!zone || !zone.body) return;
+          const explorer = knowMoreExplorerAtStep(step, mode, state.knowMoreStarter);
+          if(zone.body !== (explorer === 0 ? 'he' : 'she')){
+            mismatches++;
+            if(!sample) sample = `шаг ${step}, зона «${zone.name}» (${zone.body}), исследует игрок ${explorer}`;
+          }
+        });
+      }
+      assert(mismatches === 0,
+        `в режиме «${label}» зона должна принадлежать исследующему, расхождений: ${mismatches}${sample ? ' — ' + sample : ''}`);
+    });
+  } finally {
+    state.knowMoreMode = savedMode;
+    Object.assign(state, saved);
+  }
+});
+
+// Каждая зона колоды должна быть достижима: иначе часть заданий нельзя
+// выдать никогда. В режиме «По очереди» подходят все 48 зон.
+test('«Узнай больше»: каждая зона колоды достижима в партии', () => {
+  const saved = knowMoreBackup();
+  const savedMode = state.knowMoreMode;
+  try {
+    state.knowMoreMode = KNOW_MORE_MODE.ALTERNATE;
+    state.knowMoreStarter = 0;
+    const seen = new Set();
+    for(let game = 0; game < 400; game++){
+      buildKnowMoreQueue().forEach(id => seen.add(id));
+    }
+    const unreachable = KNOW_MORE_ZONES.filter(z => !seen.has(z.id)).map(z => z.name);
+    assert(unreachable.length === 0,
+      `зоны, которые не выпали ни разу за 400 партий: ${unreachable.join(', ') || '—'}`);
+  } finally {
+    state.knowMoreMode = savedMode;
+    Object.assign(state, saved);
+  }
+});
+
 test('«Узнай больше»: отметка попадает в карту того, кого исследовали', () => {
   const originalFade = global.fadeSwapEl;
   const saved = knowMoreBackup();

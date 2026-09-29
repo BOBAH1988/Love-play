@@ -2972,6 +2972,108 @@ function checkQuizNoRepeat() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Колода «Узнай больше»: зоны и очередь партии
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Зоны тела, 3 уровня (нежно → средне → смелее) и поле body ('he'/'she') у зон,
+ * которые есть только у одного из партнёров.
+ *
+ * Здесь же — про очередь. Раньше она строилась «мешком»: сначала ВСЕ зоны
+ * первого уровня, потом второго, потом третьего, и брались первые
+ * KNOW_MORE_STEPS. Пока зон первого уровня было меньше 12, деление работало.
+ * После расширения колоды (24 → 48 зон, 12a7b90) их стало 15, и партия на
+ * 12 ходов целиком умещалась в первый уровень: уровни 2 и 3 не выпадали
+ * НИКОГДА, «Пенис», «Клитор» и «Простата» не показывались ни разу, а игрок
+ * видел «сначала 3 мягких, потом ещё 3 мягких» и думал, что задания
+ * повторяются. Теперь уровни делят партию пропорционально
+ * (knowMoreLevelQuotas), а зона подбирается под того, кто на этом ходу
+ * исследует (knowMoreZoneFitsStep).
+ *
+ * Проверки ловят обе половины: структурная — чтобы сломанный «мешок» не
+ * вернулся молча, инварианты — чтобы сама колода осталась корректной.
+ */
+function checkKnowMoreZones() {
+  group('Колода «Узнай больше»');
+  const cards = read('cards/cards_know_more.js');
+  const game = read('games/know-more.js');
+
+  // Разбор зон прямо из файла данных: проверяем то, что реально попадёт в игру.
+  const blocks = cards.split(/\{\s*id:/).slice(1);
+  const rows = blocks.map(chunk => {
+    const head = chunk.slice(0, 120);
+    return {
+      id: Number((/^\s*(\d+)/.exec(head) || [])[1]),
+      level: Number((/level:\s*(\d+)/.exec(head) || [])[1]),
+      body: (/body:\s*'(he|she)'/.exec(chunk) || [])[1] || null,
+      name: (/name:\s*'([^']+)'/.exec(chunk) || [])[1] || '',
+      how: (/how:\s*'([^']{10,})'/.exec(chunk) || [])[1] || '',
+    };
+  }).filter(r => Number.isInteger(r.id) && r.name);
+
+  check('зоны разобраны', rows.length > 0, 'KNOW_MORE_ZONES не читается');
+  if (rows.length === 0) return;
+
+  const ids = rows.map(r => r.id);
+  const dupIds = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
+  check('id зон не повторяются (по ним ключи сохранённых карт)',
+    dupIds.length === 0, `повторяющиеся id: ${dupIds.join(', ')}`);
+
+  const names = rows.map(r => r.name);
+  const dupNames = [...new Set(names.filter((n, i) => names.indexOf(n) !== i))];
+  check('названия зон не повторяются',
+    dupNames.length === 0, `повторяющиеся названия: ${dupNames.join(', ')}`);
+
+  const badLevel = rows.filter(r => !Number.isInteger(r.level) || r.level < 1 || r.level > 3);
+  check('уровень зоны — 1, 2 или 3',
+    badLevel.length === 0, `некорректный level: ${badLevel.map(r => r.name).join(', ')}`);
+
+  const missingHow = rows.filter(r => r.how.length < 10);
+  check('у каждой зоны есть подсказка исследователю',
+    missingHow.length === 0, `без подсказки: ${missingHow.map(r => r.name).join(', ')}`);
+
+  // Квоты по уровням: партия обязана набираться из ВСЕХ уровней, а не из
+  // верхушки одного. Возврат старого «мешка» — это и есть тот баг, что игрок
+  // видел как «задания повторяются».
+  const stepsMatch = game.match(/const KNOW_MORE_STEPS\s*=\s*(\d+)/);
+  const steps = stepsMatch ? Number(stepsMatch[1]) : 0;
+  check('партия делит зоны по уровням, а не берёт верхушку одного уровня',
+    !/return bag\.slice\(0, KNOW_MORE_STEPS\)/.test(game) &&
+      /function knowMoreLevelQuotas\(levels, byLevel, steps\)\{/.test(game) &&
+      /knowMoreLevelQuotas\(levels, byLevel, KNOW_MORE_STEPS\)/.test(game),
+    'buildKnowMoreQueue снова кладёт в очередь только первые N зон «мешка» — уровни 2 и 3 станут недостижимыми');
+  check('KNOW_MORE_STEPS задан и больше нуля',
+    steps > 0, 'KNOW_MORE_STEPS не найден в games/know-more.js');
+
+  const perLevel = new Map();
+  rows.forEach(r => perLevel.set(r.level, (perLevel.get(r.level) || 0) + 1));
+  const levels = [...perLevel.keys()].sort((a, b) => a - b);
+  check('в колоде есть зоны всех трёх уровней',
+    levels.length === 3, `уровни в данных: ${levels.join(', ')}`);
+
+  // Зона под текущего исследователя — иначе «Она» получает «Его тело».
+  check('зона подбирается под того, кто на ходу исследует',
+    /function knowMoreZoneFitsStep\(zone, step\)\{/.test(game) &&
+      /pool\.findIndex\(zone=>knowMoreZoneFitsStep\(zone, step\)\)/.test(game) &&
+      /zone\.body === \(explorer === 0 \? 'he' : 'she'\)/.test(game),
+    'buildKnowMoreQueue не согласует поле body зоны с исследователем: зона «Его тело» выпадет на ходу «Она»');
+  // Логика ролей не должна дублироваться: раньше она жила прямо в
+  // knowMoreExplorerIdx, и очередь считала бы роли по-своему.
+  check('роли на ходу считает один общий помощник',
+    /function knowMoreExplorerAtStep\(step, mode, starter\)\{/.test(game) &&
+      /return knowMoreExplorerAtStep\(state\.knowMoreStep \|\| 0, getKnowMoreMode\(\), state\.knowMoreStarter\);/.test(game),
+    'knowMoreExplorerIdx должен звать knowMoreExplorerAtStep, иначе очередь и подпись на карточке будут считать исследователя по-разному');
+
+  const he = rows.filter(r => r.body === 'he').length;
+  const she = rows.filter(r => r.body === 'she').length;
+  check('колода покрывает тела обоих партнёров',
+    he > 0 && she > 0, `зон «Его тело»: ${he}, «Её тело»: ${she}`);
+  const badBody = rows.filter(r => r.body !== null && r.body !== 'he' && r.body !== 'she');
+  check('body — только «he» или «she»',
+    badBody.length === 0, `некорректный body: ${badBody.map(r => r.name).join(', ')}`);
+}
+
+
 // Карточки темы «Время» (games/kids-flash-time.js). Раньше варианты ответа
 // отличались только числом часов — минуты во всех четырёх были одинаковыми,
 // и задача сводилась к совпадению первых двух цифр. Теперь варианты — это
@@ -3166,6 +3268,7 @@ function main() {
   checkPartyQuizCards();
   checkTimeCards();
   checkKrokodilCards();
+  checkKnowMoreZones();
   checkQuizNoRepeat();
   checkPauseResetOnStart();
   checkExitNavigation();

@@ -14,8 +14,12 @@
 // «По очереди» роли чередуются по ходу — значит, на «Он» и на «Она»
 // приходится поровну исследованных зон; в режимах «Он» и «Она» исследует
 // только выбранный партнёр. Порядок зон — от нежных (level 1) к смелее
-// (level 3), внутри уровня случайно: партия всегда мягко начинается и плавно
-// идёт дальше.
+// (level 3), партия набирается ПРОПОРЦИОНАЛЬНО из всех трёх уровней
+// (knowMoreLevelQuotas), внутри уровня случайно. Раньше брались первые
+// KNOW_MORE_STEPS зон «мешка», где сначала шёл весь level 1: после роста
+// колоды до 48 зон партия целиком состояла из первого уровня, и уровни 2–3
+// не выпадали никогда. Зона подбирается под того, кто на ходу исследует
+// (knowMoreZoneFitsStep): «Его тело» не достаётся «Оне» и наоборот.
 //
 // ТЕМП. Промежуточных окон между заданиями нет: после оценки сразу
 // показывается карточка следующей зоны (а после последней — итоги). Раньше
@@ -186,26 +190,95 @@ function exitKnowMoreHistory(){
 document.getElementById('knowMoreHistoryBtn').addEventListener('click', ()=>{ goToKnowMoreHistory(); });
 document.getElementById('knowMoreHistoryExitBtn').addEventListener('click', ()=>{ exitKnowMoreHistory(); });
 
-/* ============ ПАРТИЯ ============ */
-// Очередь зон: сначала level 1, потом 2, потом 3; внутри одного уровня
-// порядок случайный, чтобы партии не повторялись.
+/* ============ ПАРТИЯ ============
+ * Очередь зон: сначала level 1, потом 2, потом 3; внутри одного уровня
+ * порядок случайный, чтобы партии не повторялись.
+ *
+ * Квоты по уровням считаются knowMoreLevelQuotas(): KNOW_MORE_STEPS делится
+ * поровну между уровнями, но не больше, чем зон в уровне есть, — остаток
+ * уходит в те уровни, где зон ещё хватает.
+ *
+ * Раньше очередь строилась иначе: «мешок» — сначала ВСЕ зоны первого уровня,
+ * потом второго, потом третьего — и первые 12 его элементов. Пока зон первого
+ * уровня было меньше 12, деление работало. После расширения колоды (24 → 48
+ * зон) их стало 15, и партия на 12 ходов целиком помещалась в первый уровень:
+ * уровни 2 и 3 не выпадали НИКОГДА, а «Пенис», «Клитор» и «Простата» из новой
+ * колоды не показывались ни разу. Игрок видел «сначала 3 мягких, потом ещё
+ * 3 мягких» и думал, что задания повторяются — это был один и тот же уровень.
+ */
+function knowMoreLevelQuotas(levels, byLevel, steps){
+  const quotas = new Map(levels.map(lv => [lv, 0]));
+  let left = steps;
+  // По одной зоне на уровень за круг, пока у какого-то уровня есть запас.
+  while(left > 0){
+    let grew = false;
+    for(const lv of levels){
+      if(left <= 0) break;
+      if(quotas.get(lv) < byLevel.get(lv).length){
+        quotas.set(lv, quotas.get(lv) + 1);
+        left--;
+        grew = true;
+      }
+    }
+    if(!grew) break; // свободных зон не осталось — партия будет короче
+  }
+  return quotas;
+}
+
+// Чей это ход: игрок 0 — «Он», игрок 1 — «Она» (state.name1/name2, в хабе это
+// «Парень»/«Девушка»). Поле body зоны означает, что такая зона есть только у
+// одного из партнёров, поэтому на ходу «Она» зона с body:'he' неуместна.
+// В режимах «Он»/«Она» исследователь один, значит подходят все зоны этого
+// тела; в режиме «По очереди» роли чередуются по чётности хода.
+function knowMoreExplorerAtStep(step, mode, starter){
+  if(mode === KNOW_MORE_MODE.HE) return 0;
+  if(mode === KNOW_MORE_MODE.SHE) return 1;
+  const st = (starter === 1) ? 1 : 0;
+  return ((step || 0) % 2 === 0) ? st : 1 - st;
+}
+
+// Подходит ли зона этому ходу: общая подходит всем, «Его тело» — только когда
+// исследует игрок 0, «Её тело» — только игрок 1.
+function knowMoreZoneFitsStep(zone, step){
+  if(!zone || !zone.body) return true;
+  const explorer = knowMoreExplorerAtStep(step, getKnowMoreMode(), state.knowMoreStarter);
+  return zone.body === (explorer === 0 ? 'he' : 'she');
+}
+
 function buildKnowMoreQueue(){
+  const zones = getKnowMoreZones();
+  if(zones.length === 0) return [];
+  // Группируем по уровню: порядок партии — от нежных к смелее.
   const byLevel = new Map();
-  getKnowMoreZones().forEach(zone=>{
+  zones.forEach(zone=>{
     const lv = typeof zone.level === 'number' ? zone.level : 1;
     if(!byLevel.has(lv)) byLevel.set(lv, []);
     byLevel.get(lv).push(zone);
   });
-  const bag = [];
-  [...byLevel.keys()].sort((a, b)=>a - b).forEach(lv=>{
+  const levels = [...byLevel.keys()].sort((a, b)=>a - b);
+  const quotas = knowMoreLevelQuotas(levels, byLevel, KNOW_MORE_STEPS);
+  // Внутри уровня — случайный порядок, чтобы партии не повторялись.
+  const pools = new Map();
+  levels.forEach(lv=>{
     const group = byLevel.get(lv).slice();
     for(let i = group.length - 1; i > 0; i--){
       const j = Math.floor(Math.random() * (i + 1));
       [group[i], group[j]] = [group[j], group[i]];
     }
-    bag.push(...group);
+    pools.set(lv, group);
   });
-  return bag.slice(0, KNOW_MORE_STEPS).map(zone=>zone.id);
+  // Шагами идём по уровням: сперва квота первого, потом второго, потом третьего.
+  const order = [];
+  levels.forEach(lv=>{ for(let i = 0; i < quotas.get(lv); i++) order.push(lv); });
+  const queue = [];
+  order.forEach((lv, step)=>{
+    const pool = pools.get(lv);
+    if(!pool || !pool.length) return;
+    let idx = pool.findIndex(zone=>knowMoreZoneFitsStep(zone, step));
+    if(idx < 0) idx = 0; // страховка: лучше чужая зона, чем пустой ход
+    queue.push(pool.splice(idx, 1)[0].id);
+  });
+  return queue;
 }
 
 function startKnowMoreGame(){
@@ -234,11 +307,7 @@ document.getElementById('knowMoreStartBtn').addEventListener('click', ()=>{
 // для партий, начатых до появления режимов. Режимы «Он»/«Она» — исследует
 // только этот партнёр, второй всё партию отвечает за свои ощущения.
 function knowMoreExplorerIdx(){
-  const mode = getKnowMoreMode();
-  if(mode === KNOW_MORE_MODE.HE) return 0;
-  if(mode === KNOW_MORE_MODE.SHE) return 1;
-  const starter = (state.knowMoreStarter === 1) ? 1 : 0;
-  return ((state.knowMoreStep || 0) % 2 === 0) ? starter : 1 - starter;
+  return knowMoreExplorerAtStep(state.knowMoreStep || 0, getKnowMoreMode(), state.knowMoreStarter);
 }
 function knowMoreReceiverIdx(){
   return 1 - knowMoreExplorerIdx();
