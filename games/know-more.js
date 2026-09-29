@@ -156,6 +156,25 @@ function knowMoreLogScoreText(score){
   const found = KNOW_MORE_SCALE.find(s => s.score === score);
   return found ? found.text : '—';
 }
+// Удаление отметки из накопительного списка «Исследованные».
+//
+// Удаляем РОВНО одну запись — по её месту в state.knowMoreLog, а не по паре
+// (zoneId + receiver). Одна зона может попасть в список дважды (повторная
+// оценка в другой партии), и удаление «по зоне» молча стёрло бы лишнее.
+//
+// Намеренно НЕ трогаем state.knowMoreHistory (карты завершённых партий, они
+// показываются в итогах) и state.knowMoreMarks (отметки текущей партии): это
+// чужие экраны со своим смыслом, и стирание из них по нажатию крестика в
+// «Исследованных» было бы потерей данных, о которой игрок не просил. Счётчик
+// «исследовано зон» и «Всего отметок» пересчитываются сами — оба читают
+// state.knowMoreLog.
+function removeKnowMoreLogEntry(index){
+  const log = Array.isArray(state.knowMoreLog) ? state.knowMoreLog : [];
+  if(!Number.isInteger(index) || index < 0 || index >= log.length) return false;
+  log.splice(index, 1);
+  saveState();
+  return true;
+}
 function goToKnowMoreHistory(){
   const wrap = document.getElementById('knowMoreHistoryList');
   const log = Array.isArray(state.knowMoreLog) ? state.knowMoreLog : [];
@@ -164,19 +183,35 @@ function goToKnowMoreHistory(){
   if(log.length === 0){
     wrap.innerHTML = '<div class="know-more-empty">Пока ничего не исследовано — начните первую партию.</div>';
   } else {
+    // Строки с крестиком: индекс — это место записи В state.knowMoreLog, а не
+    // номер строки на экране, поэтому удаление попадает точно в свою отметку
+    // даже после того, как список перерисовался.
+    const lineHtml = (text, index)=>`<span class="know-more-item">`
+      + `<span class="know-more-item-text">${text}</span>`
+      + `<button type="button" class="know-more-item-del" data-knowmore-del="${index}" `
+      + `aria-label="Удалить: ${text}">✕</button></span>`;
     wrap.innerHTML = players.map((name, idx)=>{
-      const rows = log
-        .filter(it => it.receiver === idx && knowMoreZoneById(it.zoneId))
-        .map(it => ({ zone: knowMoreZoneById(it.zoneId), score: it.score }));
-      const lines = rows.length
-        ? rows.map(it => `${knowMoreZoneLabel(it.zone)} — ${knowMoreLogScoreText(it.score)}`)
-        : ['—'];
+      const rows = [];
+      log.forEach((it, i)=>{
+        if(it.receiver !== idx) return;
+        const zone = knowMoreZoneById(it.zoneId);
+        if(!zone) return;
+        rows.push(lineHtml(`${knowMoreZoneLabel(zone)} — ${knowMoreLogScoreText(it.score)}`, i));
+      });
       return `
         <div class="know-more-map">
           <div class="know-more-map-name">${idx === 0 ? 'Он' : 'Она'} · ${name} — исследовано зон: ${rows.length}</div>
-          <div class="know-more-row"><div class="know-more-row-text">${lines.join('<br>')}</div></div>
+          <div class="know-more-row"><div class="know-more-row-text">${rows.length ? rows.join('') : '—'}</div></div>
         </div>`;
-    }).join('') + `<div class="intro-text">Всего отметок: ${log.length}. Список пополняется сразу после каждой оценки и не зависит от того, дошла ли партия до итогов.</div>`;
+    }).join('') + `<div class="intro-text">Всего отметок: ${log.length}. Список пополняется сразу после каждой оценки и не зависит от того, дошла ли партия до итогов. Крестик убирает отметку, если зону оценили ошибочно.</div>`;
+    wrap.querySelectorAll('[data-knowmore-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = parseInt(btn.dataset.knowmoreDel, 10);
+        if(!removeKnowMoreLogEntry(idx)) return;
+        playSuccessSound();
+        goToKnowMoreHistory();
+      });
+    });
   }
   const setup = document.getElementById('knowMoreSetup');
   const history = document.getElementById('knowMoreHistory');

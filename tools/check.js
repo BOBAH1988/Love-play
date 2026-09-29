@@ -3098,6 +3098,37 @@ function checkKnowMoreZones() {
   check('разделитель «Новые зоны (id 25+)» удалён',
     !/===== Новые зоны/.test(cards),
     'в файле снова две волны секций — зоны одного уровня разнесены по файлу');
+
+  // Крестик удаления в «Исследованных». dom-stub не разбирает innerHTML в
+  // элементы, поэтому смоук-тест видит только разметку строк и саму функцию
+  // removeKnowMoreLogEntry — обработчик клика по крестику проверяем здесь.
+  const km = read('games/know-more.js');
+  const historyBody = km.slice(km.indexOf('function removeKnowMoreLogEntry('),
+    km.indexOf('function exitKnowMoreHistory()'));
+  check('у каждой отметки в «Исследованных» есть крестик с индексом записи',
+    /function removeKnowMoreLogEntry\(index\)\{/.test(km) &&
+      /data-knowmore-del="\$\{index\}"/.test(historyBody) &&
+      /know-more-item-del/.test(historyBody) &&
+      /✕/.test(historyBody),
+    'в списке «Исследованные» нет кнопки-крестика с индексом — отметку нечем удалить');
+  check('клик по крестику ведёт к удалению и перерисовке списка',
+    /querySelectorAll\('\[data-knowmore-del\]'\)/.test(historyBody) &&
+      /removeKnowMoreLogEntry\(idx\)/.test(historyBody) &&
+      /goToKnowMoreHistory\(\);/.test(historyBody),
+    'обработчик крестика не удаляет запись или не перерисовывает список — счётчики разойдутся');
+  // Удалять нужно ровно одну запись по индексу: зона может встречаться в
+  // списке дважды (повторная оценка в другой партии), и удаление «по зоне»
+  // стёрло бы лишнее.
+  check('удаляется одна запись по индексу, а не все с той же зоной',
+    /log\.splice\(index, 1\)/.test(historyBody) &&
+      !/filter\(.*zoneId === /.test(historyBody),
+    'removeKnowMoreLogEntry удаляет не по индексу или фильтрует по zoneId — повторные отметки одной зоны будут теряться');
+  check('удаление из «Исследованных» не трогает карты завершённых партий',
+    !/state\.knowMoreHistory\s*=/.test(historyBody) && !/state\.knowMoreMarks\s*=/.test(historyBody),
+    'функция удаления правит state.knowMoreHistory / knowMoreMarks — это чужие экраны, стирание из них не просили');
+  check('удаление отметки сохраняется в прогрессе',
+    /log\.splice\(index, 1\);[\s\S]{0,80}?saveState\(\);/.test(historyBody),
+    'после удаления нет saveState() — правка потеряется при перезагрузке страницы');
 }
 
 

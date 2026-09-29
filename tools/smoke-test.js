@@ -4612,6 +4612,66 @@ test('«Узнай больше»: порядок режимов «Он», «О�
   }
 });
 
+// Крестик удаления в «Исследованных». Список накопительный, навсегда, и в нём
+// остаются ошибочные отметки — их нужно уметь убрать. Проверяем и разметку
+// (крестик с индексом записи на каждую строку), и саму функцию удаления:
+// dom-stub не разбирает innerHTML в элементы, поэтому обработчики клика по
+// крестику в тестовой среде не собираются — их проверяет check.js по коду.
+test('«Узнай больше»: крестик удаляет отметку из «Исследованных»', () => {
+  const list = getElById(stub, 'knowMoreHistoryList');
+  const saved = {
+    log: JSON.stringify(state.knowMoreLog),
+    history: JSON.stringify(state.knowMoreHistory),
+  };
+  try {
+    // Три отметки, из них две — одна и та же зона: удаление «по зоне» стёрло бы
+    // лишнее, поэтому важно проверить удаление ровно одной записи.
+    state.knowMoreLog = [
+      { zoneId: 1, score: 3, receiver: 0, date: 1 },
+      { zoneId: 1, score: 0, receiver: 0, date: 2 },
+      { zoneId: 2, score: 2, receiver: 1, date: 3 },
+    ];
+    state.knowMoreHistory = [{ marks: [[{ zoneId: 1, score: 3 }], [{ zoneId: 2, score: 2 }]] }];
+    goToKnowMoreHistory();
+    const html = list ? list.innerHTML : '';
+    const dels = html.match(/data-knowmore-del="(\d+)"/g) || [];
+    assert(dels.length === 3, `крестик должен быть у каждой из 3 отметок, найдено ${dels.length}`);
+    assert(/know-more-item-del/.test(html) && /know-more-item-text/.test(html),
+      'строка отметки должна состоять из текста и кнопки-крестика');
+    assert(/✕/.test(html), 'крестик должен быть нарисован');
+    // Удаляем среднюю запись (вторую оценку той же зоны).
+    assert(removeKnowMoreLogEntry(1) === true, 'удаление существующей записи должно удалять её');
+    assert(state.knowMoreLog.length === 2, `после удаления должно остаться 2 отметки, осталось ${state.knowMoreLog.length}`);
+    assert(state.knowMoreLog[0].score === 3 && state.knowMoreLog[1].score === 2,
+      'удаляться должна ровно выбранная запись, а не все с той же зоной');
+    assert(state.knowMoreLog[0].zoneId === 1 && state.knowMoreLog[1].zoneId === 2,
+      'порядок и состав оставшихся отметок должны сохраниться');
+    // Чужие экраны не трогаем: карта завершённой партии — это другое окно.
+    assert(state.knowMoreHistory.length === 1 && state.knowMoreHistory[0].marks[0].length === 1,
+      'удаление из «Исследованных» не должно стирать карту завершённой партии');
+    // Список перерисовывается и счётчики сходятся с новым составом.
+    goToKnowMoreHistory();
+    const html2 = list ? list.innerHTML : '';
+    const dels2 = html2.match(/data-knowmore-del="(\d+)"/g) || [];
+    assert(dels2.length === 2, `после удаления крестиков должно быть 2, найдено ${dels2.length}`);
+    assert(/Всего отметок: 2/.test(html2), 'счётчик «Всего отметок» должен пересчитаться');
+    assert(/исследовано зон: 1/.test(html2), 'счётчик «исследовано зон» должен пересчитаться');
+    // Границы: чужой индекс удалять нельзя.
+    assert(removeKnowMoreLogEntry(99) === false, 'несуществующий индекс не должен удалять ничего');
+    assert(removeKnowMoreLogEntry(-1) === false, 'отрицательный индекс не должен удалять ничего');
+    assert(removeKnowMoreLogEntry(1.5) === false, 'дробный индекс не должен удалять ничего');
+    assert(state.knowMoreLog.length === 2, 'после неудачных попыток список не должен измениться');
+    // Пустой список не должен падать на отрисовке.
+    state.knowMoreLog = [];
+    goToKnowMoreHistory();
+    assert(/Пока ничего не исследовано/.test(list ? list.innerHTML : ''),
+      'пустой список должен показывать обычное пустое состояние, а не крестики');
+  } finally {
+    state.knowMoreLog = JSON.parse(saved.log || '[]');
+    state.knowMoreHistory = JSON.parse(saved.history || '[]');
+  }
+});
+
 test('«Узнай больше»: в режимах «Он»/«Она» исследует только один партнёр', () => {
   const prevMode = state.knowMoreMode;
   const prevStep = state.knowMoreStep;
