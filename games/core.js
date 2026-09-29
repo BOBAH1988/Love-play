@@ -3842,6 +3842,72 @@ function hideAppError(){
   if(modal) modal.classList.remove('show');
 }
 
+/* ============ НЕЗАГРУЖЕННЫЕ ФАЙЛЫ: ДОГРУЗКА МОДУЛЯ ============
+ * Ошибка загрузки <script> не доходит до window.onerror с message: приходит
+ * событие error на самом элементе, и увидеть его можно только в фазе захвата.
+ * Раньше сбой был виден лишь по косвенному признаку «нет функции goTo…Setup»,
+ * и по отчёту игрока нельзя было понять, какой файл не пришёл.
+ *
+ * Ловим только games/, cards/ и styles/: ошибки загрузки картинок и видео сюда
+ * не относятся (у них своя диагностика) и в список не попадают.
+ *
+ * Хранилище висит на window, а не в локальной переменной: им пользуется
+ * смоук-тест (tools/smoke-test.js) и его же видно в консоли при разборе. */
+window.__failedAssetScripts = new Set();
+window.addEventListener('error', (ev)=>{
+  const el = ev && ev.target;
+  if(!el || el.tagName !== 'SCRIPT' || !el.src) return;
+  if(!/(?:\/|^)(?:games|cards|styles)\/.+\.js(?:[?#]|$)/.test(el.src)) return;
+  window.__failedAssetScripts.add(el.src);
+  try{ console.warn('[Love-play] файл не загрузился при старте:', el.src); }catch(_){}
+}, true);
+
+// Повторная попытка разрешена только один раз на цепочку вызовов: иначе
+// неудачная догрузка снова пополнит список упавших файлов, и callGameEntry
+// вызовет себя же по кругу. Внутри цепочки повтор запрещён флагом.
+
+/** Подключает скрипт заново и ждёт, выполнится он или нет. */
+function loadScriptAgain(src){
+  return new Promise((resolve)=>{
+    const el = document.createElement('script');
+    el.src = src; // тот же адрес: ветка games/* в sw.js network-first, сеть свежая
+    el.onload = ()=>resolve(true);
+    el.onerror = ()=>resolve(false);
+    document.head.appendChild(el);
+  });
+}
+
+/** Короткое имя файла для журнала: games/know-more.js (без ?v= и хоста). */
+function assetFileName(src){
+  const m = /(?:games|cards|styles)\/[^?#]+\.js/.exec(String(src || ''));
+  return m ? m[0] : String(src || '');
+}
+
+/**
+ * Один раз догружает не выполнившиеся скрипты. Вернёт true, если попытка
+ * запущена: вызов переидёт сам и разберётся по факту.
+ *
+ * Почему повторное подключение безопасно. Игровые функции объявлены как
+ * function declaration, а такие объявления создаются ДО выполнения тела
+ * скрипта. Значит, если бы know-more.js выполнился и упал с ошибкой внутри,
+ * goToKnowMoreSetup уже была бы на window — и сюда бы не попали. Отсутствие
+ * функции доказывает, что файл не выполнялся вообще: ни один обработчик не
+ * успел навеситься, поэтому повторный запуск не задвоит события.
+ */
+function retryMissingGameModule(fnName){
+  const failed = window.__failedAssetScripts;
+  if(!failed || !failed.size) return false;
+  const sources = [...failed];
+  Promise.all(sources.map(loadScriptAgain)).then(()=>{
+    // Повторяем исходный вызов: функция либо появилась (игра откроется), либо
+    // нет — тогда callGameEntry покажет окно с понятным объяснением. Повтор
+    // догрузки внутри цепочки запрещён: неудача снова пополнила бы список.
+    callGameEntry(fnName, false);
+  });
+  return true;
+}
+
+
 /* ============ НЕЗАГРУЖЕННЫЙ МОДУЛЬ ИГРЫ ============
    Функции игр (goTo*) живут в отдельных файлах games/*.js, а кнопки хаба
    вызывают их из core.js — файла, который подключается РАНЬШЕ всех игровых.
@@ -3859,7 +3925,7 @@ function hideAppError(){
    Проверка по typeof, а не по try/catch: отсутствующая функция — это ReferenceError
    при разборе идентификатора, до входа в тело, и перехватить его можно только
    проверкой. Шаблон тот же, что у callGame() в games/game-registry.js. */
-function callGameEntry(fnName){
+function callGameEntry(fnName, allowRetry){
   const fn = window[fnName];
   if(typeof fn === 'function'){
     try{
@@ -3875,11 +3941,21 @@ function callGameEntry(fnName){
       return false;
     }
   }
-  // Модуль не выполнился: честно говорим, что делать, и оставляем след в журнале.
+  // Модуль не выполнился. Прежде чем просить игрока перезапустить приложение,
+  // пробуем догрузить упавшие файлы: сбой чаще всего разовый (обрыв сети), и
+  // игра открывается сразу. Окно — только если и это не помогло.
+  if(allowRetry !== false && retryMissingGameModule(fnName)) return false;
+  // Честно говорим, что делать, и оставляем след в журнале — с именем ФАЙЛА:
+  // по названию функции файл не угадать, а игроку в отчёте нужно видеть, что
+  // именно не пришло (иначе журнал объясняет симптом, но не причину).
+  const files = [...window.__failedAssetScripts].map(assetFileName);
   const info = {
     time: new Date().toISOString(),
-    message: 'Не загрузился модуль игры: нет функции ' + fnName,
-    source: 'games/*.js не выполнился при загрузке страницы',
+    message: 'Не загрузился модуль игры: нет функции ' + fnName
+      + (files.length ? ' (не загрузился файл: ' + files.join(', ') + ')' : ''),
+    source: files.length
+      ? 'не выполнился ' + files.join(', ')
+      : 'games/*.js не выполнился при загрузке страницы (файл не отслежен)',
   };
   try{ console.warn('[Love-play] game module missing:', fnName); }catch(_){}
   logAppError(info);

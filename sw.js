@@ -34,7 +34,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v536';
+const CACHE_NAME = 'veselye-igry-cache-v537';
 
 // Корень приложения относительно адреса воркера: sw.js лежит в корне, поэтому
 // './' относительно его адреса — это корень и в деплое в корень домена ('/'),
@@ -223,6 +223,49 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Поиск в кэше с откатом на ЛЮБУЮ версию того же файла.
+//
+// Зачем: ключ записи в кэше включает ?v= (games/know-more.js?v=20261023d), и
+// caches.match(request) ищет точное совпадение вместе с query. Пока игрок не
+// нажал «Обновить», активен старый worker, в precache которого лежит ПРЕДЫДУЩАЯ
+// сборка этого файла (?v=…c). Свежий index.html приходит из сети (навигация
+// network-first) и уже просит новую версию. Если сеть моргнёт ровно на этом
+// запросе, точный поиск промахивается, и раньше на месте промаха отдавался
+// offlineResponse() — HTML-заглушка со статусом 503. Браузер не выполняет
+// classic script с Content-Type: text/html, модуль молча не выполнялся, игра не
+// открывалась. Именно это и было в отчёте игрока от 29.09: отсутствовала
+// ровно goToKnowMoreSetup, чей ?v= менялся последним (12a7b90).
+//
+// Старая версия того же файла — полноценная замена: это рабочий код прошлой
+// сборки, а не пустое место. Поэтому сначала точное совпадение, затем любой
+// ?v= того же пути. Ищем в именованном CACHE_NAME, а не через caches.match по
+// всему хранилищу: activate чистит чужие записи, и искать в чужих кэшах незачем.
+async function cachedAnyVersion(request){
+  const cache = await caches.open(CACHE_NAME);
+  const exact = await cache.match(request);
+  if(exact) return exact;
+  return cache.match(request, { ignoreSearch: true });
+}
+
+// Ответ для subresource, когда не нашлось ни сети, ни кэша.
+//
+// Смысл тот же, что у offlineResponse(), но тип содержимого соответствует
+// запрошенному файлу. Раньше здесь отдавался HTML на запрос .js — браузер
+// отказывался его выполнять (MIME-check) и приложение получало ошибку загрузки
+// вместо понятного окна. Пустой валидный JS/CSS выполняется без вреда, а
+// незагруженный модуль уже умеет объяснять игроку ситуацию через
+// callGameEntry() в core.js.
+function emptyAssetResponse(pathname){
+  const isCss = /\.css($|\?)/.test(pathname);
+  return new Response('', {
+    status: 200,
+    headers: {
+      'Content-Type': isCss ? 'text/css; charset=utf-8' : 'application/javascript; charset=utf-8',
+      'Cache-Control': 'no-store',
+    },
+  });
+}
+
 // Офлайн-заглушка: отдаётся, когда и сети нет, и в кэше нет нужного файла.
 // Без неё iOS в standalone-режиме показывает пустой белый экран, и игрок
 // решает, что приложение сломалось. Тёмный фон — как у приложения.
@@ -285,9 +328,14 @@ self.addEventListener('fetch', (event) => {
     // внешнего вида «не применялись» до второй перезагрузки. С cards/* та же
     // история: исправленные вопросы «Викторины» доезжали до игрока только со
     // второй сессии — первый заход после обновления показывал старую колоду.
-    // Офлайн fallback теперь всегда есть: games/*, styles/* и cards/*
-    // предкэшируются при установке, а при пустом кэше отдаём заглушку вместо
-    // пустого ответа (respondWith(undefined) ронял загрузку скрипта — белый экран).
+    //
+    // Офлайн fallback теперь отдаёт не HTML-заглушку, а сам файл из кэша —
+    // любую его версию (cachedAnyVersion), и только если нет даже её — пустой
+    // ответ с типом содержимого по назначению (emptyAssetResponse). Раньше на
+    // месте промаха отдавался HTML, а браузер не выполняет classic script с
+    // Content-Type: text/html: модуль молча пропадал, и игра не открывалась
+    // (отчёт игрока от 29.09, games/know-more.js). respondWith(undefined)
+    // ронял загрузку скрипта — белый экран, поэтому ответ нужен всегда.
     if (url.pathname.startsWith(ROOT + 'games/') || url.pathname.startsWith(ROOT + 'styles/') || url.pathname.startsWith(ROOT + 'cards/')) {
       event.respondWith(
         fetch(request, { cache: 'no-store' })
@@ -298,7 +346,7 @@ self.addEventListener('fetch', (event) => {
             }
             return response;
           })
-          .catch(() => caches.match(request).then((cached) => cached || offlineResponse()))
+          .catch(async () => (await cachedAnyVersion(request)) || emptyAssetResponse(url.pathname))
       );
       return;
     }

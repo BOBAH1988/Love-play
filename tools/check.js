@@ -1295,7 +1295,7 @@ function checkStyles(html) {
     rawGameCalls.length === 0,
     `прямые вызовы вернулись (${rawGameCalls.length}): ${rawGameCalls.slice(0, 5).join(', ')} — без защиты от незагруженного модуля`);
   check('незагруженный модуль игры объясняется игроку, а не падает ReferenceError',
-    /function callGameEntry\(fnName\)\{/.test(coreJs) &&
+    /function callGameEntry\(fnName(, allowRetry)?\)\{/.test(coreJs) &&
       /typeof fn === 'function'/.test(coreJs) &&
       /function showAppLoadError\(fnName\)\{/.test(coreJs) &&
       /Не загрузился модуль игры: нет функции/.test(coreJs) &&
@@ -1313,6 +1313,35 @@ function checkStyles(html) {
     /typeof fn === 'function'[\s\S]{0,120}?fn\(\)/.test(callGameEntryBody) &&
       /Не загрузился модуль игры/.test(callGameEntryBody),
     'callGameEntry должен проверять наличие функции через typeof до вызова: try/catch не ловит ReferenceError при разборе имени');
+
+  // Модуль не выполнился — игроку предлагали только «перезапустить приложение»,
+  // хотя не загружен ровно один файл. Теперь он догружается на лету, и игра
+  // открывается без перезагрузки страницы. Порядок обязателен: догрузка ДО
+  // показа окна, иначе игрок увидит требование перезапустить раньше попытки.
+  check('незагруженный модуль догружается, а не только просит перезапуск',
+    /function retryMissingGameModule\(fnName\)\{/.test(coreJs) &&
+      /allowRetry !== false && retryMissingGameModule\(fnName\)/.test(callGameEntryBody) &&
+      callGameEntryBody.indexOf('retryMissingGameModule') < callGameEntryBody.indexOf('showAppLoadError(fnName)'),
+    'callGameEntry должен сначала догрузить упавший модуль и только потом показывать окно');
+  // Петля: неудачная догрузка снова пополняет список упавших файлов, и повторный
+  // вызов callGameEntry запустил бы догрузку по кругу.
+  check('повторная догрузка внутри одной цепочки запрещена',
+    /callGameEntry\(fnName, false\)/.test(coreJs) &&
+      /function callGameEntry\(fnName, allowRetry\)/.test(coreJs),
+    'повтор в цепочке догрузки обязан идти с allowRetry = false, иначе возникнет бесконечная петля');
+  // Ошибка загрузки <script> приходит событием error на самом элементе и не
+  // всплывает: без фазы захвата её не увидеть, и сбой виден только по
+  // косвенному признаку «нет функции».
+  check('сбой загрузки файлов отслеживается в фазе захвата',
+    /window\.addEventListener\('error',[\s\S]{0,600}?\}, true\);/.test(coreJs) &&
+      /window\.__failedAssetScripts = new Set\(\)/.test(coreJs) &&
+      /el\.tagName !== 'SCRIPT'/.test(coreJs),
+    'нужен capture-слушатель error, складывающий src упавших скриптов в window.__failedAssetScripts');
+  // По отчёту игрока должно быть видно, КАКОЙ файл не пришёл: по имени
+  // функции файл не угадать, а без этого отчёт описывает только симптом.
+  check('в журнале указан файл, а не только имя функции',
+    /не загрузился файл: /.test(callGameEntryBody) && /assetFileName/.test(coreJs),
+    'запись о незагруженном модуле должна называть файл (games/….js)');
 
   // Инициализация: скрипты игр грузятся синхронно, но при обрыве сети любой
   // из них может не выполниться. Тогда половина кнопок хаба не работает.
@@ -1334,6 +1363,30 @@ function checkStyles(html) {
   check('офлайн-заглушка вместо пустого ответа',
     /function offlineResponse\(\)/.test(sw) && /cached \|\| offlineResponse\(\)/.test(sw),
     'в sw.js нет fallback-заглушки offlineResponse');
+
+  // Игра не открывалась, когда games/<игра>.js не выполнился (отчёт 29.09:
+  // пропала ровно goToKnowMoreSetup, чей ?v= менялся последним). Причина: ключ
+  // записи в кэше включает ?v=, а caches.match ищет точное совпадение вместе с
+  // query. Пока активен старый worker, в precache лежит ПРЕДЫДУЩАЯ сборка
+  // файла, а свежий index.html (network-first) уже просит новую. Обрыв сети на
+  // этом запросе → точный промах → на место промаха уходил HTML-заглушка со
+  // статусом 503, а браузер не выполняет classic script с Content-Type:
+  // text/html. Модуль молча пропадал, и защита callGameEntry показывала окно.
+  const subresourceBody = sw.slice(sw.indexOf("url.pathname.startsWith(ROOT + 'games/')"),
+    sw.indexOf('// Остальные ресурсы'));
+  check('при обрыве сети игра берётся из кэша в ЛЮБОЙ версии, а не из HTML-заглушки',
+    /function cachedAnyVersion\(request\)\{/.test(sw) &&
+      /ignoreSearch: true/.test(sw) &&
+      /cachedAnyVersion\(request\)/.test(subresourceBody) &&
+      !/offlineResponse\(\)/.test(subresourceBody),
+    'ветка games|cards|styles в sw.js обязана отдавать сам файл из кэша (с откатом на другой ?v=), а не offlineResponse()');
+  // Ответ на промах должен быть валидным JS/CSS, иначе браузер откажется его
+  // выполнять и мы снова получим «модуль не выполнился».
+  check('запасной ответ для скрипта и стиля имеет правильный тип содержимого',
+    /function emptyAssetResponse\(pathname\)\{/.test(sw) &&
+      /application\/javascript/.test(sw) &&
+      /text\/css/.test(sw),
+    'нужен emptyAssetResponse(): JS для .js, CSS для .css — HTML браузер не выполнит');
 
   // Ложное «Доступна новая версия» после обновления. Причина была в
   // register('./sw.js?v=…'): по спецификации браузер прерывает установку

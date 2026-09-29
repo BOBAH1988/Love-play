@@ -3956,6 +3956,107 @@ test('Загруженный модуль игры: вызов работает 
   delete global.__testGameEntryProbe;
 });
 
+// Сбой из отчёта игрока от 29.09: games/know-more.js не выполнился при загрузке,
+// и игра не открылась. Раньше единственный выход был «перезапустить приложение»,
+// хотя не загружен ровно один файл — теперь он догружается на лету.
+testAsync('Незагруженный модуль: догружается на лету, игра открывается без перезапуска', async () => {
+  const modal = getElById(stub, 'appErrorModal');
+  const failed = global.__failedAssetScripts;
+  assert(failed instanceof Set,
+    'список упавших файлов должен висеть на window.__failedAssetScripts');
+  if (!(failed instanceof Set)) return;
+  const fnName = 'goToKnowMoreSetup';
+  const originalFn = global[fnName];
+  const originalLoader = global.loadScriptAgain;
+  const requested = [];
+  let called = 0;
+  // Имитируем обрыв при загрузке файла: он не выполнился, функции нет.
+  global[fnName] = undefined; // в vm-контексте delete запрещён, typeof достаточно
+  failed.add('https://bobah1988.github.io/Love-play/games/know-more.js?v=20261023d');
+  // loadScriptAgain подменяем: dom-stub не исполняет подставленные скрипты,
+  // поэтому «выполняем» файл вручную — ровно так же поступит браузер.
+  global.loadScriptAgain = (src)=>{
+    requested.push(src);
+    global[fnName] = ()=>{ called++; };
+    return Promise.resolve(true);
+  };
+  try {
+    global.callGameEntry(fnName);
+    await new Promise(resolve => setImmediate(resolve));
+    assert(requested.length === 1,
+      `ожидался один запрос догрузки, запросов: ${requested.length}`);
+    assert(/games\/know-more\.js/.test(requested[0] || ''),
+      `догружаться должен упавший файл, а запросили: ${requested[0]}`);
+    assert(called === 1,
+      `после догрузки игра должна открыться, вызовов: ${called}`);
+    assert(!(modal && modal.classList.contains('show')),
+      'при успешной догрузке окно с требованием перезапуска показываться не должно');
+  } finally {
+    failed.clear();
+    global[fnName] = originalFn;
+    global.loadScriptAgain = originalLoader;
+  }
+});
+
+// По отчёту игрока должно быть видно, КАКОЙ файл не пришёл: по имени функции
+// файл не угадать, а без этого отчёт описывает только симптом. Сценарий —
+// догрузка не удалась (обрыв сети), тогда игрок получает окно и след в журнале.
+testAsync('Незагруженный модуль: в журнале назван файл, а не только функция', async () => {
+  const failed = global.__failedAssetScripts;
+  const modal = getElById(stub, 'appErrorModal');
+  const fnName = 'goToPartyQuizSetup';
+  const originalFn = global[fnName];
+  const originalLoader = global.loadScriptAgain;
+  const savedLog = global.localStorage.getItem('couple-game-error-log-v1');
+  global[fnName] = undefined; // в vm-контексте delete запрещён, typeof достаточно
+  failed.add('https://bobah1988.github.io/Love-play/games/party-quiz.js?v=20261022v');
+  global.loadScriptAgain = () => Promise.resolve(false); // файл не пришёл и в повтор
+  try {
+    global.callGameEntry(fnName);
+    await new Promise(resolve => setImmediate(resolve));
+    const logged = JSON.parse(global.localStorage.getItem('couple-game-error-log-v1') || '[]');
+    const entry = logged.find(e => (e.message || '').includes(fnName));
+    assert(!!entry, 'в журнале должна быть запись о незагруженном модуле');
+    assert(/games\/party-quiz\.js/.test((entry && entry.message) || ''),
+      `запись должна называть файл, получено: «${(entry && entry.message) || ''}»`);
+    assert(modal && modal.classList.contains('show'),
+      'неудачная догрузка должна закончиться понятным окном, а не пустотой');
+  } finally {
+    failed.clear();
+    global[fnName] = originalFn;
+    global.loadScriptAgain = originalLoader;
+    if (savedLog === null) global.localStorage.removeItem('couple-game-error-log-v1');
+    else global.localStorage.setItem('couple-game-error-log-v1', savedLog);
+    if (modal) modal.classList.remove('show');
+  }
+});
+
+// Неудачная догрузка снова пополняет список упавших файлов. Если бы повторный
+// вызов callGameEntry снова запускал догрузку, цепочка крутилась бы вечно.
+test('Повтор внутри цепочки догрузки не запускает вторую попытку', () => {
+  const failed = global.__failedAssetScripts;
+  const modal = getElById(stub, 'appErrorModal');
+  const fnName = 'goToQuizSetup';
+  const originalFn = global[fnName];
+  const originalLoader = global.loadScriptAgain;
+  let loads = 0;
+  global[fnName] = undefined; // в vm-контексте delete запрещён, typeof достаточно
+  failed.add('https://bobah1988.github.io/Love-play/games/quiz.js?v=20261022v');
+  global.loadScriptAgain = ()=>{ loads++; return Promise.resolve(false); };
+  try {
+    global.callGameEntry(fnName, false);
+    assert(loads === 0,
+      `при запрете повтора догрузка запускаться не должна, запусков: ${loads}`);
+    assert(modal && modal.classList.contains('show'),
+      'без догрузки игрок должен получить понятное окно, а не пустоту');
+  } finally {
+    failed.clear();
+    global[fnName] = originalFn;
+    global.loadScriptAgain = originalLoader;
+    if (modal) modal.classList.remove('show');
+  }
+});
+
 // Ложное «Доступна новая версия» сразу после обновления. Сценарий повторяет
 // то, что делал браузер: ставил в waiting копию worker'а с тем же байткодом
 // (причина — query-версия в register()), из-за чего плашка всплывала второй
