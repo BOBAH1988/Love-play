@@ -3129,6 +3129,21 @@ function checkKnowMoreZones() {
   check('удаление отметки сохраняется в прогрессе',
     /log\.splice\(index, 1\);[\s\S]{0,80}?saveState\(\);/.test(historyBody),
     'после удаления нет saveState() — правка потеряется при перезагрузке страницы');
+
+  // Крестик должен читаться как «удаление» и на тёмном фоне быть виден сразу,
+  // а не только после наведения. Тон тот же, что у «опасных» действий
+  // (.btn-pause): rgb(255,99,110). Проверяем, что серый/белый не вернулся.
+  const css = read('styles/app.css');
+  const delRule = css.slice(css.indexOf('.know-more-item-del{'),
+    css.indexOf('#card .card-timer'));
+  check('крестик удаления красный, а не серый',
+    /color:rgba\(255,99,110/.test(delRule) &&
+      !/color:rgba\(255,255,255/.test(delRule),
+    'крестик снова серый или белый — на тёмном фоне он не читается как удаление');
+  check('у крестика есть состояния наведения и нажатия',
+    /\.know-more-item-del:hover\{[^}]*background:rgba\(255,99,110/.test(css) &&
+      /\.know-more-item-del:active\{[^}]*background:rgba\(255,99,110/.test(css),
+    'у крестика нет красной заливки при наведении/нажатии — нажатие не читается как действие');
 }
 
 

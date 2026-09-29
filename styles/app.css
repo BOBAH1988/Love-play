@@ -1700,17 +1700,24 @@
   /* Строка накопительного списка с крестиком удаления. Раньше строки склеивались
      через <br> в одном know-more-row-text, и отдельную отметку убрать было
      нечем. Теперь каждая отметка — свой блок know-more-item, а крестик — кнопка
-     на всю высоту строки (минимальная цель нажатия — 28×28 px). */
+     на всю высоту строки (минимальная цель нажатия — 28×28 px).
+
+     Цвет — красный по решению владельца: крестик стирает, а не открывает, и на
+     тёмном фоне он обязан читаться сразу, а не после наведения. Взят тот же
+     оттенок, что у «опасных» действий (.btn-pause, строки выше):
+     rgb(255,99,110) — тот же красный, что в приложении уже читается как
+     «осторожно/удалить». В покое он приглушён (чтобы не спорить с текстом
+     отметки), на наведении светлеет, при нажатии заливается. */
   .know-more-item{ display:flex; align-items:flex-start; gap:8px; }
   .know-more-item + .know-more-item{ margin-top:6px; }
   .know-more-item-text{ flex:1 1 auto; min-width:0; word-break:break-word; }
   .know-more-item-del{
-    flex:0 0 auto; background:transparent; border:0; color:rgba(255,255,255,.45);
+    flex:0 0 auto; background:transparent; border:0; color:rgba(255,99,110,.75);
     font-size:15px; line-height:1; cursor:pointer; padding:0; width:28px; height:28px;
     margin:-4px -4px 0 0; border-radius:8px; transition:color .15s, background .15s;
   }
-  .know-more-item-del:hover{ color:#fff; background:rgba(255,255,255,.12); }
-  .know-more-item-del:active{ background:rgba(255,94,142,.28); }
+  .know-more-item-del:hover{ color:#ff8f9a; background:rgba(255,99,110,.16); }
+  .know-more-item-del:active{ color:#fff; background:rgba(255,99,110,.34); }
   /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт
      и "Старт") — тоже рассчитан на светлый фон, на тёмном был почти невидим. */
   #card .card-timer{ border-top-color:rgba(255,255,255,.18); }
