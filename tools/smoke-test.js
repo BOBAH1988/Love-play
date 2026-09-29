@@ -4376,34 +4376,62 @@ test('«Узнай больше»: в партии есть зоны всех т
   }
 });
 
-// Зона с полем body принадлежит только одному из партнёров, поэтому на ходу
-// «Она» зона «Его тело» неуместна (и наоборот). Проверяем все три режима.
-test('«Узнай больше»: зона соответствует тому, кто на ходу исследует', () => {
+// Зона с полем body принадлежит тому, кого ИССЛЕДУЮТ, а не тому, кто
+// исследует: исследователь кладёт руки на другого. Режим «Он исследует» →
+// трогают женщину → зоны «Её тело». Здесь намеренно проверяется именно это
+// направление: путаница «кто трогает» с «кого трогают» — самый естественный
+// баг в этой механике, он уже возникал (в режиме «Он» выпадали зоны
+// «Его тело», то есть мужчине задания про его собственное тело).
+test('«Узнай больше»: зона соответствует тому, кого исследуют, а не исследователю', () => {
   const saved = knowMoreBackup();
   const savedMode = state.knowMoreMode;
+  const zoneBodyOf = (id)=>{
+    const z = knowMoreZoneById(id);
+    return z ? (z.body || 'common') : null;
+  };
   try {
     [[KNOW_MORE_MODE.ALTERNATE, 'по очереди'], [KNOW_MORE_MODE.HE, 'Он'], [KNOW_MORE_MODE.SHE, 'Она']].forEach(([mode, label])=>{
       state.knowMoreMode = mode;
       state.knowMoreStarter = 0;
-      // Партий много: зона выбирается случайно внутри уровня, поэтому разовая
-      // проверка могла бы случайно пройти на старой (сломанной) механике.
       let mismatches = 0;
       let sample = '';
       for(let game = 0; game < 200; game++){
         const queue = buildKnowMoreQueue();
         queue.forEach((id, step)=>{
-          const zone = knowMoreZoneById(id);
-          if(!zone || !zone.body) return;
-          const explorer = knowMoreExplorerAtStep(step, mode, state.knowMoreStarter);
-          if(zone.body !== (explorer === 0 ? 'he' : 'she')){
+          const body = zoneBodyOf(id);
+          if(!body || body === 'common') return;
+          const receiver = 1 - knowMoreExplorerAtStep(step, mode, state.knowMoreStarter);
+          const expected = receiver === 0 ? 'he' : 'she';
+          if(body !== expected){
             mismatches++;
-            if(!sample) sample = `шаг ${step}, зона «${zone.name}» (${zone.body}), исследует игрок ${explorer}`;
+            if(!sample){
+              const zone = knowMoreZoneById(id);
+              sample = `шаг ${step}, зона «${zone.name}» (${body}), а трогают ${receiver === 0 ? 'мужчину' : 'женщину'}`;
+            }
           }
         });
       }
       assert(mismatches === 0,
-        `в режиме «${label}» зона должна принадлежать исследующему, расхождений: ${mismatches}${sample ? ' — ' + sample : ''}`);
+        `в режиме «${label}» зона должна быть у того, кого исследуют, расхождений: ${mismatches}${sample ? ' — ' + sample : ''}`);
     });
+
+    // Направление проверяем явно, а не только «несовпадений нет»: в режиме
+    // «Он исследует» не должна выпадать НИ ОДНА зона «Его тело», и наоборот.
+    state.knowMoreMode = KNOW_MORE_MODE.HE;
+    state.knowMoreStarter = 0;
+    let wrongInHe = 0;
+    for(let game = 0; game < 300; game++){
+      buildKnowMoreQueue().forEach(id=>{ if(zoneBodyOf(id) === 'he') wrongInHe++; });
+    }
+    assert(wrongInHe === 0,
+      `в режиме «Он исследует» трогают женщину, зон «Его тело» быть не должно, найдено ${wrongInHe}`);
+    state.knowMoreMode = KNOW_MORE_MODE.SHE;
+    let wrongInShe = 0;
+    for(let game = 0; game < 300; game++){
+      buildKnowMoreQueue().forEach(id=>{ if(zoneBodyOf(id) === 'she') wrongInShe++; });
+    }
+    assert(wrongInShe === 0,
+      `в режиме «Она исследует» трогают мужчину, зон «Её тело» быть не должно, найдено ${wrongInShe}`);
   } finally {
     state.knowMoreMode = savedMode;
     Object.assign(state, saved);
