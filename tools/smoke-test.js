@@ -4582,20 +4582,31 @@ test('«Узнай больше»: экран настройки — режим�
     'правила должны быть в хабе «Правила игр»');
 });
 
-test('«Узнай больше»: три режима, «По очереди» — первая и по умолчанию', () => {
+// Порядок плашек по решению владельца: сначала оба «одного партнёра»
+// («Он», «Она»), «По очереди» — в конце. Отдельно проверяем, что перестановка
+// не сломала значение по умолчанию: оно задаётся константой, а не позицией
+// в списке, иначе у игрока сохранённой партией поменялся бы режим.
+test('«Узнай больше»: порядок режимов «Он», «Она», «По очереди»', () => {
   const prev = state.knowMoreMode;
   try {
     const list = knowMoreModeList();
     assert(list.length === 3, `должно быть три режима, а ${list.length}`);
-    assert(list[0].value === KNOW_MORE_MODE.ALTERNATE,
-      'первым должен идти режим «По очереди»');
-    assert(list.map(m => m.label).join(',') === 'По очереди,Он,Она',
+    assert(list.map(m => m.label).join(',') === 'Он,Она,По очереди',
       `подписи режимов: ${list.map(m => m.label).join(',')}`);
+    assert(list.map(m => m.value).join(',') === '1,2,0',
+      `значения режимов по порядку: ${list.map(m => m.value).join(',')}`);
+    // Значение по умолчанию не зависит от позиции в списке.
     state.knowMoreMode = 0;
     assert(getKnowMoreMode() === KNOW_MORE_MODE.ALTERNATE, 'по умолчанию «По очереди»');
     state.knowMoreMode = 7;
     assert(getKnowMoreMode() === KNOW_MORE_MODE.ALTERNATE,
       'неизвестное значение должно давать «По очереди», а не ломать партию');
+    // Режим, сохранённый игроком, читается тем же значением, что и раньше:
+    // перестановка не должна была перенумеровать значения.
+    state.knowMoreMode = 1;
+    assert(getKnowMoreMode() === KNOW_MORE_MODE.HE, 'сохранённый режим 1 остался «Он»');
+    state.knowMoreMode = 2;
+    assert(getKnowMoreMode() === KNOW_MORE_MODE.SHE, 'сохранённый режим 2 остался «Она»');
   } finally {
     state.knowMoreMode = prev;
   }
