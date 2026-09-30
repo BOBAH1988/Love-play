@@ -4430,7 +4430,11 @@ test('«Пройди тест»: каждый из десяти тестов п�
     global.fadeSwapEl = (id, render) => render(getElById(stub, id));
     state.autoSpeak = false;
     state.soloTestHistory = [];
-    assert(SOLO_TESTS.length === 10, `в игре должно быть 10 тестов, а ${SOLO_TESTS.length}`);
+    // Число тестов не зашито: сверяем список с фактическими наборами вопросов —
+    // тест в data-файле без записи в SOLO_TESTS (или наоборот) должен падать.
+    assert(SOLO_TESTS.length === Object.keys(SOLO_TEST_ITEMS).length,
+      `тестов в списке ${SOLO_TESTS.length}, а наборов вопросов ${Object.keys(SOLO_TEST_ITEMS).length} — они должны совпадать`);
+    assert(SOLO_TESTS.length >= 10, `в игре должно быть не меньше 10 тестов, а ${SOLO_TESTS.length}`);
     SOLO_TESTS.forEach(testDef => {
       state.soloTestType = testDef.id;
       const items = soloTestItems();
@@ -4778,7 +4782,7 @@ test('«Пройди тест»: экран настройки, «Пройден
     };
     goToSoloTestSetup();
     document.createElement = originalCreate;
-    assert(tiles === 10, `в блоке «Тесты» должно быть 10 плашек, а ${tiles}`);
+    assert(tiles === SOLO_TESTS.length, `в блоке «Тесты» должно быть ${SOLO_TESTS.length} плашек, а ${tiles}`);
     assert(getElById(stub, 'soloTestSetup').classList.contains('active'), 'должен открыться экран настройки');
     assert(active().length === 1, `активным должен быть ровно один экран, а ${active().length}`);
 
