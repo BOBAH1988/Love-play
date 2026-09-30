@@ -1195,6 +1195,25 @@ function checkStyles(html) {
           ? 'вопрос и текст карточки должны быть белыми на синем фоне'
           : 'в standalone не должно быть отдельного переопределения #soloQuizCard');
 
+    // Карточка «Пройди тест» (для одного) — тот же ярко-синий градиент, что
+    // у «Викторины» из того же раздела. По просьбе владельца: игра показывала
+    // на карточке вопрос с вариантами ответа, но оставалась базовой светлой
+    // .card, то есть выглядела «без стиля и фона». Проверяем, что фон есть и
+    // что отдельного переопределения в standalone не появилось: правило
+    // #id ... .znayu-answer-btn для карточки запрещено, а перекраска самой
+    // карточки в standalone уже ловилась выше для «Викторины».
+    const soloTestUsesBrightBlue = /#soloTestCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2f80ed,\s*#1557c0\s+55%,\s*#08275f\)/.test(cssWithoutComments);
+    const soloTestHasWhiteText = /#soloTestCard\s*\{[^}]*color:\s*#fff;/.test(cssWithoutComments) &&
+      /#soloTestCard\s+\.znayu-question-text\s*\{[^}]*color:\s*#fff;/.test(cssWithoutComments);
+    const soloTestPwaCardStyle = /pwa-standalone[^{}]*#soloTestCard|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#soloTestCard/.test(cssWithoutComments);
+    check('фон карточки «Пройди тест» — как у «Викторины» для одного',
+      soloTestUsesBrightBlue && soloTestHasWhiteText && !soloTestPwaCardStyle,
+      !soloTestUsesBrightBlue
+        ? 'ожидается градиент #2f80ed → #1557c0 → #08275f для #soloTestCard'
+        : !soloTestHasWhiteText
+          ? 'вопрос и текст карточки должны быть белыми на синем фоне'
+          : 'в standalone не должно быть отдельного переопределения #soloTestCard');
+
     // Детская «Викторина» и витрина «Магазина» используют единый
     // тёмно-бирюзовый фон группы, одинаковый в браузере и PWA. Standalone
     // не должен перекрашивать карточки детей отдельными правилами.
