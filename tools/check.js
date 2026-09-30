@@ -3246,7 +3246,7 @@ function checkKnowMoreZones() {
   // набор иконок ОДИН на всю игру (шкала оценок, окно итогов и список): иначе
   // одна и та же оценка выглядела бы на разных экранах по-разному.
   const scaleIcons = [...game.matchAll(/\{ score: (\d+), icon: '([^']+)'/g)].map(m => ({ score: Number(m[1]), icon: m[2] }));
-  const mapIcons = ['💗', '😊', '🤍', '⛔'].filter(ic =>
+  const mapIcons = ['💗', '😊', '💙', '⛔'].filter(ic =>
     new RegExp(`row\\('${ic}',`).test(game.slice(game.indexOf('function knowMoreMapHtml'),
       game.indexOf('function finishKnowMoreGame'))));
   check('у каждой оценки в шкале есть своя иконка',
