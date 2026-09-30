@@ -1718,6 +1718,37 @@
   }
   .know-more-item-del:hover{ color:#ff8f9a; background:rgba(255,99,110,.16); }
   .know-more-item-del:active{ color:#fff; background:rgba(255,99,110,.34); }
+  /* Группы отметок в «Исследованных». Отметок становится много, и плоский
+     список нечитаем, поэтому они собраны по областям тела (KNOW_MORE_GROUPS) в
+     сворачиваемые секции. По умолчанию свёрнуты: сначала видны заголовки с
+     количеством и сводкой оценок, разворачивается только нужная область.
+     Схлопывание/раскрытие — тем же приёмом, что у «Резервной копии» и
+     сворачиваемых списков игр (.field-collapsible + .section-open). */
+  .know-more-group{ margin-top:8px; }
+  .know-more-group-head{
+    display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; padding:9px 11px; color:#fff; font-size:14px; font-weight:700;
+    cursor:pointer; transition:background .15s, border-color .15s;
+  }
+  .know-more-group.open > .know-more-group-head{
+    background:rgba(255,94,142,.16); border-color:var(--accent);
+  }
+  .know-more-group-title{ flex:1 1 auto; min-width:0; }
+  .know-more-group-sum{
+    flex:0 1 auto; font-size:11px; font-weight:600; color:#e8c9dd;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;
+  }
+  .know-more-group-count{
+    flex:0 0 auto; min-width:22px; height:22px; padding:0 6px; border-radius:11px;
+    background:rgba(255,255,255,.12); font-size:11px; font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .know-more-group.open > .know-more-group-head .know-more-group-count{
+    background:var(--accent); color:#2b0f2e;
+  }
+  .know-more-group-body{ display:none; padding:8px 2px 2px; }
+  .know-more-group.open > .know-more-group-body{ display:block; }
   /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт
      и "Старт") — тоже рассчитан на светлый фон, на тёмном был почти невидим. */
   #card .card-timer{ border-top-color:rgba(255,255,255,.18); }

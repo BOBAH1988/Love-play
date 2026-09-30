@@ -3193,6 +3193,54 @@ function checkKnowMoreZones() {
       /class="toggle-row"[^>]*>\s*<button[^>]*id="knowMoreHistoryBtn"/.test(html) &&
       !/class="btn /.test(histBtn[0]),
     'кнопка «Исследованные» должна быть .toggle-pill внутри .toggle-row — иначе она выше остальных кнопок-историй');
+  // Группировка отметок в «Исследованных». Плоский список нечитаем, когда
+  // отметок много; разложение по областям тела и сворачивание — требование
+  // владельца. Проверяем и разметку, и то, что схлопывание не пропало.
+  // Проверяем строго: и разметку с aria-expanded и обработчиком нажатия, и обе
+  // половины схлопывания в CSS (закрыта по умолчанию + раскрыта при .open).
+  // Раньше здесь стояло одно /data-knowmore-group=/, и удаление схлопывания
+  // проверку не роняло — группы просто оставались бы раскрытыми все разом.
+  const appCss = read('styles/app.css');
+  const collapsedClosed = /\.know-more-group-body\{[^}]*display:none;/.test(appCss);
+  const collapsedOpen = /\.know-more-group\.open > \.know-more-group-body\{[^}]*display:block;/.test(appCss);
+  check('отметки «Исследованных» сгруппированы в сворачиваемые секции',
+    /function knowMoreGroupOf\(zone\)\{/.test(game) &&
+      /function toggleKnowMoreGroup\(openKey\)\{/.test(game) &&
+      /class="know-more-group-head" data-knowmore-group=/.test(game) &&
+      /aria-expanded="\$\{isOpen \? 'true' : 'false'\}"/.test(game) &&
+      /querySelectorAll\('\[data-knowmore-group\]'\)[\s\S]{0,240}?toggleKnowMoreGroup\(btn\.dataset\.knowmoreGroup\)/.test(game) &&
+      // Обработчик обязан перерисовывать экран: иначе группа получит класс open в
+      // state, а на экране останется свёрнутой — «нажал, ничего не произошло».
+      /toggleKnowMoreGroup\(btn\.dataset\.knowmoreGroup\);[\s\S]{0,160}?goToKnowMoreHistory\(\);/.test(game) &&
+      collapsedClosed && collapsedOpen,
+    'в «Исследованных» нужны сворачиваемые секции: разметка с aria-expanded, обработчик нажатия и обе половины схлопывания в CSS (display:none и display:block при .open)');
+  check('состояние раскрытых групп сохраняется в прогрессе',
+    /knowMoreOpen:\[\]/.test(read('games/core.js')) &&
+      /state\.knowMoreOpen = \[\];/.test(read('games/core.js')),
+    'в state нет knowMoreOpen или он не сбрасывается в performFullReset');
+  // Ни одна часть тела из колоды не должна выпасть в «Другие зоны»: иначе
+  // часть отметок окажется в безымянной куче и раскладка потеряет смысл.
+  // Разбираем parts:[] именно как списки значений: ищем в теле KNOW_MORE_GROUPS
+  // вхождения 'Часть' и отмечаем покрытой. Простая проверка подстроки
+  // groupsBody.includes(`'${part}'`) врёт, если название части совпадает с
+  // названием группы или встречается в комментарии.
+  const cardParts = [...new Set([...cards.matchAll(/part:\s*'([^']+)'/g)].map(m => m[1]))];
+  // Убираем ТОЛЬКО комментарии. Попытка вырезать ещё и строки с title съедала
+  // весь объект группы вместе с parts — и проверка видела ноль покрытых частей.
+  const groupsBodyOnly = km.slice(km.indexOf('const KNOW_MORE_GROUPS = ['),
+    km.indexOf('const KNOW_MORE_GROUP_OTHER'))
+    .replace(/\/\/[^\n]*/g, '');
+  // Значения частей — простые слова в одинарных кавычках, регулярка с экранированием
+  // тут не нужна: ищем литерал 'Часть' внутри блока parts:[…].
+  const listedParts = new Set();
+  for (const m of groupsBodyOnly.matchAll(/parts:\s*\[([^\]]*)\]/g)) {
+    for (const q of m[1].matchAll(/'([^']+)'/g)) listedParts.add(q[1]);
+  }
+  const ungrouped = cardParts.filter(part => !listedParts.has(part));
+  check('каждая часть тела из колоды отнесена к группе',
+    ungrouped.length === 0,
+    `не отнесены к группам: ${ungrouped.join(', ')} — такие зоны попадут в «Другие зоны»`);
+
   check('поле knowMoreTool есть в состоянии и сбрасывается общим сбросом',
     /knowMoreTool:0/.test(read('games/core.js')) &&
       /state\.knowMoreTool = 0;/.test(read('games/core.js')),

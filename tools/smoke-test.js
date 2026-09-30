@@ -4832,6 +4832,90 @@ test('«Узнай больше»: для каждой зоны есть под�
     'у каждой зоны должна остаться ручная подсказка how');
 });
 
+// Отметок становится много, и плоский список нечитаем: в «Исследованных» они
+// собраны по областям тела в сворачиваемые группы. Проверяем и раскладку, и то,
+// что раскрытие/сворачивание по нажатию работает и переживает перерисовку.
+test('«Узнай больше»: отметки сгруппированы по областям тела и сворачиваются', () => {
+  const saved = knowMoreBackup();
+  const list = getElById(stub, 'knowMoreHistoryList');
+  const savedOpen = JSON.stringify(state.knowMoreOpen);
+  const prevTool = state.knowMoreTool;
+  try {
+    // Раскладка: каждая зона колоды обязана попасть ровно в одну группу.
+    const counted = new Map();
+    KNOW_MORE_ZONES.forEach(z=>{
+      const g = knowMoreGroupOf(z);
+      assert(g && typeof g.key === 'string' && g.title,
+        `зона «${z.name}» не отнесена ни к одной группе`);
+      counted.set(g.key, (counted.get(g.key) || 0) + 1);
+    });
+    const total = [...counted.values()].reduce((a, b)=>a + b, 0);
+    assert(total === KNOW_MORE_ZONES.length,
+      `в группах должно быть ${KNOW_MORE_ZONES.length} зон, а разложено ${total}`);
+    // «Другие зоны» — запасная корзина: она обязана быть пустой, иначе раскладка
+    // потеряла смысл и половина зон лежит в безымянной куче.
+    const other = KNOW_MORE_ZONES.filter(z=>knowMoreGroupOf(z).key === 'other');
+    assert(other.length === 0,
+      `в «Другие зоны» попали нераскладываемые части: ${[...new Set(other.map(z=>z.part))].join(', ')}`);
+    assert(KNOW_MORE_GROUPS.length >= 5 && KNOW_MORE_GROUPS.length <= 10,
+      `групп должно быть 5–10 для удобной ориентировки, а ${KNOW_MORE_GROUPS.length}`);
+
+    // Отрисовка: отметки из разных областей попадают в разные группы.
+    state.knowMoreOpen = [];
+    state.knowMoreTool = 0;
+    // Запястье (Руки) и Пенис (Интимная зона) — разные группы.
+    state.knowMoreLog = [
+      { zoneId: 1, score: 3, receiver: 0, tool: 0, date: 1 },  // Руки
+      { zoneId: 39, score: 2, receiver: 0, tool: 0, date: 2 }, // Интимная зона
+      { zoneId: 2, score: 1, receiver: 0, tool: 0, date: 3 },  // Голова
+    ];
+    goToKnowMoreHistory();
+    const html = list ? list.innerHTML : '';
+    const heads = html.match(/data-knowmore-group="([^"]+)"/g) || [];
+    assert(heads.length === 3,
+      `должно быть три раскрываемые группы, найдено заголовков: ${heads.length}`);
+    assert(/Руки, локти и подмышки/.test(html) && /Интимная зона/.test(html) && /Голова и лицо/.test(html),
+      `в списке должны быть все три области, получено: ${html.slice(0, 300)}`);
+    // Порядок групп — сверху вниз по телу: голова идёт раньше рук и интимной зоны.
+    assert(html.indexOf('Голова и лицо') < html.indexOf('Руки, локти и подмышки')
+      && html.indexOf('Руки, локти и подмышки') < html.indexOf('Интимная зона'),
+      'группы должны идти в анатомическом порядке: голова → руки → интимная зона');
+    // По умолчанию свёрнуты, но видно сводку и счётчик.
+    assert(!/class="know-more-group open"/.test(html), 'по умолчанию все группы должны быть свёрнуты');
+    assert(/aria-expanded="false"/.test(html), 'у свёрнутой группы должен стоять aria-expanded="false"');
+    assert(/know-more-group-sum/.test(html) && /Очень приятно 1/.test(html),
+      'в заголовке группы нужна сводка оценок, чтобы видеть, куда смотреть');
+
+    // Раскрытие по нажатию: состояние меняется и попадает в сохранение.
+    state.knowMoreOpen = [];
+    goToKnowMoreHistory();
+    assert(toggleKnowMoreGroup('0:head') === true, 'первое нажатие должно раскрывать группу');
+    assert(state.knowMoreOpen.length === 1 && state.knowMoreOpen[0] === '0:head',
+      `раскрытая группа должна сохраниться, а в state: ${JSON.stringify(state.knowMoreOpen)}`);
+    goToKnowMoreHistory();
+    const htmlOpen = list ? list.innerHTML : '';
+    assert(/class="know-more-group open"/.test(htmlOpen), 'раскрытая группа должна быть видна после перерисовки');
+    assert(/aria-expanded="true"/.test(htmlOpen), 'у раскрытой группы должен стоять aria-expanded="true"');
+    assert(htmlOpen.indexOf('section-toggle-arrow section-open') >= 0,
+      'у раскрытой группы стрелка должна быть повёрнута');
+    // Повторное нажатие сворачивает.
+    toggleKnowMoreGroup('0:head');
+    assert(state.knowMoreOpen.length === 0, 'повторное нажатие должно сворачивать группу');
+    goToKnowMoreHistory();
+    assert(!/class="know-more-group open"/.test((list ? list.innerHTML : '')),
+      'после сворачивания открытых групп быть не должно');
+    // У каждого партнёра своя раскладка: группа «Него» не открывает группу «Неё».
+    state.knowMoreOpen = [];
+    toggleKnowMoreGroup('0:head');
+    assert(!isKnowMoreGroupOpen('1:head'),
+      'раскрытая группа одного партнёра не должна открывать группу другого');
+  } finally {
+    state.knowMoreOpen = JSON.parse(savedOpen || '[]');
+    state.knowMoreTool = prevTool;
+    Object.assign(state, saved);
+  }
+});
+
 test('«Узнай больше»: в режимах «Он»/«Она» исследует только один партнёр', () => {
   const prevMode = state.knowMoreMode;
   const prevStep = state.knowMoreStep;

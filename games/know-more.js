@@ -143,6 +143,60 @@ function knowMoreZoneLabel(zone){
   if(!zone) return '';
   return zone.body ? `${zone.name} (${zone.body === 'he' ? 'Он' : 'Она'})` : zone.name;
 }
+// ГРУППИРОВКА ОТМЕТОК. В колоде 17 разных значений поля part («Ноги», «Живот»,
+// «Ключицы», «Локти»…), и в «Исследованных» такой список невозможно читать:
+// при двух-трёх партиях это строка, а при двадцати — простыня без структуры.
+// Поэтому отметки собираются в 7 групп по областям тела, в порядке сверху вниз:
+// голова → плечи/спина/грудь → живот и бок → руки → ноги → всё тело → интимная
+// зона. Порядок групп и есть главная подсказка для ориентировки: он совпадает с
+// анатомией, поэтому «ниже по списку» = «ниже на теле».
+//
+// Ключи латинские и стабильные: они попадают в state.knowMoreOpen (какая группа
+// раскрыта), поэтому переименование key сбросило бы у игрока раскрытые секции.
+// Зона с неизвестной частью попадает в «Другие зоны» — не пропадает.
+const KNOW_MORE_GROUPS = [
+  { key:'head',     title:'Голова и лицо',            parts:['Голова', 'Лицо', 'Уши', 'Волосы'] },
+  { key:'torso',    title:'Плечи, спина и грудь',    parts:['Плечи', 'Спина', 'Ключицы', 'Поясница', 'Грудь'] },
+  { key:'belly',    title:'Живот и бок',              parts:['Живот', 'Бок'] },
+  { key:'arms',     title:'Руки, локти и подмышки',   parts:['Руки', 'Локти', 'Подмышки'] },
+  { key:'legs',     title:'Ноги',                     parts:['Ноги'] },
+  { key:'whole',    title:'Всё тело',                 parts:['Тело'] },
+  { key:'intimate', title:'Интимная зона',            parts:['Интимная зона'] },
+];
+const KNOW_MORE_GROUP_OTHER = { key:'other', title:'Другие зоны', parts:[] };
+
+// Группа зоны по её part.
+function knowMoreGroupOf(zone){
+  const part = zone && zone.part;
+  const found = KNOW_MORE_GROUPS.find(g => g.parts.indexOf(part) >= 0);
+  return found || KNOW_MORE_GROUP_OTHER;
+}
+// Раскрытые группы. Ключ хранится с индексом партнёра («0:head»), чтобы у
+// каждого своя раскладка: открытая группа у «Него» не открывает такую же у «Неё».
+function knowMoreOpenGroups(){
+  return Array.isArray(state.knowMoreOpen) ? state.knowMoreOpen : [];
+}
+function isKnowMoreGroupOpen(openKey){
+  return knowMoreOpenGroups().indexOf(openKey) >= 0;
+}
+// Раскрывает/сворачивает группу и возвращает её новое состояние: true —
+// раскрыта. Возврат нужен вызывающему (в том числе тесту), а не только для
+// красоты: перерисовка экрана идёт по факту нажатия.
+function toggleKnowMoreGroup(openKey){
+  const open = knowMoreOpenGroups();
+  const at = open.indexOf(openKey);
+  if(at >= 0){
+    open.splice(at, 1);
+    state.knowMoreOpen = open;
+    saveState();
+    return false;
+  }
+  open.push(openKey);
+  state.knowMoreOpen = open;
+  saveState();
+  return true;
+}
+
 // Подсказка для ВЫБРАННОГО способа. В данных у каждой зоны есть how (руки) и
 // howByTool {1,2,3} — по варианту на каждый способ из настройки «Чем
 // исследуют». Если варианта нет (старая колода), отдаём обычную подсказку:
@@ -277,24 +331,64 @@ function goToKnowMoreHistory(){
       + `<span class="know-more-item-text">${text}</span>`
       + `<button type="button" class="know-more-item-del" data-knowmore-del="${index}" `
       + `aria-label="Удалить: ${text}">✕</button></span>`;
+    // Короткая сводка в заголовке группы: «Приятно 2 · Стоп 1». С ней видно,
+    // где искать, не раскрывая все секции подряд.
+    const scoreSum = (items)=>{
+      const parts = [];
+      KNOW_MORE_SCALE.forEach(s=>{
+        const n = items.filter(it=>it.score === s.score).length;
+        if(n > 0) parts.push(`${s.text} ${n}`);
+      });
+      return parts.length ? parts.join(' · ') : '—';
+    };
     wrap.innerHTML = players.map((name, idx)=>{
-      const rows = [];
+      // Отметки этого партнёра, разложенные по группам в порядке «сверху вниз».
+      const groups = KNOW_MORE_GROUPS.concat([KNOW_MORE_GROUP_OTHER]).map(group=>({ group, items:[] }));
       log.forEach((it, i)=>{
         if(it.receiver !== idx) return;
         const zone = knowMoreZoneById(it.zoneId);
         if(!zone) return;
-        rows.push(lineHtml(`${knowMoreZoneLabel(zone)} — ${knowMoreLogScoreText(it.score)} · ${knowMoreLogToolText(it)}`, i));
+        const bucket = groups.find(b => b.group.key === knowMoreGroupOf(zone).key);
+        bucket.items.push({ it, zone, logIndex:i });
       });
+      const filled = groups.filter(b => b.items.length > 0);
+      const blocks = filled.length ? filled.map(({ group, items })=>{
+        const openKey = `${idx}:${group.key}`;
+        const isOpen = isKnowMoreGroupOpen(openKey);
+        const rows = items.map(({ zone, it, logIndex }) =>
+          lineHtml(`${knowMoreZoneLabel(zone)} — ${knowMoreLogScoreText(it.score)} · ${knowMoreLogToolText(it)}`, logIndex)).join('');
+        return `
+        <div class="know-more-group${isOpen ? ' open' : ''}">
+          <button type="button" class="know-more-group-head" data-knowmore-group="${openKey}"
+                  aria-expanded="${isOpen ? 'true' : 'false'}">
+            <span class="know-more-group-title">${group.title}</span>
+            <span class="know-more-group-sum">${scoreSum(items.map(x=>x.it))}</span>
+            <span class="know-more-group-count">${items.length}</span>
+            <span class="section-toggle-arrow${isOpen ? ' section-open' : ''}">▼</span>
+          </button>
+          <div class="know-more-group-body">${rows}</div>
+        </div>`;
+      }).join('') : '<div class="know-more-row-text">—</div>';
+      const total = filled.reduce((n, b)=>n + b.items.length, 0);
       return `
         <div class="know-more-map">
-          <div class="know-more-map-name">${idx === 0 ? 'Он' : 'Она'} · ${name} — исследовано зон: ${rows.length}</div>
-          <div class="know-more-row"><div class="know-more-row-text">${rows.length ? rows.join('') : '—'}</div></div>
+          <div class="know-more-map-name">${idx === 0 ? 'Он' : 'Она'} · ${name} — исследовано зон: ${total}</div>
+          ${blocks}
         </div>`;
     }).join('');
     wrap.querySelectorAll('[data-knowmore-del]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const idx = parseInt(btn.dataset.knowmoreDel, 10);
         if(!removeKnowMoreLogEntry(idx)) return;
+        playSuccessSound();
+        goToKnowMoreHistory();
+      });
+    });
+    // Раскрытие/сворачивание группы. Перерисовка идёт целиком, чтобы состояние
+    // открытых групп (state.knowMoreOpen) осталось единым источником правды.
+    wrap.querySelectorAll('[data-knowmore-group]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        toggleKnowMoreGroup(btn.dataset.knowmoreGroup);
         playSuccessSound();
         goToKnowMoreHistory();
       });

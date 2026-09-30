@@ -352,11 +352,15 @@ let state = {
   // «Исследованных» было видно, чем именно трогали. Поле появилось позже
   // остальных, поэтому в старых сохранениях его может не быть — тогда
   // getKnowMoreTool() берёт дефолт «Руками».
+  // knowMoreOpen — какие группы отметок раскрыты в «Исследованных», ключи вида
+  // «0:head» (индекс партнёра + группа). Состояние экрана, а не прогресса, но
+  // переживает перезагрузку: иначе после каждого F5 пришлось бы заново
+  // раскрывать нужную область тела.
   // knowMoreHistory — сохранённые карты тела (см. games/know-more.js).
   // knowMoreLog — накопительный список исследованных зон для экрана
   // «Исследованные»: он переживает партию, поэтому знание о том, что уже
   // пробовали, не теряется.
-  knowMoreMode:0, knowMoreStarter:0, knowMoreTool:0, knowMoreQueue:[], knowMoreStep:0, knowMoreMarks:[[],[]], knowMoreHistory:[], knowMoreLog:[],
+  knowMoreMode:0, knowMoreStarter:0, knowMoreTool:0, knowMoreQueue:[], knowMoreStep:0, knowMoreMarks:[[],[]], knowMoreHistory:[], knowMoreLog:[], knowMoreOpen:[],
   // Твистер — приложение только объявляет ходы, поле физическое
   twisterDuration:10,
   // Бизнес игры — список игроков отдельный от "Игры для компании".
@@ -2043,6 +2047,7 @@ function performFullReset(){
   state.knowMoreMode = 0;
   state.knowMoreStarter = 0;
   state.knowMoreTool = 0;
+  state.knowMoreOpen = [];
   state.knowMoreQueue = [];
   state.knowMoreStep = 0;
   state.knowMoreMarks = [[], []];
