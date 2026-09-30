@@ -4602,6 +4602,79 @@ test('«Пройди тест»: итоги наполнены, а «Пройд�
   }
 });
 
+test('«Пройди тест»: результат в «Пройденных» раскрывается по нажатию', () => {
+  // По просьбе владельца: в списке была только строка с названием типа, и по
+  // ней нельзя было понять, что тип значит. Теперь нажатие раскрывает полный
+  // результат — тот же блок, что на экране итогов.
+  const originalFade = global.fadeSwapEl;
+  const saved = soloTestBackup();
+  const list = getElById(stub, 'soloTestHistoryList');
+  const clickIn = (idx, cls) => list._getHandlers().get('click').forEach(({ handler }) => handler({
+    target: { closest: sel => sel === cls ? { dataset: { idx: String(idx) } } : null },
+  }));
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.soloTestHistory = [];
+    state.soloTestOpen = [];
+    // Два прохождения разных тестов — чтобы проверить, что записи
+    // раскрываются независимо и по своей карте.
+    state.soloTestType = 'introversion';
+    startSoloTestGame();
+    const items1 = soloTestItems();
+    for(let i = 0; i < items1.length; i++){ answerSoloTestQuestion(0); advanceSoloTest(); }
+    const firstTitle = state.soloTestResult.title;
+    state.soloTestType = 'love';
+    startSoloTestGame();
+    const items2 = soloTestItems();
+    for(let i = 0; i < items2.length; i++){ answerSoloTestQuestion(0); advanceSoloTest(); }
+    const secondTitle = state.soloTestResult.title;
+    assert((state.soloTestHistory || []).length === 2, `в истории должно быть 2 записи, а ${(state.soloTestHistory || []).length}`);
+
+    goToSoloTestHistory();
+    // До нажатия тело каждой записи скрыто (CSS .solo-test-history-body{display:none}),
+    // а в разметке оно есть всегда — проверяем через класс .open у записи.
+    assert(!/solo-test-history-entry open/.test(list.innerHTML), 'никто не должен быть раскрыт до нажатия');
+    assert(list.innerHTML.includes('solo-test-history-body'), 'в записи должно быть тело с результатом');
+
+    // Раскрываем первую (последнюю по дате) запись.
+    clickIn(0, '.solo-test-history-head');
+    assert(/solo-test-history-entry open/.test(list.innerHTML), 'после нажатия запись должна раскрыться');
+    assert(list.innerHTML.includes('aria-expanded="true"'), 'у раскрытой записи должен стоять aria-expanded="true"');
+    // Содержимое раскрытой записи — полный результат, а не только название.
+    const opened = list.innerHTML;
+    assert(opened.includes('Сильные стороны'), 'в раскрытом результате должны быть сильные стороны');
+    assert(opened.includes('Возможные трудности'), 'в раскрытом результате должны быть возможные трудности');
+    assert(opened.includes('Что попробовать'), 'в раскрытом результате должен быть совет');
+    assert(opened.includes(secondTitle), `в раскрытой записи должен быть её тип «${secondTitle}»`);
+
+    // Повторное нажатие сворачивает.
+    clickIn(0, '.solo-test-history-head');
+    assert(!/solo-test-history-entry open/.test(list.innerHTML), 'повторное нажатие должно свернуть запись');
+
+    // Крестик удаляет и НЕ раскрывает запись (раньше это был единственный
+    // обработчик клика по списку, поэтому порядок веток легко спутать).
+    clickIn(0, '.solo-test-history-del');
+    assert((state.soloTestHistory || []).length === 1, `крестик должен удалить запись, осталось ${(state.soloTestHistory || []).length}`);
+    assert(!/solo-test-history-entry open/.test(list.innerHTML), 'удаление не должно раскрывать оставшиеся записи');
+
+    // Раскрытое состояние переживает переход туда-обратно: игрок не обязан
+    // каждый раз раскрывать заново.
+    clickIn(0, '.solo-test-history-head');
+    exitSoloTestHistory();
+    goToSoloTestHistory();
+    assert(/solo-test-history-entry open/.test(list.innerHTML), 'раскрытая запись должна остаться раскрытой после возврата');
+    assert(list.innerHTML.includes(firstTitle), `в раскрытой записи должен быть её тип «${firstTitle}»`);
+    // Ключ раскрытия — не индекс: после удаления записи он не должен съехать.
+    const openKeys = state.soloTestOpen || [];
+    assert(openKeys.length === 1 && /:\w+$/.test(openKeys[0]),
+      `ключ раскрытия должен быть «дата:id теста», а ${JSON.stringify(openKeys)}`);
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 test('«Пройди тест»: экран настройки, «Пройденные» и стрелка «←»', () => {
   const saved = soloTestBackup();
   const screens = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => document.getElementById(m[1]));

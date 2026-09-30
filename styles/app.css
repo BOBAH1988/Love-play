@@ -3180,6 +3180,28 @@
     display:flex; align-items:center; justify-content:center; padding:0;
   }
   .solo-test-history-del:active{ background:rgba(255,99,110,.3); }
+  /* Раскрытие результата в «Пройденных». Заголовок записи — кнопка на всю
+     ширину (тот же приём, что у групп карты тела в «Узнай больше»): сама
+     строка раскрывается по нажатию, поэтому она должна быть кликабельной
+     целиком, а не только текстом. Тело записи по умолчанию скрыто и показывается
+     у .open — без этого в списке прохождений были бы видны все описания типов
+     сразу, и список перестал бы читаться. */
+  .solo-test-history-head{
+    display:block; width:100%; text-align:left; background:transparent;
+    border:0; padding:0 40px 0 0; color:inherit; font:inherit; cursor:pointer;
+  }
+  .solo-test-history-date{ display:block; }
+  .solo-test-history-text{ display:block; }
+  .solo-test-history-hint{
+    display:block; margin-top:4px;
+    font-size:12px; font-weight:700; color:rgba(255,255,255,.6);
+  }
+  .solo-test-history-entry.open .solo-test-history-hint{ color:#e8c9dd; }
+  .solo-test-history-body{ display:none; }
+  .solo-test-history-entry.open .solo-test-history-body{
+    display:block; margin-top:12px; padding-top:12px;
+    border-top:1px solid rgba(255,255,255,.14); text-align:left;
+  }
   .pmap-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
   .pmap-history-items{ list-style:none; display:flex; flex-direction:column; gap:10px; }
   .pmap-history-items > li + li{ border-top:1px solid rgba(255,255,255,.14); padding-top:10px; }

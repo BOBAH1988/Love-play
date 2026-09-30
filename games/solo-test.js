@@ -263,6 +263,32 @@ function finishSoloTestGame(){
   document.getElementById('soloTestGame').classList.remove('active');
   document.getElementById('soloTestSummary').classList.add('active');
 }
+// Содержимое результата в одном месте: им заполняются и экран итогов, и
+// раскрытая запись в «Пройденных». Дублировать разметку в двух местах было бы
+// верным способом со временем получить разные тексты на этих экранах.
+function soloTestResultBodyHtml(result, typeIcon, typeTitle, stat){
+  return `
+    <div class="solo-test-type">${typeIcon} ${typeTitle}</div>
+    <div class="solo-test-verdict">${result.text || ''}</div>
+    ${stat || ''}
+    ${result.plus ? `<div class="solo-test-plus"><b>Сильные стороны</b>${result.plus}</div>` : ''}
+    ${result.minus ? `<div class="solo-test-minus"><b>Возможные трудности</b>${result.minus}</div>` : ''}
+    ${result.tip ? `<div class="solo-test-tip"><b>Что попробовать</b>${result.tip}</div>` : ''}
+  `;
+}
+// Счётчик для результата: в «types»-тестах — сколько ответов легло на выбранный
+// тип, в «scale»-тестах — сумма баллов по шкале. Вынесено отдельно, потому что
+// нужно и в итогах, и в раскрытой записи истории.
+function soloTestResultStat(result){
+  if(typeof result.count === 'number' && typeof result.total === 'number'){
+    return `<div class="solo-test-stat">Ответов за этот тип: ${result.count} из ${result.total}`
+      + (typeof result.max === 'number' ? ` · чаще всего — ${result.max}` : '') + '</div>';
+  }
+  if(typeof result.sum === 'number' && typeof result.total === 'number'){
+    return `<div class="solo-test-stat">Сумма баллов: ${result.sum} · вопросов: ${result.total}</div>`;
+  }
+  return '';
+}
 function renderSoloTestSummary(){
   const test = soloTestById(state.soloTestType);
   const result = state.soloTestResult || {};
@@ -272,23 +298,8 @@ function renderSoloTestSummary(){
   if(!list) return;
   const typeIcon = result.icon || (test ? test.icon : '🧪');
   const typeTitle = result.title || 'Результат не определён';
-  // Число «N из 10» показываем только там, где оно что-то значит: в
-  // «types»-тестах это счётчик голосов за один тип, в «scale»-тестах — сумма
-  // баллов по шкале. Пустые поля не выводим, чтобы в итогах не было
-  // пустых строк.
-  const stat = (typeof result.count === 'number' && typeof result.total === 'number')
-    ? `<div class="solo-test-stat">Ответов за этот тип: ${result.count} из ${result.total}`
-      + (typeof result.max === 'number' ? ` · чаще всего — ${result.max}` : '') + '</div>'
-    : (typeof result.sum === 'number' && typeof result.total === 'number'
-      ? `<div class="solo-test-stat">Сумма баллов: ${result.sum} · вопросов: ${result.total}</div>` : '');
-  list.innerHTML = `
-    <div class="solo-test-type">${typeIcon} ${typeTitle}</div>
-    <div class="solo-test-verdict">${result.text || ''}</div>
-    ${stat}
-    ${result.plus ? `<div class="solo-test-plus"><b>Сильные стороны</b>${result.plus}</div>` : ''}
-    ${result.minus ? `<div class="solo-test-minus"><b>Возможные трудности</b>${result.minus}</div>` : ''}
-    ${result.tip ? `<div class="solo-test-tip"><b>Что попробовать</b>${result.tip}</div>` : ''}
-  `;
+  const stat = soloTestResultStat(result);
+  list.innerHTML = soloTestResultBodyHtml(result, typeIcon, typeTitle, stat);
   const note = document.getElementById('soloTestSummaryNote');
   if(note) note.textContent = 'Результат сохранён в «Пройденные» — его можно открыть позже.';
 }
@@ -416,6 +427,45 @@ function soloTestHistoryShortText(entry){
   if(r.title && r.icon) return `${r.icon} ${r.title}`;
   return r.title || '';
 }
+// Раскрытые записи «Пройденных». Хранятся по ключу «дата:id теста», а не по
+// индексу: индексы сдвигаются при удалении записи крестиком, и раскрытая
+// строка съезжала бы на соседнюю. Это тот же приём, что у групп карты тела
+// в «Узнай больше» (state.knowMoreOpen).
+function soloTestOpenEntries(){
+  return Array.isArray(state.soloTestOpen) ? state.soloTestOpen : [];
+}
+function soloTestEntryKey(entry){
+  return `${(entry && entry.date) || 0}:${(entry && entry.testId) || ''}`;
+}
+function isSoloTestEntryOpen(entry){
+  return soloTestOpenEntries().indexOf(soloTestEntryKey(entry)) >= 0;
+}
+// Раскрывает/сворачивает запись и возвращает новое состояние: true — раскрыта.
+function toggleSoloTestEntry(entry){
+  const open = soloTestOpenEntries();
+  const key = soloTestEntryKey(entry);
+  const at = open.indexOf(key);
+  if(at >= 0){
+    open.splice(at, 1);
+    state.soloTestOpen = open;
+    saveState();
+    return false;
+  }
+  open.push(key);
+  state.soloTestOpen = open;
+  saveState();
+  return true;
+}
+// Полное содержимое сохранённого результата: тот же блок, что на экране итогов.
+// Раньше в списке была только строка с названием типа, и по ней нельзя было
+// понять, что тип значит, — теперь результат раскрывается по нажатию.
+function soloTestEntryBodyHtml(entry){
+  const r = (entry && entry.result) || {};
+  const test = soloTestById((entry && entry.testId) || '');
+  const typeIcon = r.icon || (test ? test.icon : '\U0001f9ea');
+  const typeTitle = r.title || 'Результат не определён';
+  return soloTestResultBodyHtml(r, typeIcon, typeTitle, soloTestResultStat(r));
+}
 function goToSoloTestHistory(){
   const wrap = document.getElementById('soloTestHistoryList');
   if(!wrap) return;
@@ -423,23 +473,41 @@ function goToSoloTestHistory(){
   if(history.length === 0){
     wrap.innerHTML = '<div class="card-text">Пока нет пройденных тестов — пройдите хотя бы один.</div>';
   } else {
-    wrap.innerHTML = history.map((entry, idx)=>`
-      <div class="solo-test-history-entry">
-        <div class="solo-test-history-date">${formatSoloTestDate(entry.date)} · ${entry.testName || 'Тест'}</div>
-        <div class="solo-test-history-text">${soloTestHistoryShortText(entry)}</div>
+    wrap.innerHTML = history.map((entry, idx)=>{
+      const open = isSoloTestEntryOpen(entry);
+      return `
+      <div class="solo-test-history-entry${open ? ' open' : ''}">
+        <button type="button" class="solo-test-history-head" data-idx="${idx}" aria-expanded="${open}">
+          <span class="solo-test-history-date">${formatSoloTestDate(entry.date)} · ${entry.testName || 'Тест'}</span>
+          <span class="solo-test-history-text">${soloTestHistoryShortText(entry)}</span>
+          <span class="solo-test-history-hint">${open ? 'Свернуть' : 'Что это значит'}</span>
+        </button>
+        <div class="solo-test-history-body">${soloTestEntryBodyHtml(entry)}</div>
         <button type="button" class="solo-test-history-del" data-idx="${idx}" aria-label="Удалить результат из пройденных">✕</button>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
   document.getElementById('soloTestSetup').classList.remove('active');
   document.getElementById('soloTestHistory').classList.add('active');
 }
 document.getElementById('soloTestHistoryList').addEventListener('click', (e)=>{
-  const btn = e.target.closest('.solo-test-history-del');
-  if(!btn) return;
-  playErrorSound();
-  state.soloTestHistory.splice(parseInt(btn.dataset.idx, 10), 1);
-  saveState();
+  // Крестик удаления — раньше по нему и только по нему и открывался этот
+  // список, поэтому порядок веток важен: удаление не должно ещё и раскрывать
+  // запись, а нажатие на заголовок — не удалять её.
+  const del = e.target.closest('.solo-test-history-del');
+  if(del){
+    playErrorSound();
+    state.soloTestHistory.splice(parseInt(del.dataset.idx, 10), 1);
+    saveState();
+    goToSoloTestHistory();
+    return;
+  }
+  const head = e.target.closest('.solo-test-history-head');
+  if(!head) return;
+  const entry = (state.soloTestHistory || [])[parseInt(head.dataset.idx, 10)];
+  if(!entry) return;
+  toggleSoloTestEntry(entry);
+  playSuccessSound();
   goToSoloTestHistory();
 });
 function exitSoloTestHistory(){
