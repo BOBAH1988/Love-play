@@ -3442,6 +3442,52 @@ function checkKnowMoreZones() {
 }
 
 
+// Раскрытие результата в «Пройденных» должно вести себя одинаково в обеих
+// играх про тесты — «Пройдите тест» (пары) и «Пройди тест» (один). Обе части
+// сделаны по одному образцу (кнопка-заголовок + скрытое тело), и однажды одна
+// из них разъехалась бы с другой: игрок привыкает, что запись раскрывается, и
+// в другой игре нажатие перестаёт работать. Проверяем инвариант, а не список
+// экранов: обе игры перечислены здесь явно, потому что подписи классов у них
+// свои (compat-test-* и solo-test-*).
+function checkTestHistoryExpand(html) {
+  group('Раскрытие результата в «Пройденных»');
+  const appCss = read('styles/app.css');
+  const core = readCore();
+  // Записи «Пройденных» не лежат в index.html: список собирается в games/*.js
+  // через innerHTML, поэтому разметку ищем в исходнике игры, а не в разметке
+  // приложения.
+  const games = [
+    { name: '«Пройдите тест»', list: 'compatTestHistoryList', prefix: 'compat-test', key: 'compatTestOpen', file: 'games/compat-test.js' },
+    { name: '«Пройди тест»', list: 'soloTestHistoryList', prefix: 'solo-test', key: 'soloTestOpen', file: 'games/solo-test.js' },
+  ];
+  for (const g of games) {
+    const src = read(g.file);
+    const head = new RegExp(`class="${g.prefix}-history-head"`).test(src);
+    const body = new RegExp(`class="${g.prefix}-history-body"`).test(src);
+    check(`${g.name}: запись «Пройденных» раскрывается по нажатию`,
+      head && body,
+      `нужны кнопка-заголовок .${g.prefix}-history-head и тело .${g.prefix}-history-body в списке #${g.list}`);
+    check(`${g.name}: тело записи скрыто и показывается у .open (CSS)`,
+      new RegExp(`\\.${g.prefix}-history-body\\s*\\{[^}]*display:none`).test(appCss)
+        && new RegExp(`\\.${g.prefix}-history-entry\\.open \\.${g.prefix}-history-body\\s*\\{[^}]*display:block`).test(appCss),
+      `без display:none по умолчанию в списке были бы видны все результаты сразу`);
+    check(`${g.name}: раскрытое состояние хранится по ключу, а не по индексу`,
+      new RegExp(`${g.key}\\s*:\\s*\\[\\]`).test(core) || new RegExp(`${g.key}:\\s*\\[\\]`).test(core),
+      `у ${g.key} должен быть дефолт в state: по индексу после удаления записи раскрытой станет соседняя`);
+  }
+  // Крестик удаления и заголовок раскрытия делят один обработчик клика, поэтому
+  // удаление обязано проверяться первым: иначе нажатие на крестик раскрывало бы
+  // запись вместо удаления.
+  for (const g of games) {
+    const src = read(g.file);
+    // Порядок важен: closest по крестику должен встретиться раньше, чем по
+    // заголовку. Ищем прямо в теле обработчика клика по списку.
+    const handlerSrc = new RegExp(`getElementById\\('${g.list}'\\)[\\s\\S]{0,900}?closest\\('\\.${g.prefix}-history-del'\\)[\\s\\S]{0,400}?closest\\('\\.${g.prefix}-history-head'\\)`).test(src);
+    check(`${g.name}: в обработчике списка удаление проверяется раньше раскрытия`, handlerSrc,
+      'иначе нажатие на крестик раскроет запись вместо удаления');
+  }
+}
+
 // Кнопки «Пройденные» в двух играх про тесты: «Пройдите тест» (пары) и
 // «Пройди тест» (один). По просьбе владельца они сделаны ниже — тем же
 // компактным компонентом .toggle-pill, что «Исследованные» и «Пройденные
@@ -3676,6 +3722,7 @@ function main() {
   checkKnowMoreZones();
   checkQuizNoRepeat();
   checkTestHistoryButtons(html);
+  checkTestHistoryExpand(html);
   checkPauseResetOnStart();
   checkExitNavigation();
   checkStyles(html);

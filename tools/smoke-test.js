@@ -2417,6 +2417,80 @@ test('Пройдите тест: все тесты из списка прохо�
   }
 });
 
+test('«Пройдите тест»: результат в «Пройденных» раскрывается по нажатию', () => {
+  // То же, что сделано для «Пройди тест» (один): в списке была только строка с
+  // выводом, и по ней нельзя было понять результат прохождения. Теперь запись
+  // раскрывается по нажатию.
+  const originalFade = global.fadeSwapEl;
+  const saved = {};
+  ['compatTestType', 'compatTestIndex', 'compatTestCurrentPlayer', 'compatTestAnswers',
+   'compatTestResult', 'compatTestHistory', 'compatTestOpen', 'compatTestPaused',
+   'inProgress', 'pausedMode', 'autoSpeak'].forEach(key => { saved[key] = state[key]; });
+  const list = getElById(stub, 'compatTestHistoryList');
+  const clickIn = (idx, cls) => list._getHandlers().get('click').forEach(({ handler }) => handler({
+    target: { closest: sel => sel === cls ? { dataset: { idx: String(idx) } } : null },
+  }));
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.compatTestHistory = [];
+    state.compatTestOpen = [];
+    // Тест на совпадение ответов: в истории должны быть балл и вывод.
+    state.compatTestType = 'comfort';
+    startCompatTestGame();
+    const items = compatTestItems().items.length;
+    for(let player = 0; player < 2; player++){
+      if(player > 0) showCompatTestHandoff();
+      showCompatTestQuestion();
+      for(let i = 0; i < items; i++){ answerCompatTestQuestion(0); advanceCompatTest(); }
+    }
+    const score = state.compatTestResult.score;
+    assert((state.compatTestHistory || []).length === 1, 'результат должен попасть в «Пройденные»');
+
+    goToCompatTestHistory();
+    assert(!/compat-test-history-entry open/.test(list.innerHTML), 'никто не должен быть раскрыт до нажатия');
+    assert(list.innerHTML.includes('compat-test-history-body'), 'в записи должно быть тело с результатом');
+    assert(list.innerHTML.includes(`${score} / 100`), 'в свёрнутой строке должен быть балл');
+
+    clickIn(0, '.compat-test-history-head');
+    assert(/compat-test-history-entry open/.test(list.innerHTML), 'после нажатия запись должна раскрыться');
+    assert(list.innerHTML.includes('aria-expanded="true"'), 'у раскрытой записи должен стоять aria-expanded="true"');
+    const opened = list.innerHTML;
+    assert(new RegExp(`${score}\\s*/\\s*100`).test(opened), 'в раскрытом результате должен быть балл прохождения');
+    assert(opened.includes('compat-test-score-title'), 'в раскрытом результате должен быть заголовок вывода');
+    assert(opened.includes('compat-test-verdict'), 'в раскрытом результате должен быть сам вывод');
+    // Имена партнёров сохраняются вместе с записью и показываются в раскрытии.
+    assert(opened.includes((state.compatTestHistory[0].players || []).join(' и ')),
+      'в раскрытом результате должны быть имена партнёров');
+
+    // Повторное нажатие сворачивает.
+    clickIn(0, '.compat-test-history-head');
+    assert(!/compat-test-history-entry open/.test(list.innerHTML), 'повторное нажатие должно свернуть запись');
+
+    // Крестик удаляет и не раскрывает (порядок веток в обработчике клика).
+    clickIn(0, '.compat-test-history-del');
+    assert((state.compatTestHistory || []).length === 0, 'крестик должен удалить запись');
+    assert(!/compat-test-history-entry open/.test(list.innerHTML), 'удаление не должно раскрывать запись');
+
+    // «На совместимость»: в раскрытии должны быть суммы по чётным и нечётным.
+    state.compatTestType = 'characters';
+    startCompatTestGame();
+    const itemsC = compatTestItems().items.length;
+    for(let player = 0; player < 2; player++){
+      if(player > 0) showCompatTestHandoff();
+      showCompatTestQuestion();
+      for(let i = 0; i < itemsC; i++){ answerCompatTestQuestion(player); advanceCompatTest(); }
+    }
+    goToCompatTestHistory();
+    clickIn(0, '.compat-test-history-head');
+    assert(list.innerHTML.includes('compat-test-sum-row'), 'в раскрытии «На совместимость» должны быть суммы баллов');
+    assert(list.innerHTML.includes('Чётные высказывания'), 'в раскрытии должны быть названия сумм');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 test('Стрелка «←» с экрана настройки «Пройдите тест» ведёт в хаб', () => {
   // Регресс: exitCompatTestSetup() звал exitGame('compatTestSetup'), а тот
   // через returnToEntryScreen() активировал ЗАПОМНЕННУЮ точку входа. А её

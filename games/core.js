@@ -340,6 +340,10 @@ let state = {
   // телефон». Без последнего флага «Продолжить игру» мог вернуть игрока на
   // вопрос, который он уже видел, или на хендофф там, где вопрос не показывали.
   compatTestPaused:null,
+  // compatTestOpen — какие записи «Пройденных» раскрыты (ключи «дата:id теста»).
+  // По индексу нельзя: после удаления записи крестиком индексы сдвигаются,
+  // и раскрытой оказалась бы соседняя строка.
+  compatTestOpen:[],
   // Пройди тест (для одного) — десять личных тестов по 10 вопросов.
   // soloTestAnswers хранит по одному значению на вопрос: для тестов
   // mode:'types' это индекс набравшего больше всего голосов типа, для
@@ -2059,6 +2063,7 @@ function performFullReset(){
   state.compatTestResult = null;
   state.compatTestHistory = [];
   state.compatTestPaused = null;
+  state.compatTestOpen = [];
   // Пройди тест (один) — общий сброс чистит текущую партию и историю
   state.soloTestType = 'personality';
   state.soloTestIndex = 0;

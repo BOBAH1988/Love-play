@@ -378,6 +378,35 @@ function compatDivergences(){
   });
   return { total: items.length, items: out, same: items.length - out.length };
 }
+// Содержимое результата в одном месте: им заполняются и экран итогов, и
+// раскрытая запись в «Пройденных». Дублировать разметку в двух местах — верный
+// способ со временем получить разные тексты на этих экранах. Имена игроков
+// передаются параметром: на экране итогов это текущие имена, а в истории —
+// сохранённые при прохождении (имена могли поменяться).
+function compatTestResultBodyHtml(result, players, diffHtml){
+  const names = Array.isArray(players) ? players : [];
+  if(result.kind === 'characters'){
+    return `
+      <div class="compat-test-verdict">${result.verdict || ''}</div>
+      <div class="compat-test-sums">
+        ${(result.pairs || []).map(p=>`
+          <div class="compat-test-sum-row">
+            <span class="compat-test-sum-name">${p.label}</span>
+            <span class="compat-test-sum-values">${names[0] || 'Первый'}: ${p.a} · ${names[1] || 'Второй'}: ${p.b}</span>
+            <span class="compat-test-sum-diff">разница ${p.diff}</span>
+          </div>
+        `).join('')}
+      </div>
+      ${diffHtml || ''}
+    `;
+  }
+  return `
+    <div class="compat-test-score">${result.score} / 100</div>
+    <div class="compat-test-score-title">${result.title || ''}</div>
+    <div class="compat-test-verdict">${result.verdict || ''}</div>
+    ${diffHtml || ''}
+  `;
+}
 function renderCompatTestSummary(){
   const test = compatTestById(state.compatTestType);
   const result = state.compatTestResult || {};
@@ -402,28 +431,7 @@ function renderCompatTestSummary(){
           `).join('')}
         </ul>` : '<div class="compat-test-diff-none">Расхождений нет — ответы совпали на всех пунктах.</div>'}
     </div>`;
-  if(result.kind === 'characters'){
-    list.innerHTML = `
-      <div class="compat-test-verdict">${result.verdict}</div>
-      <div class="compat-test-sums">
-        ${(result.pairs || []).map(p=>`
-          <div class="compat-test-sum-row">
-            <span class="compat-test-sum-name">${p.label}</span>
-            <span class="compat-test-sum-values">${players[0]}: ${p.a} · ${players[1]}: ${p.b}</span>
-            <span class="compat-test-sum-diff">разница ${p.diff}</span>
-          </div>
-        `).join('')}
-      </div>
-      ${diffHtml}
-    `;
-  } else {
-    list.innerHTML = `
-      <div class="compat-test-score">${result.score} / 100</div>
-      <div class="compat-test-score-title">${result.title || ''}</div>
-      <div class="compat-test-verdict">${result.verdict || ''}</div>
-      ${diffHtml}
-    `;
-  }
+  list.innerHTML = compatTestResultBodyHtml(result, players, diffHtml);
   const note = document.getElementById('compatTestSummaryNote');
   if(note) note.textContent = 'Результат сохранён в «Пройденные» — его можно открыть позже.';
 }
@@ -508,30 +516,86 @@ function compatHistoryShortText(entry){
   if(r.kind === 'characters') return r.verdict || '';
   return r.title ? `${r.score} / 100 — ${r.title}` : '';
 }
+// Раскрытые записи «Пройденных». Ключ — «дата:id теста», а не индекс: после
+// удаления записи крестиком индексы сдвигаются, и раскрытой оказалась бы
+// соседняя строка. Тот же приём, что в «Пройди тест» (для одного) и в группах
+// карты тела у «Узнай больше».
+function compatTestOpenEntries(){
+  return Array.isArray(state.compatTestOpen) ? state.compatTestOpen : [];
+}
+function compatTestEntryKey(entry){
+  return `${(entry && entry.date) || 0}:${(entry && entry.testId) || ''}`;
+}
+function isCompatTestEntryOpen(entry){
+  return compatTestOpenEntries().indexOf(compatTestEntryKey(entry)) >= 0;
+}
+function toggleCompatTestEntry(entry){
+  const open = compatTestOpenEntries();
+  const key = compatTestEntryKey(entry);
+  const at = open.indexOf(key);
+  if(at >= 0){
+    open.splice(at, 1);
+    state.compatTestOpen = open;
+    saveState();
+    return false;
+  }
+  open.push(key);
+  state.compatTestOpen = open;
+  saveState();
+  return true;
+}
+// Полное содержимое сохранённого результата. В истории лежит итог, а не сырые
+// ответы, поэтому разбор расхождений (список, где партнёры разошлись)
+// посчитать уже нельзя — он строится из накопленных ответов текущей партии.
+// Поэтому здесь показываются балл, вывод и суммы М/К там, где они есть, а в
+// правилах сказано, что полный разбор доступен сразу после прохождения.
+function compatTestEntryBodyHtml(entry){
+  const r = (entry && entry.result) || {};
+  return compatTestResultBodyHtml(r, entry && entry.players, '');
+}
 function goToCompatTestHistory(){
   const wrap = document.getElementById('compatTestHistoryList');
+  if(!wrap) return;
   const history = state.compatTestHistory || [];
   if(history.length === 0){
     wrap.innerHTML = '<div class="card-text">Пока нет пройденных тестов — пройдите хотя бы один.</div>';
   } else {
-    wrap.innerHTML = history.map((entry, idx)=>`
-      <div class="compat-test-history-entry">
-        <div class="compat-test-history-date">${formatCompatTestDate(entry.date)} · ${entry.testName || 'Тест'}</div>
-        <div class="compat-test-history-names">${(entry.players || []).join(' и ')}</div>
-        <div class="compat-test-history-text">${compatHistoryShortText(entry)}</div>
+    wrap.innerHTML = history.map((entry, idx)=>{
+      const open = isCompatTestEntryOpen(entry);
+      return `
+      <div class="compat-test-history-entry${open ? ' open' : ''}">
+        <button type="button" class="compat-test-history-head" data-idx="${idx}" aria-expanded="${open}">
+          <span class="compat-test-history-date">${formatCompatTestDate(entry.date)} · ${entry.testName || 'Тест'}</span>
+          <span class="compat-test-history-names">${(entry.players || []).join(' и ')}</span>
+          <span class="compat-test-history-text">${compatHistoryShortText(entry)}</span>
+          <span class="compat-test-history-hint">${open ? 'Свернуть' : 'Подробнее'}</span>
+        </button>
+        <div class="compat-test-history-body">${compatTestEntryBodyHtml(entry)}</div>
         <button type="button" class="compat-test-history-del" data-idx="${idx}" aria-label="Удалить результат из пройденных">✕</button>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
   document.getElementById('compatTestSetup').classList.remove('active');
   document.getElementById('compatTestHistory').classList.add('active');
 }
 document.getElementById('compatTestHistoryList').addEventListener('click', (e)=>{
-  const btn = e.target.closest('.compat-test-history-del');
-  if(!btn) return;
-  playErrorSound();
-  state.compatTestHistory.splice(parseInt(btn.dataset.idx, 10), 1);
-  saveState();
+  // Крестик удаления проверяется первым: раньше он был единственным
+  // обработчиком клика по списку, и при добавлении раскрытия легко было бы
+  // превратить удаление в раскрытие (или наоборот — проглотить раскрытие).
+  const del = e.target.closest('.compat-test-history-del');
+  if(del){
+    playErrorSound();
+    state.compatTestHistory.splice(parseInt(del.dataset.idx, 10), 1);
+    saveState();
+    goToCompatTestHistory();
+    return;
+  }
+  const head = e.target.closest('.compat-test-history-head');
+  if(!head) return;
+  const entry = (state.compatTestHistory || [])[parseInt(head.dataset.idx, 10)];
+  if(!entry) return;
+  toggleCompatTestEntry(entry);
+  playSuccessSound();
   goToCompatTestHistory();
 });
 function exitCompatTestHistory(){
