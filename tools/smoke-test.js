@@ -4035,6 +4035,204 @@ testAsync('PWA: обновление обнаруживается в актив�
 // «ReferenceError: goToPartyQuizSetup is not defined» — игрок видел
 // английскую техническую ошибку и не понимал, что делать. Теперь вызов идёт
 // через callGameEntry(): модуль отсутствует → понятное окно с перезапуском.
+// ═══════════════════════════════════════════════════════════════════════
+// ОФЛАЙН. Главный баг: приложение не открывалось без интернета (чёрный, потом
+// белый экран). Мобильный интернет по белому списку не роняет запрос, а ДЕРЖИТ
+// его до системного таймаута, поэтому fetch без таймаута не отклонялся никогда,
+// а скриптов приложения 105. Тесты ниже гоняют НАСТОЯЩИЙ sw.js в vm.
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Песочница Service Worker: своё хранилище кэшей и управляемая сеть. */
+function makeSwSandbox({ network }) {
+  const listeners = {};
+  const store = new Map();
+  const ORIGIN = 'https://app.test';
+  const ROOT = '/Love-play/';
+  const SW_URL = ORIGIN + ROOT + 'sw.js';
+
+  const put = (url, body, type) => store.set(url, { body, type, status: 200 });
+  const match = (url, opts) => {
+    if (opts && opts.ignoreSearch) {
+      const bare = String(url).split('?')[0];
+      for (const [k, v] of store) if (k.split('?')[0] === bare) return v;
+      return null;
+    }
+    return store.get(url) || null;
+  };
+
+  const cacheObj = {
+    match: async (req, opts) => match(typeof req === 'string' ? req : req.url, opts),
+    put: async (req, response) => {
+      const url = typeof req === 'string' ? req : req.url;
+      store.set(url, {
+        body: response && response.__body !== undefined ? response.__body : response,
+        type: (response && response.headers && response.headers.get
+          ? response.headers.get('content-type') : null) || 'text/plain',
+        status: 200,
+      });
+    },
+    addAll: async (reqs) => {
+      for (const r of reqs) {
+        const res = await network(String(r.url || r));
+        if (!res || res.status !== 200) throw new Error('addAll failed: ' + r.url);
+        put(String(r.url), res.__body, 'application/javascript');
+      }
+    },
+    keys: async () => [...store.keys()].map((u) => ({ url: u })),
+    delete: async (req) => store.delete(typeof req === 'string' ? req : req.url),
+  };
+
+  const sandbox = {
+    console, URL, AbortController, Promise, Set, Object, JSON, Array, Error, RegExp,
+    setTimeout, clearTimeout,
+    Request: class { constructor(url) { this.url = String(url); } },
+    Response: class {
+      constructor(body, init) {
+        this.__body = body;
+        this.status = (init && init.status) || 200;
+        const h = new Map();
+        if (init && init.headers) {
+          for (const [k, v] of Object.entries(init.headers)) h.set(k.toLowerCase(), v);
+        }
+        this.headers = { get: (k) => (h.has(String(k).toLowerCase()) ? h.get(String(k).toLowerCase()) : null) };
+      }
+      clone() { return new sandbox.Response(this.__body, { status: this.status }); }
+      async text() { return String(this.__body); }
+    },
+    caches: {
+      open: async () => cacheObj,
+      match: async (req) => match(typeof req === 'string' ? req : req.url),
+      keys: async () => [],
+      delete: async () => true,
+    },
+    fetch: (input, init) => network(typeof input === 'string' ? input : input.url, init),
+    self: {
+      location: { href: SW_URL, origin: ORIGIN },
+      addEventListener: (type, fn) => { (listeners[type] ||= []).push(fn); },
+      skipWaiting: async () => {},
+      clients: { claim: async () => {} },
+    },
+  };
+  sandbox.self.self = sandbox.self;
+  sandbox.globalThis = sandbox;
+  vm.createContext(sandbox);
+  return { sandbox, listeners, store, put, ORIGIN, ROOT };
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+
+testAsync('Офлайн: кэш отдаётся мгновенно, не дожидаясь висящей сети', async () => {
+  // Сеть как на мобильном интернете по белому списку: запрос не отклоняется,
+  // а висит, пока не сработает прерывание по таймауту.
+  let aborted = 0;
+  const hanging = (url, init) => new Promise((resolve, reject) => {
+    const signal = init && init.signal;
+    if (!signal) return;
+    if (signal.aborted) { aborted++; reject(new Error('aborted')); return; }
+    signal.addEventListener('abort', () => { aborted++; reject(new Error('aborted')); });
+  });
+
+  const box = makeSwSandbox({ network: hanging });
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8'), box.sandbox);
+  box.put(box.ORIGIN + box.ROOT + 'index.html', '<!doctype html><html><body>app</body></html>', 'text/html');
+  box.put(box.ORIGIN + box.ROOT + 'games/core.js', 'window.core = 1;', 'application/javascript');
+  box.put(box.ORIGIN + box.ROOT + 'styles/app.css', 'body{color:#fff}', 'text/css');
+
+  const fire = async (request) => {
+    let responded = null;
+    const waits = [];
+    // method нужен обязательно: fetch-обработчик воркера работает только с GET.
+    const req = Object.assign({ method: 'GET' }, request);
+    for (const fn of box.listeners.fetch || []) {
+      fn({ request: req, respondWith(p) { responded = p; }, waitUntil(p) { waits.push(p); } });
+    }
+    const started = Date.now();
+    const res = responded ? await responded : null;
+    const waited = Date.now() - started;
+    for (const w of waits) { try { await w; } catch (e) { /* фон */ } }
+    return { res, waited };
+  };
+
+  const nav = await fire({ url: box.ORIGIN + box.ROOT, mode: 'navigate' });
+  assert(nav.res, 'навигация офлайн должна получить ответ');
+  assert(nav.waited < 1000,
+    `навигация ждала сеть ${nav.waited} мс вместо отдачи кэша — экран был пустым`);
+  assert(nav.res && String(nav.res.body || '').includes('app'),
+    'навигация должна отдать закэшированный index.html');
+
+  const core = await fire({ url: box.ORIGIN + box.ROOT + 'games/core.js?v=20261030a', mode: 'no-cors' });
+  assert(core.res, 'games/core.js офлайн должен получить ответ');
+  assert(core.waited < 1000,
+    `games/core.js ждал сеть ${core.waited} мс вместо кэша — это и есть чёрный экран`);
+  assert(core.res && String(core.res.body || '').includes('window.core'),
+    'games/core.js должен прийти из кэша, а не пустым');
+
+  const missing = await fire({ url: box.ORIGIN + box.ROOT + 'games/nope.js?v=1', mode: 'no-cors' });
+  assert(missing.res, 'на незагруженный скрипт нужен ответ, а не срыв загрузки');
+  // Именно Content-Type решает, выполнит ли браузер classic script: HTML на
+  // месте .js приводит к тихому пропуску модуля (отчёт игрока от 29.09).
+  const missingType = missing.res && missing.res.headers
+    ? missing.res.headers.get('content-type') : '';
+  assert(/javascript/.test(missingType || ''),
+    `ответ на .js должен быть с типом javascript, получено «${missingType}» — браузер не выполнит модуль`);
+  assert(aborted > 0,
+    'сетевые запросы без ответа обязаны прерываться по таймауту (AbortController), иначе офлайн-старт встаёт');
+});
+
+testAsync('Офлайн: precache ставит воркер, даже когда часть файлов не скачалась', async () => {
+  const html = '<!doctype html><html><head></head><body>'
+    + '<script src="games/core.js?v=1"></script>'
+    + '<script src="games/init.js?v=1"></script>'
+    + '<script src="games/quiz.js?v=1"></script>'
+    + '</body></html>';
+  let addAllCalls = 0;
+  // Первые попытки addAll падают целиком (обрыв связи), дальше — докачка по
+  // одному файлу. quiz.js не отдаётся никогда: это «битая» колода.
+  const flaky = async (url) => {
+    if (url.endsWith('index.html')) return new Response(html, { status: 200 });
+    // includes, а не endsWith: в адресе есть ?v=…
+    if (url.includes('quiz.js')) throw new Error('404');
+    addAllCalls++;
+    if (addAllCalls <= 3) throw new Error('connection reset');
+    return new Response('// ok', { status: 200 });
+  };
+
+  const box = makeSwSandbox({ network: flaky });
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8'), box.sandbox);
+  const waiters = [];
+  for (const fn of box.listeners.install || []) fn({ waitUntil(p) { waiters.push(p); } });
+  let settled = 'installed';
+  try { await Promise.all(waiters); } catch (e) { settled = 'отклонён: ' + e.message; }
+  assert(settled === 'installed',
+    `install должен завершиться, а не отклониться из-за одной колоды: ${settled}`);
+  const keys = [...box.store.keys()];
+  assert(keys.some((u) => u.includes('games/core.js')), 'ядро обязано попасть в кэш даже после обрыва');
+  assert(!keys.some((u) => u.includes('games/quiz.js')), 'упавший файл не должен считаться закэшированным');
+  assert(keys.some((u) => u.includes('__precache-manifest.json')),
+    'локальный манифест precache должен записываться в кэш');
+});
+
+testAsync('Офлайн: без ядра новый воркер не вытесняет рабочий', async () => {
+  const html = '<!doctype html><html><head></head><body>'
+    + '<script src="games/core.js?v=1"></script>'
+    + '<script src="games/init.js?v=1"></script>'
+    + '</body></html>';
+  // index.html есть, ядра нет: приложение без него не запустится вовсе.
+  const network = async (url) => {
+    if (url.endsWith('index.html')) return new Response(html, { status: 200 });
+    throw new Error('connection reset');
+  };
+  const box = makeSwSandbox({ network });
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8'), box.sandbox);
+  const waiters = [];
+  for (const fn of box.listeners.install || []) fn({ waitUntil(p) { waiters.push(p); } });
+  let rejected = false;
+  try { await Promise.all(waiters); } catch (e) { rejected = true; }
+  assert(rejected, 'без games/core.js и init.js новый воркер не должен устанавливаться поверх рабочего');
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+
 test('Незагруженный модуль игры: понятное окно вместо ReferenceError', () => {
   if (typeof global.callGameEntry !== 'function') {
     assert(false, 'callGameEntry недоступна глобально');

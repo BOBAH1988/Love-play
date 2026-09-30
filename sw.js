@@ -17,13 +17,25 @@
  *    активация вычищала старый кэш, и при запуске без интернета скрипты
  *    игр не находились в кэше — приложение показывало белый экран.
  *  - FETCH:
- *      * навигация (открытие index.html) — network-first: всегда качаем свежую
- *        версию и кладём её в кэш; офлайн — отдаём из кэша; если кэша нет
- *        вовсе — офлайн-заглушку вместо пустого белого экрана.
- *      * стили (styles/*) и игры (games/*) — network-first: свежие сразу,
- *        офлайн — из кэша (он теперь всегда полный после установки).
- *      * остальные GET своего origin — stale-while-revalidate: сначала кэш
- *        (мгновенно), параллельно тянем сетевую версию и обновляем кэш.
+ *      * навигация (открытие index.html) — СНАЧАЛА КЭШ, потом сеть. Раньше
+ *        было network-first, и это главная причина чёрного/белого экрана без
+ *        интернета: на мобильном интернете по белому списку запрос к
+ *        недоступному хосту не отклоняется сразу, а ВИСИТ до системного
+ *        таймаута (десятки секунд), поэтому приложение сначала чёрное, потом
+ *        белое. Теперь кэш отдаётся мгновенно, а сеть проверяется только при
+ *        промахе или по нажатию «Обновить» (адрес с ?_r=…).
+ *      * стили (styles/*), игры (games/*) и колоды (cards/*) — СНАЧАЛА КЭШ,
+ *        потом сеть. У всех файлов есть ?v= в адресе, то есть ключ кэша
+ *        меняется вместе с содержимым: свежесть обеспечивается версионированием,
+ *        а не порядком ответа сети. Полная пара «index.html + его скрипты»
+ *        всегда приходит из одного кэша, поэтому сборка не может смешаться.
+ *      * остальные GET своего origin — кэш, затем сеть.
+ *      * ЛЮБОЙ сетевой запрос идёт через fetchTimeout() с таймаутом: зависший
+ *        запрос не должен держать страницу (отказ по таймауту, а не «висок»).
+ *      * sw.js — всегда сеть, no-store: обновления применяются мгновенно.
+ *      * Если не нашлось ни сети, ни кэша — валидный пустой ответ нужного типа
+ *        (emptyAssetResponse), а не HTML: браузер не выполнит classic script с
+ *        Content-Type: text/html, и модуль пропадёт молча.
  *  - Активация: удаляем только кэши СТАРЫХ версий (текущий CACHE_NAME не
  *    трогаем) и вычищаем устаревшие записи games/cards/styles старых ?v=…
  *    версий по локальному манифесту precache, без сетевого fetch.
@@ -34,7 +46,34 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v576';
+const CACHE_NAME = 'veselye-igry-cache-v577';
+
+// Предел ожидания сетевого ответа, мс.
+//
+// Зачем. Мобильный интернет с доступом по белому списку не роняет запрос с
+// ошибкой — он его ДЕРЖИТ: соединение открывается в пустоту и ждёт системного
+// таймаута (на телефоне это десятки секунд, иногда до минуты на файл).
+// fetch без таймаута в такой сети не отклоняется никогда, а скриптов
+// приложения 105 — экран оставался пустым на минуты. С таймаутом запрос
+// отклоняется предсказуемо, и управление переходит к кэшу.
+const NET_TIMEOUT_MS = 4000;
+// Отдельный, более короткий лимит на файл precache: их много, и install не
+// должен висеть дольше, чем нужно на всю пачку.
+const PRECACHE_FILE_TIMEOUT_MS = 8000;
+// Сколько раз install пробует докачать недостающие файлы, прежде чем перейти к
+// помилосердной закачке по одному. addAll атомарен: один оборванный запрос — и
+// вся пачка (4,1 МБ, 105 файлов) не попадает в кэш. На мобильном интернете это
+// воспроизводилось почти всегда, и офлайн просто не появлялся.
+const PRECACHE_ATTEMPTS = 3;
+
+/** fetch с предельным ожиданием. Отказ по таймауту вместо бесконечного виска. */
+function fetchTimeout(request, options, ms) {
+  const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), ms || NET_TIMEOUT_MS) : 0;
+  const opts = Object.assign({}, options || {});
+  if (ctrl) opts.signal = ctrl.signal;
+  return fetch(request, opts).finally(() => { if (timer) clearTimeout(timer); });
+}
 
 // Корень приложения относительно адреса воркера: sw.js лежит в корне, поэтому
 // './' относительно его адреса — это корень и в деплое в корень домена ('/'),
@@ -83,7 +122,7 @@ const INDEX_URL = new URL('./index.html', self.location.href).href;
 // precache не считается успешным: новый воркер не должен вытеснить старый.
 async function collectAssetUrls() {
   const urls = new Set(PRECACHE_URLS);
-  const res = await fetch(INDEX_URL, { cache: 'no-store' });
+  const res = await fetchTimeout(INDEX_URL, { cache: 'no-store' });
   if (!res || !res.ok) throw new Error('index.html unavailable');
   const html = await res.text();
   let hasCore = false;
@@ -119,15 +158,55 @@ function normUrl(urlStr) {
   catch (e) { return String(urlStr); }
 }
 
+// Файлы, без которых приложение не запустится вовсе. Только их отсутствие
+// роняет install: остальное можно докачать позже, и callGameEntry() покажет
+// игроку понятное окно вместо чёрного экрана.
+const CRITICAL_ASSETS = ['./index.html', './styles/app.css', './games/core.js', './games/init.js'];
+
+// Докачивает недостающие файлы precache.
+//
+// Зачем не хватает addAll. addAll атомарен: ОДИН оборванный запрос — и вся
+// пачка (4,1 МБ, 105 файлов) не попадает в кэш, новый воркер не
+// устанавливается, и офлайн не появляется вообще. На мобильном интернете по
+// белому списку обрыв вполне обычен, поэтому пачка сначала пробуется целиком
+// (дёшево, параллельно), затем — по одному файлу с таймаутом.
+//
+// Возвращает список того, что скачать так и не удалось. Install падает только
+// если среди этого — критичный файл: неполный кэш с работающим ядром лучше
+// полного отсутствия офлайна.
+async function precacheAssets(cache, requests) {
+  let pending = requests.slice();
+  for (let attempt = 1; attempt <= PRECACHE_ATTEMPTS && pending.length; attempt++) {
+    try {
+      await cache.addAll(pending);
+      return [];
+    } catch (e) {
+      // Пачка могла записаться частично — пересобираем список недокачанного.
+      const rest = [];
+      for (const req of pending) {
+        if (await cache.match(req.url)) continue;
+        rest.push(req);
+      }
+      pending = rest;
+    }
+  }
+  // Помилосердная закачка по одному: один битый файл больше не отменяет
+  // весь офлайн-режим.
+  const failed = [];
+  for (const req of pending) {
+    try {
+      const res = await fetchTimeout(req, { cache: 'no-store' }, PRECACHE_FILE_TIMEOUT_MS);
+      if (res && res.ok) await cache.put(req, res);
+      else failed.push(req.url);
+    } catch (e) { failed.push(req.url); }
+  }
+  return failed;
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const urls = await collectAssetUrls();
     const cache = await caches.open(CACHE_NAME);
-    // addAll атомарен для установки: если хоть один обязательный файл не
-    // скачался, install отклоняется и старый воркер/кэш остаются в силе.
-    // Раньше ошибки отдельных precache-запросов подавлялись, поэтому новый
-    // воркер мог активироваться с неполным кэшем — приложение открывалось без
-    // игровых скриптов.
     // Даже precache должен обходить HTTP-кеш: иначе install новой версии
     // может положить в кэш старый ответ с тем же URL (GitHub Pages держит
     // max-age=600). Request с no-store сохраняет транзакционность addAll.
@@ -137,15 +216,23 @@ self.addEventListener('install', (event) => {
     // games 1,4 МБ, styles 232 КБ), из-за чего обновление заметно замедлялось.
     // Ссылка включает ?v= проверенной версии, поэтому совпадение URL означает
     // и совпадение содержимого: адрес с тем же ?v= отдаёт тот же байт-код.
-    // Всё остальное (addAll по полному списку) остаётся нетронутым, чтобы
-    // install оставался транзакционным и атомарным.
     const cacheRequests = urls.map((url) => new Request(url, { cache: 'no-store' }));
     const missing = [];
     for (const req of cacheRequests) {
       if (await cache.match(req.url)) continue; // уже в кэше — не качаем
       missing.push(req);
     }
-    if (missing.length) await cache.addAll(missing);
+    if (missing.length) {
+      const failed = await precacheAssets(cache, missing);
+      // Install отклоняется только ради критичных файлов (ядро приложения).
+      // Незагруженная колода или одна игра — не повод лишать игрока офлайна
+      // целиком: их отсутствие покажет callGameEntry() понятным окном.
+      const lost = new Set(failed.map((u) => normUrl(u)));
+      for (const must of CRITICAL_ASSETS) {
+        if (!lost.has(normUrl(new URL(must, self.location.href).href))) continue;
+        throw new Error('precache: критичный файл не загружен — ' + must);
+      }
+    }
     await cache.put(PRECACHE_MANIFEST_URL, new Response(JSON.stringify(urls), {
       headers: { 'Content-Type': 'application/json; charset=utf-8' }
     }));
@@ -291,6 +378,14 @@ function offlineResponse() {
   });
 }
 
+// Есть ли свежая копия ресурса в кэше. Для навигации сначала пробуем
+// канонический index.html: precache кладёт именно его, и он всегда свежее
+// той копии, что была сохранена «по дороге» при прежнем открытии.
+async function cachedNavigationResponse(request) {
+  const cache = await caches.open(CACHE_NAME);
+  return (await cache.match(INDEX_URL)) || (await cache.match(request)) || null;
+}
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   // Работаем только с GET-запросами того же origin.
@@ -298,71 +393,102 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-// Навигация (открытие страницы) — network-first.
-    if (request.mode === 'navigate') {
-      event.respondWith(
-        fetch(request, { cache: 'no-store' })
-          .then((response) => {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-            return response;
-          })
-          .catch(() =>
-            caches.match(request)
-              .then((cached) => cached || caches.match(INDEX_URL))
-              .then((cached) => cached || offlineResponse())
-          )
-      );
-      return;
-    }
+  // sw.js — всегда из сети, чтобы обновления применялись мгновенно.
+  if (url.pathname.endsWith('sw.js')) {
+    event.respondWith(fetchTimeout(request, { cache: 'no-store' }));
+    return;
+  }
 
-    // sw.js — всегда из сети, чтобы обновления применялись мгновенно.
-    if (url.pathname.endsWith('sw.js')) {
-      event.respondWith(fetch(request, { cache: 'no-store' }));
-      return;
-    }
+  // Навигация (открытие страницы) — СНАЧАЛА КЭШ.
+  //
+  // Раньше здесь стоял network-first, и именно это ломало приложение без
+  // интернета. fetch к недоступному хосту на мобильном интернете по белому
+  // списку не отклоняется, а висит до системного таймаута: страница оставалась
+  // пустой на десятки секунд (чёрный, затем белый экран), и только потом
+  // доходила до кэша. Теперь кэш отдаётся мгновенно, сеть проверяется фоном.
+  if (request.mode === 'navigate') {
+    // Принудительное обновление (hardUpdateApp добавляет ?_r=…) обязано идти в
+    // сеть: иначе «Обновить» показывал бы ту же страницу из кэша.
+    const forced = url.searchParams.has('_r');
+    event.respondWith((async () => {
+      const cached = await cachedNavigationResponse(request);
+      if (cached && !forced) {
+        // Фоновое обновление кэша, чтобы следующий запуск был свежим.
+        event.waitUntil(
+          fetchTimeout(request, { cache: 'no-store' })
+            .then(async (response) => {
+              if (!response || !response.ok) return;
+              const cache = await caches.open(CACHE_NAME);
+              await cache.put(request, response.clone());
+            })
+            .catch(() => { /* офлайн — тихо, игрок уже видит рабочее приложение */ })
+        );
+        return cached;
+      }
+      try {
+        const response = await fetchTimeout(request, { cache: 'no-store' });
+        if (response && response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          event.waitUntil(cache.put(request, response.clone()));
+        }
+        return response;
+      } catch (e) {
+        return (forced ? await cachedNavigationResponse(request) : null) || offlineResponse();
+      }
+    })());
+    return;
+  }
 
-    // Стили, игровые скрипты и колоды карточек — всегда network-first.
-    // CSS вынесен из index.html в styles/app.css: при stale-while-revalidate
-    // (как у картинок) устройство сначала отдавало бы СТАРЫЙ стиль, и правки
-    // внешнего вида «не применялись» до второй перезагрузки. С cards/* та же
-    // история: исправленные вопросы «Викторины» доезжали до игрока только со
-    // второй сессии — первый заход после обновления показывал старую колоду.
-    //
-    // Офлайн fallback теперь отдаёт не HTML-заглушку, а сам файл из кэша —
-    // любую его версию (cachedAnyVersion), и только если нет даже её — пустой
-    // ответ с типом содержимого по назначению (emptyAssetResponse). Раньше на
-    // месте промаха отдавался HTML, а браузер не выполняет classic script с
-    // Content-Type: text/html: модуль молча пропадал, и игра не открывалась
-    // (отчёт игрока от 29.09, games/know-more.js). respondWith(undefined)
-    // ронял загрузку скрипта — белый экран, поэтому ответ нужен всегда.
-    if (url.pathname.startsWith(ROOT + 'games/') || url.pathname.startsWith(ROOT + 'styles/') || url.pathname.startsWith(ROOT + 'cards/')) {
-      event.respondWith(
-        fetch(request, { cache: 'no-store' })
-          .then((response) => {
-            if (response && response.status === 200) {
-              const copy = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-            }
-            return response;
-          })
-          .catch(async () => (await cachedAnyVersion(request)) || emptyAssetResponse(url.pathname))
-      );
-      return;
+  // Стили, игровые скрипты и колоды карточек — СНАЧАЛА КЭШ, потом сеть.
+  //
+  // Раньше был network-first «чтобы правки применялись сразу». Но у каждого
+  // файла есть ?v= в адресе, то есть ключ кэша меняется вместе с
+  // содержимым: пока ?v= прежний, содержимое и не менялось, и свежесть решает
+  // версионирование, а не порядок ответа сети. Обменяв порядок, мы получили
+  // мгновенный старт и офлайн, а риск «старой колоды до второй сессии»
+  // закрыт правилом: любая правка файла обязана поднимать ?v= (tools/check.js).
+  //
+  // Промах в кэше (например, свежий index.html при старом воркере) идёт в сеть;
+  // сеть недоступна — отдаём ЛЮБУЮ закэшированную версию того же файла
+  // (cachedAnyVersion), и только если нет даже её — валидный пустой ответ
+  // нужного типа (emptyAssetResponse). HTML на месте .js браузер выполнять не
+  // станет (MIME-check), и модуль пропал бы молча.
+  if (url.pathname.startsWith(ROOT + 'games/') || url.pathname.startsWith(ROOT + 'styles/') || url.pathname.startsWith(ROOT + 'cards/')) {
+    event.respondWith((async () => {
+      const cached = await cachedAnyVersion(request);
+      if (cached) return cached;
+      try {
+        const response = await fetchTimeout(request, { cache: 'no-store' });
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          const cache = await caches.open(CACHE_NAME);
+          event.waitUntil(cache.put(request, copy));
+        }
+        return response;
+      } catch (e) {
+        return emptyAssetResponse(url.pathname);
+      }
+    })());
+    return;
+  }
+
+  // Остальные ресурсы (иконки, фото) — кэш, при промахе сеть с таймаутом.
+  event.respondWith((async () => {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    try {
+      const response = await fetchTimeout(request, { cache: 'no-store' });
+      if (response && response.status === 200) {
+        const copy = response.clone();
+        const cache = await caches.open(CACHE_NAME);
+        event.waitUntil(cache.put(request, copy));
+      }
+      return response;
+    } catch (e) {
+      // Фото и иконки не входят в precache, поэтому офлайн их может не быть.
+      // Отвечаем валидным (пустым) ответом: respondWith(undefined) срывал бы
+      // загрузку и давал белый экран.
+      return new Response('', { status: 504, headers: { 'Cache-Control': 'no-store' } });
     }
-    // Остальные ресурсы — stale-while-revalidate.
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        const network = fetch(request, { cache: 'no-store' })
-          .then((response) => {
-            if (response && response.status === 200) {
-              const copy = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-            }
-            return response;
-          })
-          .catch(() => cached);
-        return cached || network;
-      })
-    );
+  })());
 });

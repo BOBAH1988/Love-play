@@ -1257,19 +1257,22 @@ function checkStyles(html) {
 
   }
 
-  // Service Worker обязан обновлять стили сразу, а не «со второй загрузки»:
-  // при stale-while-revalidate устройство отдаёт старый CSS и правки
-  // внешнего вида не видны — этот баг уже ловили на игровых скриптах.
+  // Стили и колоды карточек: раньше стоял network-first «чтобы правки
+  // применялись сразу», но это и было причиной чёрного/белого экрана без
+  // интернета. Теперь ветка обязана СНАЧАЛА смотреть в кэш
+  // (cachedAnyVersion) и только при промахе идти в сеть. Свежесть вместо
+  // этого обеспечивает ?v= в адресе: он меняется вместе с содержимым.
   const sw = read('sw.js');
-  const cssIsFresh = /startsWith\(ROOT \+ 'styles\/'\)/.test(sw);
-  check('SW грузит стили network-first', cssIsFresh, "в sw.js нет ветки для ROOT + 'styles/'");
-  // Колоды карточек (cards/*) — тоже network-first: при stale-while-revalidate
-  // исправленные вопросы «Викторины» (в т.ч. подсветка верного ответа на
-  // устройстве) доезжали до игрока только со второй сессии — первый заход
-  // после обновления показывал старую колоду из кэша.
-  check('SW грузит колоды карточек network-first',
-    /startsWith\(ROOT \+ 'cards\/'\)/.test(sw),
-    "в sw.js нет ветки для ROOT + 'cards/'");
+  const subBranch = sw.slice(sw.indexOf("url.pathname.startsWith(ROOT + 'games/')"),
+    sw.indexOf('// Остальные ресурсы'));
+  const cacheFirstOrder = subBranch.indexOf('cachedAnyVersion(request)') > -1 &&
+    subBranch.indexOf('cachedAnyVersion(request)') < subBranch.indexOf('fetchTimeout');
+  check('SW сначала отдаёт стили из кэша, и только потом идёт в сеть',
+    /startsWith\(ROOT \+ 'styles\/'\)/.test(sw) && cacheFirstOrder,
+    "в sw.js нет ветки для ROOT + 'styles/' или в ней кэш проверяется после сети");
+  check('SW сначала отдаёт колоды карточек из кэша, и только потом идёт в сеть',
+    /startsWith\(ROOT \+ 'cards\/'\)/.test(sw) && cacheFirstOrder,
+    "в sw.js нет ветки для ROOT + 'cards/' или в ней кэш проверяется после сети");
   // Белый экран офлайн: activate раньше удаляла все кэши, а install проглатывал
   // ошибки precache и всё равно активировал новый воркер. Повторный сетевой
   // fetch в activate особенно опасен: офлайн возвращал урезанный список и удалял
@@ -1285,11 +1288,15 @@ function checkStyles(html) {
   const installSw = sw.slice(sw.indexOf("self.addEventListener('install'"), sw.indexOf("self.addEventListener('activate'"));
   const messageSw = sw.slice(sw.indexOf("self.addEventListener('message'"), sw.indexOf('// Офлайн-заглушка'));
   const skipWaitingByMessage = /event\.data[\s\S]{0,200}SKIP_WAITING[\s\S]{0,200}ctx\.skipWaiting\(\)/.test(messageSw);
-  check('SW предкэшивает игры и стили из index.html',
+  check('SW предкэширует игры и стили из index.html',
     /cards\|games\|styles/.test(sw) &&
-      // addAll идёт по списку недостающих: полный список (urls) используется
-      // и для пропуска уже закэшированного, и для локального манифеста.
-      /if \(missing\.length\) await cache\.addAll\(missing\)/.test(sw) &&
+      // addAll идёт по списку недостающих, но больше не единственная попытка:
+      // после PRECACHE_ATTEMPTS пачка докачивается по одному файлу.
+      /await cache\.addAll\(/.test(sw) &&
+      /async function precacheAssets\(cache, requests\)/.test(sw) &&
+      /PRECACHE_ATTEMPTS/.test(sw) &&
+      // Install отклоняется ради критичных файлов, а не ради любого обрыва.
+      /CRITICAL_ASSETS/.test(sw) &&
       /new Request\(url,\s*\{\s*cache:\s*['"]no-store['"]\s*\}\)/.test(sw) &&
       !/cache\.add\(/.test(sw) &&
       skipWaitingByMessage &&
@@ -1297,9 +1304,34 @@ function checkStyles(html) {
       !/fetch\s*\(/.test(activateSw) &&
       /cache\.put\(PRECACHE_MANIFEST_URL/.test(sw) &&
       /cache\.match\(PRECACHE_MANIFEST_URL/.test(sw) &&
-      /if \(url\.pathname\.endsWith\('sw\.js'\)\)[\s\S]{0,180}fetch\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw) &&
-      /if \(request\.mode === 'navigate'\)[\s\S]{0,500}fetch\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw),
-    'нужен атомарный precache, локальный манифест и активация без сетевого fetch');
+      /if \(url\.pathname\.endsWith\('sw\.js'\)\)[\s\S]{0,180}fetchTimeout\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw) &&
+      /if \(request\.mode === 'navigate'\)[\s\S]{0,900}fetchTimeout\(request,\s*\{\s*cache:\s*['"]no-store['"]/.test(sw),
+    'нужен precache с повторами, локальный манифест и активация без сетевого fetch');
+  // Главная причина чёрного/белого экрана без интернета: мобильный интернет по
+  // белому списку не роняет запрос, а ДЕРЖИТ его до системного таймаута. У
+  // скриптов приложения 105, поэтому fetch без таймаута оставлял страницу
+  // пустой на минуты. Все сетевые запросы в sw.js обязаны идти через
+  // fetchTimeout с AbortController.
+  // Сам fetchTimeout с fetch() — это и есть место, где применяется abort, его
+  // не считаем. Ищем прямые вызовы fetch() в остальном коде воркера.
+  const swWithoutHelper = sw.replace(/function fetchTimeout\([\s\S]*?\n\}/, '');
+  const bareFetches = (swWithoutHelper.match(/(?<![A-Za-z])fetch\(/g) || []).length;
+  check('все сетевые запросы Service Worker идут с таймаутом',
+    /function fetchTimeout\(request, options, ms\)/.test(sw) &&
+      /new AbortController\(\)/.test(sw) &&
+      /ctrl\.abort\(\)/.test(sw) &&
+      /NET_TIMEOUT_MS = \d{3,}/.test(sw) &&
+      bareFetches === 0,
+    `в sw.js осталось ${bareFetches} запросов fetch() без таймаута — на мобильном интернете по белому списку они висят и держат экран`);
+  // Навигация обязана отдавать кэш до обращения к сети: иначе офлайн-старт
+  // упирается в сетевой таймаут. Обратный порядок — ровно тот баг, который
+  // чинили несколько раз.
+  const navBranch = sw.slice(sw.indexOf("if (request.mode === 'navigate')"),
+    sw.indexOf("// Остальные ресурсы"));
+  check('навигация отдаёт кэш раньше, чем пробует сеть',
+    navBranch.indexOf('cachedNavigationResponse(request)') > -1 &&
+      navBranch.indexOf('if (cached && !forced)') > -1,
+    'ветка навигации должна сначала отдавать кэш, а сеть проверять фоном');
   // Установка не должна заново качать весь precache (~4,1 МБ, 93 файла): от
   // этого обновление заметно замедлялось. Пропускать нужно только уже
   // закэшированное, и искать обязательно В ИМЕННО ЭТОМ кэше (CACHE_NAME), а не
@@ -1308,7 +1340,7 @@ function checkStyles(html) {
   const installBody = installSw;
   check('install не перекачивает уже закэшированные файлы precache',
     /if \(await cache\.match\(req\.url\)\) continue;/.test(installBody) &&
-      /if \(missing\.length\) await cache\.addAll\(missing\)/.test(installBody) &&
+      /precacheAssets\(cache, missing\)/.test(installBody) &&
       !/caches\.match\(/.test(installBody),
     'install должен пропускать файлы, уже лежащие в CACHE_NAME, и не искать по всему хранилищу');
 
@@ -1398,7 +1430,7 @@ function checkStyles(html) {
     `не подключены: ${notConnected.join(', ')} — клик по ним упадёт с ReferenceError`);
 
   check('офлайн-заглушка вместо пустого ответа',
-    /function offlineResponse\(\)/.test(sw) && /cached \|\| offlineResponse\(\)/.test(sw),
+    /function offlineResponse\(\)/.test(sw) && /\|\| offlineResponse\(\)/.test(sw),
     'в sw.js нет fallback-заглушки offlineResponse');
 
   // Игра не открывалась, когда games/<игра>.js не выполнился (отчёт 29.09:
