@@ -4775,6 +4775,63 @@ test('«Узнай больше»: способ записывается в «И
   }
 });
 
+// Подсказка на карточке должна соответствовать выбранному способу: пока одна и
+// та же подсказка «делай руками» для настроек «Губами и языком», «Пером или
+// тканью» и «Вибрацией», выбор настройки не значил ничего.
+test('«Узнай больше»: подсказка на карточке соответствует способу', () => {
+  const prev = state.knowMoreTool;
+  try {
+    const L = ['Руками', 'Губами и языком', 'Пером или тканью', 'Вибрацией'];
+    // Для каждого способа подсказки должны быть свои, а не копия ручной.
+    const perTool = L.map((_, t)=>{
+      state.knowMoreTool = t;
+      return KNOW_MORE_ZONES.map(z => knowMoreHowText(z));
+    });
+    perTool.forEach((texts, t)=>{
+      assert(texts.every(x => typeof x === 'string' && x.length > 0),
+        `у способа «${L[t]}» должна быть подсказка для каждой зоны`);
+    });
+    // Не-ручные способы не должны показывать ручную подсказку: иначе выбор
+    // настройки ничего не меняет. (Способ 0 — сам эталон, сравнивать его
+    // бессмысленно.)
+    [1, 2, 3].forEach(t=>{
+      const sameAsHands = perTool[t].filter((x, i)=>x === perTool[0][i]).length;
+      assert(sameAsHands === 0,
+        `у способа «${L[t]}» ${sameAsHands} подсказок совпадают с ручными — варианты не работают`);
+    });
+    // Конкретная проверка на данных: у «Мошонки» все три варианта разные.
+    const zone = KNOW_MORE_ZONES.find(z => z.body === 'he' && z.level === 3);
+    const variants = [1, 2, 3].map(t => zone.howByTool[String(t)]);
+    assert(new Set(variants).size === 3,
+      'три не-ручных варианта подсказки должны различаться между собой');
+    assert(zone.howByTool && typeof zone.how === 'string',
+      'у зоны должны быть и ручная подсказка, и варианты по способам');
+    // Старая колода без howByTool не должна ломать карточку.
+    state.knowMoreTool = 3;
+    const legacy = knowMoreHowText({ id: 1, name: 'Старая зона', how: 'Погладь рукой.' });
+    assert(legacy === 'Погладь рукой.',
+      `зона без howByTool должна показывать обычную подсказку, а показала: «${legacy}»`);
+  } finally {
+    state.knowMoreTool = prev;
+  }
+});
+
+// Колода обязана покрывать все способы для всех зон: пропуск означал бы, что
+// игрок на «Вибрацией» увидит инструкцию «руками» — то есть ровно то, что эту
+// настройку и просили.
+test('«Узнай больше»: для каждой зоны есть подсказка под каждый способ', () => {
+  const missing = [];
+  KNOW_MORE_ZONES.forEach(z=>{
+    ['1', '2', '3'].forEach(t=>{
+      if(!z.howByTool || !z.howByTool[t] || z.howByTool[t].length < 10) missing.push(`${z.name}/${t}`);
+    });
+  });
+  assert(missing.length === 0,
+    `зон без подсказки по способу: ${missing.join(', ') || '—'}`);
+  assert(KNOW_MORE_ZONES.every(z=>typeof z.how === 'string' && z.how.length > 10),
+    'у каждой зоны должна остаться ручная подсказка how');
+});
+
 test('«Узнай больше»: в режимах «Он»/«Она» исследует только один партнёр', () => {
   const prevMode = state.knowMoreMode;
   const prevStep = state.knowMoreStep;

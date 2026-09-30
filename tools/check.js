@@ -3187,6 +3187,57 @@ function checkKnowMoreZones() {
     /knowMoreTool:0/.test(read('games/core.js')) &&
       /state\.knowMoreTool = 0;/.test(read('games/core.js')),
     'в state нет knowMoreTool:0 или он не сбрасывается в performFullReset');
+
+  // Подсказки под способы воздействия. Пока настройка меняла только запись в
+  // «Исследованных», а карточка показывала «делай руками» — настройка ничего не
+  // значила, и вибрация в зоне вроде уздечки вообще не имела смысла.
+  // Колода разбирается ТЕКСТОМ, без eval: в данных появилось вложенное поле
+  // howByTool с числами-ключами, и вытащить его регуляркой надёжнее, чем
+  // исполнять файл. Каждая зона — блок от «id: N» до закрывающей строки «},».
+  const toolHints = [...cards.matchAll(/id:\s*(\d+),[\s\S]*?howByTool:\s*\{([\s\S]*?)\},[\s\S]*?how:\s*'([^']*)'/g)]
+    .map(m => ({ id: Number(m[1]), how: m[3], howByTool: (m[2].match(/(\d):\s*'([^']*)'/g) || [])
+      .reduce((acc, s)=>{ const kv = /^(\d):\s*'([\s\S]*)'$/.exec(s); if(kv) acc[kv[1]] = kv[2]; return acc; }, {}) }));
+  const missingHints = [];
+  const handsLookAlikes = [];
+  for (const z of toolHints){
+    for (const t of ['1', '2', '3']){
+      const alt = z.howByTool && z.howByTool[t];
+      if (typeof alt !== 'string' || alt.length < 10) missingHints.push(`${z.name}/способ ${t}`);
+      else if (alt === z.how) handsLookAlikes.push(`${z.name}/способ ${t}`);
+    }
+  }
+  // Разбор регуляркой пропускает зону, у которой howByTool удалили: без
+  // howByTool блок не подходит под шаблон, и следующая зона «поглощала» его id.
+  // Тогда список укорачивался молча, а проверка ниже видела «всё на месте».
+  // Поэтому сверяем число разобранных зон с числом зон в файле.
+  const allZoneIds = [...cards.matchAll(/id:\s*(\d+), level:/g)].map(m => Number(m[1]));
+  const skippedZones = allZoneIds.filter(id => !toolHints.some(z => z.id === id));
+  check('разбор колоды видит все зоны',
+    skippedZones.length === 0 && toolHints.length === allZoneIds.length,
+    `зон в файле ${allZoneIds.length}, разобрано ${toolHints.length}; выпали: ${skippedZones.join(', ') || '—'}`);
+  check('у каждой зоны есть подсказка под каждый способ воздействия',
+    missingHints.length === 0,
+    `пропущено подсказок: ${missingHints.join(', ') || '—'} (всего нужно ${toolHints.length * 3})`);
+  // Подсказка, дословно совпадающая с ручной, — это не перевод под способ, а
+  // заглушка: игрок на «Вибрацией» получит инструкцию «погладь ладонью».
+  check('подсказки по способам не копиируют ручную',
+    handsLookAlikes.length === 0,
+    `совпадают с ручной подсказкой: ${handsLookAlikes.join(', ') || '—'}`);
+  check('карточка берёт подсказку выбранного способа',
+    /function knowMoreHowText\(zone\)\{/.test(game) &&
+      /zone\.howByTool\[String\(getKnowMoreTool\(\)\)\]/.test(game) &&
+      /know-more-how\">\$\{knowMoreHowText\(zone\)\}/.test(game),
+    'карточка по-прежнему показывает zone.how — выбор способа не влияет на подсказку');
+  check('зоны, где прибор бессмыслен, честно об этом говорят',
+    (() => {
+      // Вибрация не работает на «Пальцах ног» (26), «Уздечке» (41), «Крае
+      // крайней плоти» (42) и в зоне простаты (45) — там прибор не заменит
+      // рук, и подсказка обязана это сказать, а не делать вид.
+      const ids = [26, 41, 42, 45].map(id => toolHints.find(z => z.id === id)).filter(Boolean);
+      return ids.length === 4 &&
+        ids.every(z => /не подходит/i.test(z.howByTool['3'] || ''));
+    })(),
+    'в зонах, где вибрация бессмысленна, подсказка должна прямо говорить, что прибор не подходит');
 }
 
 

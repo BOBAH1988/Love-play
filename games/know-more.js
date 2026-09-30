@@ -143,6 +143,18 @@ function knowMoreZoneLabel(zone){
   if(!zone) return '';
   return zone.body ? `${zone.name} (${zone.body === 'he' ? 'Он' : 'Она'})` : zone.name;
 }
+// Подсказка для ВЫБРАННОГО способа. В данных у каждой зоны есть how (руки) и
+// howByTool {1,2,3} — по варианту на каждый способ из настройки «Чем
+// исследуют». Если варианта нет (старая колода), отдаём обычную подсказку:
+// хуже лишний текст в скобках, чем молчаливо неверная инструкция.
+function knowMoreHowText(zone){
+  if(!zone) return '';
+  if(zone.howByTool){
+    const alt = zone.howByTool[String(getKnowMoreTool())];
+    if(alt) return alt;
+  }
+  return zone.how || '';
+}
 
 /* ============ ЭКРАН НАСТРОЙКИ ============ */
 function goToKnowMoreSetup(){
@@ -463,7 +475,7 @@ function showKnowMoreTurn(){
       ${knowMoreZoneOwnerText(zone) ? `<div class="know-more-owner">${knowMoreZoneOwnerText(zone)}</div>` : ''}
       <div class="card-split-title">${zone.name}</div>
       <div class="know-more-part">${zone.part || ''}</div>
-      <div class="know-more-how">${zone.how || ''}</div>
+      <div class="know-more-how">${knowMoreHowText(zone)}</div>
       <div class="know-more-rule">${players[knowMoreReceiverIdx()]} — что ощущаешь?</div>
     </div><div class="znayu-answers">${answers}</div></div>`;
     el.querySelectorAll('.znayu-answer-btn').forEach(btn=>{
