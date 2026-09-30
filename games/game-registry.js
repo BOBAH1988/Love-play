@@ -235,8 +235,9 @@ window.GAME_REGISTRY = [
   },
   {
     // «Пройди тест» — десять личных тестов по 10 вопросов. Пауза полноценная:
-    // тест длинный, снимок soloTestPaused хранит номер вопроса и признак «ответ
-    // уже выбран, но следующий вопрос ещё не показан».
+    // снимок soloTestPaused хранит номер вопроса, а «Продолжить игру»
+    // дополнительно сверяется с числом записанных ответов — иначе пауза в
+    // паузе между ответом и следующим вопросом пропускала бы вопрос.
     mode: 'soloTest', title: '«Пройди тест»', group: 'solo', menuTitle: '🧪 Пройди тест',
     pause: 'pauseSoloTestGame', resume: 'resumeSoloTestGame', finish: 'finishPausedSoloTestGame',
     screens: ['soloTestGame'],
