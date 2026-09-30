@@ -833,6 +833,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🇷🇺','Флаги','flagsRulesModal'],
       ['🏛️','Столицы','capitalsRulesModal'],
       ['🔢','Арифметика','timesTableRulesModal'],
+      ['🧠','Тест IQ','iqTestRulesModal'],
     ]},
   ];
 
@@ -965,6 +966,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     // котором игрока не было (см. инвариант в tools/check.js).
     capitalsSetup:'learningView', capitalsGame:'learningView',
     timesTableSetup:'learningView', timesTableGame:'learningView',
+    iqTestSetup:'learningView', iqTestGame:'learningView',
+    iqTestSummary:'learningView', iqTestHistory:'learningView',
     // «Четыре в ряд» у детей — из подменю настольных игр, раздел kidsView.
     kidsC4Setup:'kidsView', kidsC4Game:'kidsView',
   };
@@ -996,6 +999,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBattleshipSetup','soloC4Setup',
     'soloTestSetup','soloTestSummary','soloTestHistory',
     'businessLemonadeSetup','bizObsSetup','flashSetup','flagsSetup',
+    'iqTestSetup','iqTestSummary','iqTestHistory',
     'bizTestsSetup','bizTestsSummary','bizTestsHistory',
     // Обучающая группа: экраны настроек «Столиц» и «Арифметики». Без них
     // стрелка «←» не считала экран экраном настройки и проваливалась в
@@ -1066,6 +1070,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'bizTestsHistory':'exitBizTestsHistory',
     'bizTestsSummary':'exitBizTestsSummary',
     'bizTestsSetup':'exitBizTestsSetup',
+    'iqTestHistory':'exitIqTestHistory',
+    'iqTestSummary':'exitIqTestSummary',
+    'iqTestSetup':'exitIqTestSetup',
     'funTestsHistory':'exitFunTestsHistory',
     'funTestsSummary':'exitFunTestsSummary',
     'funTestsSetup':'exitFunTestsSetup',

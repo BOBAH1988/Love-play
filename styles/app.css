@@ -1872,7 +1872,7 @@
   }
   /* Обучающие игры: одинаковая синяя подложка внутри группы. Ответы всех
      карточек используют общий компонент, как викторины и бизнес-игры. */
-  #flagsCard, #capitalsCard, #flashCard, #timesTableCard{
+  #flagsCard, #capitalsCard, #flashCard, #timesTableCard, #iqTestCard{
     background:linear-gradient(160deg, #8aa9c9, #6f8fb0 55%, #4f6b8a);
   }
   /* Задание «Таблицы умножения» — пример (7 × 8 = ?) занимает место вопроса
@@ -3316,6 +3316,78 @@
   .biz-test-history-entry.open .biz-test-history-hint{ color:#e8c9dd; }
   .biz-test-history-body{ display:none; }
   .biz-test-history-entry.open .biz-test-history-body{
+    display:block; margin-top:12px; padding-top:12px;
+    border-top:1px solid rgba(255,255,255,.14); text-align:left;
+  }
+  /* "Тест IQ" — обучающая игра, поэтому карточка #iqTestCard включена в общий
+     сине-серый блок группы («Флагов», «Столиц», «Арифметики»). На этой подложке
+     текст остаётся тёмным, поэтому и .znayu-question-text, и содержимое
+     результата здесь светлые — наоборот, чем у тестовых игр на тёмном фоне.
+     Игра не вводит своих цветов, иначе выбилась бы из раздела. */
+  .iq-test-result{
+    background:rgba(255,255,255,.92); border:1px solid rgba(43,15,46,.12);
+    border-radius:16px; padding:14px; text-align:left;
+  }
+  .iq-test-type{ font-size:22px; font-weight:800; color:#2b0f2e; text-align:center; line-height:1.25; }
+  .iq-test-score{ font-size:34px; font-weight:800; color:#2b0f2e; text-align:center; line-height:1.1; margin-top:6px; }
+  .iq-test-verdict{ font-size:15px; line-height:1.5; color:#2b0f2e; margin-top:10px; }
+  .iq-test-tip{
+    margin-top:12px; border-top:1px solid rgba(43,15,46,.12); padding-top:10px;
+    font-size:13px; line-height:1.5; color:#4a2c46;
+  }
+  .iq-test-tip b{
+    display:block; font-size:12px; font-weight:800; color:#5c3a52;
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px;
+  }
+  /* Разбор по направлениям: у каждого своя полоса «сколько решено». */
+  .iq-test-areas{ margin-top:14px; border-top:1px solid rgba(43,15,46,.12); padding-top:12px; }
+  .iq-test-areas-head{
+    font-size:12px; font-weight:800; color:#5c3a52;
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:10px;
+  }
+  .iq-test-area{ margin-bottom:12px; }
+  .iq-test-area-head{ display:flex; align-items:baseline; gap:8px; }
+  .iq-test-area-name{ flex:1 1 auto; min-width:0; font-size:14px; font-weight:700; color:#2b0f2e; }
+  .iq-test-area-score{ flex:0 0 auto; font-size:12px; color:#5c3a52; }
+  .iq-test-area-bar{
+    height:6px; border-radius:3px; background:rgba(43,15,46,.1);
+    overflow:hidden; margin-top:5px;
+  }
+  .iq-test-area-bar > span{ display:block; height:100%; background:#6f8fb0; border-radius:3px; }
+  .iq-test-area-text{ font-size:12px; line-height:1.5; color:#5c3a52; margin-top:5px; }
+  /* Оговорка о том, что это не измерение интеллекта: на экране итогов она
+     должна быть видна всегда, а не прятаться в правилах. */
+  .iq-test-disclaimer{
+    margin-top:14px; border-top:1px solid rgba(43,15,46,.12); padding-top:10px;
+    font-size:12px; line-height:1.5; color:#5c3a52;
+  }
+  .iq-test-history-entry{
+    position:relative;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px 44px 12px 14px;
+  }
+  .iq-test-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+  .iq-test-history-text{ font-size:14px; color:#fff; line-height:1.45; }
+  .iq-test-history-del{
+    position:absolute; top:10px; right:10px;
+    flex-shrink:0; width:28px; height:28px; border-radius:50%;
+    border:1px solid rgba(255,99,110,.4); background:transparent; color:#ff8b96;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .iq-test-history-del:active{ background:rgba(255,99,110,.3); }
+  .iq-test-history-head{
+    display:block; width:100%; text-align:left; background:transparent;
+    border:0; padding:0 40px 0 0; color:inherit; font:inherit; cursor:pointer;
+  }
+  .iq-test-history-date, .iq-test-history-text{ display:block; }
+  .iq-test-history-hint{
+    display:block; margin-top:4px;
+    font-size:12px; font-weight:700; color:rgba(255,255,255,.6);
+  }
+  .iq-test-history-entry.open .iq-test-history-hint{ color:#e8c9dd; }
+  .iq-test-history-body{ display:none; }
+  .iq-test-history-entry.open .iq-test-history-body{
     display:block; margin-top:12px; padding-top:12px;
     border-top:1px solid rgba(255,255,255,.14); text-align:left;
   }

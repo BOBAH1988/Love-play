@@ -367,6 +367,16 @@ let state = {
   bizTestsOpen:[],
   // Снимок места остановки для меню паузы (номер вопроса).
   bizTestsPaused:null,
+  // Тест IQ (обучающие игры) — одна игра, один тест: 30 заданий и разбор по
+  // пяти направлениям. iqTestOrder — перемешанный порядок заданий ЭТОЙ партии
+  // (без него пять заданий одного направления шли подряд и направление
+  // угадывалось по соседству); iqTestAnswers — по 1 или 0 на задание.
+  iqTestIndex:0, iqTestOrder:[], iqTestAnswers:[],
+  iqTestResult:null, iqTestHistory:[],
+  // Какие записи «Пройденных» раскрыты (ключ — дата прохождения).
+  iqTestOpen:[],
+  // Снимок места остановки для меню паузы (номер задания).
+  iqTestPaused:null,
   // Весёлые тесты (для детей) — четырнадцать тестов по 10 вопросов.
   // funTestsAnswers хранит по одному значению на вопрос: индекс типа
   // (mode:'types'). funTestsHistory хранит посчитанный результат.
@@ -1069,6 +1079,12 @@ document.getElementById('gameBizTestsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   callGameEntry('goToBizTestsSetup');
+});
+// «Тест IQ» (обучающие игры) — 30 заданий и разбор по направлениям.
+document.getElementById('gameIqTestBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  callGameEntry('goToIqTestSetup');
 });
 // "Английский язык" (обучающие игры) — goToFlashSetup() определена в games/kids-flash.js.
 document.getElementById('gameLearningFlashBtn').addEventListener('click', ()=>{
@@ -2112,6 +2128,14 @@ function performFullReset(){
   state.bizTestsHistory = [];
   state.bizTestsOpen = [];
   state.bizTestsPaused = null;
+  // Тест IQ — общий сброс чистит партию и историю
+  state.iqTestIndex = 0;
+  state.iqTestOrder = [];
+  state.iqTestAnswers = [];
+  state.iqTestResult = null;
+  state.iqTestHistory = [];
+  state.iqTestOpen = [];
+  state.iqTestPaused = null;
   // Весёлые тесты (дети) — общий сброс чистит партию и историю
   state.funTestsType = 'adventure';
   state.funTestsIndex = 0;

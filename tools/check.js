@@ -3533,6 +3533,103 @@ function checkBizTests(html, timerSrc) {
     `шкалы видны в итогах, значит, должны быть названы в правилах — не названы: ${missingScales.join(', ') || '—'}`);
 }
 
+// «Тест IQ» — обучающая игра, один тест на 30 заданий. Проверяем регистрацию,
+// оформление карточки в группе, и — главное — содержательную часть: у каждого
+// задания ровно один верный вариант, направлений ровно пять, уровни покрывают
+// весь диапазон, а в правилах сказано, что это НЕ измерение интеллекта.
+// Последнее важно содержательно: по названию «Тест IQ» игрок ждёт числа IQ,
+// а у такой игры нет референсной группы и норм — выдавать её за оценку
+// интеллекта было бы просто неверно.
+function checkIqTest(html, timerSrc) {
+  group('«Тест IQ» (обучающие)');
+  const data = read('cards/cards_iq_test.js');
+  const learnList = /<div class="game-select-list" id="learningGameSelectList">([\s\S]*?)<\/div>/.exec(html);
+  check('кнопка игры в разделе «Обучающие игры»',
+    !!learnList && learnList[1].includes('id="gameIqTestBtn"'),
+    'кнопка «Тест IQ» должна быть в #learningGameSelectList, иначе её не запустить из раздела');
+  const otherLists = ['kidsGameSelectList', 'soloGameSelectList', 'businessGameSelectList']
+    .map(id => new RegExp(`id="${id}"([\\s\\S]*?)<\\/div>`).exec(html))
+    .filter(Boolean)
+    .map(m => m[1]);
+  check('кнопка игры не попала в другие разделы',
+    !otherLists.some(l => l.includes('gameIqTestBtn')),
+    'обучающая игра не должна висеть в детских, одиночных или бизнес-играх');
+  const regLine = read('games/game-registry.js').split('\n').filter(l => /mode:\s*'iqTest'/.test(l));
+  check('в реестре игра числится в группе learning',
+    regLine.length === 1 && /group:\s*'learning'/.test(regLine[0]),
+    `в реестре должен быть ровно один mode:'iqTest' с group:'learning' (строк: ${regLine.length})`);
+  for (const sid of ['iqTestSetup', 'iqTestGame', 'iqTestSummary', 'iqTestHistory']) {
+    check(`экран ${sid} есть в разметке и в карте раздела learningView`,
+      new RegExp(`<section id="${sid}"`).test(html) && new RegExp(`${sid}:'learningView'`).test(timerSrc),
+      `нет секции #${sid} или записи ${sid}:'learningView' в SECTION_FOR_SCREEN`);
+  }
+  // Карточка включается в ОБЩИЙ блок обучающих игр: у группы своя сине-серая
+  // подложка, и отдельный фон у одной игры выбился бы из раздела.
+  const appCss = read('styles/app.css');
+  check('карточка «Теста IQ» в общем фоне группы «Обучающие игры»',
+    /#flagsCard[^{}]*#iqTestCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#8aa9c9,\s*#6f8fb0\s+55%,\s*#4f6b8a/.test(appCss),
+    'ожидается #iqTestCard в общем блоке с градиентом #8aa9c9 → #6f8fb0 → #4f6b8a вместе с «Флагами» и «Столицами»');
+  // Отдельным считается правило, где #iqTestCard СТОИТ В НАЧАЛЕ селектора.
+  // В общем блоке он идёт последним через запятую, и прежняя регулярка
+  // считала общий блок «отдельным» — то есть проверка ругалась на то, что
+  // как раз и требовала.
+  check('у карточки нет собственного отдельного фона',
+    !/(?:^|[{;])\s*#iqTestCard\s*\{[^}]*background/m.test(appCss),
+    'отдельный фон у #iqTestCard сделает карточку чужеродной среди обучающих игр');
+  // Данные: по шесть заданий на каждое из пяти направлений, ровно один верный
+  // вариант. Оба условия обязательны: без первого профиль не сравнить, без
+  // второго задание либо не решается, либо без верного.
+  // Комментарии исключаем: в шапке файла формат записан как пример, и без
+  // этого он попадал в подсчёт как настоящие данные.
+  const dataBody = data.split('\n').filter(l => !l.trim().startsWith('//')).join('\n');
+  const areaKeys = [...dataBody.matchAll(/key: '([a-z]+)',\s*icon/g)].map(m => m[1]);
+  check('направлений пять', areaKeys.length === 5, `направлений должно быть 5, а ${areaKeys.length}`);
+  const byArea = {};
+  for (const m of dataBody.matchAll(/area: '([a-z]+)'/g)) {
+    byArea[m[1]] = (byArea[m[1]] || 0) + 1;
+  }
+  const wrongCount = [...dataBody.matchAll(/ok: true/g)].length;
+  const itemCount = Object.values(byArea).reduce((a, b) => a + b, 0);
+  check('заданий 30, по шесть на направление',
+    itemCount === 30 && areaKeys.every(k => byArea[k] === 6),
+    `заданий ${itemCount} (по направлениям ${JSON.stringify(byArea)}) — нужно 30 и по 6 на каждое`);
+  check('у каждого задания ровно один верный вариант',
+    wrongCount === itemCount,
+    `верных вариантов ${wrongCount} при ${itemCount} заданиях — должен быть ровно один на каждое`);
+  check('все направления измерены заданиями',
+    areaKeys.every(k => byArea[k] > 0),
+    `не измерено: ${areaKeys.filter(k => !byArea[k]).join(', ')}`);
+  // Уровни покрывают весь диапазон: иначе часть результатов попала бы
+  // «никуда» (например, при 25 баллах не нашлось бы уровня).
+  const mins = [...dataBody.matchAll(/min: (\d+),\s*title:/g)].map(m => Number(m[1]));
+  check('уровни покрывают весь диапазон баллов',
+    mins.length >= 3 && mins[mins.length - 1] === 0 && mins.every((m, i) => i === 0 || m < mins[i - 1])
+      && mins[0] <= 30,
+    `пороги уровней ${mins.join(',')} должны идти по убыванию, заканчиваться нулём и начинаться не выше 30`);
+  // Содержательная оговорка: игра не должна выдавать себя за измерение IQ.
+  const rules = /<div class="modal-overlay" id="iqTestRulesModal">([\s\S]*?)closeIqTestRulesBtn/.exec(html);
+  const rulesText = rules ? rules[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ') : '';
+  check('в правилах сказано, что игра не считает IQ',
+    /не считает IQ/i.test(rulesText) && /не измерение интеллекта|тренировочный тест/i.test(rulesText),
+    'по названию «Тест IQ» игрок ждёт числа IQ, а у такой игры нет норм: нужно прямое предупреждение в правилах');
+  check('в правилах объяснено, почему числа IQ здесь не бывает',
+    /референсн/i.test(rulesText) && /стандартизированн/i.test(rulesText),
+    'нужно сказать про отсутствие референсной группы и норм — иначе оговорка выглядит пустой');
+  check('в правилах сказано, что задания написаны для приложения',
+    /написаны для этого приложения/i.test(rulesText),
+    'происхождение заданий надо сказать прямо, чтобы не выдавать игру за чужие методики');
+  // Ошибочный ответ подсвечивается: иначе игрок не понимает, где ошибся.
+  const game = read('games/iq-test.js');
+  check('ошибочный ответ подсвечивается вместе с верным',
+    /answer-wrong/.test(game) && /answer-correct/.test(game),
+    'без подсветки игрок не видит, где именно ошибся');
+  // Порядок заданий перемешивается: иначе пять заданий одного направления
+  // идут подряд и направление угадывается по соседству.
+  check('порядок заданий перемешивается',
+    /shuffle\(state\.iqTestOrder\)/.test(game),
+    'без перемешивания направление выдаёт себя соседством вопросов');
+}
+
 // Раскрытие результата в «Пройденных» должно вести себя одинаково в обеих
 // играх про тесты — «Пройдите тест» (пары) и «Пройди тест» (один). Обе части
 // сделаны по одному образцу (кнопка-заголовок + скрытое тело), и однажды одна
@@ -3876,6 +3973,7 @@ function main() {
   checkFunTests(html, read('games/fants-timer.js'));
   checkTestHistoryExpand(html);
   checkBizTests(html, read('games/fants-timer.js'));
+  checkIqTest(html, read('games/fants-timer.js'));
   checkPauseResetOnStart();
   checkExitNavigation();
   checkStyles(html);

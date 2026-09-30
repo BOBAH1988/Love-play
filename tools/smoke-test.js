@@ -5308,6 +5308,246 @@ test('«Бизнес тесты»: в правилах сказано, что э
     `в правилах не названы шкалы: ${missingScales.join(', ') || '—'}`);
 });
 
+console.log('\n=== «Тест IQ» ===');
+
+const iqBackup = () => {
+  const saved = {};
+  ['iqTestIndex', 'iqTestOrder', 'iqTestAnswers', 'iqTestResult', 'iqTestHistory',
+   'iqTestOpen', 'iqTestPaused', 'inProgress', 'pausedMode', 'autoSpeak'].forEach(k => { saved[k] = state[k]; });
+  return saved;
+};
+// Ответить на всю партию, решая mode: 'all' — все верно, 'none' — все неверно,
+// 'half' — через один.
+const runIqTest = (mode) => {
+  state.iqTestHistory = [];
+  startIqTestGame();
+  const n = iqTestTotal();
+  for(let i = 0; i < n; i++){
+    const opts = iqTestCurrentOptions;
+    const pick = mode === 'all' ? opts.findIndex(o => o.ok)
+      : mode === 'half' ? (i % 2 === 0 ? opts.findIndex(o => o.ok) : opts.findIndex(o => !o.ok))
+      : opts.findIndex(o => !o.ok);
+    answerIqTestQuestion(pick);
+    advanceIqTest();
+  }
+  return state.iqTestResult;
+};
+
+test('«Тест IQ»: 30 заданий, ровно один верный вариант в каждом', () => {
+  const saved = iqBackup();
+  try {
+    assert(IQ_ITEMS.length === 30, `в тесте должно быть 30 заданий, а ${IQ_ITEMS.length}`);
+    assert(IQ_AREAS.length === 5, `направлений должно быть 5, а ${IQ_AREAS.length}`);
+    const byArea = {};
+    IQ_ITEMS.forEach((it, i) => {
+      byArea[it.area] = (byArea[it.area] || 0) + 1;
+      assert(!!it.area && !!it.q, `задание ${i + 1}: нет направления или текста`);
+      const ok = (it.a || []).filter(x => x.ok).length;
+      // Ровно один верный: иначе задание либо не решается, либо без верного.
+      assert(ok === 1, `задание ${i + 1}: верных вариантов ${ok}, а должен быть ровно один`);
+      const texts = new Set((it.a || []).map(x => x.t));
+      assert(texts.size === it.a.length, `задание ${i + 1}: варианты повторяются`);
+    });
+    // Шесть заданий на направление: иначе профиль по направлениям не сравнить.
+    IQ_AREAS.forEach(a => {
+      assert(byArea[a.key] === 6, `направление «${a.name}»: заданий ${byArea[a.key]}, а должно быть 6`);
+    });
+    // Уровни покрывают весь диапазон: от 0 баллов до всех 30.
+    const mins = IQ_LEVELS.map(l => l.min);
+    assert(mins[mins.length - 1] === 0, 'нижний уровень должен начинаться с 0 баллов');
+    assert(mins.every((m, i) => i === 0 || m < mins[i - 1]), `уровни должны идти по убыванию: ${mins.join(',')}`);
+    assert(mins[0] <= IQ_ITEMS.length, 'верхний уровень должен быть достижим');
+    IQ_LEVELS.forEach(l => {
+      assert(l.title && l.text && l.advice, `уровень «${l && l.title}» без описания или совета`);
+    });
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Тест IQ»: подсчёт по направлениям и уровень', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = iqBackup();
+  const list = getElById(stub, 'iqTestSummaryList');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    // Все верно — верхний уровень и полный профиль.
+    const all = runIqTest('all');
+    assert(all && all.score === 30, `при всех верных ответах должно быть 30, а ${all && all.score}`);
+    assert(all.areas.length === 5, `в профиле должно быть 5 направлений, а ${all.areas.length}`);
+    all.areas.forEach(a => {
+      assert(a.got === 6 && a.asked === 6, `направление ${a.name}: ${a.got} из ${a.asked}, а должно быть 6 из 6`);
+    });
+    // Все неверно — нижний уровень и нули.
+    const none = runIqTest('none');
+    assert(none.score === 0, `при всех неверных ответах должно быть 0, а ${none.score}`);
+    assert(none.title === IQ_LEVELS[IQ_LEVELS.length - 1].title, 'при нуле должен быть нижний уровень');
+    // Проверяем, что счёт по направлениям честный: решаем верно все вопросы
+    // одного направления и неверно остальные — тогда именно у него должно
+    // быть 6 из 6, а у прочих меньше.
+    const weak = IQ_AREAS[0].key;
+    state.iqTestHistory = [];
+    startIqTestGame();
+    const n = iqTestTotal();
+    for(let i = 0; i < n; i++){
+      const item = iqTestCurrentItem();
+      const opts = iqTestCurrentOptions;
+      answerIqTestQuestion(opts.findIndex(o => o.ok) === opts.findIndex(o => o.ok) && item.area === weak
+        ? opts.findIndex(o => o.ok) : opts.findIndex(o => !o.ok));
+      advanceIqTest();
+    }
+    const r = state.iqTestResult;
+    const w = r.areas.find(a => a.key === weak);
+    const others = r.areas.filter(a => a.key !== weak);
+    assert(w.got === 6, `у выбранного направления должно быть 6, а ${w.got}`);
+    assert(others.every(a => a.got < 6), 'у остальных направлений должно быть меньше 6');
+    // Сумма по направлениям равна общему счёту: расхождение означало бы, что
+    // часть ответов не засчитана или посчитана дважды.
+    const sumAreas = r.areas.reduce((acc, a) => acc + a.got, 0);
+    assert(sumAreas === r.score, `сумма по направлениям ${sumAreas} не равна общему счёту ${r.score}`);
+    // На экране итогов есть разбор и честная оговорка, что это не IQ.
+    assert(/iq-test-area/.test(list.innerHTML), 'в итогах должен быть разбор по направлениям');
+    assert(/не измерение интеллекта/.test(list.innerHTML),
+      'в итогах должно быть сказано, что это тренировочный тест, а не измерение интеллекта');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Тест IQ»: партия доходит до итогов, а не зацикливается', () => {
+  // Регресс: индекс за пределами списка заворачивался по модулю, и на
+  // последнем шаге снова показывался первый вопрос — тест крутился бы вместо
+  // перехода к итогам.
+  const originalFade = global.fadeSwapEl;
+  const saved = iqBackup();
+  const card = getElById(stub, 'iqTestCard');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    const firstQuestion = (() => {
+      state.iqTestHistory = [];
+      startIqTestGame();
+      return card.innerHTML;
+    })();
+    const n = iqTestTotal();
+    const seen = new Set();
+    for(let i = 0; i < n; i++){
+      const item = iqTestCurrentItem();
+      assert(!!item, `на шаге ${i + 1} задание должно быть, иначе партия прервалась`);
+      assert(i < n, `после ${n} заданий индекс не должен расти дальше`);
+      seen.add(item.q);
+      answerIqTestQuestion(iqTestCurrentOptions.findIndex(o => o.ok));
+      advanceIqTest();
+    }
+    assert(seen.size === n, `в партии должно быть ${n} разных заданий, а встретилось ${seen.size}`);
+    assert(state.iqTestIndex === n, `после последнего ответа индекс должен быть ${n}, а ${state.iqTestIndex}`);
+    assert(iqTestCurrentItem() === null, 'после последнего задания текущего задания быть не должно');
+    assert(state.iqTestResult && typeof state.iqTestResult.score === 'number', 'после последнего задания должны посчитаться итоги');
+    assert(getElById(stub, 'iqTestSummary').classList.contains('active'), 'должен открыться экран итогов');
+    assert(state.iqTestAnswers.length === n, `ответов должно быть ${n}, а ${state.iqTestAnswers.length}`);
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Тест IQ»: в группе «Обучающие игры», пауза и «Пройденные»', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = iqBackup();
+  const screens = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => document.getElementById(m[1]));
+  const originalQuery = document.querySelectorAll;
+  const originalSingleQuery = document.querySelector;
+  const clear = () => screens.forEach(el => el.classList.remove('active'));
+  const active = () => screens.filter(el => el.classList.contains('active'));
+  const back = document.getElementById('globalBackBtn');
+  const list = getElById(stub, 'iqTestHistoryList');
+  try {
+    document.querySelectorAll = function(selector){
+      if(selector === '.screen.active') return active();
+      if(selector === '.screen') return screens;
+      return originalQuery.call(this, selector);
+    };
+    document.querySelector = function(selector){
+      if(selector === '.screen.active') return active()[0] || null;
+      return originalSingleQuery.call(this, selector);
+    };
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    // Кнопка в разделе «Обучающие игры» и группа в реестре совпадают.
+    const learnList = /<div class="game-select-list" id="learningGameSelectList">([\s\S]*?)<\/div>/.exec(html)[1];
+    assert(learnList.includes('id="gameIqTestBtn"'), 'кнопка «Тест IQ» должна быть в разделе «Обучающие игры»');
+    const entry = (window.GAME_REGISTRY || []).find(g => g.mode === 'iqTest');
+    assert(entry && entry.group === 'learning', 'в реестре игра должна быть в группе learning');
+
+    // Пауза: возврат ровно на то же задание, в том числе после паузы между
+    // ответом и следующим заданием.
+    state.iqTestHistory = [];
+    startIqTestGame();
+    for(let i = 0; i < 5; i++){
+      answerIqTestQuestion(iqTestCurrentOptions.findIndex(o => o.ok));
+      advanceIqTest();
+    }
+    pauseIqTestGame();
+    assert(state.pausedMode === 'iqTest', `пауза должна выставить pausedMode='iqTest', а ${state.pausedMode}`);
+    assert(state.lastSectionOnPause === 'learningView',
+      `на паузе должен открыться раздел «Обучающие игры», а ${state.lastSectionOnPause}`);
+    getElById(stub, 'resumeBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(state.iqTestIndex === 5, `после продолжения задание 5, а ${state.iqTestIndex}`);
+    answerIqTestQuestion(iqTestCurrentOptions.findIndex(o => o.ok));
+    pauseIqTestGame();
+    getElById(stub, 'resumeBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(state.iqTestIndex === 6,
+      `после паузы между ответом и заданием должно быть задание 6, а ${state.iqTestIndex}`);
+
+    // «Пройденные»: раскрытие по нажатию и удаление крестиком.
+    state.iqTestHistory = [];
+    state.iqTestOpen = [];
+    runIqTest('half');
+    goToIqTestHistory();
+    assert(!/iq-test-history-entry open/.test(list.innerHTML), 'никто не должен быть раскрыт до нажатия');
+    list._getHandlers().get('click').forEach(({ handler }) => handler({
+      target: { closest: sel => sel === '.iq-test-history-head' ? { dataset: { idx: '0' } } : null },
+    }));
+    assert(/iq-test-history-entry open/.test(list.innerHTML), 'после нажатия запись должна раскрыться');
+    assert(/iq-test-area/.test(list.innerHTML), 'в раскрытой записи должен быть разбор по направлениям');
+    list._getHandlers().get('click').forEach(({ handler }) => handler({
+      target: { closest: sel => sel === '.iq-test-history-del' ? { dataset: { idx: '0' } } : null },
+    }));
+    assert((state.iqTestHistory || []).length === 0, 'крестик должен удалить запись');
+
+    // Стрелка «←» с экрана настроек уводит в хаб.
+    clear();
+    goToIqTestSetup();
+    for(const { handler } of back._getHandlers().get('click')) handler({});
+    assert(!getElById(stub, 'iqTestSetup').classList.contains('active'),
+      'стрелка «←» не должна оставлять экран настроек активным');
+    assert(getElById(stub, 'setup').classList.contains('active'), 'стрелка «←» должна вести в хаб');
+    assert(active().length === 1, `после выхода активным должен быть ровно один экран, а ${active().length}`);
+  } finally {
+    clear();
+    document.querySelectorAll = originalQuery;
+    document.query = originalSingleQuery;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Тест IQ»: правила предупреждают, что это не измерение интеллекта', () => {
+  // Содержательная проверка: по названию «Тест IQ» игрок ждёт числа IQ.
+  // Без прямого предупреждения результат такой игры выдавался бы за оценку
+  // интеллекта, которой он не является.
+  const rules = /<div class="modal-overlay" id="iqTestRulesModal">[\s\S]*?closeIqTestRulesBtn/.exec(html)[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  assert(/не измерение интеллекта|тренировочный тест/i.test(rules), 'в правилах должно быть сказано, что это тренировочный тест');
+  assert(/не считает IQ/i.test(rules), 'в правилах должно быть прямо сказано, что игра не считает IQ');
+  assert(/референсн/i.test(rules), 'в правилах нужно объяснить, почему числа IQ здесь не бывает (нет референсной группы)');
+  assert(/Все 30 заданий и вариантов ответа написаны для этого приложения/i.test(rules),
+    'в правилах должно быть сказано, что задания написаны для приложения и не скопированы');
+  // Все пять направлений названы.
+  const missing = IQ_AREAS.map(a => a.name).filter(n => !rules.includes(n));
+  assert(missing.length === 0, `в правилах не названы направления: ${missing.join(', ')}`);
+});
+
 console.log('\n=== «Узнай больше» ===');
 
 // Игра про карту тела: партнёры по очереди исследуют зоны, отметки пишутся

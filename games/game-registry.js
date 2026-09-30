@@ -272,6 +272,14 @@ window.GAME_REGISTRY = [
     screens: ['bizTestsGame'],
   },
   {
+    // «Тест IQ» — 30 заданий с разбором по пяти направлениям. НЕ считает IQ:
+    // у набора нет референсной группы и норм, поэтому в реестре это
+    // «тренировочный тест», а не измерение интеллекта.
+    mode: 'iqTest', title: '«Тест IQ»', group: 'learning', menuTitle: '🧠 Тест IQ',
+    pause: 'pauseIqTestGame', resume: 'resumeIqTestGame', finish: 'finishPausedIqTestGame',
+    screens: ['iqTestGame'],
+  },
+  {
     mode: 'flags', title: '«Флаги»', group: 'learning', menuTitle: '🇷🇺 Флаги',
     noPause: true, back: 'exitFlagsGame',
     screens: ['flagsGame'],
