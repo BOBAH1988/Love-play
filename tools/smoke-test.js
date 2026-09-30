@@ -4916,6 +4916,94 @@ test('«Узнай больше»: отметки сгруппированы п�
   }
 });
 
+// Реакция показывается иконкой, а порядок в строке задан владельцем:
+// ИКОНКА → зона → способ. Иконки те же, что в окне итогов и на кнопках оценки,
+// иначе одна оценка выглядела бы на экране двумя способами.
+test('«Узнай больше»: реакция иконкой, порядок «иконка → зона → способ»', () => {
+  const saved = knowMoreBackup();
+  const list = getElById(stub, 'knowMoreHistoryList');
+  const savedOpen = JSON.stringify(state.knowMoreOpen);
+  try {
+    // Иконка есть у каждой ступени шкалы, у всех четырёх она разная.
+    assert(KNOW_MORE_SCALE.length === 4, `в шкале должно быть четыре ступени, а ${KNOW_MORE_SCALE.length}`);
+    assert(KNOW_MORE_SCALE.every(s => typeof s.icon === 'string' && s.icon.length > 0),
+      'у каждой оценки должна быть иконка');
+    const icons = KNOW_MORE_SCALE.map(s => s.icon);
+    assert(new Set(icons).size === icons.length, `иконки оценок должны различаться, а они: ${icons.join(' ')}`);
+    assert(KNOW_MORE_SCALE.every(s => typeof s.text === 'string' && s.text.length > 0),
+      'подпись оценки нужна для кнопок на карточке — иконка её не заменяет');
+    assert(knowMoreLogScoreIcon(3) === KNOW_MORE_SCALE[0].icon
+      && knowMoreLogScoreIcon(0) === KNOW_MORE_SCALE[3].icon,
+      'иконка достаётся по значению score');
+    assert(knowMoreLogScoreIcon(99) === '—',
+      'неизвестная оценка должна давать «—», а не выдуманную иконку');
+
+    // Порядок в строке отметки.
+    state.knowMoreOpen = ['0:head'];
+    state.knowMoreTool = 1;
+    state.knowMoreLog = [
+      { zoneId: 2, score: 3, receiver: 0, tool: 1, date: 1 }, // «За ушами», очень приятно, губами
+    ];
+    goToKnowMoreHistory();
+    const html = list ? list.innerHTML : '';
+    const row = (html.match(/<span class="know-more-item">[\s\S]*?data-knowmore-del="[^"]*"[\s\S]*?<\/button>/) || [''])[0];
+    assert(/know-more-score-icon[^>]*>\s*💗/.test(row),
+      `в строке должна быть иконка реакции, получено: ${row.slice(0, 160)}`);
+    // Реакция — словом НЕ показывается: ради краткости она заменена иконкой.
+    // Ищем слово в ВИДИМОМ тексте строки. Совпадение ищем в тексте без
+    // атрибутов: aria-label/title у иконки и у крестика содержать подпись
+    // оценки намеренно (доступность и подсказка), на экране её не видно.
+    const rowVisible = row.replace(/\s(?:aria-label|title)="[^"]*"/g, '');
+    assert(!/Очень приятно/.test(rowVisible),
+      `в строке не должно быть слов про оценку, получено: ${rowVisible.slice(0, 160)}`);
+    // Иконка идёт ПЕРВОЙ, затем зона, затем способ.
+    const iconAt = row.indexOf('know-more-score-icon');
+    const zoneAt = row.search(/За ушами/);
+    const toolAt = row.search(/Губами и языком/);
+    assert(iconAt >= 0 && zoneAt > iconAt && toolAt > zoneAt,
+      `порядок должен быть «иконка → зона → способ», позиции: иконка ${iconAt}, зона ${zoneAt}, способ ${toolAt}`);
+    // Иконка остаётся доступной для программ чтения и подсказки по нажатию.
+    assert(/aria-label="Очень приятно"/.test(row) && /title="Очень приятно"/.test(row),
+      'иконка реакции должна иметь aria-label и title — реакция не должна теряться для читалок');
+    assert(/aria-label="Удалить: За ушами, Очень приятно, Губами и языком"/.test(row),
+      'у крестика должно быть полное описание отметки, а не только иконка');
+    // Сводка в заголовке группы — теми же иконками, без слов.
+    assert(/know-more-sum-icon[^>]*title="Очень приятно 1"/.test(html),
+      'сводка оценок в заголовке группы должна быть иконками с подсказкой');
+    assert(!/know-more-sum-icon[^>]*>[^<]*Очень приятно/.test(html),
+      'в сводке не должно быть слов про оценку');
+
+    // Кнопки оценки на карточке: иконка перед подписью, текст сохранён.
+    state.knowMoreMode = KNOW_MORE_MODE.HE;
+    state.knowMoreStarter = 0;
+    state.knowMoreTool = 0;
+    state.knowMoreQueue = [2];
+    state.knowMoreStep = 0;
+    state.knowMoreMarks = [[], []];
+    state.knowMoreLog = [];
+    knowMoreAwaitNext = false;
+    const card = getElById(stub, 'knowMoreCard');
+    const originalFade = global.fadeSwapEl;
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    showKnowMoreTurn();
+    const cardHtml = card ? card.innerHTML : '';
+    const buttons = cardHtml.match(/znayu-answer-btn"[\s\S]*?<\/button>/g) || [];
+    assert(buttons.length === 4, `на карточке должно быть четыре кнопки оценки, а ${buttons.length}`);
+    assert(buttons.every(b => /know-more-scale-icon/.test(b)),
+      'на каждой кнопке оценки должна быть иконка');
+    KNOW_MORE_SCALE.forEach((s, i)=>{
+      assert(buttons[i] && buttons[i].includes(s.icon),
+        `на кнопке «${s.text}» должна быть её иконка ${s.icon}`);
+      assert(buttons[i] && buttons[i].includes(s.text),
+        `на кнопке «${s.text}» должна остаться подпись — иконка её не заменяет`);
+    });
+    global.fadeSwapEl = originalFade;
+  } finally {
+    state.knowMoreOpen = JSON.parse(savedOpen || '[]');
+    Object.assign(state, saved);
+  }
+});
+
 test('«Узнай больше»: в режимах «Он»/«Она» исследует только один партнёр', () => {
   const prevMode = state.knowMoreMode;
   const prevStep = state.knowMoreStep;

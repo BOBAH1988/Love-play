@@ -41,11 +41,17 @@
 const KNOW_MORE_STEPS = 12;
 
 // Шкала оценки ощущения: от «очень приятно» до «лучше не трогать».
+// icon — тот же набор, что уже показывается в окне итогов (knowMoreMapHtml):
+// 💗 😊 🤍 ⛔. Взят один и тот же набор намеренно: иначе на карточке и в итогах
+// одна и та же оценка выглядела бы по-разному, и игрок привыкал бы к двум
+// обозначениям. Иконка дублирует подпись, а не заменяет её: на кнопках оценки
+// текст остаётся (подсказка важнее места), а в «Исследованных» слова заменены
+// иконкой ради краткости.
 const KNOW_MORE_SCALE = [
-  { score: 3, text: 'Очень приятно' },
-  { score: 2, text: 'Приятно' },
-  { score: 1, text: 'Нейтрально' },
-  { score: 0, text: 'Стоп — лучше не трогать' },
+  { score: 3, icon: '💗', text: 'Очень приятно' },
+  { score: 2, icon: '😊', text: 'Приятно' },
+  { score: 1, icon: '🤍', text: 'Нейтрально' },
+  { score: 0, icon: '⛔', text: 'Стоп — лучше не трогать' },
 ];
 
 /* ============ ЧЕМ ИССЛЕДУЮТ ============
@@ -297,6 +303,13 @@ function knowMoreLogScoreText(score){
   const found = KNOW_MORE_SCALE.find(s => s.score === score);
   return found ? found.text : '—';
 }
+// Иконка оценки для списков. Неизвестное значение (старое сохранение, битая
+// запись) даёт «—», а не выдуманный смайлик: лучше видно, что значение не
+// распознано, чем что оно «приятное».
+function knowMoreLogScoreIcon(score){
+  const found = KNOW_MORE_SCALE.find(s => s.score === score);
+  return found ? found.icon : '—';
+}
 // Удаление отметки из накопительного списка «Исследованные».
 //
 // Удаляем РОВНО одну запись — по её месту в state.knowMoreLog, а не по паре
@@ -324,22 +337,27 @@ function goToKnowMoreHistory(){
   if(log.length === 0){
     wrap.innerHTML = '<div class="know-more-empty">Пока ничего не исследовано — начните первую партию.</div>';
   } else {
-    // Строки с крестиком: индекс — это место записи В state.knowMoreLog, а не
-    // номер строки на экране, поэтому удаление попадает точно в свою отметку
-    // даже после того, как список перерисовался.
-    const lineHtml = (text, index)=>`<span class="know-more-item">`
-      + `<span class="know-more-item-text">${text}</span>`
+    // Строка отметки в порядке, заданном владельцем: ИКОНКА РЕАКЦИИ → зона →
+    // способ воздействия. Реакция иконкой, а не словами: в «Исследованных» к
+    // моменту, когда отметок много, слова «Очень приятно» съедали половину
+    // строки. Иконка помечена role=img с aria-label — для программ чтения с
+    // экрана и для долгого нажатия (подсказка) реакция остаётся доступной.
+    const lineHtml = (score, zoneText, toolText, index)=>`<span class="know-more-item">`
+      + `<span class="know-more-score-icon" role="img" `
+      + `aria-label="${knowMoreLogScoreText(score)}" `
+      + `title="${knowMoreLogScoreText(score)}">${knowMoreLogScoreIcon(score)}</span>`
+      + `<span class="know-more-item-text">${zoneText} · ${toolText}</span>`
       + `<button type="button" class="know-more-item-del" data-knowmore-del="${index}" `
-      + `aria-label="Удалить: ${text}">✕</button></span>`;
-    // Короткая сводка в заголовке группы: «Приятно 2 · Стоп 1». С ней видно,
-    // где искать, не раскрывая все секции подряд.
+      + `aria-label="Удалить: ${zoneText}, ${knowMoreLogScoreText(score)}, ${toolText}">✕</button></span>`;
+    // Короткая сводка в заголовке группы: теми же иконками, что и в строках,
+    // иначе один экран говорил бы об оценке двумя способами.
     const scoreSum = (items)=>{
       const parts = [];
       KNOW_MORE_SCALE.forEach(s=>{
         const n = items.filter(it=>it.score === s.score).length;
-        if(n > 0) parts.push(`${s.text} ${n}`);
+        if(n > 0) parts.push(`<span class="know-more-sum-icon" title="${s.text} ${n}">${s.icon}${n}</span>`);
       });
-      return parts.length ? parts.join(' · ') : '—';
+      return parts.length ? parts.join('') : '—';
     };
     wrap.innerHTML = players.map((name, idx)=>{
       // Отметки этого партнёра, разложенные по группам в порядке «сверху вниз».
@@ -356,7 +374,7 @@ function goToKnowMoreHistory(){
         const openKey = `${idx}:${group.key}`;
         const isOpen = isKnowMoreGroupOpen(openKey);
         const rows = items.map(({ zone, it, logIndex }) =>
-          lineHtml(`${knowMoreZoneLabel(zone)} — ${knowMoreLogScoreText(it.score)} · ${knowMoreLogToolText(it)}`, logIndex)).join('');
+          lineHtml(it.score, knowMoreZoneLabel(zone), knowMoreLogToolText(it), logIndex)).join('');
         return `
         <div class="know-more-group${isOpen ? ' open' : ''}">
           <button type="button" class="know-more-group-head" data-knowmore-group="${openKey}"
@@ -562,7 +580,9 @@ function showKnowMoreTurn(){
   const zone = knowMoreCurrentZone();
   if(!zone){ finishKnowMoreGame(); return; }
   const players = knowMorePlayers();
-  const answers = KNOW_MORE_SCALE.map((s, i)=>`<button type="button" class="btn btn-secondary znayu-answer-btn" data-idx="${i}">${s.text}</button>`).join('');
+  // Иконка перед подписью: та же оценка на кнопке и в «Исследованных» должна
+  // выглядеть одинаково. Подпись не убираем — по ней игрок выбирает, что ответить.
+  const answers = KNOW_MORE_SCALE.map((s, i)=>`<button type="button" class="btn btn-secondary znayu-answer-btn" data-idx="${i}"><span class="know-more-scale-icon" aria-hidden="true">${s.icon}</span>${s.text}</button>`).join('');
   fadeSwapEl('knowMoreCard', (el)=>{
     el.className = 'card';
     el.innerHTML = `<div class="card-inner"><div class="card-body">

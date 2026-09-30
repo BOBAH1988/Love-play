@@ -1708,6 +1708,15 @@
      rgb(255,99,110) — тот же красный, что в приложении уже читается как
      «осторожно/удалить». В покое он приглушён (чтобы не спорить с текстом
      отметки), на наведении светлеет, при нажатии заливается. */
+  /* Иконка реакции: в строке отметки — перед названием зоны, в заголовке
+     группы — как сводка «💗2😊1». На кнопках оценки карточки иконка перед
+     подписью (тот же набор, что в окне итогов). */
+  .know-more-score-icon{ flex:0 0 auto; font-size:15px; line-height:1.3; }
+  .know-more-sum-icon{
+    flex:0 1 auto; font-size:11px; font-weight:700; white-space:nowrap;
+    margin-right:5px; opacity:.9; font-variant-numeric:tabular-nums;
+  }
+  #knowMoreCard .know-more-scale-icon{ margin-right:5px; font-size:17px; }
   .know-more-item{ display:flex; align-items:flex-start; gap:8px; }
   .know-more-item + .know-more-item{ margin-top:6px; }
   .know-more-item-text{ flex:1 1 auto; min-width:0; word-break:break-word; }

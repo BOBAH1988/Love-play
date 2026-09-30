@@ -3241,6 +3241,25 @@ function checkKnowMoreZones() {
     ungrouped.length === 0,
     `не отнесены к группам: ${ungrouped.join(', ')} — такие зоны попадут в «Другие зоны»`);
 
+  // Иконки реакции. Требование владельца: реакция показывается иконкой, а в
+  // строке отметки порядок «иконка → зона → способ». Отдельно проверяем, что
+  // набор иконок ОДИН на всю игру (шкала оценок, окно итогов и список): иначе
+  // одна и та же оценка выглядела бы на разных экранах по-разному.
+  const scaleIcons = [...game.matchAll(/\{ score: (\d+), icon: '([^']+)'/g)].map(m => ({ score: Number(m[1]), icon: m[2] }));
+  const mapIcons = ['💗', '😊', '🤍', '⛔'].filter(ic =>
+    new RegExp(`row\\('${ic}',`).test(game.slice(game.indexOf('function knowMoreMapHtml'),
+      game.indexOf('function finishKnowMoreGame'))));
+  check('у каждой оценки в шкале есть своя иконка',
+    scaleIcons.length === 4 && new Set(scaleIcons.map(x=>x.icon)).size === 4,
+    `иконок должно быть четыре, разные; найдено: ${scaleIcons.length}`);
+  check('иконки реакции одни и те же в шкале, в итогах и в списке',
+    scaleIcons.length === 4 && scaleIcons.every(s => mapIcons.includes(s.icon)),
+    'набор иконок в шкале оценок и в окне итогов разошёлся — одна оценка будет выглядеть по-разному на разных экранах');
+  check('строка отметки идёт «иконка → зона → способ»',
+    /know-more-score-icon[\s\S]{0,220}?know-more-item-text">\$\{zoneText\} · \$\{toolText\}/.test(historyBody)
+      && !/know-moreZoneLabel\(zone\) — \$\{knowMoreLogScoreText/.test(historyBody),
+    'в строке отметки иконка реакции должна идти перед зоной, а оценка — не словами');
+
   check('поле knowMoreTool есть в состоянии и сбрасывается общим сбросом',
     /knowMoreTool:0/.test(read('games/core.js')) &&
       /state\.knowMoreTool = 0;/.test(read('games/core.js')),
