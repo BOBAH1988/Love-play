@@ -3423,6 +3423,43 @@ function checkKnowMoreZones() {
 }
 
 
+// Кнопки «Пройденные» в двух играх про тесты: «Пройдите тест» (пары) и
+// «Пройди тест» (один). По просьбе владельца они сделаны ниже — тем же
+// компактным компонентом .toggle-pill, что «Исследованные» и «Пройденные
+// задания» на экранах настроек. Обычная .btn.btn-secondary здесь давала
+// ~50px (padding 15px + шрифт 17px) — вдвое выше соседних кнопок.
+//
+// Проверка ловит откат к полной .btn: без неё правка выглядит безобидно, но
+// кнопки одного смысла в разных играх снова разъезжаются по высоте. Классы
+// сравниваем по отдельным словам: подстрока «btn» встречается в «toggle-pill»
+// не нашей, но в class=«btn btn-secondary» — есть, и наивный includes дал бы
+// ложное срабатывание наоборот.
+function checkTestHistoryButtons(html) {
+  group('Кнопки «Пройденные» в тестах');
+  for (const [id, game] of [['compatTestHistoryBtn', '«Пройдите тест»'],
+                             ['soloTestHistoryBtn', '«Пройди тест»']]) {
+    const tag = new RegExp(`<button[^>]*id="${id}"[^>]*>`).exec(html);
+    const classes = tag
+      ? ((/class="([^"]*)"/.exec(tag[0]) || ['', ''])[1].split(/\s+/).filter(Boolean))
+      : [];
+    check(`кнопка «Пройденные» (${game}) — компактная пилюля, как «Исследованные»`,
+      classes.includes('toggle-pill') && !classes.includes('btn') && !classes.includes('btn-secondary'),
+      `кнопка должна быть .toggle-pill без .btn, а стоит ${classes.join(' ') || 'ничего'}`);
+    // Обёртка .toggle-row даёт отступ сверху и не даёт .toggle-pill
+    // (flex:1) растянуться: без неё кнопка заняла бы всю ширину экрана.
+    check(`«Пройденные» (${game}) лежат в .toggle-row между «Начать» и «Выход»`,
+      new RegExp(`${id}[\\s\\S]{0,200}SetupExitBtn`).test(html),
+      'компактной пилюле нужен ряд .toggle-row, иначе она растянется на весь экран');
+  }
+  // Обе кнопки должны быть именно на экранах настроек, а не в партии: иначе
+  // игрок увидит историю посреди теста.
+  check('обе кнопки «Пройденные» — на экранах настройки',
+    /id="compatTestSetup"[\s\S]{0,1200}?compatTestHistoryBtn/.test(html)
+      && /id="soloTestSetup"[\s\S]{0,1200}?soloTestHistoryBtn/.test(html),
+    'кнопка «Пройденные» открывает историю: держать её надо на настройках, а не в партии');
+}
+
+
 // Карточки темы «Время» (games/kids-flash-time.js). Раньше варианты ответа
 // отличались только числом часов — минуты во всех четырёх были одинаковыми,
 // и задача сводилась к совпадению первых двух цифр. Теперь варианты — это
@@ -3619,6 +3656,7 @@ function main() {
   checkKrokodilCards();
   checkKnowMoreZones();
   checkQuizNoRepeat();
+  checkTestHistoryButtons(html);
   checkPauseResetOnStart();
   checkExitNavigation();
   checkStyles(html);
