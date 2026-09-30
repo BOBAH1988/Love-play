@@ -233,6 +233,14 @@ window.GAME_REGISTRY = [
     pause: 'pauseSoloC4Game', resume: 'resumeSoloC4Game', finish: 'finishSoloC4Game',
     screens: ['soloC4Game'],
   },
+  {
+    // «Пройди тест» — десять личных тестов по 10 вопросов. Пауза полноценная:
+    // тест длинный, снимок soloTestPaused хранит номер вопроса и признак «ответ
+    // уже выбран, но следующий вопрос ещё не показан».
+    mode: 'soloTest', title: '«Пройди тест»', group: 'solo', menuTitle: '🧪 Пройди тест',
+    pause: 'pauseSoloTestGame', resume: 'resumeSoloTestGame', finish: 'finishPausedSoloTestGame',
+    screens: ['soloTestGame'],
+  },
 
   // ─── Бизнес игры ────────────────────────────────────────────────────────
   {

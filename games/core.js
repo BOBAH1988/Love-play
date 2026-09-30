@@ -340,6 +340,17 @@ let state = {
   // телефон». Без последнего флага «Продолжить игру» мог вернуть игрока на
   // вопрос, который он уже видел, или на хендофф там, где вопрос не показывали.
   compatTestPaused:null,
+  // Пройди тест (для одного) — десять личных тестов по 10 вопросов.
+  // soloTestAnswers хранит по одному значению на вопрос: для тестов
+  // mode:'types' это индекс набравшего больше всего голосов типа, для
+  // mode:'scale' — сумма баллов по шкале. soloTestHistory хранит уже
+  // посчитанный результат, а не сырые ответы.
+  soloTestType:'personality', soloTestIndex:0, soloTestAnswers:[],
+  soloTestResult:null, soloTestHistory:[],
+  // soloTestPaused — снимок места остановки для меню паузы: номер вопроса и
+  // был ли уже выбран ответ (иначе «Продолжить игру» вернул бы к вопросу,
+  // на который игрок ответил, и пришлось бы отвечать второй раз).
+  soloTestPaused:null,
   // Узнай больше — партия: knowMoreMode (0 = «По очереди», 1 = «Он»
   // исследует», 2 = «Она исследует»), knowMoreStarter (0 = «Он» исследует
   // первым, 1 = «Она» — оставлено для партий, начатых до появления режимов),
@@ -1012,6 +1023,12 @@ document.getElementById('gameSoloC4Btn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   callGameEntry('goToSoloC4Setup');
+});
+// «Пройди тест» (игры для одного) — десять личных тестов (см. games/solo-test.js).
+document.getElementById('gameSoloTestBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  callGameEntry('goToSoloTestSetup');
 });
 // "Английский язык" (обучающие игры) — goToFlashSetup() определена в games/kids-flash.js.
 document.getElementById('gameLearningFlashBtn').addEventListener('click', ()=>{
@@ -2038,6 +2055,13 @@ function performFullReset(){
   state.compatTestResult = null;
   state.compatTestHistory = [];
   state.compatTestPaused = null;
+  // Пройди тест (один) — общий сброс чистит текущую партию и историю
+  state.soloTestType = 'personality';
+  state.soloTestIndex = 0;
+  state.soloTestAnswers = [];
+  state.soloTestResult = null;
+  state.soloTestHistory = [];
+  state.soloTestPaused = null;
   // Узнай больше — общий сброс чистит текущую партию и историю карт.
   // Настройки игрока (режим «кто исследует» и «чем исследуют») сбрасываются
   // на значения по умолчанию вместе со всем остальным: сброс прогресса —

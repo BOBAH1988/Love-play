@@ -823,6 +823,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['⭕','Крестики нолики','soloXoRulesModal'],
       ['🚢','Морской бой','soloBattleshipRulesModal'],
       ['🔴','Четыре в ряд','soloC4RulesModal'],
+      ['🧪','Пройди тест','soloTestRulesModal'],
     ]},
     { icon:'📚', name:'Обучающие игры', games:[
       ['🗂️','Английский язык','flashRulesModal'],
@@ -945,6 +946,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     soloXoSetup:'soloView', soloXoGame:'soloView',
     soloBattleshipSetup:'soloView', soloBattleshipGame:'soloView',
     soloC4Setup:'soloView', soloC4Game:'soloView',
+    soloTestSetup:'soloView', soloTestGame:'soloView',
+    soloTestSummary:'soloView', soloTestHistory:'soloView',
     whatToPlayGame:'soloView',
     businessLemonadeSetup:'businessView', businessLemonadeGame:'businessView',
     bizObsSetup:'businessView', bizObsGame:'businessView',
@@ -984,6 +987,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','flashTimeSetup',
     'kidsC4Setup','memesSetup',
     'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBattleshipSetup','soloC4Setup',
+    'soloTestSetup','soloTestSummary','soloTestHistory',
     'businessLemonadeSetup','bizObsSetup','flashSetup','flagsSetup',
     // Обучающая группа: экраны настроек «Столиц» и «Арифметики». Без них
     // стрелка «←» не считала экран экраном настройки и проваливалась в
@@ -1048,6 +1052,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'knowMoreSetup':'exitKnowMoreSetup',
     'knowMoreSummary':'exitKnowMoreSummary',
     'knowMoreHistory':'exitKnowMoreHistory',
+    'soloTestHistory':'exitSoloTestHistory',
+    'soloTestSummary':'exitSoloTestSummary',
+    'soloTestSetup':'exitSoloTestSetup',
   };
   window.handleNestedBack = function(activeIds){
     const ids = activeIds || getActiveGameScreenIds();

@@ -4328,6 +4328,338 @@ test('Лимонадный ларёк: лишние стаканы не прод
   }
 });
 
+console.log('\n=== «Пройди тест» (для одного) ===');
+
+// Личные тесты об одном человеке. Проверяем обе части механики: подсчёт по
+// типам (побеждает набравший больше голосов) и подсчёт по шкале (сумма
+// баллов) — ошибка в любой из них дала бы игроку чужой тип, и на экране это
+// не заметно.
+const soloTestBackup = () => {
+  const saved = {};
+  ['soloTestType', 'soloTestIndex', 'soloTestAnswers', 'soloTestResult', 'soloTestHistory',
+   'soloTestPaused', 'inProgress', 'pausedMode', 'autoSpeak'].forEach(k => { saved[k] = state[k]; });
+  return saved;
+};
+// Позиция варианта с нужным исходным индексом в перемешанном порядке показа:
+// варианты перемешиваются, поэтому «нажать третий» ≠ «выбрать тип 2».
+const soloTestPosOf = (idx) => {
+  const opts = soloTestCurrentOptions;
+  const pos = opts.findIndex(o => o.i === idx);
+  return pos;
+};
+
+test('«Пройди тест»: каждый из десяти тестов проходится целиком и даёт результат', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = soloTestBackup();
+  const card = getElById(stub, 'soloTestCard');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.soloTestHistory = [];
+    assert(SOLO_TESTS.length === 10, `в игре должно быть 10 тестов, а ${SOLO_TESTS.length}`);
+    SOLO_TESTS.forEach(testDef => {
+      state.soloTestType = testDef.id;
+      const items = soloTestItems();
+      assert(items.length === 10, `${testDef.id}: вопросов ${items.length}, а должно быть 10`);
+      // У каждого вопроса столько же вариантов, сколько типов (mode:'types')
+      // или ровно четыре по шкале (mode:'scale').
+      const expected = testDef.mode === 'scale' ? 4 : testDef.types.length;
+      items.forEach((it, i) => {
+        assert(it.a && it.a.length === expected,
+          `${testDef.id}, вопрос ${i + 1}: вариантов ${it.a && it.a.length}, а нужно ${expected}`);
+        assert(new Set(it.a).size === it.a.length,
+          `${testDef.id}, вопрос ${i + 1}: варианты повторяются — их нельзя отличить`);
+      });
+      startSoloTestGame();
+      for(let i = 0; i < items.length; i++){
+        showSoloTestQuestion();
+        const buttons = (card.innerHTML.match(/znayu-answer-btn/g) || []).length;
+        assert(buttons === expected,
+          `${testDef.id}, вопрос ${i + 1}: на карточке ${buttons} кнопок, а нужно ${expected}`);
+        answerSoloTestQuestion(i % expected);
+        assert((state.soloTestAnswers || []).length === i + 1,
+          `${testDef.id}: после ${i + 1} ответов записано ${(state.soloTestAnswers || []).length}`);
+        advanceSoloTest();
+      }
+      const result = state.soloTestResult;
+      assert(result && result.title, `${testDef.id}: результат не посчитан`);
+      assert(result.text && result.plus && result.minus && result.tip,
+        `${testDef.id}: в результате должны быть описание, сильные стороны, трудности и совет`);
+      assert(testDef.types.some(t => t.title === result.title),
+        `${testDef.id}: показан тип «${result.title}», которого нет среди типов теста`);
+      assert((state.soloTestHistory || []).length > 0, `${testDef.id}: результат не попал в «Пройденные»`);
+    });
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Пройди тест»: повторный клик не дописывает второй ответ', () => {
+  // Регресс на тот же класс багов, что был в «Пройдите тесте»: если бы
+  // защита от двойного ответа была инвертирована, ответы бы не записывались
+  // вовсе и результат всегда был бы одинаковым независимо от нажатий.
+  const originalFade = global.fadeSwapEl;
+  const saved = soloTestBackup();
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.soloTestType = 'personality';
+    startSoloTestGame();
+    showSoloTestQuestion();
+    answerSoloTestQuestion(0);
+    answerSoloTestQuestion(2);
+    answerSoloTestQuestion(3);
+    assert((state.soloTestAnswers || []).length === 1,
+      `повторные клики дописали лишние ответы: ${(state.soloTestAnswers || []).length}`);
+    const first = state.soloTestAnswers[0];
+    advanceSoloTest();
+    showSoloTestQuestion();
+    answerSoloTestQuestion(0);
+    assert((state.soloTestAnswers || []).length === 2, 'второй вопрос должен записаться');
+    assert(state.soloTestAnswers[0] === first, 'первый ответ не должен меняться');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Пройди тест»: побеждает тип, за который проголосовали чаще', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = soloTestBackup();
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.soloTestType = 'introversion';
+    startSoloTestGame();
+    // Восемь раз выбираем вариант «интроверт» (индекс 0) и дважды — «экстраверт».
+    const items = soloTestItems();
+    for(let i = 0; i < items.length; i++){
+      showSoloTestQuestion();
+      answerSoloTestQuestion(soloTestPosOf(i < 8 ? 0 : 2));
+      advanceSoloTest();
+    }
+    assert(state.soloTestResult.title === 'Интроверт',
+      `при восьми голосах за интроверта показан «${state.soloTestResult.title}»`);
+    assert(state.soloTestResult.count === 8, `посчитано ${state.soloTestResult.count} голосов вместо 8`);
+    assert(state.soloTestResult.max === 8, `максимум должен быть 8, а ${state.soloTestResult.max}`);
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Пройди тест»: в тестах по шкале считается сумма баллов', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = soloTestBackup();
+  const runScale = (pick) => {
+    state.soloTestType = 'emotional';
+    startSoloTestGame();
+    const items = soloTestItems();
+    for(let i = 0; i < items.length; i++){
+      showSoloTestQuestion();
+      answerSoloTestQuestion(soloTestPosOf(pick));
+      advanceSoloTest();
+    }
+    return state.soloTestResult;
+  };
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    const low = runScale(0);
+    assert(low.sum === 0, `десять нулей должны дать сумму 0, а ${low.sum}`);
+    assert(low.title === 'Свой фильтр', `при сумме 0 показан «${low.title}»`);
+    const high = runScale(3);
+    assert(high.sum === 30, `десять тройок должны дать сумму 30, а ${high.sum}`);
+    assert(high.title === 'Эмоциональный навигатор', `при сумме 30 показан «${high.title}»`);
+    // Граница между уровнями проходит по min из данных: сумма 20 — это уже
+    // «Сопереживающий» (min 18), а 17 — ещё «Считывающий».
+    const mid = runScale(2);
+    assert(mid.sum === 20 && mid.title === 'Сопереживающий',
+      `при сумме 20 показан «${mid.title}» вместо «Сопереживающий»`);
+    // В окне итогов у теста по шкале должна быть сумма баллов, а не счётчик
+    // голосов: счётчик выводится по наличию count, и лишний count в результате
+    // показывал бы «Ответов за этот тип: 10 из 10» вместо суммы.
+    const list = getElById(stub, 'soloTestSummaryList');
+    assert(/Сумма баллов: 20/.test(list.innerHTML), 'в итогах теста по шкале должна показываться сумма баллов');
+    assert(!/Ответов за этот тип/.test(list.innerHTML),
+      'у теста по шкале не должно показываться «Ответов за этот тип»');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+
+test('«Пройди тест»: пауза сохраняет место, продолжение возвращает', () => {
+  // Проверяем полный цикл и главное — что «Продолжить игру» возвращает РОВНО
+  // туда, откуда ушли. Отдельная проверка фазы «ответ уже выбран»: без неё
+  // игрок после паузы в эту секунду увидел бы вопрос, на который он только
+  // что ответил, и пришлось бы отвечать второй раз.
+  const originalFade = global.fadeSwapEl;
+  const saved = soloTestBackup();
+  const card = getElById(stub, 'soloTestCard');
+  const pauseModal = document.getElementById('pauseMenuModal');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.soloTestType = 'partner';
+    startSoloTestGame();
+    for(let i = 0; i < 3; i++){ answerSoloTestQuestion(0); advanceSoloTest(); }
+    assert(state.soloTestIndex === 3, `после трёх ответов индекс должен быть 3, а ${state.soloTestIndex}`);
+
+    // 1. Пауза посреди вопроса.
+    showSoloTestQuestion();
+    pauseSoloTestGame();
+    assert(state.pausedMode === 'soloTest', `пауза должна выставить pausedMode='soloTest', а ${state.pausedMode}`);
+    assert(pauseModal.classList.contains('show'), 'меню паузы должно показаться');
+    assert(state.soloTestPaused && state.soloTestPaused.index === 3,
+      `в снимке паузы должен быть индекс 3, а ${state.soloTestPaused && state.soloTestPaused.index}`);
+    assert(!getElById(stub, 'soloTestGame').classList.contains('active'), 'игровой экран должен погаснуть на паузе');
+    assert(getElById(stub, 'setup').classList.contains('active'), 'на паузе должен открыться хаб');
+
+    // 2. «Продолжить игру» — тот же экран и тот же вопрос.
+    getElById(stub, 'resumeBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(state.pausedMode === null, 'после продолжения пауза должна сняться');
+    assert(!pauseModal.classList.contains('show'), 'меню паузы должно закрыться');
+    assert(getElById(stub, 'soloTestGame').classList.contains('active'), 'игровой экран должен снова стать активным');
+    assert(state.soloTestIndex === 3, `после продолжения индекс должен остаться 3, а ${state.soloTestIndex}`);
+    assert((card.innerHTML.match(/znayu-answer-btn/g) || []).length > 0,
+      'после продолжения должен показываться вопрос, а не пустая карточка');
+    assert((state.soloTestAnswers || []).length === 3, 'ответы не должны потеряться при паузе');
+
+    // 3. Пауза между ответом и следующим вопросом (450 мс после выбора):
+    // продолжение обязано сразу показать следующий вопрос, а не тот же
+    // вопрос повторно. Раньше индекс сдвигался здесь дважды, и один вопрос
+    // пропадал молча — без этой проверки баг остался бы незаметным.
+    answerSoloTestQuestion(0);
+    pauseSoloTestGame();
+    getElById(stub, 'resumeBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(state.soloTestIndex === 4, `после продолжения должен быть вопрос 4, а ${state.soloTestIndex}`);
+    assert((state.soloTestAnswers || []).length === 4, 'ответ, выбранный перед паузой, должен сохраниться');
+    assert((card.innerHTML.match(/znayu-answer-btn/g) || []).length > 0,
+      'после продолжения должен показываться следующий вопрос');
+
+    // 4. «Закончить игру» бросает тест без результата.
+    const historyBefore = (state.soloTestHistory || []).length;
+    pauseSoloTestGame();
+    getElById(stub, 'finishGameBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(!state.inProgress, 'после «Закончить игру» inProgress должен быть снят');
+    assert(state.pausedMode === null, 'после «Закончить игру» пауза должна сняться');
+    assert(state.soloTestPaused === null, 'снимок паузы должен быть очищен');
+    assert((state.soloTestHistory || []).length === historyBefore, 'прерванный тест не должен попасть в «Пройденные»');
+    assert(getElById(stub, 'soloTestSetup').classList.contains('active'), 'после «Закончить игру» должно открыться меню игры');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    if(pauseModal) pauseModal.classList.remove('show');
+    Object.assign(state, saved);
+  }
+});
+
+test('«Пройди тест»: итоги наполнены, а «Пройденные» показывают и чистят результаты', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = soloTestBackup();
+  const summary = getElById(stub, 'soloTestSummary');
+  const list = getElById(stub, 'soloTestSummaryList');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.soloTestType = 'character';
+    state.soloTestHistory = [];
+    startSoloTestGame();
+    const items = soloTestItems();
+    for(let i = 0; i < items.length; i++){
+      answerSoloTestQuestion(soloTestPosOf(1));
+      advanceSoloTest();
+    }
+    assert(summary.classList.contains('active'), 'окно итогов должно стать активным');
+    assert(!getElById(stub, 'soloTestGame').classList.contains('active'), 'игровой экран должен погаснуть на итогах');
+    assert(/Сильные стороны/.test(list.innerHTML), 'в итогах должны быть сильные стороны');
+    assert(/Возможные трудности/.test(list.innerHTML), 'в итогах должны быть возможные трудности');
+    assert(/Что попробовать/.test(list.innerHTML), 'в итогах должен быть совет');
+    assert((state.soloTestHistory || []).length === 1, 'результат должен попасть в «Пройденные»');
+
+    // «Пройденные»: список показывает результат, крестик удаляет запись.
+    goToSoloTestHistory();
+    const historyWrap = getElById(stub, 'soloTestHistoryList');
+    assert(historyWrap.innerHTML.includes('Лидерский'), 'в «Пройденных» должен быть показан тип из итогов');
+    assert(getElById(stub, 'soloTestHistory').classList.contains('active'), 'экран «Пройденные» должен открыться');
+    historyWrap._getHandlers().get('click').forEach(({ handler }) => handler({
+      target: { closest: sel => sel === '.solo-test-history-del' ? { dataset: { idx: '0' } } : null },
+    }));
+    assert((state.soloTestHistory || []).length === 0, 'крестик должен удалить запись из «Пройденных»');
+    assert(/Пока нет пройденных тестов/.test(historyWrap.innerHTML), 'после удаления список должен предложить пройти тест');
+
+    // «В меню» с итогов возвращает в настройки игры, а не в хаб.
+    startSoloTestGame();
+    for(let i = 0; i < items.length; i++){ answerSoloTestQuestion(0); advanceSoloTest(); }
+    exitSoloTestSummary();
+    assert(getElById(stub, 'soloTestSetup').classList.contains('active'), 'с итогов должен открыться экран настройки');
+    assert(!summary.classList.contains('active'), 'экран итогов должен погаснуть');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Пройди тест»: экран настройки, «Пройденные» и стрелка «←»', () => {
+  const saved = soloTestBackup();
+  const screens = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => document.getElementById(m[1]));
+  const originalQuery = document.querySelectorAll;
+  const originalSingleQuery = document.querySelector;
+  const clear = () => screens.forEach(el => el.classList.remove('active'));
+  const active = () => screens.filter(el => el.classList.contains('active'));
+  const back = document.getElementById('globalBackBtn');
+  try {
+    document.querySelectorAll = function(selector){
+      if(selector === '.screen.active') return active();
+      if(selector === '.screen') return screens;
+      return originalQuery.call(this, selector);
+    };
+    document.querySelector = function(selector){
+      if(selector === '.screen.active') return active()[0] || null;
+      return originalSingleQuery.call(this, selector);
+    };
+    clear();
+    // Плашки выбора теста создаются через createElement + appendChild, а стаб
+    // их не накапливает: считаем сами, перехватив createElement.
+    const originalCreate = document.createElement;
+    let tiles = 0;
+    document.createElement = function(tag){
+      if(String(tag).toLowerCase() === 'div') tiles++;
+      return originalCreate.call(this, tag);
+    };
+    goToSoloTestSetup();
+    document.createElement = originalCreate;
+    assert(tiles === 10, `в блоке «Тесты» должно быть 10 плашек, а ${tiles}`);
+    assert(getElById(stub, 'soloTestSetup').classList.contains('active'), 'должен открыться экран настройки');
+    assert(active().length === 1, `активным должен быть ровно один экран, а ${active().length}`);
+
+    // «Пройденные» и «Назад» возвращают на экран настройки, а не в хаб.
+    getElById(stub, 'soloTestHistoryBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(getElById(stub, 'soloTestHistory').classList.contains('active'), '«Пройденные» должны открыться');
+    getElById(stub, 'soloTestHistoryExitBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(getElById(stub, 'soloTestSetup').classList.contains('active'), '«Назад» должен вернуть в настройки игры');
+
+    // Регресс навигации (тот же баг, что был в «Пройдите тесте»): выход с
+    // экрана настроек через exitGame() активировал бы его самого, и стрелка
+    // выглядела бы мёртвой. Проверяем, что игрок реально уходит в хаб.
+    for(const { handler } of back._getHandlers().get('click')) handler({});
+    assert(!getElById(stub, 'soloTestSetup').classList.contains('active'),
+      'стрелка «←» не должна оставлять экран настроек активным');
+    assert(getElById(stub, 'setup').classList.contains('active'), 'стрелка «←» должна вести в хаб');
+    assert(active().length === 1, `после выхода активным должен быть ровно один экран, а ${active().length}`);
+    // Связанные флаги снимаются вместе: забытый inProgress блокирует хаб.
+    assert(!state.inProgress, 'после выхода inProgress должен быть снят');
+    assert(state.pausedMode === null, 'после выхода пауза должна быть снята');
+  } finally {
+    clear();
+    document.querySelectorAll = originalQuery;
+    document.querySelector = originalSingleQuery;
+    Object.assign(state, saved);
+  }
+});
+
 console.log('\n=== «Узнай больше» ===');
 
 // Игра про карту тела: партнёры по очереди исследуют зоны, отметки пишутся
