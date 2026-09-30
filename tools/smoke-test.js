@@ -2360,6 +2360,63 @@ test('Пройдите тест: оба теста считаются по от�
   }
 });
 
+test('Пройдите тест: четыре темы про поведение в паре считаются для двоих', () => {
+  // Эти четыре темы отвечают на вопрос не «насколько нам вместе хорошо», а
+  // «как мы себя ведём вдвоём»: конфликты, сближение, границы, общение. Важно,
+  // что это ИМЕННО парные тесты: оба партнёра отвечают на одни и те же
+  // утверждения, а игра показывает и индекс совпадения, и список расхождений.
+  // Если бы их перенесли в одиночную «Пройди тест», там нет второго ответа —
+  // и весь смысл теста пропал бы.
+  const originalFade = global.fadeSwapEl;
+  const saved = {};
+  ['compatTestType', 'compatTestIndex', 'compatTestCurrentPlayer', 'compatTestAnswers',
+   'compatTestResult', 'compatTestHistory', 'autoSpeak'].forEach(key => { saved[key] = state[key]; });
+  const list = getElById(stub, 'compatTestSummaryList');
+  const pairTopics = ['conflict', 'closeness', 'borders', 'talkstyle'];
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    for(const id of pairTopics){
+      const def = COMPAT_TESTS.find(t => t.id === id);
+      assert(!!def, `тема ${id} должна быть в списке парных тестов`);
+      const set = compatTestById(id) && COMPAT_DATASETS[id];
+      assert(!!set, `тема ${id} должна быть зарегистрирована в COMPAT_DATASETS`);
+      assert(set.scale === 'agreement', `тема ${id} должна считаться мерой совпадения, а не по шкале`);
+      assert(Array.isArray(set.items) && set.items.length === def.count,
+        `у темы ${id} ${set.items && set.items.length} утверждений, а объявлено ${def.count}`);
+      state.compatTestType = id;
+      state.compatTestHistory = [];
+      startCompatTestGame();
+      const n = compatTestItems().items.length;
+      for(let player = 0; player < 2; player++){
+        if(player > 0) showCompatTestHandoff();
+        showCompatTestQuestion();
+        for(let i = 0; i < n; i++){ answerCompatTestQuestion(i % 5); advanceCompatTest(); }
+      }
+      const answers = state.compatTestAnswers || [];
+      assert(answers[0] && answers[1] && answers[0].length === n && answers[1].length === n,
+        `${id}: оба партнёра должны ответить на все ${n} утверждений (записано ${answers[0] && answers[0].length} и ${answers[1] && answers[1].length})`);
+      assert(typeof state.compatTestResult.score === 'number' && state.compatTestResult.score >= 0,
+        `${id}: должен считаться индекс совпадения 0–100`);
+    }
+    // Разные ответы дают меньше 100 и список расхождений.
+    state.compatTestType = 'conflict';
+    state.compatTestHistory = [];
+    startCompatTestGame();
+    const n = compatTestItems().items.length;
+    for(let player = 0; player < 2; player++){
+      if(player > 0) showCompatTestHandoff();
+      showCompatTestQuestion();
+      for(let i = 0; i < n; i++){ answerCompatTestQuestion((i + player * 2) % 5); advanceCompatTest(); }
+    }
+    assert(state.compatTestResult.score < 100, `при разных ответах балл должен быть ниже 100, а ${state.compatTestResult.score}`);
+    assert(/Совпали ответы/.test(list.innerHTML), 'в итогах должен быть счётчик совпавших ответов');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
 test('Пройдите тест: все тесты из списка проходят обоими игроками', () => {
   // Смысл проверки: COMPAT_TESTS, COMPAT_DATASETS и данные не должны
   // разойтись. Раньше тестов было два, и смоук-тест закрывал только их —

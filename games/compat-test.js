@@ -45,6 +45,13 @@ const COMPAT_DATASETS = {
   touch: { items: COMPAT_TOUCH, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
   talk: { items: COMPAT_TALK, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
   ideal: { items: COMPAT_IDEAL, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  // Четыре темы про поведение в паре: как вы ссоритесь, что сближает, как
+  // говорите «нет» и как разговариваете. Способ подсчёта тот же — мера
+  // совпадения ответов, оба партнёра отвечают на одни и те же утверждения.
+  conflict: { items: COMPAT_CONFLICT, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  closeness: { items: COMPAT_CLOSENESS, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  borders: { items: COMPAT_BOUNDARIES_IN_RELATION, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
+  talkstyle: { items: COMPAT_TALK_STYLE, answers: COMPAT_DEGREE_ANSWERS, scale: 'agreement' },
 };
 
 // Вопросы и варианты ответа выбранного теста. Неизвестный id или отсутствующий
