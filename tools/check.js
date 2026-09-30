@@ -3183,6 +3183,16 @@ function checkKnowMoreZones() {
       /entry\.tool === undefined \|\| entry\.tool === null\) return knowMoreToolLabel\(0\)/.test(km) &&
       /getKnowMoreTool\(\)[\s\S]{0,40}?return knowMoreToolLabel\(0\)/.test(km) === false,
     'подпись способа для записи без tool подставляет текущую настройку — старым отметкам припишется чужой способ');
+  // Кнопка «Исследованные» — компактная пилюля .toggle-pill, как «Пройденные
+  // задания» в «Пройди квест». Раньше была .btn на всю ширину с шрифтом 17px и
+  // выглядела заметно крупнее соседних кнопок-историй. Проверяем и компонент,
+  // и то, что кнопка осталась в обёртке .toggle-row (без неё flex:1 не работает).
+  const histBtn = /<button[^>]*id="knowMoreHistoryBtn"[^>]*>/.exec(html);
+  check('кнопка «Исследованные» — компактная пилюля, как у других кнопок-историй',
+    !!histBtn && /class="toggle-pill"/.test(histBtn[0]) &&
+      /class="toggle-row"[^>]*>\s*<button[^>]*id="knowMoreHistoryBtn"/.test(html) &&
+      !/class="btn /.test(histBtn[0]),
+    'кнопка «Исследованные» должна быть .toggle-pill внутри .toggle-row — иначе она выше остальных кнопок-историй');
   check('поле knowMoreTool есть в состоянии и сбрасывается общим сбросом',
     /knowMoreTool:0/.test(read('games/core.js')) &&
       /state\.knowMoreTool = 0;/.test(read('games/core.js')),
