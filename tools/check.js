@@ -3269,6 +3269,21 @@ function checkKnowMoreZones() {
       && /knowMoreClearModal/.test(html)
       && /id="knowMoreClearRow"[\s\S]*knowMoreClearAllBtn[\s\S]*id="knowMoreHistoryExitBtn"/.test(html),
     'кнопке «Очистить все» нужны своё окно подтверждения и место под списком, выше «Назад»');
+  // Внешний вид кнопки очистки: по просьбе владельца — та же компактная пилюля
+  // .toggle-pill, что «Исследованные» на экране настройки, а не полная .btn
+  // (padding 15px + шрифт 17px, вдвое выше). Проверяем и разметку, и CSS: без
+  // flex:0 0 auto пилюля с flex:1 растянулась бы на всю ширину экрана. Классы
+  // сравниваем по отдельным словам — в «know-more-clear-btn» есть «btn», и
+  // вхождение подстроки здесь дало бы ложное срабатывание.
+  const clearBtnTag = /<button[^>]*id="knowMoreClearAllBtn"[^>]*>/.exec(html);
+  const clearBtnClasses = clearBtnTag
+    ? ((/class="([^"]*)"/.exec(clearBtnTag[0]) || ['', ''])[1].split(/\s+/).filter(Boolean))
+    : [];
+  check('кнопка «Очистить все» — компактная пилюля, как «Исследованные»',
+    clearBtnClasses.includes('toggle-pill') && !clearBtnClasses.includes('btn')
+      && !clearBtnClasses.includes('btn-secondary')
+      && /\.know-more-clear-btn\{[^}]*flex:0 0 auto/.test(appCss),
+    'кнопка «Очистить все» должна быть .toggle-pill без .btn и с flex:0 0 auto — иначе она либо вдвое выше соседних кнопок, либо растянется на весь экран');
   check('очистка «Исследованных» идёт через подтверждение',
     /knowMoreClearAllBtn[\s\S]{0,400}showModal\('knowMoreClearModal'\)/.test(game)
       && /knowMoreClearCancel[\s\S]{0,200}hideModal\('knowMoreClearModal'\)/.test(game)
