@@ -3260,6 +3260,14 @@ function checkKnowMoreZones() {
       && !/know-moreZoneLabel\(zone\) — \$\{knowMoreLogScoreText/.test(historyBody),
     'в строке отметки иконка реакции должна идти перед зоной, а оценка — не словами');
 
+  // В окне итогов не должно быть служебных счётчиков: по решению владельца
+  // убраны «Сохранено карт: N» и подсказка про первую карту. Проверяем и код,
+  // и разметку — иначе строка вернётся одной правкой в любом из них.
+  check('в итогах нет служебного счётчика карт',
+    !/knowMoreSummaryPast/.test(game) && !/knowMoreSummaryPast/.test(html)
+      && !/Сохранено карт/.test(game),
+    'подпись «Сохранено карт: N» вернулась в итоги или разметку');
+
   check('поле knowMoreTool есть в состоянии и сбрасывается общим сбросом',
     /knowMoreTool:0/.test(read('games/core.js')) &&
       /state\.knowMoreTool = 0;/.test(read('games/core.js')),
