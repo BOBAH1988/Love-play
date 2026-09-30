@@ -1866,7 +1866,7 @@
   /* Карточки «Игр с детьми» — один общий тёмно-бирюзовый градиент.
      Детская «Викторина» использует его же, без отдельного светлого фона;
      кнопки ответов по-прежнему оформляет общий белый компонент. */
-  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #kidsQuizCard, #flashCard, #whatToPlayCard, .shop-register-card{
+  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #kidsQuizCard, #flashCard, #whatToPlayCard, .shop-register-card, #funTestsCard{
     background:linear-gradient(160deg, #2b837f, #176e76 55%, #0d3741);
     color:#fff;
   }
@@ -3199,6 +3199,55 @@
     display:flex; align-items:center; justify-content:center; padding:0;
   }
   .solo-test-history-del:active{ background:rgba(255,99,110,.3); }
+  /* "Весёлые тесты" (дети) — те же блоки, что у одиночной "Пройди тест", но
+     свои классы: оформление детской игры и взрослой не должны быть связаны.
+     Кнопки ответов (.znayu-answer-btn) и карточка (.card) переиспользуют
+     общие компоненты — здесь только новые элементы. */
+  .fun-tests-result{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:16px; padding:14px; text-align:left;
+  }
+  .fun-tests-type{ font-size:22px; font-weight:800; color:#fff; text-align:center; line-height:1.25; }
+  .fun-tests-verdict{ font-size:15px; line-height:1.5; color:#fff; margin-top:10px; }
+  .fun-tests-stat{ font-size:13px; color:#e8c9dd; margin-top:10px; text-align:center; }
+  .fun-tests-plus, .fun-tests-minus, .fun-tests-tip{
+    margin-top:12px; border-top:1px solid rgba(255,255,255,.14); padding-top:10px;
+    font-size:13px; line-height:1.5; color:rgba(255,255,255,.75);
+  }
+  .fun-tests-plus b, .fun-tests-minus b, .fun-tests-tip b{
+    display:block; font-size:12px; font-weight:800; color:#e8c9dd;
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px;
+  }
+  .fun-tests-history-entry{
+    position:relative;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px 44px 12px 14px;
+  }
+  .fun-tests-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+  .fun-tests-history-text{ font-size:14px; color:#fff; line-height:1.45; }
+  .fun-tests-history-del{
+    position:absolute; top:10px; right:10px;
+    flex-shrink:0; width:28px; height:28px; border-radius:50%;
+    border:1px solid rgba(255,99,110,.4); background:transparent; color:#ff8b96;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .fun-tests-history-del:active{ background:rgba(255,99,110,.3); }
+  .fun-tests-history-head{
+    display:block; width:100%; text-align:left; background:transparent;
+    border:0; padding:0 40px 0 0; color:inherit; font:inherit; cursor:pointer;
+  }
+  .fun-tests-history-date, .fun-tests-history-text{ display:block; }
+  .fun-tests-history-hint{
+    display:block; margin-top:4px;
+    font-size:12px; font-weight:700; color:rgba(255,255,255,.6);
+  }
+  .fun-tests-history-entry.open .fun-tests-history-hint{ color:#e8c9dd; }
+  .fun-tests-history-body{ display:none; }
+  .fun-tests-history-entry.open .fun-tests-history-body{
+    display:block; margin-top:12px; padding-top:12px;
+    border-top:1px solid rgba(255,255,255,.14); text-align:left;
+  }
   /* Раскрытие результата в «Пройденных». Заголовок записи — кнопка на всю
      ширину (тот же приём, что у групп карты тела в «Узнай больше»): сама
      строка раскрывается по нажатию, поэтому она должна быть кликабельной

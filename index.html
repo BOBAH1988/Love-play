@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261025d">
+<link rel="stylesheet" href="styles/app.css?v=20261025e">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-25 · v565';
+  window.APP_BUILD = '2026-10-25 · v567';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v565</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v567</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -424,6 +424,7 @@
           <button type="button" class="btn btn-menu-item" id="gameKidsMinesweeperBtn"><span class="menu-icon">💣</span> Сапёр</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsBoardGamesBtn"><span class="menu-icon">♟️</span> Настольные игры</button>
           <button type="button" class="btn btn-menu-item" id="gameKidsWhatToPlayBtn"><span class="menu-icon">🎲</span> Во что поиграть?</button>
+          <button type="button" class="btn btn-menu-item" id="gameFunTestsBtn"><span class="menu-icon">🎪</span> Весёлые тесты</button>
         </div>
       </div>
 
@@ -3849,6 +3850,97 @@
     </div>
   </div>
 
+  <!-- ===== ВЕСЁЛЫЕ ТЕСТЫ: НАСТРОЙКА ===== -->
+  <!-- 📍 логика: games/fun-tests.js | вопросы: cards/cards_fun_tests.js -->
+  <section id="funTestsSetup" class="screen">
+    <h1 class="title">🎪 Весёлые тесты</h1>
+    <div class="subtitle">Выбери тест — узнай, какой ты герой, друг и учёный</div>
+
+    <div class="field">
+      <label>Тесты</label>
+      <div class="levels" id="funTestsTypeGroup"></div>
+    </div>
+
+    <button class="btn btn-primary" id="funTestsStartBtn">Начать</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="funTestsHistoryBtn">Пройденные</button>
+    </div>
+
+    <button class="btn btn-secondary" id="funTestsSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== ВЕСЁЛЫЕ ТЕСТЫ: ИГРА ===== -->
+  <section id="funTestsGame" class="screen">
+    <div class="game-level-label">🎪 Весёлые тесты</div>
+    <div class="wishlist-progress-row" id="funTestsProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="funTestsProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="funTestsProgressLabel">0 / 10</div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="funTestsCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="znayu-question-text">Загрузка…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ВЕСЁЛЫЕ ТЕСТЫ: ИТОГИ ===== -->
+  <section id="funTestsSummary" class="screen">
+    <h1 class="title" id="funTestsSummaryTitle">🎪 Тест</h1>
+    <div class="subtitle">Твой результат</div>
+    <div class="fun-tests-result" id="funTestsSummaryList"></div>
+    <div class="intro-text" id="funTestsSummaryNote">Результат сохранён в «Пройденные».</div>
+    <button class="btn btn-primary" id="funTestsSummaryExitBtn" style="margin-top:10px;">В меню</button>
+  </section>
+
+  <!-- ===== ВЕСЁЛЫЕ ТЕСТЫ: ПРОЙДЕННЫЕ ===== -->
+  <section id="funTestsHistory" class="screen">
+    <h1 class="title">Пройденные тесты</h1>
+    <div class="subtitle">Нажми на запись — посмотри, что получилось</div>
+    <div class="pmap-history-wrap" id="funTestsHistoryList"></div>
+    <button class="btn btn-secondary" id="funTestsHistoryExitBtn" style="margin-top:10px;">Назад</button>
+  </section>
+
+  <!-- ===== ПРАВИЛА "ВЕСЁЛЫЕ ТЕСТЫ" ===== -->
+  <div class="modal-overlay" id="funTestsRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🎪 Правила игры «Весёлые тесты»</div>
+      <div class="intro-text">Тесты про тебя: какой ты герой, друг, учёный и мечтатель. Здесь нет правильных и неправильных ответов — выбирай то, что похоже на тебя, и в конце увидишь свой образ.</div>
+      <ol class="modal-rules">
+        <li>На экране настройки выбери тест — их четырнадцать, по 10 вопросов в каждом. Нажми «Начать».</li>
+        <li>Отвечай на все вопросы подряд. Таймера и кнопки «Пропустить» нет, но ответ можно передумать: пока ты не нажал кнопку «Выход», на экране тот же вопрос. Передачи телефона нет — это личный тест.</li>
+        <li>Варианты ответа показываются в случайном порядке каждую партию, поэтому по позиции кнопки ответ не угадать.</li>
+        <li>В конце открывается окно: твой образ, что у тебя получается, на что обратить внимание и что можно попробовать. Рядом видно, сколько ответов из десяти выбрали этот вариант.</li>
+        <li>Результат сохраняется в «Пройденные» — их можно открыть с экрана настройки и удалить лишние крестиком. Нажми на запись — раскроется полный результат.</li>
+        <li>Стрелка «←» открывает меню паузы: «Продолжить игру» вернёт к тому же вопросу, «Закончить игру» закроет тест без сохранения результата.</li>
+        <li><b>Тест «Безопасный интернет-герой» проходите только вместе со взрослым.</b> Это не проверка и не повод для наказания: здесь нет оценок и подсчёта «правильных ответов», результат — добрый образ и подсказка, что обсудить. Смысл теста — вместе придумать, что делать, если в интернете что-то насторожит, и договориться, что ребёнок может спросить взрослого с любым вопросом. Страшным или стыдным его делать нельзя.</li>
+      </ol>
+      <div class="intro-text" style="margin-top:14px;"><b>Какие тесты есть</b></div>
+      <ul class="modal-rules">
+        <li>🎠 Какой ты герой приключений — исследователь, изобретатель, защитник или мечтатель.</li>
+        <li>🍀 Твой суперталант — воображение, смелость, внимательность, юмор или доброта.</li>
+        <li>🦋 Какой ты персонаж мультфильма — весёлый, смелый, умный, заботливый или озорной.</li>
+        <li>🪁 Как ты лучше учишься — через картинки, объяснения, практику, игры или эксперименты.</li>
+        <li>🌋 Какой у тебя тип исследователя — природа, космос, история, животные или технологии.</li>
+        <li>🥁 Твой творческий стиль — художник, музыкант, актёр, писатель или конструктор.</li>
+        <li>🦩 Какой ты командный игрок — лидер, помощник, генератор идей, стратег или миротворец.</li>
+        <li>🧲 Как ты решаешь задачки — логик, экспериментатор, наблюдатель или нестандартный мыслитель.</li>
+        <li>🧊 Какой у тебя идеальный день — приключения, спорт, творчество, игры, общение или спокойный отдых.</li>
+        <li>🍦 Какой питомец тебе подходит — собака, кошка, попугай, хомяк, рыбка или необычный питомец.</li>
+        <li>🪀 Твой мир фантазий — космос, волшебный лес, подводное царство, город будущего или остров сокровищ.</li>
+        <li>🦖 Какой ты друг — весельчак, защитник, слушатель, помощник или вдохновитель.</li>
+        <li>🎧 Как ты справляешься с эмоциями — что ты делаешь, когда злишься, волнуешься или расстраиваешься.</li>
+        <li>🛟 Безопасный интернет-герой — учимся узнавать мошеннические сообщения и просить помощь. Только вместе со взрослым.</li>
+      </ul>
+      <button class="btn btn-primary" id="closeFunTestsRulesBtn">Понятно</button>
+    </div>
+  </div>
+
   <!-- ===== ПРОЙДИ ТЕСТ (ОДИН): НАСТРОЙКА ===== -->
   <!-- 📍 логика: games/solo-test.js | вопросы: cards/cards_solo_test.js -->
   <section id="soloTestSetup" class="screen">
@@ -4735,6 +4827,7 @@
 <script src="cards/cards_passionmap.js?v=20260913a"></script>
 <script src="cards/cards_compat_test.js?v=20260928b"></script>
 <script src="cards/cards_solo_test.js?v=20261025b"></script>
+<script src="cards/cards_fun_tests.js?v=20261025b"></script>
 <script src="cards/cards_know_more.js?v=20261024c"></script>
 <script src="cards/cards_whattoplay.js?v=20260928w"></script>
 <script src="cards/cards_kids_krokodil.js?v=20260911a"></script>
@@ -4745,18 +4838,18 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20261022y"></script>
 <script src="cards/capitals.js?v=20261022y"></script>
-<script src="games/core.js?v=20261025c"></script>
+<script src="games/core.js?v=20261025d"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
       <script src="games/fants-video.js?v=20261002f"></script>
 <script src="games/fants-davay.js?v=20260925a"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20261025a"></script>
+<script src="games/fants-timer.js?v=20261025b"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
-<script src="games/game-registry.js?v=20261025b"></script>
+<script src="games/game-registry.js?v=20261025a"></script>
 <!-- Локальная статистика: считает партии на этом устройстве, никуда не отправляет -->
 <script src="games/stats.js?v=20260929a"></script>
 <script src="games/twister.js?v=20260921j"></script>
@@ -4802,6 +4895,7 @@
 <script src="games/passionmap.js?v=20261022b"></script>
 <script src="games/compat-test.js?v=20261025a"></script>
 <script src="games/solo-test.js?v=20261025b"></script>
+<script src="games/fun-tests.js?v=20261025b"></script>
 <script src="games/know-more.js?v=20261024n"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20261022y"></script>

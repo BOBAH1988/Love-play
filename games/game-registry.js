@@ -216,6 +216,14 @@ window.GAME_REGISTRY = [
     pause: 'pauseKidsSaperGame', resume: 'resumeKidsSaperGame', finish: 'finishKidsSaperGame',
     screens: ['kidsSaperGame'],
   },
+  {
+    // «Весёлые тесты» — копия механики «Пройди тест» для ребёнка: 14 тестов
+    // по 10 вопросов, итог — образ персонажа. Пауза полноценная, снимок
+    // funTestsPaused сверяется с числом записанных ответов при продолжении.
+    mode: 'funTests', title: '«Весёлые тесты»', group: 'kids', menuTitle: '🎪 Весёлые тесты',
+    pause: 'pauseFunTestsGame', resume: 'resumeFunTestsGame', finish: 'finishPausedFunTestsGame',
+    screens: ['funTestsGame'],
+  },
 
   // ─── Игры для одного ────────────────────────────────────────────────────
   {

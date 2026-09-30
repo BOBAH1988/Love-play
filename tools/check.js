@@ -1218,6 +1218,24 @@ function checkStyles(html) {
     // тёмно-бирюзовый фон группы, одинаковый в браузере и PWA. Standalone
     // не должен перекрашивать карточки детей отдельными правилами.
     const kidsQuizInTurquoiseGroup = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(cssWithoutComments);
+    // «Весёлые тесты» — игра для детей, её карточка обязана быть в том же
+    // общем бирюзовом блоке, а не с отдельным фоном: правило группы «Игры с
+    // детьми» — один фон на всех, одинаковый в браузере и PWA.
+    const funTestsInTurquoiseGroup = /#kidsTdCard[^{}]*#funTestsCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(cssWithoutComments);
+    // «Отдельный фон» — это когда #funTestsCard СТОИТ В НАЧАЛЕ селектора
+    // отдельного правила. В списке общего блока он стоит в конце через
+    // запятую, и прежняя регулярка считала общий блок «отдельным».
+    // Запятая внутри списка селекторов — это общий блок, а не отдельное
+    // правило, поэтому в разделителях оставляем только { и ;.
+    const separateFunTestsBackground = /(?:^|[{;])\s*#funTestsCard\s*\{[^}]*\bbackground\s*:/.test(cssWithoutComments);
+    const pwaFunTestsCardStyle = /pwa-standalone[^{}]*#funTestsCard|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#funTestsCard/.test(cssWithoutComments);
+    check('карточка «Весёлых тестов» — в общем фоне группы «Игры с детьми»',
+      funTestsInTurquoiseGroup && !separateFunTestsBackground && !pwaFunTestsCardStyle,
+      !funTestsInTurquoiseGroup
+        ? 'ожидается #funTestsCard в общем блоке детских карточек с градиентом #2b837f → #176e76 → #0d3741'
+        : separateFunTestsBackground
+          ? 'у #funTestsCard не должно быть отдельного background — включите её в общий блок'
+          : 'в standalone не должно быть отдельного переопределения #funTestsCard');
     const shopUsesTurquoise = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(cssWithoutComments);
     const separateKidsQuizBackground = /#kidsQuizCard\s*\{[^}]*\bbackground\s*:/.test(cssWithoutComments);
     const pwaKidsCardStyle = /pwa-standalone[^{}]*#kids[A-Za-z0-9_-]*Card|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#kids[A-Za-z0-9_-]*Card/.test(cssWithoutComments);
@@ -3488,6 +3506,66 @@ function checkTestHistoryExpand(html) {
   }
 }
 
+// «Весёлые тесты» — игра для детей. Проверяем, что её кнопка лежит в
+// списке раздела «Игры с детьми», группа в реестре совпадает, а экраны есть
+// в карте разделов и в списке экранов настроек. Забытая запись в любой из
+// таблиц не падает, а уводит «←» не в тот раздел — это уже случалось.
+function checkFunTests(html, timerSrc) {
+  group('«Весёлые тесты» (дети)');
+  const kidsList = /<div class="game-select-list" id="kidsGameSelectList">([\s\S]*?)<\/div>/.exec(html);
+  check('кнопка игры в разделе «Игры с детьми»',
+    !!kidsList && kidsList[1].includes('id="gameFunTestsBtn"'),
+    'кнопка «Весёлые тесты» должна быть в #kidsGameSelectList, иначе её не запустить из раздела');
+  // Запись ищем по строке mode — в блоке перед ней идут //-комментарии, и
+  // разбор по фигурным скобкам на них ломается.
+  const regSrc = read('games/game-registry.js');
+  const regLines = regSrc.split('\n').filter(l => /mode:\s*'funTests'/.test(l));
+  const regGroup = regLines.length === 1
+    ? (/group:\s*'([a-z]+)'/.exec(regLines[0]) || [null, null])[1]
+    : null;
+  check('в реестре игра числится в группе kids',
+    regGroup === 'kids',
+    `в реестре должен быть ровно один mode:'funTests' с group:'kids' (найдено строк: ${regLines.length}, группа: ${regGroup})`);
+  for (const sid of ['funTestsSetup', 'funTestsGame', 'funTestsSummary', 'funTestsHistory']) {
+    check(`экран ${sid} есть в разметке и в карте раздела kidsView`,
+      new RegExp(`<section id="${sid}"`).test(html) && new RegExp(`${sid}:'kidsView'`).test(timerSrc),
+      `нет секции #${sid} или записи ${sid}:'kidsView' в SECTION_FOR_SCREEN`);
+  }
+  // Иконки тестов не должны совпадать с иконками уже существующих игр: в
+  // списке тестов одинаковые иконки путаются между собой.
+  const data = read('cards/cards_fun_tests.js');
+  const icons = [...data.matchAll(/id:\s*'[a-z]+',\s*icon:\s*'([^']+)'/g)].map(m => m[1]);
+  // Иконка самой игры и её правил — не «чужие»: сверяем только с остальным
+  // приложением, вырезав блок правил «Весёлых тестов» и кнопку игры.
+  const rest = read('index.html')
+    .replace(/<div class="modal-overlay" id="funTestsRulesModal">[\s\S]*?closeFunTestsRulesBtn[\s\S]*?<\/div>\s*<\/div>/, '')
+    .replace(/<button[^>]*id="gameFunTestsBtn"[\s\S]*?<\/button>/, '');
+  const dup = icons.filter(ic => (rest.match(new RegExp(ic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length > 0);
+  check('иконки тестов не совпадают с иконками других игр',
+    icons.length === 14 && dup.length === 0,
+    `иконок ${icons.length}${dup.length ? ', совпали с чужими: ' + [...new Set(dup)].join(' ') : ''}`);
+  // Последний тест про интернет-безопасность: в правилах обязана быть оговорка,
+  // что его проходят вместе со взрослым и не используют как проверку.
+  const rules = /<div class="modal-overlay" id="funTestsRulesModal">([\s\S]*?)closeFunTestsRulesBtn/.exec(html);
+  const rulesText = rules ? rules[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ') : '';
+  // Оговорку ищем в СПИСКЕ ПРАВИЛ, а не во всём окне: в списке тестов есть
+  // отдельная строка «Только вместе со взрослым», из-за чего проверка проходила
+  // бы и после того, как из правил убрали главное предупреждение.
+  const safetyItem = /<li><b>[^<]*интернет[^<]*<\/b>[\s\S]*?<\/li>/i.exec(rules);
+  const safetyText = safetyItem ? safetyItem[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ') : '';
+  check('в правилах сказано, что тест безопасности проходят вместе со взрослым и не как проверка',
+    /вместе со взрослым/i.test(safetyText) && /не повод для наказания/i.test(safetyText),
+    `сценарный тест про личные данные нельзя подавать как проверку: в пункте правил нужна оговорка про взрослого и про отсутствие наказания, а сейчас там: «${safetyText.slice(0, 90)}»`);
+  // И список из 14 тестов в правилах совпадает с данными.
+  // Названия берём по id теста: в файле есть ещё name: у типов и в вопросах,
+  // и считать их все — верный способ получить ложную проверку.
+  const inData = [...data.matchAll(/id:\s*'[a-z]+',\s*icon:\s*'[^']+',\s*name:\s*'([^']+)'/g)].map(m => m[1]);
+  const missing = inData.filter(n => !rulesText.includes(n));
+  check('все тесты из данных названы в правилах',
+    inData.length === 14 && missing.length === 0,
+    `в правилах не названы: ${missing.join(', ') || '—'}`);
+}
+
 // Кнопки «Пройденные» в двух играх про тесты: «Пройдите тест» (пары) и
 // «Пройди тест» (один). По просьбе владельца они сделаны ниже — тем же
 // компактным компонентом .toggle-pill, что «Исследованные» и «Пройденные
@@ -3722,6 +3800,7 @@ function main() {
   checkKnowMoreZones();
   checkQuizNoRepeat();
   checkTestHistoryButtons(html);
+  checkFunTests(html, read('games/fants-timer.js'));
   checkTestHistoryExpand(html);
   checkPauseResetOnStart();
   checkExitNavigation();

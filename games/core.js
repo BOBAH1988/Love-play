@@ -355,6 +355,14 @@ let state = {
   // По индексу нельзя: после удаления записи крестиком индексы сдвигаются, и
   // раскрытой оказалась бы соседняя строка.
   soloTestOpen:[],
+  // Весёлые тесты (для детей) — четырнадцать тестов по 10 вопросов.
+  // funTestsAnswers хранит по одному значению на вопрос: индекс типа
+  // (mode:'types'). funTestsHistory хранит посчитанный результат.
+  funTestsType:'adventure', funTestsIndex:0, funTestsAnswers:[],
+  funTestsResult:null, funTestsHistory:[],
+  funTestsOpen:[],
+  // Снимок места остановки для меню паузы (номер вопроса).
+  funTestsPaused:null,
   // soloTestPaused — снимок места остановки для меню паузы: номер вопроса и
   // был ли уже выбран ответ (иначе «Продолжить игру» вернул бы к вопросу,
   // на который игрок ответил, и пришлось бы отвечать второй раз).
@@ -1037,6 +1045,12 @@ document.getElementById('gameSoloTestBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   callGameEntry('goToSoloTestSetup');
+});
+// «Весёлые тесты» (дети) — 14 тестов про персонажа (см. games/fun-tests.js).
+document.getElementById('gameFunTestsBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  callGameEntry('goToFunTestsSetup');
 });
 // "Английский язык" (обучающие игры) — goToFlashSetup() определена в games/kids-flash.js.
 document.getElementById('gameLearningFlashBtn').addEventListener('click', ()=>{
@@ -2072,6 +2086,14 @@ function performFullReset(){
   state.soloTestHistory = [];
   state.soloTestPaused = null;
   state.soloTestOpen = [];
+  // Весёлые тесты (дети) — общий сброс чистит партию и историю
+  state.funTestsType = 'adventure';
+  state.funTestsIndex = 0;
+  state.funTestsAnswers = [];
+  state.funTestsResult = null;
+  state.funTestsHistory = [];
+  state.funTestsOpen = [];
+  state.funTestsPaused = null;
   // Узнай больше — общий сброс чистит текущую партию и историю карт.
   // Настройки игрока (режим «кто исследует» и «чем исследуют») сбрасываются
   // на значения по умолчанию вместе со всем остальным: сброс прогресса —

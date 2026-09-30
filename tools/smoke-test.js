@@ -4811,6 +4811,243 @@ test('«Пройди тест»: экран настройки, «Пройден
   }
 });
 
+console.log('\n=== «Весёлые тесты» (дети) ===');
+
+// Игра для ребёнка — копия механики «Пройди тест» с детским содержанием и
+// оформлением. Проверяем: полный проход всех тестов, корректность подсчёта,
+// паузу с возвратом ровно на тот же вопрос, историю с раскрытием и то, что
+// игра принадлежит именно группе «Игры с детьми».
+const funTestsBackup = () => {
+  const saved = {};
+  ['funTestsType', 'funTestsIndex', 'funTestsAnswers', 'funTestsResult', 'funTestsHistory',
+   'funTestsOpen', 'funTestsPaused', 'inProgress', 'pausedMode', 'autoSpeak'].forEach(k => { saved[k] = state[k]; });
+  return saved;
+};
+
+test('«Весёлые тесты»: все 14 тестов проходятся и дают результат', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = funTestsBackup();
+  const card = getElById(stub, 'funTestsCard');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.funTestsHistory = [];
+    assert(FUN_TESTS.length === 14, `в игре должно быть 14 тестов, а ${FUN_TESTS.length}`);
+    assert(FUN_TESTS.length === Object.keys(FUN_TEST_ITEMS).length,
+      `тестов в списке ${FUN_TESTS.length}, а наборов вопросов ${Object.keys(FUN_TEST_ITEMS).length}`);
+    FUN_TESTS.forEach(testDef => {
+      state.funTestsType = testDef.id;
+      const items = funTestsItems();
+      assert(items.length === 10, `${testDef.id}: вопросов ${items.length}, а должно быть 10`);
+      const expected = testDef.mode === 'scale' ? 4 : testDef.types.length;
+      items.forEach((it, i) => {
+        assert(it.a && it.a.length === expected,
+          `${testDef.id}, вопрос ${i + 1}: вариантов ${it.a && it.a.length}, а нужно ${expected}`);
+        assert(new Set(it.a).size === it.a.length,
+          `${testDef.id}, вопрос ${i + 1}: варианты повторяются — их нельзя отличить`);
+      });
+      startFunTestsGame();
+      const buttons = (card.innerHTML.match(/znayu-answer-btn/g) || []).length;
+      assert(buttons === expected, `${testDef.id}: на карточке ${buttons} кнопок, а нужно ${expected}`);
+      for(let i = 0; i < items.length; i++){
+        answerFunTestsQuestion(i % expected);
+        assert((state.funTestsAnswers || []).length === i + 1,
+          `${testDef.id}: после ${i + 1} ответа записано ${(state.funTestsAnswers || []).length}`);
+        advanceFunTests();
+      }
+      const result = state.funTestsResult;
+      assert(result && result.title, `${testDef.id}: результат не посчитан`);
+      assert(testDef.types.some(t => t.title === result.title),
+        `${testDef.id}: показан тип «${result.title}», которого нет среди типов теста`);
+      assert(result.text && result.plus && result.minus && result.tip,
+        `${testDef.id}: в результате должны быть описание, сильные стороны, трудности и совет`);
+    });
+    // Подписи в итогах детские, а не из взрослой игры.
+    const list = getElById(stub, 'funTestsSummaryList');
+    assert(/Что у тебя получается/.test(list.innerHTML), 'в итогах должна быть подпись «Что у тебя получается»');
+    assert(!/Сильные стороны/.test(list.innerHTML), 'в детской игре не должно быть взрослой подписи «Сильные стороны»');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Весёлые тесты»: побеждает тип, за который проголосовали чаще', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = funTestsBackup();
+  const posOf = (idx) => funTestsCurrentOptions.findIndex(o => o.i === idx);
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.funTestsType = 'adventure';
+    startFunTestsGame();
+    // Семь раз «Защитник» (индекс 2) и три раза «Мечтатель» (индекс 3).
+    const items = funTestsItems();
+    for(let i = 0; i < items.length; i++){
+      showFunTestsQuestion();
+      answerFunTestsQuestion(posOf(i < 7 ? 2 : 3));
+      advanceFunTests();
+    }
+    assert(state.funTestsResult.title === 'Защитник',
+      `при семи голосах за «Защитника» показан «${state.funTestsResult.title}»`);
+    assert(state.funTestsResult.count === 7, `посчитано ${state.funTestsResult.count} голосов вместо 7`);
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Весёлые тесты»: повторный клик не дописывает второй ответ', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = funTestsBackup();
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.funTestsType = 'pet';
+    startFunTestsGame();
+    showFunTestsQuestion();
+    answerFunTestsQuestion(0);
+    answerFunTestsQuestion(3);
+    assert((state.funTestsAnswers || []).length === 1,
+      `повторные клики дописали лишние ответы: ${(state.funTestsAnswers || []).length}`);
+    advanceFunTests();
+    showFunTestsQuestion();
+    answerFunTestsQuestion(0);
+    assert((state.funTestsAnswers || []).length === 2, 'второй вопрос должен записаться');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Весёлые тесты»: пауза возвращает ровно на тот же вопрос', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = funTestsBackup();
+  const pauseModal = document.getElementById('pauseMenuModal');
+  const resume = () => getElById(stub, 'resumeBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.funTestsType = 'friend';
+    startFunTestsGame();
+    for(let i = 0; i < 3; i++){ answerFunTestsQuestion(0); advanceFunTests(); }
+    pauseFunTestsGame();
+    assert(state.pausedMode === 'funTests', `пауза должна выставить pausedMode='funTests', а ${state.pausedMode}`);
+    assert(getElById(stub, 'setup').classList.contains('active'), 'на паузе должен открыться хаб');
+    resume();
+    assert(state.funTestsIndex === 3, `после продолжения индекс должен быть 3, а ${state.funTestsIndex}`);
+    assert((state.funTestsAnswers || []).length === 3, 'ответы не должны потеряться при паузе');
+    // Пауза в 450 мс между ответом и следующим вопросом: вопрос не пропускается.
+    answerFunTestsQuestion(0);
+    pauseFunTestsGame();
+    resume();
+    assert(state.funTestsIndex === 4, `после паузы между ответом и вопросом должен быть вопрос 4, а ${state.funTestsIndex}`);
+    // «Закончить игру» прерывает без результата.
+    const historyBefore = (state.funTestsHistory || []).length;
+    pauseFunTestsGame();
+    getElById(stub, 'finishGameBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(!state.inProgress, 'после «Закончить игру» inProgress должен быть снят');
+    assert((state.funTestsHistory || []).length === historyBefore, 'прерванный тест не должен попасть в «Пройденные»');
+    assert(getElById(stub, 'funTestsSetup').classList.contains('active'), 'после «Закончить игру» должно открыться меню игры');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    if(pauseModal) pauseModal.classList.remove('show');
+    Object.assign(state, saved);
+  }
+});
+
+test('«Весёлые тесты»: «Пройденные» раскрываются по нажатию', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = funTestsBackup();
+  const list = getElById(stub, 'funTestsHistoryList');
+  const clickIn = (idx, cls) => list._getHandlers().get('click').forEach(({ handler }) => handler({
+    target: { closest: sel => sel === cls ? { dataset: { idx: String(idx) } } : null },
+  }));
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.funTestsHistory = [];
+    state.funTestsOpen = [];
+    state.funTestsType = 'fantasy';
+    startFunTestsGame();
+    const items = funTestsItems();
+    for(let i = 0; i < items.length; i++){ answerFunTestsQuestion(0); advanceFunTests(); }
+    const title = state.funTestsResult.title;
+    goToFunTestsHistory();
+    assert(!/fun-tests-history-entry open/.test(list.innerHTML), 'никто не должен быть раскрыт до нажатия');
+    clickIn(0, '.fun-tests-history-head');
+    assert(/fun-tests-history-entry open/.test(list.innerHTML), 'после нажатия запись должна раскрыться');
+    assert(list.innerHTML.includes(title), `в раскрытой записи должен быть её тип «${title}»`);
+    assert(list.innerHTML.includes('Что у тебя получается'), 'в раскрытом результате должна быть подпись «Что у тебя получается»');
+    clickIn(0, '.fun-tests-history-head');
+    assert(!/fun-tests-history-entry open/.test(list.innerHTML), 'повторное нажатие должно свернуть запись');
+    clickIn(0, '.fun-tests-history-del');
+    assert((state.funTestsHistory || []).length === 0, 'крестик должен удалить запись');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Весёлые тесты»: игра в группе «Игры с детьми», стрелка «←» ведёт в хаб', () => {
+  const saved = funTestsBackup();
+  const screens = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => document.getElementById(m[1]));
+  const originalQuery = document.querySelectorAll;
+  const originalSingleQuery = document.querySelector;
+  const clear = () => screens.forEach(el => el.classList.remove('active'));
+  const active = () => screens.filter(el => el.classList.contains('active'));
+  const back = document.getElementById('globalBackBtn');
+  try {
+    document.querySelectorAll = function(selector){
+      if(selector === '.screen.active') return active();
+      if(selector === '.screen') return screens;
+      return originalQuery.call(this, selector);
+    };
+    document.querySelector = function(selector){
+      if(selector === '.screen.active') return active()[0] || null;
+      return originalSingleQuery.call(this, selector);
+    };
+    clear();
+    goToFunTestsSetup();
+    assert(getElById(stub, 'funTestsSetup').classList.contains('active'), 'должен открыться экран настройки');
+    // Кнопка игры лежит в списке раздела «Игры с детьми», и группа в реестре
+    // совпадает: от этого зависит, куда ведёт «←» на паузе.
+    const btnBlock = /<div class="game-select-list" id="kidsGameSelectList">([\s\S]*?)<\/div>/.exec(html)[1];
+    assert(btnBlock.includes('id="gameFunTestsBtn"'), 'кнопка «Весёлые тесты» должна быть в списке «Игры с детьми»');
+    const entry = (window.GAME_REGISTRY || []).find(g => g.mode === 'funTests');
+    assert(entry && entry.group === 'kids', 'в реестре игра должна быть в группе kids');
+    // «←» с экрана настроек уводит в хаб, а не гоняет экран сам на себя.
+    for(const { handler } of back._getHandlers().get('click')) handler({});
+    assert(!getElById(stub, 'funTestsSetup').classList.contains('active'),
+      'стрелка «←» не должна оставлять экран настроек активным');
+    assert(getElById(stub, 'setup').classList.contains('active'), 'стрелка «←» должна вести в хаб');
+    assert(active().length === 1, `после выхода активным должен быть ровно один экран, а ${active().length}`);
+    assert(!state.inProgress, 'после выхода inProgress должен быть снят');
+  } finally {
+    clear();
+    document.querySelectorAll = originalQuery;
+    document.querySelector = originalSingleQuery;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Весёлые тесты»: тест безопасности в интернете — только разговор, без оценки', () => {
+  // Важно по существу, а не по коду: сценарный тест про личные данные нельзя
+  // превращать в проверку «сколько баллов набрал». Проверяем, что в правилах
+  // игры это сказано прямо и что у теста нет подсчёта баллов.
+  const rules = /<div class="modal-overlay" id="funTestsRulesModal">[\s\S]*?closeFunTestsRulesBtn/.exec(html)[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  assert(/только вместе со взрослым/i.test(rules), 'в правилах должно быть сказано, что тест проходят только вместе со взрослым');
+  assert(/не повод для наказания/i.test(rules), 'в правилах должно быть сказано, что это не повод для наказания');
+  const safety = FUN_TESTS.find(t => t.id === 'safety');
+  assert(safety, 'тест «Безопасный интернет-герой» должен быть в списке');
+  assert(safety.mode === 'types', 'у теста безопасности не должно быть подсчёта баллов по шкале');
+  assert(!/min:/.test(JSON.stringify(safety.types)), 'у типов теста безопасности не должно быть порогов min — это была бы оценка');
+  assert(safety.types.every(t => t.title && t.tip), 'у каждого образа должны быть название и подсказка, что обсудить');
+  // Название не содержит «оценка/балл/уровень» — это прямое обещание игроку.
+  const joined = safety.types.map(t => t.title).join(', ');
+  assert(!/балл|оцен|уровень|сколько/i.test(joined), `названия образов не должны обещать оценку: ${joined}`);
+});
+
 console.log('\n=== «Узнай больше» ===');
 
 // Игра про карту тела: партнёры по очереди исследуют зоны, отметки пишутся

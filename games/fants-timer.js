@@ -810,6 +810,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
         ['🔴','Четыре в ряд','kidsC4RulesModal'],
       ]},
       ['🎲','Во что поиграть?','whatToPlayRulesModal'],
+      ['🎪','Весёлые тесты','funTestsRulesModal'],
     ]},
     { icon:'💼', name:'Бизнес игры', games:[
       ['🍋','Лимонадный ларёк','businessLemonadeRulesModal'],
@@ -941,6 +942,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     kidsBattleshipSetup:'kidsView', kidsBattleshipGame:'kidsView',
     kidsKrokodilSetup:'kidsView', kidsKrokodilGame:'kidsView',
     kidsMemesSetup:'kidsView', kidsMemesGame:'kidsView',
+    funTestsSetup:'kidsView', funTestsGame:'kidsView',
+    funTestsSummary:'kidsView', funTestsHistory:'kidsView',
     soloMemorySetup:'soloView', soloMemoryGame:'soloView',
     soloQuizSetup:'soloView', soloQuizGame:'soloView',
     soloXoSetup:'soloView', soloXoGame:'soloView',
@@ -985,6 +988,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'famZnayuSetup','luckySetup',
     'kidsMemorySetup','kidsQuizSetup','kidsTdSetup','kidsSaperSetup','kidsXoSetup',
     'kidsBattleshipSetup','kidsKrokodilSetup','kidsMemesSetup','flashTimeSetup',
+    'funTestsSetup','funTestsSummary','funTestsHistory',
     'kidsC4Setup','memesSetup',
     'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBattleshipSetup','soloC4Setup',
     'soloTestSetup','soloTestSummary','soloTestHistory',
@@ -1055,6 +1059,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'soloTestHistory':'exitSoloTestHistory',
     'soloTestSummary':'exitSoloTestSummary',
     'soloTestSetup':'exitSoloTestSetup',
+    'funTestsHistory':'exitFunTestsHistory',
+    'funTestsSummary':'exitFunTestsSummary',
+    'funTestsSetup':'exitFunTestsSetup',
   };
   window.handleNestedBack = function(activeIds){
     const ids = activeIds || getActiveGameScreenIds();
