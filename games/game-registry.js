@@ -263,6 +263,15 @@ window.GAME_REGISTRY = [
     screens: ['businessLemonadeGame'],
   },
   {
+    // «Бизнес тесты» — 14 тем по 10 вопросов для одного человека. Пауза
+    // полноценная, снимок bizTestsPaused сверяется с числом записанных
+    // ответов при продолжении, иначе пауза между ответом и следующим
+    // вопросом пропускала бы вопрос.
+    mode: 'bizTests', title: '«Бизнес тесты»', group: 'business', menuTitle: '🏢 Бизнес тесты',
+    pause: 'pauseBizTestsGame', resume: 'resumeBizTestsGame', finish: 'finishPausedBizTestsGame',
+    screens: ['bizTestsGame'],
+  },
+  {
     mode: 'flags', title: '«Флаги»', group: 'learning', menuTitle: '🇷🇺 Флаги',
     noPause: true, back: 'exitFlagsGame',
     screens: ['flagsGame'],

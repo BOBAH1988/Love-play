@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261025e">
+<link rel="stylesheet" href="styles/app.css?v=20261025f">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-25 · v570';
+  window.APP_BUILD = '2026-10-25 · v572';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v570</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v572</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -451,6 +451,7 @@
           <button type="button" class="btn btn-menu-item" id="gameBusiness1Btn"><span class="menu-icon">🍋</span> Лимонадный ларёк</button>
           <button type="button" class="btn btn-menu-item" id="gameShopBtn"><span class="menu-icon">🛍️</span> Магазин</button>
           <button type="button" class="btn btn-menu-item" id="gameBizObserverBtn"><span class="menu-icon">🔍</span> Оцени бизнес</button>
+          <button type="button" class="btn btn-menu-item" id="gameBizTestsBtn"><span class="menu-icon">🏢</span> Бизнес тесты</button>
         </div>
       </div>
 
@@ -3854,6 +3855,99 @@
     </div>
   </div>
 
+  <!-- ===== ПРАВИЛА "БИЗНЕС ТЕСТЫ" ===== -->
+  <div class="modal-overlay" id="bizTestsRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🏢 Правила игры «Бизнес тесты»</div>
+      <div class="intro-text">Профессиональные самотесты для одного человека: личность, сильные стороны, предпринимательский склад, мотивация, ценности, решения, риск, лидерство, эмоциональный интеллект, делегирование, стиль общения, командная роль, конфликты и готовность расти. Верных ответов здесь нет: у каждого вопроса несколько честных вариантов, а результат — описание вашего рабочего стиля.</div>
+      <ol class="modal-rules">
+        <li>На экране настройки выберите тему — их четырнадцать, по 10 вопросов в каждом. Нажмите «Начать».</li>
+        <li>Отвечайте на все вопросы подряд. Таймера и кнопки «Пропустить» нет, но ответ можно передумать: пока вы не нажали кнопку «Выход», на экране тот же вопрос. Передачи телефона нет — это личный тест.</li>
+        <li>Варианты ответа показываются в случайном порядке каждую партию, поэтому по позиции кнопки ответ не угадать.</li>
+        <li>В части тем важно, какой вариант вы выбрали чаще: побеждает тот, за который проголосовали чаще, и он показывается в итогах. В трёх темах складываются баллы по шкале — там показывается сумма. В двух темах («Личность и сильные стороны» и «Эмоциональный интеллект в бизнесе») считается сразу пять независимых шкал, и в итогах выводится профиль по каждой из них.</li>
+        <li>В конце открывается окно с результатом: ваш тип или профиль по шкалам, что у вас получается, на что обратить внимание и что можно попробовать. Рядом видно, сколько ответов легло на этот тип (или какая получилась сумма баллов).</li>
+        <li>Результат сохраняется в «Пройденные» — их можно открыть с экрана настройки, нажатием на запись раскрыть полный результат и удалить лишние крестиком. «Сбросить прогресс» на главном экране чистит историю.</li>
+        <li>Стрелка «←» открывает меню паузы: «Продолжить игру» вернёт к тому же вопросу, «Закончить игру» закроет тест без сохранения результата.</li>
+        <li><b>Честно о результате.</b> Это развлекательный самотест, а не инструмент аттестации. Под каждую тему взят известный конструкт организационной психологии — пятифакторная модель Big Five, стили реагирования на конфликт, готовность к риску, делегирование, командные роли, — но <b>все вопросы и описания написаны для этого приложения</b>, ничего не переведено из чужих методик. У этих наборов нет психометрической проверки, норм и референсных групп, и они не проходили валидацию на больших выборках. <b>Результат нельзя использовать для найма, увольнений, повышения или оценки сотрудников</b> — для этого нужны собеседование, ассессмент и работа с психологом. Пользуйтесь им как поводом подумать о своём рабочем стиле и договориться с командой о том, что изменить.</li>
+        <li>Тема «Стиль общения в команде» описывает четыре классических измерения поведения (Dominance, Influence, Steadiness, Conscientiousness), но это <b>не официальный DiSC-тест</b>: DiSC — зарегистрированный товарный знак и методика другого издателя, а формулировки здесь написаны свои.</li>
+      </ol>
+      <div class="intro-text" style="margin-top:14px;"><b>Какие темы есть</b></div>
+      <ul class="modal-rules">
+        <li>🪬 Личность и сильные стороны — большая пятёрка. Пять независимых шкал, по каждой выводится свой уровень: <b>Открытость новому</b>, <b>Добросовестность</b>, <b>Экстраверсия</b>, <b>Доброжелательность</b> и <b>Эмоциональная устойчивость</b>. Помогает понять рабочий стиль, отношение к переменам и взаимодействие с командой.</li>
+        <li>💹 Ваши предпринимательские сильные стороны — запуск идей, продажи, стратегия, организация, коммуникация, лидерство или выполнение задач. Удобно, чтобы обсудить роли в команде.</li>
+        <li>🏗 Профиль предпринимателя — инициативность, самостоятельность, готовность к риску, настойчивость, уверенность и умение замечать возможности.</li>
+        <li>🧷 Мотивация в бизнесе — что больше всего движет: деньги, свобода, влияние, статус, творчество, польза людям или развитие. Помогает понять личные цели и источники выгорания.</li>
+        <li>🗃 Ценности руководителя — на чём вы строите решения: результат, честность, скорость, стабильность, качество, команда или инновации. Полезно для разговора о культуре компании.</li>
+        <li>📉 Стиль принятия решений — как действуете при неопределённости: анализируете данные, доверяете интуиции, советуетесь или быстро экспериментируете.</li>
+        <li>🛞 Отношение к риску — избегаете, принимаете после расчёта, действуете умеренно или смело и быстро. Помогает обсудить допустимый риск в проектах.</li>
+        <li>🗜 Ваш стиль лидерства — наставник, стратег, вдохновитель, организатор, контролёр или делегирующий руководитель.</li>
+        <li>🩻 Эмоциональный интеллект в бизнесе — тоже пять независимых шкал со своим уровнем: <b>Распознавание эмоций</b>, <b>Самоконтроль</b>, <b>Эмпатия</b>, <b>Реакция на критику</b> и <b>Рабочий контакт</b>. Подходит для развития руководителей и командной коммуникации.</li>
+        <li>🪣 Готовность к делегированию — делаю сам, делегирую частично или строю автономную команду.</li>
+        <li>🪛 Стиль общения в команде — четыре классических измерения поведения: Dominance, Influence, Steadiness, Conscientiousness. Не официальный DiSC.</li>
+        <li>🗞 Командная роль — генератор идей, стратег, исполнитель, переговорщик, аналитик, координатор или поддерживающий участник. Помогает увидеть пробелы и дублирование ролей.</li>
+        <li>🧯 Стиль конфликта — избегание, давление, компромисс, сотрудничество или уступка.</li>
+        <li>📁 Потенциал роста и обучаемость — отношение к ошибкам, обратной связи, экспериментам, изменениям и новым навыкам.</li>
+      </ul>
+      <button class="btn btn-primary" id="closeBizTestsRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+  <!-- ===== БИЗНЕС ТЕСТЫ: НАСТРОЙКА ===== -->
+  <!-- 📍 логика: games/biz-tests.js | вопросы: cards/cards_biz_tests.js -->
+  <section id="bizTestsSetup" class="screen">
+    <h1 class="title">🏢 Бизнес тесты</h1>
+    <div class="subtitle">Узнайте свой рабочий стиль: личность, сильные стороны, решения, риск, лидерство, команда</div>
+
+    <div class="field">
+      <label>Темы</label>
+      <div class="levels" id="bizTestsTypeGroup"></div>
+    </div>
+
+    <button class="btn btn-primary" id="bizTestsStartBtn">Начать</button>
+
+    <div class="toggle-row" style="margin-top:10px;">
+      <button type="button" class="toggle-pill" id="bizTestsHistoryBtn">Пройденные</button>
+    </div>
+
+    <button class="btn btn-secondary" id="bizTestsSetupExitBtn" style="margin-top:10px;">Выход</button>
+  </section>
+
+  <!-- ===== БИЗНЕС ТЕСТЫ: ИГРА ===== -->
+  <section id="bizTestsGame" class="screen">
+    <div class="game-level-label">🏢 Бизнес тесты</div>
+    <div class="wishlist-progress-row" id="bizTestsProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="bizTestsProgressFill"></div></div>
+      <div class="wishlist-progress-label" id="bizTestsProgressLabel">0 / 10</div>
+    </div>
+
+    <div class="card-area">
+      <div class="card" id="bizTestsCard">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="znayu-question-text">Загрузка…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== БИЗНЕС ТЕСТЫ: ИТОГИ ===== -->
+  <section id="bizTestsSummary" class="screen">
+    <h1 class="title" id="bizTestsSummaryTitle">🏢 Тест</h1>
+    <div class="subtitle">Ваш результат по этой теме</div>
+    <div class="biz-test-result" id="bizTestsSummaryList"></div>
+    <div class="intro-text" id="bizTestsSummaryNote">Результат сохранён в «Пройденные».</div>
+    <button class="btn btn-primary" id="bizTestsSummaryExitBtn" style="margin-top:10px;">В меню</button>
+  </section>
+
+  <!-- ===== БИЗНЕС ТЕСТЫ: ПРОЙДЕННЫЕ ===== -->
+  <section id="bizTestsHistory" class="screen">
+    <h1 class="title">Пройденные темы</h1>
+    <div class="subtitle">Нажмите на запись — посмотрите, что получилось</div>
+    <div class="pmap-history-wrap" id="bizTestsHistoryList"></div>
+    <button class="btn btn-secondary" id="bizTestsHistoryExitBtn" style="margin-top:10px;">Назад</button>
+  </section>
+
   <!-- ===== ВЕСЁЛЫЕ ТЕСТЫ: НАСТРОЙКА ===== -->
   <!-- 📍 логика: games/fun-tests.js | вопросы: cards/cards_fun_tests.js -->
   <section id="funTestsSetup" class="screen">
@@ -4832,6 +4926,7 @@
 <script src="cards/cards_compat_test.js?v=20261025a"></script>
 <script src="cards/cards_solo_test.js?v=20261025d"></script>
 <script src="cards/cards_fun_tests.js?v=20261025b"></script>
+<script src="cards/cards_biz_tests.js?v=20261025a"></script>
 <script src="cards/cards_know_more.js?v=20261024c"></script>
 <script src="cards/cards_whattoplay.js?v=20260928w"></script>
 <script src="cards/cards_kids_krokodil.js?v=20260911a"></script>
@@ -4842,18 +4937,18 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20261022y"></script>
 <script src="cards/capitals.js?v=20261022y"></script>
-<script src="games/core.js?v=20261025d"></script>
+<script src="games/core.js?v=20261025e"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
       <script src="games/fants-video.js?v=20261002f"></script>
 <script src="games/fants-davay.js?v=20260925a"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20261025b"></script>
+<script src="games/fants-timer.js?v=20261025c"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
-<script src="games/game-registry.js?v=20261025a"></script>
+<script src="games/game-registry.js?v=20261025b"></script>
 <!-- Локальная статистика: считает партии на этом устройстве, никуда не отправляет -->
 <script src="games/stats.js?v=20260929a"></script>
 <script src="games/twister.js?v=20260921j"></script>
@@ -4900,6 +4995,7 @@
 <script src="games/compat-test.js?v=20261025a"></script>
 <script src="games/solo-test.js?v=20261025b"></script>
 <script src="games/fun-tests.js?v=20261025b"></script>
+<script src="games/biz-tests.js?v=20261025a"></script>
 <script src="games/know-more.js?v=20261024n"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20261022y"></script>

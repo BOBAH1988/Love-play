@@ -3460,6 +3460,79 @@ function checkKnowMoreZones() {
 }
 
 
+// «Бизнес тесты» — игра для одного человека в группе «Бизнес игры».
+// Проверяем то, что молча ломается: регистрацию в размере хаба и реестре,
+// оформление карточки (в группе она СВЕТЛАЯ, группового градиента нет) и
+// полноту правил — включая оговорку, что это не инструмент аттестации.
+function checkBizTests(html, timerSrc) {
+  group('«Бизнес тесты» (бизнес)');
+  const data = read('cards/cards_biz_tests.js');
+  const bizList = /<div class="game-select-list" id="businessGameSelectList">([\s\S]*?)<\/div>/.exec(html);
+  check('кнопка игры в разделе «Бизнес игры»',
+    !!bizList && bizList[1].includes('id="gameBizTestsBtn"'),
+    'кнопка «Бизнес тесты» должна быть в #businessGameSelectList, иначе её не запустить из раздела');
+  const otherLists = ['kidsGameSelectList', 'twoPlayerGamesField', 'soloGameSelectList']
+    .map(id => new RegExp(`id="${id}"([\\s\\S]*?)<\\/div>`).exec(html))
+    .filter(Boolean)
+    .map(m => m[1]);
+  check('кнопка игры не попала в другие разделы',
+    !otherLists.some(l => l.includes('gameBizTestsBtn')),
+    'игра для бизнеса не должна висеть в «Играх с детьми», парах или одиночных играх');
+  const regLine = read('games/game-registry.js').split('\n').filter(l => /mode:\s*'bizTests'/.test(l));
+  check('в реестре игра числится в группе business',
+    regLine.length === 1 && /group:\s*'business'/.test(regLine[0]),
+    `в реестре должен быть ровно один mode:'bizTests' с group:'business' (найдено строк: ${regLine.length})`);
+  for (const sid of ['bizTestsSetup', 'bizTestsGame', 'bizTestsSummary', 'bizTestsHistory']) {
+    check(`экран ${sid} есть в разметке и в карте раздела businessView`,
+      new RegExp(`<section id="${sid}"`).test(html) && new RegExp(`${sid}:'businessView'`).test(timerSrc),
+      `нет секции #${sid} или записи ${sid}:'businessView' в SECTION_FOR_SCREEN`);
+  }
+  // Карточка игры остаётся светлой, как у соседних игр группы: группового
+  // градиента у «Бизнес игр» нет, и отдельный фон у одной игры выбивается.
+  const appCss = read('styles/app.css');
+  check('карточка «Бизнес тестов» остаётся светлой, как в группе',
+    !/#bizTestsCard\s*\{[^}]*background/.test(appCss),
+    'у группы «Бизнес игры» нет своего градиента, отдельный фон #bizTestsCard сделает карточку чужеродной');
+  // Пороги профильных шкал должны быть достижимы: верхний уровень не может
+  // лежать выше максимальной суммы (число вопросов на шкалу × 3).
+  const profBad = [];
+  for (const m of data.matchAll(/key: '([a-z]+)', name: '([^']+)',[\s\S]*?levels: \[([\s\S]*?)\n        \] \}/g)) {
+    const [, key, name, body] = m;
+    const mins = [...body.matchAll(/min: (\d+)/g)].map(x => Number(x[1]));
+    const count = (data.match(new RegExp(`g: '${key}'`, 'g')) || []).length;
+    if (!count || !mins.length) { profBad.push(`${name}: не измеряется`); continue; }
+    if (mins[0] !== 0) profBad.push(`${name}: первый порог ${mins[0]} ≠ 0`);
+    if (mins.some((v, i) => i > 0 && v <= mins[i - 1])) profBad.push(`${name}: пороги не по возрастанию`);
+    if (mins[mins.length - 1] > count * 3) profBad.push(`${name}: верхний порог ${mins[mins.length - 1]} недостижим при максимуме ${count * 3}`);
+  }
+  check('пороги шкал профильных тем достижимы',
+    profBad.length === 0,
+    `пороги посчитаны на другое число вопросов: ${profBad.join('; ')}`);
+  // Оговорка о том, что это не инструмент аттестации: без неё игрок может
+  // применить самотест для найма, а это и неверно, и незаконно.
+  const rules = /<div class="modal-overlay" id="bizTestsRulesModal">([\s\S]*?)closeBizTestsRulesBtn/.exec(html);
+  const rulesText = rules ? rules[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ') : '';
+  check('в правилах запрет использовать результат для найма',
+    /не инструмент аттестации/i.test(rulesText) && /нельзя использовать для найма/i.test(rulesText),
+    'профессиональный самотест нельзя подавать как инструмент оценки сотрудников: нужна оговорка в правилах');
+  check('в правилах сказано про отсутствие психометрической проверки',
+    /психометрической проверки/i.test(rulesText),
+    'у самодельных наборов нет норм и валидации — об этом обязано быть сказано в правилах');
+  check('в правилах сказано, что это не официальный DiSC',
+    /не официальный DiSC/i.test(rulesText),
+    'DiSC — зарегистрированный товарный знак: тему нельзя выдавать за официальный тест');
+  const themes = [...data.matchAll(/id: '[a-z]+', icon: '[^']+', name: '([^']+)'/g)].map(m => m[1]);
+  const missing = themes.filter(n => !rulesText.includes(n));
+  check('все темы из данных названы в правилах',
+    themes.length === 14 && missing.length === 0,
+    `в правилах не названы темы: ${missing.join(', ') || '—'}`);
+  const scales = [...data.matchAll(/\{ key: '[a-z]+', name: '([^']+)'/g)].map(m => m[1]);
+  const missingScales = scales.filter(n => !rulesText.includes(n));
+  check('все шкалы профильных тем названы в правилах',
+    scales.length === 10 && missingScales.length === 0,
+    `шкалы видны в итогах, значит, должны быть названы в правилах — не названы: ${missingScales.join(', ') || '—'}`);
+}
+
 // Раскрытие результата в «Пройденных» должно вести себя одинаково в обеих
 // играх про тесты — «Пройдите тест» (пары) и «Пройди тест» (один). Обе части
 // сделаны по одному образцу (кнопка-заголовок + скрытое тело), и однажды одна
@@ -3802,6 +3875,7 @@ function main() {
   checkTestHistoryButtons(html);
   checkFunTests(html, read('games/fants-timer.js'));
   checkTestHistoryExpand(html);
+  checkBizTests(html, read('games/fants-timer.js'));
   checkPauseResetOnStart();
   checkExitNavigation();
   checkStyles(html);

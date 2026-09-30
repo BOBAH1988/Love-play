@@ -816,6 +816,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🍋','Лимонадный ларёк','businessLemonadeRulesModal'],
       ['🛍️','Магазин','shopRulesModal'],
       ['🔍','Оцени бизнес','bizObsRulesModal'],
+      ['🏢','Бизнес тесты','bizTestsRulesModal'],
     ]},
     { icon:'📱', name:'Игры для одного', games:[
       ['🪢','Виселица','partyHangmanRulesModal'],
@@ -954,6 +955,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     whatToPlayGame:'soloView',
     businessLemonadeSetup:'businessView', businessLemonadeGame:'businessView',
     bizObsSetup:'businessView', bizObsGame:'businessView',
+    bizTestsSetup:'businessView', bizTestsGame:'businessView',
+    bizTestsSummary:'businessView', bizTestsHistory:'businessView',
     flashSetup:'learningView', flashGame:'learningView',
     flashTimeSetup:'learningView', flashTimeGame:'learningView',
     flagsSetup:'learningView', flagsGame:'learningView',
@@ -993,6 +996,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'soloMemorySetup','soloQuizSetup','soloXoSetup','soloBattleshipSetup','soloC4Setup',
     'soloTestSetup','soloTestSummary','soloTestHistory',
     'businessLemonadeSetup','bizObsSetup','flashSetup','flagsSetup',
+    'bizTestsSetup','bizTestsSummary','bizTestsHistory',
     // Обучающая группа: экраны настроек «Столиц» и «Арифметики». Без них
     // стрелка «←» не считала экран экраном настройки и проваливалась в
     // generic-ветку, которая писала в lastSectionOnPause чужой раздел.
@@ -1059,6 +1063,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'soloTestHistory':'exitSoloTestHistory',
     'soloTestSummary':'exitSoloTestSummary',
     'soloTestSetup':'exitSoloTestSetup',
+    'bizTestsHistory':'exitBizTestsHistory',
+    'bizTestsSummary':'exitBizTestsSummary',
+    'bizTestsSetup':'exitBizTestsSetup',
     'funTestsHistory':'exitFunTestsHistory',
     'funTestsSummary':'exitFunTestsSummary',
     'funTestsSetup':'exitFunTestsSetup',

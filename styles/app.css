@@ -3248,6 +3248,77 @@
     display:block; margin-top:12px; padding-top:12px;
     border-top:1px solid rgba(255,255,255,.14); text-align:left;
   }
+  /* "Бизнес тесты" — свои классы, как и у остальных тестовых игр. Карточка с
+     вопросом остаётся СВЕТЛОЙ (базовый .card), как у соседних игр группы
+     «Бизнес игры»: группового градиента у этой группы нет, и вводить его ради
+     одной игры означало бы выбиваться из раздела. Тёмными здесь сделаны только
+     элементы результата и истории — они лежат на тёмном фоне экрана. */
+  .biz-test-result{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:16px; padding:14px; text-align:left;
+  }
+  .biz-test-type{ font-size:22px; font-weight:800; color:#fff; text-align:center; line-height:1.25; }
+  .biz-test-verdict{ font-size:15px; line-height:1.5; color:#fff; margin-top:10px; }
+  .biz-test-stat{ font-size:13px; color:#e8c9dd; margin-top:10px; text-align:center; }
+  .biz-test-plus, .biz-test-minus, .biz-test-tip{
+    margin-top:12px; border-top:1px solid rgba(255,255,255,.14); padding-top:10px;
+    font-size:13px; line-height:1.5; color:rgba(255,255,255,.75);
+  }
+  .biz-test-plus b, .biz-test-minus b, .biz-test-tip b{
+    display:block; font-size:12px; font-weight:800; color:#e8c9dd;
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px;
+  }
+  /* Профиль по шкалам (Big Five, эмоциональный интеллект): пять независимых
+     черт, у каждой своя сумма, свой уровень и своя подсказка. */
+  .biz-test-profiles{ margin-top:14px; border-top:1px solid rgba(255,255,255,.14); padding-top:12px; }
+  .biz-test-profiles-head{
+    font-size:12px; font-weight:800; color:#e8c9dd;
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:10px;
+  }
+  .biz-test-profile{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; padding:10px 12px; margin-bottom:10px;
+  }
+  .biz-test-profile-head{ display:flex; align-items:baseline; gap:8px; }
+  .biz-test-profile-name{ flex:1 1 auto; min-width:0; font-size:14px; font-weight:700; color:#fff; }
+  .biz-test-profile-sum{ flex:0 0 auto; font-size:12px; color:#e8c9dd; }
+  .biz-test-profile-level{ font-size:14px; font-weight:700; color:#fff; margin-top:6px; }
+  .biz-test-profile-text{ font-size:13px; line-height:1.5; color:rgba(255,255,255,.75); margin-top:6px; }
+  .biz-test-profile-row{
+    font-size:12px; line-height:1.5; color:rgba(255,255,255,.7); margin-top:8px;
+    padding-top:8px; border-top:1px solid rgba(255,255,255,.1);
+  }
+  .biz-test-profile-row b{ display:block; font-weight:800; color:#e8c9dd; margin-bottom:2px; }
+  .biz-test-history-entry{
+    position:relative;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px 44px 12px 14px;
+  }
+  .biz-test-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+  .biz-test-history-text{ font-size:14px; color:#fff; line-height:1.45; }
+  .biz-test-history-del{
+    position:absolute; top:10px; right:10px;
+    flex-shrink:0; width:28px; height:28px; border-radius:50%;
+    border:1px solid rgba(255,99,110,.4); background:transparent; color:#ff8b96;
+    font-size:13px; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .biz-test-history-del:active{ background:rgba(255,99,110,.3); }
+  .biz-test-history-head{
+    display:block; width:100%; text-align:left; background:transparent;
+    border:0; padding:0 40px 0 0; color:inherit; font:inherit; cursor:pointer;
+  }
+  .biz-test-history-date, .biz-test-history-text{ display:block; }
+  .biz-test-history-hint{
+    display:block; margin-top:4px;
+    font-size:12px; font-weight:700; color:rgba(255,255,255,.6);
+  }
+  .biz-test-history-entry.open .biz-test-history-hint{ color:#e8c9dd; }
+  .biz-test-history-body{ display:none; }
+  .biz-test-history-entry.open .biz-test-history-body{
+    display:block; margin-top:12px; padding-top:12px;
+    border-top:1px solid rgba(255,255,255,.14); text-align:left;
+  }
   /* Раскрытие результата в «Пройденных». Заголовок записи — кнопка на всю
      ширину (тот же приём, что у групп карты тела в «Узнай больше»): сама
      строка раскрывается по нажатию, поэтому она должна быть кликабельной

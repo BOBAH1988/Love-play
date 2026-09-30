@@ -5105,6 +5105,209 @@ test('«Весёлые тесты»: тест безопасности в инт
   assert(!/балл|оцен|уровень|сколько/i.test(joined), `названия образов не должны обещать оценку: ${joined}`);
 });
 
+console.log('\n=== «Бизнес тесты» ===');
+
+const bizTestsBackup = () => {
+  const saved = {};
+  ['bizTestsType', 'bizTestsIndex', 'bizTestsAnswers', 'bizTestsResult', 'bizTestsHistory',
+   'bizTestsOpen', 'bizTestsPaused', 'inProgress', 'pausedMode', 'autoSpeak'].forEach(k => { saved[k] = state[k]; });
+  return saved;
+};
+
+test('«Бизнес тесты»: все 14 тем проходятся и дают результат', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = bizTestsBackup();
+  const card = getElById(stub, 'bizTestsCard');
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.bizTestsHistory = [];
+    assert(BIZ_TESTS.length === 14, `в игре должно быть 14 тем, а ${BIZ_TESTS.length}`);
+    assert(BIZ_TESTS.length === Object.keys(BIZ_TEST_ITEMS).length,
+      `тем в списке ${BIZ_TESTS.length}, а наборов вопросов ${Object.keys(BIZ_TEST_ITEMS).length}`);
+    BIZ_TESTS.forEach(t => {
+      state.bizTestsType = t.id;
+      const items = bizTestsItems();
+      assert(items.length === 10, `${t.id}: вопросов ${items.length}, а должно быть 10`);
+      const expected = t.mode === 'types' ? t.types.length : 4;
+      items.forEach((it, i) => {
+        assert(it.a && it.a.length === expected,
+          `${t.id}, вопрос ${i + 1}: вариантов ${it.a && it.a.length}, а нужно ${expected}`);
+        assert(new Set(it.a).size === it.a.length, `${t.id}, вопрос ${i + 1}: варианты повторяются`);
+        // У профильных тем у вопроса обязана быть метка шкалы g.
+        if(t.mode === 'profile') assert(!!it.g, `${t.id}, вопрос ${i + 1}: у профильной темы нет метки g`);
+        else assert(!it.g, `${t.id}, вопрос ${i + 1}: лишняя метка g у обычной темы`);
+      });
+      startBizTestsGame();
+      const buttons = (card.innerHTML.match(/znayu-answer-btn/g) || []).length;
+      assert(buttons === expected, `${t.id}: на карточке ${buttons} кнопок, а нужно ${expected}`);
+      for(let i = 0; i < items.length; i++){
+        answerBizTestsQuestion(i % expected);
+        assert((state.bizTestsAnswers || []).length === i + 1,
+          `${t.id}: после ${i + 1} ответа записано ${(state.bizTestsAnswers || []).length}`);
+        advanceBizTests();
+      }
+      const r = state.bizTestsResult;
+      assert(r && r.title, `${t.id}: результат не посчитан`);
+      assert(r.text && r.plus && r.minus && r.tip,
+        `${t.id}: в результате должны быть описание, сильные стороны, трудности и совет`);
+      if(t.mode === 'profile'){
+        assert(Array.isArray(r.profiles) && r.profiles.length === t.profiles.length,
+          `${t.id}: в профиле должно быть ${t.profiles.length} шкал, а ${r.profiles && r.profiles.length}`);
+        r.profiles.forEach((p, i) => {
+          assert(p.level && p.level.title, `${t.id}, шкала ${p.name}: уровень не определён`);
+          assert(p.level.text && p.level.plus && p.level.minus && p.level.tip,
+            `${t.id}, шкала ${p.name}: уровень без описания или подсказки`);
+        });
+        // Все шкалы должны быть посчитаны, а не «по умолчанию» самый нижний:
+        // при разных ответах суммы обязаны различаться.
+        const sums = r.profiles.map(p => p.sum);
+        assert(new Set(sums).size > 1, `${t.id}: суммы по шкалам одинаковы (${sums.join(',')}) — шкалы считаются одинаково`);
+      }
+      assert((state.bizTestsHistory || []).length > 0, `${t.id}: результат не попал в «Пройденные»`);
+    });
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Бизнес тесты»: профильные темы считают каждую шкалу отдельно', () => {
+  // Режим profile добавлен ради Big Five и эмоционального интеллекта: там пять
+  // независимых черт, и «победитель» был бы бессмыслен. Проверяем, что высокие
+  // ответы попадают в верхний уровень именно своей шкалы, а не первой попавшей.
+  const originalFade = global.fadeSwapEl;
+  const saved = bizTestsBackup();
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.bizTestsType = 'bigfive';
+    startBizTestsGame();
+    const items = bizTestsItems();
+    for(let i = 0; i < items.length; i++){
+      const pos = bizTestsCurrentOptions.findIndex(o => o.i === 3);
+      answerBizTestsQuestion(pos);
+      advanceBizTests();
+    }
+    const r = state.bizTestsResult;
+    const open = r.profiles.find(p => p.key === 'open');
+    const cons = r.profiles.find(p => p.key === 'cons');
+    assert(open.sum === 6, `шкала «Открытость новому» при высших ответах должна дать 6, а ${open.sum}`);
+    assert(open.level.title === 'Исследователь по природе',
+      `при сумме 6 показан уровень «${open.level.title}» вместо верхнего`);
+    assert(cons.level.title === 'Стандарт и контроль',
+      `при сумме 6 у «Добросовестности» показан «${cons.level.title}»`);
+  } finally {
+    global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Бизнес тесты»: игра в разделе «Бизнес игры», пауза и «Пройденные»', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = bizTestsBackup();
+  const screens = [...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m => document.getElementById(m[1]));
+  const originalQuery = document.querySelectorAll;
+  const originalSingleQuery = document.querySelector;
+  const clear = () => screens.forEach(el => el.classList.remove('active'));
+  const active = () => screens.filter(el => el.classList.contains('active'));
+  const back = document.getElementById('globalBackBtn');
+  const list = getElById(stub, 'bizTestsHistoryList');
+  try {
+    document.querySelectorAll = function(selector){
+      if(selector === '.screen.active') return active();
+      if(selector === '.screen') return screens;
+      return originalQuery.call(this, selector);
+    };
+    document.querySelector = function(selector){
+      if(selector === '.screen.active') return active()[0] || null;
+      return originalSingleQuery.call(this, selector);
+    };
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    // Кнопка лежит в разделе «Бизнес игры», и группа в реестре совпадает.
+    const bizList = /<div class="game-select-list" id="businessGameSelectList">([\s\S]*?)<\/div>/.exec(html)[1];
+    assert(bizList.includes('id="gameBizTestsBtn"'), 'кнопка «Бизнес тесты» должна быть в разделе «Бизнес игры»');
+    const kidsList = /<div class="game-select-list" id="kidsGameSelectList">([\s\S]*?)<\/div>/.exec(html)[1];
+    assert(!kidsList.includes('gameBizTestsBtn'), 'кнопка не должна попасть в «Игры с детьми»');
+    const entry = (window.GAME_REGISTRY || []).find(g => g.mode === 'bizTests');
+    assert(entry && entry.group === 'business', 'в реестре игра должна быть в группе business');
+
+    // Пауза возвращает ровно на тот же вопрос, в том числе если пауза
+    // пришлась на паузу между ответом и следующим вопросом.
+    state.bizTestsType = 'decisions';
+    state.bizTestsHistory = [];
+    startBizTestsGame();
+    for(let i = 0; i < 3; i++){ answerBizTestsQuestion(0); advanceBizTests(); }
+    pauseBizTestsGame();
+    assert(state.pausedMode === 'bizTests', `пауза должна выставить pausedMode='bizTests', а ${state.pausedMode}`);
+    assert(state.lastSectionOnPause === 'businessView',
+      `на паузе должен открыться раздел «Бизнес игры», а ${state.lastSectionOnPause}`);
+    getElById(stub, 'resumeBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(state.bizTestsIndex === 3, `после продолжения вопрос 3, а ${state.bizTestsIndex}`);
+    answerBizTestsQuestion(0);
+    pauseBizTestsGame();
+    getElById(stub, 'resumeBtn')._getHandlers().get('click').forEach(({ handler }) => handler({}));
+    assert(state.bizTestsIndex === 4, `после паузы между ответом и вопросом должен быть вопрос 4, а ${state.bizTestsIndex}`);
+
+    // «Пройденные»: раскрытие по нажатию и удаление крестиком.
+    state.bizTestsHistory = [];
+    state.bizTestsOpen = [];
+    state.bizTestsType = 'teamrole';
+    startBizTestsGame();
+    const n = bizTestsItems().length;
+    for(let i = 0; i < n; i++){ answerBizTestsQuestion(0); advanceBizTests(); }
+    goToBizTestsHistory();
+    assert(!/biz-test-history-entry open/.test(list.innerHTML), 'никто не должен быть раскрыт до нажатия');
+    list._getHandlers().get('click').forEach(({ handler }) => handler({
+      target: { closest: sel => sel === '.biz-test-history-head' ? { dataset: { idx: '0' } } : null },
+    }));
+    assert(/biz-test-history-entry open/.test(list.innerHTML), 'после нажатия запись должна раскрыться');
+    assert(list.innerHTML.includes('Сильные стороны'), 'в раскрытом результате должна быть подпись «Сильные стороны»');
+    list._getHandlers().get('click').forEach(({ handler }) => handler({
+      target: { closest: sel => sel === '.biz-test-history-del' ? { dataset: { idx: '0' } } : null },
+    }));
+    assert((state.bizTestsHistory || []).length === 0, 'крестик должен удалить запись');
+
+    // Стрелка «←» с экрана настроек уводит в хаб, а не гоняет экран сам на себя.
+    clear();
+    goToBizTestsSetup();
+    for(const { handler } of back._getHandlers().get('click')) handler({});
+    assert(!getElById(stub, 'bizTestsSetup').classList.contains('active'),
+      'стрелка «←» не должна оставлять экран настроек активным');
+    assert(getElById(stub, 'setup').classList.contains('active'), 'стрелка «←» должна вести в хаб');
+    assert(active().length === 1, `после выхода активным должен быть ровно один экран, а ${active().length}`);
+  } finally {
+    clear();
+    document.querySelectorAll = originalQuery;
+    document.query = originalSingleQuery;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Бизнес тесты»: в правилах сказано, что это не инструмент аттестации', () => {
+  // Сценарий не о проверке кода, а о содержании: самотест нельзя применять для
+  // найма и оценки сотрудников, и про это обязано быть сказано игроку.
+  const rules = /<div class="modal-overlay" id="bizTestsRulesModal">[\s\S]*?closeBizTestsRulesBtn/.exec(html)[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  assert(/не инструмент аттестации/i.test(rules), 'в правилах должно быть сказано, что это не инструмент аттестации');
+  assert(/нельзя использовать для найма/i.test(rules), 'в правилах должен быть запрет использовать результат для найма');
+  assert(/психометрической проверки/i.test(rules), 'в правилах должно быть сказано про отсутствие психометрической проверки');
+  assert(/не официальный DiSC/i.test(rules), 'в правилах должно быть сказано, что это не официальный DiSC-тест');
+  // Все 14 тем и все шкалы двух профильных тем названы в правилах. Названия тем
+  // берём по шаблону «id, icon, name» — простое /name:/ поймало бы ещё и имена
+  // шкал внутри profiles, а их в правилах тоже нужно проверить отдельно.
+  const data = fs.readFileSync(path.join(ROOT, 'cards/cards_biz_tests.js'), 'utf8');
+  const inData = [...data.matchAll(/id: '[a-z]+', icon: '[^']+', name: '([^']+)'/g)].map(m => m[1]);
+  const inProfiles = [...data.matchAll(/\{ key: '[a-z]+', name: '([^']+)'/g)].map(m => m[1]);
+  const missingScales = inProfiles.filter(n => !rules.includes(n));
+  const missing = inData.filter(n => !rules.includes(n));
+  assert(inData.length === 14 && missing.length === 0, `в правилах не названы темы: ${missing.join(', ') || '—'}`);
+  // Шкалы профильных тем игрок видит в итогах, значит, они должны быть названы
+  // и в правилах — иначе он не знает, что вообще измерялось.
+  assert(inProfiles.length === 10 && missingScales.length === 0,
+    `в правилах не названы шкалы: ${missingScales.join(', ') || '—'}`);
+});
+
 console.log('\n=== «Узнай больше» ===');
 
 // Игра про карту тела: партнёры по очереди исследуют зоны, отметки пишутся

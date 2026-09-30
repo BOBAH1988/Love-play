@@ -355,6 +355,18 @@ let state = {
   // По индексу нельзя: после удаления записи крестиком индексы сдвигаются, и
   // раскрытой оказалась бы соседняя строка.
   soloTestOpen:[],
+  // Бизнес тесты (для одного) — четырнадцать тем по 10 вопросов.
+  // bizTestsAnswers хранит по одному значению на вопрос: индекс типа
+  // (mode:'types'), балл по шкале (mode:'scale') или балл конкретной шкалы
+  // (mode:'profile', у вопроса есть метка g). bizTestsHistory хранит
+  // посчитанный результат, а не сырые ответы.
+  bizTestsType:'bigfive', bizTestsIndex:0, bizTestsAnswers:[],
+  bizTestsResult:null, bizTestsHistory:[],
+  // Какие записи «Пройденных» раскрыты (ключи «дата:id темы»). По индексу
+  // нельзя: после удаления записи крестиком индексы сдвигаются.
+  bizTestsOpen:[],
+  // Снимок места остановки для меню паузы (номер вопроса).
+  bizTestsPaused:null,
   // Весёлые тесты (для детей) — четырнадцать тестов по 10 вопросов.
   // funTestsAnswers хранит по одному значению на вопрос: индекс типа
   // (mode:'types'). funTestsHistory хранит посчитанный результат.
@@ -1051,6 +1063,12 @@ document.getElementById('gameFunTestsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   callGameEntry('goToFunTestsSetup');
+});
+// «Бизнес тесты» — 14 тем про рабочий стиль (см. games/biz-tests.js).
+document.getElementById('gameBizTestsBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  callGameEntry('goToBizTestsSetup');
 });
 // "Английский язык" (обучающие игры) — goToFlashSetup() определена в games/kids-flash.js.
 document.getElementById('gameLearningFlashBtn').addEventListener('click', ()=>{
@@ -2086,6 +2104,14 @@ function performFullReset(){
   state.soloTestHistory = [];
   state.soloTestPaused = null;
   state.soloTestOpen = [];
+  // Бизнес тесты — общий сброс чистит партию и историю
+  state.bizTestsType = 'bigfive';
+  state.bizTestsIndex = 0;
+  state.bizTestsAnswers = [];
+  state.bizTestsResult = null;
+  state.bizTestsHistory = [];
+  state.bizTestsOpen = [];
+  state.bizTestsPaused = null;
   // Весёлые тесты (дети) — общий сброс чистит партию и историю
   state.funTestsType = 'adventure';
   state.funTestsIndex = 0;
