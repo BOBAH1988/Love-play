@@ -51,6 +51,12 @@ function goToIqTestSetup(){
 /* ============ ВЫБОР ВРЕМЕНИ НА ЗАДАНИЕ ============ */
 const IQ_TEST_SECONDS_CHOICES = [30, 45, 60, 90];
 function renderIqTestSecondsGroup(){
+  // Старое сохранение без этого поля (или с нулем) приводим к минуте: иначе
+  // ни одна кнопка не окажется отмеченной и выбор выглядел бы несработавшим.
+  if(!IQ_TEST_SECONDS_CHOICES.includes(state.iqTestSeconds)){
+    state.iqTestSeconds = 60;
+    saveState();
+  }
   document.querySelectorAll('#iqTestSecondsGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === iqTestSeconds());
   });
@@ -58,7 +64,7 @@ function renderIqTestSecondsGroup(){
 document.querySelectorAll('#iqTestSecondsGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const v = parseInt(btn.dataset.value, 10);
-    if(!v) return;
+    if(!IQ_TEST_SECONDS_CHOICES.includes(v)) return;
     state.iqTestSeconds = v;
     saveState();
     renderIqTestSecondsGroup();
