@@ -5004,6 +5004,111 @@ test('«Узнай больше»: реакция иконкой, порядок
   }
 });
 
+// Кнопка «Очистить все» внизу «Исследованных». Стирает накопительный список
+// целиком, поэтому: (1) идёт через окно подтверждения, а не сразу; (2) НЕ трогает
+// карты тела завершённых партий и отметки текущей партии — они на других
+// экранах, и обнулять их без просьбы игрока означало бы потерять данные.
+test('«Узнай больше»: «Очистить все» стирает только список отметок', () => {
+  const saved = {
+    log: JSON.stringify(state.knowMoreLog),
+    open: JSON.stringify(state.knowMoreOpen),
+    history: JSON.stringify(state.knowMoreHistory),
+    marks: JSON.stringify(state.knowMoreMarks),
+  };
+  try {
+    // Пустой список очищать нечего: функция обязана честно вернуть 0.
+    state.knowMoreLog = [];
+    assert(clearKnowMoreLog() === 0, 'очистка пустого списка должна вернуть 0');
+
+    state.knowMoreLog = [
+      { zoneId: 1, score: 3, receiver: 0, tool: 0, date: 1 },
+      { zoneId: 2, score: 2, receiver: 0, tool: 0, date: 2 },
+      { zoneId: 39, score: 1, receiver: 1, tool: 0, date: 3 },
+    ];
+    state.knowMoreOpen = ['0:head'];
+    state.knowMoreHistory = [{ marks: [[{ zoneId: 1, score: 3 }], []] }];
+    state.knowMoreMarks = [[{ zoneId: 2, score: 2 }], []];
+    const removed = clearKnowMoreLog();
+    assert(removed === 3, `очистка должна вернуть число удалённых отметок, а ${removed}`);
+    assert(state.knowMoreLog.length === 0, `список должен быть пуст, а в нём ${state.knowMoreLog.length}`);
+    assert(state.knowMoreOpen.length === 0,
+      `раскрытые группы должны сброситься, а осталось: ${JSON.stringify(state.knowMoreOpen)}`);
+
+    // Чужие экраны не задеты.
+    assert(state.knowMoreHistory.length === 1 && state.knowMoreHistory[0].marks[0].length === 1,
+      'карта тела завершённой партии должна сохраниться');
+    assert(state.knowMoreMarks[0].length === 1 && state.knowMoreMarks[0][0].zoneId === 2,
+      'отметки текущей партии должны сохраниться');
+
+    // Кнопка очистки видна только когда есть что чистить.
+    state.knowMoreLog = [{ zoneId: 1, score: 3, receiver: 0, tool: 0, date: 1 }];
+    updateKnowMoreClearRow();
+    const row = getElById(stub, 'knowMoreClearRow');
+    assert(row && row.hidden === false, 'при непустом списке кнопка очистки должна быть видна');
+    state.knowMoreLog = [];
+    updateKnowMoreClearRow();
+    assert(row && row.hidden === true, 'при пустом списке кнопка очистки должна скрываться');
+  } finally {
+    state.knowMoreLog = JSON.parse(saved.log || '[]');
+    state.knowMoreOpen = JSON.parse(saved.open || '[]');
+    state.knowMoreHistory = JSON.parse(saved.history || '[]');
+    state.knowMoreMarks = JSON.parse(saved.marks || '[]');
+  }
+});
+
+// Реальный путь игрока: кнопка -> окно подтверждения -> «Очистить». Проверяем
+// именно его, потому что ошибиться можно не в самой очистке, а в связке: если
+// забыть про отмену, кнопка сотрёт всё одним нажатием без спроса.
+test('«Узнай больше»: «Очистить все» спрашивает подтверждение и отмена не стирает', () => {
+  const saved = { log: JSON.stringify(state.knowMoreLog), open: JSON.stringify(state.knowMoreOpen) };
+  const click = (id) => {
+    const el = getElById(stub, id);
+    assert(!!el, `кнопка ${id} должна существовать в разметке`);
+    const handlers = el._getHandlers().get('click');
+    assert(!!handlers && handlers.length, `на ${id} не должен быть забыт обработчик клика`);
+    for (const { handler } of handlers) handler({ target: el });
+  };
+  try {
+    state.knowMoreLog = [
+      { zoneId: 1, score: 3, receiver: 0, date: 1 },
+      { zoneId: 2, score: 2, receiver: 1, date: 2 },
+    ];
+    const modal = getElById(stub, 'knowMoreClearModal');
+    // Первое нажатие лишь спрашивает — ничего не стёрто.
+    click('knowMoreClearAllBtn');
+    assert(modal.classList.contains('show'), 'после нажатия должно открыться окно подтверждения');
+    assert(state.knowMoreLog.length === 2,
+      `окно подтверждения не должно стирать список, а в нём ${state.knowMoreLog.length}`);
+    // Отмена закрывает окно и оставляет список в покое.
+    click('knowMoreClearCancel');
+    assert(!modal.classList.contains('show'), 'после «Отмены» окно должно закрыться');
+    assert(state.knowMoreLog.length === 2, 'после «Отмены» список должен остаться целым');
+    // Второе нажатие и согласие — стирают.
+    click('knowMoreClearAllBtn');
+    assert(modal.classList.contains('show'), 'окно должно открыться снова');
+    click('knowMoreClearOk');
+    assert(!modal.classList.contains('show'), 'после «Очистить» окно должно закрыться');
+    assert(state.knowMoreLog.length === 0, `список должен быть стёрт, а в нём ${state.knowMoreLog.length}`);
+  } finally {
+    state.knowMoreLog = JSON.parse(saved.log || '[]');
+    state.knowMoreOpen = JSON.parse(saved.open || '[]');
+  }
+});
+
+// Склонение в подсказке об очистке: «1 отметка», но «11 отметок» и «21 отметка».
+// 11/12-14/111 — частые промахи из-за «хвоста», а «очищено» выбрано потому, что
+// не требует согласования, в отличие от «убрано».
+test('«Узнай больше»: форма слова для числа отметок', () => {
+  const cases = [[0, 'отметок'], [1, 'отметка'], [2, 'отметки'], [4, 'отметки'], [5, 'отметок'],
+                 [11, 'отметок'], [12, 'отметок'], [13, 'отметок'], [14, 'отметок'],
+                 [21, 'отметка'], [22, 'отметки'], [25, 'отметок'], [101, 'отметка'],
+                 [111, 'отметок'], [112, 'отметок']];
+  for (const [n, word] of cases) {
+    assert(knowMoreLogCountWord(n) === word,
+      `для ${n} ожидалось «${word}», а получилось «${knowMoreLogCountWord(n)}»`);
+  }
+});
+
 test('«Узнай больше»: в режимах «Он»/«Она» исследует только один партнёр', () => {
   const prevMode = state.knowMoreMode;
   const prevStep = state.knowMoreStep;

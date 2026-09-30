@@ -1756,6 +1756,10 @@
   .know-more-group.open > .know-more-group-head .know-more-group-count{
     background:var(--accent); color:#2b0f2e;
   }
+  /* Кнопка «Очистить все» внизу «Исследованных», по центру. .btn сам по себе
+     растянут на всю ширину, поэтому ширину ограничиваем, а ряд центрирует. */
+  .know-more-clear-row{ display:flex; justify-content:center; margin-top:14px; }
+  .know-more-clear-btn{ width:auto; min-width:170px; }
   .know-more-group-body{ display:none; padding:8px 2px 2px; }
   .know-more-group.open > .know-more-group-body{ display:block; }
   /* Встроенный таймер задания в "Фантах" (кнопки 30 сек/1 мин/2 мин, отсчёт

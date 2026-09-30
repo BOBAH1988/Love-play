@@ -3260,6 +3260,26 @@ function checkKnowMoreZones() {
       && !/know-moreZoneLabel\(zone\) — \$\{knowMoreLogScoreText/.test(historyBody),
     'в строке отметки иконка реакции должна идти перед зоной, а оценка — не словами');
 
+  // Кнопка «Очистить все» стирает необратимо, поэтому проверяем связку целиком:
+  // кнопка внизу экрана, своё окно подтверждения, отмена ничего не делает и
+  // чистится РОВНО knowMoreLog — карта тела и отметки партии не задеваются.
+  check('кнопка «Очистить все» на экране «Исследованные»',
+    /id="knowMoreClearAllBtn"[^>]*>Очистить все</.test(html)
+      && /id="knowMoreClearOk"/.test(html) && /id="knowMoreClearCancel"/.test(html)
+      && /knowMoreClearModal/.test(html)
+      && /id="knowMoreClearRow"[\s\S]*knowMoreClearAllBtn[\s\S]*id="knowMoreHistoryExitBtn"/.test(html),
+    'кнопке «Очистить все» нужны своё окно подтверждения и место под списком, выше «Назад»');
+  check('очистка «Исследованных» идёт через подтверждение',
+    /knowMoreClearAllBtn[\s\S]{0,400}showModal\('knowMoreClearModal'\)/.test(game)
+      && /knowMoreClearCancel[\s\S]{0,200}hideModal\('knowMoreClearModal'\)/.test(game)
+      && /knowMoreClearOk[\s\S]{0,400}clearKnowMoreLog\(\)/.test(game),
+    'очистка необратима: без окна подтверждения кнопка сотрёт всё одним нажатием');
+  check('очистка «Исследованных» не задевает чужие экраны',
+    /function clearKnowMoreLog\(\)[\s\S]*?log\.splice[\s\S]*?\}/.test(game)
+      && !/function clearKnowMoreLog\(\)\{[\s\S]{0,900}?state\.knowMoreHistory\s*=/.test(game)
+      && !/function clearKnowMoreLog\(\)\{[\s\S]{0,900}?state\.knowMoreMarks\s*=/.test(game),
+    'чистить можно только список отметок: карта тела и отметки партии должны сохраниться');
+
   // В окне итогов не должно быть служебных счётчиков: по решению владельца
   // убраны «Сохранено карт: N» и подсказка про первую карту. Проверяем и код,
   // и разметку — иначе строка вернётся одной правкой в любом из них.

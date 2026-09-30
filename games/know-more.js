@@ -412,6 +412,8 @@ function goToKnowMoreHistory(){
       });
     });
   }
+  // Кнопка очистки видна только когда есть что чистить.
+  updateKnowMoreClearRow();
   const setup = document.getElementById('knowMoreSetup');
   const history = document.getElementById('knowMoreHistory');
   if(setup) setup.classList.remove('active');
@@ -424,6 +426,65 @@ function goToKnowMoreHistory(){
 function exitKnowMoreHistory(){
   goToKnowMoreSetup();
 }
+// Полная очистка накопительного списка «Исследованные» — по кнопке
+// «Очистить все» внизу экрана, через окно подтверждения (стирание без возможности
+// отменить одну отметку). Чистится РОВНО state.knowMoreLog: это тот список, что
+// показан на экране. state.knowMoreHistory (карты тела завершённых партий) и
+// knowMoreMarks (текущая партия) НЕ трогаем — они показываются на других экранах,
+// и обнулять их без просьбы игрока означало бы потерять данные, о которых он не
+// знал. Раскрытые группы тоже очищаем: списка нет, а сохранять ключи от
+// удалённых групп незачем — при новых отметках всё вернётся к свёрнутому виду.
+function clearKnowMoreLog(){
+  const log = Array.isArray(state.knowMoreLog) ? state.knowMoreLog : [];
+  const removed = log.length;
+  if(removed === 0) return 0;
+  log.splice(0, log.length);
+  state.knowMoreOpen = [];
+  saveState();
+  return removed;
+}
+
+// Форма существительного для числа: 1 отметка / 3 отметки / 5 отметок.
+function knowMoreLogCountWord(n){
+  if(n % 10 === 1 && n % 100 !== 11) return 'отметка';
+  if(n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'отметки';
+  return 'отметок';
+}
+
+// Показать/спрятать кнопку очистки: при пустом списке очищать нечего, и кнопка
+// только занимает место.
+function updateKnowMoreClearRow(){
+  const row = document.getElementById('knowMoreClearRow');
+  if(!row) return;
+  const has = Array.isArray(state.knowMoreLog) && state.knowMoreLog.length > 0;
+  row.hidden = !has;
+  if(row.style) row.style.display = has ? '' : 'none';
+}
+const __knowMoreClearBtn = document.getElementById('knowMoreClearAllBtn');
+if(__knowMoreClearBtn) __knowMoreClearBtn.addEventListener('click', ()=>{
+  // Подтверждение обязательно: отметок может быть много, и одной отмены не
+  // вернуть — очистка идёт через окно, а не сразу по нажатию.
+  showModal('knowMoreClearModal');
+});
+const __knowMoreClearCancel = document.getElementById('knowMoreClearCancel');
+if(__knowMoreClearCancel) __knowMoreClearCancel.addEventListener('click', ()=>{
+  hideModal('knowMoreClearModal');
+});
+const __knowMoreClearOk = document.getElementById('knowMoreClearOk');
+if(__knowMoreClearOk) __knowMoreClearOk.addEventListener('click', ()=>{
+  hideModal('knowMoreClearModal');
+  const removed = clearKnowMoreLog();
+  if(removed > 0){
+    playSuccessSound();
+    goToKnowMoreHistory();
+    // «Очищено: 1 отметка / 3 отметки / 5 отметок» — слово «очищено» среднего
+    // рода не требует согласования, в отличие от «убрано», которое даёт
+    // «убрано 1 отметка». Хелпера склонений в проекте нет, поэтому здесь
+    // только этот простой выбор формы по последней цифре.
+  const tail = knowMoreLogCountWord(removed);
+    showToast(`Очищено: ${removed} ${tail}`);
+  }
+});
 document.getElementById('knowMoreHistoryBtn').addEventListener('click', ()=>{ goToKnowMoreHistory(); });
 document.getElementById('knowMoreHistoryExitBtn').addEventListener('click', ()=>{ exitKnowMoreHistory(); });
 
