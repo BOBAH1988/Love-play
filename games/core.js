@@ -372,6 +372,11 @@ let state = {
   // (без него пять заданий одного направления шли подряд и направление
   // угадывалось по соседству); iqTestAnswers — по 1 или 0 на задание.
   iqTestIndex:0, iqTestOrder:[], iqTestAnswers:[],
+  // Секунд на задание (таймер). 0 — без ограничения; в настройках такого
+  // варианта нет, но старое сохранение без поля должно работать.
+  iqTestSeconds:60,
+  // Когда началась партия — по этому считается время прохождения в истории.
+  iqTestStartedAt:null,
   iqTestResult:null, iqTestHistory:[],
   // Какие записи «Пройденных» раскрыты (ключ — дата прохождения).
   iqTestOpen:[],
@@ -2131,6 +2136,7 @@ function performFullReset(){
   // Тест IQ — общий сброс чистит партию и историю
   state.iqTestIndex = 0;
   state.iqTestOrder = [];
+  state.iqTestStartedAt = null;
   state.iqTestAnswers = [];
   state.iqTestResult = null;
   state.iqTestHistory = [];

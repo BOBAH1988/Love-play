@@ -43,16 +43,28 @@ function iqTestLevels(){
 function iqTestItems(){
   return (typeof IQ_ITEMS !== 'undefined' && Array.isArray(IQ_ITEMS)) ? IQ_ITEMS : [];
 }
-// Порядок вопросов перемешивается на каждую партию. Без этого пять вопросов
-// одного направления шли подряд, и направление угадывалось по соседству,
-// ничего не решая. В state порядок не хранится — он строится заново при старте
-// и при паузе строится заново же, но индексы вопросов при этом меняются.
-function iqTestTotal(){
-  return iqTestItems().length;
-}
 function goToIqTestSetup(){
-  goToGameSetup('iqTestSetup', null, ()=>{});
+  goToGameSetup('iqTestSetup', null, ()=>{
+    renderIqTestSecondsGroup();
+  });
 }
+/* ============ ВЫБОР ВРЕМЕНИ НА ЗАДАНИЕ ============ */
+const IQ_TEST_SECONDS_CHOICES = [30, 45, 60, 90];
+function renderIqTestSecondsGroup(){
+  document.querySelectorAll('#iqTestSecondsGroup .starter-btn').forEach(btn=>{
+    btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === iqTestSeconds());
+  });
+}
+document.querySelectorAll('#iqTestSecondsGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const v = parseInt(btn.dataset.value, 10);
+    if(!v) return;
+    state.iqTestSeconds = v;
+    saveState();
+    renderIqTestSecondsGroup();
+    playSuccessSound();
+  });
+});
 
 /* ============ ЭКРАН НАСТРОЙКИ ============ */
 // Выбора темы здесь нет: игра одна, и тест в ней один — 30 вопросов. На
@@ -93,6 +105,79 @@ let iqTestOrder = [];
 function cancelIqTestAdvance(){
   if(iqTestAdvanceTimerId){ clearTimeout(iqTestAdvanceTimerId); iqTestAdvanceTimerId = null; }
 }
+/* ============ ТАЙМЕР НА ЗАДАНИЕ ============ */
+// В настоящем тесте на решение каждого задания дают время, иначе результат
+// зависит не от способностей, а от того, успел ли человек. Здесь то же: на
+// экранe настройки выбирается время на задание, в игре идёт обратный отсчёт,
+// и если время вышло, задание засчитывается как НЕВЕРНОЕ — и это показывается
+// подсветкой верного варианта, а не просто пропуском. Пропуск без пометки был
+// бы мягче, но обесценил бы весь таймер: одно и то же время на «успел» и на
+// «продумал» дало бы разный вклад в балл.
+//
+// Таймер ставится на КАЖДОЕ задание заново, а не на всю партию: в реальном
+// тесте это разные вещи, и суммарное время плохо объясняет результат.
+let iqTestTickTimerId = null;   // интервал обновления полоски
+let iqTestDeadline = 0;        // абсолютное время окончания задания, мс
+let iqTestTimedOut = false;    // текущее задание уже истекло по времени
+// Секунд на задание. 0 — без ограничения (так тоже можно, но это уже не
+// тест, а разминка, поэтому в настройках такого варианта нет).
+function iqTestSeconds(){
+  return typeof state.iqTestSeconds === 'number' && state.iqTestSeconds > 0 ? state.iqTestSeconds : 0;
+}
+function stopIqTestTimer(){
+  if(iqTestTickTimerId){ clearInterval(iqTestTickTimerId); iqTestTickTimerId = null; }
+  iqTestDeadline = 0;
+  iqTestTimedOut = false;
+  const track = document.getElementById('iqTestTimerTrack');
+  if(track) track.style.display = 'none';
+}
+function startIqTestTimer(){
+  stopIqTestTimer();
+  const total = iqTestSeconds();
+  if(!total) return;
+  iqTestDeadline = Date.now() + total * 1000;
+  iqTestTimedOut = false;
+  const track = document.getElementById('iqTestTimerTrack');
+  if(track) track.style.display = '';
+  iqTestTick();
+  iqTestTickTimerId = setInterval(iqTestTick, 200);
+}
+function iqTestTick(){
+  const total = iqTestSeconds();
+  if(!total || !iqTestDeadline) return;
+  const left = Math.max(0, iqTestDeadline - Date.now());
+  const fill = document.getElementById('iqTestTimerFill');
+  if(fill) fill.style.width = Math.round(left / (total * 1000) * 100) + '%';
+  // Под конец времени полоска краснеет: об исходящем времени человек должен
+  // узнавать по часам, а не по факту.
+  const track = document.getElementById('iqTestTimerTrack');
+  if(track) track.classList.toggle('low', left <= Math.min(10000, total * 250));
+  if(left <= 0) iqTestTimeUp();
+}
+// Время вышло: помечаем задание неверным и идём дальше. Повторный вызов из
+// интервала невозможен — iqTestTimedOut и остановка интервала это закрывают.
+function iqTestTimeUp(){
+  if(iqTestTimedOut) return;
+  iqTestTimedOut = true;
+  stopIqTestTimer();
+  showToast('⏰ Время вышло — ответ не засчитан');
+  // Ответ пишется обычным путём: защита от двойного клика не даст записать
+  // второй ответ, если игрок успел нажать на кнопку в ту же секунду.
+  const n = iqTestCurrentItem();
+  if(!n) return;
+  iqTestAnswered = true;
+  if((state.iqTestAnswers || []).length <= (state.iqTestIndex || 0)){
+    if(!Array.isArray(state.iqTestAnswers)) state.iqTestAnswers = [];
+    state.iqTestAnswers.push(0);
+  }
+  saveState();
+  document.querySelectorAll('#iqTestCard .znayu-answer-btn').forEach((btn, i)=>{
+    btn.disabled = true;
+    if(iqTestCurrentOptions[i] && iqTestCurrentOptions[i].ok) btn.classList.add('answer-correct');
+  });
+  playFailSound();
+  iqTestAdvanceTimerId = setTimeout(advanceIqTest, 900);
+}
 function startIqTestGame(){
   if(!iqTestItems().length || !iqTestAreas().length){
     showToast('Не удалось загрузить задания — обновите приложение');
@@ -103,10 +188,17 @@ function startIqTestGame(){
   abandonPausedSession('fanty');
   abandonPausedSession('compatTest');
   state.iqTestIndex = 0;
-  state.iqTestOrder = iqTestItems().map((_, i)=>i);
-  if(typeof shuffle === 'function') state.iqTestOrder = shuffle(state.iqTestOrder);
-  // Ответы: по 1 или 0 на вопрос (верно/неверно), в порядке этой партии.
+  // Порядок этой партии — не перемешивание всех 120, а ВЫБОРКА: по 6
+  // заданий из каждого направления. Перемешивание давало бы 30 заданий подряд
+  // наугад, и тогда в одном прохождении могло оказаться 2 задания на числа, а
+  // в следующем — 10, и профили разных прохождений стало бы нельзя сравнивать.
+  // Здесь у каждого направления ровно шесть, поэтому «6 из 6» значит одно и
+  // то же всегда. Повторные прохождения при этом разные: внутри направления
+  // берутся случайные шесть из двадцати четырёх.
+  state.iqTestOrder = iqTestSampleOrder();
+  // Ответы: по 1 или 0 на задание (верно/неверно), в порядке этой партии.
   state.iqTestAnswers = [];
+  state.iqTestStartedAt = Date.now();
   state.iqTestResult = null;
   goToGame(null, 'iqTestGame');
   updateMuteBtn();
@@ -116,6 +208,36 @@ function startIqTestGame(){
 // Порядок из сохранённой партии, а при его отсутствии — исходный (после
 // перезагрузки страницы посреди теста порядок уже не восстановить, и лучше
 // показать вопросы подряд, чем перемешать повторно и сбить нумерацию).
+// Сколько заданий берётся из одного направления и сколько всего в партии.
+// Держим в одном месте: от этих чисел зависят и выборка, и подсчёт профиля.
+function iqTestPerArea(){
+  return 6;
+}
+function iqTestPerGame(){
+  return iqTestPerArea() * iqTestAreas().length;
+}
+// Случайная выборка: по iqTestPerArea() заданий из каждого направления.
+// Направлений, из которых не хватает заданий, не будет — банк по 24 на
+// направление, а нужно 6, — но проверка остаётся: если данные окажутся
+// короче, партия просто возьмёт меньше и профиль покажет реальные цифры.
+function iqTestSampleOrder(){
+  const items = iqTestItems();
+  const per = iqTestPerArea();
+  const picked = [];
+  iqTestAreas().forEach(area=>{
+    const pool = [];
+    items.forEach((item, i)=>{ if(item && item.area === area.key) pool.push(i); });
+    // Важно: shuffle НЕ мутирует массив, а возвращает копию. Если брать
+    // pool.slice(0, per) из исходного массива, получаются всегда одни и те же
+    // шесть заданий — выборка перестаёт быть случайной и второй результат
+    // не отличается от первого. Брать надо из перемешанной копии.
+    const mixed = typeof shuffle === 'function' ? shuffle(pool) : pool.slice();
+    mixed.slice(0, per).forEach(i=>picked.push(i));
+  });
+  // Перемешиваем и сам порядок выбранных: иначе пять направлений шли бы
+  // блоками по шесть заданий, и по позиции можно было бы угадать направление.
+  return typeof shuffle === 'function' ? shuffle(picked) : picked;
+}
 // За ПРЕДЕЛАМИ списка возвращает null, а не заворачивает индекс по модулю:
 // при index === длина вопросов первый вопрос показался бы снова, и тест
 // зациклился бы вместо перехода к итогам. Именно на этом ловится партия,
@@ -123,15 +245,19 @@ function startIqTestGame(){
 function iqTestCurrentItem(){
   const order = Array.isArray(state.iqTestOrder) ? state.iqTestOrder : [];
   const items = iqTestItems();
-  if(!items.length) return null;
+  if(!items.length || !order.length) return null;
   const index = state.iqTestIndex || 0;
-  if(index < 0 || index >= items.length) return null;
-  const src = order.length === items.length ? order : items.map((_, i)=>i);
-  return items[src[index]] || null;
+  // За ПРЕДЕЛАМИ выборки возвращаем null, а не заворачиваем индекс по модулю:
+  // на последнем шаге показался бы первый вопрос, и партия зациклилась бы
+  // вместо перехода к итогам.
+  if(index < 0 || index >= order.length) return null;
+  return items[order[index]] || null;
 }
 
 function updateIqTestProgress(){
-  const total = iqTestTotal();
+  // Размер партии (30), а не банка (120): игрок проходит 30 заданий, и
+  // «12 / 120» сбивало бы с толку.
+  const total = iqTestPerGame();
   const done = Math.min(state.iqTestIndex || 0, total);
   const fill = document.getElementById('iqTestProgressFill');
   if(fill) fill.style.width = (total > 0 ? Math.round((done / total) * 100) : 0) + '%';
@@ -161,6 +287,8 @@ function showIqTestQuestion(){
     });
   });
   updateIqTestProgress();
+  // Таймер запускается на каждое задание заново, после отрисовки карточки.
+  startIqTestTimer();
   if(state.autoSpeak) speakIqTestCard(item);
 }
 // Пропуска нет: у каждого задания есть варианты ответа, «время вышло» не
@@ -171,6 +299,7 @@ function answerIqTestQuestion(pos){
   if(!option) return;
   iqTestAnswered = true;
   stopIqTestSpeech();
+  stopIqTestTimer();
   // Защита от повторного клика по той же карточке: записанных ответов должно
   // быть ровно столько же, сколько номер текущего вопроса. Иначе второй клик
   // дописывал бы лишний ответ и сдвигал подсчёт.
@@ -217,17 +346,17 @@ function computeIqTestResult(){
   const answers = Array.isArray(state.iqTestAnswers) ? state.iqTestAnswers : [];
   const total = answers.length;
   const score = answers.reduce((acc, v)=> acc + (v === 1 ? 1 : 0), 0);
+  // Ответы идут в порядке партии, а задания — по индексам в банке, поэтому
+  // ответ на задание bankIdx лежит на позиции pos в выборке.
+  const order = Array.isArray(state.iqTestOrder) && state.iqTestOrder.length
+    ? state.iqTestOrder
+    : iqTestItems().map((_, i)=>i);
   const areas = iqTestAreas().map(area=>{
-    // Ответы идут в порядке партии, а задания — по исходным индексам, поэтому
-    // ответ на задание i лежит по позиции order.indexOf(i).
-    const order = Array.isArray(state.iqTestOrder) && state.iqTestOrder.length
-      ? state.iqTestOrder
-      : iqTestItems().map((_, i)=>i);
     let got = 0, asked = 0;
-    iqTestItems().forEach((item, itemIdx)=>{
+    order.forEach((bankIdx, pos)=>{
+      const item = iqTestItems()[bankIdx];
       if(!item || item.area !== area.key) return;
-      const pos = order.indexOf(itemIdx);
-      if(pos < 0 || pos >= answers.length) return;
+      if(pos >= answers.length) return;
       asked++;
       if(answers[pos] === 1) got++;
     });
@@ -235,12 +364,13 @@ function computeIqTestResult(){
   });
   const levels = iqTestLevels();
   const level = levels.find(l => score >= (typeof l.min === 'number' ? l.min : 0)) || levels[levels.length - 1] || {};
-  return { ...level, score, total, max: iqTestTotal(), areas };
+  return { ...level, score, total, max: iqTestPerGame(), areas };
 }
 
 /* ============ ИТОГИ И СОХРАНЕНИЕ ============ */
 function finishIqTestGame(){
   cancelIqTestAdvance();
+  stopIqTestTimer();
   stopIqTestSpeech();
   const result = computeIqTestResult();
   state.iqTestResult = result;
@@ -248,7 +378,16 @@ function finishIqTestGame(){
   // список всех вопросов занимал бы место ради данных, которые никто больше
   // не читает. «Сбросить прогресс» чистит и её.
   if(!Array.isArray(state.iqTestHistory)) state.iqTestHistory = [];
-  state.iqTestHistory.unshift({ date: Date.now(), result });
+  // Дата, время и сколько заняло прохождение. «Сколько заняло» считается по
+  // времени старта партии, а не по сумме таймеров: игрок мог взять паузу, и
+  // сумма была бы меньше реально проведённого времени.
+  const finished = Date.now();
+  const started = state.iqTestStartedAt || finished;
+  state.iqTestHistory.unshift({
+    date: finished,
+    spentMs: Math.max(0, finished - started),
+    result,
+  });
   state.inProgress = false;
   state.pausedMode = null;
   saveState();
@@ -313,6 +452,7 @@ function finishPausedIqTestGame(){
   hideModal('pauseMenuModal');
   stopAllSounds();
   stopIqTestSpeech();
+  stopIqTestTimer();
   cancelIqTestAdvance();
   state.inProgress = false;
   state.pausedMode = null;
@@ -329,6 +469,9 @@ function finishPausedIqTestGame(){
 function pauseIqTestGame(){
   if(typeof stopAllSounds === 'function') stopAllSounds();
   stopIqTestSpeech();
+  // Таймер обязательно гасим: иначе на паузе он продолжал бы идти и время
+  // сгорало бы, пока игрок в хабе.
+  stopIqTestTimer();
   cancelIqTestAdvance();
   state.pausedMode = 'iqTest';
   state.lastSectionOnPause = 'learningView';
@@ -416,10 +559,17 @@ function formatIqTestDate(ts){
 // Короткая строка записи: сколько решено и уровень. Развёрнутый результат
 // ниже показывает профиль по направлениям, поэтому в свёрнутом виде достаточно
 // итоговой строки.
-function iqTestHistoryShortText(entry){
-  const r = (entry && entry.result) || {};
-  if(typeof r.score !== 'number') return r.title || '';
-  return `${r.score} из ${r.max || r.total || 0} — ${r.title || ''}`;
+// Сколько заняло прохождение: «3 мин 12 сек». Для записей, сделанных до
+// появления этого поля, spentMs нет — тогда строка просто не показывается,
+// чтобы не выводить «0 сек» у старых результатов.
+function formatIqTestSpent(ms){
+  if(typeof ms !== 'number' || ms <= 0) return '';
+  const total = Math.round(ms / 1000);
+  const min = Math.floor(total / 60);
+  const sec = total % 60;
+  if(min && sec) return `${min} мин ${sec} сек`;
+  if(min) return `${min} мин`;
+  return `${sec} сек`;
 }
 // Раскрытые записи «Пройденных». Ключ — дата прохождения: индексы сдвигаются
 // при удалении записи крестиком, и раскрытая строка съезжала бы на соседнюю. Это тот же приём, что у групп карты тела
@@ -468,7 +618,9 @@ function goToIqTestHistory(){
       <div class="iq-test-history-entry${open ? ' open' : ''}">
         <button type="button" class="iq-test-history-head" data-idx="${idx}" aria-expanded="${open}">
           <span class="iq-test-history-date">${formatIqTestDate(entry.date)} · Тест IQ</span>
-          <span class="iq-test-history-text">${iqTestHistoryShortText(entry)}</span>
+          <span class="iq-test-history-score">${typeof (entry.result || {}).score === 'number' ? (entry.result.score + ' из ' + ((entry.result.max) || (entry.result.total) || 0)) : ''}</span>
+          <span class="iq-test-history-text">${(entry.result || {}).title || ''}</span>
+          ${formatIqTestSpent(entry.spentMs) ? `<span class="iq-test-history-spent">Заняло: ${formatIqTestSpent(entry.spentMs)}</span>` : ''}
           <span class="iq-test-history-hint">${open ? 'Свернуть' : 'Подробнее'}</span>
         </button>
         <div class="iq-test-history-body">${iqTestEntryBodyHtml(entry)}</div>

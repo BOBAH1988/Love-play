@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261025h">
+<link rel="stylesheet" href="styles/app.css?v=20261026a">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-25 · v574';
+  window.APP_BUILD = '2026-10-26 · v575';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v574</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v575</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -3897,13 +3897,17 @@
   <div class="modal-overlay" id="iqTestRulesModal">
     <div class="modal-card">
       <div class="modal-title">🧠 Правила игры «Тест IQ»</div>
-      <div class="intro-text">30 заданий на логику, внимание, числа и смысл слов. В конце — сколько решено и разбор по пяти направлениям: где сильнее всего и что стоит подтянуть.</div>
+      <div class="intro-text">30 заданий на логику, внимание, числа и смысл слов — из банка в 120. В конце — сколько решено и разбор по пяти направлениям: где сильнее всего и что стоит подтянуть.</div>
       <ol class="modal-rules">
-        <li>Нажмите «Начать» — и пройдите 30 заданий подряд. Таймера нет, но и торопиться незачем: задания на размышление.</li>
+        <li>Перед стартом выберите <b>время на задание</b>: 30 секунд, 45, минуту или полторы. В настоящем тесте на решение каждого задания дают время, иначе результат зависит не от способностей, а от того, успел ли человек ответить. Здесь то же самое: сверху идёт полоска, и под конец времени она краснеет.</li>
+        <li>Нажмите «Начать» — и пройдите 30 заданий подряд. Таймер ставится на каждое задание заново, а не один раз на весь тест.</li>
+        <li>Если время вышло, задание засчитывается как <b>неверное</b>, и показывается верный ответ — так же, как при ошибке. Пропуск без оценки был бы мягче, но обесценил бы весь таймер: одно и то же время на «успел» и на «продумал» дало бы разный вклад в балл.</li>
         <li>В каждом задании четыре варианта ответа, верный ровно один. Ошибка подсвечивается сразу, и правильный вариант тоже показывается — так видно, где именно была ошибка.</li>
-        <li>Порядок заданий и вариантов ответа каждый раз случайный, так что пройти тест «наизусть» не получится.</li>
-        <li>В конце открывается окно с результатом: сколько заданий из тридцати решено верно, общий уровень и разбор по направлениям — числа и закономерности, логика и дедукция, слова и смысл, закономерности и фигуры, память и внимание. Нажмите на запись в «Пройденных» — разбор откроется целиком.</li>
-        <li>Стрелка «←» открывает меню паузы: «Продолжить игру» вернёт к тому же заданию, «Закончить игру» закроет тест без сохранения результата.</li>
+        <li>Задания выбираются случайно: 30 из банка в 120. Из каждого направления берётся ровно по шесть заданий — так профили разных прохождений сравнимы между собой. Внутри направления выборка случайная, поэтому два прохождения подряд не повторяются и выучить ответы наизусть не получится.</li>
+        <li>Порядок заданий и вариантов ответа тоже каждый раз разный, так что угадать ответ по позиции невозможно.</li>
+        <li>В конце открывается окно с результатом: сколько заданий из тридцати решено верно, общий уровень и разбор по направлениям — числа и закономерности, логика и дедукция, слова и смысл, закономерности и фигуры, память и внимание.</li>
+        <li>Каждое прохождение попадает в «Пройденные»: там видно дату и время, балл, описание уровня и сколько заняло прохождение. Нажатие на запись раскрывает полный разбор, крестик справа удаляет результат.</li>
+        <li>Стрелка «←» открывает меню паузы: «Продолжить игру» вернёт к тому же заданию (таймер при этом стоит — время не сгорает, пока вы в меню), «Закончить игру» закроет тест без сохранения результата.</li>
         <li><b>Это тренировочный тест, а не измерение интеллекта.</b> Настоящий тест интеллекта (WAIS, Stanford-Binet и аналоги) — стандартизированная методика: у него есть референсная группа, нормы, поправки на возраст и проверка надёжности. Здесь ничего этого нет: задания написаны для этого приложения, пользователи не измерялись. Поэтому игра <b>не считает IQ</b> и не притворяется, что измеряет интеллект в том смысле, из которого его выводят специалисты. Никаких выводов про наследственность, врождённый интеллект или «эффект Флинга» здесь тоже нет — такие утверждения таким тестом не обосновываются. Пользуйтесь результатом как тренажёром: он показывает, сколько заданий вы решили и в каких направлениях вам стоит потренироваться.</li>
         <li>Если хочется настоящего измерения, обратитесь к психологу: он подберёт методику с нормами и объяснит результат.</li>
       </ol>
@@ -3925,7 +3929,18 @@
   <!-- 📍 логика: games/iq-test.js | вопросы: cards/cards_iq_test.js -->
   <section id="iqTestSetup" class="screen">
     <h1 class="title">🧠 Тест IQ</h1>
-    <div class="subtitle">30 заданий на логику, внимание и числа — и разбор по направлениям</div>
+    <div class="subtitle">30 заданий из банка в 120 — и разбор по направлениям</div>
+
+    <div class="field">
+      <label>Время на задание</label>
+      <div class="starter-group timer-duration-group" id="iqTestSecondsGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="30">30 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="45">45 сек</button>
+        <button type="button" class="starter-btn mode-btn" data-value="60">1 мин</button>
+        <button type="button" class="starter-btn mode-btn" data-value="90">1,5 мин</button>
+      </div>
+      <div class="timer-levels-note">Время вышло — задание засчитывается как неверное, и показывается верный ответ</div>
+    </div>
 
     <button class="btn btn-primary" id="iqTestStartBtn">Начать</button>
 
@@ -3942,6 +3957,10 @@
     <div class="wishlist-progress-row" id="iqTestProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="iqTestProgressFill"></div></div>
       <div class="wishlist-progress-label" id="iqTestProgressLabel">0 / 30</div>
+    </div>
+
+    <div class="timer-bar-track" id="iqTestTimerTrack" style="display:none;">
+      <div class="timer-bar-fill" id="iqTestTimerFill"></div>
     </div>
 
     <div class="card-area">
@@ -5007,7 +5026,7 @@
 <script src="cards/cards_solo_test.js?v=20261025d"></script>
 <script src="cards/cards_fun_tests.js?v=20261025b"></script>
 <script src="cards/cards_biz_tests.js?v=20261025a"></script>
-<script src="cards/cards_iq_test.js?v=20261025a"></script>
+<script src="cards/cards_iq_test.js?v=20261026a"></script>
 <script src="cards/cards_know_more.js?v=20261024c"></script>
 <script src="cards/cards_whattoplay.js?v=20260928w"></script>
 <script src="cards/cards_kids_krokodil.js?v=20260911a"></script>
@@ -5018,7 +5037,7 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20261022y"></script>
 <script src="cards/capitals.js?v=20261022y"></script>
-<script src="games/core.js?v=20261025g"></script>
+<script src="games/core.js?v=20261026a"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -5077,7 +5096,7 @@
 <script src="games/solo-test.js?v=20261025b"></script>
 <script src="games/fun-tests.js?v=20261025b"></script>
 <script src="games/biz-tests.js?v=20261025a"></script>
-<script src="games/iq-test.js?v=20261025a"></script>
+<script src="games/iq-test.js?v=20261026a"></script>
 <script src="games/know-more.js?v=20261024n"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20261022y"></script>

@@ -3324,6 +3324,16 @@
      текст остаётся тёмным, поэтому и .znayu-question-text, и содержимое
      результата здесь светлые — наоборот, чем у тестовых игр на тёмном фоне.
      Игра не вводит своих цветов, иначе выбилась бы из раздела. */
+  /* Таймер на задание. Полоса тёмная: карточка игры светлая, и светлая полоса
+     на ней не читалась бы. Под конец времени краснеет — об исходящем времени
+     человек должен узнавать, не глядя на цифры. */
+  #iqTestTimerTrack{
+    height:6px; border-radius:3px; background:rgba(43,15,46,.12);
+    overflow:hidden; margin:6px 0 2px; flex-shrink:0;
+  }
+  #iqTestTimerFill{ height:100%; width:100%; background:#4f6b8a; border-radius:3px; transition:width .2s linear; }
+  #iqTestTimerTrack.low #iqTestTimerFill{ background:#d6455e; }
+
   .iq-test-result{
     background:rgba(255,255,255,.92); border:1px solid rgba(43,15,46,.12);
     border-radius:16px; padding:14px; text-align:left;
@@ -3367,6 +3377,10 @@
     border-radius:14px; padding:12px 44px 12px 14px;
   }
   .iq-test-history-date{ font-size:12px; font-weight:800; color:#e8c9dd; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+  /* Балл крупной строкой, рядом с описанием уровня и временем прохождения —
+     в «Пройденных» видно сразу: когда прошли, сколько набрали и сколько заняло. */
+  .iq-test-history-score{ display:block; font-size:20px; font-weight:800; color:#fff; line-height:1.2; margin-bottom:2px; }
+  .iq-test-history-spent{ display:block; font-size:12px; color:rgba(255,255,255,.6); margin-top:2px; }
   .iq-test-history-text{ font-size:14px; color:#fff; line-height:1.45; }
   .iq-test-history-del{
     position:absolute; top:10px; right:10px;

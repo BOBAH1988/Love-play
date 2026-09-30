@@ -4505,6 +4505,9 @@ test('«Пройди тест»: каждый из десяти тестов п�
         assert(new Set(it.a).size === it.a.length,
           `${testDef.id}, вопрос ${i + 1}: варианты повторяются — их нельзя отличить`);
       });
+          // Задания не повторяются: иначе из 120 часть покажется дважды.
+          const qTexts = IQ_ITEMS.map(i => i.q);
+          assert(new Set(qTexts).size === qTexts.length, 'в банке есть одинаковые задания');
       startSoloTestGame();
       for(let i = 0; i < items.length; i++){
         showSoloTestQuestion();
@@ -5321,7 +5324,7 @@ const iqBackup = () => {
 const runIqTest = (mode) => {
   state.iqTestHistory = [];
   startIqTestGame();
-  const n = iqTestTotal();
+  const n = iqTestPerGame();
   for(let i = 0; i < n; i++){
     const opts = iqTestCurrentOptions;
     const pick = mode === 'all' ? opts.findIndex(o => o.ok)
@@ -5333,11 +5336,14 @@ const runIqTest = (mode) => {
   return state.iqTestResult;
 };
 
-test('«Тест IQ»: 30 заданий, ровно один верный вариант в каждом', () => {
+test('«Тест IQ»: банк из 120 заданий, ровно один верный вариант в каждом', () => {
   const saved = iqBackup();
   try {
-    assert(IQ_ITEMS.length === 30, `в тесте должно быть 30 заданий, а ${IQ_ITEMS.length}`);
+    // Банк — 120 заданий, за игру выбирается 30. Банк вчетверо больше партии
+    // именно ради этого: результат нельзя выучить наизусть.
+    assert(IQ_ITEMS.length === 120, `в банке должно быть 120 заданий, а ${IQ_ITEMS.length}`);
     assert(IQ_AREAS.length === 5, `направлений должно быть 5, а ${IQ_AREAS.length}`);
+    assert(iqTestPerGame() === 30, `в партию должно попадать 30 заданий, а ${iqTestPerGame()}`);
     const byArea = {};
     IQ_ITEMS.forEach((it, i) => {
       byArea[it.area] = (byArea[it.area] || 0) + 1;
@@ -5348,9 +5354,14 @@ test('«Тест IQ»: 30 заданий, ровно один верный ва�
       const texts = new Set((it.a || []).map(x => x.t));
       assert(texts.size === it.a.length, `задание ${i + 1}: варианты повторяются`);
     });
-    // Шесть заданий на направление: иначе профиль по направлениям не сравнить.
+    // Задания не повторяются: иначе из 120 часть покажется дважды.
+    const qTexts = IQ_ITEMS.map(it => it.q);
+    assert(new Set(qTexts).size === qTexts.length, 'в банке есть одинаковые задания');
+    // По 24 задания на направление в банке, из них в партию берётся шесть:
+    // иначе профиль по направлениям нельзя сравнивать между прохождениями.
     IQ_AREAS.forEach(a => {
-      assert(byArea[a.key] === 6, `направление «${a.name}»: заданий ${byArea[a.key]}, а должно быть 6`);
+      assert(byArea[a.key] === 24, `направление «${a.name}»: в банке ${byArea[a.key]} заданий, а должно быть 24`);
+      assert(byArea[a.key] >= iqTestPerArea(), `направление «${a.name}»: в банке меньше ${iqTestPerArea()} заданий, взять нечего`);
     });
     // Уровни покрывают весь диапазон: от 0 баллов до всех 30.
     const mins = IQ_LEVELS.map(l => l.min);
@@ -5389,7 +5400,7 @@ test('«Тест IQ»: подсчёт по направлениям и уров�
     const weak = IQ_AREAS[0].key;
     state.iqTestHistory = [];
     startIqTestGame();
-    const n = iqTestTotal();
+    const n = iqTestPerGame();
     for(let i = 0; i < n; i++){
       const item = iqTestCurrentItem();
       const opts = iqTestCurrentOptions;
@@ -5431,7 +5442,7 @@ test('«Тест IQ»: партия доходит до итогов, а не з
       startIqTestGame();
       return card.innerHTML;
     })();
-    const n = iqTestTotal();
+    const n = iqTestPerGame();
     const seen = new Set();
     for(let i = 0; i < n; i++){
       const item = iqTestCurrentItem();
@@ -5449,6 +5460,148 @@ test('«Тест IQ»: партия доходит до итогов, а не з
     assert(state.iqTestAnswers.length === n, `ответов должно быть ${n}, а ${state.iqTestAnswers.length}`);
   } finally {
     global.fadeSwapEl = originalFade;
+    Object.assign(state, saved);
+  }
+});
+
+test('«Тест IQ»: случайная выборка 30 заданий из банка в 120', () => {
+  const saved = iqBackup();
+  try {
+    // В партии ровно 30 заданий и по 6 на направление: иначе профили разных
+    // прохождений несравнимы — «6 из 6» должно значить одно и то же.
+    startIqTestGame();
+    assert(state.iqTestOrder.length === 30, `в партии ${state.iqTestOrder.length} заданий, а должно быть 30`);
+    const byArea = {};
+    state.iqTestOrder.forEach(bankIdx => {
+      const item = IQ_ITEMS[bankIdx];
+      byArea[item.area] = (byArea[item.area] || 0) + 1;
+    });
+    IQ_AREAS.forEach(a => {
+      assert(byArea[a.key] === 6, `направление «${a.name}»: в партии ${byArea[a.key]} заданий, а должно быть 6`);
+    });
+    assert(new Set(state.iqTestOrder).size === state.iqTestOrder.length, 'в партии есть повторяющиеся задания');
+    stopIqTestTimer();
+
+    // Повторные прохождения разные — ради этого банк вчетверо больше партии.
+    // Сразу два одинаковых набора ничего бы не доказали, поэтому наборов 8.
+    const sets = [];
+    for(let k = 0; k < 8; k++) sets.push(iqTestSampleOrder().join(','));
+    assert(new Set(sets).size === sets.length,
+      `выборки повторяются: из ${sets.length} получилось ${new Set(sets).size} разных`);
+    // Среднее пересечение двух наборов около 7,5 из 30: шесть заданий из
+    // двадцати четырёх на направление. Заметно больше означало бы, что
+    // случайности на самом деле нет.
+    let totalInter = 0, pairs = 0;
+    for(let i = 0; i < sets.length; i++){
+      for(let j = i + 1; j < sets.length; j++){
+        const a = new Set(sets[i].split(',')), b = new Set(sets[j].split(','));
+        let inter = 0; a.forEach(x => { if(b.has(x)) inter++; });
+        totalInter += inter; pairs++;
+      }
+    }
+    const avg = totalInter / pairs;
+    assert(avg < 15, `две выборки совпадают в среднем в ${avg.toFixed(1)} заданиях из 30 — выборка слишком похожа на одну и ту же`);
+  } finally {
+    Object.assign(state, saved);
+    stopIqTestTimer();
+  }
+});
+
+test('«Тест IQ»: таймер на задание — истечение времени засчитывается как неверное', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = iqBackup();
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    // Ждать реальную минуту в тесте нельзя, поэтому лимит ставится минимальный,
+    // а «время вышло» воспроизводится перемоткой отсчёта назад.
+    state.iqTestSeconds = 30;
+    startIqTestGame();
+    assert(iqTestSeconds() === 30, `таймер должен быть на 30 сек, а ${iqTestSeconds()}`);
+    assert(iqTestDeadline > 0, 'показ задания должен запускать таймер');
+
+    // Ответ до истечения: верный ответ даёт балл, таймер гаснет.
+    answerIqTestQuestion(iqTestCurrentOptions.findIndex(o => o.ok));
+    assert(state.iqTestAnswers[0] === 1, 'верный ответ должен давать 1 балл');
+    assert(!iqTestDeadline, 'после ответа таймер должен быть остановлен');
+    // Двойной клик по уже отвеченной карточке балл не меняет.
+    answerIqTestQuestion(iqTestCurrentOptions.findIndex(o => !o.ok));
+    assert(state.iqTestAnswers.length === 1, `повторный клик добавил ответ: ${state.iqTestAnswers.length}`);
+    cancelIqTestAdvance();
+
+    // Время вышло: задание засчитывается как неверное. Пропуск без оценки был бы
+    // мягче, но обесценил бы весь таймер: одно и то же время на «успел» и на
+    // «продумал» дало бы разный вклад в балл.
+    cancelIqTestAdvance();
+    state.iqTestIndex = 1;
+    state.iqTestAnswers = [1];
+    showIqTestQuestion();
+    assert(iqTestDeadline > 0, 'показ следующего задания должно снова запускать таймер');
+    iqTestDeadline = Date.now() - 1;
+    iqTestTick();
+    assert(state.iqTestAnswers.length === 2, `после истечения времени ответ должен записаться, а их ${state.iqTestAnswers.length}`);
+    assert(state.iqTestAnswers[1] === 0, 'истёкшее время должно давать 0 баллов, а не «пропуск без оценки»');
+    assert(!iqTestDeadline, 'после истечения таймер должен остановиться');
+    iqTestTimeUp();
+    assert(state.iqTestAnswers.length === 2, `повторный вызов добавил лишний ответ: ${state.iqTestAnswers.length}`);
+    cancelIqTestAdvance();
+
+    // На паузе таймер гаснет: иначе время сгорает, пока игрок в хабе.
+    state.iqTestIndex = 2;
+    showIqTestQuestion();
+    assert(iqTestDeadline > 0, 'перед паузой таймер должен идти');
+    pauseIqTestGame();
+    assert(!iqTestDeadline, 'на паузе таймер должен быть остановлен');
+    finishIqTestGame();
+    assert(!iqTestDeadline, 'после итогов таймер должен быть остановлен');
+  } finally {
+    global.fadeSwapEl = originalFade;
+    cancelIqTestAdvance();
+    stopIqTestTimer();
+    Object.assign(state, saved);
+  }
+});
+
+test('«Тест IQ»: в «Пройденных» видны балл, описание, дата, время и крестик удаления', () => {
+  const originalFade = global.fadeSwapEl;
+  const saved = iqBackup();
+  try {
+    global.fadeSwapEl = (id, render) => render(getElById(stub, id));
+    state.autoSpeak = false;
+    state.iqTestHistory = [];
+    state.iqTestSeconds = 0;
+    startIqTestGame();
+    // Время старта задаётся вручную: «сколько заняло» должно считаться по
+    // времени партии, а не по сумме таймеров — иначе пауза искажала бы его.
+    state.iqTestStartedAt = Date.now() - 192000;
+    for(let i = 0; i < iqTestPerGame(); i++){
+      answerIqTestQuestion(iqTestCurrentOptions.findIndex(o => o.ok));
+      advanceIqTest();
+    }
+    assert(state.iqTestHistory.length === 1, `в истории должен быть один результат, а ${state.iqTestHistory.length}`);
+    const entry = state.iqTestHistory[0];
+    assert(typeof entry.date === 'number' && entry.date > 0, 'у результата должна быть дата и время');
+    assert(typeof entry.spentMs === 'number' && entry.spentMs >= 190000,
+      `должно сохраняться, сколько заняло прохождение, а ${entry.spentMs}`);
+
+    goToIqTestHistory();
+    const markup = getElById(stub, 'iqTestHistoryList').innerHTML || '';
+    assert(/iq-test-history-date/.test(markup), 'в записи должна быть дата и время прохождения');
+    assert(/iq-test-history-score/.test(markup), 'в записи должен быть балл');
+    assert(/iq-test-history-spent/.test(markup), 'в записи должно быть, сколько заняло прохождение');
+    assert(markup.includes(String(entry.result.score)), 'в записи должен быть сам балл');
+    assert(entry.result.title && markup.includes(entry.result.title), 'в записи должно быть описание результата');
+    assert(/data-idx="/.test(markup), 'запись должна раскрываться по нажатию');
+    assert(/iq-test-history-del/.test(markup), 'у записи должен быть крестик удаления');
+
+    // Крестик удаляет запись — и только её, не раскрывая при этом ничего.
+    const handler = getElById(stub, 'iqTestHistoryList')._getHandlers().get('click')[0].handler;
+    handler({ target: { closest: sel => sel === '.iq-test-history-del' ? { dataset: { idx: '0' } } : null } });
+    assert(state.iqTestHistory.length === 0, `после удаления история должна быть пуста, а ${state.iqTestHistory.length}`);
+  } finally {
+    global.fadeSwapEl = originalFade;
+    cancelIqTestAdvance();
+    stopIqTestTimer();
     Object.assign(state, saved);
   }
 });
