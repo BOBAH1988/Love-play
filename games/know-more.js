@@ -48,6 +48,76 @@ const KNOW_MORE_SCALE = [
   { score: 0, text: 'Стоп — лучше не трогать' },
 ];
 
+/* ============ ЧЕМ ИССЛЕДУЮТ ============
+ * Способ воздействия, выбирается на настройке. Сама очередь зон от него НЕ
+ * зависит: подсказка на карточке одна и та же. Разница в том, чем именно
+ * трогали, и она попадает в накопительный список «Исследованные» — через
+ * несколько партий видно, что зона с «очень приятно» получилась после губ,
+ * а не после рук, и это уже подсказывает, что повторить.
+ *
+ * Значение хранится в state.knowMoreTool и пишется в каждую запись
+ * knowMoreLog. Старые записи без поля показывают первый способ (руки) —
+ * дефолт, который стоял до появления настройки.
+ *
+ * Тексты намеренно без оценок «сильнее/слабее»: одна и та же зона отвечает
+ * по-разному в зависимости от настроения и близости, а подсказка на карточке
+ * уже говорит, что делать руками. Настройка не навязывает ничего, она лишь
+ * запоминает.
+ */
+const KNOW_MORE_TOOLS = [
+  { value:0, label:'Руками', desc:'Пальцами и ладонями' },
+  { value:1, label:'Губами и языком', desc:'Поцелуи, язык, влажность' },
+  { value:2, label:'Пером или тканью', desc:'Мягкая текстура, скольжение' },
+  { value:3, label:'Вибрацией', desc:'Внешняя стимуляция' },
+];
+function knowMoreToolList(){
+  return KNOW_MORE_TOOLS;
+}
+// Текущий способ. Значение из старого сохранения может быть любым числом (или
+// его не быть вовсе — поле появилось позже) — тогда берём первый, «Руками».
+function getKnowMoreTool(){
+  const v = Number(state.knowMoreTool);
+  return knowMoreToolList().some(t => t.value === v) ? v : 0;
+}
+function knowMoreToolLabel(value){
+  const found = knowMoreToolList().find(t => t.value === value);
+  return found ? found.label : knowMoreToolList()[0].label;
+}
+// Подпись способа для конкретной записи knowMoreLog. Отдельная функция
+// намеренно: у записи может НЕ быть поля tool (старые сохранения), и там нужен
+// дефолт «Руками» — а не текущая настройка игрока. Подставить сюда
+// getKnowMoreTool() значило бы приписать старой записи способ, которым её на
+// самом деле не трогали. Неизвестное значение читается так же, как «Руками».
+function knowMoreLogToolText(entry){
+  if(!entry || entry.tool === undefined || entry.tool === null) return knowMoreToolLabel(0);
+  return knowMoreToolLabel(entry.tool);
+}
+// Отрисовка группы «Чем исследуют» — тот же компонент .level-toggle, что у
+// «Кто исследует». Аккуратно с подписями: названия длинные, поэтому вторая
+// строка (desc) объясняет каждую коротко.
+function renderKnowMoreToolGroup(){
+  const wrap = document.getElementById('knowMoreToolGroup');
+  if(!wrap) return;
+  const tool = getKnowMoreTool();
+  if(state.knowMoreTool !== tool){
+    state.knowMoreTool = tool;
+    saveState();
+  }
+  wrap.innerHTML = '';
+  knowMoreToolList().forEach(({ value, label, desc })=>{
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (tool === value ? ' on' : '');
+    div.innerHTML = `<div class="lname">${label}</div><div class="ldesc">${desc}</div><div class="level-check"></div>`;
+    div.addEventListener('click', ()=>{
+      state.knowMoreTool = value;
+      saveState();
+      playSuccessSound();
+      renderKnowMoreToolGroup();
+    });
+    wrap.appendChild(div);
+  });
+}
+
 // Защита от двойного тапа по кнопке оценки: между ответом и показом карточки
 // следующей зоны флаг закрыт. В state он не нужен — это состояние одного
 // экрана, сохранять его в localStorage незачем.
@@ -76,7 +146,10 @@ function knowMoreZoneLabel(zone){
 
 /* ============ ЭКРАН НАСТРОЙКИ ============ */
 function goToKnowMoreSetup(){
-  goToGameSetup('knowMoreSetup', 'twoPlayerView', ()=>{ renderKnowMoreStarterGroup(); });
+  goToGameSetup('knowMoreSetup', 'twoPlayerView', ()=>{
+    renderKnowMoreStarterGroup();
+    renderKnowMoreToolGroup();
+  });
 }
 
 // Кто исследует: три режима. Первый в списке — «Он», второй «Она» (исследует
@@ -198,7 +271,7 @@ function goToKnowMoreHistory(){
         if(it.receiver !== idx) return;
         const zone = knowMoreZoneById(it.zoneId);
         if(!zone) return;
-        rows.push(lineHtml(`${knowMoreZoneLabel(zone)} — ${knowMoreLogScoreText(it.score)}`, i));
+        rows.push(lineHtml(`${knowMoreZoneLabel(zone)} — ${knowMoreLogScoreText(it.score)} · ${knowMoreLogToolText(it)}`, i));
       });
       return `
         <div class="know-more-map">
@@ -418,7 +491,9 @@ function answerKnowMore(choiceIdx){
   // он должен пережить и прерванную партию — иначе ценность «мы это уже
   // пробовали» терялась бы именно тогда, когда она нужнее всего.
   if(!Array.isArray(state.knowMoreLog)) state.knowMoreLog = [];
-  state.knowMoreLog.push({ zoneId: zone.id, score: scale.score, receiver, date: Date.now() });
+  // tool записывается вместе с оценкой: способы менялись от партии к партии,
+  // и без этого в «Исследованных» не видно, чем именно трогали.
+  state.knowMoreLog.push({ zoneId: zone.id, score: scale.score, receiver, tool: getKnowMoreTool(), date: Date.now() });
   knowMoreAwaitNext = true;
   playSuccessSound();
   saveState();

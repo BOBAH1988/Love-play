@@ -2997,6 +2997,7 @@ function checkKnowMoreZones() {
   group('Колода «Узнай больше»');
   const cards = read('cards/cards_know_more.js');
   const game = read('games/know-more.js');
+  const html = read('index.html');
 
   // Разбор зон прямо из файла данных: проверяем то, что реально попадёт в игру.
   const blocks = cards.split(/\{\s*id:/).slice(1);
@@ -3148,6 +3149,44 @@ function checkKnowMoreZones() {
     /\.know-more-item-del:hover\{[^}]*background:rgba\(255,99,110/.test(css) &&
       /\.know-more-item-del:active\{[^}]*background:rgba\(255,99,110/.test(css),
     'у крестика нет красной заливки при наведении/нажатии — нажатие не читается как действие');
+
+  // «Чем исследуют» — вторая настройка игры. Без неё оценка в «Исследованных»
+  // ничего не говорила при повторе зоны: непонятно, руками это было или губами.
+  check('в настройках «Узнай больше» есть группа «Чем исследуют»',
+    /<label>Чем исследуют<\/label>/.test(html) && /id="knowMoreToolGroup"/.test(html),
+    'на экране настроек «Узнай больше» нет блока «Чем исследуют»');
+  check('группа «Чем исследуют» рисуется при открытии настроек',
+    /function renderKnowMoreToolGroup\(\)\{/.test(km) &&
+      /renderKnowMoreToolGroup\(\);/.test(km.slice(km.indexOf('function goToKnowMoreSetup('),
+        km.indexOf('function exitKnowMoreSetup('))),
+    'группа «Чем исследуют» объявлена, но не вызывается при открытии настроек — экран будет пустым');
+  // Срез — ТОЛЬКО сам массив: в нём ровно четыре записи. Если взять шире (до
+  // секции ПАРТИИ), туда попадут другие литералы `{ value: … }` из функций
+  // (renderKnowMoreToolGroup и т. п.), и счётчик способов насчитал бы лишние.
+  const toolsStart = km.indexOf('const KNOW_MORE_TOOLS = [');
+  const toolsBody = km.slice(toolsStart, km.indexOf('];', toolsStart) + 2);
+  check('способов ровно четыре, первый — «Руками»',
+    /value:0, label:'Руками'/.test(toolsBody) &&
+      (toolsBody.match(/\{ value:/g) || []).length === 4,
+    `должно быть четыре способа, первым «Руками» (дефолт), найдено ${(toolsBody.match(/\{ value:/g) || []).length}`);
+  check('выбранный способ пишется в запись оценки',
+    /knowMoreLog\.push\(\{[^}]*tool: getKnowMoreTool\(\)/.test(km),
+    'в knowMoreLog нет поля tool — в «Исследованных» не будет видно, чем трогали');
+  check('в «Исследованных» показывается способ каждой отметки',
+    /knowMoreLogToolText\(it\)/.test(historyBody),
+    'в списке отметок не выводится способ, которым трогали');
+  // Запись без поля tool — обычное дело для старых сохранений: там нужен
+  // дефолт «Руками», а НЕ текущая настройка (иначе игроку приписывается то,
+  // чего он не делал). Отдельная функция не даёт спутать эти два случая.
+  check('старая запись без tool показывается как «Руками», а не как текущая настройка',
+    /function knowMoreLogToolText\(entry\)\{/.test(km) &&
+      /entry\.tool === undefined \|\| entry\.tool === null\) return knowMoreToolLabel\(0\)/.test(km) &&
+      /getKnowMoreTool\(\)[\s\S]{0,40}?return knowMoreToolLabel\(0\)/.test(km) === false,
+    'подпись способа для записи без tool подставляет текущую настройку — старым отметкам припишется чужой способ');
+  check('поле knowMoreTool есть в состоянии и сбрасывается общим сбросом',
+    /knowMoreTool:0/.test(read('games/core.js')) &&
+      /state\.knowMoreTool = 0;/.test(read('games/core.js')),
+    'в state нет knowMoreTool:0 или он не сбрасывается в performFullReset');
 }
 
 

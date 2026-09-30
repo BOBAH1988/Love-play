@@ -4703,6 +4703,78 @@ test('«Узнай больше»: крестик удаляет отметку 
   }
 });
 
+// «Чем исследуют»: четыре способа, по умолчанию «Руками». Способ пишется в
+// каждую запись накопительного списка — иначе через несколько партий не видно,
+// чем именно трогали, и «очень приятно» не говорит, что повторить.
+test('«Узнай больше»: способы «Чем исследуют», по умолчанию «Руками»', () => {
+  const prev = state.knowMoreTool;
+  try {
+    const list = knowMoreToolList();
+    assert(list.length === 4, `должно быть четыре способа, а ${list.length}`);
+    assert(list.map(t => t.label).join(',') === 'Руками,Губами и языком,Пером или тканью,Вибрацией',
+      `подписи способов: ${list.map(t => t.label).join(',')}`);
+    assert(list[0].value === 0, 'первым должен идти «Руками» — это дефолт');
+    assert(list.every(t => typeof t.label === 'string' && t.label.length > 0 && typeof t.desc === 'string'),
+      'у каждого способа должны быть подпись и короткое пояснение');
+    // Чистое состояние (поля ещё нет) и неизвестное значение дают «Руками».
+    state.knowMoreTool = undefined;
+    assert(getKnowMoreTool() === 0, 'при отсутствии поля должен выбираться дефолт «Руками»');
+    state.knowMoreTool = 7;
+    assert(getKnowMoreTool() === 0, 'неизвестное значение должно давать «Руками», а не ломать партию');
+    state.knowMoreTool = 3;
+    assert(getKnowMoreTool() === 3, 'выбранный способ должен сохраняться');
+    assert(knowMoreToolLabel(3) === 'Вибрацией', 'подпись выбранного способа');
+    // Старая запись без поля tool читается как «Руками» — дефолт, который стоял
+    // до появления настройки. Подставлять туда текущую настройку нельзя: это
+    // приписало бы игроку то, чего он не делал.
+    assert(knowMoreLogToolText({ zoneId:1, score:3, receiver:0 }) === 'Руками',
+      'запись без поля tool должна показываться как «Руками»');
+    assert(knowMoreLogToolText({ zoneId:1, score:3, receiver:0, tool:1 }) === 'Губами и языком',
+      'запись со способом должна показывать именно его');
+    assert(knowMoreLogToolText({ zoneId:1, score:3, receiver:0, tool:99 }) === 'Руками',
+      'неизвестный способ в записи читается как «Руками»');
+    assert(knowMoreLogToolText(null) === 'Руками', 'отсутствующая запись не должна ломать подпись');
+  } finally {
+    state.knowMoreTool = prev;
+  }
+});
+
+// Способ должен попадать в накопительный список: оценка без «чем трогали» не
+// говорит ничего при повторе зоны в следующей партии.
+test('«Узнай больше»: способ записывается в «Исследованные» вместе с оценкой', () => {
+  const saved = knowMoreBackup();
+  const prevTool = state.knowMoreTool;
+  const list = getElById(stub, 'knowMoreHistoryList');
+  try {
+    state.knowMoreMode = KNOW_MORE_MODE.HE;
+    state.knowMoreStarter = 0;
+    // Очередь — массив id (её строит buildKnowMoreQueue), а не объекты зон.
+    state.knowMoreQueue = [1];
+    state.knowMoreStep = 0;
+    state.knowMoreMarks = [[], []];
+    state.knowMoreLog = [];
+    state.knowMoreTool = 1; // губами и языком
+    knowMoreAwaitNext = false;
+    answerKnowMore(0);
+    assert(state.knowMoreLog.length === 1, 'оценка должна попасть в накопительный список');
+    assert(state.knowMoreLog[0].tool === 1,
+      `в записи должен лежать выбранный способ, а ${state.knowMoreLog[0].tool}`);
+    goToKnowMoreHistory();
+    const html = list ? list.innerHTML : '';
+    assert(/Губами и языком/.test(html), `в списке должен быть виден способ, получено: ${html.slice(0, 200)}`);
+    // Запись без поля tool (из старого сохранения) не должна ломать отрисовку
+    // и должна показываться как «Руками» — дефолт, который стоял раньше.
+    state.knowMoreLog = [{ zoneId: 2, score: 2, receiver: 0, date: 1 }];
+    goToKnowMoreHistory();
+    const html2 = list ? list.innerHTML : '';
+    assert(/Руками/.test(html2), 'старая запись без поля должна показывать «Руками»');
+    assert(/За ушами/.test(html2), `старая запись должна остаться в списке, получено: ${html2.slice(0, 200)}`);
+  } finally {
+    state.knowMoreTool = prevTool;
+    Object.assign(state, saved);
+  }
+});
+
 test('«Узнай больше»: в режимах «Он»/«Она» исследует только один партнёр', () => {
   const prevMode = state.knowMoreMode;
   const prevStep = state.knowMoreStep;
