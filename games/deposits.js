@@ -631,13 +631,21 @@ DEPOSITS_GROUPS.forEach(g=>{
     });
   });
 });
-document.getElementById('depositsStartBtn').addEventListener('click', ()=>{ startDepositsGame(); });
-document.getElementById('depositsSetupExitBtn').addEventListener('click', ()=>{ exitDepositsSetup(); });
-document.getElementById('depositsGameExitBtn').addEventListener('click', ()=>{ exitDepositsGame(); });
-document.getElementById('depositsCheckStartBtn').addEventListener('click', ()=>{ startDepositsCheck(); });
-document.getElementById('depositsCheckBackBtn').addEventListener('click', ()=>{ exitDepositsCheck(); });
-document.getElementById('depositsCheckNextBtn').addEventListener('click', ()=>{ nextDepositsCheck(); });
-document.getElementById('depositsSummaryExitBtn').addEventListener('click', ()=>{ exitDepositsSummary(); });
+// Кнопки подписываются с защитой `?.` — как в «Флагах», «Столицах» и
+// «Арифметике». Без неё ОДНОГО отсутствующего id (старый index.html в кэше
+// Service Worker, неполная загрузка страницы) роняет весь модуль: скрипт
+// выполняется по порядку, исключение прерывает его — и до следующих строк
+// управление не доходит. Игрок видел ровно это: кнопка «Вклады» в меню есть
+// (она в core.js), а нажатие «Рассчитать» не делает ничего. Подписка идёт
+// прямыми вызовами getElementById('id') — такой вид читает проверка
+// «у каждой кнопки «Пауза»/«Выход» есть обработчик» в check.js.
+document.getElementById('depositsStartBtn')?.addEventListener('click', ()=>{ startDepositsGame(); });
+document.getElementById('depositsSetupExitBtn')?.addEventListener('click', ()=>{ exitDepositsSetup(); });
+document.getElementById('depositsGameExitBtn')?.addEventListener('click', ()=>{ exitDepositsGame(); });
+document.getElementById('depositsCheckStartBtn')?.addEventListener('click', ()=>{ startDepositsCheck(); });
+document.getElementById('depositsCheckBackBtn')?.addEventListener('click', ()=>{ exitDepositsCheck(); });
+document.getElementById('depositsCheckNextBtn')?.addEventListener('click', ()=>{ nextDepositsCheck(); });
+document.getElementById('depositsSummaryExitBtn')?.addEventListener('click', ()=>{ exitDepositsSummary(); });
 setupRulesModal('depositsRulesModal', 'closeDepositsRulesBtn');
 renderDepositsSetup();
 

@@ -3670,6 +3670,31 @@ function checkDeposits(html, timerSrc) {
     /out\.length >= 3/.test(game) && /if\(used\.has\(label\)\) continue;/.test(game),
     'нужен подбор отвлекающих вариантов без повторов');
 
+  // Модуль игры не должен падать из-за отсутствующего id. Подписка на кнопки
+// в проекте идёт без «?.» (так устроены все 40+ игр), и это давняя норма:
+// ломает работу только реально отсутствующий элемент, которого в разметке
+// нет. Поэтому проверка не про синтаксис, а про ФАКТ: выполняем deposits.js
+// с DOM, где всех его id нет, и убеждаемся, что модуль загрузился целиком —
+// иначе у игрока кнопка «Вклады» есть, а «Рассчитать» не делает ничего.
+  const vmMod = require('vm');
+  let moduleError = null;
+  try {
+    vmMod.runInNewContext(game, {
+      console, state: {}, Math, JSON, Number, Array, Set, Object, String,
+      shuffle: arr => arr,
+      playSuccessSound(){}, saveState(){}, updateResumeUI(){},
+      goToGameSetup(){}, showSetupView(){}, activateSingleScreen(){},
+      updateMuteBtn(){}, goToGame(){}, exitGame(){}, setupRulesModal(){},
+      document: { getElementById: () => null, querySelectorAll: () => [] },
+      window: {},
+    }, { filename: 'deposits.js' });
+  } catch (e) {
+    moduleError = e.message;
+  }
+  check('модуль «Вкладов» загружается даже без своих элементов в DOM',
+    moduleError === null,
+    `падение при загрузке роняет все кнопки игры: ${moduleError || '—'}`);
+
   // Оформление: свои классы, карточка вопроса остаётся общей.
   check('диаграмма и таблица оформлены своими классами .deposit-*',
     /\.deposit-total\{/.test(css) && /\.deposit-bar\{/.test(css) && /\.deposit-table\{/.test(css),

@@ -7147,6 +7147,19 @@ test('«Вклады»: срок удвоения в годах, а не в ме
   // при ежемесячной капитализации 12% показывали 69,66 «года» вместо 5,8.
   const saved = depositsBackup();
   try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    const res = depositsSimulate(depositsParams());
+    const approx72 = 72 / 12;
+    assert(res.doublingYears > approx72 * 0.8 && res.doublingYears < approx72 * 1.2,
+      `12% ежемесячно: удвоение около 6 лет (правило 72), получено ${res.doublingYears}`);
+    depositsApply({ amount:100000, rate:4, years:5, cap:'year', topup:0 });
+    const res4 = depositsSimulate(depositsParams());
+    assert(res4.doublingYears > 15 && res4.doublingYears < 21,
+      `4% ежегодно: удвоение около 18 лет, получено ${res4.doublingYears}`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
 
 test('«Вклады»: у всех комбинаций настроек расчёт и вопросы корректны', () => {
   // Сплошной прогон по всем 2000 сочетаниям: суммы не должны падать, вопросов
@@ -7188,7 +7201,14 @@ test('«Вклады»: у всех комбинаций настроек рас
   } finally {
     Object.assign(state, saved);
   }
-  assert(combos === 2000, `проверено сочетаний: ${combos}, ожидалось 2000`);
+  // Ожидаемое число СЧИТАЕМ из самих наборов, а не хардкодим: при добавлении
+  // пятой суммы или четвёртой ставки прогон должен расшириться сам, а не
+  // начать падать на «ожидалось 2000». Прежде здесь стояло именно хардкод-
+  // число, и оно не совпадало с фактом: 4·5·5·4·4 = 1600.
+  const expected = DEPOSITS_AMOUNTS.length * DEPOSITS_RATES.length
+    * DEPOSITS_YEARS.length * DEPOSITS_CAPS.length * DEPOSITS_TOPUPS.length;
+  assert(combos === expected, `проверено сочетаний: ${combos}, ожидалось ${expected}`);
+  assert(combos >= 1000, `сплошной прогон слишком мал (${combos}) — он перестал проверять всё`);
   assert(problems.length === 0, problems.slice(0, 5).join('; '));
 });
 
@@ -7217,6 +7237,83 @@ test('«Вклады»: верный ответ совпадает с расчё
     Object.assign(state, saved);
   }
 });
+test('«Вклады»: модуль загружается целиком и кнопка «Рассчитать» работает', () => {
+  // Регресс на жалобу «после нажатия Рассчитать пустой экран». Разметка была
+  // в порядке, а расчёт — верным, но модуль ПАДАЛ при загрузке на строке
+  // getElementById(...).addEventListener без защиты: скрипт выполняется по
+  // порядку, исключение прерывает его, и все кнопки остаются мёртвыми. Кнопка
+  // «Вклады» в меню при этом есть (она в core.js) — отсюда «пустой экран».
+  const src = fs.readFileSync(path.join(ROOT, 'games/deposits.js'), 'utf8');
+  // 1. Подписка на кнопки должна быть защищена: без ?. один отсутствующий id
+  //    роняет весь модуль. Ищем ОБЕ формы — и защищённую, и нет: иначе при
+  //    исправленном коде регулярка просто ничего не найдёт и проверка
+  //    молча пройдёт, потеряв смысл.
+  const guarded = [...src.matchAll(/getElementById\('([A-Za-z0-9_]+)'\)\s*\?\.\s*addEventListener/g)];
+  const bare = [...src.matchAll(/getElementById\('([A-Za-z0-9_]+)'\)\s*\.\s*addEventListener/g)];
+  assert(guarded.length > 0 || bare.length > 0,
+    'в модуле не найдено ни одной подписки на кнопки — проверка ничего не проверяет');
+  const unsafe = bare.map(m => m[1]);
+  assert(unsafe.length === 0,
+    `подписки без ?. роняют весь модуль при первом отсутствующем id: ${unsafe.join(', ')}`);
+  // 2. Модуль должен выполняться целиком, даже если ни одного его элемента нет
+  //    в DOM (например, index.html из старого кэша Service Worker).
+  let loadError = null;
+  try {
+    const ctx = {
+      console, state: {}, Math, JSON, Number, Array, Set, Object, String,
+      shuffle: arr => arr,
+      playSuccessSound() {}, saveState() {}, updateResumeUI() {},
+      goToGameSetup() {}, showSetupView() {}, activateSingleScreen() {},
+      updateMuteBtn() {}, goToGame() {}, exitGame() {}, setupRulesModal() {},
+      document: { getElementById: () => null, querySelectorAll: () => [] },
+      window: {},
+    };
+    vm.runInNewContext(src, ctx, { filename: 'deposits.js' });
+  } catch (e) {
+    loadError = e.message;
+  }
+  assert(loadError === null, `модуль падает при загрузке без своих элементов: ${loadError}`);
+  // 3. И настоящий сценарий: вход в игру → «Рассчитать» → экран с расчётом.
+  const saved = depositsBackup();
+  const clear = () => document.querySelectorAll('.screen.active').forEach(el => el.classList.remove('active'));
+  try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    clear();
+    getElById(stub, 'depositsSetup').classList.add('active');
+    // Кликаем так же, как остальные сценарии файла: dom-stub не реализует
+    // dispatchEvent, а хранит обработчики в _getHandlers().
+    getElById(stub, 'depositsStartBtn')._getHandlers().get('click')
+      .forEach(({ handler }) => handler({}));
+    assert(getElById(stub, 'depositsGame').classList.contains('active'),
+      'после «Рассчитать» должен быть активен экран расчёта, а не пустота');
+    // Проверяем, что экран расчёта не пустой. Именно этот случай и был жалобой
+    // игрока («после Рассчитать пустой экран»), поэтому проверка обязана
+    // смотреть на результат, а не только на активный класс экрана.
+    // Через innerHTML самого экрана здесь не выйдет: dom-stub не переносит
+    // исходную разметку в _html, он пуст до первого присваивания, поэтому
+    // сверяем те элементы, которые игра заполняет сама.
+    const res2 = depositsSimulate(depositsParams());
+    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res2.total, true),
+      'на экране расчёта должна быть итоговая сумма');
+    assert(getElById(stub, 'depositsInvested').textContent.includes('Вложено'),
+      'на экране должно быть сказано, сколько вложено');
+    assert(getElById(stub, 'depositsProfit').textContent.includes('Процентами'),
+      'на экране должно быть сказано, сколько начислено процентами');
+    assert(getElById(stub, 'depositsDoubling').textContent.length > 5,
+      'строка про удвоение должна быть заполнена');
+    // Таблица и диаграмма заполняются через innerHTML — их стаба хранит.
+    const tableHtml = getElById(stub, 'depositsTable').innerHTML || '';
+    assert(tableHtml.includes('<tr>'), 'таблица по годам должна быть заполнена');
+    assert((tableHtml.match(/<tr>/g) || []).length === res2.years.length,
+      `в таблице должно быть ${res2.years.length} строк по годам`);
+    const barsHtml2 = getElById(stub, 'depositsBars').innerHTML || '';
+    assert((barsHtml2.match(/deposit-bar-col/g) || []).length === res2.years.length,
+      'диаграмма роста должна быть заполнена');
+  } finally {
+    clear();
+    Object.assign(state, saved);
+  }
+});
 
 test('«Вклады»: правила говорят, что расчёт учебный и не совет', () => {
   const rules = /<div class="modal-overlay" id="depositsRulesModal">[\s\S]*?closeDepositsRulesBtn/.exec(html)[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
@@ -7231,6 +7328,7 @@ test('«Вклады»: правила говорят, что расчёт уч�
   const hubHtml = document.getElementById('rulesHubList').innerHTML;
   assert(hubHtml.includes('depositsRulesModal'), 'в хабе правил должен быть пункт «Вклады»');
   assert(hubHtml.includes('Вклады'), 'пункт должен называться «Вклады»');
+});
 
 test('«Вклады»: полный цикл — расчёт, проверка из 5 вопросов, итоги', () => {
   const saved = depositsBackup();
@@ -7245,20 +7343,22 @@ test('«Вклады»: полный цикл — расчёт, проверка
       'на экране должен быть итог того же расчёта, который пошёл в вопросы');
     assert(getElById(stub, 'depositsCompare').textContent.includes('капитализация'),
       'на экране должно быть сравнение с простыми процентами');
-    assert(getElById(stub, 'depositsBars').children.length === 10, 'в диаграмме должно быть 10 столбиков');
-    assert(getElById(stub, 'depositsTable').innerHTML.split('<tr>').length - 1 === 10,
+    // Диаграмму и таблицу считаем по строке innerHTML: dom-stub хранит её
+    // строкой и не строит дерево, поэтому children здесь всегда пуст.
+    const barsHtml = getElById(stub, 'depositsBars').innerHTML || '';
+    assert((barsHtml.match(/deposit-bar-col/g) || []).length === 10,
+      'в диаграмме должно быть 10 столбиков');
+    assert((getElById(stub, 'depositsTable').innerHTML || '').split('<tr>').length - 1 === 10,
       'в таблице должно быть 10 строк по годам');
 
     startDepositsCheck();
     assert(getElById(stub, 'depositsCheck').classList.contains('active'), 'проверка должна открыться');
     for(let i = 0; i < 5; i++){
-      const box = getElById(stub, 'depositsCheckAnswers');
-      assert(box.children.length === 3, `в вопросе ${i + 1} должно быть 3 варианта, а ${box.children.length}`);
       const list = depositsCheckList();
-      const correct = depositsCheckOptions(list[i]).find(o => o.correct);
-      const btn = Array.from(box.children).find(b => b.textContent === correct.label);
-      assert(!!btn, `в вопросе ${i + 1} нет кнопки с верным ответом «${correct.label}»`);
-      btn.dispatchEvent({ type:'click' });
+      const opts = depositsCheckOptions(list[i]);
+      assert(opts.length === 3, `в вопросе ${i + 1} должно быть 3 варианта, а ${opts.length}`);
+      // Отвечаем верным вариантом через функцию игры — так же, как по клику.
+      onDepositsAnswer(i, opts.find(o => o.correct), list);
       assert(state.depositsAnswers[i] === 1, `ответ ${i + 1} должен засчитаться верным`);
       assert(getElById(stub, 'depositsCheckHint').textContent.length > 0, `после ответа ${i + 1} должно быть пояснение`);
       nextDepositsCheck();
@@ -7306,22 +7406,6 @@ test('«Вклады»: «←» с проверки возвращает к ра
       'стрелка «←» с расчёта должна открыть настройки игры');
   } finally {
     clear();
-    Object.assign(state, saved);
-  }
-});
-
-});
-
-    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
-    const res = depositsSimulate(depositsParams());
-    const approx72 = 72 / 12;
-    assert(res.doublingYears > approx72 * 0.8 && res.doublingYears < approx72 * 1.2,
-      `12% ежемесячно: удвоение около 6 лет (правило 72), получено ${res.doublingYears}`);
-    depositsApply({ amount:100000, rate:4, years:5, cap:'year', topup:0 });
-    const res4 = depositsSimulate(depositsParams());
-    assert(res4.doublingYears > 15 && res4.doublingYears < 21,
-      `4% ежегодно: удвоение около 18 лет, получено ${res4.doublingYears}`);
-  } finally {
     Object.assign(state, saved);
   }
 });
