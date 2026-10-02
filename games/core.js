@@ -367,6 +367,18 @@ let state = {
   bizTestsOpen:[],
   // Снимок места остановки для меню паузы (номер вопроса).
   bizTestsPaused:null,
+  // «Вклады» (бизнес-игры) — симулятор сложных процентов. Пять условий
+  // задаёт игрок, depositsResult хранит ПОСЛЕДНИЙ расчёт: с него берутся
+  // и вопросы «Проверки себя», и итог. Копия, а не ссылка на результат
+  // depositsSimulate(), потому что при следующем расчёте с другими
+  // условиями настройки вопросы должны опираться на тот расчёт, который
+  // игрок видел на экране.
+  depositsAmount:100000, depositsRate:12, depositsYears:5,
+  depositsCap:'month', depositsTopUp:0,
+  depositsResult:null,
+  // Проверка себя: номер вопроса и по 1/0 на каждый (как в «Бизнес тестах»
+  // и «Тесте IQ» — тот же приём, чтобы не заводить отдельные счётчики).
+  depositsIndex:0, depositsAnswers:[],
   // Тест IQ (обучающие игры) — одна игра, один тест: 30 заданий и разбор по
   // пяти направлениям. iqTestOrder — перемешанный порядок заданий ЭТОЙ партии
   // (без него пять заданий одного направления шли подряд и направление
@@ -1084,6 +1096,12 @@ document.getElementById('gameBizTestsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   callGameEntry('goToBizTestsSetup');
+});
+// «Вклады» (бизнес-игры) — симулятор сложных процентов.
+document.getElementById('gameDepositsBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  callGameEntry('goToDepositsSetup');
 });
 // «Тест IQ» (обучающие игры) — 30 заданий и разбор по направлениям.
 document.getElementById('gameIqTestBtn').addEventListener('click', ()=>{
@@ -2133,6 +2151,15 @@ function performFullReset(){
   state.bizTestsHistory = [];
   state.bizTestsOpen = [];
   state.bizTestsPaused = null;
+  // «Вклады» — сброс возвращает условия к дефолтам и чистит партию проверки
+  state.depositsAmount = 100000;
+  state.depositsRate = 12;
+  state.depositsYears = 5;
+  state.depositsCap = 'month';
+  state.depositsTopUp = 0;
+  state.depositsResult = null;
+  state.depositsIndex = 0;
+  state.depositsAnswers = [];
   // Тест IQ — общий сброс чистит партию и историю
   state.iqTestIndex = 0;
   state.iqTestOrder = [];

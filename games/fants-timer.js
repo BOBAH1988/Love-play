@@ -817,6 +817,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🛍️','Магазин','shopRulesModal'],
       ['🔍','Оцени бизнес','bizObsRulesModal'],
       ['🏢','Бизнес тесты','bizTestsRulesModal'],
+      ['🏦','Вклады','depositsRulesModal'],
     ]},
     { icon:'📱', name:'Игры для одного', games:[
       ['🪢','Виселица','partyHangmanRulesModal'],
@@ -958,6 +959,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     bizObsSetup:'businessView', bizObsGame:'businessView',
     bizTestsSetup:'businessView', bizTestsGame:'businessView',
     bizTestsSummary:'businessView', bizTestsHistory:'businessView',
+    depositsSetup:'businessView', depositsGame:'businessView',
+    depositsCheck:'businessView', depositsSummary:'businessView',
     flashSetup:'learningView', flashGame:'learningView',
     flashTimeSetup:'learningView', flashTimeGame:'learningView',
     flagsSetup:'learningView', flagsGame:'learningView',
@@ -1001,6 +1004,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'businessLemonadeSetup','bizObsSetup','flashSetup','flagsSetup',
     'iqTestSetup','iqTestSummary','iqTestHistory',
     'bizTestsSetup','bizTestsSummary','bizTestsHistory',
+    // «Вклады»: кроме настроек, вложенными являются экран проверки и итоги —
+    // стрелка «←» с них возвращает на шаг назад, а не выбрасывает в хаб.
+    'depositsSetup','depositsCheck','depositsSummary',
     // Обучающая группа: экраны настроек «Столиц» и «Арифметики». Без них
     // стрелка «←» не считала экран экраном настройки и проваливалась в
     // generic-ветку, которая писала в lastSectionOnPause чужой раздел.
@@ -1070,6 +1076,11 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'bizTestsHistory':'exitBizTestsHistory',
     'bizTestsSummary':'exitBizTestsSummary',
     'bizTestsSetup':'exitBizTestsSetup',
+    // «Вклады»: «←» с проверки возвращает к расчёту (он не теряется), а с
+    // итогов — к настройкам игры, как у остальных вложенных экранов.
+    'depositsCheck':'exitDepositsCheck',
+    'depositsSummary':'exitDepositsSummary',
+    'depositsSetup':'exitDepositsSetup',
     'iqTestHistory':'exitIqTestHistory',
     'iqTestSummary':'exitIqTestSummary',
     'iqTestSetup':'exitIqTestSetup',

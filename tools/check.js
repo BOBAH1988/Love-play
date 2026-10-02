@@ -3565,6 +3565,144 @@ function checkBizTests(html, timerSrc) {
     `шкалы видны в итогах, значит, должны быть названы в правилах — не названы: ${missingScales.join(', ') || '—'}`);
 }
 
+// «Вклады» — симулятор сложных процентов в разделе «Бизнес игры». Проверяем
+// регистрацию, оформление и главное — содержательную часть: числа в правилах
+// и в разметке не должны разойтись с кодом, а в правилах обязано быть сказано,
+// что расчёт учебный и не является советом (иначе «ставка 20%» читается как
+// обещание доходности).
+function checkDeposits(html, timerSrc) {
+  group('«Вклады» (бизнес)');
+  const game = read('games/deposits.js');
+  const css = read('styles/app.css');
+  const registry = read('games/game-registry.js');
+  const bizList = /<div class="game-select-list" id="businessGameSelectList">([\s\S]*?)<\/div>/.exec(html);
+  check('кнопка игры в разделе «Бизнес игры»',
+    !!bizList && bizList[1].includes('id="gameDepositsBtn"'),
+    'кнопка «Вклады» должна быть в #businessGameSelectList, иначе её не запустить из раздела');
+  const otherLists = ['kidsGameSelectList', 'twoPlayerGamesField', 'soloGameSelectList', 'learningGameSelectList']
+    .map(id => new RegExp(`id="${id}"([\\s\\S]*?)<\\/div>`).exec(html))
+    .filter(Boolean)
+    .map(m => m[1]);
+  check('кнопка игры не попала в другие разделы',
+    !otherLists.some(l => l.includes('gameDepositsBtn')),
+    'игра для бизнеса не должна висеть в «Играх с детьми», парах, одиночных или обучающих играх');
+
+  const regLine = registry.split('\n').filter(l => /mode:\s*'deposits'/.test(l));
+  check('в реестре игра числится в группе business и без паузы',
+    regLine.length === 1 && /group:\s*'business'/.test(regLine[0]) && /noPause:\s*true/.test(regLine[0]),
+    `в реестре должен быть ровно один mode:'deposits' с group:'business' и noPause:true (строк: ${regLine.length})`);
+  check('выход с расчёта ведёт в настройки игры, а не в хаб',
+    /mode:\s*'deposits'[\s\S]*?back:\s*'exitDepositsGame'/.test(registry),
+    'без back стрелка «←» из экрана расчёта уведёт не туда');
+  for (const sid of ['depositsSetup', 'depositsGame', 'depositsCheck', 'depositsSummary']) {
+    check(`экран ${sid} есть в разметке и в карте раздела businessView`,
+      new RegExp(`<section id="${sid}"`).test(html) && new RegExp(`${sid}:'businessView'`).test(timerSrc),
+      `нет секции #${sid} или записи ${sid}:'businessView' в SECTION_FOR_SCREEN`);
+  }
+  // Вложенные экраны обязаны быть в PARENT_BACK: иначе стрелка «←» с них
+  // попадёт в generic-fallback и выбросит в хаб, минуя настройки игры.
+  const parentBack = /const PARENT_BACK\s*=\s*\{([\s\S]*?)\n\s*\};/.exec(timerSrc);
+  const backIds = parentBack ? [...parentBack[1].matchAll(/'([A-Za-z0-9_]+)':\s*'([A-Za-z0-9_]+)'/g)].map(m => m[1]) : [];
+  const nested = ['depositsSetup', 'depositsCheck', 'depositsSummary'];
+  check('вложенные экраны «Вкладов» описаны в PARENT_BACK',
+    nested.every(sid => backIds.includes(sid)),
+    `нет в карте PARENT_BACK: ${nested.filter(sid => !backIds.includes(sid)).join(', ') || '—'}`);
+
+  // Наборы значений из кода должны совпадать с кнопками в разметке: иначе
+  // «ставка 24%» из кода окажется недостижимой, а лишняя кнопка — сломанной.
+  const groupValues = (id) => {
+    const m = new RegExp(`id="${id}"[^>]*>([\\s\\S]*?)</div>`).exec(html);
+    return m ? [...m[1].matchAll(/data-value="([^"]+)"/g)].map(x => x[1]) : [];
+  };
+  const numList = (name) => {
+    const m = new RegExp(`const ${name} = \\[([^\\]]*)\\];`).exec(game);
+    return m ? m[1].split(',').map(s => s.trim()).filter(Boolean) : [];
+  };
+  check('кнопки суммы совпадают с DEPOSITS_AMOUNTS',
+    groupValues('depositsAmountGroup').join(',') === numList('DEPOSITS_AMOUNTS').join(','),
+    `в разметке: ${groupValues('depositsAmountGroup').join(',') || '—'}; в коде: ${numList('DEPOSITS_AMOUNTS').join(',')}`);
+  check('кнопки ставки совпадают с DEPOSITS_RATES',
+    groupValues('depositsRateGroup').join(',') === numList('DEPOSITS_RATES').join(','),
+    `в разметке: ${groupValues('depositsRateGroup').join(',') || '—'}; в коде: ${numList('DEPOSITS_RATES').join(',')}`);
+  check('кнопки срока совпадают с DEPOSITS_YEARS',
+    groupValues('depositsYearsGroup').join(',') === numList('DEPOSITS_YEARS').join(','),
+    `в разметке: ${groupValues('depositsYearsGroup').join(',') || '—'}; в коде: ${numList('DEPOSITS_YEARS').join(',')}`);
+  check('кнопки пополнения совпадают с DEPOSITS_TOPUPS',
+    groupValues('depositsTopUpGroup').join(',') === numList('DEPOSITS_TOPUPS').join(','),
+    `в разметке: ${groupValues('depositsTopUpGroup').join(',') || '—'}; в коде: ${numList('DEPOSITS_TOPUPS').join(',')}`);
+  const capIds = [...game.matchAll(/\{ id:'([a-z]+)',\s+label:'[^']+',\s+months:(\d+)/g)].map(m => m[1]);
+  check('кнопки капитализации совпадают с DEPOSITS_CAPS',
+    groupValues('depositsCapGroup').join(',') === capIds.join(','),
+    `в разметке: ${groupValues('depositsCapGroup').join(',') || '—'}; в коде: ${capIds.join(',') || '—'}`);
+
+  // Расчёт помесячный, а не по годовой формуле: при пополнении годовая
+  // формула неприменима. Регрессия, из-за которой суммы «поехали бы».
+  check('расчёт помесячный и учитывает пополнение',
+    /function depositsSimulate\(/.test(game) && /for\(let m = 1; m <= totalMonths; m\+\+\)/.test(game)
+      && /if\(monthly > 0\) balance \+= monthly;/.test(game),
+    'ожидается перебор по месяцам totalMonths с добавлением пополнения');
+  // Сложные проценты должны быть сравнены с простыми — в этом смысл игры.
+  check('расчёт сравнивает сложные проценты с простыми',
+    /simpleTotal/.test(game) && /extraFromCap/.test(game) && /depositsCompare/.test(game),
+    'нет сравнения с простыми процентами — исчезает главный смысл игры');
+  // Правило 72 делится на число капитализаций: без этого срок удвоения
+  // выходил в месяцах, а не в годах (на этом упал прогон формул).
+  check('срок удвоения пересчитан из периодов в годы',
+    /doublingYears = perYear > 0\s*\n\s*\? Math\.log\(2\) \/ \(perYear \* Math\.log/.test(game),
+    'ожидается Math.log(2) / (perYear * Math.log(...)) — без perYear выходят месяцы');
+  // При выплате в конце срока удвоения нет: верным должен быть ответ «никогда».
+  check('при выплате в конце срока верный ответ — «никогда»',
+    /label:'Никогда: проценты в конце срока', correct:true/.test(game)
+      && /doublingYears === null/.test(game),
+    'без капитализации сумма не удваивается — верным ответом должен быть прямой');
+  // Вопросы «Проверки себя» порождаются расчётом, а не хранятся в данных:
+  // так верный ответ невозможно забыть при изменении формулы.
+  check('вопросы проверки считаются тем же расчётом, а не хранятся вручную',
+    /function depositsCheckQuestions\(res, p\)/.test(game) && /depositsSimulate\(/.test(game),
+    'вопросы должны строиться из depositsSimulate');
+  // Нулевая разница с простыми процентами схлопывала три варианта ответа
+  // в один «0 ₽»: нужен заменяющий вопрос.
+  check('вопрос о разнице заменяется, когда разница равна нулю',
+    /id:'alt'/.test(game) && /useAlt/.test(game),
+    'при капитализации в конце срока разница 0, нужен другой вопрос');
+  // Вариантов ответа должно быть ровно три, иначе экран врёт или схлопывается.
+  check('в каждом вопросе ровно три варианта ответа',
+    /out\.length >= 3/.test(game) && /if\(used\.has\(label\)\) continue;/.test(game),
+    'нужен подбор отвлекающих вариантов без повторов');
+
+  // Оформление: свои классы, карточка вопроса остаётся общей.
+  check('диаграмма и таблица оформлены своими классами .deposit-*',
+    /\.deposit-total\{/.test(css) && /\.deposit-bar\{/.test(css) && /\.deposit-table\{/.test(css),
+    'ожидаются .deposit-total/.deposit-bar/.deposit-table в styles/app.css');
+  check('карточка вопроса проверки остаётся общей .card',
+    /<div class="card">/.test(html) && /id="depositsCheckAnswers"/.test(html)
+      && !/#depositsCheck[A-Za-z]*\s*\{[^}]*background/m.test(css),
+    'отдельный фон у карточки «Вкладов» сделает её чужеродной среди игр с вариантами ответа');
+
+  // Правила: расчёт учебный, не совет. Ставки в игре произвольные, и без
+  // оговорки «ставка 20%» читается как обещание доходности.
+  const rules = /<div class="modal-overlay" id="depositsRulesModal">([\s\S]*?)closeDepositsRulesBtn/.exec(html);
+  const rulesText = rules ? rules[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ') : '';
+  check('в правилах сказано, что это не финансовый совет',
+    /не финансовый совет/i.test(rulesText) && /не рекомендует/i.test(rulesText),
+    'ставки учебные: игрок не должен принять их за банковские');
+  check('в правилах перечислено, что расчёт не учитывает',
+    /налог/i.test(rulesText) && /инфляц/i.test(rulesText) && /страхован/i.test(rulesText),
+    'налоги, инфляция и страхование меняют итог — об этом обязано быть сказано');
+  check('в правилах объяснено, что делает капитализация',
+    /остаются на счёте|присоедин/i.test(rulesText) && /1 \+ ставка ÷ 12/.test(rulesText),
+    'правила должны объяснять саму механику, иначе игра ничему не учит');
+  check('в правилах сказано про пополнение в конце месяца',
+    /конце каждого месяца/.test(rulesText),
+    'порядок начисления влияет на итог и обязан быть описан');
+  check('в правилах названы все режимы капитализации',
+    ['ежемесячно', 'ежеквартально', 'ежегодно', 'в конце срока'].every(m => rulesText.includes(m)),
+    'все четыре режима доступны в игре и должны быть названы в правилах');
+  check('правила «Вкладов» доступны в общем хабе правил',
+    /depositsRulesModal/.test(read('games/fants-timer.js')),
+    'нет пункта в RULES_HUB — правила будут недостижимы из меню «Правила игр»');
+}
+
 // «Тест IQ» — обучающая игра, один тест на 30 заданий. Проверяем регистрацию,
 // оформление карточки в группе, и — главное — содержательную часть: у каждого
 // задания ровно один верный вариант, направлений ровно пять, уровни покрывают
@@ -4035,6 +4173,7 @@ function main() {
   checkFunTests(html, read('games/fants-timer.js'));
   checkTestHistoryExpand(html);
   checkBizTests(html, read('games/fants-timer.js'));
+  checkDeposits(html, read('games/fants-timer.js'));
   checkIqTest(html, read('games/fants-timer.js'));
   checkPauseResetOnStart();
   checkExitNavigation();

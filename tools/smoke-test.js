@@ -7072,6 +7072,260 @@ test('«Назад»: раздел, оставшийся от прошлой и�
   assert(openGameScreens().length === 0, 'игровых экранов после выхода остаться не должно');
 });
 
+
+console.log('\n=== «Вклады» ===');
+
+const depositsBackup = () => {
+  const saved = {};
+  ['depositsAmount', 'depositsRate', 'depositsYears', 'depositsCap', 'depositsTopUp',
+   'depositsResult', 'depositsIndex', 'depositsAnswers', 'inProgress', 'pausedMode'].forEach(k => { saved[k] = state[k]; });
+  return saved;
+};
+const depositsApply = (o) => {
+  state.depositsAmount = o.amount;
+  state.depositsRate = o.rate;
+  state.depositsYears = o.years;
+  state.depositsCap = o.cap;
+  state.depositsTopUp = o.topup;
+};
+const depositsActiveCount = () => document.querySelectorAll('.screen.active').length;
+
+test('«Вклады»: расчёт совпадает с формулой сложных процентов', () => {
+  // Ключевая проверка смысла игры: если формула врёт, игрок уйдёт с ложным
+  // пониманием сложных процентов. Сверяем с независимой формулой, а не с
+  // результатом самой функции: иначе проверка была бы tautологией.
+  const saved = depositsBackup();
+  try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    const res = depositsSimulate(depositsParams());
+    const formula = 100000 * Math.pow(1 + 0.12 / 12, 60);
+    assert(Math.abs(res.total - formula) < 0.01,
+      `ежемесячная капитализация: получено ${res.total}, по формуле ${formula}`);
+    depositsApply({ amount:100000, rate:12, years:5, cap:'year', topup:0 });
+    const yearly = depositsSimulate(depositsParams());
+    assert(Math.abs(yearly.total - 100000 * Math.pow(1.12, 5)) < 0.01,
+      `годовая капитализация: получено ${yearly.total}, по формуле ${100000 * Math.pow(1.12, 5)}`);
+    // «В конце срока» — ровно простые проценты: 100 000 × 1,6 = 160 000.
+    depositsApply({ amount:100000, rate:12, years:5, cap:'end', topup:0 });
+    const flat = depositsSimulate(depositsParams());
+    assert(Math.abs(flat.total - 160000) < 0.01,
+      `простые проценты должны дать 160 000, получено ${flat.total}`);
+    assert(flat.doublingYears === null,
+      'при выплате в конце срока удвоения нет — срок удвоения должен быть null');
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Вклады»: чем чаще капитализация и длиннее срок, тем больше итог', () => {
+  const saved = depositsBackup();
+  try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    const monthly = depositsSimulate(depositsParams()).total;
+    depositsApply({ amount:100000, rate:12, years:5, cap:'quarter', topup:0 });
+    const quarterly = depositsSimulate(depositsParams()).total;
+    depositsApply({ amount:100000, rate:12, years:5, cap:'year', topup:0 });
+    const yearly = depositsSimulate(depositsParams()).total;
+    depositsApply({ amount:100000, rate:12, years:5, cap:'end', topup:0 });
+    const flat = depositsSimulate(depositsParams()).total;
+    assert(monthly > quarterly && quarterly > yearly && yearly > flat,
+      `порядок должен быть month > quarter > year > end, получено ${monthly}, ${quarterly}, ${yearly}, ${flat}`);
+    // Главный эффект сложных процентов — расхождение на длинном сроке.
+    depositsApply({ amount:100000, rate:12, years:1, cap:'month', topup:0 });
+    const one = depositsSimulate(depositsParams());
+    depositsApply({ amount:100000, rate:12, years:20, cap:'month', topup:0 });
+    const twenty = depositsSimulate(depositsParams());
+    assert(twenty.extraFromCap > one.extraFromCap * 10,
+      `на 20 годах выигрыш капитализации должен быть кратно больше: 1 год — ${one.extraFromCap}, 20 лет — ${twenty.extraFromCap}`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Вклады»: срок удвоения в годах, а не в месяцах', () => {
+  // Регресс: ln(2)/ln(1+r/n) даёт число ПЕРИОДОВ, и без деления на n
+  // при ежемесячной капитализации 12% показывали 69,66 «года» вместо 5,8.
+  const saved = depositsBackup();
+  try {
+
+test('«Вклады»: у всех комбинаций настроек расчёт и вопросы корректны', () => {
+  // Сплошной прогон по всем 2000 сочетаниям: суммы не должны падать, вопросов
+  // должно быть ровно пять, а в каждом — три РАЗНЫХ варианта с одним верным.
+  // Именно на этом прогоне поймался баг: при выплате в конце срока разница с
+  // простыми процентами равна 0, и три варианта схлопывались в один «0 ₽».
+  const saved = depositsBackup();
+  const problems = [];
+  let combos = 0;
+  try {
+    for(const amount of DEPOSITS_AMOUNTS){
+      for(const rate of DEPOSITS_RATES){
+        for(const years of DEPOSITS_YEARS){
+          for(const cap of DEPOSITS_CAPS.map(c => c.id)){
+            for(const topup of DEPOSITS_TOPUPS){
+              depositsApply({ amount, rate, years, cap, topup });
+              const p = depositsParams();
+              const res = depositsSimulate(p);
+              combos++;
+              const tag = `${amount}/${rate}/${years}/${cap}/${topup}`;
+              if(!(res.total >= res.invested - 0.01)) problems.push(`${tag}: итог меньше вложенного`);
+              for(let i = 1; i < res.years.length; i++){
+                if(res.years[i].end < res.years[i - 1].end - 0.01) problems.push(`${tag}: сумма падает на ${i} году`);
+              }
+              const qs = depositsCheckQuestions(res, p);
+              if(qs.length !== 5) problems.push(`${tag}: вопросов ${qs.length}`);
+              for(const q of qs){
+                const opts = depositsCheckOptions(q);
+                if(opts.length !== 3) problems.push(`${tag}: у вопроса ${q.id} вариантов ${opts.length}`);
+                if(new Set(opts.map(o => o.label)).size !== opts.length) problems.push(`${tag}: у вопроса ${q.id} повторяющиеся варианты`);
+                if(opts.filter(o => o.correct).length !== 1) problems.push(`${tag}: у вопроса ${q.id} не один верный ответ`);
+                if(!depositsCheckHint(q, res, p)) problems.push(`${tag}: у вопроса ${q.id} нет пояснения`);
+              }
+            }
+          }
+        }
+      }
+    }
+  } finally {
+    Object.assign(state, saved);
+  }
+  assert(combos === 2000, `проверено сочетаний: ${combos}, ожидалось 2000`);
+  assert(problems.length === 0, problems.slice(0, 5).join('; '));
+});
+
+test('«Вклады»: верный ответ совпадает с расчётом, а при простых процентах — «никогда»', () => {
+  // Верный вариант должен быть числом из расчёта. Раньше в одном из вопросов
+  // при выплате в конце срока верным стояло «удвоится через 10 лет» — то есть
+  // ровно то, чего при простых процентах не бывает.
+  const saved = depositsBackup();
+  try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'end', topup:0 });
+    const p = depositsParams();
+    const res = depositsSimulate(p);
+    const doubling = depositsCheckQuestions(res, p).find(q => q.id === 'doubling');
+    assert(doubling.answer === null, 'при выплате в конце срока срок удвоения должен быть null');
+    const opts = depositsCheckOptions(doubling);
+    assert(opts.find(o => o.correct).label.includes('Никогда'),
+      `верным должен быть ответ «никогда», а не «${opts.find(o => o.correct).label}»`);
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    const p2 = depositsParams();
+    const res2 = depositsSimulate(p2);
+    const totalQ = depositsCheckQuestions(res2, p2).find(q => q.id === 'total');
+    const correct = depositsCheckOptions(totalQ).find(o => o.correct);
+    assert(correct.label === depositsMoney(Math.round(res2.total)),
+      `верный ответ должен совпадать с итогом расчёта: «${correct.label}» против ${depositsMoney(Math.round(res2.total))}`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Вклады»: правила говорят, что расчёт учебный и не совет', () => {
+  const rules = /<div class="modal-overlay" id="depositsRulesModal">[\s\S]*?closeDepositsRulesBtn/.exec(html)[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  assert(/не финансовый совет/i.test(rules), 'в правилах должно быть сказано, что это не финансовый совет');
+  assert(/не рекомендует/i.test(rules), 'в правилах должно быть сказано, что игра не советует вкладывать');
+  assert(/налог/i.test(rules) && /инфляц/i.test(rules) && /страхован/i.test(rules),
+    'в правилах должны быть названы налоги, инфляция и страхование — они меняют итог');
+  assert(/конце каждого месяца/.test(rules), 'порядок пополнения влияет на итог и должен быть описан');
+  ['ежемесячно', 'ежеквартально', 'ежегодно', 'в конце срока'].forEach(m => {
+    assert(rules.includes(m), `в правилах должен быть назван режим капитализации «${m}»`);
+  });
+  const hubHtml = document.getElementById('rulesHubList').innerHTML;
+  assert(hubHtml.includes('depositsRulesModal'), 'в хабе правил должен быть пункт «Вклады»');
+  assert(hubHtml.includes('Вклады'), 'пункт должен называться «Вклады»');
+
+test('«Вклады»: полный цикл — расчёт, проверка из 5 вопросов, итоги', () => {
+  const saved = depositsBackup();
+  const clear = () => document.querySelectorAll('.screen.active').forEach(el => el.classList.remove('active'));
+  try {
+    depositsApply({ amount:300000, rate:16, years:10, cap:'quarter', topup:10000 });
+    clear();
+    getElById(stub, 'depositsSetup').classList.add('active');
+    startDepositsGame();
+    const res = depositsSimulate(depositsParams());
+    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res.total, true),
+      'на экране должен быть итог того же расчёта, который пошёл в вопросы');
+    assert(getElById(stub, 'depositsCompare').textContent.includes('капитализация'),
+      'на экране должно быть сравнение с простыми процентами');
+    assert(getElById(stub, 'depositsBars').children.length === 10, 'в диаграмме должно быть 10 столбиков');
+    assert(getElById(stub, 'depositsTable').innerHTML.split('<tr>').length - 1 === 10,
+      'в таблице должно быть 10 строк по годам');
+
+    startDepositsCheck();
+    assert(getElById(stub, 'depositsCheck').classList.contains('active'), 'проверка должна открыться');
+    for(let i = 0; i < 5; i++){
+      const box = getElById(stub, 'depositsCheckAnswers');
+      assert(box.children.length === 3, `в вопросе ${i + 1} должно быть 3 варианта, а ${box.children.length}`);
+      const list = depositsCheckList();
+      const correct = depositsCheckOptions(list[i]).find(o => o.correct);
+      const btn = Array.from(box.children).find(b => b.textContent === correct.label);
+      assert(!!btn, `в вопросе ${i + 1} нет кнопки с верным ответом «${correct.label}»`);
+      btn.dispatchEvent({ type:'click' });
+      assert(state.depositsAnswers[i] === 1, `ответ ${i + 1} должен засчитаться верным`);
+      assert(getElById(stub, 'depositsCheckHint').textContent.length > 0, `после ответа ${i + 1} должно быть пояснение`);
+      nextDepositsCheck();
+    }
+    assert(getElById(stub, 'depositsSummary').classList.contains('active'), 'после пятого ответа должны открыться итоги');
+    assert(getElById(stub, 'depositsSummaryTitle').textContent.includes('5 из 5'),
+      `все ответы верны — ожидалось «5 из 5», получено «${getElById(stub, 'depositsSummaryTitle').textContent}»`);
+    exitDepositsSummary();
+    assert(getElById(stub, 'depositsSetup').classList.contains('active'), 'после итогов должен открыться экран настроек');
+    assert(state.inProgress === false, 'партия должна быть завершена');
+  } finally {
+    clear();
+    Object.assign(state, saved);
+  }
+});
+
+test('«Вклады»: «←» с проверки возвращает к расчёту, с расчёта — в настройки', () => {
+  const saved = depositsBackup();
+  const clear = () => document.querySelectorAll('.screen.active').forEach(el => el.classList.remove('active'));
+  const back = getElById(stub, 'globalBackBtn');
+  const press = () => { for(const { handler } of back._getHandlers().get('click')) handler({}); };
+  try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    // Регресс: раньше «←» с настроек вызывал goToDepositsSetup() и просто
+    // перерисовывал тот же экран — из игры было невозможно выйти.
+    clear();
+    getElById(stub, 'depositsSetup').classList.add('active');
+    press();
+    assert(!getElById(stub, 'depositsSetup').classList.contains('active'),
+      'стрелка «←» не должна оставлять экран настроек активным');
+    assert(getElById(stub, 'setup').classList.contains('active'), 'стрелка «←» с настроек должна вести в хаб');
+    // «←» с проверки возвращает к расчёту: расчёт не теряется.
+    clear();
+    startDepositsGame();
+    startDepositsCheck();
+    press();
+    assert(getElById(stub, 'depositsGame').classList.contains('active'),
+      'стрелка «←» с проверки должна вернуть к расчёту');
+    assert(depositsActiveCount() === 1, `активным должен остаться ровно один экран, а ${depositsActiveCount()}`);
+    // «←» с расчёта — в настройки игры (noPause + back в реестре).
+    clear();
+    getElById(stub, 'depositsGame').classList.add('active');
+    press();
+    assert(getElById(stub, 'depositsSetup').classList.contains('active'),
+      'стрелка «←» с расчёта должна открыть настройки игры');
+  } finally {
+    clear();
+    Object.assign(state, saved);
+  }
+});
+
+});
+
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    const res = depositsSimulate(depositsParams());
+    const approx72 = 72 / 12;
+    assert(res.doublingYears > approx72 * 0.8 && res.doublingYears < approx72 * 1.2,
+      `12% ежемесячно: удвоение около 6 лет (правило 72), получено ${res.doublingYears}`);
+    depositsApply({ amount:100000, rate:4, years:5, cap:'year', topup:0 });
+    const res4 = depositsSimulate(depositsParams());
+    assert(res4.doublingYears > 15 && res4.doublingYears < 21,
+      `4% ежегодно: удвоение около 18 лет, получено ${res4.doublingYears}`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
 tests.forEach(t => {
   name = t.name;
   try {

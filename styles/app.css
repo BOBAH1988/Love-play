@@ -4258,3 +4258,65 @@
   .menu-icon{
     font-size:15px; width:32px; min-width:32px; text-align:center; flex-shrink:0;
   }
+
+  /* ---- «Вклады» (games/deposits.js) ----
+     Свои классы с префиксом .deposit-*, чтобы оформление не зависело от
+     остальных игр. Палитра та же, что у раздела «Бизнес игры»: тёмный фон
+     страницы, светлый текст, акцент --accent. Карточка вопроса в «Проверке
+     себя» остаётся общей (.card/.znayu-answers) — отдельная выглядела бы
+     чужеродно рядом с остальными играми с вариантами ответа. */
+  .deposit-total-box{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:18px; padding:16px 14px; text-align:center; margin:10px 0 12px;
+  }
+  .deposit-total-label{ font-size:12px; color:#cba0bf; font-weight:600; }
+  .deposit-total{
+    font-size:clamp(28px, 9vw, 40px); font-weight:800; line-height:1.1;
+    margin:4px 0 8px; color:var(--gold); overflow-wrap:anywhere;
+  }
+  .deposit-sub{ font-size:13px; color:#e8c9dd; line-height:1.45; }
+  .deposit-sub + .deposit-sub{ margin-top:3px; }
+  .deposit-note{
+    font-size:13px; line-height:1.45; color:#e8c9dd; text-align:left;
+    background:rgba(255,255,255,.05); border-radius:12px;
+    padding:9px 12px; margin-bottom:8px;
+  }
+  /* Столбиковая диаграмма роста. Высота столбика задаётся из JS в процентах,
+     поэтому у колонки фиксированная высота, а сам столбик растёт снизу вверх.
+     min-width нужен, чтобы при 20 годах столбики не слиплись в полоску. */
+  .deposit-bars{
+    display:flex; align-items:flex-end; gap:4px;
+    height:120px; padding:8px 6px 0;
+    background:rgba(255,255,255,.05); border-radius:12px;
+  }
+  .deposit-bar-col{
+    flex:1 1 0; min-width:0; height:100%;
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+  }
+  .deposit-bar{
+    width:100%; max-width:26px; border-radius:6px 6px 0 0;
+    background:linear-gradient(180deg, #ffd27a, #ff9f5e);
+  }
+  .deposit-bar-year{
+    font-size:10px; color:#cba0bf; margin-top:4px; line-height:1;
+    white-space:nowrap; overflow:hidden;
+  }
+  .deposit-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .deposit-table th, .deposit-table td{
+    padding:7px 6px; text-align:right; border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .deposit-table th{ color:#cba0bf; font-size:11px; font-weight:700; }
+  .deposit-table td:first-child, .deposit-table th:first-child{ text-align:left; }
+  .deposit-table td b{ color:var(--gold); }
+  /* Подсказка «почему такой ответ» — внутри светлой карточки, поэтому тёмный
+     текст: тот же приём, что у .znayu-question-text на белой карточке. */
+  .deposit-hint{
+    font-size:13px; line-height:1.45; color:#5c3a52; text-align:left;
+    margin-top:10px; padding:9px 11px; border-radius:10px; background:rgba(43,15,46,.07);
+  }
+  .deposit-disclaimer{
+    font-size:11px; line-height:1.45; color:#cba0bf; text-align:left;
+    margin:12px 0 4px; padding:9px 12px; border-radius:10px;
+    border:1px dashed rgba(255,255,255,.2);
+  }
+

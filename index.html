@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261026a">
+<link rel="stylesheet" href="styles/app.css?v=20261030a">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-30 · v577';
+  window.APP_BUILD = '2026-10-30 · v578';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v577</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v578</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -452,6 +452,7 @@
           <button type="button" class="btn btn-menu-item" id="gameShopBtn"><span class="menu-icon">🛍️</span> Магазин</button>
           <button type="button" class="btn btn-menu-item" id="gameBizObserverBtn"><span class="menu-icon">🔍</span> Оцени бизнес</button>
           <button type="button" class="btn btn-menu-item" id="gameBizTestsBtn"><span class="menu-icon">🏢</span> Бизнес тесты</button>
+          <button type="button" class="btn btn-menu-item" id="gameDepositsBtn"><span class="menu-icon">🏦</span> Вклады</button>
         </div>
       </div>
 
@@ -3893,6 +3894,32 @@
     </div>
   </div>
 
+  <!-- ===== ПРАВИЛА "ВКЛАДЫ" ===== -->
+  <!-- 📍 логика: games/deposits.js -->
+  <div class="modal-overlay" id="depositsRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">🏦 Правила игры «Вклады»</div>
+      <div class="intro-text">Симулятор вклада с капитализацией процентов. Задайте сумму, ставку, срок, капитализацию и ежемесячное пополнение — и увидите, как растут деньги по годам, чем сложные проценты отличаются от простых и через какой срок сумма удвоится.</div>
+      <ol class="modal-rules">
+        <li>На экране настройки выберите пять условий: <b>сумму вклада</b> (50 000 — 1 000 000 ₽), <b>ставку в год</b> (4–20%), <b>срок</b> (1–20 лет), <b>капитализацию</b> и <b>пополнение в месяц</b>. Нажмите «Рассчитать».</li>
+        <li>На экране расчёта будет итоговая сумма, сколько из неё начислено процентами и сколько вы вложили всего. Ниже — сравнение с простыми процентами, эффективная годовая ставка, срок удвоения, столбиковая диаграмма и таблица по годам.</li>
+        <li><b>Главное, ради чего игра и сделана:</b> при капитализации проценты каждый раз начисляются уже на сумму ВМЕСТЕ с процентами. Поэтому при длинном сроке разрыв с простыми процентами становится огромным. Сравните вклад на 1 год и на 20 лет при одной и той же ставке.</li>
+        <li>«Проверить себя» — пять вопросов о вашем же расчёте. Отвечайте по таблице, а не на глаз: после ответа показывается верный вариант и объяснение, как получился этот ответ.</li>
+        <li>Настройки можно менять сколько угодно: «В меню» возвращает к выбору условий, «К расчёту» — обратно к таблице. Стрелка «←» работает так же.</li>
+        <li><b>Что расчёт НЕ учитывает</b> (и почему это важно понимать): <b>налоги</b> с процентов по вкладам, <b>инфляцию</b> (реальная покупательная способность денег ниже, чем показывает сумма), <b>страхование вкладов</b> и лимит АСВ 1,4 млн ₽, а также <b>фиксированность ставки</b> — в жизни ставки меняются и вклады продлевают. Всё это меняет итог, поэтому считать вклад «в вакууме» можно только ради понимания самой механики процентов.</li>
+        <li><b>Это не финансовый совет.</b> Ставки в игре учебные, они не являются ставками какого-либо банка. Игра не рекомендует вкладывать деньги и не обещает доходность.</li>
+      </ol>
+      <div class="intro-text" style="margin-top:14px;"><b>Как считается</b></div>
+      <ul class="modal-rules">
+        <li>Каждый месяц сумма умножается на <b>1 + ставка ÷ 12</b>. Дальше всё зависит от капитализации: <b>ежемесячно</b> — проценты присоединяются каждый месяц, <b>ежеквартально</b> — раз в три месяца, <b>ежегодно</b> — раз в год, а при выплате <b>в конце срока</b> проценты к сумме не присоединяются до самого конца.</li>
+        <li>Пополнение вносится в конце каждого месяца, и проценты за этот месяц на него уже не начисляются — так считают почти все банковские калькуляторы.</li>
+        <li>Срок удвоения считается по формуле ln(2) ÷ ln(1 + ставка ÷ n), где n — число капитализаций в год. Ориентир «правило 72»: срок удвоения примерно равен 72 ÷ ставка в процентах.</li>
+      </ul>
+      <button class="btn btn-primary" id="closeDepositsRulesBtn">Понятно</button>
+    </div>
+  </div>
+
+
   <!-- ===== ПРАВИЛА "ТЕСТ IQ" ===== -->
   <div class="modal-overlay" id="iqTestRulesModal">
     <div class="modal-card">
@@ -4046,6 +4073,149 @@
     <div class="pmap-history-wrap" id="bizTestsHistoryList"></div>
     <button class="btn btn-secondary" id="bizTestsHistoryExitBtn" style="margin-top:10px;">Назад</button>
   </section>
+  <!-- ===== ВКЛАДЫ: НАСТРОЙКА ===== -->
+  <!-- 📍 логика: games/deposits.js | расчёт по формуле, колода карточек не нужна -->
+  <section id="depositsSetup" class="screen">
+    <h1 class="title">🏦 Вклады</h1>
+    <div class="subtitle">Симулятор вклада: посмотрите, как сложные проценты превращают сумму в деньги, и за какой срок сколько накопитcя</div>
+
+    <div class="field">
+      <label>Сумма вклада</label>
+      <div class="starter-group starter-group-2" id="depositsAmountGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="50000">50 000 ₽</button>
+        <button type="button" class="starter-btn mode-btn" data-value="100000">100 000 ₽</button>
+        <button type="button" class="starter-btn mode-btn" data-value="300000">300 000 ₽</button>
+        <button type="button" class="starter-btn mode-btn" data-value="1000000">1 000 000 ₽</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Ставка в год</label>
+      <div class="starter-group" id="depositsRateGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="4">4%</button>
+        <button type="button" class="starter-btn mode-btn" data-value="8">8%</button>
+        <button type="button" class="starter-btn mode-btn" data-value="12">12%</button>
+        <button type="button" class="starter-btn mode-btn" data-value="16">16%</button>
+        <button type="button" class="starter-btn mode-btn" data-value="20">20%</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Срок</label>
+      <div class="starter-group" id="depositsYearsGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="1">1 год</button>
+        <button type="button" class="starter-btn mode-btn" data-value="3">3 года</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5">5 лет</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10">10 лет</button>
+        <button type="button" class="starter-btn mode-btn" data-value="20">20 лет</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Капитализация процентов</label>
+      <div class="starter-group starter-group-2" id="depositsCapGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="month">ежемесячно</button>
+        <button type="button" class="starter-btn mode-btn" data-value="quarter">ежеквартально</button>
+        <button type="button" class="starter-btn mode-btn" data-value="year">ежегодно</button>
+        <button type="button" class="starter-btn mode-btn" data-value="end">в конце срока</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Пополнение в месяц</label>
+      <div class="starter-group" id="depositsTopUpGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="0">не пополнять</button>
+        <button type="button" class="starter-btn mode-btn" data-value="5000">5 000 ₽</button>
+        <button type="button" class="starter-btn mode-btn" data-value="10000">10 000 ₽</button>
+        <button type="button" class="starter-btn mode-btn" data-value="25000">25 000 ₽</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="depositsStartBtn">Рассчитать</button>
+
+    <button class="btn btn-secondary" id="depositsSetupExitBtn" style="margin-top:10px;">Выход</button>
+
+  <!-- ===== ВКЛАДЫ: РАСЧЁТ ===== -->
+  <!-- 📍 логика: games/deposits.js -->
+  <section id="depositsGame" class="screen">
+    <div class="game-level-label">🏦 Вклады</div>
+
+    <div class="deposit-total-box">
+      <div class="deposit-total-label">На счёте в конце срока</div>
+      <div class="deposit-total" id="depositsTotal">—</div>
+      <div class="deposit-sub" id="depositsInvested">—</div>
+      <div class="deposit-sub" id="depositsProfit">—</div>
+    </div>
+
+    <div class="deposit-note" id="depositsCompare">—</div>
+    <div class="deposit-note" id="depositsEffective">—</div>
+    <div class="deposit-note" id="depositsDoubling">—</div>
+
+    <div class="field">
+      <label>Как растёт сумма</label>
+      <div class="deposit-bars" id="depositsBars"></div>
+    </div>
+
+    <div class="field">
+      <label>По годам</label>
+      <table class="deposit-table">
+        <thead>
+          <tr><th>Срок</th><th>Начислено</th><th>На счёте</th></tr>
+        </thead>
+        <tbody id="depositsTable"></tbody>
+      </table>
+    </div>
+
+    <div class="deposit-disclaimer">Расчёт учебный: ставки взяты произвольно, налоги, инфляция и страхование вкладов не учтены. Это не совет, куда вложить деньги.</div>
+
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-primary" id="depositsCheckStartBtn">Проверить себя</button>
+    </div>
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-secondary btn-pause" id="depositsGameExitBtn">Выход</button>
+    </div>
+  </section>
+
+  <!-- ===== ВКЛАДЫ: ПРОВЕРКА СЕБЯ ===== -->
+  <!-- 📍 логика: games/deposits.js -->
+  <section id="depositsCheck" class="screen">
+    <div class="game-level-label">🏦 Вклады: проверка</div>
+    <div class="wishlist-progress-row" id="depositsCheckProgressRow">
+      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="depositsCheckFill"></div></div>
+      <div class="wishlist-progress-label" id="depositsCheckLabel">Вопрос 1 / 5</div>
+    </div>
+
+    <div class="card-area">
+      <div class="card">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="znayu-question-text" id="depositsCheckText">Загрузка…</div>
+            <div class="deposit-hint" id="depositsCheckHint" style="display:none"></div>
+          </div>
+          <div class="znayu-answers" id="depositsCheckAnswers"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-primary" id="depositsCheckNextBtn" style="display:none;">Дальше</button>
+    </div>
+    <div class="quiz-pause-row">
+      <button type="button" class="btn btn-secondary btn-pause" id="depositsCheckBackBtn">К расчёту</button>
+    </div>
+  </section>
+
+  <!-- ===== ВКЛАДЫ: ИТОГИ ПРОВЕРКИ ===== -->
+  <!-- 📍 логика: games/deposits.js -->
+  <section id="depositsSummary" class="screen">
+    <h1 class="title" id="depositsSummaryTitle">🏦 Вклады: 0 из 5</h1>
+    <div class="biz-test-result" id="depositsSummaryList"></div>
+    <div class="intro-text" id="depositsSummaryNote"></div>
+    <button class="btn btn-primary" id="depositsSummaryExitBtn" style="margin-top:10px;">В меню</button>
+  </section>
+
+  </section>
+
 
   <!-- ===== ВЕСЁЛЫЕ ТЕСТЫ: НАСТРОЙКА ===== -->
   <!-- 📍 логика: games/fun-tests.js | вопросы: cards/cards_fun_tests.js -->
@@ -5037,18 +5207,18 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20261022y"></script>
 <script src="cards/capitals.js?v=20261022y"></script>
-<script src="games/core.js?v=20261026a"></script>
+<script src="games/core.js?v=20261030a"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
       <script src="games/fants-video.js?v=20261002f"></script>
 <script src="games/fants-davay.js?v=20260925a"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20261025e"></script>
+<script src="games/fants-timer.js?v=20261030a"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
-<script src="games/game-registry.js?v=20261025d"></script>
+<script src="games/game-registry.js?v=20261030a"></script>
 <!-- Локальная статистика: считает партии на этом устройстве, никуда не отправляет -->
 <script src="games/stats.js?v=20260929a"></script>
 <script src="games/twister.js?v=20260921j"></script>
@@ -5096,6 +5266,7 @@
 <script src="games/solo-test.js?v=20261025b"></script>
 <script src="games/fun-tests.js?v=20261025b"></script>
 <script src="games/biz-tests.js?v=20261025a"></script>
+<script src="games/deposits.js?v=20261002a"></script>
 <script src="games/iq-test.js?v=20261026a"></script>
 <script src="games/know-more.js?v=20261024n"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
