@@ -134,6 +134,55 @@ function checkMarkup(html) {
     `несбалансированы: ${broken.join(', ')}`
   );
 
+  // Баланс <div> не спасает от потерянного </section>: вложенный <section>
+  // внутри другого остаётся «внутри» секции, её собственная разметка при этом
+  // может быть сбалансирована. А последствие ровно «пустой экран»: внешняя
+  // секция скрыта (.screen{display:none}), и нажатие переключает класс
+  // active на ВНУТРЕННЕЙ, которая вместе с родителем не отображается —
+  // класс есть, а видимой разметки нет. Именно так сломался «Вклады»:
+  // </section> после экрана настроек потерялся, и три экрана оказались
+  // внутри #depositsSetup. Ни одна из проверок этого не видела: баланс <div>
+  // сходился, id уникальны, реестр и SECTION_FOR_SCREEN в порядке.
+  const nestedSections = [];
+  {
+    const VOID = new Set(['br', 'img', 'input', 'meta', 'link', 'hr', 'source']);
+    const stack = [];
+    const tagRe = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)>/g;
+    let m;
+    while ((m = tagRe.exec(html)) !== null) {
+      const [full, slash, tag, attrs] = m;
+      if (VOID.has(tag.toLowerCase()) || full.endsWith('/>')) continue;
+      const idMatch = /id="([^"]+)"/.exec(attrs || '');
+      if (slash) {
+        for (let i = stack.length - 1; i >= 0; i--) {
+          if (stack[i].tag === tag.toLowerCase()) { stack.length = i; break; }
+        }
+      } else {
+        const lname = tag.toLowerCase();
+        const openSection = stack.filter(s => s.tag === 'section').pop();
+        if (lname === 'section' && openSection) {
+          nestedSections.push(`#${(idMatch && idMatch[1]) || '?'} внутри #${openSection.id}`);
+        }
+        stack.push({ tag: lname, id: (idMatch && idMatch[1]) || '' });
+      }
+    }
+  }
+  check(
+    'экраны не вложены друг в друга',
+    nestedSections.length === 0,
+    `вложенный экран не виден: его родитель скрыт (.screen{display:none}). Вложены: ${nestedSections.join(', ')}`
+  );
+
+  // Отдельная проверка баланса </section>: их счётчик ловит пропажу тега
+  // напрямую, даже если разметка внутри случайно сойдётся.
+  const secOpen = (html.match(/<section\b/g) || []).length;
+  const secClose = (html.match(/<\/section>/g) || []).length;
+  check(
+    `баланс <section> во всём файле (${secOpen}/${secClose})`,
+    secOpen === secClose,
+    `закрывающих </section> на ${secClose - secOpen} меньше, чем открывающих: потерян тег, и следующие экраны окажутся вложены в предыдущий`
+  );
+
   // ─── Обработчики вешаются только на существующие элементы ─────────────
   // `document.getElementById('x').addEventListener(...)` на отсутствующем
   // элементе роняет ВЕСЬ модуль: скрипт выполняется по порядку, исключение
