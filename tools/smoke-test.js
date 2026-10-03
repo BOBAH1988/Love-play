@@ -7484,6 +7484,71 @@ test('«Вклады»: под итогом показан срок, на кот
   }
 });
 
+test('«Вклады»: налог считается с превышения над необлагаемым минимумом', () => {
+  // По ст. 214.2 НК РФ облагается не весь процентный доход, а превышение
+  // над максимумом(ключевая ставка, 12,5%) от суммы вкладов.
+  const saved = depositsBackup();
+  try {
+    // 100 000 ₽ под 14% дают минимум 14 000 ₽.
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    const res = depositsSimulate(depositsParams());
+    assert(Math.abs(res.invested - 100000) < 0.01, `вложено должно быть 100 000, получено ${res.invested}`);
+    const expectedExempt = 100000 * 0.14;
+    const t = depositsTax(res);
+    assert(Math.abs(t.exempt - expectedExempt) < 0.01,
+      `необлагаемый минимум должен быть 14% от вклада (${expectedExempt}), получено ${t.exempt}`);
+    assert(Math.abs(t.taxable - (res.profit - expectedExempt)) < 0.01,
+      `облагаемый доход должен быть проценты минус минимум, получено ${t.taxable}`);
+    assert(Math.abs(t.tax - t.taxable * 0.13) < 0.01,
+      `при доходе до 2,4 млн ставка 13%: ожидалось ${t.taxable * 0.13}, получено ${t.tax}`);
+    assert(t.tax > 0, 'на 5 годах под 12% налог должен быть');
+    // Мало процентов — налога нет вовсе, а не минусовой.
+    depositsApply({ amount:100000, rate:5, years:1, cap:'month', topup:0 });
+    const small = depositsSimulate(depositsParams());
+    const t2 = depositsTax(small);
+    assert(t2.tax === 0, `при 5% на год налога быть не должно, получено ${t2.tax}`);
+    assert(t2.taxable === 0, 'облагаемый доход не может быть отрицательным');
+    // Ставка 15% включается с части свыше 2,4 млн.
+    depositsApply({ amount:5000000, rate:30, years:30, cap:'month', topup:0 });
+    const big = depositsSimulate(depositsParams());
+    const t3 = depositsTax(big);
+    assert(t3.taxable > 2_400_000, `нужен доход свыше 2,4 млн для проверки 15%, получено ${t3.taxable}`);
+    const expectedBig = 2_400_000 * 0.13 + (t3.taxable - 2_400_000) * 0.15;
+    assert(Math.abs(t3.tax - expectedBig) < 0.01,
+      `шкала 13%/15% даёт ${expectedBig}, получено ${t3.tax}`);
+    assert(t3.rate === 15, 'при доходе свыше 2,4 млн должна применяться ставка 15%');
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Вклады»: инфляция показывает, во сколько обесценится итог', () => {
+  const saved = depositsBackup();
+  try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    const res = depositsSimulate(depositsParams());
+    const infl = depositsInflationLoss(res);
+    // Потери ровно total − total/(1+инфляция)^years.
+    const expectedLoss = res.total - res.total / Math.pow(1.063, 5);
+    assert(Math.abs(infl.loss - expectedLoss) < 0.01,
+      `потери от инфляции: ожидалось ${expectedLoss}, получено ${infl.loss}`);
+    assert(infl.loss > 0 && infl.loss < res.total, 'инфляция должна «съесть» часть итога, но не весь');
+    assert(Math.abs(infl.realValue + infl.loss - res.total) < 0.01,
+      'реальная стоимость и потери должны в сумме давать итог');
+    // Инфляция затрагивает только покупательную способность: сумма на счёте
+    // от неё не меняется, поэтому итог не должен «подстричься».
+    assert(res.total > infl.realValue, 'реальная стоимость должна быть ниже номинального итога');
+    // На длинном сроке потери растут.
+    depositsApply({ amount:100000, rate:12, years:20, cap:'month', topup:0 });
+    const long = depositsSimulate(depositsParams());
+    assert(depositsInflationLoss(long).loss > infl.loss, 'на 20 годах потери от инфляции должны быть больше');
+    assert(depositsRuNum(6.3) === '6,3', `проценты пишутся с запятой, получено «${depositsRuNum(6.3)}»`);
+    assert(depositsRuNum(14) === '14', `целое без запятой, получено «${depositsRuNum(14)}»`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
 test('«Вклады»: полный цикл — настройки, расчёт, выход', () => {
   const saved = depositsBackup();
   const clear = () => document.querySelectorAll('.screen.active').forEach(el => el.classList.remove('active'));
