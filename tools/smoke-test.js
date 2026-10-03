@@ -7464,6 +7464,63 @@ test('«Вклады»: ползунки меняют настройки, под
   }
 });
 
+test('«Вклады»: заключение трёхстепенное — рост, накопление или убыток', () => {
+  // Аналитическая логика: ориентир — реальная ставка ЦБ (ключевая минус
+  // инфляция). Вклад, который её бьёт, увеличивает капитал; вклад, который
+  // лишь покрывает инфляцию, — накопление; ниже нуля — убыток. Двухстепенное
+  // «плюс/минус» теряло половину вывода.
+  const saved = depositsBackup();
+  try {
+    state.depositsServices = [];
+    const bench = Math.max(DEPOSITS_RU.keyRate, DEPOSITS_RU.exemptFloor) - DEPOSITS_RU.inflation;
+    assert(Math.abs(bench - 7.7) < 0.01, `ориентир должен быть 7,7% (14 − 6,3), получено ${bench}`);
+    const levelOf = (rate, years) => {
+      depositsApply({ amount:100000, rate, years, cap:'month', topup:0 });
+      return depositsVerdict(depositsSimulate(depositsParams()),
+        depositsTax(depositsSimulate(depositsParams())),
+        depositsServicesCost(depositsParams())).level;
+    };
+    // Ниже инфляции даже без налога — убыток.
+    assert(levelOf(4, 5) === 'bad', '4% против инфляции 6,3% — убыток');
+    assert(levelOf(8, 5) === 'save', '8% при реальной ставке ЦБ 7,7% — накопление');
+    assert(levelOf(20, 5) === 'grow', '20% заметно выше ориентира — рост капитала');
+    assert(levelOf(20, 1) === 'grow', '20% даже за год дают реальные 13,7% — выше ориентира 7,7%');
+    assert(levelOf(10, 1) === 'save', '10% за год дают реальные 3,9% — ниже ориентира, это накопление');
+    // Услуги уменьшают выгоду и могут опустить уровень, но не могут его улучшить.
+    depositsApply({ amount:100000, rate:20, years:5, cap:'month', topup:0 });
+    const vBefore = depositsVerdict(depositsSimulate(depositsParams()),
+      depositsTax(depositsSimulate(depositsParams())), depositsServicesCost(depositsParams()));
+    state.depositsServices = ['insurance', 'sms', 'premium', 'auto'];
+    const vAfter = depositsVerdict(depositsSimulate(depositsParams()),
+      depositsTax(depositsSimulate(depositsParams())), depositsServicesCost(depositsParams()));
+    assert(vAfter.realGain < vBefore.realGain, 'услуги должны уменьшать реальную выгоду');
+    assert(vAfter.realRate < vBefore.realRate, 'услуги должны уменьшать реальную доходность');
+    const order = { bad:0, save:1, grow:2 };
+    assert(order[vAfter.level] <= order[vBefore.level],
+      `услуги не могут улучшить уровень: было «${vBefore.level}», стало «${vAfter.level}»`);
+    // На экране: цвет и текст соответствуют уровню.
+    state.depositsServices = [];
+    renderDepositsResult();
+    const box = getElById(stub, 'depositsVerdict');
+    assert(box.classList.contains('grow'), `на 20% должен быть класс .grow, получено «${box.className}»`);
+    assert(getElById(stub, 'depositsVerdictMain').textContent.includes('увеличения дохода'),
+      'вывод должен называть увеличение дохода');
+    depositsApply({ amount:100000, rate:10, years:5, cap:'month', topup:0 });
+    renderDepositsResult();
+    assert(box.classList.contains('save'), 'на 10% должен быть класс .save');
+    assert(getElById(stub, 'depositsVerdictMain').textContent.includes('накопления'),
+      'вывод должен называть накопление');
+    depositsApply({ amount:100000, rate:4, years:5, cap:'end', topup:0 });
+    renderDepositsResult();
+    assert(box.classList.contains('bad'), 'на 4% должен быть класс .bad');
+    assert(!box.classList.contains('grow') && !box.classList.contains('save'),
+      'классы уровней не должны накладываться');
+  } finally {
+    Object.assign(state, saved);
+    renderDepositsSetup();
+  }
+});
+
 test('«Вклады»: под итогом показан срок, на который считалось', () => {
   // Строка со сроком обязана показывать ФАКТИЧЕСКОЕ число месяцев из
   // расчёта, а не заданный p.years: для дробного срока они расходятся
@@ -7726,15 +7783,15 @@ test('«Вклады»: вердикт считает реальную дохо�
     startDepositsGame();
     const main = getElById(stub, 'depositsVerdictMain');
     const note = getElById(stub, 'depositsVerdictNote');
-    assert(/имеет смысл/.test(main.textContent), `строка вывода должна быть заполнена, получено «${main.textContent}»`);
-    assert(/после налога, инфляции/.test(note.textContent), `строка пояснения должна быть заполнена, получено «${note.textContent}»`);
+    assert(/смысл/.test(main.textContent), `строка вывода должна быть заполнена, получено «${main.textContent}»`);
+    assert(note.textContent.length > 0, 'строка пояснения должна быть заполнена');
     depositsApply({ amount:100000, rate:4, years:5, cap:'end', topup:0 });
     renderDepositsResult();
-    assert(getElById(stub, 'depositsVerdictMain').textContent.includes('не имеет смысла'),
+    assert(getElById(stub, 'depositsVerdictMain').textContent.includes('Не имеет смысла'),
       'проигрышный вклад должен называться бессмысленным');
     const badBox = getElById(stub, 'depositsVerdict');
-    assert(badBox.classList.contains('bad') && !badBox.classList.contains('good'),
-      'проигрышный вердикт должен быть помечен классом .bad');
+    assert(badBox.classList.contains('bad') && !badBox.classList.contains('grow') && !badBox.classList.contains('save'),
+      'проигрышный вердикт должен быть помечен только классом .bad');
   } finally {
     Object.assign(state, saved);
     renderDepositsSetup();

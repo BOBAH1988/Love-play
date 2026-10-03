@@ -322,7 +322,20 @@ function depositsVerdict(res, tax, services){
   const factor = Math.pow(1 + DEPOSITS_RU.inflation / 100, res.months / 12);
   const realTotal = net / factor;
   const realGain = realTotal - res.invested;
+  // Ориентир для шкалы — реальная ставка Банка России: ключевая ставка минус
+  // инфляция. Это то, что даёт безрисковая альтернатива (депозит в ЦБ). Вклад,
+  // который её бьёт, действительно увеличивает капитал; вклад, который лишь
+  // покрывает инфляцию, — это накопление, а не рост.
+  const benchmark = Math.max(DEPOSITS_RU.keyRate, DEPOSITS_RU.exemptFloor) - DEPOSITS_RU.inflation;
+  const realRate = res.invested > 0
+    ? (Math.pow(Math.max(realTotal, 0) / res.invested, 12 / res.months) - 1) * 100
+    : 0;
+  // Три исхода вместо двух: «просто не убыток» и «заметный рост» — это разные
+  // вещи, и сводить их к одному «плюс/минус» значило терять половину вывода.
+  const level = realRate < 0 ? 'bad' : (realRate >= benchmark ? 'grow' : 'save');
   return {
+    level,
+    benchmark,
     profit: realGain >= 0,
     // gain — модуль для подписи («плюс 27 368 ₽» / «минус 12 162 ₽»), а
     // realGain со знаком — для расчётов: при убытке модуль РАСТЁТ вместе с
@@ -331,11 +344,8 @@ function depositsVerdict(res, tax, services){
     realGain,
     realTotal,
     net,
-    // Реальная годовая доходность «после всего» — ею удобнее объяснять
-    // вердикт: сравнение ставки с инфляцией плюс издержки.
-    realRate: res.invested > 0
-      ? (Math.pow(Math.max(realTotal, 0) / res.invested, 12 / res.months) - 1) * 100
-      : 0,
+    // Реальная годовая доходность «после всего» — ею объясняется вердикт.
+    realRate,
   };
 }
 
@@ -587,20 +597,34 @@ function renderDepositsResult(){
   const verdictBox = document.getElementById('depositsVerdict');
   if(verdictBox){
     const rate = `${depositsRuNum(verdict.realRate)}% в год`;
+    const bench = `${depositsRuNum(verdict.benchmark)}%`;
     const verdictMain = document.getElementById('depositsVerdictMain');
-    if(verdictMain){
-      verdictMain.textContent = verdict.profit
-        ? `Вклад имеет смысл: реальный плюс ${depositsMoney(verdict.gain)} (${rate})`
-        : `Вклад не имеет смысла: минус ${depositsMoney(verdict.gain)} (${rate})`;
-    }
-    // Пояснение одинаковое для обоих исходов: вычеты те же, различается
-    // только знак результата.
     const verdictNote = document.getElementById('depositsVerdictNote');
-    if(verdictNote){
-      verdictNote.textContent = 'после налога, инфляции и других услуг';
-    }
-    verdictBox.classList.toggle('good', verdict.profit);
-    verdictBox.classList.toggle('bad', !verdict.profit);
+    // Три заключения, а не два. «Просто не убыток» и «заметный рост» —
+    // разные вещи: вклад под 12% при инфляции 6,3% честно работает, но это
+    // накопление, а не увеличение дохода. Сводить оба к «имеет смысл» значило
+    // терять половину вывода и подталкивать к вкладу, который проигрывает
+    // безрисковой альтернативе.
+    const VERDICT_TEXT = {
+      grow: {
+        main: `Имеет смысл для увеличения дохода: +${depositsMoney(verdict.gain)} (${rate})`,
+        note: `выше реальной ставки ЦБ ${bench} — капитал растёт заметно`,
+      },
+      save: {
+        main: `Имеет смысл для накопления: +${depositsMoney(verdict.gain)} (${rate})`,
+        note: 'прирост скромный, но он покрывает инфляцию, налоги и услуги',
+      },
+      bad: {
+        main: `Не имеет смысла: −${depositsMoney(verdict.gain)} (${rate})`,
+        note: 'инфляция и налог съедают больше, чем капает',
+      },
+    };
+    const text = VERDICT_TEXT[verdict.level] || VERDICT_TEXT.bad;
+    if(verdictMain) verdictMain.textContent = text.main;
+    if(verdictNote) verdictNote.textContent = text.note;
+    verdictBox.classList.toggle('grow', verdict.level === 'grow');
+    verdictBox.classList.toggle('save', verdict.level === 'save');
+    verdictBox.classList.toggle('bad', verdict.level === 'bad');
   }
   // Инфляция за срок: итог в ценах начала вклада.
   const infl = depositsInflationLoss(res);

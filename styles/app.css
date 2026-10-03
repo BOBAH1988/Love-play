@@ -4417,7 +4417,12 @@
     font-size:12px; line-height:1.35; text-align:left;
     border:1px solid transparent;
   }
-  .deposit-verdict.good{ background:rgba(76,201,100,.16); border-color:rgba(76,201,100,.5); color:#d6f7e1; }
+  /* Три состояния — по трём исходам. Зелёный — капитал заметно растёт,
+     золотой — деньги работают, но скромно (вклад держит инфляцию и не даёт
+     упустить рост), красный — деньги тают. Золото взято из палитры проекта
+     (--gold), чтобы не вводить четвёртый цвет ради одного блока. */
+  .deposit-verdict.grow{ background:rgba(76,201,100,.16); border-color:rgba(76,201,100,.5); color:#d6f7e1; }
+  .deposit-verdict.save{ background:rgba(255,210,122,.14); border-color:rgba(255,210,122,.45); color:#ffe9c2; }
   .deposit-verdict.bad{ background:rgba(255,99,110,.16); border-color:rgba(255,99,110,.5); color:#ffd4d9; }
   /* Вердикт разделён на вывод и пояснение: вывод жирный, пояснение мельче и
      приглушённее — чтобы взгляд цеплялся за ответ, а условия читались после.
