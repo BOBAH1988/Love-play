@@ -50,6 +50,18 @@ const BIZ_LOCATIONS = {
   park:    { name: 'В парке', icon: '🌳', rentPerHour: 6, hint: 'По выходным сюда приходят гулять семьями', perHour: 2.8, demand: { hot: 1.0, normal: 0.9, rain: 0.75 }, weekdayMult: 0.8, weekendMult: 1.3 },
   beach:   { name: 'На пляже', icon: '🏖️', rentPerHour: 18, hint: 'Отлично в жару, но пусто в дождь', perHour: 2.5, demand: { hot: 1.5, normal: 1.0, rain: 0.3 }, weekdayMult: 0.9, weekendMult: 1.2 },
 };
+// Словесная шкала людности места вместо чисел: игрок выбирает интуитивно, по
+// ощущениям, а не по готовому расчёту. Уровень места — его доля от самого
+// людного места при сегодняшней погоде и дне недели (событие, часы и развитие
+// одинаковы для всех мест и на сравнение не влияют). Пороги подобраны так,
+// чтобы в обычный день места различались по уровню, а не сливались в одно.
+const BIZ_CROWD_WORDS = [
+  { min: 0.92, word: 'очень людно' },
+  { min: 0.75, word: 'людно' },
+  { min: 0.55, word: 'средне' },
+  { min: 0.35, word: 'малолюдно' },
+  { min: 0,    word: 'почти пусто' },
+];
 const BIZ_WEATHERS = [
   { key: 'hot', icon: '☀️', name: 'Жара' },
   { key: 'normal', icon: '🌤️', name: 'Обычная погода' },
@@ -341,11 +353,10 @@ function updateBizContextBar(){
   const ev = bizEventInfo();
   if(ev) chips.push(`${ev.icon} Событие`);
   if(state.businessLemonadeHours) chips.push(`⏰ ${state.businessLemonadeHours} ч`);
-  // Прогноз потока людей виден на всех шагах: именно он объясняет, почему
-  // в одном месте продаётся больше, а в другом меньше.
+  // Точное число прохожих скрыто: вместо него — словесный уровень людности
+  // выбранного места сегодня (см. BIZ_CROWD_WORDS). Решение игрок принимает сам.
   if(state.businessLemonadeHours && state.businessLemonadeLocation){
-    const fc = bizForecast();
-    chips.push(`👥 ≈${fc.people}`);
+    chips.push(`👥 ${bizCrowdText(state.businessLemonadeLocation)}`);
   }
   const lemonStock = state.businessLemonadeLemonStock || 0;
   if(lemonStock > 0) chips.push(`🍋 ${lemonStock} шт.`);
@@ -487,24 +498,44 @@ document.getElementById('bizStartDayBtn').addEventListener('click', ()=>{
   goToBizPhase('bizPhaseLocation');
 });
 
+/* ---------- СЛОВЕСНАЯ ОЦЕНКА, ВМЕСТО ЦИФР ---------- */
+/* Игра намеренно не показывает расчёты: сколько человек пройдёт и сколько
+   стаканов купят — игрок решает интуитивно, по подсказкам словами. Числа
+   остались только в итогах дня (сколько реально продалось) и там же видно,
+   насколько выбор удачный. */
+function bizLocationFlowValue(key){
+  const dow = bizDayOfWeek(state.businessLemonadeDay || 1);
+  const weatherKey = state.businessLemonadeWeatherKey || 'normal';
+  const loc = BIZ_LOCATIONS[key] || BIZ_LOCATIONS.school;
+  const flowMult = dow.weekend ? loc.weekendMult : loc.weekdayMult;
+  return loc.perHour * (loc.demand[weatherKey] || 1) * flowMult;
+}
+// Уровень людности места сегодня: доля от самого людного места при той же
+// погоде и дне недели. Возвращает слово — «очень людно», «людно», «средне»,
+// «малолюдно» или «почти пусто».
+function bizCrowdText(locationKey){
+  let max = 0;
+  Object.keys(BIZ_LOCATIONS).forEach(k=>{
+    const v = bizLocationFlowValue(k);
+    if(v > max) max = v;
+  });
+  const share = max > 0 ? bizLocationFlowValue(locationKey) / max : 0;
+  for(const level of BIZ_CROWD_WORDS){
+    if(share >= level.min) return level.word;
+  }
+  return 'почти пусто';
+}
 /* ============ ШАГ 1: МЕСТО ТОРГОВЛИ (+ событие места) ============ */
 function renderBizLocationList(){
   const wrap = document.getElementById('bizLocationList');
-  const dow = bizDayOfWeek(state.businessLemonadeDay || 1);
   wrap.innerHTML = Object.keys(BIZ_LOCATIONS).map(key=>{
     const loc = BIZ_LOCATIONS[key];
     const on = state.businessLemonadeLocation === key;
-    const flowMult = dow.weekend ? loc.weekendMult : loc.weekdayMult;
-    const flowNote = flowMult >= 1.15 ? ' · сегодня людно' : (flowMult <= 0.6 ? ' · сегодня малолюдно' : '');
-    // Сколько человек проходит мимо за час именно сегодня: базовый поток
-    // места, умноженный на погоду и на сегодняшний день недели.
-    const weatherKey = state.businessLemonadeWeatherKey || 'normal';
-    const todayPerHour = loc.perHour * (loc.demand[weatherKey] || 1) * flowMult;
-    const perHourText = todayPerHour.toFixed(1).replace('.', ',');
+    // Число прохожих не показываем — только словесный уровень людности.
     return `<button type="button" class="biz-location-item${on ? ' on' : ''}" data-key="${key}">
       <div class="biz-location-name">${loc.icon} ${loc.name}</div>
-      <div class="biz-location-hint">${loc.hint}${flowNote}</div>
-      <div class="biz-location-rent">👥 Сегодня мимо проходит ≈ ${perHourText} чел./час · 🏠 Аренда: ${loc.rentPerHour} ₽/час</div>
+      <div class="biz-location-hint">${loc.hint}</div>
+      <div class="biz-location-rent">👥 Сегодня здесь ${bizCrowdText(key)} · 🏠 Аренда: ${loc.rentPerHour} ₽/час</div>
     </button>`;
   }).join('');
   wrap.querySelectorAll('.biz-location-item').forEach(btn=>{
@@ -576,15 +607,29 @@ document.getElementById('bizToLemonsBtn').addEventListener('click', ()=>{
 renderBizLemonsPhase();
   goToBizPhase('bizPhaseLemons');
 });
-/* ============ ШАГ 4: ПРОГНОЗ СПРОСА (общий для всех шагов) ============ */
-// Прогноз без разброса — честное ожидание, на нём игрок решает, сколько
-// готовить и какую цену ставить. Показывается на трёх шагах: время работы
-// (только поток людей — цена ещё не выбрана), приготовление и цена.
-function bizForecast(){
-  const fc = bizDemandForecast(state.businessLemonadePrice || 30, false);
-  fc.people = Math.round(fc.people);
-  fc.rangeText = (fc.buyersMin === fc.buyersMax) ? `${fc.buyers}` : `${fc.buyersMin}–${fc.buyersMax}`;
-  return fc;
+/* ============ ШАГ 4: ПОДСКАЗКИ СЛОВАМИ (расчётов в интерфейсе нет) ============ */
+/* Игра учит решать по смыслу, а не по арифметике, поэтому прогноз спроса
+   никогда не показывается числами: ни «сколько человек пройдёт», ни «сколько
+   стаканов купят», ни «сколько выбросишь». Вместо них — два слова-подсказки:
+   насколько людно в выбранном месте (bizCrowdText) и насколько охотно берут
+   при текущей цене (bizWishText). Оценка «хватит ли стаканов» остаётся
+   словесной: «продашь всё» или «часть пропадёт». Числа появляются только в
+   итогах дня, когда выбор уже сделан. */
+// Охотно ли берут при текущей цене и опциях — сравнение желания купить с
+// обычным днём (цена 30 ₽, без добавок). Тоже без чисел: только слово.
+function bizWishText(){
+  const weatherKey = state.businessLemonadeWeatherKey || 'normal';
+  const locationKey = state.businessLemonadeLocation || 'school';
+  const options = state.businessLemonadeOptions || {};
+  const opts = Object.keys(BIZ_OPTIONS).filter(k=>options[k]).length;
+  // Обычный день — та же погода, место и развитие, но цена 30 ₽ и без добавок.
+  const norm = bizConversion(30, {}, weatherKey, locationKey);
+  const now = bizConversion(state.businessLemonadePrice || 30, options, weatherKey, locationKey);
+  const r = norm > 0 ? now / norm : 1;
+  if(r >= 1.25) return opts ? `берут охотно, добавки помогают` : 'берут охотно';
+  if(r >= 0.95) return 'берут охотно';
+  if(r >= 0.7)  return 'берут, но не все';
+  return 'берут неохотно';
 }
 // Поток людей известен уже после выбора места и времени — он не зависит от
 // цены, поэтому его можно показать до закупки лимонов.
@@ -593,42 +638,46 @@ function updateBizFlowPreview(){
   if(!el) return;
   const hours = state.businessLemonadeHours;
   if(!hours || !state.businessLemonadeLocation){ el.textContent = ''; return; }
-  const fc = bizForecast();
-  el.textContent = `👥 За ${hours} ч мимо ларька пройдёт ≈ ${fc.people} человек. Сколько из них купят стакан — зависит от цены и опций (это дальше).`;
+  el.textContent = `👥 Здесь сегодня ${bizCrowdText(state.businessLemonadeLocation)}. Работаешь ${bizHoursWord(hours)} — каждый лишний час это новые прохожие, но и аренда дороже. Сколько стаканов купят, узнаешь в конце дня.`;
 }
-// Прогноз покупателей на шаге «приготовление»: поток + желание купить при
-// текущей цене. Если приготовлено больше прогноза — прямое предупреждение,
-// что лишнее выбросят.
+// Склонение «час / часа / часов» — подсказка читается по-человечески.
+function bizHoursWord(hours){
+  if(hours === 1) return 'час';
+  if(hours >= 5) return 'часов';
+  return `${hours} часа`;
+}
+// Подсказка на шаге «приготовление»: без числа прогноза, только словами —
+// хватит стаканов или часть пропадёт.
 function updateBizDemandHint(){
   const el = document.getElementById('bizDemandHint');
   if(!el) return;
   const cups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
   if(cups <= 0 || !state.businessLemonadeHours){ el.style.display = 'none'; return; }
-  const fc = bizForecast();
+  const fc = bizDemandForecast(state.businessLemonadePrice || 30, false);
   el.style.display = 'block';
   if(fc.buyers >= cups){
-    el.textContent = `👥 Мимо пройдёт ≈ ${fc.people} человек, купят ≈ ${fc.rangeText} (если цена останется ${state.businessLemonadePrice} ₽) — твоих ${cups} стаканов хватит всем.`;
+    el.textContent = `👥 Сегодня ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()} — похоже, ${cups} стаканов продашь.`;
   } else {
-    el.textContent = `👥 Мимо пройдёт ≈ ${fc.people} человек, но купят только ≈ ${fc.rangeText} (при цене ${state.businessLemonadePrice} ₽). Приготовив ${cups}, ты выбросишь примерно ${cups - fc.buyers} стак. — деньги на них уже потрачены.`;
+    el.textContent = `👥 Сегодня ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()} — похоже, часть стаканов останется и пропадёт. Деньги на них уже потрачены.`;
   }
   el.classList.toggle('biz-loss', fc.buyers < cups);
 }
-// Развёрнутый прогноз на шаге «цена»: сравнение спроса с тем, что приготовлено,
-// и напоминание, что лишнее сгорает.
+// Подсказка на шаге «цена»: та же словесная оценка, что и на шаге
+// «приготовление». Точные числа и совет «приготовь столько-то» убраны —
+// точное число покупателей игроку не показывается.
 function updateBizDemandPreview(){
   const el = document.getElementById('bizDemandPreview');
   if(!el) return;
   const cups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
   const price = state.businessLemonadePrice || 30;
-  const fc = bizForecast();
+  const fc = bizDemandForecast(price, false);
   const parts = [
-    `👥 Мимо пройдёт ≈ ${fc.people} человек за ${state.businessLemonadeHours} ч.`,
-    `🍋 Купят ≈ ${fc.rangeText} стак. (цена ${price} ₽).`,
+    `👥 Сегодня ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()} (цена ${price} ₽).`,
   ];
   if(cups > 0){
     parts.push(fc.buyers >= cups
-      ? `✅ Твоих ${cups} стаканов хватит — все уйдут покупателям.`
-      : `⚠️ Покупателей меньше, чем стаканов: примерно ${cups - fc.buyers} из ${cups} останутся и сгорят. Попробуй приготовить ${Math.max(BIZ_CUP_CHOICES[0], Math.round(fc.buyers / 10) * 10)} стаканов или снизить цену.`);
+      ? `✅ Похоже, ${cups} стаканов продашь — всё уйдёт покупателям.`
+      : `⚠️ Похоже, часть стаканов не продастся и пропадёт вместе с деньгами на них. Попробуй приготовить меньше или снизить цену.`);
   }
   el.textContent = parts.join(' ');
   el.classList.toggle('biz-loss', cups > fc.buyers);
@@ -1005,9 +1054,10 @@ function bizConversion(price, options, weatherKey, locationKey){
   const competitorMult = bizCompetitorMult(price, state.businessLemonadeCompetitorPrice);
   return Math.min(BIZ_MAX_CONVERSION, BIZ_BASE_CONVERSION * priceMult * optMult * upgradeConv * competitorMult);
 }
-// Полный прогноз дня. rollJitter=true добавляет разброс реального дня
-// (покупателей может оказаться чуть больше или меньше прогноза) — только
-// в момент продаж, в интерфейсе показываем честный прогноз без разброса.
+// Полный прогноз дня внутри игры. rollJitter=true добавляет разброс реального
+// дня (покупателей может оказаться чуть больше или меньше расчёта) — только в
+// момент продаж. В интерфейсе расчёта нет: игроку показываются только слова
+// (см. bizCrowdText и bizWishText), числа появляются в итогах дня.
 function bizDemandForecast(price, rollJitter){
   const dow = bizDayOfWeek(state.businessLemonadeDay || 1);
   const weatherKey = state.businessLemonadeWeatherKey || 'normal';
@@ -1020,6 +1070,8 @@ function bizDemandForecast(price, rollJitter){
   return {
     people, conv, expected,
     buyers: Math.max(0, Math.round(expected * factor)),
+    // Границы дневного разброса — нужны тестам и внутренним сверкам, в
+    // интерфейсе не показываются: игрок расчётов не видит.
     buyersMin: Math.max(0, Math.round(expected * (1 - BIZ_DEMAND_JITTER))),
     buyersMax: Math.max(0, Math.round(expected * (1 + BIZ_DEMAND_JITTER))),
   };
