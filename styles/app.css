@@ -4407,6 +4407,19 @@
      Шрифты и радиусы НЕ трогаем: уменьшение текста ниже 13px бьёт по
      читаемости, а радиусы — по узнаваемости оформления. Проверяемо:
      после правок экран расчёта помещается в 812 px на 390×844. */
+  /* Вердикт «стоит ли вклад». Цвет здесь несёт смысл, а не украшает:
+     зелёный — деньги работают, красный — съедают инфляцией и налогом. Без
+     цвета строку легко пропустить, а с ним видно сразу. Палитра берётся из
+     проекта: зелёный #4cd964 (кнопки согласия), красный #ff99a3 (кнопки
+     отмены и .btn-pause). */
+  .deposit-verdict{
+    margin:6px 0; padding:7px 10px; border-radius:10px;
+    font-size:12px; line-height:1.35; text-align:left;
+    border:1px solid transparent;
+  }
+  .deposit-verdict.good{ background:rgba(76,201,100,.16); border-color:rgba(76,201,100,.5); color:#d6f7e1; }
+  .deposit-verdict.bad{ background:rgba(255,99,110,.16); border-color:rgba(255,99,110,.5); color:#ffd4d9; }
+
   .deposit-doubling{ margin-top:4px; color:#cba0bf; font-size:12px; }
   #depositsSetup .subtitle{ margin-bottom:12px; font-size:13px; line-height:1.4; }
   #depositsSetup .field{ margin-bottom:10px; }

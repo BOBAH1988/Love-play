@@ -7638,6 +7638,61 @@ test('«Вклады»: пилюли услуг включаются и выкл
   }
 });
 
+test('«Вклады»: вердикт считает реальную доходность после налога, услуг и инфляции', () => {
+  // Вердикт — смысловая кульминация игры: номинальный итог сам по себе
+  // обманчив, поэтому сравниваем его с реальным, в ценах начала срока.
+  const saved = depositsBackup();
+  try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    state.depositsServices = [];
+    let res = depositsSimulate(depositsParams());
+    const tax = depositsTax(res);
+    const serv = depositsServicesCost(depositsParams());
+    const v = depositsVerdict(res, tax, serv);
+    assert(v.profit === true, '12% против инфляции 6,3% должны остаться в плюсе');
+    // Плюс обязан равняться реальному итогу минус вложенное.
+    const expectedGain = (res.total - serv.total - tax.tax) / Math.pow(1.063, 5) - res.invested;
+    assert(Math.abs(v.gain - expectedGain) < 0.01,
+      `реальный плюс должен быть ${expectedGain}, получено ${v.gain}`);
+    // Явный проигрыш: 4% годовых против инфляции 6,3% и выплаты в конце
+    // срока. Сверяем с ручным расчётом, а не с самой функцией.
+    depositsApply({ amount:100000, rate:4, years:5, cap:'end', topup:0 });
+    res = depositsSimulate(depositsParams());
+    const tax2 = depositsTax(res);
+    const serv2 = depositsServicesCost(depositsParams());
+    const v2 = depositsVerdict(res, tax2, serv2);
+    assert(v2.profit === false, '4% против инфляции 6,3% обязаны дать минус');
+    // Ручная сверка: проценты 20 000, минимум 14 000, налог 780,
+    // реальный итог 119 220 ÷ 1,063^5 = 87 838, то есть минус 12 162 ₽.
+    assert(Math.abs(res.total - 120000) < 0.01, `при 4% на 5 годах итог 120 000, получено ${res.total}`);
+    assert(Math.abs(tax2.tax - 780) < 0.01, `налог должен быть 780, получено ${tax2.tax}`);
+    assert(Math.abs(v2.gain - 12162) < 1, `минус должен быть 12 162 ₽, получено ${v2.gain}`);
+    assert(v2.realRate < 0, 'реальная доходность в минусе должна быть отрицательной');
+    // Услуги и налог обязаны ухудшать вердикт, а не улучшать. Сравниваем
+    // realGain СО ЗНАКОМ: при убытке модуль gain растёт вместе с потерями,
+    // и сравнение по нему дало бы обратный смысл (этот тест сначала так и упал).
+    depositsApply({ amount:100000, rate:4, years:5, cap:'end', topup:0 });
+    state.depositsServices = ['insurance', 'premium'];
+    const res3 = depositsSimulate(depositsParams());
+    const v3 = depositsVerdict(res3, depositsTax(res3), depositsServicesCost(depositsParams()));
+    assert(v3.realGain < v2.realGain, 'услуги должны уменьшать реальную выгоду');
+    assert(v3.realTotal < v2.realTotal, 'услуги должны уменьшать реальный итог');
+    // На экране вердикт заполнен и окрашен по смыслу.
+    startDepositsGame();
+    const box = getElById(stub, 'depositsVerdict');
+    assert(/имеет смысл|не имеет смысла/.test(box.textContent), `строка вердикта должна быть заполнена, получено «${box.textContent}»`);
+    depositsApply({ amount:100000, rate:4, years:5, cap:'end', topup:0 });
+    renderDepositsResult();
+    const badBox = getElById(stub, 'depositsVerdict');
+    assert(badBox.textContent.includes('не имеет смысла'), 'проигрышный вклад должен называться бессмысленным');
+    assert(badBox.classList.contains('bad') && !badBox.classList.contains('good'),
+      'проигрышный вердикт должен быть помечен классом .bad');
+  } finally {
+    Object.assign(state, saved);
+    renderDepositsSetup();
+  }
+});
+
 test('«Вклады»: полный цикл — настройки, расчёт, выход', () => {
   const saved = depositsBackup();
   const clear = () => document.querySelectorAll('.screen.active').forEach(el => el.classList.remove('active'));

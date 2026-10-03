@@ -299,6 +299,46 @@ function depositsSimulate(p){
 }
 
 
+// Проценты — с запятой, как их пишут в России: 3,4%. toLocaleString тут не
+// годится: он даёт неразрывный пробел и копейки. Округляем до десятых, иначе
+// из-за двоичной точности вылезло бы «3,4000000000000004%».
+function depositsRuNum(n){
+  return String(Math.round((Number(n) || 0) * 10) / 10).replace('.', ',');
+}
+
+/* ============ ВЕРДИКТ: СТОИТ ЛИ ВКЛАД ============ */
+// Смысл всей игры в одном выводе: считать с процентами интересно, пока
+// непонятно, что с этими деньгами будет на самом деле. Поэтому сравниваем
+// НОМИНАЛЬНЫЙ итог с реальным — в ценах начала срока, после налога и услуг.
+//
+// realTotal = (итог − услуги − налог) ÷ (1 + инфляция) ^ лет
+// realGain  = realTotal − вложено
+//
+// Это именно реальная, а не номинальная доходность. Вклад под 14% с налогом
+// и инфляцией 6,3% может остаться в плюсе, а под 5% — уйти в минус: на
+// экране это должно быть видно сразу, а не после сравнения в уме.
+function depositsVerdict(res, tax, services){
+  const net = res.total - services.total - tax.tax;
+  const factor = Math.pow(1 + DEPOSITS_RU.inflation / 100, res.months / 12);
+  const realTotal = net / factor;
+  const realGain = realTotal - res.invested;
+  return {
+    profit: realGain >= 0,
+    // gain — модуль для подписи («плюс 27 368 ₽» / «минус 12 162 ₽»), а
+    // realGain со знаком — для расчётов: при убытке модуль РАСТЁТ вместе с
+    // потерями, и сравнивать выгоду услуг по нему бессмысленно.
+    gain: Math.abs(realGain),
+    realGain,
+    realTotal,
+    net,
+    // Реальная годовая доходность «после всего» — ею удобнее объяснять
+    // вердикт: сравнение ставки с инфляцией плюс издержки.
+    realRate: res.invested > 0
+      ? (Math.pow(Math.max(realTotal, 0) / res.invested, 12 / res.months) - 1) * 100
+      : 0,
+  };
+}
+
 /* ============ НАЛОГ И ИНФЛЯЦИЯ ============ */
 // Проценты по вкладу облагаются НДФЛ не со всей суммы, а с превышения над
 // необлагаемым минимумом: максимум(ключевая ставка, 12,5%) от суммы вкладов
@@ -503,6 +543,19 @@ function renderDepositsResult(){
       const detail = serv.items.map(s => `${s.label} ${depositsMoney(s.sum)}`).join(', ');
       servBox.textContent = `Услуги — ${depositsMoney(serv.total)} (${detail}). На счёте останется ${depositsMoney(res.total - serv.total)}.`;
     }
+  }
+  // Вердикт «стоит ли вклад». Считаем здесь, а не у строки срока, потому что
+  // нужны tax и serv, которые считаются ниже; в разметке вердикт уже стоит
+  // под строкой срока — JS только заполняет, порядок элементов он не меняет.
+  const verdict = depositsVerdict(res, tax, serv);
+  const verdictBox = document.getElementById('depositsVerdict');
+  if(verdictBox){
+    const rate = `${depositsRuNum(verdict.realRate)}% в год`;
+    verdictBox.textContent = verdict.profit
+      ? `Вклад имеет смысл: реальный плюс ${depositsMoney(verdict.gain)} (${rate}) — уже после налога, услуг и инфляции.`
+      : `Вклад не имеет смысла: минус ${depositsMoney(verdict.gain)} (${rate}) — инфляция и налог съедают больше, чем капает.`;
+    verdictBox.classList.toggle('good', verdict.profit);
+    verdictBox.classList.toggle('bad', !verdict.profit);
   }
   // Инфляция за срок: итог в ценах начала вклада.
   const infl = depositsInflationLoss(res);
