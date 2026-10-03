@@ -3833,10 +3833,13 @@ function checkDeposits(html, timerSrc) {
         .every(id => new RegExp(`class="deposit-sub deposit-line" id="${id}"`).test(html))
       && !/deposit-inner|deposit-doubling/.test(html) && !/deposit-inner|deposit-doubling/.test(css),
     'все три строки-вывода должны иметь класс .deposit-line, а прежние .deposit-inner и .deposit-doubling — исчезнуть');
-  check('налог и инфляция стоят в блоке итога, под сроком удвоения',
-    /id="depositsDoubling">[\s\S]{0,200}id="depositsTax"[\s\S]{0,200}id="depositsInflation"/.test(html)
+  // Порядок строк-выводов задан игроком: инфляция — сразу под «Процентами
+  // начислено», потому что это и объясняет, почему начисленное не равно
+  // тому, что можно купить. Дальше — срок удвоения и налог.
+  check('строки-выводы стоят в порядке: инфляция, удвоение, налог',
+    /id="depositsProfit">[\s\S]{0,160}id="depositsInflation"[\s\S]{0,160}id="depositsDoubling"[\s\S]{0,160}id="depositsTax"/.test(html)
       && /class="deposit-sub deposit-line" id="depositsTax"/.test(html),
-    'ожидается порядок: срок удвоения → налог → инфляция, все три в блоке итога');
+    'ожидается порядок: начислено → инфляция → удвоение → налог, все в блоке итога');
 
   // Модуль игры не должен падать из-за отсутствующего id. Подписка на кнопки
 // в проекте идёт без «?.» (так устроены все 40+ игр), и это давняя норма:

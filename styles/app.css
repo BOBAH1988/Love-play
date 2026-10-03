@@ -4413,7 +4413,7 @@
      проекта: зелёный #4cd964 (кнопки согласия), красный #ff99a3 (кнопки
      отмены и .btn-pause). */
   .deposit-verdict{
-    margin:6px 0; padding:7px 10px; border-radius:10px;
+    margin:4px 0; padding:6px 10px; border-radius:10px;
     font-size:12px; line-height:1.35; text-align:left;
     border:1px solid transparent;
   }
@@ -4435,7 +4435,7 @@
 /* Номинальный итог — прямо под реальной крупной суммой. Нужен, чтобы игрок
      видел обе цифры: «124 789 ₽» — это то, что можно купить на эти деньги
      сегодня, а «181 669 ₽» — то же самое, но в деньгах конца срока. */
-  .deposit-nominal{ margin-top:1px; font-size:12px; color:#cba0bf; text-align:center; }
+  .deposit-nominal{ margin-top:0; font-size:12px; color:#cba0bf; text-align:center; }
 
   .deposit-line{ margin-top:4px; color:#cba0bf; font-size:12px; }
   #depositsSetup .subtitle{ margin-bottom:12px; font-size:13px; line-height:1.4; }
