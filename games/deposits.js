@@ -220,8 +220,6 @@ function exitDepositsSetup(){
   state.inProgress = false;
   state.pausedMode = null;
   state.lastSectionOnPause = null;
-  state.depositsIndex = 0;
-  state.depositsAnswers = [];
   saveState();
   const pauseModal = document.getElementById('pauseMenuModal');
   if(pauseModal) pauseModal.classList.remove('show');
@@ -303,8 +301,6 @@ function exitDepositsGame(){
   state.inProgress = false;
   state.pausedMode = null;
   state.lastSectionOnPause = null;
-  state.depositsIndex = 0;
-  state.depositsAnswers = [];
   saveState();
   exitGame('depositsGame', 'depositsSetup');
   goToDepositsSetup();
