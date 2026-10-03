@@ -7343,8 +7343,16 @@ test('«Вклады»: модуль загружается целиком и к
     // исходную разметку в _html, он пуст до первого присваивания, поэтому
     // сверяем те элементы, которые игра заполняет сама.
     const res2 = depositsSimulate(depositsParams());
-    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res2.total, true),
-      'на экране расчёта должна быть итоговая сумма');
+    // Крупная сумма — РЕАЛЬНЫЙ итог (после налога, услуг и инфляции), а
+    // номинальный вынесен в строку под ней. Проверяем обе: иначе вердикт и
+    // таблица считают одно, а игрок видит другое.
+    const tax2 = depositsTax(res2);
+    const serv2 = depositsServicesCost(depositsParams());
+    const real = depositsVerdict(res2, tax2, serv2).realTotal;
+    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(real, true),
+      `на экране расчёта должен быть реальный итог ${depositsMoney(real, true)}`);
+    assert(getElById(stub, 'depositsNominal').textContent === `В номинальных ценах — ${depositsMoney(res2.total, true)}`,
+      'под реальной суммой должен быть номинальный итог');
     assert(getElById(stub, 'depositsInvested').textContent.includes('Вложено'),
       'на экране должно быть сказано, сколько вложено');
     assert(getElById(stub, 'depositsProfit').textContent.includes('Процентами'),
@@ -7592,7 +7600,9 @@ test('«Вклады»: услуги банка уменьшают итог и �
     const serv = depositsServicesCost(depositsParams());
     const note = getElById(stub, 'depositsServices').textContent;
     assert(note.includes(depositsMoney(serv.total)), `в строке услуг должна быть сумма ${depositsMoney(serv.total)}, получено «${note}»`);
-    assert(note.includes(depositsMoney(res.total - serv.total)), 'в строке услуг должен показан итог после списания');
+    assert(!note.includes('останется'),
+      'строка услуг не должна обещать «итог на счёте»: крупная сумма теперь реальная, и два разных итога рядом путают');
+    assert(note.includes(depositsMoney(serv.total)), `в строке услуг должен быть расход ${depositsMoney(serv.total)}`);
     // Без услуг строка говорит, что ничего не подключено.
     state.depositsServices = [];
     renderDepositsResult();
@@ -7703,8 +7713,11 @@ test('«Вклады»: полный цикл — настройки, расчё
     startDepositsGame();
     const res = depositsSimulate(depositsParams());
     assert(getElById(stub, 'depositsGame').classList.contains('active'), 'расчёт должен открыться');
-    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res.total, true),
-      'на экране должен быть итог того же расчёта, который показан в таблице');
+    const realTotal = depositsVerdict(res, depositsTax(res), depositsServicesCost(depositsParams())).realTotal;
+    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(realTotal, true),
+      `на экране должен быть реальный итог расчёта ${depositsMoney(realTotal, true)}`);
+    assert(getElById(stub, 'depositsTotal').textContent !== depositsMoney(res.total, true),
+      'крупная сумма не должна совпадать с номинальным итогом — иначе вычеты не показаны');
     // Подпись сокращена до «Капитализация дала на X больше», поэтому проверяем
     // само слово в правильной форме и наличие самой суммы: раньше здесь искалось
     // «капитализация» в нижнем регистре, и после правки текста проверка упала бы.

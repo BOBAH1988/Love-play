@@ -484,8 +484,18 @@ function renderDepositsResult(){
   const res = depositsSimulate(p);
   // Результат считается заново при каждом показе и нигде не сохраняется:
   // экран получает те же числа, что и рисует, из одного источника.
+  //
+  // Вычеты считаются ДО крупной суммы: она показывает реальный итог, а он
+  // зависит от налога, услуг и инфляции. Раньше крупной стоял номинальный
+  // итог, который читался как «столько получите», хотя на руки столько не
+  // выходит — вычеты были разбросаны ниже мелкими строками.
+  const tax = depositsTax(res);
+  const serv = depositsServicesCost(p);
+  const verdict = depositsVerdict(res, tax, serv);
   const total = document.getElementById('depositsTotal');
-  if(total) total.textContent = depositsMoney(res.total, true);
+  if(total) total.textContent = depositsMoney(verdict.realTotal, true);
+  const nominal = document.getElementById('depositsNominal');
+  if(nominal) nominal.textContent = `В номинальных ценах — ${depositsMoney(res.total, true)}`;
   // Срок, на который считалось. Берём res.months — это фактическое число
   // месяцев из расчёта, а не заданный p.years: для дробного срока они
   // расходятся (2,7 года превращаются в 32 месяца), и подпись обязана
@@ -521,7 +531,6 @@ function renderDepositsResult(){
   }
   // Налог с процентов по вкладу. Показываем и сумму, и почему она такая:
   // без необлагаемого минимума цифра выглядит завышенной и пугает зря.
-  const tax = depositsTax(res);
   const taxBox = document.getElementById('depositsTax');
   if(taxBox){
     // Подписи на экране намеренно короткие: каждая строка занимает до четырёх
@@ -534,20 +543,21 @@ function renderDepositsResult(){
   }
   // Услуги банка: показываем и цену, и итог после неё. Смысл блока в том,
   // что игрок видит, как «бесплатные» страховка и СМС съедают доход.
-  const serv = depositsServicesCost(p);
   const servBox = document.getElementById('depositsServices');
   if(servBox){
     if(!serv.items.length){
       servBox.textContent = 'Дополнительные услуги не подключены — итог не уменьшается.';
     }else{
       const detail = serv.items.map(s => `${s.label} ${depositsMoney(s.sum)}`).join(', ');
-      servBox.textContent = `Услуги — ${depositsMoney(serv.total)} (${detail}). На счёте останется ${depositsMoney(res.total - serv.total)}.`;
+      // «На счёте останется» здесь было бы враньём: крупная сумма теперь
+      // реальная (124 789), а это номинальная после услуг (178 170) — рядом
+      // два разных «итога» сбивали бы с толку. Оставляем только расход.
+      servBox.textContent = `Услуги — ${depositsMoney(serv.total)} (${detail}).`;
     }
   }
   // Вердикт «стоит ли вклад». Считаем здесь, а не у строки срока, потому что
   // нужны tax и serv, которые считаются ниже; в разметке вердикт уже стоит
   // под строкой срока — JS только заполняет, порядок элементов он не меняет.
-  const verdict = depositsVerdict(res, tax, serv);
   const verdictBox = document.getElementById('depositsVerdict');
   if(verdictBox){
     const rate = `${depositsRuNum(verdict.realRate)}% в год`;
