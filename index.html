@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261003i">
+<link rel="stylesheet" href="styles/app.css?v=20261003k">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-30 · v594';
+  window.APP_BUILD = '2026-10-30 · v595';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v594</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v595</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -4165,7 +4165,10 @@
       <div class="deposit-total" id="depositsTotal">—</div>
       <div class="deposit-nominal" id="depositsNominal">—</div>
       <div class="deposit-term" id="depositsTerm">—</div>
-      <div class="deposit-verdict" id="depositsVerdict">—</div>
+      <div class="deposit-verdict" id="depositsVerdict">
+        <div class="deposit-verdict-main" id="depositsVerdictMain">—</div>
+        <div class="deposit-verdict-note" id="depositsVerdictNote">—</div>
+      </div>
       <div class="deposit-sub" id="depositsInvested">—</div>
       <div class="deposit-sub" id="depositsProfit">—</div>
       <div class="deposit-sub deposit-line" id="depositsDoubling">—</div>
@@ -5248,7 +5251,7 @@
 <script src="games/solo-test.js?v=20261025b"></script>
 <script src="games/fun-tests.js?v=20261025b"></script>
 <script src="games/biz-tests.js?v=20261025a"></script>
-<script src="games/deposits.js?v=20261003j"></script>
+<script src="games/deposits.js?v=20261003k"></script>
 <script src="games/iq-test.js?v=20261026a"></script>
 <script src="games/know-more.js?v=20261024n"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>

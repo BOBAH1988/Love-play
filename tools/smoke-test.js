@@ -7720,14 +7720,19 @@ test('«Вклады»: вердикт считает реальную дохо�
     const v3 = depositsVerdict(res3, depositsTax(res3), depositsServicesCost(depositsParams()));
     assert(v3.realGain < v2.realGain, 'услуги должны уменьшать реальную выгоду');
     assert(v3.realTotal < v2.realTotal, 'услуги должны уменьшать реальный итог');
-    // На экране вердикт заполнен и окрашен по смыслу.
+    // На экране вердикт заполнен и окрашен по смыслу. Текст читаем у ДОЧЕРНИХ
+    // строк, а не у контейнера: dom-stub хранит textContent каждого элемента
+    // отдельно и не собирает его из детей, так что контейнер даёт пустую строку.
     startDepositsGame();
-    const box = getElById(stub, 'depositsVerdict');
-    assert(/имеет смысл|не имеет смысла/.test(box.textContent), `строка вердикта должна быть заполнена, получено «${box.textContent}»`);
+    const main = getElById(stub, 'depositsVerdictMain');
+    const note = getElById(stub, 'depositsVerdictNote');
+    assert(/имеет смысл/.test(main.textContent), `строка вывода должна быть заполнена, получено «${main.textContent}»`);
+    assert(/после налога, инфляции/.test(note.textContent), `строка пояснения должна быть заполнена, получено «${note.textContent}»`);
     depositsApply({ amount:100000, rate:4, years:5, cap:'end', topup:0 });
     renderDepositsResult();
+    assert(getElById(stub, 'depositsVerdictMain').textContent.includes('не имеет смысла'),
+      'проигрышный вклад должен называться бессмысленным');
     const badBox = getElById(stub, 'depositsVerdict');
-    assert(badBox.textContent.includes('не имеет смысла'), 'проигрышный вклад должен называться бессмысленным');
     assert(badBox.classList.contains('bad') && !badBox.classList.contains('good'),
       'проигрышный вердикт должен быть помечен классом .bad');
   } finally {

@@ -358,7 +358,7 @@ MIGRATIONS[2] = (s) => { s.newField = s.oldField; delete s.oldField; };
 `index.html` также должен соответствовать текущей версии, чтобы правильная
 надпись была доступна до первого вызова меню.
 
-**Текущая версия проекта:** `v594` (`veselye-igry-cache-v594`).
+**Текущая версия проекта:** `v595` (`veselye-igry-cache-v595`).
 
 При каждой смене `CACHE_NAME` нужно в том же изменении обновить
 `window.APP_BUILD`, начальный текст `#menuCacheVersion`, запись о текущей

@@ -569,12 +569,24 @@ function renderDepositsResult(){
   // Вердикт «стоит ли вклад». Считаем здесь, а не у строки срока, потому что
   // нужны tax и serv, которые считаются ниже; в разметке вердикт уже стоит
   // под строкой срока — JS только заполняет, порядок элементов он не меняет.
+  // Вердикт разделён на две строки: вывод и пояснение, почему он такой.
+  // Раньше всё было в одной длинной фразе, и её приходилось читать целиком,
+  // чтобы понять сам вывод.
   const verdictBox = document.getElementById('depositsVerdict');
   if(verdictBox){
     const rate = `${depositsRuNum(verdict.realRate)}% в год`;
-    verdictBox.textContent = verdict.profit
-      ? `Вклад имеет смысл: реальный плюс ${depositsMoney(verdict.gain)} (${rate}) — уже после налога, услуг и инфляции.`
-      : `Вклад не имеет смысла: минус ${depositsMoney(verdict.gain)} (${rate}) — инфляция и налог съедают больше, чем капает.`;
+    const verdictMain = document.getElementById('depositsVerdictMain');
+    if(verdictMain){
+      verdictMain.textContent = verdict.profit
+        ? `Вклад имеет смысл: реальный плюс ${depositsMoney(verdict.gain)} (${rate})`
+        : `Вклад не имеет смысла: минус ${depositsMoney(verdict.gain)} (${rate})`;
+    }
+    // Пояснение одинаковое для обоих исходов: вычеты те же, различается
+    // только знак результата.
+    const verdictNote = document.getElementById('depositsVerdictNote');
+    if(verdictNote){
+      verdictNote.textContent = 'после налога, инфляции и других услуг';
+    }
     verdictBox.classList.toggle('good', verdict.profit);
     verdictBox.classList.toggle('bad', !verdict.profit);
   }
