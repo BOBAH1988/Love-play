@@ -128,6 +128,16 @@ function depositsPeriodLabel(years){
   if(Number.isInteger(rounded)) return `${rounded} ${depositsYearsWord(rounded)}`;
   return `${String(rounded).replace('.', ',')} года`;
 }
+// Склонение «месяц/месяца/месяцев». Отдельная функция, потому что в русском
+// «2 года, 21 месяц» — а «21 месяц» склоняется иначе, чем «месяцев».
+function depositsMonthsWord(n){
+  const v = Math.abs(Math.round(Number(n) || 0)) % 100;
+  const last = v % 10;
+  if(v > 10 && v < 20) return 'месяцев';
+  if(last === 1) return 'месяц';
+  if(last >= 2 && last <= 4) return 'месяца';
+  return 'месяцев';
+}
 
 /* ============ РАСЧЁТ ============ */
 /**
@@ -205,6 +215,7 @@ function depositsSimulate(p){
     total,
     invested,
     profit: total - invested,
+    months: totalMonths,
     years,
     simpleTotal,
     extraFromCap: total - simpleTotal,
@@ -298,6 +309,14 @@ function renderDepositsResult(){
   // экран получает те же числа, что и рисует, из одного источника.
   const total = document.getElementById('depositsTotal');
   if(total) total.textContent = depositsMoney(res.total, true);
+  // Срок, на который считалось. Берём res.months — это фактическое число
+  // месяцев из расчёта, а не заданный p.years: для дробного срока они
+  // расходятся (2,7 года превращаются в 32 месяца), и подпись обязана
+  // показывать то, по чему действительно считали.
+  const term = document.getElementById('depositsTerm');
+  if(term){
+    term.textContent = `Вложено на ${depositsPeriodLabel(res.months / 12)} — ${res.months} ${depositsMonthsWord(res.months)}`;
+  }
   const invested = document.getElementById('depositsInvested');
   if(invested){
     invested.textContent = `Вложено ${depositsMoney(res.invested)}`

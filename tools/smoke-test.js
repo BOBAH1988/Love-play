@@ -7453,6 +7453,37 @@ test('«Вклады»: ползунки меняют настройки, под
   }
 });
 
+test('«Вклады»: под итогом показан срок, на который считалось', () => {
+  // Строка со сроком обязана показывать ФАКТИЧЕСКОЕ число месяцев из
+  // расчёта, а не заданный p.years: для дробного срока они расходятся
+  // (2,7 года → 32 месяца), и подпись вводила бы в заблуждение.
+  const saved = depositsBackup();
+  try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    startDepositsGame();
+    const res = depositsSimulate(depositsParams());
+    assert(res.months === 60, `5 лет должны дать 60 месяцев, получено ${res.months}`);
+    assert(getElById(stub, 'depositsTerm').textContent === 'Вложено на 5 лет — 60 месяцев',
+      `ожидалось «Вложено на 5 лет — 60 месяцев», получено «${getElById(stub, 'depositsTerm').textContent}»`);
+    // Дробный срок: 2,7 года = 32 месяца.
+    depositsApply({ amount:100000, rate:12, years:2.7, cap:'month', topup:0 });
+    startDepositsGame();
+    const res2 = depositsSimulate(depositsParams());
+    assert(res2.months === 32, `2,7 года должны дать 32 месяца, получено ${res2.months}`);
+    assert(getElById(stub, 'depositsTerm').textContent === 'Вложено на 2,7 года — 32 месяца',
+      `ожидалось «Вложено на 2,7 года — 32 месяца», получено «${getElById(stub, 'depositsTerm').textContent}»`);
+    // Склонение месяцев: 1 и 21 — «месяц», 2 и 22 — «месяца».
+    assert(depositsMonthsWord(1) === 'месяц', `1 → месяц, получено «${depositsMonthsWord(1)}»`);
+    assert(depositsMonthsWord(21) === 'месяц', `21 → месяц, получено «${depositsMonthsWord(21)}»`);
+    assert(depositsMonthsWord(2) === 'месяца', `2 → месяца, получено «${depositsMonthsWord(2)}»`);
+    assert(depositsMonthsWord(22) === 'месяца', `22 → месяца, получено «${depositsMonthsWord(22)}»`);
+    assert(depositsMonthsWord(5) === 'месяцев', `5 → месяцев, получено «${depositsMonthsWord(5)}»`);
+    assert(depositsMonthsWord(11) === 'месяцев', `11 → месяцев, получено «${depositsMonthsWord(11)}»`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
 test('«Вклады»: полный цикл — настройки, расчёт, выход', () => {
   const saved = depositsBackup();
   const clear = () => document.querySelectorAll('.screen.active').forEach(el => el.classList.remove('active'));
