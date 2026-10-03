@@ -7650,8 +7650,13 @@ test('«Вклады»: полный цикл — настройки, расчё
     assert(getElById(stub, 'depositsGame').classList.contains('active'), 'расчёт должен открыться');
     assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res.total, true),
       'на экране должен быть итог того же расчёта, который показан в таблице');
-    assert(getElById(stub, 'depositsCompare').textContent.includes('капитализация'),
-      'на экране должно быть сравнение с простыми процентами');
+    // Подпись сокращена до «Капитализация дала на X больше», поэтому проверяем
+    // само слово в правильной форме и наличие самой суммы: раньше здесь искалось
+    // «капитализация» в нижнем регистре, и после правки текста проверка упала бы.
+    const compareText = getElById(stub, 'depositsCompare').textContent;
+    assert(/Капитализация дала на/.test(compareText), 'строка должна говорить, сколько дала капитализация');
+    assert(compareText.includes(depositsMoney(res.extraFromCap)),
+      `в строке должна быть разница с простыми процентами ${depositsMoney(res.extraFromCap)}, получено «${compareText}»`);
     // Диаграмму и таблицу считаем по строке innerHTML: dom-stub хранит её
     // строкой и не строит дерево, поэтому children здесь всегда пуст.
     const barsHtml = getElById(stub, 'depositsBars').innerHTML || '';

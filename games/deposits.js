@@ -464,7 +464,7 @@ function renderDepositsResult(){
   const compare = document.getElementById('depositsCompare');
   if(compare){
     compare.textContent = res.extraFromCap >= 1
-      ? `С простыми процентами было бы ${depositsMoney(res.simpleTotal)} — капитализация дала на ${depositsMoney(res.extraFromCap)} больше.`
+      ? `Капитализация дала на ${depositsMoney(res.extraFromCap)} больше`
       : 'При выплате в конце срока капитализации нет: сумма растёт только за счёт процентов на вложенное.';
   }
   const eff = document.getElementById('depositsEffective');
@@ -489,8 +489,8 @@ function renderDepositsResult(){
     // указаны один раз в дисклеймере под таблицей и в правилах игры, поэтому
     // повторять их в каждой строке незачем — все числа остаются на месте.
     taxBox.textContent = tax.tax < 1
-      ? `Налог — 0 ₽: доход не превысил необлагаемый минимум ${depositsMoney(tax.exempt)}.`
-      : `Налог — ${depositsMoney(tax.tax)} (${tax.rate}% с ${depositsMoney(tax.taxable)} сверх минимума ${depositsMoney(tax.exempt)}).`;
+      ? 'Налог — 0 ₽'
+      : `Налог — ${depositsMoney(tax.tax)}`;
   }
   // Услуги банка: показываем и цену, и итог после неё. Смысл блока в том,
   // что игрок видит, как «бесплатные» страховка и СМС съедают доход.
@@ -508,8 +508,7 @@ function renderDepositsResult(){
   const infl = depositsInflationLoss(res);
   const inflBox = document.getElementById('depositsInflation');
   if(inflBox){
-    inflBox.textContent = `Инфляция за срок — ${depositsMoney(infl.loss)}: итог `
-      + `${depositsMoney(res.total)} стоит как ${depositsMoney(infl.realValue)} в ценах начала срока.`;
+    inflBox.textContent = `Инфляция за весь срок — ${depositsMoney(infl.loss)}`;
   }
   const bars = document.getElementById('depositsBars');
   if(bars) bars.innerHTML = depositsBarsHtml(res.years);

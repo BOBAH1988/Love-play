@@ -4407,6 +4407,7 @@
      Шрифты и радиусы НЕ трогаем: уменьшение текста ниже 13px бьёт по
      читаемости, а радиусы — по узнаваемости оформления. Проверяемо:
      после правок экран расчёта помещается в 812 px на 390×844. */
+  .deposit-doubling{ margin-top:4px; color:#cba0bf; font-size:12px; }
   #depositsSetup .subtitle{ margin-bottom:12px; font-size:13px; line-height:1.4; }
   #depositsSetup .field{ margin-bottom:10px; }
   #depositsGame .deposit-note{ margin-bottom:4px; padding:5px 10px; line-height:1.35; }
