@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261003a">
+<link rel="stylesheet" href="styles/app.css?v=20261003b">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-30 · v585';
+  window.APP_BUILD = '2026-10-30 · v586';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v585</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v586</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -4128,7 +4128,6 @@
 
     <div class="field">
       <label>Дополнительные услуги банка</label>
-      <div class="deposit-serv-intro">Банки часто предлагают их вместе со вкладом. Каждая списывается в конце срока и уменьшает итог на счёт.</div>
       <div class="deposit-serv-list" id="depositsServicesList">
         <button type="button" class="deposit-serv" id="depositsServInsurance" aria-pressed="false">
           <span class="deposit-serv-name">Страхование вклада</span>
