@@ -4420,17 +4420,14 @@
   .deposit-verdict.good{ background:rgba(76,201,100,.16); border-color:rgba(76,201,100,.5); color:#d6f7e1; }
   .deposit-verdict.bad{ background:rgba(255,99,110,.16); border-color:rgba(255,99,110,.5); color:#ffd4d9; }
 
-  /* Налог и инфляция перенесены внутрь блока итога (под срок удвоения).
-     Им нужен свой класс: заметка .deposit-note с полноценной рамкой внутри
-     рамки итога выглядела бы как карточка в карточке. Здесь тонкая плашка —
-     она читается как часть итога, но всё же отделена от сумм. */
-  .deposit-inner{
-    margin-top:4px; padding:5px 9px; border-radius:9px;
-    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09);
-    font-size:12px; line-height:1.35; color:#e8c9dd; text-align:left;
-  }
-
-  .deposit-doubling{ margin-top:4px; color:#cba0bf; font-size:12px; }
+  /* Строки-выводы под итогом: срок удвоения, налог и инфляция. Все три —
+     одного класса и одного вида намеренно: это три ответа на один вопрос
+     «сколько будет на счёте и сколько отнимут». Разный стиль (плашки,
+     рамки, разный кегль) дробил бы их на несвязанные факты, а здесь они
+     читаются как один блок выводов. Сначала налог и инфляция получились
+     плашками с фоном — на фоне рамки итога это выглядело как карточка в
+     карточке, и рядом с молчаливой строкой удвоения сбивало с толку. */
+  .deposit-line{ margin-top:4px; color:#cba0bf; font-size:12px; }
   #depositsSetup .subtitle{ margin-bottom:12px; font-size:13px; line-height:1.4; }
   #depositsSetup .field{ margin-bottom:10px; }
   #depositsGame .deposit-note{ margin-bottom:4px; padding:5px 10px; line-height:1.35; }
@@ -4448,7 +4445,6 @@
     #depositsSetup .field{ margin-bottom:8px; }
     #depositsGame .deposit-bars{ height:76px; }
     #depositsGame .deposit-note{ padding:5px 9px; }
-    #depositsGame .deposit-inner{ padding:4px 8px; margin-top:3px; }
     #depositsGame .deposit-total-box{ padding:8px 12px; }
   }
 

@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261003g">
+<link rel="stylesheet" href="styles/app.css?v=20261003h">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-30 · v591';
+  window.APP_BUILD = '2026-10-30 · v592';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v591</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v592</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -4167,9 +4167,9 @@
       <div class="deposit-verdict" id="depositsVerdict">—</div>
       <div class="deposit-sub" id="depositsInvested">—</div>
       <div class="deposit-sub" id="depositsProfit">—</div>
-      <div class="deposit-sub deposit-doubling" id="depositsDoubling">—</div>
-      <div class="deposit-inner" id="depositsTax">—</div>
-      <div class="deposit-inner" id="depositsInflation">—</div>
+      <div class="deposit-sub deposit-line" id="depositsDoubling">—</div>
+      <div class="deposit-sub deposit-line" id="depositsTax">—</div>
+      <div class="deposit-sub deposit-line" id="depositsInflation">—</div>
     </div>
 
     <div class="deposit-note" id="depositsCompare">—</div>

@@ -3784,7 +3784,7 @@ function checkDeposits(html, timerSrc) {
   // сравнению с эффективной ставкой, и в общем списке заметок терялась.
   check('строка срока удвоения стоит в блоке итога, под начисленными процентами',
     /id="depositsProfit">[\s\S]{0,160}id="depositsDoubling"/.test(html)
-      && /class="deposit-sub deposit-doubling"/.test(html),
+      && /class="deposit-sub deposit-line"/.test(html),
     'строка удвоения должна идти сразу после «Процентами начислено» внутри блока итога');
   // Подписи налога и инфляции оставлены в короткой форме «сумма»: длинные
   // расшифровки занимали по четыре строки и уводили экран в прокрутку.
@@ -3810,9 +3810,17 @@ function checkDeposits(html, timerSrc) {
   // Налог и инфляция перенесены внутрь блока итога, под срок удвоения: это
   // итоговые суммы «сколько отнимут», и рядом с итогом они читаются лучше,
   // чем отдельными заметками после эффективной ставки.
+  // Три строки-вывода обязаны быть одного класса: разный вид у налога,
+  // инфляции и удвоения читался бы как три несвязанных факта.
+  check('удвоение, налог и инфляция оформлены одинаково',
+    /\.deposit-line\{/.test(css)
+      && ['depositsDoubling', 'depositsTax', 'depositsInflation']
+        .every(id => new RegExp(`class="deposit-sub deposit-line" id="${id}"`).test(html))
+      && !/deposit-inner|deposit-doubling/.test(html) && !/deposit-inner|deposit-doubling/.test(css),
+    'все три строки-вывода должны иметь класс .deposit-line, а прежние .deposit-inner и .deposit-doubling — исчезнуть');
   check('налог и инфляция стоят в блоке итога, под сроком удвоения',
     /id="depositsDoubling">[\s\S]{0,200}id="depositsTax"[\s\S]{0,200}id="depositsInflation"/.test(html)
-      && /class="deposit-inner" id="depositsTax"/.test(html),
+      && /class="deposit-sub deposit-line" id="depositsTax"/.test(html),
     'ожидается порядок: срок удвоения → налог → инфляция, все три в блоке итога');
 
   // Модуль игры не должен падать из-за отсутствующего id. Подписка на кнопки
