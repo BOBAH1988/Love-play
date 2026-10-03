@@ -61,9 +61,9 @@
 // tools/check.js сверяет одно с другим: разъехавшиеся границы дали бы
 // невозможные значения (например, ставку 30,5% при max=30).
 const DEPOSITS_LIMITS = {
-  amount: { min:10000,  max:5000000, step:1000, def:100000 },
-  rate:   { min:0.1,    max:30,     step:0.1,   def:12 },
-  years:  { min:1,      max:30,     step:0.1,   def:5 },
+  amount: { min:10000,  max:5000000, step:1000, def:50000 },
+  rate:   { min:0.1,    max:30,     step:0.1,   def:13 },
+  years:  { min:1,      max:30,     step:0.1,   def:1 },
   topup:  { min:0,      max:100000, step:1000,  def:0 },
 };
 // ДЕЙСТВУЮЩИЕ УСЛОВИЯ В РОССИИ

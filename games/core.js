@@ -371,7 +371,7 @@ let state = {
   // игрок (ползунки, капитализация кнопками, услуги — пилюлями); запоминаются
   // только они, состояние расчёта не хранится — оно целиком выводится из них
   // функцией depositsSimulate() при каждом показе экрана.
-  depositsAmount:100000, depositsRate:12, depositsYears:5,
+  depositsAmount:50000, depositsRate:13, depositsYears:1,
   depositsCap:'month', depositsTopUp:0,
   // Подключённые услуги банка (страховка, СМС, премиум) — массив id из
   // DEPOSITS_SERVICES. По умолчанию пусто: навязывать услуги в дефолте
@@ -2150,9 +2150,9 @@ function performFullReset(){
   state.bizTestsOpen = [];
   state.bizTestsPaused = null;
   // «Вклады» — сброс возвращает условия к дефолтам и отключает услуги
-  state.depositsAmount = 100000;
-  state.depositsRate = 12;
-  state.depositsYears = 5;
+  state.depositsAmount = 50000;
+  state.depositsRate = 13;
+  state.depositsYears = 1;
   state.depositsCap = 'month';
   state.depositsTopUp = 0;
   state.depositsServices = [];

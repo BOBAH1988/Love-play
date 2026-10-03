@@ -3749,6 +3749,32 @@ function checkDeposits(html, timerSrc) {
   check('у условий указана дата, чтобы расчёт не выдавался за вечный',
     /keyRateFrom:\s*'\d{2}\.\d{2}\.\d{4}'/.test(game) && /inflationFrom:\s*'\d{2}\.\d{2}\.\d{4}'/.test(game),
     'ожидаются keyRateFrom и inflationFrom в формате ДД.ММ.ГГГГ');
+  // Значения по умолчанию объявлены в трёх местах: state в core.js, запасные
+  // def в deposits.js и начальные value ползунков в разметке. Разъехались бы
+  // они тихо: на экране мигнуло бы одно значение, а расчёт пошёл бы по другому.
+  const coreSrc2 = read('games/core.js');
+  const firstNum = (src, re) => {
+    const m = re.exec(src);
+    return m ? m[1] : '';
+  };
+  const sliderValue = (id) => firstNum(html, new RegExp(`id="${id}"[\\s\\S]*?value="([\\d.]+)"`));
+  const defaults = [
+    { name:'суммы', state:/depositsAmount:(\d+)/, def:/amount: \{[^}]*def:(\d+)/, id:'depositsAmountRange' },
+    { name:'ставки', state:/depositsRate:(\d+)/, def:/rate:   \{[^}]*def:(\d+)/, id:'depositsRateRange' },
+    { name:'срока', state:/depositsYears:(\d+)/, def:/years:  \{[^}]*def:(\d+)/, id:'depositsYearsRange' },
+  ].map(d => ({ name:d.name, a:firstNum(coreSrc2, d.state), b:firstNum(game, d.def), c:sliderValue(d.id) }));
+  const badDefaults = defaults.filter(d => !d.a || d.a !== d.b || d.a !== d.c).map(d => d.name);
+  check('значения по умолчанию согласованы в state, в deposits.js и в разметке',
+    badDefaults.length === 0,
+    `разошлись: ${badDefaults.join(', ') || '—'}`);
+  // Сброс прогресса обязан возвращать те же значения, что и стартовая страница.
+  const resetMatch = /state\.depositsAmount = (\d+);[\s\S]*?state\.depositsRate = (\d+);[\s\S]*?state\.depositsYears = (\d+);/.exec(coreSrc2);
+  check('полный сброс возвращает те же значения по умолчанию',
+    !!resetMatch
+      && resetMatch[1] === defaults[0].a
+      && resetMatch[2] === defaults[1].a
+      && resetMatch[3] === defaults[2].a,
+    'после «Сбросить весь прогресс» условия должны совпасть с начальными');
   // Услуги: каждая должна быть и в коде, и в разметке, и по своему id.
   // Иначе пилюля на экране либо ничего не сделает, либо её нет вовсе.
   const serviceIds = [...game.matchAll(/\{ id:'(\w+)',\s+el:'(depositsServ\w+)'/g)].map(m => ({ id: m[1], el: m[2] }));
