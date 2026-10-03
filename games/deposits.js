@@ -513,15 +513,26 @@ function renderDepositsResult(){
   if(profit) profit.textContent = `Процентами начислено ${depositsMoney(res.profit, true)}`;
   const compare = document.getElementById('depositsCompare');
   if(compare){
-    compare.textContent = res.extraFromCap >= 1
-      ? `Капитализация дала на ${depositsMoney(res.extraFromCap)} больше`
-      : 'При выплате в конце срока капитализации нет: сумма растёт только за счёт процентов на вложенное.';
+    // Режим определяется ВЫБРАННОЙ КАПИТАЛИЗАЦИЕЙ, а не размером разницы.
+    // Прежде здесь стояло extraFromCap >= 1, и это был баг: при 0,1% на один
+    // год капитализация даёт меньше рубля, даже помесячной, — и экран
+    // показывал «капитализации нет», словно выбран режим «в конце срока».
+    // Разница в деньгах и выбор режима — разные вещи.
+    if(p.cap === 'end'){
+      compare.textContent = 'При выплате в конце срока капитализации нет: сумма растёт только за счёт процентов на вложенное.';
+    }else if(res.extraFromCap < 1){
+      compare.textContent = 'Капитализация почти ничего не добавила: за такой срок и ставку разница меньше рубля.';
+    }else{
+      compare.textContent = `Капитализация дала на ${depositsMoney(res.extraFromCap)} больше`;
+    }
   }
   const eff = document.getElementById('depositsEffective');
   if(eff){
     eff.textContent = p.cap === 'end'
       ? 'Эффективная ставка равна договорной: проценты не присоединяются.'
-      : `Эффективная годовая ставка — ${res.effective.toFixed(2).replace('.', ',')}% при ${p.rate}% в договоре.`;
+      // depositsRuNum, а не ${p.rate}: у ползунка шаг 0,1, и в подписи
+      // появлялось «при 0.1% в договоре» с точкой вместо запятой.
+      : `Эффективная годовая ставка — ${res.effective.toFixed(2).replace('.', ',')}% при ${depositsRuNum(p.rate)}% в договоре.`;
   }
   const double = document.getElementById('depositsDoubling');
   if(double){

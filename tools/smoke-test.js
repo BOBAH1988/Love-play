@@ -7558,6 +7558,39 @@ test('«Вклады»: инфляция показывает, во скольк
   }
 });
 
+test('«Вклады»: строка о капитализации не путается с выбранным режимом', () => {
+  // Регресс: признаком режима служила разница в рублях (extraFromCap >= 1),
+  // а не выбранная капитализация. При 0,1% за один год капитализация даёт
+  // меньше рубля даже помесячной, и экран показывал «При выплате в конце
+  // срока капитализации нет», словно выбрано «в конце срока».
+  const saved = depositsBackup();
+  try {
+    for(const cap of ['month', 'quarter', 'year']){
+      depositsApply({ amount:100000, rate:0.1, years:1, cap, topup:0 });
+      startDepositsGame();
+      const text = getElById(stub, 'depositsCompare').textContent;
+      assert(!/капитализации нет/i.test(text),
+        `при капитализации «${cap}» нельзя писать «капитализации нет»: получено «${text}»`);
+    }
+    // Обратный случай: режим «в конце срока» обязан давать именно то сообщение.
+    depositsApply({ amount:100000, rate:12, years:5, cap:'end', topup:0 });
+    startDepositsGame();
+    assert(/капитализации нет/i.test(getElById(stub, 'depositsCompare').textContent),
+      'при выплате в конце срока должно быть сказано, что капитализации нет');
+    // При годовой капитализации на коротком сроке разница меньше рубля —
+    // это не «нет капитализации», а «почти ничего не добавила».
+    depositsApply({ amount:100000, rate:0.1, years:1, cap:'year', topup:0 });
+    startDepositsGame();
+    const tiny = getElById(stub, 'depositsCompare').textContent;
+    assert(/почти ничего не добавила/.test(tiny), `при копеечной разнице ожидался свой текст, получено «${tiny}»`);
+    // Проценты в подписи — с запятой, а не с точкой (у ползунка шаг 0,1).
+    assert(getElById(stub, 'depositsEffective').textContent.includes('при 0,1% в договоре'),
+      `в подписи ставка должна быть с запятой, получено «${getElById(stub, 'depositsEffective').textContent}»`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
 test('«Вклады»: услуги банка уменьшают итог и считаются по каждой', () => {
   // Смысл блока услуг — они РЕАЛЬНО уменьшают итог. Проверяем сумму по
   // каждой услуге и общий итог, иначе пилюли останутся украшением.
