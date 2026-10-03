@@ -492,10 +492,22 @@ function renderDepositsResult(){
   const tax = depositsTax(res);
   const serv = depositsServicesCost(p);
   const verdict = depositsVerdict(res, tax, serv);
+  // Крупная сумма — НОМИНАЛЬНАЯ: ровно столько лежит на счёте в конце
+  // срока, как и показывает вклад в банке. Реальная цена (после инфляции,
+  // налога и услуг) — строкой под ней: она всегда меньше, и мешать её в
+  // первую цифру значило бы занижать то, что действительно на счёте.
   const total = document.getElementById('depositsTotal');
-  if(total) total.textContent = depositsMoney(verdict.realTotal, true);
-  const nominal = document.getElementById('depositsNominal');
-  if(nominal) nominal.textContent = `В номинальных ценах — ${depositsMoney(res.total, true)}`;
+  if(total) total.textContent = depositsMoney(res.total, true);
+  const real = document.getElementById('depositsReal');
+  if(real){
+    // Состав вычетов в подписи меняется: без услуг о налоге и инфляции
+    // говорить не о чем, а с услугами они часть цены.
+    const realTotal = verdict.realTotal;
+    const parts = serv.total > 0
+      ? 'С учётом инфляции, налога и услуг'
+      : 'С учётом инфляции и налога';
+    real.textContent = `${parts} — ${depositsMoney(realTotal, true)}`;
+  }
   // Срок, на который считалось. Берём res.months — это фактическое число
   // месяцев из расчёта, а не заданный p.years: для дробного срока они
   // расходятся (2,7 года превращаются в 32 месяца), и подпись обязана

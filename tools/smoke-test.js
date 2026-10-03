@@ -7343,16 +7343,16 @@ test('«Вклады»: модуль загружается целиком и к
     // исходную разметку в _html, он пуст до первого присваивания, поэтому
     // сверяем те элементы, которые игра заполняет сама.
     const res2 = depositsSimulate(depositsParams());
-    // Крупная сумма — РЕАЛЬНЫЙ итог (после налога, услуг и инфляции), а
-    // номинальный вынесен в строку под ней. Проверяем обе: иначе вердикт и
-    // таблица считают одно, а игрок видит другое.
+    // Крупная сумма — НОМИНАЛЬНАЯ (что лежит на счёте), реальная цена с
+    // учётом инфляции, налога и услуг — строкой под ней. Проверяем обе.
     const tax2 = depositsTax(res2);
     const serv2 = depositsServicesCost(depositsParams());
-    const real = depositsVerdict(res2, tax2, serv2).realTotal;
-    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(real, true),
-      `на экране расчёта должен быть реальный итог ${depositsMoney(real, true)}`);
-    assert(getElById(stub, 'depositsNominal').textContent === `В номинальных ценах — ${depositsMoney(res2.total, true)}`,
-      'под реальной суммой должен быть номинальный итог');
+    const real2 = depositsVerdict(res2, tax2, serv2).realTotal;
+    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res2.total, true),
+      `на экране расчёта должен быть номинальный итог ${depositsMoney(res2.total, true)}`);
+    assert(getElById(stub, 'depositsReal').textContent.includes(depositsMoney(real2, true)),
+      `под итогом должна быть реальная цена ${depositsMoney(real2, true)}`);
+    assert(real2 < res2.total, 'реальная цена не может быть выше номинальной');
     assert(getElById(stub, 'depositsInvested').textContent.includes('Вложено'),
       'на экране должно быть сказано, сколько вложено');
     assert(getElById(stub, 'depositsProfit').textContent.includes('Процентами'),
@@ -7752,10 +7752,13 @@ test('«Вклады»: полный цикл — настройки, расчё
     const res = depositsSimulate(depositsParams());
     assert(getElById(stub, 'depositsGame').classList.contains('active'), 'расчёт должен открыться');
     const realTotal = depositsVerdict(res, depositsTax(res), depositsServicesCost(depositsParams())).realTotal;
-    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(realTotal, true),
-      `на экране должен быть реальный итог расчёта ${depositsMoney(realTotal, true)}`);
-    assert(getElById(stub, 'depositsTotal').textContent !== depositsMoney(res.total, true),
-      'крупная сумма не должна совпадать с номинальным итогом — иначе вычеты не показаны');
+    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res.total, true),
+      `на экране должен быть номинальный итог расчёта ${depositsMoney(res.total, true)}`);
+    // Реальная строка обязана быть и отличаться: иначе вычеты не показаны.
+    const realText = getElById(stub, 'depositsReal').textContent;
+    assert(realText.includes(depositsMoney(realTotal, true)),
+      `реальная цена должна быть показана рядом с итогом, получено «${realText}»`);
+    assert(getElById(stub, 'depositsTotal').textContent !== realText, 'номинальный и реальный итоги не должны совпадать');
     // Подпись сокращена до «Капитализация дала на X больше», поэтому проверяем
     // само слово в правильной форме и наличие самой суммы: раньше здесь искалось
     // «капитализация» в нижнем регистре, и после правки текста проверка упала бы.
