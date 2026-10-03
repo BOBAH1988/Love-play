@@ -187,6 +187,10 @@ function depositsMoney(n, withKopecks){
 // целых работает обычное склонение: 1 → «год», 3 → «года», 5 → «лет».
 function depositsYearsWord(n){
   const v = Math.abs(Number(n) || 0);
+  // После дробного числа в русском языке всегда «года»: «5,4 года», а не
+  // «5,4 лет». Раньше число округлялось и слово бралось от округлённого, из-за
+  // чего на экране появлялось «через 5,4 лет».
+  if(Math.abs(v - Math.round(v)) > 1e-9) return 'года';
   const rounded = Math.round(v) % 100;
   const last = rounded % 10;
   if(rounded > 10 && rounded < 20) return 'лет';
@@ -711,8 +715,6 @@ DEPOSITS_SERVICES.forEach(s=>{
 // прямыми вызовами getElementById('id') — такой вид читает проверка
 // «у каждой кнопки «Пауза»/«Выход» есть обработчик» в check.js.
 document.getElementById('depositsStartBtn')?.addEventListener('click', ()=>{ startDepositsGame(); });
-document.getElementById('depositsSetupExitBtn')?.addEventListener('click', ()=>{ exitDepositsSetup(); });
-document.getElementById('depositsGameExitBtn')?.addEventListener('click', ()=>{ exitDepositsGame(); });
 setupRulesModal('depositsRulesModal', 'closeDepositsRulesBtn');
 renderDepositsSetup();
 
