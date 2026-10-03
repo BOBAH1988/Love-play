@@ -131,8 +131,17 @@ function createDomStub(html, { trackHandlers = false } = {}) {
       appendChild() {}, removeChild() {}, insertBefore() {}, replaceChild() {},
       remove() {}, replaceWith() {}, after() {}, before() {},
       cloneNode() { return makeEl(id); },
-      setAttribute() {}, getAttribute() { return null; }, removeAttribute() {},
-      hasAttribute() { return false; },
+      // Атрибуты хранятся по-настоящему: без этого нельзя проверить
+      // aria-pressed и прочие состояния доступности — getAttribute() всегда
+      // возвращал бы null, и проверка либо проходила бы враньё, либо падала бы
+      // впустую на неработающем коде.
+      _attrs: {},
+      setAttribute(name, value) { this._attrs[name] = String(value); },
+      getAttribute(name) {
+        return Object.prototype.hasOwnProperty.call(this._attrs, name) ? this._attrs[name] : null;
+      },
+      removeAttribute(name) { delete this._attrs[name]; },
+      hasAttribute(name) { return Object.prototype.hasOwnProperty.call(this._attrs, name); },
       focus() {}, blur() {},
       click() {
         // Симуляция клика: вызываем все зарегистрированные обработчики click

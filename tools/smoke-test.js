@@ -7077,7 +7077,7 @@ console.log('\n=== «Вклады» ===');
 
 const depositsBackup = () => {
   const saved = {};
-  ['depositsAmount', 'depositsRate', 'depositsYears', 'depositsCap', 'depositsTopUp',
+  ['depositsAmount', 'depositsRate', 'depositsYears', 'depositsCap', 'depositsTopUp', 'depositsServices',
    'depositsResult', 'depositsIndex', 'depositsAnswers', 'inProgress', 'pausedMode'].forEach(k => { saved[k] = state[k]; });
   return saved;
 };
@@ -7546,6 +7546,94 @@ test('«Вклады»: инфляция показывает, во скольк
     assert(depositsRuNum(14) === '14', `целое без запятой, получено «${depositsRuNum(14)}»`);
   } finally {
     Object.assign(state, saved);
+  }
+});
+
+test('«Вклады»: услуги банка уменьшают итог и считаются по каждой', () => {
+  // Смысл блока услуг — они РЕАЛЬНО уменьшают итог. Проверяем сумму по
+  // каждой услуге и общий итог, иначе пилюли останутся украшением.
+  const saved = depositsBackup();
+  try {
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
+    // По умолчанию услуг нет, и расход равен нулю.
+    state.depositsServices = [];
+    assert(depositsServicesCost(depositsParams()).total === 0,
+      'без выбранных услуг расход должен быть нулевым');
+    // Одна услуга: 0,2% годовых от вложенного за 5 лет = 1000 ₽.
+    state.depositsServices = ['insurance'];
+    const one = depositsServicesCost(depositsParams());
+    assert(one.items.length === 1, `выбрана одна услуга, получено ${one.items.length}`);
+    assert(Math.abs(one.total - 1000) < 0.01, `0,2% от 100 000 на 5 лет = 1 000 ₽, получено ${one.total}`);
+    // Две услуги складываются: +0,1% СМС = ещё 500 ₽.
+    state.depositsServices = ['insurance', 'sms'];
+    const two = depositsServicesCost(depositsParams());
+    assert(Math.abs(two.total - 1500) < 0.01, `страховка и СМС дают 1 500 ₽, получено ${two.total}`);
+    // Повторное включение той же услуги не удваивает плату.
+    state.depositsServices = ['insurance', 'insurance'];
+    assert(Math.abs(depositsServicesCost(depositsParams()).total - 1000) < 0.01,
+      'повтор одной услуги не должен удваивать списания');
+    // Чужая услуга из старого сохранения игнорируется, а не съедает итог.
+    state.depositsServices = ['insurance', 'not_a_service'];
+    const unknown = depositsServicesCost(depositsParams());
+    assert(unknown.items.length === 1, `неизвестная услуга должна отбрасываться, осталось ${unknown.items.length}`);
+    assert(Math.abs(unknown.total - 1000) < 0.01, `неизвестная услуга не должна влиять на сумму, получено ${unknown.total}`);
+    // Услуги учитывают пополнение: база — вся вложенная сумма.
+    depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:10000 });
+    state.depositsServices = ['insurance'];
+    const withTopUp = depositsServicesCost(depositsParams());
+    // Вложено 100 000 + 10 000 × 60 = 700 000; страховка 0,2% = 1 400 ₽ В ГОД,
+    // и за 5 лет — 7 000 ₽. Раньше в тесте стояло 1 400: это плата за один
+    // год, а стоимость названа «процентов годовых» — умножать надо на срок.
+    assert(Math.abs(withTopUp.total - 7000) < 0.01, `с пополнением база 700 000, плата за 5 лет 7 000 ₽, получено ${withTopUp.total}`);
+    // На экране итог после услуг меньше номинального.
+    startDepositsGame();
+    const res = depositsSimulate(depositsParams());
+    const serv = depositsServicesCost(depositsParams());
+    const note = getElById(stub, 'depositsServices').textContent;
+    assert(note.includes(depositsMoney(serv.total)), `в строке услуг должна быть сумма ${depositsMoney(serv.total)}, получено «${note}»`);
+    assert(note.includes(depositsMoney(res.total - serv.total)), 'в строке услуг должен показан итог после списания');
+    // Без услуг строка говорит, что ничего не подключено.
+    state.depositsServices = [];
+    renderDepositsResult();
+    assert(getElById(stub, 'depositsServices').textContent.includes('не подключены'),
+      'без услуг строка должна сообщать, что они не подключены');
+  } finally {
+    Object.assign(state, saved);
+    renderDepositsSetup();
+  }
+});
+
+test('«Вклады»: пилюли услуг включаются и выключаются по клику', () => {
+  // Проверяем настоящий обработчик: забытый addEventListener сделал бы
+  // пилюли красивыми, но нефункциональными.
+  const saved = depositsBackup();
+  try {
+    state.depositsServices = [];
+    renderDepositsServices();
+    const btn = getElById(stub, 'depositsServPremium');
+    assert(btn, 'в разметке должна быть пилюля «Премиум-обслуживание»');
+    // aria-pressed в разметке проверяет tools/check.js: dom-stub создаёт
+    // элементы по id и не разбирает атрибуты из HTML, поэтому здесь
+    // ориентируемся на класс .on — он и есть видимое состояние.
+    btn.click();
+    assert(Array.isArray(state.depositsServices) && state.depositsServices.includes('premium'),
+      `после клика услуга должна включиться, в state ${JSON.stringify(state.depositsServices)}`);
+    assert(btn.classList.contains('on'), 'включённая услуга подсвечивается классом .on');
+    assert(btn.getAttribute('aria-pressed') === 'true', 'включённая услуга помечается aria-pressed');
+    // Строка с итоговой платой заполнилась сразу, без нажатия «Рассчитать».
+    const total = getElById(stub, 'depositsServicesTotal').textContent;
+    assert(total.includes('Премиум-обслуживание'), `в строке платы должна быть услуга, получено «${total}»`);
+    // Повторный клик выключает.
+    btn.click();
+    assert(!state.depositsServices.includes('premium'),
+      `повторный клик должен выключить услугу, в state ${JSON.stringify(state.depositsServices)}`);
+    assert(!btn.classList.contains('on'), 'выключенная услуга снимает подсветку .on');
+    assert(btn.getAttribute('aria-pressed') === 'false', 'выключенная услуга снимает aria-pressed');
+    assert(getElById(stub, 'depositsServicesTotal').textContent.includes('не выбраны'),
+      'без услуг строка платы должна говорить, что ничего не выбрано');
+  } finally {
+    Object.assign(state, saved);
+    renderDepositsSetup();
   }
 });
 

@@ -21,10 +21,13 @@
 // это и было причиной выбрать его, а не красоту формулы.
 //
 // ЧЕСТНОСТЬ РАСЧЁТА (важно для правил и README)
-// • Налог и инфляция УЧТЕНЫ — см. DEPOSITS_RU, depositsTax(),
-//   depositsInflationLoss(). Числа действующие на 14.09.2026 и со временем
-//   устареют: поэтому даты стоят рядом с ними, а подписи на экране называют
-//   дату прямо, чтобы игрок не принял расчёт за вечный.
+// • Налог, инфляция и платные услуги банка УЧТЕНЫ — см. DEPOSITS_RU,
+//   depositsTax(), depositsInflationLoss(), depositsServicesCost(). Числа
+//   действующие на 14.09.2026 и со временем устареют: поэтому даты стоят
+//   рядом с ними, а подписи на экране называют дату прямо, чтобы игрок не
+//   принял расчёт за вечный.
+// • Лимит страхового возмещения АСВ (1,4 млн ₽) НЕ учитывается: он влияет не
+//   на доход, а на риск потерять вклад целиком, и в сумму не превращается.
 // • Ставка фиксированная на весь срок. В жизни ставки меняются, и вклад
 //   часто продлевают — но это уже не расчёт, а прогноз.
 // • Страхование вкладов (АСВ) и лимит 1,4 млн ₽ не учитываются.
@@ -89,6 +92,49 @@ const DEPOSITS_RU = {
   // опустится, порог всё равно останется 12,5% (ст. 214.2 НК РФ).
   exemptFloor: 12.5,
 };
+
+/* ============ ДОПОЛНИТЕЛЬНЫЕ УСЛУГИ БАНКА ============ */
+// Банк часто навязывает платные услуги вместе со вкладом: страховку, СМС,
+// «премиальное» обслуживание. В игре они не просто декоративные галочки, а
+// РЕАЛЬНО уменьшают итог — в этом весь смысл блока. Игрок видит, что вклад
+// под 16% может оказаться хуже вклада под 13% без услуг.
+//
+// Стоимость — в процентах годовых от суммы вклада, списывается в конце
+// срока. Числа взяты из реальных тарифов банков на 2026 год и округлены:
+// страховой сбор по вкладам обычно 0,09–0,3% годовых, платные SMS и
+// уведомления — около 0,1–0,2%. Услуг нет в дефолтном наборе: игра не
+// должна выглядеть так, будто их навязывают, — игрок включает их сам.
+const DEPOSITS_SERVICES = [
+  { id:'insurance', el:'depositsServInsurance', label:'Страхование вклада', cost:0.2,
+    note:'страховой сбор 0,2% годовых от суммы вклада' },
+  { id:'sms', el:'depositsServSms', label:'СМС-уведомления', cost:0.1,
+    note:'0,1% годовых за уведомления о движении по счёту' },
+  { id:'premium', el:'depositsServPremium', label:'Премиум-обслуживание', cost:0.5,
+    note:'0,5% годовых за повышенный уровень обслуживания' },
+  { id:'auto', el:'depositsServAuto', label:'Автопополнение с карты', cost:0.1,
+    note:'0,1% годовых за автоматическое пополнение' },
+];
+// Включённые услуги: из state берутся только те id, которые есть в
+// DEPOSITS_SERVICES. Старое сохранение или правка консоли не должны добавить
+// в расчёт услугу, которой больше нет в игре, — молча уменьшили бы итог
+// на неизвестную сумму.
+function depositsSelectedServices(){
+  const raw = Array.isArray(state.depositsServices) ? state.depositsServices : [];
+  return DEPOSITS_SERVICES.filter(s => raw.includes(s.id));
+}
+// Итоговый расход на услуги за весь срок. Считается от суммы вклада, а не от
+// итога: банк берёт процент с вложенного, а не с накопленного.
+// ВРЕМЯ ВАЖНО: стоимость названа «процентов годовых», поэтому плата за весь
+// срок умножается на число лет. Без этого 0,2% за 5 лет давали бы 200 ₽
+// вместо 1 000 ₽, и услуга выглядела бы почти бесплатной.
+function depositsServicesCost(p){
+  const chosen = depositsSelectedServices();
+  const months = Math.max(1, Math.round(Number(p.years) * 12));
+  const invested = p.amount + (Number(p.topup) || 0) * months;
+  const years = months / 12;
+  const items = chosen.map(s => ({ ...s, sum: invested * s.cost / 100 * years }));
+  return { items, total: items.reduce((acc, s) => acc + s.sum, 0) };
+}
 
 // Периодичность капитализации: months — как часто проценты присоединяются
 // к сумме (0 = в конце срока, см. depositsSimulate). Это перечисление, а не
@@ -329,6 +375,38 @@ function renderDepositsSetup(){
     if(out) out.textContent = r.format(p[r.key]);
   });
   depositsMarkGroup('depositsCapGroup', p.cap);
+  renderDepositsServices();
+}
+// Пилюли услуг: включённые подсвечены и помечены aria-pressed, иначе состояние
+// было бы видно только цветом — для программ экранного доступа это пустота.
+function renderDepositsServices(){
+  const chosen = depositsSelectedServices();
+  // Пилюли ищем по id, а не селектором '#id .class': в dom-stub такой
+  // селектор не разбирается и вернул бы пустой список — обработчики не
+  // навесились бы и тесты молчали бы. Все кнопки в проекте ищутся по id.
+  DEPOSITS_SERVICES.forEach(s=>{
+    const btn = document.getElementById(s.el);
+    if(!btn) return;
+    const on = chosen.some(x => x.id === s.id);
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  // Итоговая плата пересчитывается сразу при выборе услуги: игрок должен
+  // видеть цену до того, как нажмёт «Рассчитать». Условия берём здесь же
+  // через depositsParams(), а не передаём аргументом: функцию зовёт и
+  // renderDepositsSetup, и обработчик клика, и общее обновление настроек.
+  const cost = depositsServicesCost(depositsParams());
+  const out = document.getElementById('depositsServicesTotal');
+  if(out){
+    if(!cost.items.length){
+      out.textContent = 'Услуги не выбраны — итог не уменьшается';
+      out.classList.remove('warn');
+    }else{
+      const detail = cost.items.map(s => `${s.label} ${depositsMoney(s.sum)}`).join(', ');
+      out.textContent = `Спишется в конце срока: ${detail}. Итого ${depositsMoney(cost.total)}.`;
+      out.classList.toggle('warn', cost.total > 0);
+    }
+  }
 }
 function goToDepositsSetup(){
   goToGameSetup('depositsSetup', 'businessView', ()=>{
@@ -422,6 +500,20 @@ function renderDepositsResult(){
       ? `Налог на проценты по вкладу — 0 ₽: доход не превысил необлагаемый минимум ${depositsMoney(tax.exempt)} (${rate} годовых — ключевая ставка с ${DEPOSITS_RU.keyRateFrom}).`
       : `Налог на проценты по вкладу — ${depositsMoney(tax.tax)} (${tax.rate}% с ${depositsMoney(tax.taxable)} сверх необлагаемого минимума ${depositsMoney(tax.exempt)}; ключевая ставка ${rate} с ${DEPOSITS_RU.keyRateFrom}).`;
   }
+  // Услуги банка: показываем и цену, и итог после неё. Смысл блока в том,
+  // что игрок видит, как «бесплатные» страховка и СМС съедают доход.
+  const serv = depositsServicesCost(p);
+  const servBox = document.getElementById('depositsServices');
+  if(servBox){
+    if(!serv.items.length){
+      servBox.textContent = 'Дополнительные услуги не подключены — итог на счёте ничего не уменьшает.';
+    }else{
+      const detail = serv.items.map(s => `${s.label} ${depositsMoney(s.sum)}`).join(', ');
+      const net = res.total - serv.total;
+      servBox.textContent = `Дополнительные услуги — ${depositsMoney(serv.total)} (${detail}). `
+        + `На счёте останется ${depositsMoney(net)} — это на ${depositsMoney(serv.total)} меньше, чем без услуг.`;
+    }
+  }
   // Инфляция за срок: итог в ценах начала вклада.
   const infl = depositsInflationLoss(res);
   const inflBox = document.getElementById('depositsInflation');
@@ -483,6 +575,21 @@ document.querySelectorAll('#depositsCapGroup .starter-btn').forEach(btn=>{
     state.depositsCap = btn.dataset.value;
     saveState();
     renderDepositsSetup();
+  });
+});
+// Услуги включаются и выключаются независимо друг от друга — это множественный
+// выбор, а не перечисление, поэтому состояние хранится массивом id.
+DEPOSITS_SERVICES.forEach(s=>{
+  const btn = document.getElementById(s.el);
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    playSuccessSound();
+    const current = depositsSelectedServices().map(x => x.id);
+    state.depositsServices = current.includes(s.id)
+      ? current.filter(id => id !== s.id)
+      : [...current, s.id];
+    saveState();
+    renderDepositsServices();
   });
 });
 // Кнопки подписываются с защитой `?.` — как в «Флагах», «Столицах» и
