@@ -4465,3 +4465,54 @@
     #depositsGame .deposit-total-box{ padding:8px 12px; }
   }
 
+
+  /* ---- «Кредит» (games/credit.js) ----
+     Экран настроек и расчёта намеренно остаётся на классах «Вкладов»
+     (.deposit-range, .deposit-serv-*, .deposit-total-box, .deposit-table):
+     это тот же раздел «Бизнес игры» с той же палитрой, и два одинаковых
+     калькулятора должны выглядеть одинаково. Свои классы .credit-* есть
+     только там, где экраны РЕАЛЬНО различаются: у кредита столбики
+     показывают убывающий остаток долга, а не растущую сумму. */
+
+  /* Столбиковая диаграмма остатка долга. Высота столбика задаётся из JS в
+     процентах от исходной суммы кредита, поэтому у колонки фиксированная
+     высота, а сам столбик растёт снизу вверх. */
+  .credit-bar-col{
+    flex:1 1 0; min-width:0; height:100%;
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+  }
+  /* Убывающий остаток — обратный смысл цветов «Вкладов»: там золотой столбик
+     значит «накопилось», здесь — «ещё должен банку». */
+  .credit-bar{
+    width:100%; max-width:26px; border-radius:6px 6px 0 0;
+    background:linear-gradient(180deg, #ff9f5e, #ff636e);
+  }
+  .credit-bar-year{
+    font-size:10px; color:#cba0bf; margin-top:4px; line-height:1;
+    white-space:nowrap; overflow:hidden;
+  }
+  /* Плотная раскладка — по замеру «Вкладов»: на 390×844 их расчёт занимал
+     1145 px против 812 видимых. Здесь блоков столько же, поэтому отступы
+     взяты те же. */
+  #creditSetup .subtitle{ margin-bottom:12px; font-size:13px; line-height:1.4; }
+  #creditSetup .field{ margin-bottom:10px; }
+  #creditSetup #creditProductNote{ margin-top:6px; font-size:12px; line-height:1.35; }
+  #creditGame .deposit-note{ margin-bottom:4px; padding:5px 10px; line-height:1.35; }
+  #creditGame .deposit-total-box{ margin:4px 0; padding:8px 12px; }
+  #creditGame .deposit-total{ margin:2px 0 4px; font-size:clamp(26px, 8.5vw, 38px); }
+  #creditGame .deposit-term{ margin:-2px 0 5px; padding-bottom:5px; }
+  #creditGame .field{ margin-bottom:6px; }
+  #creditGame .deposit-bars{ height:80px; }
+  #creditGame .deposit-table th, #creditGame .deposit-table td{ padding:3px 6px; }
+  #creditGame .deposit-disclaimer{ margin:6px 0 4px; padding:6px 10px; line-height:1.4; }
+  #creditSetup .deposit-serv-total{ margin-top:6px; }
+  /* Пять услуг в сетке 2×2 не помещаются: последняя (нотариус) встаёт на
+     всю ширину — так она читается как дорогая разовая услуга, а не как
+     мелкая плата. */
+  #creditServNotary{ grid-column:1 / -1; }
+  @media (max-height:700px){
+    #creditSetup .field{ margin-bottom:8px; }
+    #creditGame .deposit-bars{ height:76px; }
+    #creditGame .deposit-note{ padding:5px 9px; }
+    #creditGame .deposit-total-box{ padding:8px 12px; }
+  }

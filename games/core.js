@@ -377,6 +377,17 @@ let state = {
   // DEPOSITS_SERVICES. По умолчанию пусто: навязывать услуги в дефолте
   // означало бы исподтишка уменьшать итог до того, как игрок что-то выбрал.
   depositsServices:[],
+  // «Кредит» (бизнес-игры) — калькулятор кредита: выгодно ли его брать.
+  // Условия задаёт игрок (тип кредита кнопками подставляет реальные рыночные
+  // параметры продукта на 02.10.2026, остальное — ползунками), запоминаются
+  // только они; состояние расчёта не хранится — оно целиком выводится из них
+  // функцией creditSimulate() при каждом показе экрана.
+  creditProduct:'cash', creditAmount:500000, creditRate:25, creditMonths:60,
+  creditSched:'annuity', creditDown:0, creditGain:0,
+  // Подключённые страховки и комиссии — массив id из CREDIT_SERVICES. По
+  // умолчанию пусто: навязывать их в дефолте означало бы исподтишка удорожать
+  // кредит до того, как игрок что-то выбрал.
+  creditServices:[],
   // Тест IQ (обучающие игры) — одна игра, один тест: 30 заданий и разбор по
   // пяти направлениям. iqTestOrder — перемешанный порядок заданий ЭТОЙ партии
   // (без него пять заданий одного направления шли подряд и направление
@@ -1100,6 +1111,12 @@ document.getElementById('gameDepositsBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   callGameEntry('goToDepositsSetup');
+});
+// «Кредит» (бизнес-игры) — калькулятор кредита с реальными условиями.
+document.getElementById('gameCreditBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  callGameEntry('goToCreditSetup');
 });
 // «Тест IQ» (обучающие игры) — 30 заданий и разбор по направлениям.
 document.getElementById('gameIqTestBtn').addEventListener('click', ()=>{
@@ -2156,6 +2173,15 @@ function performFullReset(){
   state.depositsCap = 'month';
   state.depositsTopUp = 0;
   state.depositsServices = [];
+  // «Кредит» — сброс возвращает условия к дефолтам и отключает комиссии
+  state.creditProduct = 'cash';
+  state.creditAmount = 500000;
+  state.creditRate = 25;
+  state.creditMonths = 60;
+  state.creditSched = 'annuity';
+  state.creditDown = 0;
+  state.creditGain = 0;
+  state.creditServices = [];
   // Тест IQ — общий сброс чистит партию и историю
   state.iqTestIndex = 0;
   state.iqTestOrder = [];

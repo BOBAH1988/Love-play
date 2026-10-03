@@ -818,6 +818,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🔍','Оцени бизнес','bizObsRulesModal'],
       ['🏢','Бизнес тесты','bizTestsRulesModal'],
       ['🏦','Вклады','depositsRulesModal'],
+      ['💳','Кредит','creditRulesModal'],
     ]},
     { icon:'📱', name:'Игры для одного', games:[
       ['🪢','Виселица','partyHangmanRulesModal'],
@@ -960,6 +961,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     bizTestsSetup:'businessView', bizTestsGame:'businessView',
     bizTestsSummary:'businessView', bizTestsHistory:'businessView',
     depositsSetup:'businessView', depositsGame:'businessView',
+    creditSetup:'businessView', creditGame:'businessView',
     flashSetup:'learningView', flashGame:'learningView',
     flashTimeSetup:'learningView', flashTimeGame:'learningView',
     flagsSetup:'learningView', flagsGame:'learningView',
@@ -1006,6 +1008,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     // «Вклады»: экран настроек, чтобы стрелка «←» из него вела в хаб,
     // а не гоняла экран сам на себе.
     'depositsSetup',
+    // «Кредит» — то же самое: его экран настроек тоже уводит в хаб.
+    'creditSetup',
     // Обучающая группа: экраны настроек «Столиц» и «Арифметики». Без них
     // стрелка «←» не считала экран экраном настройки и проваливалась в
     // generic-ветку, которая писала в lastSectionOnPause чужой раздел.
@@ -1077,6 +1081,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'bizTestsSetup':'exitBizTestsSetup',
     // «Вклады»: «←» с экрана настроек ведёт в хаб.
     'depositsSetup':'exitDepositsSetup',
+    // «Кредит»: то же.
+    'creditSetup':'exitCreditSetup',
     'iqTestHistory':'exitIqTestHistory',
     'iqTestSummary':'exitIqTestSummary',
     'iqTestSetup':'exitIqTestSetup',

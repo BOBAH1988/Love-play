@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261003m">
+<link rel="stylesheet" href="styles/app.css?v=20261004a">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-30 · v601';
+  window.APP_BUILD = '2026-11-04 · v602';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v601</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v602</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -453,6 +453,7 @@
           <button type="button" class="btn btn-menu-item" id="gameBizObserverBtn"><span class="menu-icon">🔍</span> Оцени бизнес</button>
           <button type="button" class="btn btn-menu-item" id="gameBizTestsBtn"><span class="menu-icon">🏢</span> Бизнес тесты</button>
           <button type="button" class="btn btn-menu-item" id="gameDepositsBtn"><span class="menu-icon">🏦</span> Вклады</button>
+          <button type="button" class="btn btn-menu-item" id="gameCreditBtn"><span class="menu-icon">💳</span> Кредит</button>
         </div>
       </div>
 
@@ -3921,6 +3922,37 @@
     </div>
   </div>
 
+  <!-- ===== ПРАВИЛА "КРЕДИТ" ===== -->
+  <!-- 📍 логика: games/credit.js -->
+  <div class="modal-overlay" id="creditRulesModal">
+    <div class="modal-card">
+      <div class="modal-title">💳 Правила игры «Кредит»</div>
+      <div class="intro-text">Калькулятор кредита с реальными российскими условиями. Выберите тип кредита, задайте сумму, ставку, срок и дополнительные условия — и увидите, сколько стоит кредит на самом деле и выгодно ли его брать.</div>
+      <ol class="modal-rules">
+        <li>Сначала выберите <b>тип кредита</b> — обычная кредитка наличными, автокредит, ипотека, семейная ипотека или рефинансирование. Кнопка подставит <b>реальные условия этого продукта</b> на 02.10.2026, а подсказка под ней покажет диапазон ставок по рынку. Дальше все числа меняются <b>ползунками</b>: <b>сумма кредита</b> (10 000 — 12 000 000 ₽, шаг 10 000 ₽), <b>ставка</b> (1–40 %, шаг 0,1), <b>срок</b> (3–360 месяцев, шаг 1), <b>первый взнос</b> (0–80 % от суммы) и <b>окупаемость</b> — сколько в год приносит то, на что берётся кредит (0–40 %). <b>График платежей</b> выбирается кнопками: аннуитетный или дифференцированный. Дополнительные услуги включаются пилюлями. Нажмите «Рассчитать».</li>
+        <li>Крупная цифра на экране расчёта — это <b>переплата по процентам за весь срок</b>: ровно столько вы отдадите банку сверх взятых денег. А строкой под ней — <b>стоимость в ценах начала срока</b>: столько же пришлось бы заплатить деньгами начала срока. Эта цифра всегда <b>меньше</b>, и это не ошибка: платить вы будете постепенно, а к концу срока деньги обесценятся. Дальше идут срок и график платежей, а под ними <b>вывод: выгодно ли брать этот кредит</b>, затем — сколько отдадите всего, какой платёж в месяц, полная стоимость кредита, реальная ставка после инфляции, инфляция за срок, сравнение со вкладом, комиссии и страховка, столбиковая диаграмма остатка долга и таблица по годам.</li>
+        <li><b>Главное, ради чего игра и сделана:</b> переплата есть у ЛЮБОГО кредита, поэтому сам по себе плюс в графе «переплата» ещё ничего не значит. Сравнивать надо с тем, что те же деньги сделали бы без кредита. Вклад под 13 % даёт <b>реальные 6,3 % в год</b> при инфляции 6,3 %, а кредит под 25 % стоит <b>реальных 17,6 %</b>. Игра считает это по формуле Фишера и сравнивает со вкладом. Выводов три: <b>кредит обходится не дороже вклада</b> — деньги стоят дешевле, чем под вкладом; <b>кредит дороже вклада, но ненамного</b> — разница не больше 5 процентных пунктов, решение ещё может быть оправдано; <b>кредит дороже вклада</b> — деньги работают хуже, чем лежали бы на вкладе.</li>
+        <li><b>Первое, на что стоит смотреть, — ПСК.</b> Это полная стоимость кредита в процентах годовых: в неё входят и проценты, и страховка, и комиссии. Банки сравнивают предложения именно по ПСК, а не по ставке: кредит под 18 % с дешёвой страховкой бывает выгоднее кредита под 16 % с дорогой. В игре услуги <b>реально попадают в ПСК</b> и в вывод — поэтому «бесплатная» страховка или премиум-карта увеличивают цену кредита, а не остаются украшением.</li>
+        <li><b>Два графика платежей.</b> <b>Аннуитетный</b> — платёж каждый месяц одинаковый, проценты начисляются на остаток долга. <b>Дифференцированный</b> — тело долга делится поровну, проценты убывают, поэтому первые платежи заметно больше последних. Переплата у дифференцированного графика чуть меньше, а нагрузка на бюджет в начале срока выше.</li>
+        <li><b>Дополнительные условия.</b> Банки предлагают вместе с кредитом страхование жизни, СМС-информирование, выдачу наличными в кассе, премиум-обслуживание карты, нотариальные расходы и оценку залога. В игре их можно включить или выключить, и каждая <b>реально увеличивает цену кредита</b>. Важно: стоимость у них разная — страховка берётся процентами <b>за весь срок</b>, а выдача наличными и нотариус — <b>один раз</b>. Услуг нет в настройках по умолчанию: игра не должна выглядеть так, будто их навязывают, — вы включаете их сами.</li>
+        <li><b>Первый взнос и окупаемость.</b> Первый взнос (ПВ) — это ваши деньги, которые вы не занимаете, поэтому он не входит в переплату и показан отдельной строкой. <b>Окупаемость</b> — сколько в год приносит то, что вы покупаете: 0 % для вещей на разовое потребление, выше — для бизнеса или сдачи в аренду. Это единственный способ оправдать дорогой кредит, поэтому игра сравнивает её с реальной ставкой по кредиту.</li>
+        <li><b>Настройки можно менять сколько угодно:</b> вернуться к выбору условий можно только стрелкой «←» в левом верхнем углу — отдельных кнопок «Выход» в игре нет. Условия запоминаются — вернётесь, и они останутся теми же.</li>
+        <li><b>Инфляция.</b> В отличие от вкладов, здесь инфляция работает <b>на пользу заёмщика</b>: долг зафиксирован в рублях, а расплачиваться вы будете обесценивающимися деньгами. Игра берёт <b>ключевую ставку 14 %</b> (с 14.09.2026) и инфляцию <b>6,3 % в год</b> (оценка Банка России на 07.09.2026), считая реальную ставку по формуле Фишера. Реальная ставка — это не «ставка минус инфляция», а (1 + ставка) ÷ (1 + инфляция) − 1: разница видна на длинных сроках.</li>
+        <li><b>Что расчёт всё ещё НЕ учитывает</b>: налоговый вычет с процентов (13 %) — его можно вернуть только за полные годы налогового периода и не сразу, поэтому «переплата минус вычет» было бы числом, которого в жизни не существует; штрафы за просрочку; оценку кредитной истории и отказ банка; изменение ставки в течение срока; платёж в день получения кредита; комиссию за ротацию карты при рефинансировании. Ставки в игре учебные, они не являются ставками какого-либо банка.</li>
+        <li><b>Это не финансовый совет.</b> Игра не рекомендует брать или не брать кредит и не обещает выгоду: вердикт — это арифметическое сравнение со вкладом, а не рекомендация. Решение всегда за вами.</li>
+      </ol>
+      <div class="intro-text" style="margin-top:14px;"><b>Как считается</b></div>
+      <ul class="modal-rules">
+        <li>Каждый месяц проценты начисляются на <b>остаток долга</b>, а не на исходную сумму: сначала вы платите проценты за месяц, потом остаток уменьшается. Поэтому при длинном сроке ставка «25 %» обходится намного дешевле той же ставки, взятой на один год.</li>
+        <li><b>Аннуитетный платёж</b> считается по формуле A = P·i ÷ (1 − (1+i)ⁿ⁻¹). Он одинаковый все месяцы, а долг гасится медленно в начале и быстро в конце.</li>
+        <li><b>Дифференцированный график</b> делит тело долга поровну: сумма кредита ÷ срок каждый месяц, а проценты считаются от уменьшающегося остатка. Последний платёж заметно меньше первого.</li>
+        <li><b>ПСК</b> считается по ст. 3 ФЗ-353: (переплата ÷ сумма кредита) × (365 ÷ срок в днях) × 100. У аннуитетного кредита ПСК всегда <b>ниже</b> договорной ставки — это нормально и связано с уменьшением остатка; у банков ПСК выше ставки из-за страховки и комиссий.</li>
+        <li>Срок считается в <b>месяцах</b>, потому что в договоре он указан именно так: 250 месяцев — это 20 лет и 10 месяцев, и в таблице последний год будет неполным.</li>
+      </ul>
+      <button class="btn btn-primary" id="closeCreditRulesBtn">Понятно</button>
+    </div>
+  </div>
+
 
   <!-- ===== ПРАВИЛА "ТЕСТ IQ" ===== -->
   <div class="modal-overlay" id="iqTestRulesModal">
@@ -4195,6 +4227,152 @@
     </div>
 
     <div class="deposit-disclaimer">Расчёт учебный: ставки произвольны, налог и инфляция — по условиям на 14.09.2026 (КС 14%, инфляция 6,3%) и устареют. Не финансовый совет.</div>
+
+  </section>
+
+  <!-- ===== КРЕДИТ: НАСТРОЙКА ===== -->
+  <!-- 📍 логика: games/credit.js | расчёт по формуле, колода карточек не нужна -->
+  <section id="creditSetup" class="screen">
+    <h1 class="title">💳 Кредит</h1>
+    <div class="subtitle">Посмотрите, сколько на самом деле стоит кредит и выгодно ли его брать: переплата, ПСК и сравнение со вкладом</div>
+
+    <div class="field">
+      <label>Тип кредита</label>
+      <div class="starter-group starter-group-2" id="creditProductGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="cash">наличные</button>
+        <button type="button" class="starter-btn mode-btn" data-value="auto">авто</button>
+        <button type="button" class="starter-btn mode-btn" data-value="mortgage">ипотека</button>
+        <button type="button" class="starter-btn mode-btn" data-value="family">семейная</button>
+        <button type="button" class="starter-btn mode-btn" data-value="refi">рефинансирование</button>
+      </div>
+      <div class="deposit-serv-total" id="creditProductNote">—</div>
+    </div>
+
+    <div class="field">
+      <div class="deposit-range-head">
+        <label for="creditAmountRange">Сумма кредита</label>
+        <span class="deposit-range-value" id="creditAmountValue">500 000 ₽</span>
+      </div>
+      <input type="range" class="deposit-range" id="creditAmountRange"
+             min="10000" max="12000000" step="10000" value="500000">
+    </div>
+
+    <div class="field">
+      <div class="deposit-range-head">
+        <label for="creditRateRange">Ставка в год</label>
+        <span class="deposit-range-value" id="creditRateValue">25%</span>
+      </div>
+      <input type="range" class="deposit-range" id="creditRateRange"
+             min="1" max="40" step="0.1" value="25">
+    </div>
+
+    <div class="field">
+      <div class="deposit-range-head">
+        <label for="creditMonthsRange">Срок</label>
+        <span class="deposit-range-value" id="creditMonthsValue">60 месяцев · 5 лет</span>
+      </div>
+      <input type="range" class="deposit-range" id="creditMonthsRange"
+             min="3" max="360" step="1" value="60">
+    </div>
+
+    <div class="field">
+      <label>График платежей</label>
+      <div class="starter-group starter-group-2" id="creditSchedGroup">
+        <button type="button" class="starter-btn mode-btn" data-value="annuity">аннуитетный</button>
+        <button type="button" class="starter-btn mode-btn" data-value="diff">дифференцированный</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="deposit-range-head">
+        <label for="creditDownRange">Первый взнос</label>
+        <span class="deposit-range-value" id="creditDownValue">без первого взноса</span>
+      </div>
+      <input type="range" class="deposit-range" id="creditDownRange"
+             min="0" max="80" step="5" value="0">
+    </div>
+
+    <div class="field">
+      <div class="deposit-range-head">
+        <label for="creditGainRange">Окупаемость покупки</label>
+        <span class="deposit-range-value" id="creditGainValue">ничего не приносит</span>
+      </div>
+      <input type="range" class="deposit-range" id="creditGainRange"
+             min="0" max="40" step="1" value="0">
+    </div>
+
+    <div class="field">
+      <label>Страховка и комиссии</label>
+      <div class="deposit-serv-list" id="creditServicesList">
+        <button type="button" class="deposit-serv" id="creditServInsurance" aria-pressed="false">
+          <span class="deposit-serv-name">Страхование жизни</span>
+          <span class="deposit-serv-cost">+1% годовых</span>
+        </button>
+        <button type="button" class="deposit-serv" id="creditServSms" aria-pressed="false">
+          <span class="deposit-serv-name">СМС-информирование</span>
+          <span class="deposit-serv-cost">+0,1% годовых</span>
+        </button>
+        <button type="button" class="deposit-serv" id="creditServCash" aria-pressed="false">
+          <span class="deposit-serv-name">Выдача наличными</span>
+          <span class="deposit-serv-cost">+1% разово</span>
+        </button>
+        <button type="button" class="deposit-serv" id="creditServPremium" aria-pressed="false">
+          <span class="deposit-serv-name">Премиум-карта</span>
+          <span class="deposit-serv-cost">+0,3% годовых</span>
+        </button>
+        <button type="button" class="deposit-serv" id="creditServNotary" aria-pressed="false">
+          <span class="deposit-serv-name">Нотариус и оценка</span>
+          <span class="deposit-serv-cost">+20 000 ₽ разово</span>
+        </button>
+      </div>
+      <div class="deposit-serv-total" id="creditServicesTotal">Комиссии не подключены — стоимость кредита не растёт</div>
+    </div>
+
+    <button class="btn btn-primary" id="creditStartBtn">Рассчитать</button>
+
+  </section>
+
+  <!-- ===== КРЕДИТ: РАСЧЁТ ===== -->
+  <!-- 📍 логика: games/credit.js -->
+  <section id="creditGame" class="screen">
+    <div class="game-level-label">💳 Кредит</div>
+
+    <div class="deposit-total-box">
+      <div class="deposit-total-label">Переплата по процентам за весь срок</div>
+      <div class="deposit-total" id="creditOverpay">—</div>
+      <div class="deposit-real" id="creditReal">—</div>
+      <div class="deposit-term" id="creditTerm">—</div>
+      <div class="deposit-verdict" id="creditVerdict">
+        <div class="deposit-verdict-main" id="creditVerdictMain">—</div>
+        <div class="deposit-verdict-note" id="creditVerdictNote">—</div>
+      </div>
+      <div class="deposit-sub" id="creditPaid">—</div>
+      <div class="deposit-sub" id="creditPayment">—</div>
+      <div class="deposit-sub deposit-line" id="creditPsk">—</div>
+      <div class="deposit-sub deposit-line" id="creditRealRate">—</div>
+      <div class="deposit-sub deposit-line" id="creditSaving">—</div>
+      <div class="deposit-sub deposit-line" id="creditGainLine">—</div>
+    </div>
+
+    <div class="deposit-note" id="creditDepositCompare">—</div>
+    <div class="deposit-note" id="creditServices">—</div>
+
+    <div class="field">
+      <label>Остаток долга по годам</label>
+      <div class="deposit-bars" id="creditBars"></div>
+    </div>
+
+    <div class="field">
+      <label>По годам</label>
+      <table class="deposit-table">
+        <thead>
+          <tr><th>Срок</th><th>Отдано</th><th>Остаток долга</th></tr>
+        </thead>
+        <tbody id="creditTable"></tbody>
+      </table>
+    </div>
+
+    <div class="deposit-disclaimer">Расчёт учебный: ставки по продуктам — по рынку на 02.10.2026 (КС 14%, инфляция 6,3%, вклад 13%) и устареют. Не финансовый совет.</div>
 
   </section>
 
@@ -5188,18 +5366,18 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20261022y"></script>
 <script src="cards/capitals.js?v=20261022y"></script>
-<script src="games/core.js?v=20261003n"></script>
+<script src="games/core.js?v=20261004a"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
       <script src="games/fants-video.js?v=20261002f"></script>
 <script src="games/fants-davay.js?v=20260925a"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20261002d"></script>
+<script src="games/fants-timer.js?v=20261004a"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
-<script src="games/game-registry.js?v=20261002d"></script>
+<script src="games/game-registry.js?v=20261004a"></script>
 <!-- Локальная статистика: считает партии на этом устройстве, никуда не отправляет -->
 <script src="games/stats.js?v=20260929a"></script>
 <script src="games/twister.js?v=20260921j"></script>
@@ -5248,6 +5426,7 @@
 <script src="games/fun-tests.js?v=20261025b"></script>
 <script src="games/biz-tests.js?v=20261025a"></script>
 <script src="games/deposits.js?v=20261003o"></script>
+<script src="games/credit.js?v=20261004b"></script>
 <script src="games/iq-test.js?v=20261026a"></script>
 <script src="games/know-more.js?v=20261024n"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>

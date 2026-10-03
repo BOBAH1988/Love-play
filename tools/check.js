@@ -3955,6 +3955,308 @@ function checkDeposits(html, timerSrc) {
     'нет пункта в RULES_HUB — правила будут недостижимы из меню «Правила игр»');
 }
 
+// «Кредит» — калькулятор кредита в разделе «Бизнес игры». Проверяем
+// регистрацию, оформление и содержательную часть: границы ползунков не должны
+// разойтись с CREDIT_LIMITS, а в правилах обязано быть сказано, что расчёт
+// учебный и не является советом (иначе «ставка 25%» читается как предложение
+// банка). Формулы тоже сверяются с кодом: игра, которая врёт в арифметике,
+// хуже, чем игры без неё.
+function checkCredit(html, timerSrc) {
+  group('«Кредит» (бизнес)');
+  const game = read('games/credit.js');
+  const core = read('games/core.js');
+  const css = read('styles/app.css');
+  const registry = read('games/game-registry.js');
+  const bizList = /<div class="game-select-list" id="businessGameSelectList">([\s\S]*?)<\/div>/.exec(html);
+  check('кнопка игры в разделе «Бизнес игры»',
+    !!bizList && bizList[1].includes('id="gameCreditBtn"'),
+    'кнопка «Кредит» должна быть в #businessGameSelectList, иначе её не запустить из раздела');
+  const otherLists = ['kidsGameSelectList', 'twoPlayerGamesField', 'soloGameSelectList', 'learningGameSelectList']
+    .map(id => new RegExp(`id="${id}"([\\s\\S]*?)<\\/div>`).exec(html))
+    .filter(Boolean)
+    .map(m => m[1]);
+  check('кнопка игры не попала в другие разделы',
+    !otherLists.some(l => l.includes('gameCreditBtn')),
+    'игра для бизнеса не должна висеть в «Играх с детьми», парах, одиночных или обучающих играх');
+
+  const regLine = registry.split('\n').filter(l => /mode:\s*'credit'/.test(l));
+  check('в реестре игра числится в группе business и без паузы',
+    regLine.length === 1 && /group:\s*'business'/.test(regLine[0]) && /noPause:\s*true/.test(regLine[0]),
+    `в реестре должен быть ровно один mode:'credit' с group:'business' и noPause:true (строк: ${regLine.length})`);
+  check('выход с расчёта ведёт в настройки игры, а не в хаб',
+    /mode:\s*'credit'[\s\S]*?back:\s*'exitCreditGame'/.test(registry),
+    'без back стрелка «←» из экрана расчёта уведёт не туда');
+  for (const sid of ['creditSetup', 'creditGame']) {
+    check(`экран ${sid} есть в разметке и в карте раздела businessView`,
+      new RegExp(`<section id="${sid}"`).test(html) && new RegExp(`${sid}:'businessView'`).test(timerSrc),
+      `нет секции #${sid} или записи ${sid}:'businessView' в SECTION_FOR_SCREEN`);
+  }
+  // Вложенные экраны обязаны быть в PARENT_BACK: иначе стрелка «←» с них
+  // попадёт в generic-fallback и выбросит в хаб, минуя настройки игры.
+  const parentBack = /const PARENT_BACK\s*=\s*\{([\s\S]*?)\n\s*\};/.exec(timerSrc);
+  const backIds = parentBack ? [...parentBack[1].matchAll(/'([A-Za-z0-9_]+)':\s*'([A-Za-z0-9_]+)'/g)].map(m => m[1]) : [];
+  check('вложенные экраны «Кредита» описаны в PARENT_BACK',
+    ['creditSetup'].every(sid => backIds.includes(sid)),
+    `нет в карте PARENT_BACK: ${['creditSetup'].filter(sid => !backIds.includes(sid)).join(', ') || '—'}`);
+  check('функции выхода «Кредита» объявлены',
+    /function\s+exitCreditSetup\s*\(/.test(game) && /function\s+exitCreditGame\s*\(/.test(game),
+    'PARENT_BACK ссылается на exitCreditSetup, а реестр — на exitCreditGame; обе должны существовать');
+
+  // Границы ползунков в разметке должны совпадать с CREDIT_LIMITS в коде.
+  // Расхождение означало бы, что creditClamp() зажимает в границы, которых
+  // ползунок не может достичь: игрок выставил бы 12 000 000 ₽ и не смог бы.
+  const rangeAttr = (inputId, attr) => {
+    const m = new RegExp(`id="${inputId}"[\\s\\S]*?${attr}="([^"]+)"`).exec(html);
+    return m ? m[1] : '';
+  };
+  const limits = {};
+  for(const key of ['amount', 'rate', 'months', 'down', 'gain']){
+    const m = new RegExp(`${key}:\\s*\\{[^}]*min:\\s*([\\d.]+),\\s*max:\\s*([\\d.]+),\\s*step:\\s*([\\d.]+)`).exec(game);
+    limits[key] = m ? [m[1], m[2], m[3]] : null;
+  }
+  const rangeInputs = [
+    { key:'amount', id:'creditAmountRange' },
+    { key:'rate', id:'creditRateRange' },
+    { key:'months', id:'creditMonthsRange' },
+    { key:'down', id:'creditDownRange' },
+    { key:'gain', id:'creditGainRange' },
+  ];
+  const rangeMismatch = rangeInputs.filter(r=>{
+    const lim = limits[r.key];
+    return !lim || [0, 1, 2].some(i => String(lim[i]) !== rangeAttr(r.id, ['min', 'max', 'step'][i]));
+  }).map(r => r.key);
+  check('границы всех пяти ползунков совпадают с CREDIT_LIMITS',
+    rangeMismatch.length === 0,
+    `разошлись min/max/step: ${rangeMismatch.join(', ') || '—'}`);
+  check('шаг ползунков соответствует единицам измерения',
+    limits.amount[2] === '10000' && limits.rate[2] === '0.1' && limits.months[2] === '1'
+      && limits.down[2] === '5' && limits.gain[2] === '1',
+    `ожидался шаг 10000 для денег и 0,1 для ставки, 1 для месяцев и процентов; получено: сумма ${limits.amount[2]}, ставка ${limits.rate[2]}, срок ${limits.months[2]}, ПВ ${limits.down[2]}, окупаемость ${limits.gain[2]}`);
+  check('у каждого ползунка есть подпись со значением',
+    rangeInputs.every(r => new RegExp(`id="${r.id.replace('Range', 'Value')}"`).test(html)),
+    'у каждого ползунка должна быть подпись с текущим значением рядом с ручкой');
+  // Тип кредита и график платежей — перечисления кнопками; их состав обязан
+  // совпадать с разметкой, иначе кнопка выберет то, чего на экране нет.
+  const groupValues = (id) => {
+    const m = new RegExp(`id="${id}"[\\s\\S]*?</div>`).exec(html);
+    return m ? [...m[0].matchAll(/data-value="([^"]+)"/g)].map(x => x[1]) : [];
+  };
+  const productIds = [...game.matchAll(/\{ id:'(\w+)', label:'[^']+', full:/g)].map(m => m[1]);
+  check('типы кредита в разметке совпадают с CREDIT_PRODUCTS',
+    groupValues('creditProductGroup').join(',') === productIds.join(','),
+    `в разметке: ${groupValues('creditProductGroup').join(',') || '—'}; в коде: ${productIds.join(',') || '—'}`);
+  const schedIds = [...game.matchAll(/\{ id:'(annuity|diff)',\s+label:'[^']+'/g)].map(m => m[1]);
+  check('графики платежей в разметке совпадают с CREDIT_SCHEDULES',
+    groupValues('creditSchedGroup').join(',') === schedIds.join(','),
+    `в разметке: ${groupValues('creditSchedGroup').join(',') || '—'}; в коде: ${schedIds.join(',') || '—'}`);
+  // У каждого типа кредита должны быть рыночные условия: без них кнопка
+  // ничего не подставляет и «реальные условия» остаются только словами.
+  const productBlocks = [...game.matchAll(/\{ id:'\w+', label:'[^']+', full:[^]*?note:'[^']+'\s*\}/g)];
+  check('у каждого типа кредита заданы ставка, срок, сумма и рыночная подсказка',
+    productIds.length > 0 && productBlocks.length === productIds.length
+      && productBlocks.every(b => /rate:\s*[\d.]+/.test(b[0]) && /months:\s*\d+/.test(b[0]) && /amount:\s*\d+/.test(b[0])),
+    `у ${productIds.length} типов кредита условия заданы у ${productBlocks.length}`);
+  check('под выбранным типом показывается его рыночный диапазон',
+    /id="creditProductNote"/.test(html) && /renderCreditProductNote/.test(game) && /pr\.note/.test(game),
+    'без подсказки по ставкам кнопки типов ничего не объясняют');
+
+  // Расчёт: формулы, а не украшения. Каждый инвариант ниже ломает главный
+  // вопрос игры — «сколько стоит кредит», — поэтому сверяем их с кодом.
+  check('аннуитетный платёж считается по формуле, а не «на глаз»',
+    /const annuity = mr > 0/.test(game)
+      && /Math\.pow\(1 \+ mr, months\) \/ \(Math\.pow\(1 \+ mr, months\) - 1\)/.test(game),
+    'ожидается A = P·i·(1+i)^n / ((1+i)^n − 1) с защитой от нулевой ставки');
+  check('проценты начисляются на остаток долга, а не на всю сумму',
+    /const interest = balance \* mr/.test(game),
+    'иначе переплата не зависит от погашения и растёт неверно');
+  check('тело долга гасится полностью и последний платёж добирает остаток',
+    /if\(m === months && balance - principal <= 0\) principal = balance;/.test(game)
+      && /if\(principal > balance\) principal = balance;/.test(game),
+    'без этого остаётся хвост в несколько копеек или уходит в минус баланс');
+  check('ПСК считается в процентах годовых за весь срок',
+    /psk: days > 0 \? \(overpay \/ amount\) \* \(365 \/ days\) \* 100 : 0/.test(game),
+    'ПСК по ФЗ-353: (переплата ÷ сумма) × (365 ÷ срок в днях) × 100');
+  check('реальная ставка считается по формуле Фишера, а не «минус инфляция»',
+    /\(1 \+ \(Number\(nominalRate\) \|\| 0\) \/ 100\) \/ \(1 \+ ru\.inflation \/ 100\) - 1\) \* 100/.test(game),
+    'реальная ставка = (1 + ставка) ÷ (1 + инфляция) − 1; вычитание инфляции даёт другую цифру');
+  check('вердикт сравнивает кредит с вкладом, а не с нулём',
+    /const depositReal = creditRealRate\(ru\.depositRate\)/.test(game)
+      && /const diff = realRate - depositReal/.test(game),
+    'переплата положительна у любого кредита — сравнивать надо с доходностью вклада');
+  check('у вердикта три состояния, а не два',
+    /const level = diff <= 0 \? 'good' : \(diff <= BORDER \? 'border' : 'bad'\)/.test(game)
+      && /const BORDER = 5/.test(game),
+    '«дороже вклада» и «намного дороже» — разные решения, сводить их к плюс/минусу нельзя');
+  // Инфляция у кредита работает НА БЛАГО заёмщика: реальная стоимость всегда
+  // меньше номинальной. Если знак поменяется местами, игра будет врать.
+  check('инфляция уменьшает реальную стоимость кредита, а не увеличивает',
+    /const realPaid = res\.paidTotal \/ factor/.test(game) && /saving: Math\.max\(0, res\.paidTotal - realPaid\)/.test(game),
+    'долг зафиксирован в рублях: платить придётся обесценивающимися деньгами');
+  check('услуги попадают и в ПСК, и в вердикт',
+    /const effectiveRate = res\.rate \+ pskAnnual/.test(game)
+      && /const realRate = creditRealRate\(effectiveRate\)/.test(game),
+    'иначе «бесплатная» страховка не влияет на цену кредита и на вывод');
+  check('у услуг три разные единицы платы (годовые, разовые проценты и рубли)',
+    /kind:\s*'yearly'/.test(game) && /kind:\s*'percent'/.test(game) && /kind:\s*'once'/.test(game)
+      && /function creditServiceSum\(/.test(game)
+      && /if\(s\.kind === 'yearly'\) return p\.amount \* s\.cost \/ 100 \* years;/.test(game)
+      && /if\(s\.kind === 'percent'\) return p\.amount \* s\.cost \/ 100;/.test(game),
+    'страховка — проценты годовых за весь срок, выдача наличными — процент один раз, нотариус — рубли');
+  check('диаграмма показывает убывающий остаток долга',
+    /function creditBarsHtml\(/.test(game) && /id="creditBars"/.test(html),
+    'диаграмма кредита должна показывать остаток долга, а не рост суммы');
+
+  // Значения по умолчанию должны совпадать в state, в коде и в разметке.
+  // Иначе игрок откроет игру, увидит одно число, а расчёт пойдёт по другому.
+  const defaults = [
+    { name:'суммы', state:/creditAmount:(\d+)/, def:/amount: \{[^}]*def:(\d+)/, id:'creditAmountRange' },
+    { name:'ставки', state:/creditRate:([\d.]+)/, def:/rate:   \{[^}]*def:([\d.]+)/, id:'creditRateRange' },
+    { name:'срока', state:/creditMonths:(\d+)/, def:/months: \{[^}]*def:(\d+)/, id:'creditMonthsRange' },
+    { name:'первого взноса', state:/creditDown:(\d+)/, def:/down:   \{[^}]*def:(\d+)/, id:'creditDownRange' },
+    { name:'окупаемости', state:/creditGain:(\d+)/, def:/gain:   \{[^}]*def:(\d+)/, id:'creditGainRange' },
+  ];
+  const defBad = defaults.filter(d=>{
+    const a = d.state.exec(core), b = d.def.exec(game), c = rangeAttr(d.id, 'value');
+    return !a || !b || !c || Number(a[1]) !== Number(b[1]) || Number(b[1]) !== Number(c);
+  }).map(d => d.name);
+  check('значения по умолчанию согласованы в state, в credit.js и в разметке',
+    defBad.length === 0,
+    `разошлись: ${defBad.join(', ') || '—'}`);
+  // Тип кредита по умолчанию обязан существовать в CREDIT_PRODUCTS: иначе
+  // расчёт пойдёт по первому продукту, а подпись покажет пустую строку.
+  const defProduct = /creditProduct:'(\w+)'/.exec(core);
+  check('тип кредита по умолчанию существует в CREDIT_PRODUCTS',
+    !!defProduct && productIds.includes(defProduct[1]),
+    `в state стоит '${defProduct ? defProduct[1] : '—'}', а в коде есть: ${productIds.join(', ')}`);
+  const defSched = /creditSched:'(\w+)'/.exec(core);
+  check('график платежей по умолчанию существует в CREDIT_SCHEDULES',
+    !!defSched && schedIds.includes(defSched[1]),
+    `в state стоит '${defSched ? defSched[1] : '—'}', а в коде есть: ${schedIds.join(', ')}`);
+  const resetMatch = /state\.creditProduct = '\w+';\s*state\.creditAmount = (\d+);\s*state\.creditRate = ([\d.]+);\s*state\.creditMonths = (\d+);/.exec(core);
+  check('сброс прогресса возвращает условия «Кредита» к дефолтам',
+    !!resetMatch
+      && Number(resetMatch[1]) === Number(defaults[0].def.exec(game)[1])
+      && Number(resetMatch[2]) === Number(defaults[1].def.exec(game)[1])
+      && Number(resetMatch[3]) === Number(defaults[2].def.exec(game)[1]),
+    'performFullReset должен чистить поля credit* — иначе после сброса останутся чужие условия');
+  check('услуги по умолчанию выключены',
+    /creditServices:\[\]/.test(core) && /state\.creditServices = \[\];/.test(core),
+    'навязывать комиссии в дефолте означало бы исподтишка удорожать кредит до выбора игрока');
+  // Условия РФ объявлены с датами: без них расчёт выглядел бы как вечная истина.
+  check('условия РФ для ставки и инфляции объявлены в CREDIT_RU',
+    /const CREDIT_RU = \{/.test(game) && /keyRate:\s*[\d.]+/.test(game)
+      && /inflation:\s*[\d.]+/.test(game) && /depositRate:\s*[\d.]+/.test(game)
+      && /keyRateFrom:\s*'\d\d\.\d\d\.\d{4}'/.test(game) && /ratesFrom:\s*'\d\d\.\d\d\.\d{4}'/.test(game),
+    'все числа по РФ живут в CREDIT_RU вместе с датами, по которым они взяты');
+  check('ставка вкладов в «Кредите» совпадает с дефолтом игры «Вклады»',
+    /depositRate:\s*13/.test(game) && /depositsRate:13/.test(core),
+    'иначе кредит и вклад сравниваются на разных условиях и вывод врёт');
+  check('на дисклеймере названа дата условий',
+    /id="creditGame"[\s\S]{0,4000}02\.10\.2026/.test(html),
+    'ставки устареют — игрок должен видеть, к какому именно дню они взяты');
+
+  // Кнопки услуг объявлены в коде и есть в разметке: пилюля без обработчика
+  // молча ничего не делает, а услуга без кнопки недоступна.
+  const serviceIds = [...game.matchAll(/\{ id:'(\w+)', el:'(creditServ\w+)'/g)].map(m => ({ id: m[1], el: m[2] }));
+  check('услуги банка объявлены в CREDIT_SERVICES и есть кнопки в разметке',
+    serviceIds.length >= 4 && serviceIds.every(s => html.includes(`id="${s.el}"`)),
+    `услуг в коде: ${serviceIds.length}, без кнопки: ${serviceIds.filter(s => !html.includes(`id="${s.el}"`)).map(s => s.id).join(', ') || '—'}`);
+  check('блок услуг собран сеткой и выводит итоговую плату',
+    /\.deposit-serv-list\{[^}]*display:grid/.test(css)
+      && /id="creditServicesTotal"/.test(html) && /id="creditServices"/.test(html),
+    'итог по услугам нужен и на экране настроек (до расчёта), и на экране результата');
+
+  // Оформление: свои классы диаграммы, общий блок итога. Отдельный фон у
+  // экрана сделал бы его чужим среди остальных игр раздела.
+  check('диаграмма оформлена своими классами .credit-*',
+    /\.credit-bar\{/.test(css) && /\.credit-bar-year\{/.test(css),
+    'ожидаются .credit-bar и .credit-bar-year в styles/app.css');
+  check('экран расчёта остаётся на общих классах блока итога и таблицы',
+    /class="deposit-table"/.test(html) && /id="creditGame"/.test(html)
+      && !/#creditGame[A-Za-z]*\s*\{[^}]*background/m.test(css),
+    'отдельный фон у экрана «Кредита» сделает его чужим среди остальных игр');
+  check('крупная сумма — переплата, а под ней реальная стоимость',
+    /class="deposit-total-label">Переплата по процентам за весь срок/.test(html)
+      && /id="creditOverpay">—</.test(html) && /id="creditReal">—</.test(html)
+      && /total\.textContent = creditMoney\(res\.overpay, true\)/.test(game),
+    'игрок ищет в кабинете банка именно переплату — она и должна быть крупной цифрой');
+  check('вердикт на экране расчёта — с пояснением в две строки',
+    /id="creditVerdictMain"/.test(html) && /id="creditVerdictNote"/.test(html)
+      && /const VERDICT_TEXT = \{/.test(game),
+    'вывод и причина должны читаться по отдельности, а не одной длинной фразой');
+  check('строки выводов — на общих классах .deposit-line',
+    ['creditPsk', 'creditRealRate', 'creditSaving', 'creditGainLine']
+      .every(id => new RegExp(`class="deposit-sub deposit-line" id="${id}"`).test(html)),
+    'все четыре строки-вывода обязаны иметь класс .deposit-line');
+
+  // Модуль должен грузиться целиком даже без своих элементов в DOM: иначе
+  // кнопка «Кредит» в меню есть (она в core.js), а «Рассчитать» не делает
+  // ничего. Проверка не про синтаксис, а про ФАКТ: выполняем credit.js с
+  // пустым DOM — как smoke-test делает это для «Вкладов».
+  const vmMod = require('vm');
+  let moduleError = null;
+  try {
+    vmMod.runInNewContext(game, {
+      console, state: {}, Math, JSON, Number, Array, Set, Object, String,
+      shuffle: arr => arr,
+      playSuccessSound(){}, saveState(){}, updateResumeUI(){},
+      goToGameSetup(){}, showSetupView(){}, activateSingleScreen(){},
+      updateMuteBtn(){}, goToGame(){}, exitGame(){}, setupRulesModal(){},
+      document: { getElementById: () => null, querySelectorAll: () => [] },
+      window: {},
+    }, { filename: 'credit.js' });
+  } catch (e) {
+    moduleError = e.message;
+  }
+  check('модуль «Кредита» загружается даже без своих элементов в DOM',
+    moduleError === null,
+    `падение при загрузке роняет все кнопки игры: ${moduleError || '—'}`);
+
+  // Правила: расчёт учебный, не совет. Ставки в игре взяты с рынка, но
+  // конкретные числа у каждого банка свои, и без оговорки «ставка 25%»
+  // читается как предложение конкретного банка.
+  const rules = /<div class="modal-overlay" id="creditRulesModal">([\s\S]*?)closeCreditRulesBtn/.exec(html);
+  const rulesText = rules ? rules[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ') : '';
+  check('в правилах сказано, что это не финансовый совет',
+    /не финансовый совет/i.test(rulesText) && /не рекомендует/i.test(rulesText),
+    'игрок не должен принять расчёт за предложение банка или за рекомендацию');
+  // Правила обязаны называть всё, что меняет цену кредита: страховку,
+  // комиссии, инфляцию и ПСК. Без этого игра молча меняет итог.
+  check('в правилах перечислено, что влияет на цену кредита',
+    /страхов/i.test(rulesText) && /комисс/i.test(rulesText)
+      && /инфляц/i.test(rulesText) && /ПСК/.test(rulesText),
+    'страховка, комиссии, инфляция и ПСК меняют цену — обо всём этом обязано быть сказано');
+  check('в правилах перечислено, что расчёт НЕ учитывает',
+    /вычет/i.test(rulesText) && /просрочк/i.test(rulesText) && /НЕ учитывает/.test(rulesText),
+    'вычет, штрафы и отказ банка меняют итог в жизни — о них обязано быть сказано');
+  check('в правилах объяснено, что такое ПСК и зачем на него смотреть',
+    /ФЗ-353/.test(rulesText) && /полная стоимость кредита/i.test(rulesText),
+    'ПСК — главная цифра договора; без объяснения формулы правила не учат главному');
+  check('в правилах названы все типы кредита и оба графика платежей',
+    ['наличными', 'автокредит', 'ипотека', 'рефинансирование'].every(m => rulesText.includes(m))
+      && rulesText.includes('аннуитетный') && rulesText.includes('дифференцированный'),
+    'все типы из CREDIT_PRODUCTS и оба графика доступны в игре и должны быть названы');
+  check('в правилах сказано, что инфляция работает на пользу заёмщику',
+    /на пользу заёмщика/i.test(rulesText) && /Фишера/.test(rulesText),
+    'инфляция у кредита уменьшает реальную стоимость — без оговорки это читается как ошибка');
+  check('в правилах описаны первый взнос и окупаемость',
+    /первый взнос/i.test(rulesText) && /окупаемост/i.test(rulesText),
+    'оба параметра меняют вывод, поэтому должны быть описаны');
+  check('в правилах объяснено, что проценты идут на остаток долга',
+    /остаток долга/i.test(rulesText),
+    'иначе игрок не поймёт, почему длинный срок дешевле короткого при той же ставке');
+  // Кнопки выхода скрыты глобальным правилом ([id$="ExitBtn"]{display:none}),
+  // поэтому упоминать их в правилах нельзя: игрок будет искать кнопку,
+  // которой нет. Навигация в игре идёт стрелкой «←».
+  check('правила не обещают кнопку «Выход», которой нет на экране',
+    !/«Выход» возвращает/.test(rulesText)
+      && !/id="creditSetupExitBtn"|id="creditGameExitBtn"/.test(html),
+    'кнопки выхода скрыты правилом [id$="ExitBtn"] — их не должно быть ни в разметке, ни в правилах');
+  check('правила «Кредита» доступны в общем хабе правил',
+    /creditRulesModal/.test(read('games/fants-timer.js')),
+    'нет пункта в RULES_HUB — правила будут недостижимы из меню «Правила игр»');
+}
+
 // «Тест IQ» — обучающая игра, один тест на 30 заданий. Проверяем регистрацию,
 // оформление карточки в группе, и — главное — содержательную часть: у каждого
 // задания ровно один верный вариант, направлений ровно пять, уровни покрывают
@@ -4426,6 +4728,7 @@ function main() {
   checkTestHistoryExpand(html);
   checkBizTests(html, read('games/fants-timer.js'));
   checkDeposits(html, read('games/fants-timer.js'));
+  checkCredit(html, read('games/fants-timer.js'));
   checkIqTest(html, read('games/fants-timer.js'));
   checkPauseResetOnStart();
   checkExitNavigation();

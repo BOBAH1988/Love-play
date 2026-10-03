@@ -7899,6 +7899,379 @@ test('«Вклады»: «←» с расчёта возвращает в нас
   }
 });
 
+console.log('\n=== «Кредит» ===');
+
+const creditBackup = () => {
+  const saved = {};
+  ['creditProduct', 'creditAmount', 'creditRate', 'creditMonths', 'creditSched',
+   'creditDown', 'creditGain', 'creditServices', 'inProgress', 'pausedMode'].forEach(k => { saved[k] = state[k]; });
+  return saved;
+};
+const creditApply = (o) => {
+  state.creditProduct = o.product || 'cash';
+  state.creditAmount = o.amount;
+  state.creditRate = o.rate;
+  state.creditMonths = o.months;
+  state.creditSched = o.sched || 'annuity';
+  state.creditDown = o.down || 0;
+  state.creditGain = o.gain || 0;
+  state.creditServices = o.services || [];
+};
+
+test('«Кредит»: аннуитетный платёж совпадает с формулой', () => {
+  // Ключевая проверка смысла игры: если формула врёт, игрок уйдёт с ложным
+  // пониманием цены кредита. Сверяем с независимой формулой, а не с
+  // результатом самой функции: иначе проверка была бы tautологией.
+  const saved = creditBackup();
+  try {
+    creditApply({ amount:500000, rate:25, months:60 });
+    const res = creditSimulate(creditParams());
+    const i = 0.25 / 12, n = 60;
+    const byFormula = 500000 * i * Math.pow(1 + i, n) / (Math.pow(1 + i, n) - 1);
+    assert(Math.abs(res.firstPayment - byFormula) < 0.01,
+      `аннуитетный платёж ${res.firstPayment}, по формуле ${byFormula}`);
+    assert(res.lastBalance === 0,
+      `к концу срока долг обязан быть погашен, осталось ${res.lastBalance}`);
+    assert(Math.abs(res.principalPaid - 500000) < 0.01,
+      `тело долга должно равняться сумме кредита, погашено ${res.principalPaid}`);
+    // Платежи аннуитетные — равные. Допуск нужен из-за округления копеек:
+    // последний платёж добирает остаток и отличается на копейки.
+    const first = res.schedule[0].payment, last = res.schedule[n - 1].payment;
+    assert(Math.abs(first - last) < 0.05,
+      `в аннуитетном графике все платежи равны, первый ${first}, последний ${last}`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Кредит»: проценты идут на остаток, а не на всю сумму', () => {
+  // Ключевое отличие кредита от вклада. Если бы проценты считались от всей
+  // суммы 12 месяцев подряд, переплата была бы в разы больше и вердикт
+  // «дороже вклада» получался бы на любых условиях — то есть всегда.
+  const saved = creditBackup();
+  try {
+    creditApply({ amount:1000000, rate:24, months:12 });
+    const res = creditSimulate(creditParams());
+    const i = 0.24 / 12;
+    const interestIfFlat = 1000000 * i * 12;
+    assert(res.interestTotal < interestIfFlat,
+      `на остатке процентов ${res.interestTotal.toFixed(0)} ₽, на всей сумме ${interestIfFlat.toFixed(0)} ₽`);
+    // Первый месяц вручную: 1 000 000 × 2 % = 20 000 ₽.
+    assert(Math.abs(res.schedule[0].interest - 20000) < 0.01,
+      `проценты за первый месяц должны быть 20 000 ₽, получено ${res.schedule[0].interest}`);
+    assert(res.schedule[1].interest < res.schedule[0].interest,
+      'со второго месяца остаток меньше — процентов должно быть меньше');
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Кредит»: дифференцированный график дешевле, но тяжелее в начале', () => {
+  // Разница между графиками — в распределении нагрузки, а не в сумме:
+  // переплата у дифференцированного меньше, но первый платёж заметно больше
+  // последнего. Именно это и объясняет игроку, зачем вообще два графика.
+  const saved = creditBackup();
+  try {
+    creditApply({ amount:500000, rate:25, months:60, sched:'annuity' });
+    const ann = creditSimulate(creditParams());
+    creditApply({ amount:500000, rate:25, months:60, sched:'diff' });
+    const diff = creditSimulate(creditParams());
+    assert(diff.overpay < ann.overpay,
+      `дифференцированный должен быть дешевле: ${diff.overpay.toFixed(0)} против ${ann.overpay.toFixed(0)}`);
+    assert(diff.firstPayment > diff.lastPayment,
+      'в дифференцированном графике проценты убывают — последний платёж меньше первого');
+    assert(diff.lastBalance === 0, `долг должен быть погашен, осталось ${diff.lastBalance}`);
+    // Тело долга делится поровну: 500 000 ÷ 60 = 8 333,33 ₽.
+    assert(Math.abs(diff.schedule[0].principal - 500000 / 60) < 0.01,
+      `тело должно делиться поровну, получено ${diff.schedule[0].principal}`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Кредит»: вердикт сравнивает кредит со вкладом и имеет три состояния', () => {
+  // Главный вывод игры. Проверяем не только границы уровней, но и то, что
+  // он считается по РЕАЛЬНОЙ ставке: при 17% кредит дороже вклада, хотя его
+  // номинальная ставка выше 13% всего на четыре пункта. Считать по номиналу
+  // значило бы выдавать «на грани» там, где на деле дороже в полтора раза.
+  const saved = creditBackup();
+  try {
+    const verdictAt = (rate) => {
+      creditApply({ amount:500000, rate, months:60 });
+      const res = creditSimulate(creditParams());
+      return creditVerdict(res, { total: 0 });
+    };
+    const v6 = verdictAt(6);
+    const v17 = verdictAt(17);
+    const v25 = verdictAt(25);
+    // Реальная ставка вклада под 13% при инфляции 6,3% = 6,3%.
+    assert(Math.abs(v25.depositReal - 6.3) < 0.1,
+      `реальная доходность вклада должна быть 6,3%, получено ${v25.depositReal}`);
+    assert(v6.level === 'good', `кредит под 6% должен быть «good», получено ${v6.level}`);
+    assert(v25.level === 'bad', `кредит под 25% должен быть «bad», получено ${v25.level}`);
+    assert(v25.realRate > v25.depositReal + 5,
+      `25% должны быть заметно дороже вклада, разница ${(v25.realRate - v25.depositReal).toFixed(1)} п.п.`);
+    // Реальная ставка считается по Фишеру: 25% → 17,6%, а не 18,7%.
+    assert(Math.abs(creditRealRate(25) - 17.6) < 0.1,
+      `реальная ставка 25% при инфляции 6,3% = 17,6%, получено ${creditRealRate(25).toFixed(2)}`);
+    // Уровни не должны пересекаться: одна и та же ставка обязана давать один
+    // и тот же уровень при любом порядке расчёта.
+    assert(verdictAt(17).level === v17.level, 'уровень должен зависеть только от ставки');
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Кредит»: инфляция уменьшает реальную стоимость кредита', () => {
+  // Знак здесь важен больше цифры: у вклада инфляция отнимает часть дохода,
+  // а у кредита — часть долга. Если бы игра считала наоборот, вердикт
+  // «дороже вклада» получился бы на любом сроке и был бы бессмысленным.
+  const saved = creditBackup();
+  try {
+    creditApply({ amount:1000000, rate:20, months:60 });
+    const res = creditSimulate(creditParams());
+    const infl = creditInflationEffect(res);
+    assert(infl.realPaid < res.paidTotal,
+      `в ценах начала срока платёж должен стоить меньше: ${infl.realPaid.toFixed(0)} против ${res.paidTotal.toFixed(0)}`);
+    assert(infl.saving > 0, `инфляция за 5 лет должна дать ощутимую экономию, получено ${infl.saving}`);
+    // Экономия на длинном сроке больше, чем на коротком: платить придётся
+    // ещё более обесценивающимися деньгами.
+    creditApply({ amount:1000000, rate:20, months:12 });
+    const short = creditInflationEffect(creditSimulate(creditParams()));
+    assert(infl.saving > short.saving,
+      `на 5 годах экономия ${infl.saving.toFixed(0)} должна быть больше, чем на годе ${short.saving.toFixed(0)}`);
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Кредит»: комиссии и страховка удорожают кредит и ухудшают вывод', () => {
+  // Смысл блока услуг: «бесплатная» страховка обязана реально повышать цену
+  // кредита. Если бы услуги считались, но не влияли на вердикт, игрок вышел бы
+  // с выводом, который противоречит сумме на экране.
+  const saved = creditBackup();
+  try {
+    creditApply({ amount:1000000, rate:20, months:60, services:[] });
+    const without = creditVerdict(creditSimulate(creditParams()), creditServicesCost(creditParams()));
+    creditApply({ amount:1000000, rate:20, months:60, services:['insurance','premium'] });
+    const serv = creditServicesCost(creditParams());
+    const withServ = creditVerdict(creditSimulate(creditParams()), serv);
+    // Страховка 1% и премиум 0,3% за 5 лет от 1 000 000 = 65 000 ₽.
+    assert(Math.abs(serv.total - 65000) < 1,
+      `страховка 1% + премиум 0,3% за 5 лет от 1 000 000 = 65 000 ₽, получено ${serv.total}`);
+    assert(withServ.effectiveRate > without.effectiveRate,
+      'услуги должны повышать эффективную ставку');
+    assert(withServ.realRate > without.realRate,
+      'услуги должны повышать реальную стоимость кредита');
+    assert(withServ.diff > without.diff,
+      'разница с вкладом должна расти от комиссий — вывод обязан ухудшаться');
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Кредит»: разовые и годовые услуги считаются по-разному', () => {
+  // Страховка берётся за весь срок, а нотариус — один раз. Если бы обе
+  // умножались на срок, нотариальные расходы на ипотеке выросли бы в 20 раз.
+  const saved = creditBackup();
+  try {
+    creditApply({ amount:1000000, rate:20, months:60, services:['notary'] });
+    const notary = creditServicesCost(creditParams());
+    assert(notary.total === 20000,
+      `нотариус 20 000 ₽ разово независимо от срока, получено ${notary.total}`);
+    creditApply({ amount:1000000, rate:20, months:60, services:['cashout'] });
+    const cashout = creditServicesCost(creditParams());
+    assert(cashout.total === 10000,
+      `выдача наличными 1% от 1 000 000 = 10 000 ₽ разово, получено ${cashout.total}`);
+    // Неизвестная услуга из старого сохранения не должна попадать в расчёт.
+    state.creditServices = ['notary', 'что-то-неизвестное'];
+    assert(creditServicesCost(creditParams()).total === 20000,
+      'услуга, которой больше нет в игре, не должна увеличивать итог');
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Кредит»: тип кредита подставляет реальные условия', () => {
+  // Главное отличие от игры «Вклады»: ставка здесь не выдумывается
+  // ползунком, а приходит из рынка. Проверяем, что выбор типа действительно
+  // меняет ответ — иначе пять кнопок были бы украшением.
+  const saved = creditBackup();
+  try {
+    creditApply({ amount:500000, rate:25, months:60 });
+    const cashVerdict = creditVerdict(creditSimulate(creditParams()), { total: 0 });
+    creditApply({ product:'family', amount:500000, rate:6, months:240, down:20 });
+    const familyVerdict = creditVerdict(creditSimulate(creditParams()), { total: 0 });
+    assert(cashVerdict.level !== familyVerdict.level,
+      `наличные под 25% (${cashVerdict.level}) и семейная ипотека под 6% (${familyVerdict.level}) `
+      + 'обязаны давать разный вывод — иначе выбор типа кредита бессмыслен');
+    assert(familyVerdict.level === 'good',
+      `льготная ипотека под 6% при инфляции 6,3% реально стоит меньше вклада, вывод ${familyVerdict.level}`);
+    // Подсказка под кнопкой показывает рыночный диапазон — без неё «реальные
+    // условия» были бы числами без источника.
+    state.creditProduct = 'mortgage';
+    renderCreditProductNote();
+    const note = getElById(stub, 'creditProductNote').textContent;
+    assert(note.includes('Ипотека') && note.includes('%'),
+      `подсказка должна называть продукт и его диапазон ставок, получено «${note}»`);
+  } finally {
+    Object.assign(state, saved);
+    renderCreditSetup();
+  }
+});
+
+test('«Кредит»: экран расчёта заполняется и не остаётся пустым', () => {
+  // Регресс на жалобу «после нажатия Рассчитать пустой экран»: разметка была
+  // в порядке, а модуль падал при загрузке, из-за чего кнопка «Рассчитать»
+  // не делала ничего. Поэтому проверяем не только активный экран, но и то,
+  // что на нём реально появились числа.
+  const saved = creditBackup();
+  const clear = () => document.querySelectorAll('.screen.active').forEach(el => el.classList.remove('active'));
+  try {
+    creditApply({ amount:500000, rate:25, months:60 });
+    clear();
+    getElById(stub, 'creditSetup').classList.add('active');
+    getElById(stub, 'creditStartBtn')._getHandlers().get('click')
+      .forEach(({ handler }) => handler({}));
+    assert(getElById(stub, 'creditGame').classList.contains('active'),
+      'после «Рассчитать» должен быть активен экран расчёта, а не пустота');
+    const res = creditSimulate(creditParams());
+    assert(getElById(stub, 'creditOverpay').textContent === creditMoney(res.overpay, true),
+      `на экране должна быть переплата ${creditMoney(res.overpay, true)}, `
+      + `получено «${getElById(stub, 'creditOverpay').textContent}»`);
+    assert(getElById(stub, 'creditReal').textContent.includes(creditMoney(creditInflationEffect(res).realPaid)),
+      'под переплатой должна быть стоимость в ценах начала срока');
+    assert(getElById(stub, 'creditTerm').textContent.includes('аннуитетный'),
+      'строка срока должна называть выбранный график');
+    assert(getElById(stub, 'creditPsk').textContent.includes('ПСК'),
+      'обязательно должна быть строка с полной стоимостью кредита');
+    assert(getElById(stub, 'creditRealRate').textContent.includes('Реальная стоимость'),
+      'обязательно должна быть реальная ставка после инфляции');
+    assert(getElById(stub, 'creditGainLine').textContent.length > 10,
+      'строка про окупаемость должна быть заполнена');
+    const tableHtml = getElById(stub, 'creditTable').innerHTML || '';
+    assert((tableHtml.match(/<tr>/g) || []).length === res.years.length,
+      `в таблице должно быть ${res.years.length} строк по годам`);
+    const barsHtml = getElById(stub, 'creditBars').innerHTML || '';
+    assert((barsHtml.match(/credit-bar-col/g) || []).length === res.years.length,
+      'диаграмма остатка долга должна быть заполнена');
+  } finally {
+    clear();
+    Object.assign(state, saved);
+    renderCreditSetup();
+  }
+});
+
+test('«Кредит»: вердикт на экране соответствует уровню и окрашен', () => {
+  // Цвет здесь несёт смысл: зелёный — кредит дешевле вклада, жёлтый — на
+  // грани, красный — дороже. Без цвета вывод легко пропустить. Проверяем все
+  // три состояния на настоящих экранах, а не на функции.
+  const saved = creditBackup();
+  try {
+    const box = getElById(stub, 'creditVerdict');
+    creditApply({ amount:500000, rate:6, months:60 });
+    renderCreditResult();
+    assert(box.classList.contains('grow'), 'при 6% должен быть класс .grow');
+    assert(getElById(stub, 'creditVerdictMain').textContent.includes('не дороже вклада'),
+      'вывод должен называть, что кредит дешевле вклада');
+    creditApply({ amount:500000, rate:17, months:60 });
+    renderCreditResult();
+    assert(box.classList.contains('save'), 'при 17% должен быть класс .save');
+    creditApply({ amount:500000, rate:25, months:60 });
+    renderCreditResult();
+    assert(box.classList.contains('bad'), 'при 25% должен быть класс .bad');
+    assert(!box.classList.contains('grow') && !box.classList.contains('save'),
+      'классы уровней не должны накладываться');
+    // Пояснение под выводом обязано содержать обе ставки: без сравнения с
+    // вкладом вывод «дороже» ничем не подкреплён.
+    const note = getElById(stub, 'creditVerdictNote').textContent;
+    assert(/\d/.test(note) && note.includes('%'),
+      `пояснение должно содержать ставки, получено «${note}»`);
+  } finally {
+    Object.assign(state, saved);
+    renderCreditSetup();
+  }
+});
+
+test('«Кредит»: окупаемость сравнивается с ценой кредита', () => {
+  // Единственный параметр, который может оправдать даже дорогой кредит:
+  // если покупка или бизнес приносит больше, чем стоят деньги. Проверяем обе
+  // стороны — иначе строка всегда говорила бы одно и то же.
+  const saved = creditBackup();
+  try {
+    creditApply({ amount:500000, rate:25, months:60, gain:0 });
+    renderCreditResult();
+    assert(getElById(stub, 'creditGainLine').textContent.includes('ничего не принесут'),
+      'при нулевой окупаемости игра должна сказать, что деньги ничего не приносят');
+    // 30% годовых при инфляции 6,3% — реальные 22%, этого хватает против
+    // 17,6% реальной цены кредита под 25%.
+    creditApply({ amount:500000, rate:25, months:60, gain:30 });
+    renderCreditResult();
+    assert(getElById(stub, 'creditGainLine').textContent.includes('окупился'),
+      'при 30% годовых кредит под 25% должен окупаться');
+    creditApply({ amount:500000, rate:25, months:60, gain:5 });
+    renderCreditResult();
+    assert(getElById(stub, 'creditGainLine').textContent.includes('не окупается'),
+      'при 5% годовых кредит под 25% окупаться не должен');
+  } finally {
+    Object.assign(state, saved);
+    renderCreditSetup();
+  }
+});
+
+test('«Кредит»: ползунки меняют условия и показывают значения', () => {
+  // Ключевое поведение: событие 'input' обязано менять state и подпись сразу.
+  // Проверяем настоящий элемент из разметки, а не вызов функции: обработчик
+  // можно забыть, и тест на функцию этого не заметит.
+  const saved = creditBackup();
+  try {
+    renderCreditSetup();
+    const rate = getElById(stub, 'creditRateRange');
+    assert(rate.value === String(state.creditRate),
+      `ползунок должен показывать сохранённую ставку ${state.creditRate}, показывает ${rate.value}`);
+    rate.value = '18.5';
+    for(const { handler } of rate._getHandlers().get('input')) handler({});
+    assert(state.creditRate === 18.5, `после движения ползунка ставка должна стать 18,5, получено ${state.creditRate}`);
+    assert(getElById(stub, 'creditRateValue').textContent.includes('18,5%'),
+      `подпись должна обновиться сразу, получено «${getElById(stub, 'creditRateValue').textContent}»`);
+    // Мусор в state обязан исправляться, а не попадать в расчёт как NaN.
+    assert(creditClamp('rate', 'abc') === CREDIT_LIMITS.rate.def,
+      'мусор в state должен давать значение по умолчанию');
+    assert(creditClamp('months', 1e9) === CREDIT_LIMITS.months.max,
+      'срок выше максимума должен зажиматься');
+    assert(creditClamp('amount', 1) === CREDIT_LIMITS.amount.min,
+      'сумма ниже минимума должна зажиматься');
+  } finally {
+    Object.assign(state, saved);
+    renderCreditSetup();
+  }
+});
+
+test('«Кредит»: правила говорят, что расчёт учебный и не совет', () => {
+  const rules = /<div class="modal-overlay" id="creditRulesModal">[\s\S]*?closeCreditRulesBtn/.exec(html)[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  assert(/не финансовый совет/i.test(rules), 'в правилах должно быть сказано, что это не финансовый совет');
+  assert(/не рекомендует/i.test(rules), 'в правилах должно быть сказано, что игра не рекомендует брать кредит');
+  // Ставки взяты с рынка, но конкретные числа у каждого банка свои: без
+  // оговорки «ставка 25%» читается как предложение какого-то банка.
+  assert(/страхов/i.test(rules) && /комисс/i.test(rules) && /инфляц/i.test(rules) && /ПСК/.test(rules),
+    'в правилах должны быть названы страховка, комиссии, инфляция и ПСК — они меняют цену кредита');
+  assert(/вычет/i.test(rules) && /просрочк/i.test(rules) && /НЕ учитывает/.test(rules),
+    'в правилах должно быть сказано, что расчёт не учитывает вычет, штрафы и отказ банка');
+  assert(/ФЗ-353/.test(rules), 'нужно объяснить, по какой формуле считается ПСК — это главная цифра договора');
+  assert(/Фишера/.test(rules) && /на пользу заёмщика/i.test(rules),
+    'нужно сказать, что инфляция у кредита работает на пользу заёмщику, иначе это читается как ошибка');
+  assert(/остаток долга/i.test(rules),
+    'нужно объяснить, что проценты идут на остаток — иначе непонятно, почему длинный срок дешевле');
+  ['наличными', 'автокредит', 'ипотека', 'рефинансирование'].forEach(m => {
+    assert(rules.includes(m), `в правилах должен быть назван тип кредита «${m}»`);
+  });
+  assert(rules.includes('аннуитетный') && rules.includes('дифференцированный'),
+    'оба графика платежей доступны в игре и должны быть названы в правилах');
+  const hubHtml = document.getElementById('rulesHubList').innerHTML;
+  assert(hubHtml.includes('creditRulesModal'), 'в хабе правил должен быть пункт «Кредит»');
+  assert(hubHtml.includes('Кредит'), 'пункт должен называться «Кредит»');
+});
+
 tests.forEach(t => {
   name = t.name;
   try {
