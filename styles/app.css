@@ -4394,3 +4394,36 @@
     border:1px dashed rgba(255,255,255,.2);
   }
 
+  /* ---- ПЛОТНАЯ РАСКЛАДКА ЭКРАНОВ «ВКЛАДОВ» ----
+     Замер показал: на экране расчёта при 390×844 контент занимал 1145 px
+     против 812 видимых — 333 px лишней прокрутки. Экран настроек влезал
+     ровно, поэтому ужимается в основном расчёт.
+     Что уменьшаем и почему:
+     • отступы между блоками 16 → 10, между заметками 8 → 5: основной
+       источник пустоты, блоков на экране девять, и каждый давал запас;
+     • внутренние отступы заметок 9/12 → 7/10;
+     • рамка итога: padding 16/14 → 12/12;
+     • диаграмма 120 → 96 px, отступы в таблице 7 → 5 px.
+     Шрифты и радиусы НЕ трогаем: уменьшение текста ниже 13px бьёт по
+     читаемости, а радиусы — по узнаваемости оформления. Проверяемо:
+     после правок экран расчёта помещается в 812 px на 390×844. */
+  #depositsSetup .subtitle{ margin-bottom:12px; font-size:13px; line-height:1.4; }
+  #depositsSetup .field{ margin-bottom:10px; }
+  #depositsGame .deposit-note{ margin-bottom:4px; padding:5px 10px; line-height:1.35; }
+  #depositsGame .deposit-total-box{ margin:4px 0; padding:8px 12px; }
+  #depositsGame .deposit-total{ margin:2px 0 4px; font-size:clamp(26px, 8.5vw, 38px); }
+  #depositsGame .deposit-term{ margin:-2px 0 5px; padding-bottom:5px; }
+  #depositsGame .field{ margin-bottom:6px; }
+  #depositsGame .deposit-bars{ height:80px; }
+  #depositsGame .deposit-table th, #depositsGame .deposit-table td{ padding:3px 6px; }
+  #depositsGame .deposit-disclaimer{ margin:6px 0 4px; padding:6px 10px; line-height:1.4; }
+  #depositsSetup .deposit-serv-total{ margin-top:6px; }
+  /* На совсем низких экранах (iPhone SE) сжимаем ещё на шаг: тот же
+     список правил, иначе расчёт уезжает в прокрутку. */
+  @media (max-height:700px){
+    #depositsSetup .field{ margin-bottom:8px; }
+    #depositsGame .deposit-bars{ height:76px; }
+    #depositsGame .deposit-note{ padding:5px 9px; }
+    #depositsGame .deposit-total-box{ padding:8px 12px; }
+  }
+

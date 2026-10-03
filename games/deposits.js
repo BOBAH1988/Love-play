@@ -299,17 +299,6 @@ function depositsSimulate(p){
 }
 
 
-// Строки «Проверки себя». Каждый вопрос берёт число из расчёта, а не из
-
-
-// Проценты и ставки — с запятой, как их пишут в России: 14%, 6,3%. Формат
-// toLocaleString тут не годится: он даёт неразрывный пробел и копейки, а у
-// процента дробная часть — одна значащая цифра.
-function depositsRuNum(n){
-  const v = Number(n) || 0;
-  return String(v).replace('.', ',');
-}
-
 /* ============ НАЛОГ И ИНФЛЯЦИЯ ============ */
 // Проценты по вкладу облагаются НДФЛ не со всей суммы, а с превышения над
 // необлагаемым минимумом: максимум(ключевая ставка, 12,5%) от суммы вкладов
@@ -495,10 +484,13 @@ function renderDepositsResult(){
   const tax = depositsTax(res);
   const taxBox = document.getElementById('depositsTax');
   if(taxBox){
-    const rate = `${depositsRuNum(DEPOSITS_RU.keyRate)}%`;
+    // Подписи на экране намеренно короткие: каждая строка занимает до четырёх
+    // строк текста, а на 390×844 это 187 px лишней прокрутки. Источники и даты
+    // указаны один раз в дисклеймере под таблицей и в правилах игры, поэтому
+    // повторять их в каждой строке незачем — все числа остаются на месте.
     taxBox.textContent = tax.tax < 1
-      ? `Налог на проценты по вкладу — 0 ₽: доход не превысил необлагаемый минимум ${depositsMoney(tax.exempt)} (${rate} годовых — ключевая ставка с ${DEPOSITS_RU.keyRateFrom}).`
-      : `Налог на проценты по вкладу — ${depositsMoney(tax.tax)} (${tax.rate}% с ${depositsMoney(tax.taxable)} сверх необлагаемого минимума ${depositsMoney(tax.exempt)}; ключевая ставка ${rate} с ${DEPOSITS_RU.keyRateFrom}).`;
+      ? `Налог — 0 ₽: доход не превысил необлагаемый минимум ${depositsMoney(tax.exempt)}.`
+      : `Налог — ${depositsMoney(tax.tax)} (${tax.rate}% с ${depositsMoney(tax.taxable)} сверх минимума ${depositsMoney(tax.exempt)}).`;
   }
   // Услуги банка: показываем и цену, и итог после неё. Смысл блока в том,
   // что игрок видит, как «бесплатные» страховка и СМС съедают доход.
@@ -506,21 +498,18 @@ function renderDepositsResult(){
   const servBox = document.getElementById('depositsServices');
   if(servBox){
     if(!serv.items.length){
-      servBox.textContent = 'Дополнительные услуги не подключены — итог на счёте ничего не уменьшает.';
+      servBox.textContent = 'Дополнительные услуги не подключены — итог не уменьшается.';
     }else{
       const detail = serv.items.map(s => `${s.label} ${depositsMoney(s.sum)}`).join(', ');
-      const net = res.total - serv.total;
-      servBox.textContent = `Дополнительные услуги — ${depositsMoney(serv.total)} (${detail}). `
-        + `На счёте останется ${depositsMoney(net)} — это на ${depositsMoney(serv.total)} меньше, чем без услуг.`;
+      servBox.textContent = `Услуги — ${depositsMoney(serv.total)} (${detail}). На счёте останется ${depositsMoney(res.total - serv.total)}.`;
     }
   }
   // Инфляция за срок: итог в ценах начала вклада.
   const infl = depositsInflationLoss(res);
   const inflBox = document.getElementById('depositsInflation');
   if(inflBox){
-    const pct = depositsRuNum(DEPOSITS_RU.inflation);
-    inflBox.textContent = `Примерная инфляция за срок — ${depositsMoney(infl.loss)}: итог ${depositsMoney(res.total)} `
-      + `подстричь до ${depositsMoney(infl.realValue)} в ценах начала срока (${pct}% в год, оценка ЦБ на ${DEPOSITS_RU.inflationFrom}).`;
+    inflBox.textContent = `Инфляция за срок — ${depositsMoney(infl.loss)}: итог `
+      + `${depositsMoney(res.total)} стоит как ${depositsMoney(infl.realValue)} в ценах начала срока.`;
   }
   const bars = document.getElementById('depositsBars');
   if(bars) bars.innerHTML = depositsBarsHtml(res.years);

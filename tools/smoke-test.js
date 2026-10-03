@@ -7545,8 +7545,6 @@ test('«Вклады»: инфляция показывает, во скольк
     depositsApply({ amount:100000, rate:12, years:20, cap:'month', topup:0 });
     const long = depositsSimulate(depositsParams());
     assert(depositsInflationLoss(long).loss > infl.loss, 'на 20 годах потери от инфляции должны быть больше');
-    assert(depositsRuNum(6.3) === '6,3', `проценты пишутся с запятой, получено «${depositsRuNum(6.3)}»`);
-    assert(depositsRuNum(14) === '14', `целое без запятой, получено «${depositsRuNum(14)}»`);
   } finally {
     Object.assign(state, saved);
   }
