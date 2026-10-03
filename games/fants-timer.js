@@ -960,7 +960,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     bizTestsSetup:'businessView', bizTestsGame:'businessView',
     bizTestsSummary:'businessView', bizTestsHistory:'businessView',
     depositsSetup:'businessView', depositsGame:'businessView',
-    depositsCheck:'businessView', depositsSummary:'businessView',
     flashSetup:'learningView', flashGame:'learningView',
     flashTimeSetup:'learningView', flashTimeGame:'learningView',
     flagsSetup:'learningView', flagsGame:'learningView',
@@ -1004,9 +1003,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'businessLemonadeSetup','bizObsSetup','flashSetup','flagsSetup',
     'iqTestSetup','iqTestSummary','iqTestHistory',
     'bizTestsSetup','bizTestsSummary','bizTestsHistory',
-    // «Вклады»: кроме настроек, вложенными являются экран проверки и итоги —
-    // стрелка «←» с них возвращает на шаг назад, а не выбрасывает в хаб.
-    'depositsSetup','depositsCheck','depositsSummary',
+    // «Вклады»: экран настроек, чтобы стрелка «←» из него вела в хаб,
+    // а не гоняла экран сам на себе.
+    'depositsSetup',
     // Обучающая группа: экраны настроек «Столиц» и «Арифметики». Без них
     // стрелка «←» не считала экран экраном настройки и проваливалась в
     // generic-ветку, которая писала в lastSectionOnPause чужой раздел.
@@ -1076,10 +1075,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'bizTestsHistory':'exitBizTestsHistory',
     'bizTestsSummary':'exitBizTestsSummary',
     'bizTestsSetup':'exitBizTestsSetup',
-    // «Вклады»: «←» с проверки возвращает к расчёту (он не теряется), а с
-    // итогов — к настройкам игры, как у остальных вложенных экранов.
-    'depositsCheck':'exitDepositsCheck',
-    'depositsSummary':'exitDepositsSummary',
+    // «Вклады»: «←» с экрана настроек ведёт в хаб.
     'depositsSetup':'exitDepositsSetup',
     'iqTestHistory':'exitIqTestHistory',
     'iqTestSummary':'exitIqTestSummary',

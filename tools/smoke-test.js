@@ -7161,11 +7161,10 @@ test('«Вклады»: срок удвоения в годах, а не в ме
   }
 });
 
-test('«Вклады»: у всех комбинаций настроек расчёт и вопросы корректны', () => {
-  // Сплошной прогон по всем 2000 сочетаниям: суммы не должны падать, вопросов
-  // должно быть ровно пять, а в каждом — три РАЗНЫХ варианта с одним верным.
-  // Именно на этом прогоне поймался баг: при выплате в конце срока разница с
-  // простыми процентами равна 0, и три варианта схлопывались в один «0 ₽».
+test('«Вклады»: у всех комбинаций настроек расчёт корректен', () => {
+  // Сплошной прогон по всем сочетаниям настроек: итог не меньше вложенного,
+  // сумма по годам не убывает, эффективная ставка не превосходит договорную
+  // и срок удвоения есть ровно тогда, когда есть капитализация.
   const saved = depositsBackup();
   const problems = [];
   let combos = 0;
@@ -7181,17 +7180,14 @@ test('«Вклады»: у всех комбинаций настроек рас
               combos++;
               const tag = `${amount}/${rate}/${years}/${cap}/${topup}`;
               if(!(res.total >= res.invested - 0.01)) problems.push(`${tag}: итог меньше вложенного`);
+              if(!Number.isFinite(res.total)) problems.push(`${tag}: итог не число`);
+              if(res.years.length !== years) problems.push(`${tag}: в таблице ${res.years.length} строк вместо ${years}`);
+              if(!(res.effective >= p.rate - 0.01)) problems.push(`${tag}: эффективная ставка ниже договорной`);
+              if(cap === 'end' && res.doublingYears !== null) problems.push(`${tag}: при выплате в конце срока удвоение невозможно`);
+              if(cap !== 'end' && !(res.doublingYears > 0)) problems.push(`${tag}: при капитализации срок удвоения должен быть`);
+              if(!(res.simpleTotal >= res.invested - 0.01)) problems.push(`${tag}: простые проценты меньше вложенного`);
               for(let i = 1; i < res.years.length; i++){
                 if(res.years[i].end < res.years[i - 1].end - 0.01) problems.push(`${tag}: сумма падает на ${i} году`);
-              }
-              const qs = depositsCheckQuestions(res, p);
-              if(qs.length !== 5) problems.push(`${tag}: вопросов ${qs.length}`);
-              for(const q of qs){
-                const opts = depositsCheckOptions(q);
-                if(opts.length !== 3) problems.push(`${tag}: у вопроса ${q.id} вариантов ${opts.length}`);
-                if(new Set(opts.map(o => o.label)).size !== opts.length) problems.push(`${tag}: у вопроса ${q.id} повторяющиеся варианты`);
-                if(opts.filter(o => o.correct).length !== 1) problems.push(`${tag}: у вопроса ${q.id} не один верный ответ`);
-                if(!depositsCheckHint(q, res, p)) problems.push(`${tag}: у вопроса ${q.id} нет пояснения`);
               }
             }
           }
@@ -7212,27 +7208,20 @@ test('«Вклады»: у всех комбинаций настроек рас
   assert(problems.length === 0, problems.slice(0, 5).join('; '));
 });
 
-test('«Вклады»: верный ответ совпадает с расчётом, а при простых процентах — «никогда»', () => {
-  // Верный вариант должен быть числом из расчёта. Раньше в одном из вопросов
-  // при выплате в конце срока верным стояло «удвоится через 10 лет» — то есть
-  // ровно то, чего при простых процентах не бывает.
+test('«Вклады»: при выплате в конце срока игра говорит, что удвоения не будет', () => {
+  // Раньше в одном из вопросов при выплате в конце срока верным стояло
+  // «удвоится через 10 лет» — то есть ровно то, чего при простых процентах
+  // не бывает. Теперь эта невозможность обязана быть видна на экране.
   const saved = depositsBackup();
   try {
     depositsApply({ amount:100000, rate:12, years:5, cap:'end', topup:0 });
-    const p = depositsParams();
-    const res = depositsSimulate(p);
-    const doubling = depositsCheckQuestions(res, p).find(q => q.id === 'doubling');
-    assert(doubling.answer === null, 'при выплате в конце срока срок удвоения должен быть null');
-    const opts = depositsCheckOptions(doubling);
-    assert(opts.find(o => o.correct).label.includes('Никогда'),
-      `верным должен быть ответ «никогда», а не «${opts.find(o => o.correct).label}»`);
+    const res = depositsSimulate(depositsParams());
+    assert(res.doublingYears === null, `при выплате в конце срока срок удвоения должен быть null, получено ${res.doublingYears}`);
+    assert(res.extraFromCap < 1, 'без капитализации разница с простыми процентами нулевая');
     depositsApply({ amount:100000, rate:12, years:5, cap:'month', topup:0 });
-    const p2 = depositsParams();
-    const res2 = depositsSimulate(p2);
-    const totalQ = depositsCheckQuestions(res2, p2).find(q => q.id === 'total');
-    const correct = depositsCheckOptions(totalQ).find(o => o.correct);
-    assert(correct.label === depositsMoney(Math.round(res2.total)),
-      `верный ответ должен совпадать с итогом расчёта: «${correct.label}» против ${depositsMoney(Math.round(res2.total))}`);
+    const res2 = depositsSimulate(depositsParams());
+    assert(res2.doublingYears > 0, 'при ежемесячной капитализации срок удвоения должен быть');
+    assert(res2.effective > 12, `эффективная ставка должна превышать договорные 12%, получено ${res2.effective}`);
   } finally {
     Object.assign(state, saved);
   }
@@ -7330,7 +7319,7 @@ test('«Вклады»: правила говорят, что расчёт уч�
   assert(hubHtml.includes('Вклады'), 'пункт должен называться «Вклады»');
 });
 
-test('«Вклады»: полный цикл — расчёт, проверка из 5 вопросов, итоги', () => {
+test('«Вклады»: полный цикл — настройки, расчёт, выход', () => {
   const saved = depositsBackup();
   const clear = () => document.querySelectorAll('.screen.active').forEach(el => el.classList.remove('active'));
   try {
@@ -7339,8 +7328,9 @@ test('«Вклады»: полный цикл — расчёт, проверка
     getElById(stub, 'depositsSetup').classList.add('active');
     startDepositsGame();
     const res = depositsSimulate(depositsParams());
+    assert(getElById(stub, 'depositsGame').classList.contains('active'), 'расчёт должен открыться');
     assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res.total, true),
-      'на экране должен быть итог того же расчёта, который пошёл в вопросы');
+      'на экране должен быть итог того же расчёта, который показан в таблице');
     assert(getElById(stub, 'depositsCompare').textContent.includes('капитализация'),
       'на экране должно быть сравнение с простыми процентами');
     // Диаграмму и таблицу считаем по строке innerHTML: dom-stub хранит её
@@ -7351,23 +7341,19 @@ test('«Вклады»: полный цикл — расчёт, проверка
     assert((getElById(stub, 'depositsTable').innerHTML || '').split('<tr>').length - 1 === 10,
       'в таблице должно быть 10 строк по годам');
 
-    startDepositsCheck();
-    assert(getElById(stub, 'depositsCheck').classList.contains('active'), 'проверка должна открыться');
-    for(let i = 0; i < 5; i++){
-      const list = depositsCheckList();
-      const opts = depositsCheckOptions(list[i]);
-      assert(opts.length === 3, `в вопросе ${i + 1} должно быть 3 варианта, а ${opts.length}`);
-      // Отвечаем верным вариантом через функцию игры — так же, как по клику.
-      onDepositsAnswer(i, opts.find(o => o.correct), list);
-      assert(state.depositsAnswers[i] === 1, `ответ ${i + 1} должен засчитаться верным`);
-      assert(getElById(stub, 'depositsCheckHint').textContent.length > 0, `после ответа ${i + 1} должно быть пояснение`);
-      nextDepositsCheck();
-    }
-    assert(getElById(stub, 'depositsSummary').classList.contains('active'), 'после пятого ответа должны открыться итоги');
-    assert(getElById(stub, 'depositsSummaryTitle').textContent.includes('5 из 5'),
-      `все ответы верны — ожидалось «5 из 5», получено «${getElById(stub, 'depositsSummaryTitle').textContent}»`);
-    exitDepositsSummary();
-    assert(getElById(stub, 'depositsSetup').classList.contains('active'), 'после итогов должен открыться экран настроек');
+    // Блока вопросов в игре больше нет: кнопки запуска и самих экранов
+    // не должно существовать, иначе на экране останется мёртвая кнопка.
+    // dom-stub отдаёт элемент только если такой id реально есть в index.html,
+    // поэтому null здесь — точная проверка удаления разметки.
+    assert(getElById(stub, 'depositsCheckStartBtn') === null,
+      'кнопка «Проверить себя» должна быть удалена из разметки');
+    assert(getElById(stub, 'depositsCheck') === null,
+      'экран проверки должен быть удалён из разметки');
+    assert(getElById(stub, 'depositsSummary') === null,
+      'экран итогов проверки должен быть удалён из разметки');
+
+    exitDepositsGame();
+    assert(getElById(stub, 'depositsSetup').classList.contains('active'), 'после выхода должен открыться экран настроек');
     assert(state.inProgress === false, 'партия должна быть завершена');
   } finally {
     clear();
@@ -7375,7 +7361,7 @@ test('«Вклады»: полный цикл — расчёт, проверка
   }
 });
 
-test('«Вклады»: «←» с проверки возвращает к расчёту, с расчёта — в настройки', () => {
+test('«Вклады»: «←» с расчёта возвращает в настройки, с настроек — в хаб', () => {
   const saved = depositsBackup();
   const clear = () => document.querySelectorAll('.screen.active').forEach(el => el.classList.remove('active'));
   const back = getElById(stub, 'globalBackBtn');
@@ -7390,20 +7376,13 @@ test('«Вклады»: «←» с проверки возвращает к ра
     assert(!getElById(stub, 'depositsSetup').classList.contains('active'),
       'стрелка «←» не должна оставлять экран настроек активным');
     assert(getElById(stub, 'setup').classList.contains('active'), 'стрелка «←» с настроек должна вести в хаб');
-    // «←» с проверки возвращает к расчёту: расчёт не теряется.
-    clear();
-    startDepositsGame();
-    startDepositsCheck();
-    press();
-    assert(getElById(stub, 'depositsGame').classList.contains('active'),
-      'стрелка «←» с проверки должна вернуть к расчёту');
-    assert(depositsActiveCount() === 1, `активным должен остаться ровно один экран, а ${depositsActiveCount()}`);
     // «←» с расчёта — в настройки игры (noPause + back в реестре).
     clear();
-    getElById(stub, 'depositsGame').classList.add('active');
+    startDepositsGame();
     press();
     assert(getElById(stub, 'depositsSetup').classList.contains('active'),
       'стрелка «←» с расчёта должна открыть настройки игры');
+    assert(depositsActiveCount() === 1, `активным должен остаться ровно один экран, а ${depositsActiveCount()}`);
   } finally {
     clear();
     Object.assign(state, saved);

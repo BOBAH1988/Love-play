@@ -3643,7 +3643,7 @@ function checkDeposits(html, timerSrc) {
   check('выход с расчёта ведёт в настройки игры, а не в хаб',
     /mode:\s*'deposits'[\s\S]*?back:\s*'exitDepositsGame'/.test(registry),
     'без back стрелка «←» из экрана расчёта уведёт не туда');
-  for (const sid of ['depositsSetup', 'depositsGame', 'depositsCheck', 'depositsSummary']) {
+  for (const sid of ['depositsSetup', 'depositsGame']) {
     check(`экран ${sid} есть в разметке и в карте раздела businessView`,
       new RegExp(`<section id="${sid}"`).test(html) && new RegExp(`${sid}:'businessView'`).test(timerSrc),
       `нет секции #${sid} или записи ${sid}:'businessView' в SECTION_FOR_SCREEN`);
@@ -3652,7 +3652,7 @@ function checkDeposits(html, timerSrc) {
   // попадёт в generic-fallback и выбросит в хаб, минуя настройки игры.
   const parentBack = /const PARENT_BACK\s*=\s*\{([\s\S]*?)\n\s*\};/.exec(timerSrc);
   const backIds = parentBack ? [...parentBack[1].matchAll(/'([A-Za-z0-9_]+)':\s*'([A-Za-z0-9_]+)'/g)].map(m => m[1]) : [];
-  const nested = ['depositsSetup', 'depositsCheck', 'depositsSummary'];
+  const nested = ['depositsSetup'];
   check('вложенные экраны «Вкладов» описаны в PARENT_BACK',
     nested.every(sid => backIds.includes(sid)),
     `нет в карте PARENT_BACK: ${nested.filter(sid => !backIds.includes(sid)).join(', ') || '—'}`);
@@ -3699,25 +3699,15 @@ function checkDeposits(html, timerSrc) {
   check('срок удвоения пересчитан из периодов в годы',
     /doublingYears = perYear > 0\s*\n\s*\? Math\.log\(2\) \/ \(perYear \* Math\.log/.test(game),
     'ожидается Math.log(2) / (perYear * Math.log(...)) — без perYear выходят месяцы');
-  // При выплате в конце срока удвоения нет: верным должен быть ответ «никогда».
-  check('при выплате в конце срока верный ответ — «никогда»',
-    /label:'Никогда: проценты в конце срока', correct:true/.test(game)
-      && /doublingYears === null/.test(game),
-    'без капитализации сумма не удваивается — верным ответом должен быть прямой');
-  // Вопросы «Проверки себя» порождаются расчётом, а не хранятся в данных:
-  // так верный ответ невозможно забыть при изменении формулы.
-  check('вопросы проверки считаются тем же расчётом, а не хранятся вручную',
-    /function depositsCheckQuestions\(res, p\)/.test(game) && /depositsSimulate\(/.test(game),
-    'вопросы должны строиться из depositsSimulate');
-  // Нулевая разница с простыми процентами схлопывала три варианта ответа
-  // в один «0 ₽»: нужен заменяющий вопрос.
-  check('вопрос о разнице заменяется, когда разница равна нулю',
-    /id:'alt'/.test(game) && /useAlt/.test(game),
-    'при капитализации в конце срока разница 0, нужен другой вопрос');
-  // Вариантов ответа должно быть ровно три, иначе экран врёт или схлопывается.
-  check('в каждом вопросе ровно три варианта ответа',
-    /out\.length >= 3/.test(game) && /if\(used\.has\(label\)\) continue;/.test(game),
-    'нужен подбор отвлекающих вариантов без повторов');
+  // При выплате в конце срока удвоения нет: экран должен прямо говорить об
+  // этом, а не печатать «через 0,0 лет».
+  check('при выплате в конце срока игра говорит, что сумма не удвоится',
+    /doublingYears === null/.test(game) && /Удвоения не будет/.test(game),
+    'без капитализации сумма не удваивается — на экране это должно быть сказано прямо');
+  check('в репозитории не осталось экранов проверки «Вкладов»',
+    !/depositsCheck|depositsSummary/.test(game) && !/id="depositsCheck[A-Za-z]*"/.test(html)
+      && !/depositsCheck[A-Za-z]*\s*:/.test(timerSrc),
+    'блок вопросов удалён: экраны и функции проверки должны быть вырезаны из кода, разметки и карт навигации');
 
   // Модуль игры не должен падать из-за отсутствующего id. Подписка на кнопки
 // в проекте идёт без «?.» (так устроены все 40+ игр), и это давняя норма:
@@ -3748,10 +3738,10 @@ function checkDeposits(html, timerSrc) {
   check('диаграмма и таблица оформлены своими классами .deposit-*',
     /\.deposit-total\{/.test(css) && /\.deposit-bar\{/.test(css) && /\.deposit-table\{/.test(css),
     'ожидаются .deposit-total/.deposit-bar/.deposit-table в styles/app.css');
-  check('карточка вопроса проверки остаётся общей .card',
-    /<div class="card">/.test(html) && /id="depositsCheckAnswers"/.test(html)
-      && !/#depositsCheck[A-Za-z]*\s*\{[^}]*background/m.test(css),
-    'отдельный фон у карточки «Вкладов» сделает её чужеродной среди игр с вариантами ответа');
+  check('экран расчёта остаётся на общих классах карточки и таблицы',
+    /class="deposit-table"/.test(html) && /id="depositsGame"/.test(html)
+      && !/#depositsGame[A-Za-z]*\s*\{[^}]*background/m.test(css),
+    'отдельный фон у экрана «Вкладов» сделает его чужим среди остальных игр');
 
   // Правила: расчёт учебный, не совет. Ставки в игре произвольные, и без
   // оговорки «ставка 20%» читается как обещание доходности.

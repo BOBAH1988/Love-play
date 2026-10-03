@@ -8,8 +8,8 @@
 // КАК растут деньги: сколько будет на счёте, сколько из этого проценты,
 // насколько больше даёт капитализация, чем простые проценты, и через какой
 // срок сумма удвоится. Цель — научиться читать сложные проценты, а не
-// просто получить число: поэтому рядом с расчётом идёт «Проверка себя» —
-// пять вопросов, ответы на которые считает ТОТ ЖЕ расчёт.
+// просто получить число: сравнение с простыми процентами, эффективная
+// ставка, срок удвоения и таблица по годам показывают, откуда берётся итог.
 //
 // ПОЧЕМУ ПОМЕСЯЧНЫЙ ЦИКЛ, А НЕ ГОДОВАЯ ФОРМУЛА
 // Считаем перебором по месяцам (depositsSimulate), а не формулой
@@ -40,11 +40,9 @@
 //   паузы только путает.
 // • Реестр нужен, чтобы стрелка «←» из экрана расчёта возвращала в
 //   настройки игры (back: 'exitDepositsGame'), а не в хаб.
-// • Экраны depositsSetup/depositsGame/depositsCheck/depositsSummary
-//   описаны в SECTION_FOR_SCREEN (games/fants-timer.js) с разделом
-//   businessView, а depositsSetup/depositsCheck/depositsSummary — ещё и в
-//   SETUP_ONLY_SCREENS и PARENT_BACK: это вложенные экраны, «←» с них
-//   возвращает на шаг назад, а не выбрасывает в хаб.
+// • Экраны depositsSetup и depositsGame описаны в SECTION_FOR_SCREEN
+//   (games/fants-timer.js) с разделом businessView, а depositsSetup — ещё и
+//   в SETUP_ONLY_SCREENS и PARENT_BACK: стрелка «←» с него возвращает в хаб.
 //
 // ЧЕГО ИГРА НЕ ДЕЛАЕТ
 // Не обещает доходность и не советует, куда вложить деньги: ставки в ней
@@ -67,10 +65,6 @@ const DEPOSITS_CAPS = [
   { id:'end',     label:'в конце срока', months:0,  short:'в конце срока' },
 ];
 const DEPOSITS_TOPUPS = [0, 5000, 10000, 25000];
-// Сколько вопросов в «Проверке себя». Вопросы не хранятся в данных: их
-// порождает расчёт (depositsCheckQuestions), поэтому правильный ответ всегда
-// соответствует той же формуле, что и таблица на экране.
-const DEPOSITS_CHECKS = 5;
 
 function depositsCapById(id){
   return DEPOSITS_CAPS.find(c => c.id === id) || DEPOSITS_CAPS[0];
@@ -193,133 +187,6 @@ function depositsSimulate(p){
 
 
 // Строки «Проверки себя». Каждый вопрос берёт число из расчёта, а не из
-// заранее написанного ответа, поэтому «правильный» ответ невозможно забыть
-// обновить при изменении формулы — он считается вместе с ней.
-// res — результат depositsSimulate, p — настройки этого расчёта: они нужны,
-// чтобы посчитать ответ для ЗАМЕНЯЮЩЕГО вопроса (см. ниже про нулевую разницу).
-function depositsCheckQuestions(res, p){
-  const firstYear = res.years[0];
-  const midYear = res.years[Math.floor(res.years.length / 2)] || firstYear;
-  // Вопрос о разнице с простыми процентами при выплате в конце срока
-  // бессмыслен: разница ровно ноль, и три числовых варианта ответа схлопывались
-  // в один «0 ₽» (на этом упал прогон по всем комбинациям настроек). Тогда
-  // спрашиваем то, что и объясняет разницу: а сколько было бы при ежемесячной
-  // капитализации на тех же условиях.
-  const extraRounded = Math.round(res.extraFromCap);
-  const useAlt = !(extraRounded >= 1);
-  const altTotal = useAlt && p ? depositsSimulate({ ...p, cap:'month' }).total : 0;
-  const list = [
-    {
-      id:'total', text:'Сколько денег будет на счёте в конце срока?',
-      value: res.total, answer: Math.round(res.total), money:true,
-    },
-    {
-      id:'profit', text:'Сколько из этой суммы начислено процентами?',
-      value: res.profit, answer: Math.round(res.profit), money:true,
-    },
-    useAlt ? {
-      id:'alt', text:'А сколько было бы на счёте, если бы проценты присоединялись каждый месяц?',
-      value: altTotal, answer: Math.round(altTotal), money:true,
-    } : {
-      id:'extra', text:'На сколько капитализация дала больше, чем простые проценты?',
-      value: res.extraFromCap, answer: extraRounded, money:true,
-    },
-    {
-      id:'doubling', text:'Через сколько лет сумма примерно удвоится?',
-      value: res.doublingYears,
-      answer: res.doublingYears === null ? null : Math.max(1, Math.round(res.doublingYears)),
-      years:true,
-    },
-    {
-      id:'year', text:`Сколько денег будет на счёте через ${firstYear.year} ${depositsYearsWord(firstYear.year)}?`,
-      value: firstYear.end, answer: Math.round(firstYear.end), money:true,
-    },
-  ].slice(0, DEPOSITS_CHECKS);
-  // Пятый вопрос не должен повторять первый: при сроке в один год «через
-  // 1 год» и «в конце срока» — одно и то же число, и такой вопрос ничего
-  // не проверяет. Тогда спрашиваем середину срока.
-  if(list.length >= 5 && list[4].value === list[0].value){
-    list[4] = {
-      id:'year', text:`Сколько денег будет на счёте через ${midYear.year} ${depositsYearsWord(midYear.year)}?`,
-      value: midYear.end, answer: Math.round(midYear.end), money:true,
-    };
-  }
-  return list;
-}
-
-
-// Три варианта ответа: верный и два правдоподобных. Отвлекающие строятся от
-// верного множителем, а не выдумываются: так они правдоподобны (именно столько
-// «на глаз» и ожидаешь) и гарантированно отличаются от верного — два верных
-// ответа в одном вопросе были бы нечестной проверкой.
-function depositsCheckOptions(q){
-  const base = q.answer;
-  if(base === null){
-    // «В конце срока» капитализации нет, и сумма НИКОГДА не удваивается
-    // только за счёт процентов. Верным ответом раньше стояло «через 10 лет» —
-    // то есть ровно то, чего при простых процентах не бывает; вопрос
-    // проверял бы неверное. Теперь верным является прямой ответ.
-    return [
-      { label:'Никогда: проценты в конце срока', correct:true },
-      { label:'Удвоится примерно через 10 лет', correct:false },
-      { label:'Удвоится примерно через 20 лет', correct:false },
-    ];
-  }
-  const correctLabel = q.money ? depositsMoney(base) : `${base} ${depositsYearsWord(base)}`;
-  const used = new Set([correctLabel]);
-  const out = [{ label:correctLabel, correct:true }];
-  const labelOf = (v) => q.money ? depositsMoney(v) : `${v} ${depositsYearsWord(v)}`;
-  // Отвлекающие множители: сначала правдоподобные доли от верного, затем —
-  // шаг в сторону. Второй набор нужен для малых сумм, где 0,6 и 1,5 от
-  // ответа после округления дают одно и то же число: без него вопрос
-  // остался бы с двумя одинаковыми кнопками.
-  const candidates = q.years
-    ? [2, 0.5, 3, 1]
-    : [0.6, 1.5, 0.8, 1.25, 2, 0.35];
-  for(const f of candidates){
-    if(out.length >= 3) break;
-    let v = Math.round(base * f);
-    if(q.years) v = Math.max(1, v);
-    if(v === base) continue;
-    const label = labelOf(v);
-    if(used.has(label)) continue;
-    used.add(label);
-    out.push({ label, correct:false });
-  }
-  return shuffle(out);
-}
-// Пояснение «почему такой ответ» — показывается сразу после выбора, чтобы
-// игрок понял ход расчёта, а не просто угадал число.
-function depositsCheckHint(q, res, p){
-  const cap = res.cap.short;
-  if(q.id === 'total'){
-    // Для «в конце срока» прежняя формулировка («проценты остаются на счёте»)
-    // была прямой неправдой: там они как раз НЕ присоединяются.
-    return res.cap.months > 0
-      ? `Каждый месяц сумма умножается на 1 + ${p.rate}% ÷ 12, и раз в ${cap} проценты остаются на счёте.`
-      : `Проценты начисляются, но присоединяются к сумме только один раз — в конце срока.`;
-  }
-  if(q.id === 'profit'){
-    return `Всего вложено ${depositsMoney(res.invested)}, на счёте ${depositsMoney(res.total)}: разница и есть проценты.`;
-  }
-  if(q.id === 'extra'){
-    return `С простыми процентами было бы ${depositsMoney(res.simpleTotal)} — капитализация добавила сверху.`;
-  }
-  if(q.id === 'alt'){
-    return `Сейчас выплата в конце срока: проценты не присоединяются. При ежемесячной капитализации на тех же условиях итог выше.`;
-  }
-  if(q.id === 'doubling'){
-    if(res.doublingYears === null){
-      return 'При выплате в конце срока проценты не присоединяются, сумма растёт только линейно.';
-    }
-    const approx = Math.max(1, Math.round(72 / p.rate));
-    return `Ориентир «правило 72»: 72 ÷ ${p.rate} ≈ ${approx} ${depositsYearsWord(approx)}; точный срок — ${res.doublingYears.toFixed(1).replace('.', ',')} ${depositsYearsWord(res.doublingYears)}.`;
-  }
-  const year = res.years.find(y => Math.abs(y.end - q.value) < 1);
-  return year
-    ? `За ${year.year} ${depositsYearsWord(year.year)} начислено ${depositsMoney(year.profit)} процентами.`
-    : 'Смотрите строку этого года в таблице расчёта.';
-}
 
 
 /* ============ ЭКРАН НАСТРОЙКИ ============ */
@@ -385,16 +252,8 @@ function depositsBarsHtml(years){
 function renderDepositsResult(){
   const p = depositsParams();
   const res = depositsSimulate(p);
-  // Результат считается заново при каждом показе и кладётся в state: экран
-  // «Проверка себя» и итоги берут РОВНО эти же числа, что нарисованы здесь.
-  // Расхождение между таблицей и вопросами было бы ошибкой в понимании.
-  state.depositsResult = {
-    amount:p.amount, rate:p.rate, years:p.years, cap:p.cap, topup:p.topup,
-    total:res.total, invested:res.invested, profit:res.profit,
-    simpleTotal:res.simpleTotal, extraFromCap:res.extraFromCap,
-    doublingYears:res.doublingYears, effective:res.effective,
-  };
-  saveState();
+  // Результат считается заново при каждом показе и нигде не сохраняется:
+  // экран получает те же числа, что и рисует, из одного источника.
   const total = document.getElementById('depositsTotal');
   if(total) total.textContent = depositsMoney(res.total, true);
   const invested = document.getElementById('depositsInvested');
@@ -453,163 +312,6 @@ function exitDepositsGame(){
 }
 
 
-/* ============ ПРОВЕРКА СЕБЯ ============ */
-// Расчёт для проверки берётся из state.depositsResult — того самого, что
-// нарисован на экране расчёта. Если результата нет (экран открыт напрямую,
-// минуя расчёт), он считается заново из настроек: проверка не должна падать.
-function depositsSavedResult(){
-  const r = state.depositsResult;
-  if(r && typeof r.total === 'number' && r.years && typeof r.years === 'object') return r;
-  const p = depositsParams();
-  const res = depositsSimulate(p);
-  return {
-    amount:p.amount, rate:p.rate, years:p.years, cap:p.cap, topup:p.topup,
-    total:res.total, invested:res.invested, profit:res.profit,
-    simpleTotal:res.simpleTotal, extraFromCap:res.extraFromCap,
-    doublingYears:res.doublingYears, effective:res.effective,
-  };
-}
-function depositsCheckList(){
-  const r = depositsSavedResult();
-  const p = { amount:r.amount, rate:r.rate, years:r.years, cap:r.cap, topup:r.topup };
-  return depositsCheckQuestions(depositsSimulate(p), p);
-}
-function startDepositsCheck(){
-  state.depositsIndex = 0;
-  state.depositsAnswers = [];
-  saveState();
-  const next = document.getElementById('depositsCheckNextBtn');
-  if(next) next.style.display = 'none';
-  renderDepositsCheck();
-  activateSingleScreen('depositsCheck');
-}
-function renderDepositsCheck(){
-  const list = depositsCheckList();
-  const idx = Math.min(Math.max(0, Number(state.depositsIndex) || 0), list.length - 1);
-  const q = list[idx];
-  const total = list.length;
-  const label = document.getElementById('depositsCheckLabel');
-  if(label) label.textContent = `Вопрос ${idx + 1} / ${total}`;
-  const fill = document.getElementById('depositsCheckFill');
-  if(fill) fill.style.width = `${total ? ((idx + 1) / total) * 100 : 0}%`;
-  const text = document.getElementById('depositsCheckText');
-  if(text) text.textContent = q.text;
-  const box = document.getElementById('depositsCheckAnswers');
-  if(box){
-    box.innerHTML = '';
-    depositsCheckOptions(q).forEach(opt=>{
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'znayu-answer-btn';
-      btn.textContent = opt.label;
-      btn.addEventListener('click', ()=>{ onDepositsAnswer(idx, opt, list); });
-      box.appendChild(btn);
-    });
-  }
-  const hint = document.getElementById('depositsCheckHint');
-  if(hint){
-    // Подсказка появляется только после ответа: до него она выдала бы
-    // правильный ответ и превратила проверку в чтение.
-    const answered = (state.depositsAnswers || [])[idx] !== undefined;
-    hint.textContent = answered ? depositsCheckHint(q, depositsSimulate(depositsParams()), depositsParams()) : '';
-    hint.style.display = hint.textContent ? 'block' : 'none';
-  }
-}
-
-
-function onDepositsAnswer(idx, opt, list){
-  const answers = Array.isArray(state.depositsAnswers) ? state.depositsAnswers : [];
-  if(answers[idx] !== undefined) return;   // повторный клик по тому же вопросу
-  answers[idx] = opt.correct ? 1 : 0;
-  state.depositsAnswers = answers;
-  saveState();
-  const box = document.getElementById('depositsCheckAnswers');
-  if(box){
-    // Верный ответ подсвечивается сразу: угадывание без разбора ничему
-    // не учит. Ошибочным помечается только тот, что нажали.
-    const correctOpt = depositsCheckOptions(list[idx]).find(o => o.correct);
-    const correctLabel = correctOpt ? correctOpt.label : '';
-    Array.from(box.children).forEach(btn=>{
-      btn.disabled = true;
-      if(btn.textContent === correctLabel) btn.classList.add('answer-correct');
-      else if(btn.textContent === opt.label) btn.classList.add('answer-wrong');
-    });
-  }
-  const hint = document.getElementById('depositsCheckHint');
-  if(hint){
-    const p = depositsParams();
-    hint.textContent = depositsCheckHint(list[idx], depositsSimulate(p), p);
-    hint.style.display = 'block';
-  }
-  const next = document.getElementById('depositsCheckNextBtn');
-  if(next) next.style.display = '';
-  playSuccessSound();
-}
-function nextDepositsCheck(){
-  const list = depositsCheckList();
-  const idx = Number(state.depositsIndex) || 0;
-  if(idx + 1 >= list.length){
-    finishDepositsCheck();
-    return;
-  }
-  state.depositsIndex = idx + 1;
-  saveState();
-  const next = document.getElementById('depositsCheckNextBtn');
-  if(next) next.style.display = 'none';
-  renderDepositsCheck();
-}
-function finishDepositsCheck(){
-  const answers = Array.isArray(state.depositsAnswers) ? state.depositsAnswers : [];
-  const list = depositsCheckList();
-  const correct = answers.filter(a => a === 1).length;
-  state.depositsIndex = list.length;
-  saveState();
-  renderDepositsSummary(correct, list.length);
-  activateSingleScreen('depositsSummary');
-}
-function depositsScoreWord(correct, total){
-  const share = total ? correct / total : 0;
-  if(correct === total) return 'Отлично — вы читаете расчёт как формулу, а не как совпадение.';
-  if(share >= 0.6) return 'Хорошо: основное поняли, остальное — повторите по таблице расчёта.';
-  if(correct > 0) return 'Стоит вернуться к таблице: сначала посмотрите, как растёт сумма по годам.';
-  return 'Начните с таблицы на экране расчёта: там по годам видно, откуда берётся итог.';
-}
-function renderDepositsSummary(correct, total){
-  const title = document.getElementById('depositsSummaryTitle');
-  if(title) title.textContent = `🏦 Вклады: ${correct} из ${total}`;
-  const list = document.getElementById('depositsSummaryList');
-  if(list) list.innerHTML = `<div class="biz-test-verdict">${depositsScoreWord(correct, total)}</div>`;
-  const note = document.getElementById('depositsSummaryNote');
-  if(note){
-    const r = depositsSavedResult();
-    note.textContent = `Расчёт: вклад ${depositsMoney(r.amount)} под ${r.rate}% на ${r.years} ${depositsYearsWord(r.years)}, `
-      + `капитализация ${depositsCapById(r.cap).short} → ${depositsMoney(r.total)}. `
-      + 'Настройки можно поменять и посчитать заново.';
-  }
-}
-// Возврат с экрана проверки на экран расчёта: расчёт не теряется, в отличие
-// от «Выход», который закрывает игру целиком.
-function goToDepositsGameScreen(){
-  renderDepositsResult();
-  activateSingleScreen('depositsGame');
-}
-function exitDepositsCheck(){
-  state.depositsIndex = 0;
-  state.depositsAnswers = [];
-  saveState();
-  goToDepositsGameScreen();
-}
-function exitDepositsSummary(){
-  goToDepositsSetup();
-  state.inProgress = false;
-  state.pausedMode = null;
-  state.depositsIndex = 0;
-  state.depositsAnswers = [];
-  saveState();
-  updateResumeUI();
-}
-
-
 /* ============ КНОПКИ И ИНИЦИАЛИЗАЦИЯ ============ */
 // Один обработчик на все группы: у них одинаковая природа (выбор значения
 // настройки), и пять почти одинаковых копий разъехались бы при первом же
@@ -642,10 +344,6 @@ DEPOSITS_GROUPS.forEach(g=>{
 document.getElementById('depositsStartBtn')?.addEventListener('click', ()=>{ startDepositsGame(); });
 document.getElementById('depositsSetupExitBtn')?.addEventListener('click', ()=>{ exitDepositsSetup(); });
 document.getElementById('depositsGameExitBtn')?.addEventListener('click', ()=>{ exitDepositsGame(); });
-document.getElementById('depositsCheckStartBtn')?.addEventListener('click', ()=>{ startDepositsCheck(); });
-document.getElementById('depositsCheckBackBtn')?.addEventListener('click', ()=>{ exitDepositsCheck(); });
-document.getElementById('depositsCheckNextBtn')?.addEventListener('click', ()=>{ nextDepositsCheck(); });
-document.getElementById('depositsSummaryExitBtn')?.addEventListener('click', ()=>{ exitDepositsSummary(); });
 setupRulesModal('depositsRulesModal', 'closeDepositsRulesBtn');
 renderDepositsSetup();
 
