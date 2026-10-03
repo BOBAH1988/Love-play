@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261002d">
+<link rel="stylesheet" href="styles/app.css?v=20261002e">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-30 · v581';
+  window.APP_BUILD = '2026-10-30 · v582';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -206,7 +206,7 @@
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
         <span>⚙️ Меню</span>
-        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v581</span>
+        <span class="menu-cache-version" id="menuCacheVersion" aria-label="Версия кэха">версии v582</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
@@ -3899,7 +3899,7 @@
       <div class="modal-title">🏦 Правила игры «Вклады»</div>
       <div class="intro-text">Симулятор вклада с капитализацией процентов. Задайте сумму, ставку, срок, капитализацию и ежемесячное пополнение — и увидите, как растут деньги по годам, чем сложные проценты отличаются от простых и через какой срок сумма удвоится.</div>
       <ol class="modal-rules">
-        <li>На экране настройки выберите пять условий: <b>сумму вклада</b> (50 000 — 1 000 000 ₽), <b>ставку в год</b> (4–20%), <b>срок</b> (1–20 лет), <b>капитализацию</b> и <b>пополнение в месяц</b>. Нажмите «Рассчитать».</li>
+        <li>На экране настройки задайте пять условий. Четыре из них ставятся <b>ползунками</b>: <b>сумма вклада</b> (10 000 — 5 000 000 ₽, шаг 1 000 ₽), <b>ставка в год</b> (0,1–30%, шаг 0,1), <b>срок</b> (1–30 лет, шаг 0,1 года) и <b>пополнение в месяц</b> (0 — 100 000 ₽, шаг 1 000 ₽). Текущее значение видно рядом с ползунком. <b>Капитализация</b> выбирается кнопками. Нажмите «Рассчитать».</li>
         <li>На экране расчёта будет итоговая сумма, сколько из неё начислено процентами и сколько вы вложили всего. Ниже — сравнение с простыми процентами, эффективная годовая ставка, срок удвоения, столбиковая диаграмма и таблица по годам.</li>
         <li><b>Главное, ради чего игра и сделана:</b> при капитализации проценты каждый раз начисляются уже на сумму ВМЕСТЕ с процентами. Поэтому при длинном сроке разрыв с простыми процентами становится огромным. Сравните вклад на 1 год и на 20 лет при одной и той же ставке.</li>
         <li>Настройки можно менять сколько угодно: «Выход» возвращает к выбору условий, а стрелка «←» работает так же. Условия запоминаются — вернётесь, и они останутся теми же.</li>
@@ -3910,6 +3910,7 @@
       <ul class="modal-rules">
         <li>Каждый месяц сумма умножается на <b>1 + ставка ÷ 12</b>. Дальше всё зависит от капитализации: <b>ежемесячно</b> — проценты присоединяются каждый месяц, <b>ежеквартально</b> — раз в три месяца, <b>ежегодно</b> — раз в год, а при выплате <b>в конце срока</b> проценты к сумме не присоединяются до самого конца.</li>
         <li>Пополнение вносится в конце каждого месяца, и проценты за этот месяц на него уже не начисляются — так считают почти все банковские калькуляторы.</li>
+        <li>Срок считается <b>в месяцах</b>, потому что ползунок даёт его с шагом 0,1 года: 2,7 года — это 32 месяца. Если срок не кратен году, последний период в таблице будет неполным и подпишется как «2,7 года».</li>
         <li>Срок удвоения считается по формуле ln(2) ÷ ln(1 + ставка ÷ n), где n — число капитализаций в год. Ориентир «правило 72»: срок удвоения примерно равен 72 ÷ ставка в процентах.</li>
       </ul>
       <button class="btn btn-primary" id="closeDepositsRulesBtn">Понятно</button>
@@ -4077,35 +4078,30 @@
     <div class="subtitle">Симулятор вклада: посмотрите, как сложные проценты превращают сумму в деньги, и за какой срок сколько накопитcя</div>
 
     <div class="field">
-      <label>Сумма вклада</label>
-      <div class="starter-group starter-group-2" id="depositsAmountGroup">
-        <button type="button" class="starter-btn mode-btn" data-value="50000">50 000 ₽</button>
-        <button type="button" class="starter-btn mode-btn" data-value="100000">100 000 ₽</button>
-        <button type="button" class="starter-btn mode-btn" data-value="300000">300 000 ₽</button>
-        <button type="button" class="starter-btn mode-btn" data-value="1000000">1 000 000 ₽</button>
+      <div class="deposit-range-head">
+        <label for="depositsAmountRange">Сумма вклада</label>
+        <span class="deposit-range-value" id="depositsAmountValue">100 000 ₽</span>
       </div>
+      <input type="range" class="deposit-range" id="depositsAmountRange"
+             min="10000" max="5000000" step="1000" value="100000">
     </div>
 
     <div class="field">
-      <label>Ставка в год</label>
-      <div class="starter-group" id="depositsRateGroup">
-        <button type="button" class="starter-btn mode-btn" data-value="4">4%</button>
-        <button type="button" class="starter-btn mode-btn" data-value="8">8%</button>
-        <button type="button" class="starter-btn mode-btn" data-value="12">12%</button>
-        <button type="button" class="starter-btn mode-btn" data-value="16">16%</button>
-        <button type="button" class="starter-btn mode-btn" data-value="20">20%</button>
+      <div class="deposit-range-head">
+        <label for="depositsRateRange">Ставка в год</label>
+        <span class="deposit-range-value" id="depositsRateValue">12 %</span>
       </div>
+      <input type="range" class="deposit-range" id="depositsRateRange"
+             min="0.1" max="30" step="0.1" value="12">
     </div>
 
     <div class="field">
-      <label>Срок</label>
-      <div class="starter-group" id="depositsYearsGroup">
-        <button type="button" class="starter-btn mode-btn" data-value="1">1 год</button>
-        <button type="button" class="starter-btn mode-btn" data-value="3">3 года</button>
-        <button type="button" class="starter-btn mode-btn" data-value="5">5 лет</button>
-        <button type="button" class="starter-btn mode-btn" data-value="10">10 лет</button>
-        <button type="button" class="starter-btn mode-btn" data-value="20">20 лет</button>
+      <div class="deposit-range-head">
+        <label for="depositsYearsRange">Срок</label>
+        <span class="deposit-range-value" id="depositsYearsValue">5 лет</span>
       </div>
+      <input type="range" class="deposit-range" id="depositsYearsRange"
+             min="1" max="30" step="0.1" value="5">
     </div>
 
     <div class="field">
@@ -4119,13 +4115,12 @@
     </div>
 
     <div class="field">
-      <label>Пополнение в месяц</label>
-      <div class="starter-group" id="depositsTopUpGroup">
-        <button type="button" class="starter-btn mode-btn" data-value="0">не пополнять</button>
-        <button type="button" class="starter-btn mode-btn" data-value="5000">5 000 ₽</button>
-        <button type="button" class="starter-btn mode-btn" data-value="10000">10 000 ₽</button>
-        <button type="button" class="starter-btn mode-btn" data-value="25000">25 000 ₽</button>
+      <div class="deposit-range-head">
+        <label for="depositsTopUpRange">Пополнение в месяц</label>
+        <span class="deposit-range-value" id="depositsTopUpValue">не пополнять</span>
       </div>
+      <input type="range" class="deposit-range" id="depositsTopUpRange"
+             min="0" max="100000" step="1000" value="0">
     </div>
 
     <button class="btn btn-primary" id="depositsStartBtn">Рассчитать</button>
@@ -5220,7 +5215,7 @@
 <script src="games/solo-test.js?v=20261025b"></script>
 <script src="games/fun-tests.js?v=20261025b"></script>
 <script src="games/biz-tests.js?v=20261025a"></script>
-<script src="games/deposits.js?v=20261002d"></script>
+<script src="games/deposits.js?v=20261002e"></script>
 <script src="games/iq-test.js?v=20261026a"></script>
 <script src="games/know-more.js?v=20261024n"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>

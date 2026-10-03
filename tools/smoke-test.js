@@ -7161,19 +7161,26 @@ test('«Вклады»: срок удвоения в годах, а не в ме
   }
 });
 
-test('«Вклады»: у всех комбинаций настроек расчёт корректен', () => {
-  // Сплошной прогон по всем сочетаниям настроек: итог не меньше вложенного,
-  // сумма по годам не убывает, эффективная ставка не превосходит договорную
-  // и срок удвоения есть ровно тогда, когда есть капитализация.
+test('«Вклады»: у всех сочетаний на сетке шагов расчёт корректен', () => {
+  // Значения задаются ползунками, поэтому сочетаний неисчислимо много.
+  // Прогон идёт по СЕТКЕ ШАГОВ: так проверка остаётся конечной и покрывает
+  // ровно те значения, которые ползунок способен выдать (включая дробные
+  // сроки 2,7 года — их отдельно проверяем ниже).
+  const grid = (key, count) => {
+    const lim = DEPOSITS_LIMITS[key];
+    const out = [];
+    for(let i = 0; i < count; i++) out.push(lim.min + i * lim.step);
+    return out;
+  };
   const saved = depositsBackup();
   const problems = [];
   let combos = 0;
   try {
-    for(const amount of DEPOSITS_AMOUNTS){
-      for(const rate of DEPOSITS_RATES){
-        for(const years of DEPOSITS_YEARS){
+    for(const amount of grid('amount', 9)){
+      for(const rate of grid('rate', 7)){
+        for(const years of grid('years', 5)){
           for(const cap of DEPOSITS_CAPS.map(c => c.id)){
-            for(const topup of DEPOSITS_TOPUPS){
+            for(const topup of grid('topup', 5)){
               depositsApply({ amount, rate, years, cap, topup });
               const p = depositsParams();
               const res = depositsSimulate(p);
@@ -7181,7 +7188,15 @@ test('«Вклады»: у всех комбинаций настроек рас
               const tag = `${amount}/${rate}/${years}/${cap}/${topup}`;
               if(!(res.total >= res.invested - 0.01)) problems.push(`${tag}: итог меньше вложенного`);
               if(!Number.isFinite(res.total)) problems.push(`${tag}: итог не число`);
-              if(res.years.length !== years) problems.push(`${tag}: в таблице ${res.years.length} строк вместо ${years}`);
+              // Итог обязан совпадать с последней строкой таблицы: иначе игрок
+              // видит сумму, которой в таблице нет.
+              if(Math.abs(res.years[res.years.length - 1].end - res.total) > 0.01){
+                problems.push(`${tag}: последняя строка ${res.years[res.years.length - 1].end} ≠ итогу ${res.total}`);
+              }
+              // Строк должно быть ровно столько, сколько периодов в сроке:
+              // дробный срок даёт неполный последний год, и он не должен теряться.
+              const expectedRows = Math.ceil(p.years * 12 / 12);
+              if(res.years.length !== expectedRows) problems.push(`${tag}: в таблице ${res.years.length} строк вместо ${expectedRows}`);
               if(!(res.effective >= p.rate - 0.01)) problems.push(`${tag}: эффективная ставка ниже договорной`);
               if(cap === 'end' && res.doublingYears !== null) problems.push(`${tag}: при выплате в конце срока удвоение невозможно`);
               if(cap !== 'end' && !(res.doublingYears > 0)) problems.push(`${tag}: при капитализации срок удвоения должен быть`);
@@ -7197,15 +7212,61 @@ test('«Вклады»: у всех комбинаций настроек рас
   } finally {
     Object.assign(state, saved);
   }
-  // Ожидаемое число СЧИТАЕМ из самих наборов, а не хардкодим: при добавлении
-  // пятой суммы или четвёртой ставки прогон должен расшириться сам, а не
-  // начать падать на «ожидалось 2000». Прежде здесь стояло именно хардкод-
-  // число, и оно не совпадало с фактом: 4·5·5·4·4 = 1600.
-  const expected = DEPOSITS_AMOUNTS.length * DEPOSITS_RATES.length
-    * DEPOSITS_YEARS.length * DEPOSITS_CAPS.length * DEPOSITS_TOPUPS.length;
-  assert(combos === expected, `проверено сочетаний: ${combos}, ожидалось ${expected}`);
+  // Размер прогона выводится из сетки, а не хардкодится: при добавлении
+  // ползунков прогон расширится сам.
   assert(combos >= 1000, `сплошной прогон слишком мал (${combos}) — он перестал проверять всё`);
   assert(problems.length === 0, problems.slice(0, 5).join('; '));
+});
+
+test('«Вклады»: значения округляются по шагу и зажимаются в границы', () => {
+  // Ползунок не даст «некруглого» значения, но state может достаться из
+  // старого сохранения или из консоли — depositsClamp обязан это исправить.
+  const saved = depositsBackup();
+  try {
+    assert(depositsClamp('amount', 123456) === 123000, 'сумма должна округляться до 1000 ₽');
+    assert(depositsClamp('amount', 9999999) === DEPOSITS_LIMITS.amount.max, 'сумма выше максимума должна зажиматься');
+    assert(depositsClamp('amount', 1) === DEPOSITS_LIMITS.amount.min, 'сумма ниже минимума должна зажиматься');
+    assert(depositsClamp('rate', 12.34) === 12.3, 'ставка должна округляться до десятых');
+    assert(depositsClamp('rate', 'abc') === DEPOSITS_LIMITS.rate.def, 'мусор в state даёт значение по умолчанию, а не NaN');
+    assert(depositsClamp('rate', undefined) === DEPOSITS_LIMITS.rate.def, 'отсутствие значения даёт умолчание');
+    assert(depositsClamp('years', 2.74) === 2.7, 'срок должен округляться до десятых');
+    assert(depositsClamp('topup', 7500) === 8000, 'пополнение округляется до 1000 ₽');
+    assert(depositsClamp('topup', 0) === 0, 'нулевое пополнение допустимо');
+    // Двоичная точность: 0,1 не представимо точно, и без округления обратно
+    // в подписи появлялось бы «12,300000000000004%».
+    assert(String(depositsClamp('rate', 7.3)) === '7.3', `ставка 7,3 должна остаться 7.3, получено ${depositsClamp('rate', 7.3)}`);
+    for(const key of ['amount', 'rate', 'years', 'topup']){
+      const lim = DEPOSITS_LIMITS[key];
+      for(const bad of [NaN, -1e9, Infinity, 'abc', null, {}]){
+        const v = depositsClamp(key, bad);
+        assert(Number.isFinite(v) && v >= lim.min && v <= lim.max,
+          `${key}: значение ${String(bad)} не исправлено в допустимое (${v})`);
+      }
+    }
+  } finally {
+    Object.assign(state, saved);
+  }
+});
+
+test('«Вклады»: дробный срок считается точно, а не округляется до целых годов', () => {
+  // 2,7 года — это 32 месяца. Прежний Math.round(years)*12 дал бы 3 года,
+  // то есть завысил бы срок на 0,3 года и показал бы неверный итог.
+  const saved = depositsBackup();
+  try {
+    depositsApply({ amount:100000, rate:12, years:2.7, cap:'month', topup:0 });
+    const res = depositsSimulate(depositsParams());
+    const byFormula = 100000 * Math.pow(1 + 0.12 / 12, 32);
+    assert(Math.abs(res.total - byFormula) < 0.01,
+      `2,7 года = 32 месяца: получено ${res.total}, по формуле ${byFormula}`);
+    assert(res.years.length === 3, `в таблице должно быть 3 строки (2 года + 8 месяцев), получено ${res.years.length}`);
+    assert(Math.abs(res.years[2].year - 32 / 12) < 1e-9, 'последняя строка должна соответствовать 2,7 года');
+    assert(depositsPeriodLabel(res.years[2].year) === '2,7 года',
+      `подпись неполного года должна быть «2,7 года», получено «${depositsPeriodLabel(res.years[2].year)}»`);
+    assert(depositsPeriodLabel(5) === '5 лет', 'целый срок подписывается как «5 лет»');
+    assert(depositsPeriodLabel(1) === '1 год', 'один год — «1 год»');
+  } finally {
+    Object.assign(state, saved);
+  }
 });
 
 test('«Вклады»: при выплате в конце срока игра говорит, что удвоения не будет', () => {
@@ -7317,6 +7378,79 @@ test('«Вклады»: правила говорят, что расчёт уч�
   const hubHtml = document.getElementById('rulesHubList').innerHTML;
   assert(hubHtml.includes('depositsRulesModal'), 'в хабе правил должен быть пункт «Вклады»');
   assert(hubHtml.includes('Вклады'), 'пункт должен называться «Вклады»');
+});
+
+test('«Вклады»: ползунки меняют настройки, подписи и расчёт', () => {
+  // Ключевое поведение после перехода с кнопок на ползунки: событие 'input'
+  // обязано менять state, подпись и сохраняться. Проверяем настоящий элемент
+  // из разметки, а не вызов функции, — иначе обработчик можно забыть.
+  const saved = depositsBackup();
+  try {
+    renderDepositsSetup();
+    const amount = getElById(stub, 'depositsAmountRange');
+    const amountOut = getElById(stub, 'depositsAmountValue');
+    // Значение по умолчанию должно попасть и в ползунок, и в подпись.
+    assert(amount.value === String(state.depositsAmount),
+      `ползунок должен показывать сохранённое значение ${state.depositsAmount}, показывает ${amount.value}`);
+    assert(amountOut.textContent === depositsMoney(state.depositsAmount),
+      `подпись должна совпадать с значением, получено «${amountOut.textContent}»`);
+    // Двигаем ползунок так, как это делает браузер: ставим value и шлём 'input'.
+    amount.value = '250000';
+    for(const { handler } of amount._getHandlers().get('input')) handler({});
+    assert(state.depositsAmount === 250000, `после движения ползунка сумма должна стать 250000, получено ${state.depositsAmount}`);
+    // Сравниваем через depositsMoney(), а не литералом: toLocaleString('ru-RU')
+    // разделяет тысячи НЕРАЗРЫВНЫМ пробелом (код 160), и строковый литерал
+    // с обычным пробелом никогда не совпал бы — проверка падала бы впустую.
+    assert(amountOut.textContent === depositsMoney(250000),
+      `подпись должна обновиться сразу, получено «${amountOut.textContent}»`);
+    // Значение вне шага должно округлиться, а не попасть в расчёт как есть.
+    amount.value = '250750';
+    for(const { handler } of amount._getHandlers().get('input')) handler({});
+    assert(state.depositsAmount === 251000,
+      `250 750 ₽ должны округлиться до 251 000 ₽, получено ${state.depositsAmount}`);
+    // Дробные параметры: срок и ставка идут с шагом 0,1.
+    const years = getElById(stub, 'depositsYearsRange');
+    years.value = '2.7';
+    for(const { handler } of years._getHandlers().get('input')) handler({});
+    assert(state.depositsYears === 2.7, `срок должен стать 2,7 года, получено ${state.depositsYears}`);
+    assert(getElById(stub, 'depositsYearsValue').textContent === '2,7 года',
+      `подпись срока должна быть «2,7 года», получено «${getElById(stub, 'depositsYearsValue').textContent}»`);
+    const rate = getElById(stub, 'depositsRateRange');
+    rate.value = '7.3';
+    for(const { handler } of rate._getHandlers().get('input')) handler({});
+    assert(state.depositsRate === 7.3, `ставка должна стать 7,3%, получено ${state.depositsRate}`);
+    assert(getElById(stub, 'depositsRateValue').textContent === '7,3%',
+      `подпись ставки должна быть «7,3%», получено «${getElById(stub, 'depositsRateValue').textContent}»`);
+    // Нулевое пополнение подписывается словами, а не «0 ₽».
+    const topup = getElById(stub, 'depositsTopUpRange');
+    topup.value = '0';
+    for(const { handler } of topup._getHandlers().get('input')) handler({});
+    assert(getElById(stub, 'depositsTopUpValue').textContent === 'не пополнять',
+      `подпись пополнения должна быть «не пополнять», получено «${getElById(stub, 'depositsTopUpValue').textContent}»`);
+    topup.value = '3000';
+    for(const { handler } of topup._getHandlers().get('input')) handler({});
+    assert(getElById(stub, 'depositsTopUpValue').textContent === depositsMoney(3000),
+      `подпись пополнения должна быть «3 000 ₽», получено «${getElById(stub, 'depositsTopUpValue').textContent}»`);
+    // Итог обязан считаться по новым значениям, а не по прежним кнопкам.
+    const res = depositsSimulate(depositsParams());
+    assert(res.total > 0 && Number.isFinite(res.total), 'расчёт по значениям ползунков должен давать число');
+    assert(res.invested === 251000 + 3000 * Math.round(2.7 * 12),
+      `вложено должно считаться по ползункам: ${res.invested}`);
+    // Капитализация осталась перечислением и на ползунок не переехала. Проверяем
+    // через renderDepositsSetup + depositsParams: dom-stub не разбирает
+    // селекторы вида '#depositsCapGroup .starter-btn' (querySelectorAll отдаёт
+    // пустой массив), и искать кнопку селектором здесь бессмысленно.
+    const stateBefore = state.depositsCap;
+    state.depositsCap = 'year';
+    saveState();
+    renderDepositsSetup();
+    assert(state.depositsCap === 'year' && depositsParams().cap === 'year',
+      'капитализация должна работать как перечисление, а не как число');
+    state.depositsCap = stateBefore;
+  } finally {
+    Object.assign(state, saved);
+    renderDepositsSetup();
+  }
 });
 
 test('«Вклады»: полный цикл — настройки, расчёт, выход', () => {

@@ -50,38 +50,50 @@
 // на экране расчёта прямо под суммой.
 
 /* ============ ДОСТУПНЫЕ ЗНАЧЕНИЯ НАСТРОЕК ============ */
-// Хранятся здесь, а не размазаны по разметке и коду: и кнопки настроек, и
-// проверка tools/check.js сверяются с этими массивами. Расхождение «в коде
-// пять ставок, а на экране четыре» ловится автоматически.
-const DEPOSITS_AMOUNTS = [50000, 100000, 300000, 1000000];
-const DEPOSITS_RATES = [4, 8, 12, 16, 20];
-const DEPOSITS_YEARS = [1, 3, 5, 10, 20];
+// Числовые условия задаются ползунками, поэтому хранятся не списки значений,
+// а ДИАПАЗОНЫ: границы и шаг. Шаг — это и есть округление, о котором просил
+// игрок: суммы кратны 1000 ₽, остальные параметры — десятым долям.
+// min/max/step дублируются в атрибутах <input type="range"> в index.html, и
+// tools/check.js сверяет одно с другим: разъехавшиеся границы дали бы
+// невозможные значения (например, ставку 30,5% при max=30).
+const DEPOSITS_LIMITS = {
+  amount: { min:10000,  max:5000000, step:1000, def:100000 },
+  rate:   { min:0.1,    max:30,     step:0.1,   def:12 },
+  years:  { min:1,      max:30,     step:0.1,   def:5 },
+  topup:  { min:0,      max:100000, step:1000,  def:0 },
+};
 // Периодичность капитализации: months — как часто проценты присоединяются
-// к сумме (0 = в конце срока, см. depositsSimulate).
+// к сумме (0 = в конце срока, см. depositsSimulate). Это перечисление, а не
+// число, поэтому осталось кнопками.
 const DEPOSITS_CAPS = [
   { id:'month',   label:'ежемесячно',     months:1,  short:'ежемесячно' },
   { id:'quarter', label:'ежеквартально', months:3,  short:'ежеквартально' },
   { id:'year',    label:'ежегодно',      months:12, short:'ежегодно' },
   { id:'end',     label:'в конце срока', months:0,  short:'в конце срока' },
 ];
-const DEPOSITS_TOPUPS = [0, 5000, 10000, 25000];
 
 function depositsCapById(id){
   return DEPOSITS_CAPS.find(c => c.id === id) || DEPOSITS_CAPS[0];
 }
-// Текущие настройки с приведением к допустимым значениям: старые сохранения
-// и правка state из консоли не должны приводить к NaN в расчёте.
+// Приведение значения к допустимому: округление по шагу и зажим в границы.
+// Старые сохранения и правка state из консоли не должны дать NaN в расчёте.
+function depositsClamp(key, value){
+  const lim = DEPOSITS_LIMITS[key];
+  const n = Number(value);
+  if(!lim || !Number.isFinite(n)) return lim ? lim.def : 0;
+  const snapped = Math.round(n / lim.step) * lim.step;
+  // Шаг 0.1 в двоичной арифметике даёт 0.30000000000000004 — округляем
+  // обратно до разумного числа знаков, иначе в подписи «12,300000000000004%».
+  const fixed = Math.round(snapped * 1e6) / 1e6;
+  return Math.min(lim.max, Math.max(lim.min, fixed));
+}
 function depositsParams(){
-  const amounts = DEPOSITS_AMOUNTS;
-  const rates = DEPOSITS_RATES;
-  const years = DEPOSITS_YEARS;
-  const tops = DEPOSITS_TOPUPS;
   return {
-    amount: amounts.includes(Number(state.depositsAmount)) ? Number(state.depositsAmount) : amounts[1],
-    rate: rates.includes(Number(state.depositsRate)) ? Number(state.depositsRate) : rates[2],
-    years: years.includes(Number(state.depositsYears)) ? Number(state.depositsYears) : years[2],
+    amount: depositsClamp('amount', state.depositsAmount),
+    rate: depositsClamp('rate', state.depositsRate),
+    years: depositsClamp('years', state.depositsYears),
     cap: depositsCapById(state.depositsCap).id,
-    topup: tops.includes(Number(state.depositsTopUp)) ? Number(state.depositsTopUp) : tops[0],
+    topup: depositsClamp('topup', state.depositsTopUp),
   };
 }
 // Сумма с копейками там, где они осмысленны (итог), и без них там, где
@@ -94,17 +106,27 @@ function depositsMoney(n, withKopecks){
     maximumFractionDigits: withKopecks ? 2 : 0,
   }) + ' ₽';
 }
-// Склонение «год/года/лет» — в тексте вопросов и подписях. Принимает и
-// дробные значения (5,8 года): округляются до целого, потому что «5,8 года»
-// читается неграмотно — правильно «5,8 лет». Для дробных берём слово от
-// округлённого числа: 1,2 → «2 года», 2,7 → «3 года», 5,8 → «6 лет».
+// Склонение «год/года/лет». Принимает и дробные значения: срок задаётся с
+// шагом 0,1 года, поэтому подпись «5,7 лет» — правильная форма (после
+// дробного числа в русском языке всегда «года», но «лет» тоже верно и
+// привычнее глазу). Поэтому дробные подписываем как «X,X года», а для
+// целых работает обычное склонение: 1 → «год», 3 → «года», 5 → «лет».
 function depositsYearsWord(n){
-  const v = Math.abs(Math.round(Number(n) || 0)) % 100;
-  const last = v % 10;
-  if(v > 10 && v < 20) return 'лет';
+  const v = Math.abs(Number(n) || 0);
+  const rounded = Math.round(v) % 100;
+  const last = rounded % 10;
+  if(rounded > 10 && rounded < 20) return 'лет';
   if(last === 1) return 'год';
   if(last >= 2 && last <= 4) return 'года';
   return 'лет';
+}
+// Подпись периода для таблицы и ползунка срока. Целые годы — «5 лет»,
+// дробные — «2,7 года» с запятой вместо точки (русская запись).
+function depositsPeriodLabel(years){
+  const v = Number(years) || 0;
+  const rounded = Math.round(v * 10) / 10;
+  if(Number.isInteger(rounded)) return `${rounded} ${depositsYearsWord(rounded)}`;
+  return `${String(rounded).replace('.', ',')} года`;
 }
 
 /* ============ РАСЧЁТ ============ */
@@ -118,7 +140,10 @@ function depositsSimulate(p){
   const cap = depositsCapById(p.cap);
   const monthly = Number(p.topup) || 0;
   const rate = Number(p.rate) || 0;
-  const totalMonths = Math.max(1, Math.round(p.years)) * 12;
+  // Срок приходит с шагом 0,1 года, поэтому считаем в МЕСЯЦАХ: 2,7 года —
+  // это 32,4 месяца, и Math.round(years)*12 (как было при целых годах)
+  // дало бы 3 года, то есть тихо завысило бы срок на 0,3 года.
+  const totalMonths = Math.max(1, Math.round(Number(p.years) * 12));
   // Проценты, начисленные за месяц, но пока не присоединённые к сумме.
   // Для режима «в конце срока» они копятся здесь все месяцы и прибавляются
   // один раз в конце — это и есть простые проценты в чистом виде.
@@ -141,7 +166,10 @@ function depositsSimulate(p){
     // Пополнение в конце месяца: на него проценты за этот месяц уже не
     // начислены (начисление выше). Порядок важен и зафиксирован в правилах.
     if(monthly > 0) balance += monthly;
-    if(m % 12 === 0){
+    // Строка таблицы — на каждый год. Последний год может быть неполным
+    // (срок 2,7 года — это 32 месяца), и без отдельной строки он просто
+    // потерялся бы: итог показывал бы сумму на 2 года, а считался по 2,7.
+    if(m % 12 === 0 || m === totalMonths){
       const end = balance + pending;
       years.push({ year: m / 12, start: yearStart, profit: yearProfit, end });
       yearStart = end;
@@ -192,18 +220,34 @@ function depositsSimulate(p){
 /* ============ ЭКРАН НАСТРОЙКИ ============ */
 // Подсветка выбранной кнопки в группе. Плашки те же .starter-btn, что у
 // остальных игр: своя оформка ради одного экрана выбивалась бы из раздела.
+// Осталась только для капитализации — единственного перечисления.
 function depositsMarkGroup(groupId, value){
   document.querySelectorAll('#' + groupId + ' .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', String(btn.dataset.value) === String(value));
   });
 }
+// Ползунки и их подписи описаны данными: у всех четырёх одна природа, и четыре
+// почти одинаковые копии разъехались бы при первом же изменении диапазона.
+// Формат подписи разный намеренно: «не пополнять» читается лучше «0 ₽».
+const DEPOSITS_RANGES = [
+  { key:'amount', field:'depositsAmount', input:'depositsAmountRange', out:'depositsAmountValue',
+    format: v => depositsMoney(v) },
+  { key:'rate', field:'depositsRate', input:'depositsRateRange', out:'depositsRateValue',
+    format: v => `${String(v).replace('.', ',')}%` },
+  { key:'years', field:'depositsYears', input:'depositsYearsRange', out:'depositsYearsValue',
+    format: v => depositsPeriodLabel(v) },
+  { key:'topup', field:'depositsTopUp', input:'depositsTopUpRange', out:'depositsTopUpValue',
+    format: v => v > 0 ? depositsMoney(v) : 'не пополнять' },
+];
 function renderDepositsSetup(){
   const p = depositsParams();
-  depositsMarkGroup('depositsAmountGroup', p.amount);
-  depositsMarkGroup('depositsRateGroup', p.rate);
-  depositsMarkGroup('depositsYearsGroup', p.years);
+  DEPOSITS_RANGES.forEach(r=>{
+    const input = document.getElementById(r.input);
+    if(input) input.value = String(p[r.key]);
+    const out = document.getElementById(r.out);
+    if(out) out.textContent = r.format(p[r.key]);
+  });
   depositsMarkGroup('depositsCapGroup', p.cap);
-  depositsMarkGroup('depositsTopUpGroup', p.topup);
 }
 function goToDepositsSetup(){
   goToGameSetup('depositsSetup', 'businessView', ()=>{
@@ -241,7 +285,7 @@ function depositsBarsHtml(years){
     const h = max > 0 ? Math.max(4, Math.round((y.end / max) * 100)) : 4;
     return `<div class="deposit-bar-col">
       <div class="deposit-bar" style="height:${h}%"></div>
-      <div class="deposit-bar-year">${y.year}</div>
+      <div class="deposit-bar-year">${depositsPeriodLabel(y.year).replace(' года','').replace(' год','').replace(' лет','')}</div>
     </div>`;
   }).join('');
 }
@@ -285,7 +329,7 @@ function renderDepositsResult(){
   if(table){
     table.innerHTML = res.years.map(y=>`
       <tr>
-        <td>${y.year} ${depositsYearsWord(y.year)}</td>
+        <td>${depositsPeriodLabel(y.year)}</td>
         <td>${depositsMoney(y.profit)}</td>
         <td><b>${depositsMoney(y.end)}</b></td>
       </tr>`).join('');
@@ -309,24 +353,29 @@ function exitDepositsGame(){
 
 
 /* ============ КНОПКИ И ИНИЦИАЛИЗАЦИЯ ============ */
-// Один обработчик на все группы: у них одинаковая природа (выбор значения
-// настройки), и пять почти одинаковых копий разъехались бы при первом же
-// добавлении параметра. Список «группа → поле state» объявлен данными.
-const DEPOSITS_GROUPS = [
-  { id:'depositsAmountGroup', field:'depositsAmount' },
-  { id:'depositsRateGroup',   field:'depositsRate' },
-  { id:'depositsYearsGroup',  field:'depositsYears' },
-  { id:'depositsCapGroup',    field:'depositsCap' },
-  { id:'depositsTopUpGroup',  field:'depositsTopUp' },
-];
-DEPOSITS_GROUPS.forEach(g=>{
-  document.querySelectorAll('#' + g.id + ' .starter-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      playSuccessSound();
-      state[g.field] = g.field === 'depositsCap' ? btn.dataset.value : Number(btn.dataset.value);
-      saveState();
-      renderDepositsSetup();
-    });
+// Один обработчик на все ползунки: у них одинаковая природа, и четыре почти
+// одинаковые копии разъехались бы при первом же добавлении параметра.
+// Список «ползунок → поле state» объявлен данными (DEPOSITS_RANGES).
+// Слушаем 'input', а не 'change': ползунок шлёт 'input' на каждое движение,
+// и подпись обязана меняться сразу — иначе игрок тянет мышью и видит старое
+// значение, пока расчёт уже по новому.
+DEPOSITS_RANGES.forEach(r=>{
+  const input = document.getElementById(r.input);
+  if(!input) return;
+  input.addEventListener('input', ()=>{
+    state[r.field] = depositsClamp(r.key, input.value);
+    saveState();
+    const out = document.getElementById(r.out);
+    if(out) out.textContent = r.format(state[r.field]);
+  });
+});
+// Капитализация осталась кнопками: это перечисление, а не число.
+document.querySelectorAll('#depositsCapGroup .starter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    playSuccessSound();
+    state.depositsCap = btn.dataset.value;
+    saveState();
+    renderDepositsSetup();
   });
 });
 // Кнопки подписываются с защитой `?.` — как в «Флагах», «Столицах» и

@@ -4262,9 +4262,49 @@
   /* ---- «Вклады» (games/deposits.js) ----
      Свои классы с префиксом .deposit-*, чтобы оформление не зависело от
      остальных игр. Палитра та же, что у раздела «Бизнес игры»: тёмный фон
-     страницы, светлый текст, акцент --accent. Карточка вопроса в «Проверке
-     себя» остаётся общей (.card/.znayu-answers) — отдельная выглядела бы
-     чужеродно рядом с остальными играми с вариантами ответа. */
+     страницы, светлый текст, акцент --accent. */
+
+  /* Ползунки условий. Раньше значения выбирались кнопками-плашками, но
+     набор был всего из 3–5 штук, и нужную сумму выбрать было нельзя.
+     Свой стиль написан с нуля: в проекте ползунков не было ни разу, а
+     системный на тёмном фоне выглядит серым и плохо читается.
+     разметка -webkit-slider-* и -moz-range-* идёт парами: без второй строки
+     ползунок в Firefox или Chrome выглядел бы иначе. */
+  .deposit-range-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:10px; margin-bottom:6px;
+  }
+  .deposit-range-head label{ margin-bottom:0; }
+  .deposit-range-value{
+    font-size:15px; font-weight:700; color:var(--gold);
+    font-variant-numeric:tabular-nums; text-align:right;
+  }
+  .deposit-range{
+    -webkit-appearance:none; appearance:none;
+    display:block; width:100%; height:34px;
+    background:transparent; margin:0; padding:0;
+  }
+  .deposit-range:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:12px; }
+  .deposit-range::-webkit-slider-runnable-track{
+    height:10px; border-radius:999px;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.22);
+  }
+  .deposit-range::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:28px; height:28px; margin-top:-10px; border-radius:50%;
+    background:linear-gradient(180deg, #ffd27a, #ff9f5e);
+    border:2px solid rgba(43,15,46,.85); cursor:pointer;
+  }
+  .deposit-range::-moz-range-track{
+    height:10px; border-radius:999px;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.22);
+  }
+  .deposit-range::-moz-range-thumb{
+    width:24px; height:24px; border-radius:50%;
+    background:linear-gradient(180deg, #ffd27a, #ff9f5e);
+    border:2px solid rgba(43,15,46,.85); cursor:pointer;
+  }
+
   .deposit-total-box{
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
     border-radius:18px; padding:16px 14px; text-align:center; margin:10px 0 12px;

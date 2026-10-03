@@ -3657,28 +3657,53 @@ function checkDeposits(html, timerSrc) {
     nested.every(sid => backIds.includes(sid)),
     `нет в карте PARENT_BACK: ${nested.filter(sid => !backIds.includes(sid)).join(', ') || '—'}`);
 
-  // Наборы значений из кода должны совпадать с кнопками в разметке: иначе
-  // «ставка 24%» из кода окажется недостижимой, а лишняя кнопка — сломанной.
+  // Границы ползунков в разметке должны совпадать с DEPOSITS_LIMITS в коде.
+  // Раньше здесь сверялись списки значений с кнопками; теперь значения
+  // произвольные, и сверять нечего — сверяются min/max/step. Расхождение
+  // означало бы, что depositsClamp() зажимает в границы, которых ползунок
+  // не может достичь: игрок выставил бы 5 000 000 ₽, а получить не смог бы.
   const groupValues = (id) => {
     const m = new RegExp(`id="${id}"[^>]*>([\\s\\S]*?)</div>`).exec(html);
     return m ? [...m[1].matchAll(/data-value="([^"]+)"/g)].map(x => x[1]) : [];
+};
+  // Атрибут number конкретного <input type="range"> по его id.
+  const rangeAttr = (inputId, attr) => {
+    const m = new RegExp(`id="${inputId}"[\\s\\S]*?${attr}="([^"]+)"`).exec(html);
+    return m ? m[1] : '';
   };
-  const numList = (name) => {
-    const m = new RegExp(`const ${name} = \\[([^\\]]*)\\];`).exec(game);
-    return m ? m[1].split(',').map(s => s.trim()).filter(Boolean) : [];
-  };
-  check('кнопки суммы совпадают с DEPOSITS_AMOUNTS',
-    groupValues('depositsAmountGroup').join(',') === numList('DEPOSITS_AMOUNTS').join(','),
-    `в разметке: ${groupValues('depositsAmountGroup').join(',') || '—'}; в коде: ${numList('DEPOSITS_AMOUNTS').join(',')}`);
-  check('кнопки ставки совпадают с DEPOSITS_RATES',
-    groupValues('depositsRateGroup').join(',') === numList('DEPOSITS_RATES').join(','),
-    `в разметке: ${groupValues('depositsRateGroup').join(',') || '—'}; в коде: ${numList('DEPOSITS_RATES').join(',')}`);
-  check('кнопки срока совпадают с DEPOSITS_YEARS',
-    groupValues('depositsYearsGroup').join(',') === numList('DEPOSITS_YEARS').join(','),
-    `в разметке: ${groupValues('depositsYearsGroup').join(',') || '—'}; в коде: ${numList('DEPOSITS_YEARS').join(',')}`);
-  check('кнопки пополнения совпадают с DEPOSITS_TOPUPS',
-    groupValues('depositsTopUpGroup').join(',') === numList('DEPOSITS_TOPUPS').join(','),
-    `в разметке: ${groupValues('depositsTopUpGroup').join(',') || '—'}; в коде: ${numList('DEPOSITS_TOPUPS').join(',')}`);
+  // Границы читаются из каждой строки DEPOSITS_LIMITS отдельно: цепочка
+  // через && обрывалась бы на первом несовпадении, и четыре проверки молчали
+  // бы, приняв пустые строки за «границы совпадают».
+  const limits = {};
+  for(const key of ['amount', 'rate', 'years', 'topup']){
+    const m = new RegExp(`${key}:\\s*\\{[^}]*min:\\s*([\\d.]+),\\s*max:\\s*([\\d.]+),\\s*step:\\s*([\\d.]+)`).exec(game);
+    limits[key] = m ? [m[1], m[2], m[3]] : null;
+  }
+  const rangeInputs = [
+    { key:'amount', id:'depositsAmountRange' },
+    { key:'rate', id:'depositsRateRange' },
+    { key:'years', id:'depositsYearsRange' },
+    { key:'topup', id:'depositsTopUpRange' },
+  ];
+  const rangeMismatch = rangeInputs.filter(r=>{
+    const lim = limits[r.key];
+    return !lim || [0, 1, 2].some(i => String(lim[i]) !== rangeAttr(r.id, ['min', 'max', 'step'][i]));
+  }).map(r => r.key);
+  check('границы всех четырёх ползунков совпадают с DEPOSITS_LIMITS',
+    rangeMismatch.length === 0,
+    `разошлись min/max/step: ${rangeMismatch.join(', ') || '—'}`);
+  // Шаг — это и есть округление: суммы кратны 1000 ₽, остальные — десятым.
+  check('суммы округляются до 1000 ₽, остальные параметры — до десятых',
+    limits.amount[2] === '1000' && limits.topup[2] === '1000'
+      && limits.rate[2] === '0.1' && limits.years[2] === '0.1',
+    `ожидался шаг 1000 для денег и 0.1 для ставки и срока, получено: сумма ${limits.amount[2]}, пополнение ${limits.topup[2]}, ставка ${limits.rate[2]}, срок ${limits.years[2]}`);
+  check('у каждого ползунка есть подпись со значением',
+    rangeInputs.every(r => new RegExp(`id="${r.id.replace('Range', 'Value')}"`).test(html)),
+    'подписи нужны, чтобы игрок видел выбранное число, а не только положение ручки');
+  check('числовые условия больше не выбираются кнопками',
+    !/id="depositsAmountGroup"|id="depositsRateGroup"|id="depositsYearsGroup"|id="depositsTopUpGroup"/.test(html)
+      && !/DEPOSITS_AMOUNTS|DEPOSITS_RATES|DEPOSITS_YEARS|DEPOSITS_TOPUPS/.test(game),
+    'кнопки-плашки и списки значений должны быть заменены ползунками и DEPOSITS_LIMITS');
   const capIds = [...game.matchAll(/\{ id:'([a-z]+)',\s+label:'[^']+',\s+months:(\d+)/g)].map(m => m[1]);
   check('кнопки капитализации совпадают с DEPOSITS_CAPS',
     groupValues('depositsCapGroup').join(',') === capIds.join(','),
