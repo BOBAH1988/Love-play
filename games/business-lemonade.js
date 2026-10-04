@@ -1034,6 +1034,18 @@ function bizDrinkExpenses(cups){
    return sugarCost + cupCost + waterCost;
 }
 
+/* ---------- СКЛОНЕНИЕ «СТАКАН» ---------- */
+/* Общее правило проекта: прилагательное «осталось» не согласуется по числу
+   («3 стакана осталось» — верно, «3 остался» — нет), поэтому склоняется
+   только существительное: 1 стакан, 2–4 стакана, 5+ стаканов. */
+function bizCupsWord(n){
+  const v = Math.abs(Math.round(Number(n) || 0)) % 100;
+  const last = v % 10;
+  if(v > 10 && v < 20) return 'стаканов';
+  if(last === 1) return 'стакан';
+  if(last >= 2 && last <= 4) return 'стакана';
+  return 'стаканов';
+}
 function bizSellDay(){
   const dow = bizDayOfWeek(state.businessLemonadeDay || 1);
   const weatherKey = state.businessLemonadeWeatherKey || 'normal';
@@ -1134,9 +1146,17 @@ function bizSellDay(){
   document.getElementById('bizResLemonPeople').textContent = `${lemonPeople} человек прошло, купили ${lemonBuyers}`;
   const unsoldEl = document.getElementById('bizResLemonUnsold');
   if(unsoldEl){
-    unsoldEl.textContent = lemonUnsold > 0
-      ? `${lemonUnsold} стак. осталось — выброшено (в мусор ушли лимоны и ${lemonUnsold * (BIZ_SUGAR_PER_CUP + BIZ_CUP_PER_CUP)} ₽ на сахар и стаканчики)`
-      : 'Всё приготовленное продано — ничего не пропало!';
+    // Короткая подпись: сколько стаканов выброшено. Сколько именно денег на них
+    // потрачено, игрок и так видит в строке расходов, а длинный хвост в скобках
+    // переносился на три строки и закрывал собой итоговую прибыль.
+    // «1 стакан остался — выброшен» согласовано по числу; во всех остальных
+    // случаях «осталось — выброшены» (единственный случай, где 1 стакан
+    // нераспроданный, вполне достижим: 39 покупателей из 40).
+    unsoldEl.textContent = lemonUnsold === 1
+      ? '1 стакан остался — выброшен'
+      : (lemonUnsold > 1
+        ? `${lemonUnsold} ${bizCupsWord(lemonUnsold)} осталось — выброшены`
+        : 'Всё приготовленное продано — ничего не пропало!');
     unsoldEl.classList.toggle('biz-loss', lemonUnsold > 0);
   }
 
