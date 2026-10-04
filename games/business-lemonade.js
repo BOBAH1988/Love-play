@@ -592,7 +592,6 @@ function renderBizHoursGroup(){
       preview.textContent = '';
     }
   }
-  updateBizFlowPreview();
 }
 document.querySelectorAll('#bizHoursGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -610,63 +609,14 @@ document.getElementById('bizToLemonsBtn').addEventListener('click', ()=>{
 renderBizLemonsPhase();
   goToBizPhase('bizPhaseLemons');
 });
-/* ============ ШАГ 4: ПОДСКАЗКИ СЛОВАМИ (расчётов в интерфейсе нет) ============ */
-/* Игра учит решать по смыслу, а не по арифметике, поэтому прогноз спроса
-   никогда не показывается числами: ни «сколько человек пройдёт», ни «сколько
-   стаканов купят», ни «сколько выбросишь». Вместо них — два слова-подсказки:
-   насколько людно в выбранном месте (bizCrowdText) и насколько охотно берут
-   при текущей цене (bizWishText). Оценка «хватит ли стаканов» остаётся
-   словесной: «продашь всё» или «часть пропадёт». Числа появляются только в
-   итогах дня, когда выбор уже сделан. */
-// Охотно ли берут при текущей цене и опциях — сравнение желания купить с
-// обычным днём (цена 30 ₽, без добавок). Тоже без чисел: только слово.
-function bizWishText(){
-  const weatherKey = state.businessLemonadeWeatherKey || 'normal';
-  const locationKey = state.businessLemonadeLocation || 'school';
-  const options = state.businessLemonadeOptions || {};
-  const opts = Object.keys(BIZ_OPTIONS).filter(k=>options[k]).length;
-  // Обычный день — та же погода, место и развитие, но цена 30 ₽ и без добавок.
-  const norm = bizConversion(30, {}, weatherKey, locationKey);
-  const now = bizConversion(state.businessLemonadePrice || 30, options, weatherKey, locationKey);
-  const r = norm > 0 ? now / norm : 1;
-  if(r >= 1.25) return opts ? `берут охотно, добавки помогают` : 'берут охотно';
-  if(r >= 0.95) return 'берут охотно';
-  if(r >= 0.7)  return 'берут, но не все';
-  return 'берут неохотно';
-}
-// Поток людей известен уже после выбора места и времени — он не зависит от
-// цены, поэтому его можно показать до закупки лимонов.
-function updateBizFlowPreview(){
-  const el = document.getElementById('bizFlowPreview');
-  if(!el) return;
-  const hours = state.businessLemonadeHours;
-  if(!hours || !state.businessLemonadeLocation){ el.textContent = ''; return; }
-  el.textContent = `👥 Здесь сегодня ${bizCrowdText(state.businessLemonadeLocation)}. Работаешь ${bizHoursWord(hours)} — каждый лишний час это новые прохожие, но и аренда дороже. Сколько стаканов купят, узнаешь в конце дня.`;
-}
-// Склонение «час / часа / часов» — подсказка читается по-человечески.
-function bizHoursWord(hours){
-  if(hours === 1) return 'час';
-  if(hours >= 5) return 'часов';
-  return `${hours} часа`;
-}
-// Подсказка на шаге «приготовление»: только слова о сегодняшних условиях —
-// людно ли в выбранном месте и охотно ли берут. Сколько именно стаканов
-// продастся, игра не говорит: объём игрок выбирает сам, на глаз.
-function updateBizDemandHint(){
-  const el = document.getElementById('bizDemandHint');
-  if(!el) return;
-  if(!state.businessLemonadeHours || !state.businessLemonadeLocation){ el.style.display = 'none'; return; }
-  el.style.display = 'block';
-  el.textContent = `👥 Сегодня здесь ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()}.`;
-}
-// Подсказка на шаге «цена»: те же слова об условиях плюс выбранная цена.
-// Ни числа покупателей, ни вердикта «продашь / пропадёт» — решение своё.
-function updateBizDemandPreview(){
-  const el = document.getElementById('bizDemandPreview');
-  if(!el) return;
-  const price = state.businessLemonadePrice || 30;
-  el.textContent = `👥 Сегодня здесь ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()} (цена ${price} ₽).`;
-}
+/* ============ ШАГ 4: ЧТО ИГРОК ВИДИТ НА ЭТОМ ШАГЕ ============ */
+/* Отдельных подсказок про поток и желание купить больше нет: и то и другое
+   уже написано в строке выбранных параметров вверху экрана (день недели,
+   погода, место, время работы, уровень людности). Дублировать это под
+   каждым шагом значило бы повторять одну и ту же строку четыре раза.
+   Прогноз с числами не показывается нигде: сколько человек пройдёт и сколько
+   стаканов купят — решает игрок сам, числа появляются только в итогах дня,
+   когда выбор уже сделан. */
 // Обработчик выбора количества стаканов лимонада. Кнопки строятся из
 // BIZ_CUP_CHOICES: сколько можно приготовить, столько и предлагаем, а лишние
 // (на которые не хватает лимонов в запасе) просто отключаются.
@@ -685,7 +635,6 @@ function renderBizQuantityGroup(){
     return `<button type="button" class="starter-btn mode-btn${on ? ' on' : ''}" data-value="${v}"${v > stock ? ' disabled' : ''}>${v} стаканов</button>`;
   }).join('');
   updateBizBuyBreakdownUI();
-  updateBizDemandHint();
 }
 document.getElementById('bizLemonQuantityGroup').addEventListener('click', (e)=>{
   const btn = e.target.closest('.starter-btn');
@@ -800,8 +749,6 @@ function renderBizOptionsGrid(){
       playNeutralSound();
       renderBizOptionsGrid();
       updateBizBuyBreakdownUI();
-      // Опции меняют спрос — прогноз покупателей должен обновиться сразу.
-      updateBizDemandHint();
     });
   });
 }
@@ -949,8 +896,6 @@ function renderBizPriceGroup(){
   document.querySelectorAll('#bizPriceGroup .starter-btn').forEach(btn=>{
     btn.classList.toggle('on', parseInt(btn.dataset.value, 10) === (state.businessLemonadePrice || 30));
   });
-  // Прогноз покупателей зависит от цены сильнее всего — пересчитываем здесь.
-  updateBizDemandPreview();
 }
 document.querySelectorAll('#bizPriceGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -1060,8 +1005,8 @@ function bizConversion(price, options, weatherKey, locationKey){
 }
 // Полный прогноз дня внутри игры. rollJitter=true добавляет разброс реального
 // дня (покупателей может оказаться чуть больше или меньше расчёта) — только в
-// момент продаж. В интерфейсе расчёта нет: игроку показываются только слова
-// (см. bizCrowdText и bizWishText), числа появляются в итогах дня.
+// момент продаж. В интерфейсе расчёта нет: словами сказано только, насколько
+// людно в выбранном месте (см. bizCrowdText), числа появляются в итогах дня.
 function bizDemandForecast(price, rollJitter){
   const dow = bizDayOfWeek(state.businessLemonadeDay || 1);
   const weatherKey = state.businessLemonadeWeatherKey || 'normal';
