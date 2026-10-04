@@ -7371,10 +7371,10 @@ test('«Вклады»: модуль загружается целиком и к
     const tax2 = depositsTax(res2);
     const serv2 = depositsServicesCost(depositsParams());
     const real2 = depositsVerdict(res2, tax2, serv2).realTotal;
-    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res2.total, true),
-      `на экране расчёта должен быть номинальный итог ${depositsMoney(res2.total, true)}`);
-    assert(getElById(stub, 'depositsReal').textContent.includes(depositsMoney(real2, true)),
-      `под итогом должна быть реальная цена ${depositsMoney(real2, true)}`);
+    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res2.total),
+      `на экране расчёта должен быть номинальный итог ${depositsMoney(res2.total)}`);
+    assert(getElById(stub, 'depositsReal').textContent.includes(depositsMoney(real2)),
+      `под итогом должна быть реальная цена ${depositsMoney(real2)}`);
     assert(real2 < res2.total, 'реальная цена не может быть выше номинальной');
     assert(getElById(stub, 'depositsInvested').textContent.includes('Вложено'),
       'на экране должно быть сказано, сколько вложено');
@@ -7852,11 +7852,11 @@ test('«Вклады»: полный цикл — настройки, расчё
     const res = depositsSimulate(depositsParams());
     assert(getElById(stub, 'depositsGame').classList.contains('active'), 'расчёт должен открыться');
     const realTotal = depositsVerdict(res, depositsTax(res), depositsServicesCost(depositsParams())).realTotal;
-    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res.total, true),
-      `на экране должен быть номинальный итог расчёта ${depositsMoney(res.total, true)}`);
+    assert(getElById(stub, 'depositsTotal').textContent === depositsMoney(res.total),
+      `на экране должен быть номинальный итог расчёта ${depositsMoney(res.total)}`);
     // Реальная строка обязана быть и отличаться: иначе вычеты не показаны.
     const realText = getElById(stub, 'depositsReal').textContent;
-    assert(realText.includes(depositsMoney(realTotal, true)),
+    assert(realText.includes(depositsMoney(realTotal)),
       `реальная цена должна быть показана рядом с итогом, получено «${realText}»`);
     assert(getElById(stub, 'depositsTotal').textContent !== realText, 'номинальный и реальный итоги не должны совпадать');
     // Подпись сокращена до «Капитализация дала на X больше», поэтому проверяем

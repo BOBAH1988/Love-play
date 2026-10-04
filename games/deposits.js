@@ -170,15 +170,12 @@ function depositsParams(){
     topup: depositsClamp('topup', state.depositsTopUp),
   };
 }
-// Сумма с копейками там, где они осмысленны (итог), и без них там, где
-// округление до рубля ничего не теряет (годовые строки, варианты ответа).
-function depositsMoney(n, withKopecks){
+// Сумма в рублях, всегда целыми: копейки в игре не нужны и только мешают —
+// «12 345,67 ₽» читается как точность, которой в расчёте нет. Всё округляется
+// до рубля, поэтому одна функция на все суммы, а не две с разным форматом.
+function depositsMoney(n){
   const v = Number(n) || 0;
-  const rounded = withKopecks ? Math.round(v * 100) / 100 : Math.round(v);
-  return rounded.toLocaleString('ru-RU', {
-    minimumFractionDigits: withKopecks ? 2 : 0,
-    maximumFractionDigits: withKopecks ? 2 : 0,
-  }) + ' ₽';
+  return Math.round(v).toLocaleString('ru-RU') + ' ₽';
 }
 // Склонение «год/года/лет». Принимает и дробные значения: срок задаётся с
 // шагом 0,1 года, поэтому подпись «5,7 лет» — правильная форма (после
@@ -511,7 +508,7 @@ function renderDepositsResult(){
   // налога и услуг) — строкой под ней: она всегда меньше, и мешать её в
   // первую цифру значило бы занижать то, что действительно на счёте.
   const total = document.getElementById('depositsTotal');
-  if(total) total.textContent = depositsMoney(res.total, true);
+  if(total) total.textContent = depositsMoney(res.total);
   const real = document.getElementById('depositsReal');
   if(real){
     // Состав вычетов в подписи меняется: без услуг о налоге и инфляции
@@ -520,7 +517,7 @@ function renderDepositsResult(){
     const parts = serv.total > 0
       ? 'С учётом инфляции, налога и услуг'
       : 'С учётом инфляции и налога';
-    real.textContent = `${parts} — ${depositsMoney(realTotal, true)}`;
+    real.textContent = `${parts} — ${depositsMoney(realTotal)}`;
   }
   // Срок, на который считалось. Берём res.months — это фактическое число
   // месяцев из расчёта, а не заданный p.years: для дробного срока они
@@ -536,7 +533,7 @@ function renderDepositsResult(){
       + (p.topup > 0 ? ` (вклад ${depositsMoney(p.amount)} + по ${depositsMoney(p.topup)} в месяц)` : '');
   }
   const profit = document.getElementById('depositsProfit');
-  if(profit) profit.textContent = `Процентами начислено ${depositsMoney(res.profit, true)}`;
+  if(profit) profit.textContent = `Процентами начислено ${depositsMoney(res.profit)}`;
   const compare = document.getElementById('depositsCompare');
   if(compare){
     // Режим определяется ВЫБРАННОЙ КАПИТАЛИЗАЦИЕЙ, а не размером разницы.
