@@ -4648,6 +4648,29 @@ test('Лимонадный ларёк: лишние стаканы не прод
     const rainIce = bizDemandForecast(40, false);
     assert(hotIce.buyers > hot.buyers, 'лёд в жару должен повышать спрос');
     assert(rainIce.buyers < rain.buyers, 'лёд в дождь должен снижать спрос');
+
+    // Лёд должен работать при ЛЮБОЙ цене. Раньше его эффект упирался в потолок
+    // конверсии 0.9: в жару на дешёвом стакане он давал ровно ноль прибавки
+    // к продажам, хотя игрок платил за него 2 ₽ с каждого приготовленного.
+    state.businessLemonadeWeatherKey = 'hot';
+    state.businessLemonadeLocation = 'beach';
+    [20, 30, 40].forEach(price => {
+      state.businessLemonadeOptions = {};
+      const plain = bizDemandForecast(price, false);
+      state.businessLemonadeOptions = { ice: true };
+      const withIce = bizDemandForecast(price, false);
+      assert(withIce.buyers > plain.buyers,
+        `лёд в жару на пляже при цене ${price} ₽ должен увеличивать число покупателей (${withIce.buyers} против ${plain.buyers})`);
+    });
+
+    // На пляже в жару лёд сильнее, чем в других местах: там люди ищут прохладу.
+    state.businessLemonadeLocation = 'beach';
+    state.businessLemonadeOptions = { ice: true };
+    const beachIce = bizDemandForecast(30, false).buyers;
+    state.businessLemonadeLocation = 'station';
+    const stationIce = bizDemandForecast(30, false).buyers;
+    assert(beachIce > stationIce,
+      `на пляже в жару лёд должен работать сильнее, чем у остановки (${beachIce} против ${stationIce})`);
   } finally {
     state.businessLemonadeDayLog = saveStateBackup;
     state.businessLemonadeReserve = reserveBackup;

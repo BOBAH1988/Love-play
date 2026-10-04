@@ -125,7 +125,7 @@ const BIZ_WORK_HOURS = [1, 3, 6];
 // priceShield — насколько опция «оправдывает» высокую цену: с дорогими
 // добавками покупатель легче соглашается на неудобную цену.
 const BIZ_OPTIONS = {
-  ice:      { name: 'Лёд', icon: '🧊', costType: 'perCup', cost: 2, priceShield: 0.08, hint: 'В жару берут охлаждённый: ×1.25 в жару, ×0.9 в прохладу' },
+  ice:      { name: 'Лёд', icon: '🧊', costType: 'perCup', cost: 2, priceShield: 0.08, hint: 'В жару приводит людей: на пляже ×1.55, в других местах ×1.25; в прохладу мешает' },
   umbrella: { name: 'Зонтик', icon: '☂️', costType: 'perCup', cost: 1, priceShield: 0.06, hint: 'На пляже спасает от солнца: ×1.25 там, ×1.05 в остальных местах' },
   colorCup: { name: 'Цветной стакан', icon: '🧋', costType: 'perCup', cost: 1, priceShield: 0.06, hint: 'Дети выбирают яркое: ×1.2 у школы и в парке, ×1.08 в остальных местах' },
   straw:    { name: 'Узорная трубочка', icon: '🥤', costType: 'perCup', cost: 1, priceShield: 0.05, hint: 'Приятная мелочь: ×1.15 у школы и в парке, ×1.06 в остальных местах' },
@@ -134,7 +134,10 @@ const BIZ_OPTIONS = {
 // пройдёт мимо за день (bizFootfall), потом КОНВЕРСИЯ — какая доля из них
 // реально купит стакан (bizConversion). Их произведение и есть число покупателей.
 const BIZ_BASE_CONVERSION = 0.75;   // доля прохожих, которые купят стакан при средней цене
-const BIZ_MAX_CONVERSION = 0.9;     // больше даже в идеале не покупают — все к одному ларьку не придут
+const BIZ_MAX_CONVERSION = 0.95;    // выше даже в идеале не покупают — все к одному ларьку не придут.
+// Потолок не должен съедать эффект дорогих добавок: при ×1.25 от льда и цене
+// 20 ₽ сырая конверсия 0.75 × 1.25 × 1.2 = 1.125, и при старом потолке 0.9
+// лёд в жару давал ровно ноль прибавки. 0.95 оставляет добавкам смысл.
 const BIZ_DEMAND_JITTER = 0.07;     // разброс дня: кто-то придёт не сразу, кто-то свернёт
 // Во сколько раз меняется желание купить в зависимости от цены. Промежутки
 // считаются по соседним точкам, поэтому таблица не привязана к кнопкам.
@@ -646,41 +649,23 @@ function bizHoursWord(hours){
   if(hours >= 5) return 'часов';
   return `${hours} часа`;
 }
-// Подсказка на шаге «приготовление»: без числа прогноза, только словами —
-// хватит стаканов или часть пропадёт.
+// Подсказка на шаге «приготовление»: только слова о сегодняшних условиях —
+// людно ли в выбранном месте и охотно ли берут. Сколько именно стаканов
+// продастся, игра не говорит: объём игрок выбирает сам, на глаз.
 function updateBizDemandHint(){
   const el = document.getElementById('bizDemandHint');
   if(!el) return;
-  const cups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
-  if(cups <= 0 || !state.businessLemonadeHours){ el.style.display = 'none'; return; }
-  const fc = bizDemandForecast(state.businessLemonadePrice || 30, false);
+  if(!state.businessLemonadeHours || !state.businessLemonadeLocation){ el.style.display = 'none'; return; }
   el.style.display = 'block';
-  if(fc.buyers >= cups){
-    el.textContent = `👥 Сегодня ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()} — похоже, ${cups} стаканов продашь.`;
-  } else {
-    el.textContent = `👥 Сегодня ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()} — похоже, часть стаканов останется и пропадёт. Деньги на них уже потрачены.`;
-  }
-  el.classList.toggle('biz-loss', fc.buyers < cups);
+  el.textContent = `👥 Сегодня здесь ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()}.`;
 }
-// Подсказка на шаге «цена»: та же словесная оценка, что и на шаге
-// «приготовление». Точные числа и совет «приготовь столько-то» убраны —
-// точное число покупателей игроку не показывается.
+// Подсказка на шаге «цена»: те же слова об условиях плюс выбранная цена.
+// Ни числа покупателей, ни вердикта «продашь / пропадёт» — решение своё.
 function updateBizDemandPreview(){
   const el = document.getElementById('bizDemandPreview');
   if(!el) return;
-  const cups = Math.min(state.businessLemonadeCups || 0, state.businessLemonadeLemonStock || 0);
   const price = state.businessLemonadePrice || 30;
-  const fc = bizDemandForecast(price, false);
-  const parts = [
-    `👥 Сегодня ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()} (цена ${price} ₽).`,
-  ];
-  if(cups > 0){
-    parts.push(fc.buyers >= cups
-      ? `✅ Похоже, ${cups} стаканов продашь — всё уйдёт покупателям.`
-      : `⚠️ Похоже, часть стаканов не продастся и пропадёт вместе с деньгами на них. Попробуй приготовить меньше или снизить цену.`);
-  }
-  el.textContent = parts.join(' ');
-  el.classList.toggle('biz-loss', cups > fc.buyers);
+  el.textContent = `👥 Сегодня здесь ${bizCrowdText(state.businessLemonadeLocation)}, лимонад ${bizWishText()} (цена ${price} ₽).`;
 }
 // Обработчик выбора количества стаканов лимонада. Кнопки строятся из
 // BIZ_CUP_CHOICES: сколько можно приготовить, столько и предлагаем, а лишние
@@ -999,7 +984,10 @@ function bizFootfall(locationKey, weatherKey, dow, hours){
   Object.keys(BIZ_UPGRADES).forEach(k=>{ if(upgrades[k]) upgradeFlow += BIZ_UPGRADES[k].flow; });
   // Часы работы: каждый лишний час — это новые прохожие, поэтому поток
   // растёт пропорционально времени (1 / 3 / 6 часов).
-  return loc.perHour * hours * locWeatherMult * locDowMult * eventMult * upgradeFlow;
+  // Лёд в жару дополнительно приводит людей к ларьку (см. bizOptionsFlow) —
+  // без этого его эффект упирался в потолок конверсии и был нулевым.
+  const optionFlow = bizOptionsFlow(state.businessLemonadeOptions || {}, locationKey, weatherKey);
+  return loc.perHour * hours * locWeatherMult * locDowMult * eventMult * upgradeFlow * optionFlow;
 }
 // Желание купить в зависимости от цены: между точками BIZ_PRICE_CONV
 // считается по линейной интерполяции, поэтому таблица не привязана к кнопкам.
@@ -1015,6 +1003,20 @@ function bizPriceConvMult(price){
   }
   return BIZ_PRICE_CONV[pts[pts.length-1]];
 }
+// Лёд — единственная опция, которая влияет не только на желание купить, но и на
+// сам поток людей: в жару прохожие замечают ларёк с холодным напитком и подходят
+// чаще. На пляже, где ищут прохладу, эффект сильнее всего. Без этого лёд упирался
+// в потолок конверсии и в жару часто не давал НИКАКОЙ прибавки к продажам.
+function bizOptionsFlow(options, locationKey, weatherKey){
+  const opts = options || {};
+  let mult = 1;
+  if(opts.ice){
+    if(weatherKey === 'hot') mult *= (locationKey === 'beach' ? 1.55 : 1.25);
+    // В прохладу и дождь холодный напиток не нужен, а деньги потрачены.
+    else mult *= 0.92;
+  }
+  return mult;
+}
 // Желание купить с учётом опций к напитку. Сила каждой опции зависит от
 // места и погоды: лёд спасает в жару, зонтик — на пляже, яркий стакан и
 // трубочка нравятся детям у школы и в парке. shield — насколько опции
@@ -1024,7 +1026,9 @@ function bizOptionsConv(options, locationKey, weatherKey){
   const kidsPlace = locationKey === 'school' || locationKey === 'park';
   let mult = 1, shield = 0;
   if(opts.ice){
-    mult *= (weatherKey === 'hot' ? 1.25 : 0.9);
+    // Конверсия от льда теперь скромнее, чем раньше: основной эффект ушёл в
+    // поток людей (bizOptionsFlow) — в жару лёд прежде всего приводит покупателей.
+    mult *= (weatherKey === 'hot' ? 1.15 : 0.9);
     shield += BIZ_OPTIONS.ice.priceShield;
   }
   if(opts.umbrella){
