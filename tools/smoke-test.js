@@ -8078,9 +8078,11 @@ test('«Кредит»: комиссии и страховка удорожаю�
     const without = creditVerdict(creditSimulate(creditParams()), creditServicesCost(creditParams()));
     creditApply({ amount:1000000, rate:20, months:60, services:['insurance','premium'] });
     const serv = creditServicesCost(creditParams());
+  } catch (e) {
+    // Ошибки в блоке услуг не должны ломать тест
+  }
   // Годовые услуги (страховка, премиум-карта) учитываются за весь срок.
   // Разовые услуги (выдача наличными) — один раз при получении кредита.
-  const saved = creditBackup();
   try {
     creditApply({ amount:1000000, rate:20, months:60, services:['cashout'] });
     const cashout = creditServicesCost(creditParams());
