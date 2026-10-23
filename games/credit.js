@@ -508,6 +508,20 @@ function renderCreditSetup(){
     const out = document.getElementById(r.out);
     if(out) out.textContent = r.format(p[r.key]);
   });
+  // Динамический диапазон срока в месяцах в зависимости от типа кредита
+  const monthsInput = document.getElementById("creditMonthsRange");
+  if(monthsInput){
+    const product = creditProductById(state.creditProduct);
+    if(product.id === "mortgage" || product.id === "family"){
+      // Ипотеки и семейная: 5–30 лет (60–360 месяцев)
+      monthsInput.min = "60";
+      monthsInput.max = "360";
+    } else {
+      // Остальные виды: 3–5 лет (3–60 месяцев)
+      monthsInput.min = "3";
+      monthsInput.max = "60";
+    }
+  }
   creditMarkGroup('creditProductGroup', p.product);
   creditMarkGroup('creditSchedGroup', p.sched);
   renderCreditProductNote();
