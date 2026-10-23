@@ -4337,7 +4337,7 @@
   .deposit-serv-total.warn{ color:#ffc2c8; }
 
   .deposit-monthly{
-    font-size:13px; color:#e8c9dd; margin-top:8px; text-align:center;
+    font-size:26px; color:#e8c9dd; margin:8px 0 20px; text-align:center;
   }
 
   .deposit-total-box{
