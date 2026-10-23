@@ -71,7 +71,7 @@
 // <input type="range"> в index.html, и tools/check.js сверяет одно с другим:
 // разъехавшиеся границы дали бы невозможные значения.
 const CREDIT_LIMITS = {
-  amount: { min:10000,  max:12000000, step:10000, def:500000 },
+  amount: { min:50000,  max:5000000, step:10000, def:500000 },
   rate:   { min:1,      max:40,       step:0.1,   def:25 },
   months: { min:3,      max:360,      step:1,     def:60 },
   down:   { min:0,      max:80,       step:5,     def:0 },
@@ -183,12 +183,6 @@ const CREDIT_SERVICES = [
     note:'1% годовых от суммы кредита за весь срок' },
   { id:'sms', el:'creditServSms', label:'СМС-информирование', cost:0.1, kind:'yearly',
     note:'0,1% годовых за уведомления о счёте' },
-  { id:'cashout', el:'creditServCash', label:'Выдача наличными', cost:1, kind:'percent',
-    note:'1% от суммы кредита один раз при получении' },
-  { id:'premium', el:'creditServPremium', label:'Премиум-карта', cost:0.3, kind:'yearly',
-    note:'0,3% годовых от суммы кредита за весь срок' },
-  { id:'notary', el:'creditServNotary', label:'Нотариус и оценка', cost:20000, kind:'once',
-    note:'20 000 ₽ один раз: оценка обеспечения и нотариальные расходы' },
 ];
 // Стоимость услуги за весь срок. Три вида по-разному:
 // yearly  — проценты годовых от суммы, умножаются на срок;

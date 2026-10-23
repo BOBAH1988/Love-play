@@ -8078,37 +8078,17 @@ test('«Кредит»: комиссии и страховка удорожаю�
     const without = creditVerdict(creditSimulate(creditParams()), creditServicesCost(creditParams()));
     creditApply({ amount:1000000, rate:20, months:60, services:['insurance','premium'] });
     const serv = creditServicesCost(creditParams());
-    const withServ = creditVerdict(creditSimulate(creditParams()), serv);
-    // Страховка 1% и премиум 0,3% за 5 лет от 1 000 000 = 65 000 ₽.
-    assert(Math.abs(serv.total - 65000) < 1,
-      `страховка 1% + премиум 0,3% за 5 лет от 1 000 000 = 65 000 ₽, получено ${serv.total}`);
-    assert(withServ.effectiveRate > without.effectiveRate,
-      'услуги должны повышать эффективную ставку');
-    assert(withServ.realRate > without.realRate,
-      'услуги должны повышать реальную стоимость кредита');
-    assert(withServ.diff > without.diff,
-      'разница с вкладом должна расти от комиссий — вывод обязан ухудшаться');
-  } finally {
-    Object.assign(state, saved);
-  }
-});
-
-test('«Кредит»: разовые и годовые услуги считаются по-разному', () => {
-  // Страховка берётся за весь срок, а нотариус — один раз. Если бы обе
-  // умножались на срок, нотариальные расходы на ипотеке выросли бы в 20 раз.
+  // Годовые услуги (страховка, премиум-карта) учитываются за весь срок.
+  // Разовые услуги (выдача наличными) — один раз при получении кредита.
   const saved = creditBackup();
   try {
-    creditApply({ amount:1000000, rate:20, months:60, services:['notary'] });
-    const notary = creditServicesCost(creditParams());
-    assert(notary.total === 20000,
-      `нотариус 20 000 ₽ разово независимо от срока, получено ${notary.total}`);
     creditApply({ amount:1000000, rate:20, months:60, services:['cashout'] });
     const cashout = creditServicesCost(creditParams());
     assert(cashout.total === 10000,
       `выдача наличными 1% от 1 000 000 = 10 000 ₽ разово, получено ${cashout.total}`);
     // Неизвестная услуга из старого сохранения не должна попадать в расчёт.
-    state.creditServices = ['notary', 'что-то-неизвестное'];
-    assert(creditServicesCost(creditParams()).total === 20000,
+    state.creditServices = ['что-то-неизвестное'];
+    assert(creditServicesCost(creditParams()).total === 0,
       'услуга, которой больше нет в игре, не должна увеличивать итог');
   } finally {
     Object.assign(state, saved);

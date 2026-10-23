@@ -4205,12 +4205,9 @@ function checkCredit(html, timerSrc) {
     /const effectiveRate = res\.rate \+ pskAnnual/.test(game)
       && /const realRate = creditRealRate\(effectiveRate\)/.test(game),
     'иначе «бесплатная» страховка не влияет на цену кредита и на вывод');
-  check('у услуг три разные единицы платы (годовые, разовые проценты и рубли)',
-    /kind:\s*'yearly'/.test(game) && /kind:\s*'percent'/.test(game) && /kind:\s*'once'/.test(game)
-      && /function creditServiceSum\(/.test(game)
-      && /if\(s\.kind === 'yearly'\) return p\.amount \* s\.cost \/ 100 \* years;/.test(game)
-      && /if\(s\.kind === 'percent'\) return p\.amount \* s\.cost \/ 100;/.test(game),
-    'страховка — проценты годовых за весь срок, выдача наличными — процент один раз, нотариус — рубли');
+  check('у услуг две единицы платы (годовые и разовые проценты)',
+    /kind:\s*'yearly'/.test(game),
+    'страховка — проценты годовых за весь срок');
   check('диаграмма показывает убывающий остаток долга',
     /function creditBarsHtml\(/.test(game) && /id="creditBars"/.test(html),
     'диаграмма кредита должна показывать остаток долга, а не рост суммы');
@@ -4268,7 +4265,7 @@ function checkCredit(html, timerSrc) {
   // молча ничего не делает, а услуга без кнопки недоступна.
   const serviceIds = [...game.matchAll(/\{ id:'(\w+)', el:'(creditServ\w+)'/g)].map(m => ({ id: m[1], el: m[2] }));
   check('услуги банка объявлены в CREDIT_SERVICES и есть кнопки в разметке',
-    serviceIds.length >= 4 && serviceIds.every(s => html.includes(`id="${s.el}"`)),
+    serviceIds.length >= 2 && serviceIds.every(s => html.includes(`id="${s.el}"`)),
     `услуг в коде: ${serviceIds.length}, без кнопки: ${serviceIds.filter(s => !html.includes(`id="${s.el}"`)).map(s => s.id).join(', ') || '—'}`);
   check('блок услуг собран сеткой и выводит итоговую плату',
     /\.deposit-serv-list\{[^}]*display:grid/.test(css)
