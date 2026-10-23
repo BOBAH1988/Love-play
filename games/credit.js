@@ -183,6 +183,12 @@ const CREDIT_SERVICES = [
     note:'1% годовых от суммы кредита за весь срок' },
   { id:'sms', el:'creditServSms', label:'СМС-информирование', cost:0.1, kind:'yearly',
     note:'0,1% годовых за уведомления о счёте' },
+  { id:'premium', el:'creditServPremium', label:'Премиум-обслуживание', cost:0.3, kind:'yearly',
+    note:'0,3% годовых от суммы кредита за весь срок' },
+  { id:'cashout', el:'creditServCashout', label:'Выдача наличными', cost:1, kind:'percent',
+    note:'1% от суммы один раз при получении кредита' },
+  { id:'notary', el:'creditServNotary', label:'Нотариус и оценка', cost:25000, kind:'once',
+    note:'фиксированная плата 25 000 ₽ один раз' },
 ];
 // Стоимость услуги за весь срок. Три вида по-разному:
 // yearly  — проценты годовых от суммы, умножаются на срок;
