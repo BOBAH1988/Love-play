@@ -827,6 +827,18 @@ document.getElementById('creditFamilyCheck')?.addEventListener('change', ()=>{
   saveState();
   renderCreditSetup();
 });
+
+// Показываем/скрываем чекбокс семейной ипотеки в зависимости от выбранного типа кредита
+document.querySelectorAll('#creditProductGroup .starter-btn')[2]?.addEventListener('click', ()=>{ // mortgage is the 3rd button (0=cash, 1=auto, 2=mortgage)
+  const familyContainer = document.getElementById('familyContainer');
+  if(state.creditProduct === 'mortgage'){
+    familyContainer.style.display = 'block';
+  } else {
+    familyContainer.style.display = 'none';
+    // Если выбрали не ипотеку, снимаем галочку если она была
+    document.getElementById('creditFamilyCheck').checked = false;
+  }
+});
 // График платежей — перечисление, поэтому кнопками.
 document.querySelectorAll('#creditSchedGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
