@@ -635,9 +635,10 @@ function renderCreditResult(){
   if(monthly){
     const sch = creditScheduleById(p.sched);
     const graph = p.sched === 'diff'
-      ? `платёж ${creditMoney(res.firstPayment)} → ${creditMoney(res.lastPayment)}`
-      : `платёж ${creditMoney(res.firstPayment)}`;
-    monthly.textContent = `Платёж в месяц: ${graph}`;
+      ? `${creditMoney(res.firstPayment)} → ${creditMoney(res.lastPayment)}`
+      : `${creditMoney(res.firstPayment)}`;
+    // 'Платёж' убран per дизайн-запрос, текст центрируется в CSS
+    monthly.textContent = `В месяц: ${graph}`;
   }
   // Срок, за который считалось, и график платежей. Берём res.months —
   // фактическое число месяцев из расчёта, а не заданное p.months.
