@@ -806,6 +806,27 @@ document.querySelectorAll('#creditProductGroup .starter-btn').forEach(btn=>{
     renderCreditSetup();
   });
 });
+// Обработчик чекбокса «Семейная ипотека»
+document.getElementById('creditFamilyCheck')?.addEventListener('change', ()=>{
+  playSuccessSound();
+  // Если галочка отмечена — используем семейную ипотеку (6% руб., 5 млн лимит)
+  // Если галочка снята — используем обычную ипотеку (17% руб., 6 млн лимит)
+  if(document.getElementById('creditFamilyCheck').checked){
+    state.creditProduct = 'family';
+    state.creditAmount = creditClamp('amount', 5000000); // лимит семейной ипотеки
+    state.creditRate = creditClamp('rate', 6); // 6% ставка
+    state.creditMonths = creditClamp('months', 240); // 20 лет
+    state.creditDown = creditClamp('down', 20); // 20% взнос
+  } else {
+    state.creditProduct = 'mortgage';
+    state.creditAmount = creditClamp('amount', 6000000); // лимит обычной ипотеки
+    state.creditRate = creditClamp('rate', 17); // 17% ставка
+    state.creditMonths = creditClamp('months', 240); // 20 лет
+    state.creditDown = creditClamp('down', 20); // 20% взнос
+  }
+  saveState();
+  renderCreditSetup();
+});
 // График платежей — перечисление, поэтому кнопками.
 document.querySelectorAll('#creditSchedGroup .starter-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
