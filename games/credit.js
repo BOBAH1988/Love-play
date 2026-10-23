@@ -630,6 +630,15 @@ function renderCreditResult(){
   if(total) total.textContent = creditMoney(res.overpay, true);
   const real = document.getElementById('creditReal');
   if(real) real.textContent = `В ценах начала срока — ${creditMoney(infl.realPaid)}`;
+  // Ежемесячный платёж: аннуитетный — одинаковый каждый месяц, дифференцированный — меняется
+  const monthly = document.getElementById('creditMonthly');
+  if(monthly){
+    const sch = creditScheduleById(p.sched);
+    const graph = p.sched === 'diff'
+      ? `платёж ${creditMoney(res.firstPayment)} → ${creditMoney(res.lastPayment)}`
+      : `платёж ${creditMoney(res.firstPayment)}`;
+    monthly.textContent = `Платёж в месяц: ${graph}`;
+  }
   // Срок, за который считалось, и график платежей. Берём res.months —
   // фактическое число месяцев из расчёта, а не заданное p.months.
   const term = document.getElementById('creditTerm');
