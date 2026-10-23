@@ -4340,6 +4340,10 @@
     font-size:26px; color:#e8c9dd; margin:8px 0 20px; text-align:center;
   }
 
+  .deposit-serv-hide{
+    display:none!important;
+  }
+
   .deposit-total-box{
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
     border-radius:18px; padding:16px 14px; text-align:center; margin:10px 0 12px;
