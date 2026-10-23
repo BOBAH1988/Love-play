@@ -153,7 +153,13 @@
         if(sp) sp.hidden = true;
       }
       if(typeof window.addEventListener === 'function'){
-        window.addEventListener('load', function(){ setTimeout(hide, 400); });
+        window.addEventListener('load', function(){
+          setTimeout(hide, 400);
+          // Автоматически рассчитать кредит при загрузке страницы на основе
+          // текущих значений ползунков (по умолчанию: 500 000₽, 25%, 60 месяцев).
+          // Это показывает данные до нажатия кнопки «Рассчитать».
+          try { renderCreditResult(); } catch(e) { console.error('renderCreditResult on load:', e); }
+        });
       }
       // Страховка: даже если скрипты приложения не загрузятся (обрыв сети),
       // экран не должен висеть вечно.
