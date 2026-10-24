@@ -4979,8 +4979,12 @@ function playHitSound(){
     showError('accountError', '');
   }
 
-  const accountBtn = document.getElementById('homeAccountBtn');
-  if (accountBtn) accountBtn.addEventListener('click', openAccount);
+  const accountBtn = document.getElementById('menuAccountBtn');
+  if (accountBtn) accountBtn.addEventListener('click', function(){
+    const mm = document.getElementById('globalMenuModal');
+    if (mm) mm.classList.remove('show');
+    openAccount();
+  });
   const closeBtn = document.getElementById('accountCloseBtn');
   if (closeBtn) closeBtn.addEventListener('click', closeAccount);
   const tabLogin = document.getElementById('accountTabLoginBtn');
@@ -5035,12 +5039,13 @@ function playHitSound(){
     });
   }
 
+  window.__openAccountModal = openAccount;
+
   const auth = getAuth();
   if (auth && typeof auth.onAuthStateChanged === 'function') {
     auth.onAuthStateChanged(function (user) {
       if (user) ensureUserDoc(user);
-      const btn = document.getElementById('homeAccountBtn');
-      if (btn) btn.textContent = user ? '👤 Профиль' : '👤 Аккаунт';
+      // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
     });
   }
 })();
