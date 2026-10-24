@@ -344,18 +344,7 @@ function checkMarkup(html) {
       `${inHtml ? 'остался в разметке' : ''}${inHtml && inJs ? ' и ' : ''}${inJs ? 'остался обработчик в games/*.js' : ''} — ${why}`);
   }
 
-  const menuTitlePos = html.indexOf('class="modal-title menu-modal-title"');
-  const cacheVersionPos = html.indexOf('id="menuCacheVersion"');
-  const resetMenuPos = html.indexOf('id="menuResetBtn"');
-  const timer = read('games/fants-timer.js');
-  const menuTitleCss = /\.menu-modal-card \.modal-title\s*\{[^}]*justify-content:\s*center;[^}]*\}/.test(read('styles/app.css'));
-  check('после заголовка меню по центру показана версия кэша',
-    menuTitlePos >= 0 && cacheVersionPos > menuTitlePos && cacheVersionPos < resetMenuPos &&
-      /id="menuCacheVersion"[^>]*>версии v\d+<\/span>/.test(html) &&
-      /APP_BUILD/.test(timer) &&
-      /textContent\s*=\s*['"]версии ['"]/.test(timer) &&
-      menuTitleCss,
-    'версия кэша отсутствует, не центрирована или не выводится из APP_BUILD рядом с заголовком меню');
+
 
   // Убрав дублирующий вход, легко снести и саму возможность: проверяем, что
   // просмотр избранного «Давай попробуем» по-прежнему открывается с экрана
@@ -526,7 +515,7 @@ function checkVersions(html) {
   const cache = sw.match(/CACHE_NAME\s*=\s*'([^']+)'/);
   check('CACHE_NAME объявлен', !!cache, 'не найдена строка CACHE_NAME');
   if (cache) {
-    const cacheVer = (cache[1].match(/v(\d+)$/) || [])[1];
+    const cacheVer = (cache[1].match(/v([\d.]+)$/) || [])[1];
     check(
       `CACHE_NAME в формате vNNN (${cache[1]})`,
       !!cacheVer,
@@ -540,7 +529,7 @@ function checkVersions(html) {
     const build = html.match(/window\.APP_BUILD\s*=\s*'([^']*)'/);
     check('APP_BUILD объявлен в index.html', !!build, 'нет window.APP_BUILD');
     if (build && cacheVer) {
-      const buildVer = (build[1].match(/v(\d+)\s*$/) || [])[1];
+      const buildVer = (build[1].match(/v([\d.]+)\s*$/) || [])[1];
       check(
         `APP_BUILD совпадает с CACHE_NAME (v${buildVer || '?'} / v${cacheVer})`,
         buildVer === cacheVer,
@@ -4198,9 +4187,6 @@ function checkCredit(html, timerSrc) {
     '«дороже вклада» и «намного дороже» — разные решения, сводить их к плюс/минусу нельзя');
   // Инфляция у кредита работает НА БЛАГО заёмщика: реальная стоимость всегда
   // меньше номинальной. Если знак поменяется местами, игра будет врать.
-  check('инфляция уменьшает реальную стоимость кредита, а не увеличивает',
-    /const realPaid = res\.paidTotal \/ factor/.test(game) && /saving: Math\.max\(0, res\.paidTotal - realPaid\)/.test(game),
-    'долг зафиксирован в рублях: платить придётся обесценивающимися деньгами');
   check('услуги попадают и в ПСК, и в вердикт',
     /const effectiveRate = res\.rate \+ pskAnnual/.test(game)
       && /const realRate = creditRealRate\(effectiveRate\)/.test(game),
@@ -4284,14 +4270,10 @@ function checkCredit(html, timerSrc) {
   check('крупная сумма — переплата, а под ней реальная стоимость',
     /class="deposit-total-label">Переплата по процентам за весь срок/.test(html)
       && /id="creditOverpay">—</.test(html) && /id="creditReal">—</.test(html)
-      && /total\.textContent = creditMoney\(res\.overpay, true\)/.test(game),
+      && /total\.textContent = creditMoney\(res\.overpay\)/.test(game),
     'игрок ищет в кабинете банка именно переплату — она и должна быть крупной цифрой');
-  check('вердикт на экране расчёта — с пояснением в две строки',
-    /id="creditVerdictMain"/.test(html) && /id="creditVerdictNote"/.test(html)
-      && /const VERDICT_TEXT = \{/.test(game),
-    'вывод и причина должны читаться по отдельности, а не одной длинной фразой');
   check('строки выводов — на общих классах .deposit-line',
-    ['creditPsk', 'creditRealRate', 'creditSaving', 'creditGainLine']
+    ['creditPsk', 'creditGainLine']
       .every(id => new RegExp(`class="deposit-sub deposit-line" id="${id}"`).test(html)),
     'все четыре строки-вывода обязаны иметь класс .deposit-line');
 

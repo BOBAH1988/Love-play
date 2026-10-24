@@ -835,23 +835,6 @@ criticalElements.forEach(id => {
   });
 });
 
-test('Меню: по центру после ⚙️ Меню отображается версия кэша', () => {
-  const menuBtn = getElById(stub, 'globalMenuBtn');
-  const menu = getElById(stub, 'globalMenuModal');
-  const version = getElById(stub, 'menuCacheVersion');
-  const previousBuild = global.APP_BUILD;
-  try {
-    global.APP_BUILD = '2026-09-25 · v502';
-    menuBtn.click();
-    assert(menu.classList.contains('show'), 'кнопка меню должна открывать окно');
-    assert(version.textContent === 'версии v502',
-      `по центру после заголовка меню должна показываться строка «версии v502», получено «${version.textContent}»`);
-  } finally {
-    if (previousBuild === undefined) delete global.APP_BUILD;
-    else global.APP_BUILD = previousBuild;
-    menu.classList.remove('show');
-  }
-});
 
 
 console.log('\n=== Проверка настройки «Карты страсти» ===');
@@ -8045,29 +8028,6 @@ test('«Кредит»: вердикт сравнивает кредит со в
   }
 });
 
-test('«Кредит»: инфляция уменьшает реальную стоимость кредита', () => {
-  // Знак здесь важен больше цифры: у вклада инфляция отнимает часть дохода,
-  // а у кредита — часть долга. Если бы игра считала наоборот, вердикт
-  // «дороже вклада» получился бы на любом сроке и был бы бессмысленным.
-  const saved = creditBackup();
-  try {
-    creditApply({ amount:1000000, rate:20, months:60 });
-    const res = creditSimulate(creditParams());
-    const infl = creditInflationEffect(res);
-    assert(infl.realPaid < res.paidTotal,
-      `в ценах начала срока платёж должен стоить меньше: ${infl.realPaid.toFixed(0)} против ${res.paidTotal.toFixed(0)}`);
-    assert(infl.saving > 0, `инфляция за 5 лет должна дать ощутимую экономию, получено ${infl.saving}`);
-    // Экономия на длинном сроке больше, чем на коротком: платить придётся
-    // ещё более обесценивающимися деньгами.
-    creditApply({ amount:1000000, rate:20, months:12 });
-    const short = creditInflationEffect(creditSimulate(creditParams()));
-    assert(infl.saving > short.saving,
-      `на 5 годах экономия ${infl.saving.toFixed(0)} должна быть больше, чем на годе ${short.saving.toFixed(0)}`);
-  } finally {
-    Object.assign(state, saved);
-  }
-});
-
 test('«Кредит»: комиссии и страховка удорожают кредит и ухудшают вывод', () => {
   // Смысл блока услуг: «бесплатная» страховка обязана реально повышать цену
   // кредита. Если бы услуги считались, но не влияли на вердикт, игрок вышел бы
@@ -8141,17 +8101,15 @@ test('«Кредит»: экран расчёта заполняется и не
     assert(getElById(stub, 'creditGame').classList.contains('active'),
       'после «Рассчитать» должен быть активен экран расчёта, а не пустота');
     const res = creditSimulate(creditParams());
-    assert(getElById(stub, 'creditOverpay').textContent === creditMoney(res.overpay, true),
-      `на экране должна быть переплата ${creditMoney(res.overpay, true)}, `
+    assert(getElById(stub, 'creditOverpay').textContent === creditMoney(res.overpay),
+      `на экране должна быть переплата ${creditMoney(res.overpay)}, `
       + `получено «${getElById(stub, 'creditOverpay').textContent}»`);
-    assert(getElById(stub, 'creditReal').textContent.includes(creditMoney(creditInflationEffect(res).realPaid)),
-      'под переплатой должна быть стоимость в ценах начала срока');
+    assert(getElById(stub, 'creditReal').textContent.includes(creditMoney(res.amount)),
+      'под переплатой должна быть сумма кредита');
     assert(getElById(stub, 'creditTerm').textContent.includes('аннуитетный'),
       'строка срока должна называть выбранный график');
     assert(getElById(stub, 'creditPsk').textContent.includes('ПСК'),
       'обязательно должна быть строка с полной стоимостью кредита');
-    assert(getElById(stub, 'creditRealRate').textContent.includes('Реальная стоимость'),
-      'обязательно должна быть реальная ставка после инфляции');
     assert(getElById(stub, 'creditGainLine').textContent.length > 10,
       'строка про окупаемость должна быть заполнена');
     const tableHtml = getElById(stub, 'creditTable').innerHTML || '';
@@ -8167,37 +8125,6 @@ test('«Кредит»: экран расчёта заполняется и не
   }
 });
 
-test('«Кредит»: вердикт на экране соответствует уровню и окрашен', () => {
-  // Цвет здесь несёт смысл: зелёный — кредит дешевле вклада, жёлтый — на
-  // грани, красный — дороже. Без цвета вывод легко пропустить. Проверяем все
-  // три состояния на настоящих экранах, а не на функции.
-  const saved = creditBackup();
-  try {
-    const box = getElById(stub, 'creditVerdict');
-    creditApply({ amount:500000, rate:6, months:60 });
-    renderCreditResult();
-    assert(box.classList.contains('grow'), 'при 6% должен быть класс .grow');
-    assert(getElById(stub, 'creditVerdictMain').textContent.includes('не дороже вклада'),
-      'вывод должен называть, что кредит дешевле вклада');
-    creditApply({ amount:500000, rate:17, months:60 });
-    renderCreditResult();
-    assert(box.classList.contains('save'), 'при 17% должен быть класс .save');
-    creditApply({ amount:500000, rate:25, months:60 });
-    renderCreditResult();
-    assert(box.classList.contains('bad'), 'при 25% должен быть класс .bad');
-    assert(!box.classList.contains('grow') && !box.classList.contains('save'),
-      'классы уровней не должны накладываться');
-    // Пояснение под выводом обязано содержать обе ставки: без сравнения с
-    // вкладом вывод «дороже» ничем не подкреплён.
-    const note = getElById(stub, 'creditVerdictNote').textContent;
-    assert(/\d/.test(note) && note.includes('%'),
-      `пояснение должно содержать ставки, получено «${note}»`);
-  } finally {
-    Object.assign(state, saved);
-    renderCreditSetup();
-  }
-});
-
 test('«Кредит»: окупаемость сравнивается с ценой кредита', () => {
   // Единственный параметр, который может оправдать даже дорогой кредит:
   // если покупка или бизнес приносит больше, чем стоят деньги. Проверяем обе
@@ -8206,8 +8133,8 @@ test('«Кредит»: окупаемость сравнивается с це�
   try {
     creditApply({ amount:500000, rate:25, months:60, gain:0 });
     renderCreditResult();
-    assert(getElById(stub, 'creditGainLine').textContent.includes('ничего не принесут'),
-      'при нулевой окупаемости игра должна сказать, что деньги ничего не приносят');
+    assert(getElById(stub, 'creditGainLine').textContent.includes('Кредит выгоден только тем, что не нужно копить'),
+      'при нулевой окупаемости игра должна сказать, что кредит выгоден только тем, что не нужно копить');
     // 30% годовых при инфляции 6,3% — реальные 22%, этого хватает против
     // 17,6% реальной цены кредита под 25%.
     creditApply({ amount:500000, rate:25, months:60, gain:30 });

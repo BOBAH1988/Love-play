@@ -181,8 +181,8 @@ function creditScheduleById(id){
 const CREDIT_SERVICES = [
   { id:'insurance', el:'creditServInsurance', label:'Страхование жизни', cost:1, kind:'yearly',
     note:'1% годовых от суммы кредита за весь срок' },
-  { id:'sms', el:'creditServSms', label:'СМС-информирование', cost:0.1, kind:'yearly',
-    note:'0,1% годовых за уведомления о счёте' },
+  { id:'sms', el:'creditServSms', label:'СМС-информирование', cost:100, kind:'monthly',
+    note:'100 ₽ в месяц за уведомления о счёте' },
   { id:'premium', el:'creditServPremium', label:'Премиум-обслуживание', cost:0.3, kind:'yearly',
     note:'0,3% годовых от суммы кредита за весь срок' },
   { id:'cashout', el:'creditServCashout', label:'Выдача наличными', cost:1, kind:'percent',
@@ -190,13 +190,18 @@ const CREDIT_SERVICES = [
   { id:'notary', el:'creditServNotary', label:'Нотариус и оценка', cost:25000, kind:'once',
     note:'фиксированная плата 25 000 ₽ один раз' },
 ];
-// Стоимость услуги за весь срок. Три вида по-разному:
+// Стоимость услуги за весь срок. Четыре вида по-разному:
 // yearly  — проценты годовых от суммы, умножаются на срок;
 // percent — проценты от суммы ОДИН раз, срока не умножают;
 // once    — фиксированная сумма в рублях, тоже один раз.
+// monthly — фиксированная сумма в рублях КАЖДЫЙ МЕСЯЦ, умножается на срок.
 function creditServiceSum(s, p, years){
   if(s.kind === 'yearly') return p.amount * s.cost / 100 * years;
   if(s.kind === 'percent') return p.amount * s.cost / 100;
+  if(s.kind === 'monthly') {
+    const months = Math.max(1, Math.round(Number(p.months) || 1));
+    return s.cost * months;
+  }
   return s.cost;
 }
 // Включённые услуги: из state берутся только те id, которые есть в
@@ -214,9 +219,14 @@ function creditServicesCost(p){
   const chosen = creditSelectedServices();
   const months = Math.max(1, Math.round(Number(p.months) || 1));
   const years = months / 12;
+  // Услуги берутся процентами от суммы кредита — а сумма после первого взноса
+  // меньше, поэтому базой служит тело долга, а не исходная цена покупки.
+  const loanAmount = Math.max(0, (Number(p.amount) || 0)
+    * (1 - (Math.max(0, Math.min(100, Number(p.down) || 0)) / 100)));
+  const pp = Object.assign({}, p, { amount: loanAmount });
   const items = chosen.map(s => ({
     ...s,
-    sum: creditServiceSum(s, p, years),
+    sum: creditServiceSum(s, pp, years),
   }));
   return { items, total: items.reduce((acc, s) => acc + s.sum, 0) };
 }
@@ -308,7 +318,12 @@ function creditSimulate(p){
   // Месячная ставка. Проценты по кредиту начисляются на ОСТАТОК долга, а не
   // на исходную сумму, — это и есть главное отличие кредита от вклада.
   const mr = rate / 100 / 12;
-  const amount = Math.max(0, Number(p.amount) || 0);
+  // Первый взнос — собственные деньги заёмщика: он уменьшает сумму, которую
+  // реально занимают в банке. Поэтому долг и все платежи считаются от суммы
+  // МИНУС первый взнос; иначе взнос был бы просто надписью.
+  const rawAmount = Math.max(0, Number(p.amount) || 0);
+  const downPct = Math.max(0, Math.min(100, Number(p.down) || 0));
+  const amount = Math.max(0, rawAmount - rawAmount * downPct / 100);
   const diff = creditScheduleById(p.sched).id === 'diff';
   // Аннуитетный платёж: A = P·i / (1 − (1+i)^−n). Формула устойчива и при
   // нулевой ставке не делит на ноль: при i = 0 знаменатель даёт n, и платёж
@@ -326,8 +341,10 @@ function creditSimulate(p){
   let lastPayment = 0;
   const schedule = [];
   const years = [];
-  let yearPaid = 0;
-  let yearInterest = 0;
+  const monthlyBreakdown = months <= 36;
+  const step = monthlyBreakdown ? 1 : 12;
+  let periodPaid = 0;
+  let periodInterest = 0;
   for(let m = 1; m <= months; m++){
     // Проценты за месяц — от остатка на начало месяца.
     const interest = balance * mr;
@@ -357,24 +374,22 @@ function creditSimulate(p){
     paidTotal += payment;
     interestTotal += interest;
     principalPaid += principal;
-    yearPaid += payment;
-    yearInterest += interest;
+    periodPaid += payment;
+    periodInterest += interest;
     schedule.push({ month: m, payment, interest, principal, balance: Math.max(0, balance) });
     if(m === 1) firstPayment = payment;
     lastPayment = payment;
-    // Строка таблицы — на каждый год. Последний год может быть неполным
-    // (срок 250 месяцев — это 20 лет и 10 месяцев), и без отдельной строки он
-    // просто потерялся бы.
-    if(m % 12 === 0 || m === months){
+    if(m % step === 0 || m === months){
       years.push({
         month: m,
         year: m / 12,
-        paid: yearPaid,
-        interest: yearInterest,
+        paid: periodPaid,
+        interest: periodInterest,
         balance: Math.max(0, balance),
+        monthly: monthlyBreakdown,
       });
-      yearPaid = 0;
-      yearInterest = 0;
+      periodPaid = 0;
+      periodInterest = 0;
     }
   }
   const overpay = paidTotal - amount;
@@ -407,16 +422,6 @@ function creditSimulate(p){
 // Считаем от стоимости всех платежей в ценах начала срока — так же, как в
 // игре «Вклады», только знак полезный: инфляция долг НЕ увеличивает, а
 // уменьшает его настоящую цену.
-function creditInflationEffect(res){
-  const factor = Math.pow(1 + CREDIT_RU.inflation / 100, res.months / 12);
-  const realPaid = res.paidTotal / factor;
-  return {
-    factor,
-    realPaid,
-    // «Скидка» заёмщика: на сколько обесценились все выплаты за срок.
-    saving: Math.max(0, res.paidTotal - realPaid),
-  };
-}
 // Реальная годовая ставка — формула Фишера. Ставка 25% при инфляции 6,3%
 // реально стоит (1,25 ÷ 1,063) − 1 = 17,6% в год, а не 25%: часть процентов
 // съедает инфляция, и чем длиннее срок, тем сильнее это видно.
@@ -614,9 +619,10 @@ function creditBarsHtml(years, amount){
   const max = amount > 0 ? amount : 1;
   return years.map(y=>{
     const h = Math.max(3, Math.round((y.balance / max) * 100));
+    const label = y.monthly ? String(y.month) : creditPeriodLabel(y.year).replace(' года','').replace(' год','').replace(' лет','');
     return `<div class="credit-bar-col">
       <div class="credit-bar" style="height:${h}%"></div>
-      <div class="credit-bar-year">${creditPeriodLabel(y.year).replace(' года','').replace(' год','').replace(' лет','')}</div>
+      <div class="credit-bar-year">${label}</div>
     </div>`;
   }).join('');
 }
@@ -628,16 +634,15 @@ function renderCreditResult(){
   // экран получает те же числа, что и рисует, из одного источника.
   const serv = creditServicesCost(p);
   const verdict = creditVerdict(res, serv);
-  const infl = creditInflationEffect(res);
   // Крупная сумма — ПЕРЕПЛАТА ПО ПРОЦЕНТАМ за весь срок: ровно столько
   // заёмщик отдаст банку сверх взятых денег. Это и есть цена кредита, и
   // именно её игрок ищет в кабинете банка. Реальная стоимость (после
   // инфляции) — строкой под ней: она всегда МЕНЬШЕ, и именно поэтому
   // инфляция здесь не враг заёмщика, а его союзник.
   const total = document.getElementById('creditOverpay');
-  if(total) total.textContent = creditMoney(res.overpay, true);
+  if(total) total.textContent = creditMoney(res.overpay);
   const real = document.getElementById('creditReal');
-  if(real) real.textContent = `В ценах начала срока — ${creditMoney(infl.realPaid)}`;
+  if(real) real.textContent = `Сумма кредита — ${creditMoney(res.amount)}`;
   // Ежемесячный платёж: аннуитетный — одинаковый каждый месяц, дифференцированный — меняется
   const monthly = document.getElementById('creditMonthly');
   if(monthly){
@@ -645,7 +650,7 @@ function renderCreditResult(){
     const graph = p.sched === 'diff'
       ? `${creditMoney(res.firstPayment)} → ${creditMoney(res.lastPayment)}`
       : `${creditMoney(res.firstPayment)}`;
-    monthly.textContent = `Платеж в месяц: ${graph}`;
+    monthly.textContent = `Платёж ${graph} в месяц`;
   }
   // Срок, за который считалось, и график платежей. Берём res.months —
   // фактическое число месяцев из расчёта, а не заданное p.months.
@@ -655,7 +660,7 @@ function renderCreditResult(){
     const graph = p.sched === 'diff'
       ? `платёж ${creditMoney(res.firstPayment)} → ${creditMoney(res.lastPayment)}`
       : `платёж ${creditMoney(res.firstPayment)} каждый месяц`;
-    term.textContent = `${sch.short} график, ${creditPeriodLabel(res.months / 12)} — ${res.months} ${creditMonthsWord(res.months)}, ${graph}`;
+    term.textContent = `${sch.short} график, ${res.months} ${creditMonthsWord(res.months)}, ${graph}`;
   }
   const paid = document.getElementById('creditPaid');
   if(paid){
@@ -665,8 +670,8 @@ function renderCreditResult(){
   const payment = document.getElementById('creditPayment');
   if(payment){
     payment.textContent = p.sched === 'diff'
-      ? `Средний платёж ${creditMoney(res.avgPayment)} в месяц, проценты уменьшаются`
-      : `Платёж ${creditMoney(res.firstPayment)} в месяц, проценты уже учтены`;
+      ? `Средний платёж ${creditMoney(res.avgPayment)} в месяц`
+      : `Платёж ${creditMoney(res.firstPayment)} в месяц`;
   }
   // Полная стоимость кредита в % годовых. Отдельно от договорной ставки:
   // разница между ними и есть комиссии со страховкой, и именно на неё
@@ -675,21 +680,8 @@ function renderCreditResult(){
   if(psk){
     psk.textContent = `ПСК — ${creditPct(res.psk + verdict.pskAnnual)} годовых при ${creditPct(res.rate)} в договоре`;
   }
-  const realRate = document.getElementById('creditRealRate');
-  if(realRate){
-    realRate.textContent = `Реальная стоимость — ${creditPct(verdict.realRate)} в год при инфляции ${creditPct(CREDIT_RU.inflation)}`;
-  }
-  const savings = document.getElementById('creditSaving');
-  if(savings){
-    savings.textContent = `Инфляция обесценила выплаты на ${creditMoney(infl.saving)}`;
-  }
   // Сравнение с вкладом: сколько стоили бы те же деньги, отложенные на вклад
   // под ставку вкладов. Это главный вопрос игры, и ответ на него — в
-  // вердикте, а здесь — само число сравнения.
-  const depositBox = document.getElementById('creditDepositCompare');
-  if(depositBox){
-    depositBox.textContent = `Вклад под ${creditPct(CREDIT_RU.depositRate)} даёт реальные ${creditPct(verdict.depositReal)} в год — это и есть цена «просто подождать».`;
-  }
   // Услуги: показываем и цену, и то, как она меняет ПСК. Смысл блока в том,
   // что игрок видит, как «бесплатные» страховка и премиум-карта поднимают
   // полную стоимость кредита.
@@ -702,43 +694,13 @@ function renderCreditResult(){
       servBox.textContent = `Комиссии и страховка — ${creditMoney(serv.total)} (${detail}). В ПСК из них попало ${creditPct(verdict.pskAnnual)} годовых.`;
     }
   }
-  // Вердикт «выгодно ли брать кредит». Разделён на две строки: вывод и
-  // пояснение, почему он такой. Раньше всё было в одной длинной фразе, и её
-  // приходилось читать целиком, чтобы понять сам вывод.
-  const verdictBox = document.getElementById('creditVerdict');
-  if(verdictBox){
-    const rate = creditPct(verdict.realRate);
-    const dep = creditPct(verdict.depositReal);
-    const VERDICT_TEXT = {
-      good: {
-        main: `Кредит обходится не дороже вклада: переплата ${creditMoney(verdict.gain)}`,
-        note: `${rate} в год против ${dep} у вклада — деньги стоят дешевле, чем под вкладом`,
-      },
-      border: {
-        main: `Кредит дороже вклада, но ненамного: переплата ${creditMoney(verdict.gain)}`,
-        note: `${rate} против ${dep} в год — разница ${creditPct(verdict.diff)}`,
-      },
-      bad: {
-        main: `Кредит дороже вклада: переплата ${creditMoney(verdict.gain)}`,
-        note: `${rate} против ${dep} в год — деньги работают хуже, чем лежали бы на вкладе`,
-      },
-    };
-    const text = VERDICT_TEXT[verdict.level] || VERDICT_TEXT.bad;
-    const verdictMain = document.getElementById('creditVerdictMain');
-    const verdictNote = document.getElementById('creditVerdictNote');
-    if(verdictMain) verdictMain.textContent = text.main;
-    if(verdictNote) verdictNote.textContent = text.note;
-    verdictBox.classList.toggle('grow', verdict.level === 'good');
-    verdictBox.classList.toggle('save', verdict.level === 'border');
-    verdictBox.classList.toggle('bad', verdict.level === 'bad');
-  }
   // Окупаемость: сколько в год приносит то, на что взят кредит. Это
   // единственный параметр, который может оправдать даже дорогой кредит,
   // поэтому он стоит рядом с вердиктом, а не прячется в настройках.
   const gainBox = document.getElementById('creditGainLine');
   if(gainBox){
     if(p.gain <= 0){
-      gainBox.textContent = 'Деньги уйдут на покупку и ничего не принесут — кредит выгоден только тем, что не нужно копить.';
+      gainBox.textContent = 'Кредит выгоден только тем, что не нужно копить.';
     }else if(creditRealRate(p.gain) >= verdict.realRate){
       gainBox.textContent = `Покупка приносит ${creditPct(p.gain)} в год, реальных ${creditPct(creditRealRate(p.gain))} — этого хватает, чтобы кредит окупился.`;
     }else{
@@ -747,11 +709,15 @@ function renderCreditResult(){
   }
   const bars = document.getElementById('creditBars');
   if(bars) bars.innerHTML = creditBarsHtml(res.years, res.amount);
+  const balanceLabel = document.getElementById('creditBalanceLabel');
+  if(balanceLabel) balanceLabel.textContent = res.months <= 36
+    ? 'Остаток долга по месяцам'
+    : 'Остаток долга по годам';
   const table = document.getElementById('creditTable');
   if(table){
     table.innerHTML = res.years.map(y=>`
       <tr>
-        <td>${creditPeriodLabel(y.year)}</td>
+        <td>${y.monthly ? `${y.month} ${creditMonthsWord(y.month)}` : creditPeriodLabel(y.year)}</td>
         <td>${creditMoney(y.paid)}</td>
         <td><b>${creditMoney(y.balance)}</b></td>
       </tr>`).join('');
@@ -796,6 +762,9 @@ CREDIT_RANGES.forEach(r=>{
     // Плата за услуги считается от суммы кредита и срока, поэтому при
     // изменении любого из них пересчитывается и итог по услугам.
     renderCreditServices();
+    // Предварительный расчёт (платёж в месяц) тоже должен обновляться сразу,
+    // иначе первый взнос и другие ползунки не отражались бы до «Рассчитать».
+    try { renderCreditResult(); } catch (e) {}
   });
 });
 // Тип кредита подставляет реальные рыночные условия продукта — это главное

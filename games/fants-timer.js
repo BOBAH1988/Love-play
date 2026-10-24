@@ -531,12 +531,12 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   const closeMenu = ()=> menuModal.classList.remove('show');
 
   function updateMenuCacheVersion(){
-    const versionEl = document.getElementById('menuCacheVersion');
+    const versionEl = document.getElementById('projectVersion');
     if(!versionEl) return;
     // APP_BUILD синхронизирован с суффиксом CACHE_NAME в tools/check.js.
     // Поэтому из него безопасно показать именно версию кэша, не дублируя число.
-    const match = String(window.APP_BUILD || '').match(/v\d+$/);
-    versionEl.textContent = 'версии ' + (match ? match[0] : 'v?');
+    const match = String(window.APP_BUILD || '').match(/v([\d.]+)\s*$/);
+    versionEl.textContent = 'v ' + (match ? match[1] : '?');
   }
   updateMenuCacheVersion();
 
