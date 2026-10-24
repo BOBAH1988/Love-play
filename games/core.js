@@ -4914,7 +4914,7 @@ function playHitSound(){
     return (err && err.message) ? err.message : 'Ошибка';
   }
 
-  function ensureUserDoc(user) {
+  function ensureUserDoc(user, isAdult) {
     if (!user) return;
     const db = getDb();
     if (!db) return;
@@ -4928,7 +4928,7 @@ function playHitSound(){
         displayName: displayName,
         role: 'user',
         accessLevel: 'basic',
-        isAdult: false,
+        isAdult: !!isAdult,
         status: 'active',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).catch(function (err) { console.error('ensureUserDoc error', err); });
@@ -5026,6 +5026,39 @@ function playHitSound(){
       .catch(function (err) { showError('accountProfileError', mapError(err)); });
   });
 
+  function updateRegisterSubmitState() {
+    const btn = document.getElementById('accountRegisterSubmitBtn');
+    const terms = document.getElementById('accountConsentTerms');
+    const data = document.getElementById('accountConsentData');
+    if (btn) btn.disabled = !(terms && terms.checked && data && data.checked);
+  }
+  ['accountConsentTerms', 'accountConsentData'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', updateRegisterSubmitState);
+  });
+  updateRegisterSubmitState();
+
+  function openLegalModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.add('show');
+  }
+  function closeLegalModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.remove('show');
+  }
+  ['openTermsLink', 'openTermsLink2'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', function (e) { e.preventDefault(); openLegalModal('termsModal'); });
+  });
+  ['openPrivacyLink', 'openPrivacyLink2'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', function (e) { e.preventDefault(); openLegalModal('privacyModal'); });
+  });
+  const termsClose = document.getElementById('termsCloseBtn');
+  if (termsClose) termsClose.addEventListener('click', function () { closeLegalModal('termsModal'); });
+  const privacyClose = document.getElementById('privacyCloseBtn');
+  if (privacyClose) privacyClose.addEventListener('click', function () { closeLegalModal('privacyModal'); });
+
   const loginForm = document.getElementById('accountLoginForm');
   if (loginForm) {
     loginForm.addEventListener('submit', function (e) {
@@ -5047,15 +5080,22 @@ function playHitSound(){
       e.preventDefault();
       const auth = getAuth();
       if (!auth) return;
+      const terms = document.getElementById('accountConsentTerms');
+      const data = document.getElementById('accountConsentData');
+      if (!terms || !terms.checked || !data || !data.checked) {
+        showError('accountError', 'Необходимо принять правила и согласие на обработку данных');
+        return;
+      }
       const email = (document.getElementById('accountRegisterEmail').value || '').trim();
       const password = document.getElementById('accountRegisterPassword').value || '';
       const confirm = document.getElementById('accountRegisterPasswordConfirm').value || '';
+      const isAdult = !!(document.getElementById('accountConsentAdult') && document.getElementById('accountConsentAdult').checked);
       showError('accountError', '');
       if (password.length < 6) { showError('accountError', 'Слишком короткий пароль (минимум 6 символов)'); return; }
       if (password !== confirm) { showError('accountError', 'Пароли не совпадают'); return; }
       auth.createUserWithEmailAndPassword(email, password)
         .then(function (cred) {
-          ensureUserDoc(cred.user);
+          ensureUserDoc(cred.user, isAdult);
           if (cred.user && typeof cred.user.sendEmailVerification === 'function') {
             cred.user.sendEmailVerification().catch(function (e) { console.error('sendEmailVerification', e); });
           }
