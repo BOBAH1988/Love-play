@@ -4796,3 +4796,97 @@ function playHitSound(){
   }catch(e){}
   if(navigator.vibrate) navigator.vibrate(40);
 }
+// Динамический вывод групп игр из Firestore на главном экране.
+(function loadHomeGroups() {
+  const GROUP_ICONS = {
+    kids: '🧸',
+    business: '💼',
+    solo: '📱',
+    learning: '📚'
+  };
+  const GROUP_VIEWS = {
+    kids: 'kidsView',
+    business: 'businessView',
+    solo: 'soloView',
+    learning: 'learningView'
+  };
+
+  function render(groups) {
+    const container = document.getElementById('homeGroupsDynamic');
+    if (!container) return;
+    container.innerHTML = '';
+    groups.forEach(function (group) {
+      const slug = group.slug;
+      const viewId = GROUP_VIEWS[slug] || (slug + 'View');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-menu-item';
+      btn.dataset.groupSlug = slug || '';
+
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'menu-icon';
+      iconSpan.textContent = GROUP_ICONS[slug] || '📁';
+      btn.appendChild(iconSpan);
+
+      const textSpan = document.createElement('span');
+      const title = document.createElement('span');
+      title.style.display = 'block';
+      title.textContent = group.title || slug || '';
+      const desc = document.createElement('small');
+      desc.style.display = 'block';
+      desc.style.fontSize = '13px';
+      desc.style.fontWeight = '400';
+      desc.style.opacity = '0.85';
+      desc.style.marginTop = '2px';
+      desc.textContent = group.description || '';
+      textSpan.appendChild(title);
+      textSpan.appendChild(desc);
+      btn.appendChild(textSpan);
+
+      btn.addEventListener('click', function () {
+        try { playSuccessSound(); } catch (e) {}
+        try { showSetupView(viewId); } catch (e) {}
+      });
+
+      container.appendChild(btn);
+    });
+
+    ['homeKidsBtn', 'homeBusinessBtn', 'homeSoloBtn', 'homeLearningBtn'].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    container.style.display = '';
+  }
+
+  try {
+    if (typeof db === 'undefined' || !db || typeof db.collection !== 'function') return;
+    db.collection('gameGroups')
+      .where('enabled', '==', true)
+      .orderBy('order')
+      .get()
+      .then(function (snapshot) {
+        const groups = [];
+        snapshot.forEach(function (doc) {
+          const data = doc.data() || {};
+          groups.push({
+            id: doc.id,
+            title: data.title,
+            description: data.description,
+            slug: data.slug,
+            accessLevel: data.accessLevel,
+            ageRating: data.ageRating,
+            order: data.order
+          });
+        });
+        if (groups.length) render(groups);
+      })
+      .catch(function (error) {
+        console.error('Firestore: ошибка чтения коллекции gameGroups:', error);
+        const container = document.getElementById('homeGroupsDynamic');
+        if (container) container.style.display = 'none';
+      });
+  } catch (error) {
+    console.error('Firestore: ошибка чтения коллекции gameGroups:', error);
+  }
+})();
+

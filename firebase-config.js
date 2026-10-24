@@ -26,38 +26,4 @@ const firebaseConfig = {
   console.log("Firebase инициализирован");
   console.log("Firestore доступен");
   console.log("Auth доступен");
-
-  // Временная проверка подключения к Firestore: чтение коллекции gameGroups.
-  (function checkGameGroups() {
-    try {
-      db.collection("gameGroups")
-        .where("enabled", "==", true)
-        .orderBy("order")
-        .get()
-        .then(function (snapshot) {
-          console.log("Firestore: найдено групп:", snapshot.size);
-          snapshot.forEach(function (doc) {
-            const data = doc.data() || {};
-            console.log(
-              "Группа:",
-              data.title,
-              data.slug,
-              data.accessLevel,
-              data.ageRating,
-              data.order
-            );
-          });
-        })
-        .catch(function (error) {
-          console.error("Firestore: ошибка чтения коллекции gameGroups:", error);
-          const message = String((error && error.message) || error || "");
-          const indexLinkMatch = message.match(/https:\/\/console\.firebase\.google\.com\/[^\s)]+/i);
-          if (indexLinkMatch) {
-            console.error("Ссылка на создание составного индекса:", indexLinkMatch[0]);
-          }
-        });
-    } catch (error) {
-      console.error("Firestore: ошибка чтения коллекции gameGroups:", error);
-    }
-  })();
 })();
