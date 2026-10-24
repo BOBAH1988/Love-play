@@ -649,7 +649,7 @@ function saveState(){
     // Квота localStorage исчерпана — уведомляем пользователя, чтобы он
     // знал, почему прогресс может не сохраниться.
     if(e && e.name === 'QuotaExceededError' && typeof showToast === 'function'){
-      showToast('⚠️ Хранилище переполнено — очистите историю или сделайте сброс');
+      showToast('⚠️ Хранилище переполнено — очистите историю/сброс');
     }
   }
 }
@@ -682,7 +682,7 @@ function exportGameData(){
     showToast('Файл с данными сохранён 📤');
   }catch(e){
     playErrorSound();
-    showToast('Не удалось создать файл резервной копии');
+    showToast('Не удалось создать резервную копию');
   }
 }
 function importGameDataFromFile(file){
@@ -712,7 +712,7 @@ function importGameDataFromFile(file){
       showToast('Данные восстановлены ✅');
     }catch(e){
       playErrorSound();
-      showToast('Не удалось прочитать файл — это не резервная копия игры');
+      showToast('Не резервная копия игры');
     }
   };
   reader.onerror = ()=>{
@@ -1191,7 +1191,7 @@ function showToast(msg, duration){
 // поэтому showToast гасит его на время тоста. По окончании тоста видимость
 // возвращает эта функция — иначе заголовок пропадает навсегда: раньше возврат
 // стоял только для режима «Предложи партнёру», и после любого тоста в
-// «Видеорулетке» («Показываю все видео», «Спасибо что делитесь!» …) название
+// «Видеорулетке» («Все видео», «Спасибо что делитесь!» …) название
 // игры исчезало до следующего updateTurnUI.
 function restoreGameLevelLabelAfterToast(levelLabel){
   if(!levelLabel) levelLabel = document.getElementById('gameLevelLabel');
@@ -1548,7 +1548,7 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
     const elig = favoritesEligibility();
     if(!elig.ok){
       playErrorSound();
-      showToast(`Добавьте больше карточек: М добавлено ${elig.forM}, Ж добавлено ${elig.forF}`, 2000);
+      showToast(`Добавьте карточки: М+${elig.forM}, Ж+${elig.forF}`, 2000);
       return;
     }
   }
@@ -1583,7 +1583,7 @@ function blockedByDavayPause(){
   }
   playErrorSound();
   const label = gameTitle(state.pausedMode);
-  showToast(`Сначала завершите ${label} — «Продолжить игру» или «Закончить игру»`);
+  showToast(`Сначала завершите ${label}`);
   return true;
 }
 // Универсальная функция сброса паузы. Вызывается напрямую с ключом игры:
@@ -1789,7 +1789,7 @@ async function hardUpdateApp(){
   // Значение true ничего не гарантирует, но в этом случае обычный сценарий
   // безопасен: если сеть на самом деле отвалилась, сработает .catch ниже.
   if(navigator.onLine === false){
-    showToast('Нет интернета — обновление возможно только онлайн');
+    showToast('Нет сети — обновление только онлайн');
     return false;
   }
   // Защита от нескольких нажатий и от повторного входа из обработчика.
@@ -2390,7 +2390,7 @@ function performFullReset(){
   const setupEl = document.getElementById('setup');
   if(setupEl) setupEl.classList.add('active');
   if(typeof showSetupView === 'function') showSetupView('homeView');
-  showToast('Прогресс и настройки сброшены. Свои задания в «Фантах» сохранены');
+  showToast('Прогресс сброшен. Задания «Фантов» сохранены');
 }
 
 /* ============ ПОДБОР КАРТ ============ */
@@ -2568,7 +2568,7 @@ function switchVideoLevel(level, sub){
         return restartDavayRoundAtLevel(n, s) ? { restarted: true } : false;
       }
       playErrorSound();
-      showToast('Сначала закончите раунд — уровень меняется между раундами');
+      showToast('Сначала закончите раунд');
       return false;
     }
     davayLevel = normalizeDavayLevel(n);
@@ -3811,7 +3811,7 @@ document.getElementById('favoritesOnlyBtn').addEventListener('click', ()=>{
     const elig = favoritesEligibility();
     if(!elig.ok){
       playErrorSound();
-      showToast(`Добавьте больше карточек: М добавлено ${elig.forM}, Ж добавлено ${elig.forF}`, 2000);
+      showToast(`Добавьте карточки: М+${elig.forM}, Ж+${elig.forF}`, 2000);
       return;
     }
   }
@@ -4230,7 +4230,7 @@ if(__errReportBtn) __errReportBtn.addEventListener('click', async ()=>{
       sel.addRange(range);
     }catch(_){}
   }
-  showToast(copied ? 'Отчёт скопирован — вставьте его в сообщение о проблеме' : 'Отчёт показан ниже — выделите и скопируйте');
+  showToast(copied ? 'Отчёт скопирован' : 'Отчёт показан — скопируйте');
 });
 const __errCloseBtn = document.getElementById('appErrorCloseBtn');
 if(__errCloseBtn) __errCloseBtn.addEventListener('click', ()=>{

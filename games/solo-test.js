@@ -107,7 +107,7 @@ function cancelSoloTestAdvance(){
 function startSoloTestGame(){
   const items = soloTestItems();
   if(!items.length){
-    showToast('Не удалось загрузить вопросы — обновите приложение');
+    showToast('Не удалось загрузить — обновите приложение');
     return;
   }
   cancelSoloTestAdvance();

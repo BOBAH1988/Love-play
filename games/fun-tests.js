@@ -117,7 +117,7 @@ function cancelFunTestsAdvance(){
 function startFunTestsGame(){
   const items = funTestsItems();
   if(!items.length){
-    showToast('Не удалось загрузить вопросы — обновите приложение');
+    showToast('Не удалось загрузить — обновите приложение');
     return;
   }
   cancelFunTestsAdvance();

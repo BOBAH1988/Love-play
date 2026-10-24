@@ -177,7 +177,7 @@ function migrateVideoDbIntoDavay(){
       importedDavayVideosLoaded = false; // при следующем обращении подтянутся и перенесённые
       state.videoDbMigrated = true;
       saveState();
-      showToast('Видео из «Видеорулетки» перенесены в общий каталог 🎬');
+      showToast('Видео перенесены в общий каталог 🎬');
     });
   }).catch(()=>{
     // IndexedDB недоступен или чтение не удалось — не повторяем попытку на
@@ -1339,11 +1339,11 @@ document.getElementById('davaySetupYandexBtn').addEventListener('click', async (
   const removed = result.removed ? `, удалено устаревших: ${result.removed}` : '';
   const partial = result.fetchFailures ? ' (часть папок не прочиталась — нажмите ещё раз)' : '';
   if(result.added > 0){
-    showToast(`✅ Синхронизация выполнена. Новых: ${result.added}. Ссылки обновлены у ${result.refreshed} видео — уровни 1–6${removed}${tail}${partial}`);
+    showToast(`✅ Синхр.: новых ${result.added}, обновлено ${result.refreshed} (ур.1–6)${removed}${tail}${partial}`);
     return;
   }
   const note = result.unplayable ? `, .avi/.mkv пропущено: ${result.unplayable}` : '';
-  showToast(`✅ Синхронизация выполнена. Обновлены ссылки у ${result.refreshed || 0} видео — уровни 1–6${removed}${note}${partial}`);
+  showToast(`✅ Синхр.: обновлено ${result.refreshed || 0} (ур.1–6)${removed}${note}${partial}`);
 });
 document.getElementById('yandexLinksCloseBtn').addEventListener('click', ()=>{
   document.getElementById('yandexLinksModal').classList.remove('show');
@@ -1375,7 +1375,7 @@ document.getElementById('yandexLinksImportBtn').addEventListener('click', async 
     ensureImportedDavayVideosLoaded();
     showToast(`Загружено ${added} видео`);
   } else {
-    showToast('Не удалось загрузить файлы. Проверьте ссылки и CORS.');
+    showToast('Не удалось загрузить. Проверьте ссылки/CORS.');
   }
 });
 document.getElementById('davaySetupStartBtn').addEventListener('click', async ()=>{
@@ -1415,7 +1415,7 @@ document.getElementById('davaySetupVideoFavBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   if(!(state.videoLiked && state.videoLiked.length)){
     playErrorSound();
-    showToast('Пока нет избранных видео — сначала лайкните что-нибудь в видеорулетке');
+    showToast('Нет избранных видео — лайкните в видеорулетке');
     return;
   }
   playSuccessSound();
@@ -1761,7 +1761,7 @@ function photoFavPrev(){ showPhotoFavoriteAt(photoFavIndex - 1); }
 function goToPhotoFavoritesView(){
   if(!(state.photoDone && state.photoDone.length)){
     playErrorSound();
-    showToast('Пока нет избранного — сначала отметьте карточки ❤️');
+    showToast('Нет избранного — отметьте карточки ❤️');
     return;
   }
   abandonPausedSession('davay');

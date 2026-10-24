@@ -216,7 +216,7 @@ function krDrawWord(){
   }
   if(krQueueKey !== key) krBuildQueue();
   if(krQueue.length === 0){
-    showToast('Слова этого уровня закончились — начинаем новый круг 🔀');
+    showToast('Слова закончились — новый круг 🔀');
     krBuildQueue();
   }
   const card = krQueue.shift();

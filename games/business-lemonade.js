@@ -493,7 +493,7 @@ document.getElementById('bizStartDayBtn').addEventListener('click', ()=>{
   const finance = bizHandleDailyFinance();
   if(finance.loanInfo){
     updateBizHeaderUI();
-    showToast(`💰 Друг одолжил ещё ${finance.loanInfo.borrowed} ₽ — деньги совсем закончились`);
+    showToast(`💰 Заём ${finance.loanInfo.borrowed} ₽ — деньги закончились`);
   }
   renderBizLocationList();
   document.getElementById('bizLocationEventCard').style.display = 'none';
@@ -869,7 +869,7 @@ document.getElementById('bizLoanBtn').addEventListener('click', ()=>{
        state.businessLemonadeLoanDueDay = Math.max(state.businessLemonadeLoanDueDay || 0, (state.businessLemonadeDay || 1) + BIZ_LOAN_DUE_DAYS);
        saveState();
        playSuccessSound();
-       showToast(`🤝 Друг одолжил ${borrow} ₽. Верни ${state.businessLemonadeLoanOwed} ₽ до дня ${state.businessLemonadeLoanDueDay}`);
+       showToast(`🤝 Заём ${borrow} ₽. Вернуть ${state.businessLemonadeLoanOwed} ₽ до дня ${state.businessLemonadeLoanDueDay}`);
      }
      updateBizHeaderUI();
      updateBizContextBar();

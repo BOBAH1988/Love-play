@@ -256,7 +256,7 @@ function answerKidsQuizQuestion(choiceIdx){
     // ниже это просто подсказка "вот какой был правильный ответ", очко за
     // него НЕ начисляется (state.kidsQuizCorrect не увеличивается), но без
     // этого тоста легко перепутать подсветку с "ответ засчитан верным".
-    if(choiceIdx < 0) showToast('⏰ Время вышло — ответ не выбран, засчитано как неверно');
+    if(choiceIdx < 0) showToast('⏰ Время вышло — ответ неверный');
   }
   document.querySelectorAll('#kidsQuizCard .znayu-answer-btn').forEach((btn, i)=>{
     btn.disabled = true;

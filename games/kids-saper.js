@@ -209,7 +209,7 @@ function escalateKidsSaperTo(nextLevel){
   renderKidsSaperGrid();
   showKidsSaperBonus(nextLevel);
   const info = getKidsSaperLevelById(nextLevel);
-  showToast(`Уровень повышен: ${info ? info.icon + ' ' + info.name : nextLevel}! Задания обновлены 🔀`);
+  showToast(`Уровень повышен: ${info ? info.icon + ' ' + info.name : nextLevel} 🔀`);
 }
 function showKidsSaperBonus(level){
   playLevelUpSound();

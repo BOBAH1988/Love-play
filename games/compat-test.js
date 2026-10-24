@@ -148,7 +148,7 @@ setupRulesModal('compatTestRulesModal', 'closeCompatTestRulesBtn');
 function startCompatTestGame(){
   const { items, answers } = compatTestItems();
   if(!items.length || !answers.length){
-    showToast('Не удалось загрузить вопросы — обновите приложение');
+    showToast('Не удалось загрузить — обновите приложение');
     return;
   }
   // Сбрасываем чужие партии: тест личный, чужая пауза тут неуместна.

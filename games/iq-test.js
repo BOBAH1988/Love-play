@@ -186,7 +186,7 @@ function iqTestTimeUp(){
 }
 function startIqTestGame(){
   if(!iqTestItems().length || !iqTestAreas().length){
-    showToast('Не удалось загрузить задания — обновите приложение');
+    showToast('Не удалось загрузить — обновите приложение');
     return;
   }
   cancelIqTestAdvance();

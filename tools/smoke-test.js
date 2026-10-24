@@ -3862,7 +3862,7 @@ test('Сценарий: после тоста название игры снов
     gameEl.classList.add('video-mode');
     title.style.display = 'block';
     title.textContent = '🎥 Видеорулетка';
-    global.showToast('Показываю все видео');
+    global.showToast('Все видео');
     assert(title.style.display === 'none', 'тост должен гасить заголовок, пока висит');
     global.restoreGameLevelLabelAfterToast(title);
     assert(title.style.display === 'block',

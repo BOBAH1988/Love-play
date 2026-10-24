@@ -1660,7 +1660,7 @@ function startDavayQuizPlayer(playerNum){
   if(state.davayQuizQueue.length === 0){
     const pool = shuffle(getDavayQuizPool()).slice(0, 10);
     if(pool.length === 0){
-      showToast('Нет видео для этого уровня — добавьте видео кнопкой «+»');
+      showToast('Нет видео — добавьте кнопкой «+»');
       return;
     }
     if(pool.length < 10){

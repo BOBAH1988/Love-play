@@ -33,7 +33,7 @@ function playFallbackVideoCard(level, announceEmpty){
   const fallback = getFallbackVideoCard();
   if(!fallback){ renderVideoPlaceholderCard(); return true; }
   if(announceEmpty){
-    showToast('Своих видео пока нет — включили демо. Добавьте видео на странице «Давай попробуем»');
+    showToast('Нет своих видео — включено демо. Добавьте на странице «Давай попробуем»');
   }
   currentVideoCard = fallback;
   saveState();
@@ -305,7 +305,7 @@ document.getElementById('videoFavoritesBtn')?.addEventListener('click', ()=>{
   state.videoFavoritesOnly = !state.videoFavoritesOnly;
   saveState();
   updateVideoFavoritesBtn();
-  showToast(state.videoFavoritesOnly ? 'Показываю только избранное ⭐' : 'Показываю все видео');
+  showToast(state.videoFavoritesOnly ? 'Только избранное ⭐' : 'Все видео');
   drawVideoCard(videoLevel || 1);
 });
 
@@ -1120,7 +1120,7 @@ async function goToVideoGame(entry){
       // «своих видео нет вовсе», а молчаливый демо-ролик вместо присланного
       // выглядит как сломанная игра. Показываем заглушку с честной подсказкой.
       renderVideoPlaceholderCard();
-      showToast('Это видео не найдено в каталоге — нажмите «Следующее» или синхронизируйте видео на странице «Давай попробуем»');
+      showToast('Это видео не найдено в каталоге — нажмите «Следующее»');
     } else {
       drawVideoCard(videoLevel);
     }

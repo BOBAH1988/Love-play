@@ -127,7 +127,7 @@ function cancelBizTestsAdvance(){
 function startBizTestsGame(){
   const items = bizTestsItems();
   if(!items.length){
-    showToast('Не удалось загрузить вопросы — обновите приложение');
+    showToast('Не удалось загрузить — обновите приложение');
     return;
   }
   cancelBizTestsAdvance();

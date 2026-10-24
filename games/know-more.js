@@ -596,7 +596,7 @@ function buildKnowMoreQueue(){
 
 function startKnowMoreGame(){
   if(getKnowMoreZones().length === 0){
-    showToast('Не удалось загрузить зоны — обновите приложение');
+    showToast('Не удалось загрузить — обновите приложение');
     return;
   }
   state.knowMoreQueue = buildKnowMoreQueue();

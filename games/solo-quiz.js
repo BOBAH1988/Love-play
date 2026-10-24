@@ -216,7 +216,7 @@ function answerSoloQuizQuestion(choiceIdx){
     playSuccessSound();
   } else {
     playFailSound();
-    if(choiceIdx < 0) showToast('⏰ Время вышло — ответ не выбран, засчитано как неверно');
+    if(choiceIdx < 0) showToast('⏰ Время вышло — ответ неверный');
   }
   document.querySelectorAll('#soloQuizCard .znayu-answer-btn').forEach((btn, i)=>{
     btn.disabled = true;
