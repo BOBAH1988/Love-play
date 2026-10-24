@@ -4890,3 +4890,157 @@ function playHitSound(){
   }
 })();
 
+
+// Минимальный интерфейс аккаунта на Firebase Authentication.
+(function initAccountUI() {
+  function getFirebase() { return window.ComeOnPlayFirebase; }
+  function getAuth() { const f = getFirebase(); return f && f.auth; }
+  function getDb() { const f = getFirebase(); return f && f.db; }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (msg) { el.textContent = msg; el.style.display = 'block'; }
+    else { el.textContent = ''; el.style.display = 'none'; }
+  }
+
+  function mapError(err) {
+    const code = (err && err.code) || '';
+    if (code === 'auth/invalid-email') return 'Неверный email';
+    if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') return 'Неверный email или пароль';
+    if (code === 'auth/email-already-in-use') return 'Email уже используется';
+    if (code === 'auth/weak-password') return 'Слишком короткий пароль (минимум 6 символов)';
+    if (code === 'auth/too-many-requests') return 'Слишком много попыток, попробуйте позже';
+    return (err && err.message) ? err.message : 'Ошибка';
+  }
+
+  function ensureUserDoc(user) {
+    if (!user) return;
+    const db = getDb();
+    if (!db) return;
+    const ref = db.collection('users').doc(user.uid);
+    ref.get().then(function (doc) {
+      if (doc.exists) return;
+      const email = user.email || '';
+      const displayName = email.indexOf('@') > 0 ? email.split('@')[0] : email;
+      ref.set({
+        email: email,
+        displayName: displayName,
+        role: 'user',
+        accessLevel: 'basic',
+        isAdult: false,
+        status: 'active',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function (err) { console.error('ensureUserDoc error', err); });
+    }).catch(function (err) { console.error('ensureUserDoc read error', err); });
+  }
+
+  function openAccount() {
+    const auth = getAuth();
+    const user = auth && auth.currentUser;
+    const guest = document.getElementById('accountGuestView');
+    const profile = document.getElementById('accountProfileView');
+    if (user) {
+      if (guest) guest.style.display = 'none';
+      if (profile) profile.style.display = '';
+      const emailEl = document.getElementById('accountProfileEmail');
+      if (emailEl) emailEl.textContent = user.email || '';
+      const db = getDb();
+      if (db) {
+        db.collection('users').doc(user.uid).get().then(function (doc) {
+          const data = doc.exists ? (doc.data() || {}) : {};
+          const al = document.getElementById('accountProfileAccessLevel');
+          const role = document.getElementById('accountProfileRole');
+          if (al) al.textContent = data.accessLevel || 'basic';
+          if (role) role.textContent = data.role || 'user';
+        }).catch(function () {});
+      }
+    } else {
+      if (guest) guest.style.display = '';
+      if (profile) profile.style.display = 'none';
+    }
+    showError('accountError', '');
+    showError('accountProfileError', '');
+    showModal('accountModal');
+  }
+
+  function closeAccount() { hideModal('accountModal'); }
+
+  function switchTab(tab) {
+    const loginForm = document.getElementById('accountLoginForm');
+    const regForm = document.getElementById('accountRegisterForm');
+    if (tab === 'login') {
+      if (loginForm) loginForm.style.display = '';
+      if (regForm) regForm.style.display = 'none';
+    } else {
+      if (loginForm) loginForm.style.display = 'none';
+      if (regForm) regForm.style.display = '';
+    }
+    showError('accountError', '');
+  }
+
+  const accountBtn = document.getElementById('homeAccountBtn');
+  if (accountBtn) accountBtn.addEventListener('click', openAccount);
+  const closeBtn = document.getElementById('accountCloseBtn');
+  if (closeBtn) closeBtn.addEventListener('click', closeAccount);
+  const tabLogin = document.getElementById('accountTabLoginBtn');
+  const tabReg = document.getElementById('accountTabRegisterBtn');
+  if (tabLogin) tabLogin.addEventListener('click', function () { switchTab('login'); });
+  if (tabReg) tabReg.addEventListener('click', function () { switchTab('register'); });
+
+  const loginForm = document.getElementById('accountLoginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const auth = getAuth();
+      if (!auth) return;
+      const email = (document.getElementById('accountLoginEmail').value || '').trim();
+      const password = document.getElementById('accountLoginPassword').value || '';
+      showError('accountError', '');
+      auth.signInWithEmailAndPassword(email, password)
+        .then(function () { closeAccount(); })
+        .catch(function (err) { showError('accountError', mapError(err)); });
+    });
+  }
+
+  const regForm = document.getElementById('accountRegisterForm');
+  if (regForm) {
+    regForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const auth = getAuth();
+      if (!auth) return;
+      const email = (document.getElementById('accountRegisterEmail').value || '').trim();
+      const password = document.getElementById('accountRegisterPassword').value || '';
+      const confirm = document.getElementById('accountRegisterPasswordConfirm').value || '';
+      showError('accountError', '');
+      if (password.length < 6) { showError('accountError', 'Слишком короткий пароль (минимум 6 символов)'); return; }
+      if (password !== confirm) { showError('accountError', 'Пароли не совпадают'); return; }
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(function (cred) {
+          ensureUserDoc(cred.user);
+          closeAccount();
+        })
+        .catch(function (err) { showError('accountError', mapError(err)); });
+    });
+  }
+
+  const logoutBtn = document.getElementById('accountLogoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function () {
+      const auth = getAuth();
+      if (!auth) return;
+      auth.signOut().then(function () {
+        closeAccount();
+      }).catch(function (err) { showError('accountProfileError', mapError(err)); });
+    });
+  }
+
+  const auth = getAuth();
+  if (auth && typeof auth.onAuthStateChanged === 'function') {
+    auth.onAuthStateChanged(function (user) {
+      if (user) ensureUserDoc(user);
+      const btn = document.getElementById('homeAccountBtn');
+      if (btn) btn.textContent = user ? '👤 Профиль' : '👤 Аккаунт';
+    });
+  }
+})();
