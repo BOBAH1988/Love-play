@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-24 · v1.1.656';
+  window.APP_BUILD = '2026-10-24 · v1.1.657';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -316,6 +316,7 @@
             <input type="password" id="accountLoginPassword" placeholder="Пароль" autocomplete="current-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(43,15,46,.15);background:rgba(43,15,46,.06);color:#2b0f2e;font-size:16px;">
           </div>
           <button type="submit" class="btn btn-primary" style="margin-top:12px;width:100%;">Войти</button>
+          <button type="button" class="btn btn-secondary" id="accountForgotPasswordBtn" style="margin-top:8px;width:100%;padding:6px 10px;font-size:13px;line-height:1.2;">Забыли пароль?</button>
           <button type="button" class="btn btn-secondary" id="accountTabRegisterBtn" style="margin-top:8px;width:100%;padding:6px 10px;font-size:13px;line-height:1.2;">Регистрация</button>
         </form>
 
@@ -341,8 +342,10 @@
 
       <div id="accountProfileView" style="display:none;">
         <div style="margin-bottom:8px;"><strong>Email:</strong> <span id="accountProfileEmail"></span></div>
+        <div style="margin-bottom:8px;"><strong>Email подтверждён:</strong> <span id="accountProfileVerified">нет</span></div>
         <div style="margin-bottom:8px;"><strong>Access level:</strong> <span id="accountProfileAccessLevel"></span></div>
         <div style="margin-bottom:12px;"><strong>Role:</strong> <span id="accountProfileRole"></span></div>
+        <button type="button" class="btn btn-secondary" id="accountResendVerificationBtn" style="width:100%;margin-bottom:8px;">Отправить письмо подтверждения</button>
         <button type="button" class="btn btn-secondary" id="accountLogoutBtn" style="width:100%;">Выйти</button>
         <div id="accountProfileError" style="margin-top:10px;color:#b00020;font-size:14px;display:none;"></div>
       </div>
@@ -5497,7 +5500,7 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20261022y"></script>
 <script src="cards/capitals.js?v=20261022y"></script>
-<script src="games/core.js?v=20261024u"></script>
+<script src="games/core.js?v=20261024v"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->

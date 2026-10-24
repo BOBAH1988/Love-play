@@ -4900,7 +4900,7 @@ function playHitSound(){
   function showError(id, msg) {
     const el = document.getElementById(id);
     if (!el) return;
-    if (msg) { el.textContent = msg; el.style.display = 'block'; }
+    if (msg) { el.style.color = '#b00020'; el.textContent = msg; el.style.display = 'block'; }
     else { el.textContent = ''; el.style.display = 'none'; }
   }
 
@@ -4945,6 +4945,11 @@ function playHitSound(){
       if (profile) profile.style.display = '';
       const emailEl = document.getElementById('accountProfileEmail');
       if (emailEl) emailEl.textContent = user.email || '';
+      const verifiedEl = document.getElementById('accountProfileVerified');
+      const resendBtn = document.getElementById('accountResendVerificationBtn');
+      function applyVerified(u) { const v = !!(u && u.emailVerified); if (verifiedEl) verifiedEl.textContent = v ? 'да' : 'нет'; if (resendBtn) resendBtn.style.display = v ? 'none' : ''; }
+      applyVerified(user);
+      if (user && typeof user.reload === 'function') { user.reload().then(function () { applyVerified(user); }).catch(function () {}); }
       const db = getDb();
       if (db) {
         db.collection('users').doc(user.uid).get().then(function (doc) {
@@ -4992,6 +4997,35 @@ function playHitSound(){
   if (tabLogin) tabLogin.addEventListener('click', function () { switchTab('login'); });
   if (tabReg) tabReg.addEventListener('click', function () { switchTab('register'); });
 
+  const forgotBtn = document.getElementById('accountForgotPasswordBtn');
+  if (forgotBtn) forgotBtn.addEventListener('click', function () {
+    const auth = getAuth();
+    if (!auth) return;
+    const email = (document.getElementById('accountLoginEmail').value || '').trim();
+    if (!email) { showError('accountError', 'Введите email для восстановления пароля'); return; }
+    showError('accountError', '');
+    auth.sendPasswordResetEmail(email)
+      .then(function () {
+        const el = document.getElementById('accountError');
+        if (el) { el.style.color = '#1b5e20'; el.textContent = 'Письмо для сброса пароля отправлено на ' + email; el.style.display = 'block'; }
+      })
+      .catch(function (err) { showError('accountError', mapError(err)); });
+  });
+
+  const resendBtn = document.getElementById('accountResendVerificationBtn');
+  if (resendBtn) resendBtn.addEventListener('click', function () {
+    const auth = getAuth();
+    const user = auth && auth.currentUser;
+    if (!user) return;
+    showError('accountProfileError', '');
+    user.sendEmailVerification()
+      .then(function () {
+        const el = document.getElementById('accountProfileError');
+        if (el) { el.style.color = '#1b5e20'; el.textContent = 'Письмо для подтверждения отправлено'; el.style.display = 'block'; }
+      })
+      .catch(function (err) { showError('accountProfileError', mapError(err)); });
+  });
+
   const loginForm = document.getElementById('accountLoginForm');
   if (loginForm) {
     loginForm.addEventListener('submit', function (e) {
@@ -5022,7 +5056,12 @@ function playHitSound(){
       auth.createUserWithEmailAndPassword(email, password)
         .then(function (cred) {
           ensureUserDoc(cred.user);
-          closeAccount();
+          if (cred.user && typeof cred.user.sendEmailVerification === 'function') {
+            cred.user.sendEmailVerification().catch(function (e) { console.error('sendEmailVerification', e); });
+          }
+          openAccount();
+          const el = document.getElementById('accountProfileError');
+          if (el) { el.style.color = '#1b5e20'; el.textContent = 'Регистрация успешна. Письмо для подтверждения отправлено на ' + email; el.style.display = 'block'; }
         })
         .catch(function (err) { showError('accountError', mapError(err)); });
     });
