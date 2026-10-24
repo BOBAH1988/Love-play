@@ -4891,6 +4891,158 @@ function playHitSound(){
 })();
 
 
+// Динамический вывод игр из Firestore в разделах групп.
+(function loadGroupGames() {
+  const GROUP_CONTAINERS = {
+    kids: 'kidsGameSelectList',
+    business: 'businessGameSelectList',
+    solo: 'soloGameSelectList',
+    learning: 'learningGameSelectList'
+  };
+  const ACCESS_LABELS = {
+    basic: 'Базовый',
+    advanced: 'Расширенный',
+    full: 'Полный'
+  };
+  const ACCESS_REQUIRED_TEXT = {
+    basic: 'Нужен Базовый доступ',
+    advanced: 'Нужен Расширенный доступ',
+    full: 'Нужен Полный доступ'
+  };
+  const ACCESS_RANK = {
+    guest: 0,
+    basic: 1,
+    advanced: 2,
+    full: 3
+  };
+
+  function getDb() {
+    const f = window.ComeOnPlayFirebase;
+    return f && f.db;
+  }
+
+  let cachedGamesByGroup = null;
+
+  function canPlay(game) {
+    const level = game.accessLevel || 'public';
+    if (level === 'public') return true;
+    const userLevel = window.__userAccessLevel || 'guest';
+    return (ACCESS_RANK[userLevel] || 0) >= (ACCESS_RANK[level] || 99);
+  }
+
+  function clearRendered() {
+    Object.keys(GROUP_CONTAINERS).forEach(function (slug) {
+      const container = document.getElementById(GROUP_CONTAINERS[slug]);
+      if (!container) return;
+      const old = container.querySelectorAll('[data-firestore-game="1"]');
+      old.forEach(function (el) { el.remove(); });
+    });
+  }
+
+  function render() {
+    clearRendered();
+    if (!cachedGamesByGroup) return;
+    Object.keys(GROUP_CONTAINERS).forEach(function (slug) {
+      const container = document.getElementById(GROUP_CONTAINERS[slug]);
+      if (!container) return;
+      const games = (cachedGamesByGroup[slug] || []).slice().sort(function (a, b) {
+        return (a.order || 0) - (b.order || 0);
+      });
+      games.forEach(function (game) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-menu-item';
+        btn.dataset.firestoreGame = '1';
+        btn.dataset.gameKey = game.gameKey || '';
+
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'menu-icon';
+        iconSpan.textContent = canPlay(game) ? '🎮' : '🔒';
+        btn.appendChild(iconSpan);
+
+        const textSpan = document.createElement('span');
+        textSpan.style.display = 'block';
+        const title = document.createElement('span');
+        title.style.display = 'block';
+        title.textContent = game.title || game.gameKey || '';
+        textSpan.appendChild(title);
+
+        if (!canPlay(game)) {
+          const lockLabel = document.createElement('small');
+          lockLabel.style.display = 'block';
+          lockLabel.style.fontSize = '12px';
+          lockLabel.style.opacity = '0.85';
+          lockLabel.textContent = ACCESS_REQUIRED_TEXT[game.accessLevel] || 'Нужен доступ';
+          textSpan.appendChild(lockLabel);
+        }
+        btn.appendChild(textSpan);
+
+        btn.addEventListener('click', function () {
+          try { playSuccessSound(); } catch (e) {}
+          if (!canPlay(game)) {
+            const levelName = ACCESS_LABELS[game.accessLevel] || game.accessLevel || '';
+            const message = 'Эта игра доступна с уровня ' + levelName + '. Войдите в аккаунт или запросите доступ.';
+            let currentUser = null;
+            try {
+              if (window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth) {
+                currentUser = window.ComeOnPlayFirebase.auth.currentUser;
+              }
+            } catch (e) {}
+            if (!currentUser) {
+              if (window.confirm(message + '\n\nОткрыть окно Аккаунт?')) {
+                if (typeof window.__openAccountModal === 'function') window.__openAccountModal();
+              }
+            } else {
+              window.alert(message);
+            }
+            return;
+          }
+          window.alert('Игра временно недоступна: ' + (game.title || '') + ' (' + (game.gameKey || '') + ')');
+        });
+
+        container.appendChild(btn);
+      });
+    });
+  }
+
+  window.renderGroupGames = render;
+
+  try {
+    const db = getDb();
+    if (!db || typeof db.collection !== 'function') return;
+    db.collection('games')
+      .where('enabled', '==', true)
+      .get()
+      .then(function (snapshot) {
+        const byGroup = {};
+        snapshot.forEach(function (doc) {
+          const data = doc.data() || {};
+          if (data.enabled !== true) return;
+          const slug = data.groupSlug;
+          if (!slug) return;
+          if (!byGroup[slug]) byGroup[slug] = [];
+          byGroup[slug].push({
+            id: doc.id,
+            title: data.title,
+            groupSlug: slug,
+            gameKey: data.gameKey,
+            enabled: data.enabled,
+            accessLevel: data.accessLevel,
+            ageRating: data.ageRating,
+            order: data.order
+          });
+        });
+        cachedGamesByGroup = byGroup;
+        render();
+      })
+      .catch(function (error) {
+        console.error('Firestore: ошибка чтения коллекции games:', error);
+      });
+  } catch (error) {
+    console.error('Firestore: ошибка чтения коллекции games:', error);
+  }
+})();
+
 // Минимальный интерфейс аккаунта на Firebase Authentication.
 (function initAccountUI() {
   function getFirebase() { return window.ComeOnPlayFirebase; }
@@ -5120,10 +5272,31 @@ function playHitSound(){
 
   window.__openAccountModal = openAccount;
 
+  window.__userAccessLevel = 'guest';
+
   const auth = getAuth();
   if (auth && typeof auth.onAuthStateChanged === 'function') {
     auth.onAuthStateChanged(function (user) {
-      if (user) ensureUserDoc(user);
+      if (user) {
+        ensureUserDoc(user);
+        const db = getDb();
+        if (db) {
+          db.collection('users').doc(user.uid).get().then(function (doc) {
+            const data = doc.exists ? (doc.data() || {}) : {};
+            window.__userAccessLevel = data.accessLevel || 'basic';
+            if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+          }).catch(function () {
+            window.__userAccessLevel = 'basic';
+            if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+          });
+        } else {
+          window.__userAccessLevel = 'basic';
+          if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+        }
+      } else {
+        window.__userAccessLevel = 'guest';
+        if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+      }
       // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
     });
   }

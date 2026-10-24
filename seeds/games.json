@@ -1,0 +1,38 @@
+[
+  {
+    "title": "Тестовая детская игра",
+    "groupSlug": "kids",
+    "gameKey": "test-kids-game",
+    "enabled": true,
+    "accessLevel": "public",
+    "ageRating": "all",
+    "order": 1
+  },
+  {
+    "title": "Тестовая бизнес-игра",
+    "groupSlug": "business",
+    "gameKey": "test-business-game",
+    "enabled": true,
+    "accessLevel": "basic",
+    "ageRating": "all",
+    "order": 1
+  },
+  {
+    "title": "Тестовая игра для одного",
+    "groupSlug": "solo",
+    "gameKey": "test-solo-game",
+    "enabled": true,
+    "accessLevel": "advanced",
+    "ageRating": "all",
+    "order": 1
+  },
+  {
+    "title": "Тестовая обучающая игра",
+    "groupSlug": "learning",
+    "gameKey": "test-learning-game",
+    "enabled": true,
+    "accessLevel": "full",
+    "ageRating": "all",
+    "order": 1
+  }
+]
