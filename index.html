@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261004d">
+<link rel="stylesheet" href="styles/app.css?v=20261024q">
 <script>
   // Версия сборки — попадает в отчёт об ошибке (core.js) и в выгрузку
   // статистики (stats.js), чтобы по сообщению игрока было понятно, на какой
@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-03 · v1.1.610';
+  window.APP_BUILD = '2026-10-24 · v1.1.645';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -305,7 +305,7 @@
     <!-- ---- Главная (хаб): название, описание, выбор формата игры ---- -->
     <div class="field-collapsible section-open" id="homeView">
       <h1 class="title" id="homeTitle"><span class="home-logo">🎲</span>Давай играй</h1>
-      <div class="subtitle">Большая коллекция игр для любой компании: романтический вечер вдвоём 18+, шумная вечеринка, время с детьми, игры в одиночку, обучающие флеш-карты и даже собственный бизнес в игре «Лимонадный ларёк». Выберите формат и начинайте.</div>
+      <div class="subtitle">Большая коллекция игр для интересного времяпрепровождения: Романтический вечер вдвоём, шумная вечеринка, игра с ребёнком, и многое другое.</div>
 
       <div class="game-select-list" id="homeMenuList">
         <button type="button" class="btn btn-menu-item" id="homeTwoPlayerBtn"><span class="menu-icon">💕</span> Игры для пар 18+</button>
@@ -316,7 +316,7 @@
         <button type="button" class="btn btn-menu-item" id="homeLearningBtn"><span class="menu-icon">📚</span> Обучающие игры</button>
       </div>
       <div class="app-footer">
-        Project by Vladimir Sokolov - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.610</span>
+        Project by Vladimir Sokolov - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.645</span>
       </div>
 
 
@@ -1307,9 +1307,21 @@
   <!-- 📍 логика: games/passionmap.js | карточки: cards/cards_passionmap.js -->
   <section id="passionMapSetup" class="screen">
     <h1 class="title">🎀 Карта страсти</h1>
-    <div class="subtitle">Карта желаний для двоих — идём по маршруту шаг за шагом, без давления</div>
+    <div class="subtitle">Карта желаний для двоих — идём по маршруту шаг за шагом</div>
 
-    <button class="btn btn-primary" id="passionMapStartBtn" style="margin-top:16px;">Начать</button>
+    <button class="btn btn-secondary" id="passionMapMapBtn" style="margin-top:10px;">Пройденные задания</button>
+    <div class="field" style="margin-top:12px;">
+      <label>Варианты игры</label>
+      <div class="starter-group" id="passionMapVariantsGroup">
+        <button type="button" class="starter-btn mode-btn on" id="passionMapModeStandardBtn" data-value="standard">Стандартный</button>
+        <button type="button" class="starter-btn mode-btn" id="passionMapModeCustomBtn" data-value="custom">Свои задания</button>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:16px; justify-content:center; align-items:center;">
+      <button class="btn btn-primary" id="passionMapStartBtn">Начать</button>
+      <button class="btn btn-secondary" id="passionMapResetBtn" style="width:auto;">Сброс</button>
+    </div>
+    <button type="button" class="btn btn-secondary" id="passionMapCustomTasksBtn" style="width:100%; margin-top:10px; padding:8px 12px;">Добавить свои задания</button>
     <button class="btn btn-secondary" id="passionMapSetupExitBtn" style="margin-top:10px;">Выход</button>
   </section>
 
@@ -1317,10 +1329,6 @@
   <!-- 📍 логика: games/passionmap.js | карточки: cards/cards_passionmap.js -->
   <section id="passionMapGame" class="screen">
     <div class="game-level-label">🎀 Карта страсти</div>
-    <div class="pmap-status-row">
-      <span id="passionMapProgressLabel">1 / 12</span>
-      <span id="passionMapScoreLabel">0 🏆</span>
-    </div>
     <div class="card-area">
       <div class="card" id="passionMapCard">
         <div class="card-inner">
@@ -1333,8 +1341,8 @@
 
       <div class="timer-actions-row">
         <div class="timer-actions-top">
-          <button type="button" class="btn btn-primary" id="passionMapYesBtn">Да, выполняем</button>
-          <button type="button" class="btn btn-secondary" id="passionMapNoBtn">Нет, пока не готовы</button>
+          <button type="button" class="btn btn-primary" id="passionMapYesBtn">Выполнено</button>
+          <button type="button" class="btn btn-secondary" id="passionMapNoBtn">Не сейчас</button>
         </div>
         <div class="timer-actions-bottom">
           <button type="button" class="btn btn-secondary" id="passionMapStartPlayBtn" hidden>▶ Начать</button>
@@ -4824,16 +4832,72 @@
       <div class="modal-title">🎀 Правила игры «Карта страсти»</div>
       <div class="intro-text">Цель — мягко, без давления и дискомфорта, пройти карту желаний друг друга.</div>
       <ol class="modal-rules">
-        <li>По очереди открываются точки карты с описанием желания. Настройки количества и способа выбора на этой странице сейчас не задаются.</li>
-        <li>Кнопкой «▶ Начать» запускается цепочка мягких шагов навстречу: первый шаг мягко намекает на саму цель желания, а с каждым отказом предложение становится всё проще и безопаснее, на каждом свой маленький вопрос «Да/Нет».</li>
-        <li>«Да» на любом шаге — желание засчитывается облегчённой версией (1 очко) и выполняется сразу в этом варианте.</li>
-        <li>«Нет» на всех шагах — желание откладывается без давления, без штрафов и без осуждения.</li>
-        <li>После партии показываются итоги. Список «✅ Пройденные» пока недоступен с экрана настройки; история сохраняется в данных приложения.</li>
-        <li>«Выход» вернёт в меню игры. Чек-лист прерванной партии не сохраняется — доиграть её позже нельзя.</li>
+        <li>В игре 10 заданий — от простого к более откровенному. Они всегда идут по порядку, без перемешивания.</li>
+        <li>На карточке — описание задания. Нажмите «Выполнено», чтобы отметить задание выполненным и перейти к следующему.</li>
+        <li>Нажмите «Не сейчас», чтобы выйти в меню настройки. Прогресс сохраняется — можно продолжить в любой день.</li>
+        <li>Можно использовать свои задания: откройте «Добавить свои задания», заполните 10 пунктов (название и текст) и выберите режим «Свои задания». Если заполнены не все, при закрытии редактора появится предупреждение.</li>
+        <li>Кнопка «Сброс» начнёт прохождение заново (с подтверждением).</li>
+        <li>Игра рассчитана на неспешное прохождение: одно задание в день или когда захочется. Цель — разнообразить интимную жизнь в комфортном режиме.</li>
+        <li>После выполнения всех 10 заданий показываются итоги. История сохраняется в «Пройденных».</li>
       </ol>
       <button class="btn btn-primary" id="closePassionMapRulesBtn">Понятно</button>
     </div>
   </div>
+  <div class="modal-overlay" id="passionMapMapModal">
+    <div class="modal-card">
+      <div class="modal-title">🗺 Пройденные задания</div>
+      <div class="intro-text">Выполненные задания текущего прохождения.</div>
+      <ul class="pmap-summary-list" id="passionMapMapList"></ul>
+      <button class="btn btn-primary" id="closePassionMapMapBtn" style="margin-top:10px;">Закрыть</button>
+    </div>
+  </div>
+  <div class="modal-overlay" id="passionMapTaskModal">
+    <div class="modal-card">
+      <div class="modal-title" id="passionMapTaskModalTitle"></div>
+      <div class="intro-text" id="passionMapTaskModalText"></div>
+      <button class="btn btn-primary" id="closePassionMapTaskBtn" style="margin-top:10px;">Закрыть</button>
+    </div>
+  </div>
+  <div class="modal-overlay" id="passionMapResetModal">
+    <div class="modal-card">
+      <div class="modal-title">Сбросить прогресс<br>«Карта страсти»?</div>
+      <div class="intro-text">Текущее прохождение будет начато заново.</div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:18px;">
+        <button type="button" class="btn btn-secondary" id="passionMapResetCancelBtn">Отмена</button>
+        <button type="button" class="btn btn-primary" id="passionMapResetOkBtn">Сбросить</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="passionMapCustomTasksModal">
+    <div class="modal-card" style="max-width:620px; max-height:80vh; overflow:auto;">
+      <div class="modal-title">Свои задания</div>
+      <div class="intro-text">Заполните 10 заданий (название и текст).</div>
+      <div id="passionMapCustomTasksList" style="margin-top:12px;"></div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:18px;">
+        <button type="button" class="btn btn-secondary" id="passionMapCustomTasksCancelBtn">Закрыть</button>
+        <button type="button" class="btn btn-primary" id="passionMapCustomTasksSaveBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="passionMapCustomTasksIncompleteModal">
+    <div class="modal-card" style="max-width:420px;">
+      <div class="modal-title">Задания заполнены не полностью</div>
+      <div class="intro-text">Не все 10 заданий заполнены. Сохранить текущее заполнение и выйти или продолжить заполнение?</div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:18px;">
+        <button type="button" class="btn btn-secondary" id="passionMapCustomTasksIncompleteCloseBtn">Закрыть</button>
+        <button type="button" class="btn btn-primary" id="passionMapCustomTasksIncompleteContinueBtn">Продолжить заполнение</button>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
 
   <!-- ===== ПРАВИЛА "ВО ЧТО ПОИГРАТЬ?" ===== -->
   <div class="modal-overlay" id="whatToPlayRulesModal">
@@ -5355,7 +5419,7 @@
 <script src="cards/cards_kids_quiz.js?v=20261021a"></script>
 <script src="cards/cards_ideas.js?v=20260829g"></script>
 <script src="cards/cards_sexquest.js?v=20260922a"></script>
-<script src="cards/cards_passionmap.js?v=20260913a"></script>
+<script src="cards/cards_passionmap.js?v=20261024q"></script>
 <script src="cards/cards_compat_test.js?v=20261025a"></script>
 <script src="cards/cards_solo_test.js?v=20261025d"></script>
 <script src="cards/cards_fun_tests.js?v=20261025b"></script>
@@ -5371,7 +5435,7 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20261022y"></script>
 <script src="cards/capitals.js?v=20261022y"></script>
-<script src="games/core.js?v=20261004a"></script>
+<script src="games/core.js?v=20261024q"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->
@@ -5425,7 +5489,7 @@
 <script src="games/znayu.js?v=20260922a"></script>
 <script src="games/ideas.js?v=20261002c"></script>
 <script src="games/sexquest.js?v=20260927x"></script>
-<script src="games/passionmap.js?v=20261022b"></script>
+<script src="games/passionmap.js?v=20261024q"></script>
 <script src="games/compat-test.js?v=20261025a"></script>
 <script src="games/solo-test.js?v=20261025b"></script>
 <script src="games/fun-tests.js?v=20261025b"></script>

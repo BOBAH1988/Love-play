@@ -849,7 +849,7 @@ test('«Карта страсти»: настройка содержит тол�
   assert(setupHtml.includes('id="passionMapStartBtn"'), 'кнопка «Начать» должна остаться');
   assert(setupHtml.includes('id="passionMapSetupExitBtn"'), 'кнопка «Выход» должна остаться');
   assert(remaining.length === 0, `настройка всё ещё содержит старые блоки: ${remaining.join(', ')}`);
-  assert(!/Количество вопросов|Выбор вопросов|Случайно|Пройденные|Правила/.test(setupHtml),
+  assert(!/Количество вопросов|Выбор вопросов|Случайно|Правила/.test(setupHtml),
     'на экране настройки остался текст удалённых блоков');
 });
 

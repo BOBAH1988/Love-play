@@ -329,7 +329,7 @@ let state = {
   sexQuestExcluded:[],
   // Карта страсти — независимая игра (games/passionmap.js): свои ключи
   // passionMap* для текущей партии и сохранённой истории.
-  passionMapQueue:[], passionMapIndex:0, passionMapScore:0, passionMapResults:[], passionMapChecklists:[],
+  passionMapQueue:[], passionMapIndex:0, passionMapScore:0, passionMapResults:[], passionMapChecklists:[], passionMapCompleted:[], passionMapMode:'standard', passionMapCustomTasks:[],
   // Пройдите тест — два теста на совместимость; ответы копятся по каждому
   // игроку отдельно (compatTestAnswers[0]/[1]), а compatTestHistory хранит
   // уже посчитанные результаты, а не сырые ответы.
@@ -2135,12 +2135,9 @@ function performFullReset(){
   state.passionMapScore = 0;
   state.passionMapResults = [];
   state.passionMapChecklists = [];
-  // Карта страсти
-  state.passionMapQueue = [];
-  state.passionMapIndex = 0;
-  state.passionMapScore = 0;
-  state.passionMapResults = [];
-  state.passionMapChecklists = [];
+  state.passionMapCompleted = [];
+  state.passionMapMode = 'standard';
+  state.passionMapCustomTasks = [];
   // Пройдите тест — общий сброс чистит и историю результатов
   state.compatTestType = 'characters';
   state.compatTestIndex = 0;

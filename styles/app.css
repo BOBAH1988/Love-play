@@ -276,6 +276,12 @@
     font-size:14px;
     margin-bottom:18px;
   }
+  #homeView .subtitle{
+    margin-bottom:6px;
+  }
+  #homeView .app-footer{
+    margin-top:8px;
+  }
   .intro-text{
     text-align:center;
     color:#e8c9dd;
@@ -2859,6 +2865,19 @@
   /* В модалках с белым фоном (.modal-card) бледно-розовый #e8c9dd плохо виден.
      Переопределяем .intro-text на тёмно-фиолетовый, читаемый на светлом фоне. */
   .modal-card .intro-text{color:#d81b60;}
+  #passionMapMapModal .modal-card .pmap-summary-list li{
+    background:rgba(43,15,46,.06); border:1px solid rgba(43,15,46,.12);
+  }
+  #passionMapMapModal .modal-card .pmap-summary-title{ color:#2b0f2e; }
+  #passionMapMapModal .modal-card .pmap-summary-outcome{ color:rgba(43,15,46,.7); }
+
+
+  #passionMapMapModal .modal-card .pmap-summary-list{ text-align:left; padding:0; margin:0; }
+  #passionMapMapModal .modal-card .pmap-summary-list li{ width:100%; box-sizing:border-box; text-align:left; cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, background .15s ease; }
+  #passionMapMapModal .modal-card .pmap-summary-list li:hover{ transform:translateY(-2px); box-shadow:0 4px 12px rgba(43,15,46,.15); background:rgba(43,15,46,.1); }
+  #passionMapMapModal .modal-card #closePassionMapMapBtn{ width:100%; }
+
+
   /* Кнопки .btn-ghost (например «Отмена» в диалогах) тоже бледно-розовые —
      делаем их малиновыми, как заголовки полей в модалках. */
   .modal-card .btn-ghost{color:#d81b60;}
