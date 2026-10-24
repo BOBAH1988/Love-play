@@ -4924,10 +4924,8 @@ function playHitSound(){
   let cachedGamesByGroup = null;
 
   function canPlay(game) {
-    const level = game.accessLevel || 'public';
-    if (level === 'public') return true;
-    const userLevel = window.__userAccessLevel || 'guest';
-    return (ACCESS_RANK[userLevel] || 0) >= (ACCESS_RANK[level] || 99);
+    if ((game.ageRating || 'all') !== '18+') return true;
+    return window.__userIsAdult === true && window.__userAccessLevel === 'full';
   }
 
   function clearRendered() {
@@ -4972,7 +4970,7 @@ function playHitSound(){
           lockLabel.style.display = 'block';
           lockLabel.style.fontSize = '12px';
           lockLabel.style.opacity = '0.85';
-          lockLabel.textContent = ACCESS_REQUIRED_TEXT[game.accessLevel] || 'Нужен доступ';
+          lockLabel.textContent = '18+. Требуется подтверждение возраста';
           textSpan.appendChild(lockLabel);
         }
         btn.appendChild(textSpan);
@@ -4980,8 +4978,7 @@ function playHitSound(){
         btn.addEventListener('click', function () {
           try { playSuccessSound(); } catch (e) {}
           if (!canPlay(game)) {
-            const levelName = ACCESS_LABELS[game.accessLevel] || game.accessLevel || '';
-            const message = 'Эта игра доступна с уровня ' + levelName + '. Войдите в аккаунт или запросите доступ.';
+            const message = 'Этот раздел доступен только совершеннолетним. Войдите в аккаунт и подтвердите возраст 18+.';
             let currentUser = null;
             try {
               if (window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth) {
@@ -5273,6 +5270,7 @@ function playHitSound(){
   window.__openAccountModal = openAccount;
 
   window.__userAccessLevel = 'guest';
+  window.__userIsAdult = false;
 
   const auth = getAuth();
   if (auth && typeof auth.onAuthStateChanged === 'function') {
@@ -5284,17 +5282,21 @@ function playHitSound(){
           db.collection('users').doc(user.uid).get().then(function (doc) {
             const data = doc.exists ? (doc.data() || {}) : {};
             window.__userAccessLevel = data.accessLevel || 'basic';
+            window.__userIsAdult = data.isAdult === true;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
           }).catch(function () {
             window.__userAccessLevel = 'basic';
+            window.__userIsAdult = false;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
           });
         } else {
           window.__userAccessLevel = 'basic';
+          window.__userIsAdult = false;
           if (typeof window.renderGroupGames === "function") window.renderGroupGames();
         }
       } else {
         window.__userAccessLevel = 'guest';
+        window.__userIsAdult = false;
         if (typeof window.renderGroupGames === "function") window.renderGroupGames();
       }
       // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
