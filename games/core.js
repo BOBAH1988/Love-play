@@ -4929,10 +4929,18 @@ function playHitSound(){
 
   let cachedGamesByGroup = null;
 
-  function canPlay(game) {
+  function canLaunchGame(game) {
+    if (!game || game.enabled !== true) return false;
     if ((game.ageRating || 'all') !== '18+') return true;
-    return window.__userIsAdult === true && window.__userAccessLevel === 'admin';
+    const accessLevel = (typeof window !== 'undefined' && window.__userAccessLevel) || 'guest';
+    const isAdult = !!(typeof window !== 'undefined' && window.__userIsAdult === true);
+    const hasUser = !!(typeof window !== 'undefined' && window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
+    if (accessLevel === 'guest' || !hasUser) return false;
+    if (!isAdult) return false;
+    if (accessLevel === 'admin') return true;
+    return false;
   }
+  function canPlay(game) { return canLaunchGame(game); }
 
   function clearRendered() {
     Object.keys(GROUP_CONTAINERS).forEach(function (slug) {
@@ -4961,7 +4969,7 @@ function playHitSound(){
 
         const iconSpan = document.createElement('span');
         iconSpan.className = 'menu-icon';
-        iconSpan.textContent = canPlay(game) ? '🎮' : '🔒';
+        iconSpan.textContent = canLaunchGame(game) ? '🎮' : '🔒';
         btn.appendChild(iconSpan);
 
         const textSpan = document.createElement('span');
@@ -4971,7 +4979,7 @@ function playHitSound(){
         title.textContent = game.title || game.gameKey || '';
         textSpan.appendChild(title);
 
-        if (!canPlay(game)) {
+        if (!canLaunchGame(game)) {
           const lockLabel = document.createElement('small');
           lockLabel.style.display = 'block';
           lockLabel.style.fontSize = '12px';
@@ -4983,7 +4991,7 @@ function playHitSound(){
 
         btn.addEventListener('click', function () {
           try { playSuccessSound(); } catch (e) {}
-          if (!canPlay(game)) {
+          if (!canLaunchGame(game)) {
             const message = 'Этот раздел доступен только совершеннолетним. Войдите в аккаунт и подтвердите возраст 18+.';
             let currentUser = null;
             try {
@@ -5309,3 +5317,25 @@ function playHitSound(){
     });
   }
 })();
+
+function canLaunchGame(game) {
+  if (!game || game.enabled !== true) return false;
+  if ((game.ageRating || 'all') !== '18+') return true;
+  var accessLevel = 'guest';
+  var isAdult = false;
+  var hasUser = false;
+  try {
+    if (typeof window !== 'undefined') {
+      accessLevel = window.__userAccessLevel || 'guest';
+      isAdult = window.__userIsAdult === true;
+      hasUser = !!(window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
+    }
+  } catch (e) {}
+  if (accessLevel === 'guest' || !hasUser) return false;
+  if (!isAdult) return false;
+  if (accessLevel === 'admin') return true;
+  return false;
+}
+try { if (typeof global !== 'undefined') global.canLaunchGame = canLaunchGame; } catch (e) {}
+function canPlay(game) { return canLaunchGame(game); }
+try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {}

@@ -34,5 +34,14 @@
     "accessLevel": "admin",
     "ageRating": "all",
     "order": 1
+  },
+  {
+    "title": "Тест 18+",
+    "groupSlug": "solo",
+    "gameKey": "test-adult-game",
+    "enabled": true,
+    "accessLevel": "admin",
+    "ageRating": "18+",
+    "order": 99
   }
 ]
