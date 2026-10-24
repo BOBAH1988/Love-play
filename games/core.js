@@ -4899,21 +4899,27 @@ function playHitSound(){
     solo: 'soloGameSelectList',
     learning: 'learningGameSelectList'
   };
-  const ACCESS_LABELS = {
-    basic: 'Базовый',
-    advanced: 'Расширенный',
-    full: 'Полный'
+  const LEVEL_LABELS = {
+    guest: 'Гость',
+    starter: 'Старт',
+    plus: 'Плюс',
+    premium: 'Премиум',
+    admin: 'Админ'
   };
+  const ACCESS_LABELS = LEVEL_LABELS;
   const ACCESS_REQUIRED_TEXT = {
-    basic: 'Нужен Базовый доступ',
-    advanced: 'Нужен Расширенный доступ',
-    full: 'Нужен Полный доступ'
+    guest: 'Нужен уровень Гость',
+    starter: 'Нужен уровень Старт',
+    plus: 'Нужен уровень Плюс',
+    premium: 'Нужен уровень Премиум',
+    admin: 'Нужен уровень Админ'
   };
   const ACCESS_RANK = {
     guest: 0,
-    basic: 1,
-    advanced: 2,
-    full: 3
+    starter: 1,
+    plus: 2,
+    premium: 3,
+    admin: 4
   };
 
   function getDb() {
@@ -4925,7 +4931,7 @@ function playHitSound(){
 
   function canPlay(game) {
     if ((game.ageRating || 'all') !== '18+') return true;
-    return window.__userIsAdult === true && window.__userAccessLevel === 'full';
+    return window.__userIsAdult === true && window.__userAccessLevel === 'admin';
   }
 
   function clearRendered() {
@@ -5076,7 +5082,7 @@ function playHitSound(){
         email: email,
         displayName: displayName,
         role: 'user',
-        accessLevel: 'basic',
+        accessLevel: 'starter',
         isAdult: !!isAdult,
         status: 'active',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -5105,7 +5111,7 @@ function playHitSound(){
           const data = doc.exists ? (doc.data() || {}) : {};
           const al = document.getElementById('accountProfileAccessLevel');
           const role = document.getElementById('accountProfileRole');
-          if (al) al.textContent = data.accessLevel || 'basic';
+          if (al) al.textContent = LEVEL_LABELS[data.accessLevel] || data.accessLevel || 'Гость';
           if (role) role.textContent = data.role || 'user';
         }).catch(function () {});
       }
@@ -5281,16 +5287,16 @@ function playHitSound(){
         if (db) {
           db.collection('users').doc(user.uid).get().then(function (doc) {
             const data = doc.exists ? (doc.data() || {}) : {};
-            window.__userAccessLevel = data.accessLevel || 'basic';
+            window.__userAccessLevel = data.accessLevel || 'starter';
             window.__userIsAdult = data.isAdult === true;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
           }).catch(function () {
-            window.__userAccessLevel = 'basic';
+            window.__userAccessLevel = 'starter';
             window.__userIsAdult = false;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
           });
         } else {
-          window.__userAccessLevel = 'basic';
+          window.__userAccessLevel = 'starter';
           window.__userIsAdult = false;
           if (typeof window.renderGroupGames === "function") window.renderGroupGames();
         }

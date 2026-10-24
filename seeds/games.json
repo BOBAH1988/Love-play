@@ -4,7 +4,7 @@
     "groupSlug": "kids",
     "gameKey": "test-kids-game",
     "enabled": true,
-    "accessLevel": "public",
+    "accessLevel": "starter",
     "ageRating": "all",
     "order": 1
   },
@@ -13,7 +13,7 @@
     "groupSlug": "business",
     "gameKey": "test-business-game",
     "enabled": true,
-    "accessLevel": "basic",
+    "accessLevel": "plus",
     "ageRating": "all",
     "order": 1
   },
@@ -22,7 +22,7 @@
     "groupSlug": "solo",
     "gameKey": "test-solo-game",
     "enabled": true,
-    "accessLevel": "advanced",
+    "accessLevel": "premium",
     "ageRating": "all",
     "order": 1
   },
@@ -31,7 +31,7 @@
     "groupSlug": "learning",
     "gameKey": "test-learning-game",
     "enabled": true,
-    "accessLevel": "full",
+    "accessLevel": "admin",
     "ageRating": "all",
     "order": 1
   }
