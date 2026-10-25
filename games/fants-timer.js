@@ -729,15 +729,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     renderStatsScreen();
   });
 
-  const __statsToggleBtn = document.getElementById('statsToggleBtn');
-  if(__statsToggleBtn) __statsToggleBtn.addEventListener('click', ()=>{
-    if(!window.AppStats) return;
-    const now = !window.AppStats.enabled();
-    window.AppStats.setEnabled(now);
-    renderStatsScreen();
-    showToast(now ? 'Сбор статистики включён' : 'Сбор приостановлен (данные сохранены)');
-  });
-
   // Закрытие модалки «О проекте» кликом по фону
   const aboutProjectModal = document.getElementById('aboutProjectModal');
   if(aboutProjectModal){

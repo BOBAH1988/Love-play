@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-25 · v1.1.699';
+  window.APP_BUILD = '2026-10-25 · v1.1.700';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -416,7 +416,7 @@
       </div>
       <div class="game-select-list" id="homeGroupsDynamic" style="display:none;"></div>
       <div class="app-footer">
-        Project by Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.699</span>
+        Project by Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.700</span>
       </div>
 
 
@@ -4750,9 +4750,6 @@
       </div>
       <div id="statsBody" style="text-align:left; font-size:14px; line-height:1.5; color:#2b0f2e; margin:12px 0;"></div>
       <div id="statsFinishedRow" style="display:none;"></div>
-      <div id="statsMineControls" style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
-        <button type="button" class="btn btn-secondary" id="statsToggleBtn">⏸ Приостановить сбор</button>
-      </div>
     </div>
   </div>
 
@@ -5545,13 +5542,13 @@
       <script src="games/fants-video.js?v=20261002g"></script>
 <script src="games/fants-davay.js?v=20260925b"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20261024i"></script>
+<script src="games/fants-timer.js?v=20261024j"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
 <script src="games/game-registry.js?v=20261004a"></script>
 <!-- Локальная статистика: считает партии на этом устройстве, никуда не отправляет -->
-<script src="games/stats.js?v=20260929a"></script>
+<script src="games/stats.js?v=20261025a"></script>
 <script src="games/twister.js?v=20260921j"></script>
 <script src="games/party-hangman.js?v=20260921e"></script>
 <script src="games/solo-quiz.js?v=20261022w"></script>

@@ -81,10 +81,9 @@
     } catch (e) { /* квота или приватный режим — статистика не критична */ }
   }
 
-  /** Включена ли статистика (переключатель в меню). */
+  /** Сбор статистики всегда включён (переключатель убран из интерфейса). */
   function statsEnabled() {
-    const g = loadStats();
-    return !!g.enabled;
+    return true;
   }
 
   /** Включает или выключает сбор. При выключении данные не удаляются. */
@@ -222,7 +221,7 @@
     const totalMs = Object.keys(g.games).reduce((sum, k) => sum + (g.games[k].totalMs || 0), 0);
     const finishedGames = Object.keys(g.games).reduce((sum, k) => sum + (g.games[k].finished || 0), 0);
     return {
-      enabled: g.enabled,
+      enabled: true,
       firstSeen: g.firstSeen,
       days: g.days.length,
       totalGames: g.totalGames,
