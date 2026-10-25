@@ -5108,11 +5108,6 @@ function playHitSound(){
       if (profile) profile.style.display = '';
       const emailEl = document.getElementById('accountProfileEmail');
       if (emailEl) emailEl.textContent = user.email || '';
-      const verifiedEl = document.getElementById('accountProfileVerified');
-      const resendBtn = document.getElementById('accountResendVerificationBtn');
-      function applyVerified(u) { const v = !!(u && u.emailVerified); if (verifiedEl) verifiedEl.textContent = v ? 'да' : 'нет'; if (resendBtn) resendBtn.style.display = v ? 'none' : ''; }
-      applyVerified(user);
-      if (user && typeof user.reload === 'function') { user.reload().then(function () { applyVerified(user); }).catch(function () {}); }
       const db = getDb();
       if (db) {
         db.collection('users').doc(user.uid).get().then(function (doc) {
@@ -5437,6 +5432,11 @@ function playHitSound(){
 
   const auth = getAuth();
   if (auth && typeof auth.onAuthStateChanged === 'function') {
+    // Админы по email — определяются независимо от Firestore,
+    // чтобы доступ к статистике не зависел от заполнения документа пользователя.
+    const ADMIN_EMAILS = ['79042044926@ya.ru'];
+    function isAdminEmail(email) { return ADMIN_EMAILS.indexOf((email || '').toLowerCase()) >= 0; }
+
     // Автономно показывает/скрывает кнопку «Статистика» в меню.
     // Не зависит от порядка загрузки скриптов: сам ищет кнопку в DOM и
     // ждёт Appearance window.__userAccessLevel (из Firestore), прежде чем
@@ -5467,11 +5467,12 @@ function playHitSound(){
           db.collection('users').doc(user.uid).get().then(function (doc) {
             const data = doc.exists ? (doc.data() || {}) : {};
             window.__userAccessLevel = data.accessLevel || 'starter';
+            if (isAdminEmail(user.email)) window.__userAccessLevel = 'admin';
             window.__userIsAdult = data.isAdult === true;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
             ensureStatsBtnVisibility();
           }).catch(function () {
-            window.__userAccessLevel = 'starter';
+            window.__userAccessLevel = isAdminEmail(user.email) ? 'admin' : 'starter';
             window.__userIsAdult = false;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
             ensureStatsBtnVisibility();
@@ -5490,7 +5491,7 @@ function playHitSound(){
             }).catch(function () {});
           }
         } else {
-          window.__userAccessLevel = 'starter';
+          window.__userAccessLevel = isAdminEmail(user.email) ? 'admin' : 'starter';
           window.__userIsAdult = false;
           if (typeof window.renderGroupGames === "function") window.renderGroupGames();
           ensureStatsBtnVisibility();
