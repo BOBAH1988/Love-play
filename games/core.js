@@ -5345,7 +5345,7 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
     try { window.alert(message); } catch(e){}
     try {
       var hasUser = !!(window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
-      if (!hasUser && window.confirm(message + '\\n\\nОткрыть окно Аккаунт?')) {
+      if (!hasUser && window.confirm(message + '\n\nОткрыть окно Аккаунт?')) {
         if (typeof window.__openAccountModal === 'function') window.__openAccountModal();
       }
     } catch(e){}
