@@ -738,15 +738,6 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     showToast(now ? 'Сбор статистики включён' : 'Сбор приостановлен (данные сохранены)');
   });
 
-  const __statsClearBtn = document.getElementById('statsClearBtn');
-  if(__statsClearBtn) __statsClearBtn.addEventListener('click', async ()=>{
-    if(!window.AppStats) return;
-    if(!(await showResetConfirm('Очистить статистику?', 'Счётчики партий на этом устройстве будут удалены. Прогресс игр не тронется.'))) return;
-    window.AppStats.clear();
-    renderStatsScreen();
-    showToast('Статистика очищена');
-  });
-
   // Закрытие модалки «О проекте» кликом по фону
   const aboutProjectModal = document.getElementById('aboutProjectModal');
   if(aboutProjectModal){
