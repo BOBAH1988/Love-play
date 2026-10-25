@@ -5107,6 +5107,10 @@ function playHitSound(){
     admin: 'Админ'
   };
 
+  // Админы по email — определяются независимо от Firestore.
+  const ADMIN_EMAILS = ['79042044926@ya.ru'];
+  function isAdminEmail(email) { return ADMIN_EMAILS.indexOf((email || '').toLowerCase()) >= 0; }
+
   function openAccount() {
     const auth = getAuth();
     const user = auth && auth.currentUser;
@@ -5500,8 +5504,6 @@ function playHitSound(){
   if (auth && typeof auth.onAuthStateChanged === 'function') {
     // Админы по email — определяются независимо от Firestore,
     // чтобы доступ к статистике не зависел от заполнения документа пользователя.
-    const ADMIN_EMAILS = ['79042044926@ya.ru'];
-    function isAdminEmail(email) { return ADMIN_EMAILS.indexOf((email || '').toLowerCase()) >= 0; }
 
     // Автономно показывает/скрывает кнопку «Статистика» в меню.
     // Не зависит от порядка загрузки скриптов: сам ищет кнопку в DOM и
