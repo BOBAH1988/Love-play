@@ -1410,41 +1410,6 @@ function applyKidsModeRestrictions(){
   if(twoPlayerBtn) twoPlayerBtn.style.display = 'none';
   if(companyBtn) companyBtn.style.display = 'none';
 }
-document.getElementById('ageGateAdultBtn').addEventListener('click', ()=>{
-  try{ localStorage.setItem('couple-game-age-verified-v1', '1'); }catch(e){}
-  hideModal('ageGateModal');
-});
-document.getElementById('ageGateMinorBtn').addEventListener('click', ()=>{
-  try{ localStorage.setItem('couple-game-kids-mode-v1', '1'); }catch(e){}
-  hideModal('ageGateModal');
-  applyKidsModeRestrictions();
-});
-// Долгое нажатие (1.5 сек) на заголовок "Давай играй" — скрытый способ для
-// родителя вернуть полный доступ на этом устройстве: сбрасывает оба флага
-// возрастного экрана и перезагружает страницу, чтобы окно 18+ показалось
-// заново.
-(function(){
-  const titleEl = document.getElementById('homeTitle');
-  if(!titleEl) return;
-  let pressTimer = null;
-  const clearPressTimer = ()=>{ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
-  titleEl.addEventListener('pointerdown', ()=>{
-    clearPressTimer();
-    pressTimer = setTimeout(()=>{
-      if(confirm('Сбросить выбор возраста и снова показать окно 18+?')){
-        try{
-          localStorage.removeItem('couple-game-age-verified-v1');
-          localStorage.removeItem('couple-game-kids-mode-v1');
-        }catch(e){}
-        location.reload();
-      }
-    }, 1500);
-  });
-  titleEl.addEventListener('pointerup', clearPressTimer);
-  titleEl.addEventListener('pointerleave', clearPressTimer);
-  titleEl.addEventListener('pointercancel', clearPressTimer);
-})();
-applyKidsModeRestrictions();
 // «Горячее» в «Видеорулетке»: следующая папка Яндекса внутри уровня
 // («Level 1-1 …» → «Level 1-2 …»), а когда своих папок в уровне больше нет —
 // следующий уровень.

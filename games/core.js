@@ -5339,3 +5339,36 @@ function canLaunchGame(game) {
 try { if (typeof global !== 'undefined') global.canLaunchGame = canLaunchGame; } catch (e) {}
 function canPlay(game) { return canLaunchGame(game); }
 try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {}
+(function setupGuestAccessHandlers(){
+  function isGuest(){ return (typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'guest'; }
+  function deny(message){
+    try { window.alert(message); } catch(e){}
+    try {
+      var hasUser = !!(window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
+      if (!hasUser && window.confirm(message + '\\n\\nОткрыть окно Аккаунт?')) {
+        if (typeof window.__openAccountModal === 'function') window.__openAccountModal();
+      }
+    } catch(e){}
+  }
+  var coupleList = document.getElementById('gameSelectList');
+  if (coupleList) {
+    coupleList.addEventListener('click', function(e){
+      if (!isGuest()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      deny('Игры для пар доступны только зарегистрированным пользователям.');
+    }, true);
+  }
+  var luckyBtn = document.getElementById('gameLuckyBtn');
+  if (luckyBtn) {
+    luckyBtn.addEventListener('click', function(e){
+      if (!isGuest()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      deny('Игра «Счастливый билет» недоступна для гостя.');
+    }, true);
+  }
+})();
+

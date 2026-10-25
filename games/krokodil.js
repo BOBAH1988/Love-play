@@ -76,8 +76,10 @@ document.getElementById('partyAddPlayerBtn').addEventListener('click', ()=>{
 function renderKrokodilSetupLevels(){
   const wrap = document.getElementById('krokodilSetupLevels');
   if(!wrap) return;
+  const __guest = (typeof window !== 'undefined' && (window.__userAccessLevel || 'guest') === 'guest');
+  if (__guest && (state.krokodilSelectedLevel || 1) > 2) { state.krokodilSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
-  (typeof KROKODIL_LEVELS !== 'undefined' ? KROKODIL_LEVELS : []).forEach(l=>{
+  (typeof KROKODIL_LEVELS !== 'undefined' ? KROKODIL_LEVELS : []).filter(function(l){ return !__guest || (typeof l.id === 'number' && l.id <= 2); }).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'level-toggle' + (state.krokodilSelectedLevel === l.id ? ' on' : '');
     div.innerHTML = `<div class="lname">${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;

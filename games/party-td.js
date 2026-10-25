@@ -12,8 +12,10 @@ function getPartyTdCardsList(level, type){
 function renderPartyTdSetupLevels(){
   const wrap = document.getElementById('partyTdSetupLevels');
   if(!wrap) return;
+  const __guest = (typeof window !== 'undefined' && (window.__userAccessLevel || 'guest') === 'guest');
+  if (__guest && (state.partyTdSelectedLevel || 1) > 2) { state.partyTdSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
-  (typeof PARTY_TD_LEVELS !== 'undefined' ? PARTY_TD_LEVELS : []).forEach(l=>{
+  (typeof PARTY_TD_LEVELS !== 'undefined' ? PARTY_TD_LEVELS : []).filter(function(l){ return !__guest || (typeof l.id === 'number' && l.id <= 2); }).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'level-toggle' + (state.partyTdSelectedLevel === l.id ? ' on' : '');
     div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;

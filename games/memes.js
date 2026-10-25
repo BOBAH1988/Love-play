@@ -10,8 +10,10 @@ function getMemesCardsList(level){
 function renderMemesSetupLevels(){
   const wrap = document.getElementById('memesSetupLevels');
   if(!wrap) return;
+  const __guest = (typeof window !== 'undefined' && (window.__userAccessLevel || 'guest') === 'guest');
+  if (__guest && (state.memesSelectedLevel || 1) > 2) { state.memesSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
-  (typeof MEMES_LEVELS !== 'undefined' ? MEMES_LEVELS : []).forEach(l=>{
+  (typeof MEMES_LEVELS !== 'undefined' ? MEMES_LEVELS : []).filter(function(l){ return !__guest || (typeof l.id === 'number' && l.id <= 2); }).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'level-toggle' + (state.memesSelectedLevel === l.id ? ' on' : '');
     div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;

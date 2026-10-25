@@ -22,8 +22,10 @@ function getPartyQuizCardsList(level){
 function renderPartyQuizSetupLevels(){
   const wrap = document.getElementById('partyQuizSetupLevels');
   if(!wrap) return;
+  const __guest = (typeof window !== 'undefined' && (window.__userAccessLevel || 'guest') === 'guest');
+  if (__guest && (state.partyQuizSelectedLevel || 1) > 2) { state.partyQuizSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
-  (typeof PARTY_QUIZ_LEVELS !== 'undefined' ? PARTY_QUIZ_LEVELS : []).forEach(l=>{
+  (typeof PARTY_QUIZ_LEVELS !== 'undefined' ? PARTY_QUIZ_LEVELS : []).filter(function(l){ return !__guest || (typeof l.id === 'number' && l.id <= 2); }).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'level-toggle' + (state.partyQuizSelectedLevel === l.id ? ' on' : '');
     div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;

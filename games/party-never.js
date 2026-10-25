@@ -12,8 +12,10 @@ function getPartyNeverCardsList(level){
 function renderPartyNeverSetupLevels(){
   const wrap = document.getElementById('partyNeverSetupLevels');
   if(!wrap) return;
+  const __guest = (typeof window !== 'undefined' && (window.__userAccessLevel || 'guest') === 'guest');
+  if (__guest && (state.partyNeverSelectedLevel || 1) > 2) { state.partyNeverSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
-  (typeof PARTY_NEVER_LEVELS !== 'undefined' ? PARTY_NEVER_LEVELS : []).forEach(l=>{
+  (typeof PARTY_NEVER_LEVELS !== 'undefined' ? PARTY_NEVER_LEVELS : []).filter(function(l){ return !__guest || (typeof l.id === 'number' && l.id <= 2); }).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'level-toggle' + (state.partyNeverSelectedLevel === l.id ? ' on' : '');
     div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
