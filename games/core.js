@@ -5108,6 +5108,11 @@ function playHitSound(){
       if (profile) profile.style.display = '';
       const emailEl = document.getElementById('accountProfileEmail');
       if (emailEl) emailEl.textContent = user.email || '';
+      const verifiedEl = document.getElementById('accountProfileVerified');
+      const resendBtn = document.getElementById('accountResendVerificationBtn');
+      function applyVerified(u) { const v = !!(u && u.emailVerified); if (verifiedEl) verifiedEl.textContent = v ? 'да' : 'нет'; if (resendBtn) resendBtn.style.display = v ? 'none' : ''; }
+      applyVerified(user);
+      if (user && typeof user.reload === 'function') { user.reload().then(function () { const fresh = auth && auth.currentUser; if (fresh) applyVerified(fresh); }).catch(function () {}); }
       const db = getDb();
       if (db) {
         db.collection('users').doc(user.uid).get().then(function (doc) {
