@@ -4573,7 +4573,7 @@
 .account-gender-btn:focus { outline: none; box-shadow: 0 0 0 2px rgba(43,15,46,.25); }
 
 /* Статистика: переключатель «Общая / Моя» */
-.stats-tab-btn { flex: 1 1 0; }
+.stats-tab-btn { flex: 1 1 0; padding: 6px 10px; font-size: 14px; border-radius: 12px; }
 .stats-tab-btn.on {
   background: rgba(var(--accent-rgb), .18); color: #2b0f2e; border-color: rgba(var(--accent-rgb), .45);
 }
