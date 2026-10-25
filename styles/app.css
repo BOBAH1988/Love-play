@@ -4577,3 +4577,8 @@
 .stats-tab-btn.on {
   background: rgba(var(--accent-rgb), .18); color: #2b0f2e; border-color: rgba(var(--accent-rgb), .45);
 }
+/* Статистика: стабильная высота окна при переключении вкладок —
+   контент скроллится внутри, сама карточка не «прыгает». */
+#statsModal { align-items: flex-start; padding-top: 6vh; }
+#statsModal .modal-card { min-height: 360px; }
+#statsBody { min-height: 220px; max-height: 56vh; overflow-y: auto; transition: opacity 0.18s ease; }

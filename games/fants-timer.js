@@ -405,10 +405,13 @@ function renderStatsScreen(){
   if (mineBtn) mineBtn.classList.toggle('on', statsView === 'mine');
   if (allBtn) allBtn.classList.toggle('on', statsView === 'all');
 
+  if (body) body.style.opacity = '0';
+
   if (statsView === 'general') {
     if (mineControls) mineControls.style.display = 'none';
     if (finishedRow) finishedRow.style.display = 'none';
     renderGeneralStats(body);
+    requestAnimationFrame(() => { if (body) body.style.opacity = '1'; });
     return;
   }
 
@@ -416,14 +419,19 @@ function renderStatsScreen(){
     if (mineControls) mineControls.style.display = 'none';
     if (finishedRow) finishedRow.style.display = 'none';
     renderAllStats(body);
+    requestAnimationFrame(() => { if (body) body.style.opacity = '1'; });
     return;
   }
 
   if (mineControls) mineControls.style.display = '';
-  if(!body || !window.AppStats) return;
+  if(!body || !window.AppStats) {
+    if (body) body.style.opacity = '1';
+    return;
+  }
 
   const s = window.AppStats.summary();
   renderStatsBody(body, s, finishedRow);
+  requestAnimationFrame(() => { if (body) body.style.opacity = '1'; });
   return;
 }
 function renderStatsBody(body, s, finishedRow){
@@ -554,7 +562,9 @@ function renderAllStats(body) {
     }).sort(function (a, b) { return b.started - a.started; });
 
     if (totalGames === 0) {
+      if (body) body.style.opacity = '0.35';
       body.innerHTML = '<div style="color:#8a5c7a;">Пока нет данных от пользователей.</div>';
+      requestAnimationFrame(() => { if (body) body.style.opacity = '1'; });
       return;
     }
     const s = {
@@ -569,15 +579,19 @@ function renderAllStats(body) {
       totalMs: totalMs,
       users: usersWithStats,
     };
+    if (body) body.style.opacity = '0.35';
     renderStatsBody(body, s, null);
+    requestAnimationFrame(() => { if (body) body.style.opacity = '1'; });
     // Дополнительно показываем число пользователей со статистикой.
     const note = document.createElement('div');
     note.style.cssText = 'margin-top:8px; color:#8a5c7a; font-size:12px;';
     note.textContent = 'Пользователей со статистикой: ' + usersWithStats;
     body.appendChild(note);
   }).catch(function (err) {
+    if (body) body.style.opacity = '0.35';
     body.innerHTML = '<div style="color:#b00020;">Ошибка загрузки статистики всех пользователей: '
       + String((err && err.message) ? err.message : err) + '</div>';
+    requestAnimationFrame(() => { if (body) body.style.opacity = '1'; });
   });
 }
 
@@ -649,13 +663,109 @@ function renderGeneralStats(body){
     html += row('Женщины', female);
     html += row('Активных', active);
 
+    if (body) body.style.opacity = '0.35';
     body.innerHTML = html;
+    requestAnimationFrame(() => { if (body) body.style.opacity = '1'; });
   }).catch(function(err){
+    if (body) body.style.opacity = '0.35';
     body.innerHTML = '<div style="color:#b00020;">Ошибка загрузки общей статистики: '
       + esc((err && err.message) ? err.message : err) + '</div>';
+    requestAnimationFrame(() => { if (body) body.style.opacity = '1'; });
   });
 }
 
+
+const ADMIN_LEVEL_LABELS = { guest: 'Гость', starter: 'Старт', plus: 'Плюс', premium: 'Премиум', admin: 'Админ' };
+
+function escHtmlAdmin(t) {
+  return String(t).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+function saveUserAccessLevel(uid, level) {
+  const body = document.getElementById('adminPanelBody');
+  const f = window.ComeOnPlayFirebase;
+  const db = f && f.db;
+  if (!db || typeof db.collection !== 'function') return;
+  const statusEl = body ? body.querySelector('.admin-level-status[data-uid="' + uid + '"]') : null;
+  if (statusEl) { statusEl.textContent = 'Сохранение…'; statusEl.style.color = '#8a5c7a'; }
+  db.collection('users').doc(uid).update({ accessLevel: level }).then(function () {
+    if (statusEl) { statusEl.textContent = 'Сохранено: ' + (ADMIN_LEVEL_LABELS[level] || level); statusEl.style.color = '#2e7d32'; }
+    if (typeof showToast === 'function') showToast('Уровень обновлён');
+  }).catch(function (err) {
+    if (statusEl) { statusEl.textContent = 'Ошибка: ' + ((err && err.message) ? err.message : err); statusEl.style.color = '#b00020'; }
+  });
+}
+
+function renderAdminPanel() {
+  const body = document.getElementById('adminPanelBody');
+  if (!body) return;
+  const f = window.ComeOnPlayFirebase;
+  const db = f && f.db;
+  if (!db || typeof db.collection !== 'function') {
+    body.innerHTML = '<div style="color:#8a5c7a;">Firebase недоступен — список пользователей недоступен.</div>';
+    return;
+  }
+  body.innerHTML = '<div style="color:#8a5c7a;">Загрузка списка пользователей…</div>';
+
+  db.collection('users').get().then(function (snap) {
+    const docs = (snap && Array.isArray(snap.docs)) ? snap.docs : [];
+    const users = docs.map(function (doc) {
+      return { uid: doc.id, data: (typeof doc.data === 'function') ? (doc.data() || {}) : {} };
+    }).sort(function (a, b) {
+      const ae = String((a.data && a.data.email) || a.uid);
+      const be = String((b.data && b.data.email) || b.uid);
+      return ae.localeCompare(be, 'ru');
+    });
+
+    if (!users.length) {
+      body.innerHTML = '<div style="color:#8a5c7a;">Пользователей пока нет.</div>';
+      return;
+    }
+
+    const levels = ['guest', 'starter', 'plus', 'premium', 'admin'];
+    let html = '<div style="margin-bottom:8px; font-weight:700;">Всего пользователей: ' + users.length + '</div>';
+    html += '<div style="display:flex; flex-direction:column; gap:8px;">';
+    users.forEach(function (u) {
+      const d = u.data || {};
+      const email = escHtmlAdmin(d.email || u.uid);
+      const name = escHtmlAdmin(d.name || d.displayName || '');
+       const gender = String(d.gender || '').toUpperCase();
+       const genderIcon = gender === 'M' ? '♂' : (gender === 'F' ? '♀' : '');
+      let level = String(d.accessLevel || 'starter').toLowerCase().trim();
+      if (levels.indexOf(level) < 0) level = 'starter';
+      const created = (d.createdAt && typeof d.createdAt.toDate === 'function')
+        ? d.createdAt.toDate().toLocaleDateString('ru-RU') : '';
+      html += '<div style="border:1px solid rgba(43,15,46,.12); border-radius:10px; padding:6px 8px; background:rgba(255,255,255,.35);">';
+      html += '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">';
+      html += '<div style="font-weight:700; word-break:break-all; flex:1 1 160px; min-width:0;">' + email + '</div>';
+      if (name) html += '<div style="font-size:12px; color:#5c3a52;">' + name + (genderIcon ? ' ' + genderIcon : '') + (created ? ' · ' + created : '') + '</div>';
+      html += '</div>';
+      html += '<div style="display:flex; align-items:center; gap:6px;">';
+      html += '<select class="admin-level-select" data-uid="' + escHtmlAdmin(u.uid) + '" style="flex:1; min-width:0; padding:4px 6px; border-radius:8px; border:1px solid rgba(43,15,46,.2); background:#fff; color:#2b0f2e;">';
+      levels.forEach(function (lvl) {
+        html += '<option value="' + lvl + '"' + (lvl === level ? ' selected' : '') + ' style="background:#fff; color:#2b0f2e;">' + (ADMIN_LEVEL_LABELS[lvl] || lvl) + '</option>';
+      });
+      html += '</select>';
+      html += '<button type="button" class="btn btn-primary admin-save-level-btn" data-uid="' + escHtmlAdmin(u.uid) + '" style="padding:4px 10px; font-size:13px; width:auto; min-width:0;">ОК</button>';
+      html += '</div>';
+      html += '<div class="admin-level-status" data-uid="' + escHtmlAdmin(u.uid) + '" style="font-size:12px; margin-top:2px; color:#8a5c7a;"></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    body.innerHTML = html;
+
+    body.querySelectorAll('.admin-save-level-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const uid = btn.getAttribute('data-uid');
+        const select = body.querySelector('.admin-level-select[data-uid="' + uid + '"]');
+        const level = select ? select.value : '';
+        saveUserAccessLevel(uid, level);
+      });
+    });
+  }).catch(function (err) {
+    body.innerHTML = '<div style="color:#b00020;">Ошибка загрузки пользователей: ' + escHtmlAdmin((err && err.message) ? err.message : err) + '</div>';
+  });
+}
 
 function showSummary(){
   summaryModalMode = 'fanty';
@@ -802,10 +912,18 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     showModal('statsModal');
   });
 
+  const __adminBtn = document.getElementById('menuAdminBtn');
+  if(__adminBtn) __adminBtn.addEventListener('click', ()=>{
+    closeMenu();
+    renderAdminPanel();
+    showModal('adminPanelModal');
+  });
+
   // Статистика в меню — только для администратора (__userAccessLevel === 'admin').
   function updateStatsBtnVisibility() {
     const btn = document.getElementById('menuStatsBtn');
-    if (!btn) return;
+    const adminBtn = document.getElementById('menuAdminBtn');
+    if (!btn && !adminBtn) return;
     // Если уровень доступа ещё не загружен из Firestore — повторяем через 100 мс.
     if (typeof window.__userAccessLevel === 'undefined') {
       if (--updateStatsBtnVisibility.attempts > 0) {
@@ -813,7 +931,9 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       }
       return;
     }
-    btn.style.display = (window.__userAccessLevel === 'admin') ? '' : 'none';
+    const isAdmin = (window.__userAccessLevel === 'admin');
+    if (btn) btn.style.display = isAdmin ? '' : 'none';
+    if (adminBtn) adminBtn.style.display = isAdmin ? '' : 'none';
   }
   updateStatsBtnVisibility.attempts = 50;
   updateStatsBtnVisibility();
@@ -821,6 +941,11 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 
   const __statsCloseBtn = document.getElementById('statsCloseBtn');
   if(__statsCloseBtn) __statsCloseBtn.addEventListener('click', ()=>{ hideModal('statsModal'); });
+
+  const __adminCloseBtn = document.getElementById('adminPanelCloseBtn');
+  if(__adminCloseBtn) __adminCloseBtn.addEventListener('click', ()=>{ hideModal('adminPanelModal'); });
+  const __adminModal = document.getElementById('adminPanelModal');
+  if(__adminModal) __adminModal.addEventListener('click', (e)=>{ if(e.target === __adminModal) hideModal('adminPanelModal'); });
 
   const __statsGeneralBtn = document.getElementById('statsGeneralBtn');
   if(__statsGeneralBtn) __statsGeneralBtn.addEventListener('click', ()=>{

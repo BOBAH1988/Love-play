@@ -5593,7 +5593,8 @@ function playHitSound(){
     // скрыть кнопку. Повторяет до 10 секунд (100 попыток × 100 мс).
     function ensureStatsBtnVisibility() {
       const btn = document.getElementById('menuStatsBtn');
-      if (!btn) {
+      const adminBtn = document.getElementById('menuAdminBtn');
+      if (!btn && !adminBtn) {
         if (--ensureStatsBtnVisibility.attempts > 0) {
           setTimeout(ensureStatsBtnVisibility, 100);
         }
@@ -5605,7 +5606,9 @@ function playHitSound(){
         }
         return;
       }
-      btn.style.display = (window.__userAccessLevel === 'admin') ? '' : 'none';
+      const isAdmin = (window.__userAccessLevel === 'admin');
+      if (btn) btn.style.display = isAdmin ? '' : 'none';
+      if (adminBtn) adminBtn.style.display = isAdmin ? '' : 'none';
     }
     ensureStatsBtnVisibility.attempts = 100;
 
