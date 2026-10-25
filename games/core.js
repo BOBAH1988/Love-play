@@ -5127,29 +5127,58 @@ function playHitSound(){
       if (db) {
         db.collection('users').doc(user.uid).get().then(function (doc) {
           const data = doc.exists ? (doc.data() || {}) : {};
+          const accessLevel = data.accessLevel || 'guest';
           const levelEl = document.getElementById('accountProfileLevel');
+          const levelRow = document.getElementById('accountProfileLevelRow');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
           const accessLevelEl = document.getElementById('accountProfileAccessLevel');
-          const levelName = LEVEL_LABELS_LOCAL[data.accessLevel] || data.accessLevel || 'Гость';
-          if (levelEl) { levelEl.textContent = levelName; levelEl.style.color = '#2b0f2e'; }
-          // «Уровень доступа: Админ» видно только администратору (по Firestore или по email)
-          const isAdmin = data.accessLevel === 'admin' || isAdminEmail(user.email);
+          const levelName = LEVEL_LABELS_LOCAL[accessLevel] || accessLevel;
+          // «Уровень» — только starter/plus/premium/admin
+          if (levelEl) {
+            levelEl.style.color = '#2b0f2e';
+            if (['starter','plus','premium','admin'].indexOf(accessLevel) >= 0) {
+              levelEl.textContent = levelName;
+              if (levelRow) levelRow.style.display = '';
+            } else {
+              if (levelRow) levelRow.style.display = 'none';
+            }
+          }
+          // «Уровень доступа» — только для админа, текст «Администратор»
+          const isAdmin = accessLevel === 'admin' || isAdminEmail(user.email);
           if (accessLevelRow) {
             accessLevelRow.style.display = isAdmin ? '' : 'none';
-            if (accessLevelEl) { accessLevelEl.textContent = levelName; accessLevelEl.style.color = '#2b0f2e'; }
+            if (accessLevelEl) {
+              accessLevelEl.textContent = isAdmin ? 'Администратор' : '';
+              accessLevelEl.style.color = '#2b0f2e';
+            }
           }
         }).catch(function () {});
       } else {
         // Fallback: используем уже установленный window.__userAccessLevel из onAuthStateChanged
+        const accessLevel = window.__userAccessLevel || 'guest';
         const levelEl = document.getElementById('accountProfileLevel');
+        const levelRow = document.getElementById('accountProfileLevelRow');
         const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
         const accessLevelEl = document.getElementById('accountProfileAccessLevel');
-        const levelName = LEVEL_LABELS_LOCAL[window.__userAccessLevel] || window.__userAccessLevel || 'Гость';
-        if (levelEl) { levelEl.textContent = levelName; levelEl.style.color = '#2b0f2e'; }
-        const isAdmin = window.__userAccessLevel === 'admin' || isAdminEmail(user.email);
+        const levelName = LEVEL_LABELS_LOCAL[accessLevel] || accessLevel;
+        // «Уровень» — только starter/plus/premium/admin
+        if (levelEl) {
+          levelEl.style.color = '#2b0f2e';
+          if (['starter','plus','premium','admin'].indexOf(accessLevel) >= 0) {
+            levelEl.textContent = levelName;
+            if (levelRow) levelRow.style.display = '';
+          } else {
+            if (levelRow) levelRow.style.display = 'none';
+          }
+        }
+        // «Уровень доступа» — только для админа, текст «Администратор»
+        const isAdmin = accessLevel === 'admin' || isAdminEmail(user.email);
         if (accessLevelRow) {
           accessLevelRow.style.display = isAdmin ? '' : 'none';
-          if (accessLevelEl) { accessLevelEl.textContent = levelName; accessLevelEl.style.color = '#2b0f2e'; }
+          if (accessLevelEl) {
+            accessLevelEl.textContent = isAdmin ? 'Администратор' : '';
+            accessLevelEl.style.color = '#2b0f2e';
+          }
         }
       }
     } else {
