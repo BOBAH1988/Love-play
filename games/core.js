@@ -5109,18 +5109,25 @@ function playHitSound(){
       const emailEl = document.getElementById('accountProfileEmail');
       if (emailEl) emailEl.textContent = user.email || '';
       const verifiedEl = document.getElementById('accountProfileVerified');
+      const verifiedRow = document.getElementById('accountProfileVerifiedRow');
       const resendBtn = document.getElementById('accountResendVerificationBtn');
-      function applyVerified(u) { const v = !!(u && u.emailVerified); if (verifiedEl) verifiedEl.textContent = v ? 'да' : 'нет'; if (resendBtn) resendBtn.style.display = v ? 'none' : ''; }
+      function applyVerified(u) { const v = !!(u && u.emailVerified); if (verifiedEl) verifiedEl.textContent = v ? 'да' : 'нет'; if (resendBtn) resendBtn.style.display = v ? 'none' : ''; if (verifiedRow) verifiedRow.style.display = v ? 'none' : ''; }
       applyVerified(user);
       if (user && typeof user.reload === 'function') { user.reload().then(function () { const fresh = auth && auth.currentUser; if (fresh) applyVerified(fresh); }).catch(function () {}); }
       const db = getDb();
       if (db) {
         db.collection('users').doc(user.uid).get().then(function (doc) {
           const data = doc.exists ? (doc.data() || {}) : {};
-          const al = document.getElementById('accountProfileAccessLevel');
-          const role = document.getElementById('accountProfileRole');
-          if (al) al.textContent = LEVEL_LABELS[data.accessLevel] || data.accessLevel || 'Гость';
-          if (role) role.textContent = data.role || 'user';
+          const levelEl = document.getElementById('accountProfileLevel');
+          const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
+          const accessLevelEl = document.getElementById('accountProfileAccessLevel');
+          const levelName = LEVEL_LABELS[data.accessLevel] || data.accessLevel || 'Гость';
+          if (levelEl) levelEl.textContent = levelName;
+          // «Уровень доступа: Админ» видно только администратору
+          if (accessLevelRow) {
+            accessLevelRow.style.display = (data.accessLevel === 'admin') ? '' : 'none';
+            if (accessLevelEl) accessLevelEl.textContent = levelName;
+          }
         }).catch(function () {});
       }
     } else {
