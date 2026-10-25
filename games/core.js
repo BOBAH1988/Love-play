@@ -5111,6 +5111,13 @@ function playHitSound(){
   const ADMIN_EMAILS = ['79042044926@ya.ru'];
   function isAdminEmail(email) { return ADMIN_EMAILS.indexOf((email || '').toLowerCase()) >= 0; }
 
+  function setAccountGender(g) {
+    const male = document.getElementById('accountProfileGenderMale');
+    const female = document.getElementById('accountProfileGenderFemale');
+    if (male) { male.classList.toggle('on', g === 'M'); male.setAttribute('aria-pressed', g === 'M' ? 'true' : 'false'); }
+    if (female) { female.classList.toggle('on', g === 'F'); female.setAttribute('aria-pressed', g === 'F' ? 'true' : 'false'); }
+  }
+
   function openAccount() {
     const auth = getAuth();
     const user = auth && auth.currentUser;
@@ -5119,6 +5126,9 @@ function playHitSound(){
     if (user) {
       if (guest) guest.style.display = 'none';
       if (profile) profile.style.display = '';
+      const accountNameEl = document.getElementById('accountProfileName');
+      if (accountNameEl) accountNameEl.value = '';
+      setAccountGender(null);
       const emailEl = document.getElementById('accountProfileEmail');
       if (emailEl) emailEl.textContent = user.email || '';
       const verifiedEl = document.getElementById('accountProfileVerified');
@@ -5131,6 +5141,8 @@ function playHitSound(){
       if (db) {
         db.collection('users').doc(user.uid).get().then(function (doc) {
           const data = doc.exists ? (doc.data() || {}) : {};
+          if (accountNameEl) accountNameEl.value = (data.name || '').trim();
+          setAccountGender(data.gender === 'M' || data.gender === 'F' ? data.gender : null);
           const rawLevel = data.accessLevel;
           const firestoreLevel = (rawLevel || 'guest').toLowerCase().trim();
           // Нормализация: устаревшее/неизвестное значение (например, 'full') приводим
@@ -5391,6 +5403,43 @@ function playHitSound(){
       auth.signOut().then(function () {
         closeAccount();
       }).catch(function (err) { showError('accountProfileError', mapError(err)); });
+    });
+  }
+
+  function saveAccountProfile() {
+    const auth = getAuth();
+    const user = auth && auth.currentUser;
+    if (!user) return;
+    const db = getDb();
+    if (!db) return;
+    const nameEl = document.getElementById('accountProfileName');
+    const maleBtn = document.getElementById('accountProfileGenderMale');
+    const femaleBtn = document.getElementById('accountProfileGenderFemale');
+    const name = nameEl ? (nameEl.value || '').trim() : '';
+    const gender = maleBtn && maleBtn.classList.contains('on') ? 'M' : (femaleBtn && femaleBtn.classList.contains('on') ? 'F' : null);
+    db.collection('users').doc(user.uid).set({ name: name, gender: gender }, { merge: true })
+      .catch(function (err) { console.error('account profile save error', err); });
+  }
+
+  const accountProfileNameInput = document.getElementById('accountProfileName');
+  if (accountProfileNameInput) {
+    accountProfileNameInput.addEventListener('blur', saveAccountProfile);
+    accountProfileNameInput.addEventListener('change', saveAccountProfile);
+  }
+  const accountGenderMaleBtn = document.getElementById('accountProfileGenderMale');
+  const accountGenderFemaleBtn = document.getElementById('accountProfileGenderFemale');
+  if (accountGenderMaleBtn) {
+    accountGenderMaleBtn.addEventListener('click', function () {
+      const wasOn = accountGenderMaleBtn.classList.contains('on');
+      setAccountGender(wasOn ? null : 'M');
+      saveAccountProfile();
+    });
+  }
+  if (accountGenderFemaleBtn) {
+    accountGenderFemaleBtn.addEventListener('click', function () {
+      const wasOn = accountGenderFemaleBtn.classList.contains('on');
+      setAccountGender(wasOn ? null : 'F');
+      saveAccountProfile();
     });
   }
 
