@@ -5130,15 +5130,17 @@ function playHitSound(){
           const firestoreLevel = data.accessLevel || 'guest';
           // «Уровень доступа» — админ по Firestore или по email
           const isAdmin = firestoreLevel === 'admin' || isAdminEmail(user.email);
+          // Для админа по email, у которого в Firestore нет уровня (guest), показываем «Админ»
+          const levelForDisplay = (isAdmin && firestoreLevel === 'guest') ? 'admin' : firestoreLevel;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
           const accessLevelEl = document.getElementById('accountProfileAccessLevel');
-          const levelName = LEVEL_LABELS_LOCAL[firestoreLevel] || firestoreLevel;
+          const levelName = LEVEL_LABELS_LOCAL[levelForDisplay] || levelForDisplay;
           // «Уровень» — реальный уровень из настроек доступа: starter/plus/premium/admin (скрыт для гостя)
           if (levelEl) {
             levelEl.style.color = '#2b0f2e';
-            if (['starter','plus','premium','admin'].indexOf(firestoreLevel) >= 0) {
+            if (['starter','plus','premium','admin'].indexOf(levelForDisplay) >= 0) {
               levelEl.textContent = levelName;
               if (levelRow) levelRow.style.display = '';
             } else {
