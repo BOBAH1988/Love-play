@@ -5131,25 +5131,22 @@ function playHitSound(){
       if (db) {
         db.collection('users').doc(user.uid).get().then(function (doc) {
           const data = doc.exists ? (doc.data() || {}) : {};
-          const firestoreLevel = data.accessLevel || 'guest';
+          const rawLevel = data.accessLevel;
+          const firestoreLevel = (rawLevel || 'guest').toLowerCase().trim();
           // «Уровень доступа» — админ по Firestore или по email
           const isAdmin = firestoreLevel === 'admin' || isAdminEmail(user.email);
           // Для админа по email, у которого в Firestore нет уровня (guest), показываем «Админ»
-          const levelForDisplay = (isAdmin && firestoreLevel === 'guest') ? 'admin' : firestoreLevel;
+          const levelForDisplay = (isAdmin && (firestoreLevel === 'guest' || !rawLevel)) ? 'admin' : firestoreLevel;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
           const accessLevelEl = document.getElementById('accountProfileAccessLevel');
-          const levelName = LEVEL_LABELS_LOCAL[levelForDisplay] || levelForDisplay;
           // «Уровень» — реальный уровень из настроек доступа: starter/plus/premium/admin (скрыт для гостя)
           if (levelEl) {
+            const levelName = (LEVEL_LABELS_LOCAL && LEVEL_LABELS_LOCAL[levelForDisplay]) || levelForDisplay || 'Админ';
             levelEl.style.color = '#2b0f2e';
-            if (['starter','plus','premium','admin'].indexOf(levelForDisplay) >= 0) {
-              levelEl.textContent = levelName;
-              if (levelRow) levelRow.style.display = '';
-            } else {
-              if (levelRow) levelRow.style.display = 'none';
-            }
+            levelEl.textContent = levelName;
+            if (levelRow) levelRow.style.display = '';
           }
           // «Уровень доступа» — только для админа, текст «Администратор»
           if (accessLevelRow) {
@@ -5162,22 +5159,18 @@ function playHitSound(){
         }).catch(function (err) {
           console.error('account level load error', err);
           // Fallback: используем window.__userAccessLevel из onAuthStateChanged
-          const accessLevel = window.__userAccessLevel || 'guest';
+          const accessLevel = (window.__userAccessLevel || 'guest').toLowerCase().trim();
           const isAdmin = accessLevel === 'admin' || isAdminEmail(user.email);
-          const levelForDisplay = (isAdmin && accessLevel === 'guest') ? 'admin' : accessLevel;
+          const levelForDisplay = (isAdmin && (accessLevel === 'guest' || !window.__userAccessLevel)) ? 'admin' : accessLevel;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
           const accessLevelEl = document.getElementById('accountProfileAccessLevel');
-          const levelName = LEVEL_LABELS_LOCAL[levelForDisplay] || levelForDisplay;
           if (levelEl) {
+            const levelName = (LEVEL_LABELS_LOCAL && LEVEL_LABELS_LOCAL[levelForDisplay]) || levelForDisplay || 'Админ';
             levelEl.style.color = '#2b0f2e';
-            if (['starter','plus','premium','admin'].indexOf(levelForDisplay) >= 0) {
-              levelEl.textContent = levelName;
-              if (levelRow) levelRow.style.display = '';
-            } else {
-              if (levelRow) levelRow.style.display = 'none';
-            }
+            levelEl.textContent = levelName;
+            if (levelRow) levelRow.style.display = '';
           }
           if (accessLevelRow) {
             accessLevelRow.style.display = isAdmin ? '' : 'none';
@@ -5189,24 +5182,19 @@ function playHitSound(){
         });
       } else {
         // Fallback: используем уже установленный window.__userAccessLevel из onAuthStateChanged
-        const accessLevel = window.__userAccessLevel || 'guest';
+        const accessLevel = (window.__userAccessLevel || 'guest').toLowerCase().trim();
+        const isAdmin = accessLevel === 'admin' || isAdminEmail(user.email);
+        const levelForDisplay = isAdmin ? 'admin' : (['starter','plus','premium'].indexOf(accessLevel) >= 0 ? accessLevel : 'guest');
         const levelEl = document.getElementById('accountProfileLevel');
         const levelRow = document.getElementById('accountProfileLevelRow');
         const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
         const accessLevelEl = document.getElementById('accountProfileAccessLevel');
-        const levelName = LEVEL_LABELS_LOCAL[accessLevel] || accessLevel;
-        // «Уровень» — только starter/plus/premium/admin
+        const levelName = (LEVEL_LABELS_LOCAL && LEVEL_LABELS_LOCAL[levelForDisplay]) || levelForDisplay || 'Админ';
         if (levelEl) {
           levelEl.style.color = '#2b0f2e';
-          if (['starter','plus','premium','admin'].indexOf(accessLevel) >= 0) {
-            levelEl.textContent = levelName;
-            if (levelRow) levelRow.style.display = '';
-          } else {
-            if (levelRow) levelRow.style.display = 'none';
-          }
+          levelEl.textContent = levelName;
+          if (levelRow) levelRow.style.display = '';
         }
-        // «Уровень доступа» — только для админа, текст «Администратор»
-        const isAdmin = accessLevel === 'admin' || isAdminEmail(user.email);
         if (accessLevelRow) {
           accessLevelRow.style.display = isAdmin ? '' : 'none';
           if (accessLevelEl) {
