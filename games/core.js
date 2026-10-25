@@ -5437,17 +5437,27 @@ function playHitSound(){
 
   const auth = getAuth();
   if (auth && typeof auth.onAuthStateChanged === 'function') {
-    // Вызывает updateStatsBtnVisibility, дожидаясь загрузки fants-timer.js
-    // (подключается после core.js). Если функция уже определена — вызывает сразу,
-    // иначе пробует каждые 100 мс в течение 5 секунд.
+    // Автономно показывает/скрывает кнопку «Статистика» в меню.
+    // Не зависит от порядка загрузки скриптов: сам ищет кнопку в DOM и
+    // ждёт Appearance window.__userAccessLevel (из Firestore), прежде чем
+    // скрыть кнопку. Повторяет до 10 секунд (100 попыток × 100 мс).
     function ensureStatsBtnVisibility() {
-      if (typeof window.updateStatsBtnVisibility === 'function') {
-        window.updateStatsBtnVisibility();
-      } else if (--ensureStatsBtnVisibility.attempts > 0) {
-        setTimeout(ensureStatsBtnVisibility, 100);
+      const btn = document.getElementById('menuStatsBtn');
+      if (!btn) {
+        if (--ensureStatsBtnVisibility.attempts > 0) {
+          setTimeout(ensureStatsBtnVisibility, 100);
+        }
+        return;
       }
+      if (typeof window.__userAccessLevel === 'undefined') {
+        if (--ensureStatsBtnVisibility.attempts > 0) {
+          setTimeout(ensureStatsBtnVisibility, 100);
+        }
+        return;
+      }
+      btn.style.display = (window.__userAccessLevel === 'admin') ? '' : 'none';
     }
-    ensureStatsBtnVisibility.attempts = 50;
+    ensureStatsBtnVisibility.attempts = 100;
 
     auth.onAuthStateChanged(function (user) {
       if (user) {
