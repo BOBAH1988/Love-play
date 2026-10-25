@@ -5231,9 +5231,16 @@ function playHitSound(){
       const email = (document.getElementById('accountLoginEmail').value || '').trim();
       const password = document.getElementById('accountLoginPassword').value || '';
       showError('accountError', '');
+      manualAuthJustDone = true;
       auth.signInWithEmailAndPassword(email, password)
+        .then(function (cred) {
+          return handlePostAuthMigration(cred.user);
+        })
         .then(function () { closeAccount(); })
-        .catch(function (err) { showError('accountError', mapError(err)); });
+        .catch(function (err) {
+          manualAuthJustDone = false;
+          showError('accountError', mapError(err));
+        });
     });
   }
 
@@ -5262,11 +5269,19 @@ function playHitSound(){
           if (cred.user && typeof cred.user.sendEmailVerification === 'function') {
             cred.user.sendEmailVerification().catch(function (e) { console.error('sendEmailVerification', e); });
           }
+          // Миграция локальных данных в новый аккаунт (или начало с нуля).
+          manualAuthJustDone = true;
+          return handlePostAuthMigration(cred.user);
+        })
+        .then(function () {
           openAccount();
           const el = document.getElementById('accountProfileError');
           if (el) { el.style.color = '#1b5e20'; el.textContent = 'Регистрация успешна. Письмо для подтверждения отправлено на ' + email; el.style.display = 'block'; }
         })
-        .catch(function (err) { showError('accountError', mapError(err)); });
+        .catch(function (err) {
+          manualAuthJustDone = false;
+          showError('accountError', mapError(err));
+        });
     });
   }
 
@@ -5283,7 +5298,141 @@ function playHitSound(){
 
   window.__openAccountModal = openAccount;
 
-  window.__userAccessLevel = 'guest';
+  // ===== Синхронизация на Firebase (облако) =====
+  // Гость: только localStorage. Авторизованный: Firestore-копия + локальный
+  // кэш. При входе/регистрации предлагаем мигрировать или начать с нуля.
+  let manualAuthJustDone = false;
+  let applyingCloud = false;
+  let cloudSaveTimer = null;
+  window.__cloudApplying = false;
+
+  function cloudRefFor(user) {
+    const db = getDb();
+    if (!db || !user) return null;
+    return db.collection('users').doc(user.uid).collection('app').doc('state');
+  }
+
+  function hasLocalData() {
+    try { return !!localStorage.getItem(STORAGE_KEY); } catch (e) { return false; }
+  }
+
+  function serializeState() {
+    try { return JSON.parse(JSON.stringify(state)); } catch (e) { return null; }
+  }
+
+  function stripMeta(obj) {
+    if (!obj || typeof obj !== 'object') return obj;
+    try {
+      const c = JSON.parse(JSON.stringify(obj));
+      delete c.updatedAt;
+      return c;
+    } catch (e) { return obj; }
+  }
+
+  function scheduleCloudSave() {
+    if (applyingCloud || window.__cloudApplying) return;
+    const auth = getAuth();
+    const user = auth && auth.currentUser;
+    if (!user) return;
+    if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(function () {
+      const ref = cloudRefFor(user);
+      if (!ref) return;
+      const data = serializeState();
+      if (!data) return;
+      data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      try { data.schemaVersion = SCHEMA_VERSION; } catch (e) {}
+      ref.set(data, { merge: true }).catch(function (err) { console.error('cloud save error', err); });
+    }, 1200);
+  }
+  window.__scheduleCloudSave = scheduleCloudSave;
+
+  function pullCloudState(user) {
+    const ref = cloudRefFor(user);
+    if (!ref) return Promise.resolve(null);
+    return ref.get().then(function (doc) {
+      if (!doc.exists) return null;
+      const d = doc.data() || null;
+      return d && Object.keys(d).length ? d : null;
+    }).catch(function (err) { console.error('cloud load error', err); return null; });
+  }
+
+  function applyCloudState(cloudData) {
+    if (!cloudData) return;
+    applyingCloud = true;
+    window.__cloudApplying = true;
+    try {
+      try { applyMigrations(cloudData); } catch (e) {}
+      state = Object.assign(state, cloudData);
+      if (state.videoSoundOn !== state.davaySoundOn) state.videoSoundOn = state.davaySoundOn;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    } finally {
+      applyingCloud = false;
+      window.__cloudApplying = false;
+    }
+  }
+
+  function uploadLocalToCloud(user) {
+    const ref = cloudRefFor(user);
+    if (!ref) return Promise.resolve();
+    const data = serializeState();
+    if (!data) return Promise.resolve();
+    data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    try { data.schemaVersion = SCHEMA_VERSION; } catch (e) {}
+    return ref.set(data).catch(function (err) { console.error('cloud upload error', err); });
+  }
+
+  function applyCloudAndReload(user, cloudData) {
+    applyCloudState(cloudData);
+    try { window.location.reload(); } catch (e) {}
+    return Promise.resolve();
+  }
+
+  function handlePostAuthMigration(user) {
+    if (!user) return Promise.resolve();
+    const localHas = hasLocalData();
+    return pullCloudState(user).then(function (cloud) {
+      const cloudHas = !!(cloud && Object.keys(stripMeta(cloud)).length);
+      const localSig = JSON.stringify(stripMeta(serializeState() || {}));
+      const cloudSig = cloudHas ? JSON.stringify(stripMeta(cloud)) : null;
+
+      if (localHas && cloudHas && localSig !== cloudSig) {
+        const migrate = window.confirm('На устройстве и в аккаунте найдены разные данные.\n\nПеренести данные с устройства в аккаунт (перезаписать данные аккаунта)?\nOK — перенести, Отмена — использовать данные аккаунта.');
+        if (migrate) return uploadLocalToCloud(user);
+        return applyCloudAndReload(user, cloud);
+      }
+      if (localHas && !cloudHas) {
+        const migrate = window.confirm('Перенести данные с этого устройства в аккаунт?\nOK — перенести, Отмена — начать с нуля.');
+        if (migrate) return uploadLocalToCloud(user);
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        try { window.location.reload(); } catch (e) {}
+        return Promise.resolve();
+      }
+      if (!localHas && cloudHas) {
+        return applyCloudAndReload(user, cloud);
+      }
+      return uploadLocalToCloud(user);
+    }).catch(function (err) { console.error('migration error', err); return null; }).finally(function () {
+      manualAuthJustDone = false;
+    });
+  }
+
+  function syncOnFocus() {
+    if (manualAuthJustDone || applyingCloud || window.__cloudApplying) return;
+    const auth = getAuth();
+    const user = auth && auth.currentUser;
+    if (!user) return;
+    pullCloudState(user).then(function (cloud) {
+      if (!cloud) return;
+      const cloudSig = JSON.stringify(stripMeta(cloud));
+      const localSig = JSON.stringify(stripMeta(serializeState() || {}));
+      if (cloudSig !== localSig) applyCloudAndReload(user, cloud);
+    }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) syncOnFocus(); });
+  window.addEventListener('focus', syncOnFocus);
+
+
   window.__userIsAdult = false;
 
   const auth = getAuth();
@@ -5303,6 +5452,19 @@ function playHitSound(){
             window.__userIsAdult = false;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
           });
+          // Молчаливая синхронизация при автовходе. При ручном входе/регистрации
+          // миграция handled в handlePostAuthMigration, поэтому пропускаем.
+          if (!manualAuthJustDone) {
+            pullCloudState(user).then(function (cloud) {
+              if (!cloud) {
+                uploadLocalToCloud(user);
+                return;
+              }
+              const cloudSig = JSON.stringify(stripMeta(cloud));
+              const localSig = JSON.stringify(stripMeta(serializeState() || {}));
+              if (cloudSig !== localSig) applyCloudAndReload(user, cloud);
+            }).catch(function () {});
+          }
         } else {
           window.__userAccessLevel = 'starter';
           window.__userIsAdult = false;
