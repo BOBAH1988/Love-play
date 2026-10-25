@@ -5098,6 +5098,15 @@ function playHitSound(){
     }).catch(function (err) { console.error('ensureUserDoc read error', err); });
   }
 
+  // Ярлыки уровней — дублируются из loadGroupGames IIFE, чтобы были видны здесь.
+  const LEVEL_LABELS_LOCAL = {
+    guest: 'Гость',
+    starter: 'Старт',
+    plus: 'Плюс',
+    premium: 'Премиум',
+    admin: 'Админ'
+  };
+
   function openAccount() {
     const auth = getAuth();
     const user = auth && auth.currentUser;
@@ -5121,7 +5130,7 @@ function playHitSound(){
           const levelEl = document.getElementById('accountProfileLevel');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
           const accessLevelEl = document.getElementById('accountProfileAccessLevel');
-          const levelName = LEVEL_LABELS[data.accessLevel] || data.accessLevel || 'Гость';
+          const levelName = LEVEL_LABELS_LOCAL[data.accessLevel] || data.accessLevel || 'Гость';
           if (levelEl) { levelEl.textContent = levelName; levelEl.style.color = '#2b0f2e'; }
           // «Уровень доступа: Админ» видно только администратору (по Firestore или по email)
           const isAdmin = data.accessLevel === 'admin' || isAdminEmail(user.email);
@@ -5135,7 +5144,7 @@ function playHitSound(){
         const levelEl = document.getElementById('accountProfileLevel');
         const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
         const accessLevelEl = document.getElementById('accountProfileAccessLevel');
-        const levelName = LEVEL_LABELS[window.__userAccessLevel] || window.__userAccessLevel || 'Гость';
+        const levelName = LEVEL_LABELS_LOCAL[window.__userAccessLevel] || window.__userAccessLevel || 'Гость';
         if (levelEl) { levelEl.textContent = levelName; levelEl.style.color = '#2b0f2e'; }
         const isAdmin = window.__userAccessLevel === 'admin' || isAdminEmail(user.email);
         if (accessLevelRow) {
