@@ -1410,6 +1410,7 @@ function applyKidsModeRestrictions(){
   if(twoPlayerBtn) twoPlayerBtn.style.display = 'none';
   if(companyBtn) companyBtn.style.display = 'none';
 }
+applyKidsModeRestrictions();
 // «Горячее» в «Видеорулетке»: следующая папка Яндекса внутри уровня
 // («Level 1-1 …» → «Level 1-2 …»), а когда своих папок в уровне больше нет —
 // следующий уровень.

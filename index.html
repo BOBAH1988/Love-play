@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-24 · v1.1.664';
+  window.APP_BUILD = '2026-10-24 · v1.1.665';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -175,35 +175,6 @@
       setTimeout(hide, 25000);
     })();
   </script>
-<!-- ===== ВОЗРАСТНОЕ ПРЕДУПРЕЖДЕНИЕ (18+) =====
-     Показывается один раз при первом заходе с устройства (флаги хранятся
-     отдельно от основного state в localStorage, чтобы "Сбросить прогресс"
-     или восстановление резервной копии их не затрагивали). Скрипт сразу
-     после разметки скрывает окно ещё до отрисовки остального содержимого,
-     если пользователь уже отвечал на этот вопрос раньше — без "мигания".
-     "Мне нет 18" больше не блокирует сайт полностью — включает детский
-     режим (см. applyKidsModeRestrictions в games/core.js): остаются только
-     игры с детьми, для одного (без уровней 18+/пошлые) и бизнес-игры.
-     Долгое нажатие на заголовок "Давай играй" сбрасывает оба флага и
-     снова показывает это окно — так родитель может вернуть полный доступ. -->
-<div class="modal-overlay show" id="ageGateModal" style="z-index:500;">
-  <div class="modal-card">
-    <div class="modal-title">🔞 Есть контент для взрослых</div>
-    <div class="intro-text">Это приложение содержит игры для пар 18+ с откровенным содержанием. Если вам ещё нет 18 — будут доступны только игры с детьми, игры для одного и бизнес-игры, без взрослого контента.</div>
-    <button type="button" class="btn btn-primary" id="ageGateAdultBtn" style="margin-bottom:10px;">Мне есть 18 — продолжить</button>
-    <button type="button" class="btn btn-secondary" id="ageGateMinorBtn">Мне нет 18 — детский режим</button>
-  </div>
-</div>
-<script>
-  (function(){
-    try{
-      if(localStorage.getItem('couple-game-age-verified-v1') === '1' || localStorage.getItem('couple-game-kids-mode-v1') === '1'){
-        var gate = document.getElementById('ageGateModal');
-        if(gate) gate.classList.remove('show');
-      }
-    }catch(e){}
-  })();
-</script>
 <div id="rotateStub">
   <div class="rotate-stub-icon">📱</div>
   <div class="rotate-stub-text">Поверните телефон вертикально</div>
@@ -441,7 +412,7 @@
       </div>
       <div class="game-select-list" id="homeGroupsDynamic" style="display:none;"></div>
       <div class="app-footer">
-        Project by Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.664</span>
+        Project by Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.665</span>
       </div>
 
 
@@ -5567,7 +5538,7 @@
       <script src="games/fants-video.js?v=20261002g"></script>
 <script src="games/fants-davay.js?v=20260925b"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20261024c"></script>
+<script src="games/fants-timer.js?v=20261024d"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
