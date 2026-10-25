@@ -5133,10 +5133,16 @@ function playHitSound(){
           const data = doc.exists ? (doc.data() || {}) : {};
           const rawLevel = data.accessLevel;
           const firestoreLevel = (rawLevel || 'guest').toLowerCase().trim();
+          // Нормализация: устаревшее/неизвестное значение (например, 'full') приводим
+          // к одному из валидных уровней ['guest','starter','plus','premium','admin'].
+          const normalizedLevel = (['guest','starter','plus','premium','admin'].indexOf(firestoreLevel) >= 0)
+            ? firestoreLevel
+            : (firestoreLevel === 'full' ? 'premium' : 'starter');
           // «Уровень доступа» — админ по Firestore или по email
-          const isAdmin = firestoreLevel === 'admin' || isAdminEmail(user.email);
-          // Для админа по email, у которого в Firestore нет уровня (guest), показываем «Админ»
-          const levelForDisplay = (isAdmin && (firestoreLevel === 'guest' || !rawLevel)) ? 'admin' : firestoreLevel;
+          const isAdmin = normalizedLevel === 'admin' || isAdminEmail(user.email);
+          // Для админа по email, у которого в Firestore нет уровня (guest/full/missing),
+          // показываем «Админ» в строке «Уровень».
+          const levelForDisplay = (isAdmin && (normalizedLevel === 'guest' || !rawLevel || firestoreLevel === 'full')) ? 'admin' : normalizedLevel;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
@@ -5159,9 +5165,15 @@ function playHitSound(){
         }).catch(function (err) {
           console.error('account level load error', err);
           // Fallback: используем window.__userAccessLevel из onAuthStateChanged
-          const accessLevel = (window.__userAccessLevel || 'guest').toLowerCase().trim();
-          const isAdmin = accessLevel === 'admin' || isAdminEmail(user.email);
-          const levelForDisplay = (isAdmin && (accessLevel === 'guest' || !window.__userAccessLevel)) ? 'admin' : accessLevel;
+          const rawAccess = window.__userAccessLevel;
+          const accessLevel = (rawAccess || 'guest').toLowerCase().trim();
+          // Нормализация: устаревшее/неизвестное значение (например, 'full') приводим
+          // к одному из валидных уровней ['guest','starter','plus','premium','admin'].
+          const normalizedAccess = (['guest','starter','plus','premium','admin'].indexOf(accessLevel) >= 0)
+            ? accessLevel
+            : (accessLevel === 'full' ? 'premium' : 'starter');
+          const isAdmin = normalizedAccess === 'admin' || isAdminEmail(user.email);
+          const levelForDisplay = (isAdmin && (normalizedAccess === 'guest' || !rawAccess || accessLevel === 'full')) ? 'admin' : normalizedAccess;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
@@ -5182,9 +5194,15 @@ function playHitSound(){
         });
       } else {
         // Fallback: используем уже установленный window.__userAccessLevel из onAuthStateChanged
-        const accessLevel = (window.__userAccessLevel || 'guest').toLowerCase().trim();
-        const isAdmin = accessLevel === 'admin' || isAdminEmail(user.email);
-        const levelForDisplay = isAdmin ? 'admin' : (['starter','plus','premium'].indexOf(accessLevel) >= 0 ? accessLevel : 'guest');
+        const rawAccess = window.__userAccessLevel;
+        const accessLevel = (rawAccess || 'guest').toLowerCase().trim();
+        // Нормализация: устаревшее/неизвестное значение (например, 'full') приводим
+        // к одному из валидных уровней ['guest','starter','plus','premium','admin'].
+        const normalizedAccess = (['guest','starter','plus','premium','admin'].indexOf(accessLevel) >= 0)
+          ? accessLevel
+          : (accessLevel === 'full' ? 'premium' : 'starter');
+        const isAdmin = normalizedAccess === 'admin' || isAdminEmail(user.email);
+        const levelForDisplay = isAdmin ? 'admin' : (['starter','plus','premium','admin'].indexOf(normalizedAccess) >= 0 ? normalizedAccess : 'guest');
         const levelEl = document.getElementById('accountProfileLevel');
         const levelRow = document.getElementById('accountProfileLevelRow');
         const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
@@ -5549,7 +5567,13 @@ function playHitSound(){
         if (db) {
           db.collection('users').doc(user.uid).get().then(function (doc) {
             const data = doc.exists ? (doc.data() || {}) : {};
-            window.__userAccessLevel = data.accessLevel || 'starter';
+            let accessLevel = (data.accessLevel || 'starter').toLowerCase().trim();
+            // Нормализация: устаревшее/неизвестное значение (например, 'full') приводим
+            // к одному из валидных уровней ['guest','starter','plus','premium','admin'].
+            if (['guest','starter','plus','premium','admin'].indexOf(accessLevel) < 0) {
+              accessLevel = (accessLevel === 'full' ? 'premium' : 'starter');
+            }
+            window.__userAccessLevel = accessLevel;
             if (isAdminEmail(user.email)) window.__userAccessLevel = 'admin';
             window.__userIsAdult = data.isAdult === true;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
