@@ -5437,6 +5437,18 @@ function playHitSound(){
 
   const auth = getAuth();
   if (auth && typeof auth.onAuthStateChanged === 'function') {
+    // Вызывает updateStatsBtnVisibility, дожидаясь загрузки fants-timer.js
+    // (подключается после core.js). Если функция уже определена — вызывает сразу,
+    // иначе пробует каждые 100 мс в течение 5 секунд.
+    function ensureStatsBtnVisibility() {
+      if (typeof window.updateStatsBtnVisibility === 'function') {
+        window.updateStatsBtnVisibility();
+      } else if (--ensureStatsBtnVisibility.attempts > 0) {
+        setTimeout(ensureStatsBtnVisibility, 100);
+      }
+    }
+    ensureStatsBtnVisibility.attempts = 50;
+
     auth.onAuthStateChanged(function (user) {
       if (user) {
         ensureUserDoc(user);
@@ -5447,12 +5459,12 @@ function playHitSound(){
             window.__userAccessLevel = data.accessLevel || 'starter';
             window.__userIsAdult = data.isAdult === true;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
-            if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
+            ensureStatsBtnVisibility();
           }).catch(function () {
             window.__userAccessLevel = 'starter';
             window.__userIsAdult = false;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
-            if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
+            ensureStatsBtnVisibility();
           });
           // Молчаливая синхронизация при автовходе. При ручном входе/регистрации
           // миграция handled в handlePostAuthMigration, поэтому пропускаем.
@@ -5471,17 +5483,17 @@ function playHitSound(){
           window.__userAccessLevel = 'starter';
           window.__userIsAdult = false;
           if (typeof window.renderGroupGames === "function") window.renderGroupGames();
-          if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
+          ensureStatsBtnVisibility();
         }
       } else {
         window.__userAccessLevel = 'guest';
         window.__userIsAdult = false;
         if (typeof window.renderGroupGames === "function") window.renderGroupGames();
-        if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
+        ensureStatsBtnVisibility();
       }
       // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
       // Кнопка статистики — только админу.
-      if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
+      ensureStatsBtnVisibility();
     });
   }
 })();
