@@ -609,10 +609,17 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   // Статистика в меню — только для администратора (__userAccessLevel === 'admin').
   function updateStatsBtnVisibility() {
     const btn = document.getElementById('menuStatsBtn');
-    if (btn) {
-      btn.style.display = (typeof window !== 'undefined' && window.__userAccessLevel === 'admin') ? '' : 'none';
+    if (!btn) return;
+    // Если уровень доступа ещё не загружен из Firestore — повторяем через 100 мс.
+    if (typeof window.__userAccessLevel === 'undefined') {
+      if (--updateStatsBtnVisibility.attempts > 0) {
+        setTimeout(updateStatsBtnVisibility, 100);
+      }
+      return;
     }
+    btn.style.display = (window.__userAccessLevel === 'admin') ? '' : 'none';
   }
+  updateStatsBtnVisibility.attempts = 50;
   updateStatsBtnVisibility();
   window.updateStatsBtnVisibility = updateStatsBtnVisibility;
 
