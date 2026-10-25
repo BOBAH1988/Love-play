@@ -5476,6 +5476,8 @@ function playHitSound(){
         if (typeof window.renderGroupGames === "function") window.renderGroupGames();
       }
       // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
+      // Кнопка статистики — только админу.
+      if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
     });
   }
 })();

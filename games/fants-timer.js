@@ -606,6 +606,16 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     showModal('statsModal');
   });
 
+  // Статистика в меню — только для администратора (__userAccessLevel === 'admin').
+  function updateStatsBtnVisibility() {
+    const btn = document.getElementById('menuStatsBtn');
+    if (btn) {
+      btn.style.display = (typeof window !== 'undefined' && window.__userAccessLevel === 'admin') ? '' : 'none';
+    }
+  }
+  updateStatsBtnVisibility();
+  window.updateStatsBtnVisibility = updateStatsBtnVisibility;
+
   const __statsCloseBtn = document.getElementById('statsCloseBtn');
   if(__statsCloseBtn) __statsCloseBtn.addEventListener('click', ()=>{ hideModal('statsModal'); });
 
