@@ -5447,10 +5447,12 @@ function playHitSound(){
             window.__userAccessLevel = data.accessLevel || 'starter';
             window.__userIsAdult = data.isAdult === true;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+            if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
           }).catch(function () {
             window.__userAccessLevel = 'starter';
             window.__userIsAdult = false;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+            if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
           });
           // Молчаливая синхронизация при автовходе. При ручном входе/регистрации
           // миграция handled в handlePostAuthMigration, поэтому пропускаем.
@@ -5469,11 +5471,13 @@ function playHitSound(){
           window.__userAccessLevel = 'starter';
           window.__userIsAdult = false;
           if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+          if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
         }
       } else {
         window.__userAccessLevel = 'guest';
         window.__userIsAdult = false;
         if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+        if (typeof window.updateStatsBtnVisibility === 'function') window.updateStatsBtnVisibility();
       }
       // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
       // Кнопка статистики — только админу.
