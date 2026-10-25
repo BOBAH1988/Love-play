@@ -391,9 +391,26 @@ let summaryModalMode = 'fanty';
 // Раскрыт ли полный список «Любимые игры» (кнопка «Показать все»).
 // Флаг сбрасывается при каждом открытии экрана статистики.
 let statsGamesExpanded = false;
+let statsView = 'general'; // 'general' | 'mine'
 function renderStatsScreen(){
   const body = document.getElementById('statsBody');
   const toggleBtn = document.getElementById('statsToggleBtn');
+  const mineControls = document.getElementById('statsMineControls');
+  const finishedRow = document.getElementById('statsFinishedRow');
+  const generalBtn = document.getElementById('statsGeneralBtn');
+  const mineBtn = document.getElementById('statsMineBtn');
+
+  if (generalBtn) generalBtn.classList.toggle('on', statsView === 'general');
+  if (mineBtn) mineBtn.classList.toggle('on', statsView === 'mine');
+
+  if (statsView === 'general') {
+    if (mineControls) mineControls.style.display = 'none';
+    if (finishedRow) finishedRow.style.display = 'none';
+    renderGeneralStats(body);
+    return;
+  }
+
+  if (mineControls) mineControls.style.display = '';
   if(!body || !window.AppStats) return;
 
   const s = window.AppStats.summary();
@@ -443,7 +460,6 @@ function renderStatsScreen(){
     html += row('из настройки', s.exits.setup || 0);
     html += row('посреди партии', s.exits.midgame || 0);
 
-    const finishedRow = document.getElementById('statsFinishedRow');
     if (finishedRow) finishedRow.style.display = s.finishedGames !== undefined ? 'block' : 'none';
 
     body.innerHTML = html;
@@ -461,6 +477,81 @@ function renderStatsScreen(){
     toggleBtn.textContent = s.enabled ? '⏸ Приостановить сбор' : '▶ Возобновить сбор';
   }
 }
+
+function renderGeneralStats(body){
+  if(!body) return;
+  const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const row = (label, value) =>
+    '<div style="display:flex; justify-content:space-between; gap:10px; padding:2px 0;">'
+    + '<span>' + label + '</span><b>' + value + '</b></div>';
+
+  const f = window.ComeOnPlayFirebase;
+  const db = f && f.db;
+  if(!db || typeof db.collection !== 'function'){
+    body.innerHTML = '<div style="color:#8a5c7a;">Firebase недоступен — общая статистика недоступна.</div>';
+    return;
+  }
+
+  body.innerHTML = '<div style="color:#8a5c7a;">Загрузка общей статистики…</div>';
+
+  const now = Date.now();
+  const d1 = new Date(now - 24*60*60*1000);
+  const d7 = new Date(now - 7*24*60*60*1000);
+  const d30 = new Date(now - 30*24*60*60*1000);
+
+  db.collection('users').get().then(function(snap){
+    const docs = (snap && Array.isArray(snap.docs)) ? snap.docs : [];
+    let total = docs.length;
+    let new1 = 0, new7 = 0, new30 = 0;
+    const levels = { admin:0, premium:0, plus:0, starter:0, guest:0 };
+    let active = 0, withName = 0, male = 0, female = 0;
+
+    docs.forEach(function(doc){
+      const d = (typeof doc.data === 'function') ? (doc.data() || {}) : {};
+      let created = null;
+      if (d.createdAt && typeof d.createdAt.toDate === 'function') created = d.createdAt.toDate();
+      else if (d.createdAt) created = new Date(d.createdAt);
+      if (created) {
+        if (created >= d1) new1++;
+        if (created >= d7) new7++;
+        if (created >= d30) new30++;
+      }
+      const lvl = String(d.accessLevel || 'starter').toLowerCase().trim();
+      if (Object.prototype.hasOwnProperty.call(levels, lvl)) levels[lvl]++;
+      else levels[lvl] = (levels[lvl] || 0) + 1;
+      if (String(d.status || 'active').toLowerCase() === 'active') active++;
+      if (String(d.name || '').trim()) withName++;
+      if (d.gender === 'M') male++;
+      if (d.gender === 'F') female++;
+    });
+
+    let html = '';
+    html += row('Всего пользователей', total);
+    html += row('Новых за 30 дней', new30);
+    html += row('Новых за 7 дней', new7);
+    html += row('Новых за 24 часа', new1);
+    html += row('Средний прирост в день (30 дн)', (new30 / 30).toFixed(1));
+
+    html += '<div style="margin-top:12px; font-weight:700;">Уровни доступа</div>';
+    html += row('Администраторы', levels.admin || 0);
+    html += row('Премиум', levels.premium || 0);
+    html += row('Плюс', levels.plus || 0);
+    html += row('Старт', levels.starter || 0);
+    if (levels.guest) html += row('Гость', levels.guest);
+
+    html += '<div style="margin-top:12px; font-weight:700;">Профиль и активность</div>';
+    html += row('С именем', withName);
+    html += row('Мужчины', male);
+    html += row('Женщины', female);
+    html += row('Активных (status: active)', active);
+
+    body.innerHTML = html;
+  }).catch(function(err){
+    body.innerHTML = '<div style="color:#b00020;">Ошибка загрузки общей статистики: '
+      + esc((err && err.message) ? err.message : err) + '</div>';
+  });
+}
+
 
 function showSummary(){
   summaryModalMode = 'fanty';
@@ -602,6 +693,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     closeMenu();
     // Каждый раз открываем свёрнутым: сначала топ-5, остальное — по кнопке.
     statsGamesExpanded = false;
+    statsView = 'general';
     renderStatsScreen();
     showModal('statsModal');
   });
@@ -625,6 +717,17 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 
   const __statsCloseBtn = document.getElementById('statsCloseBtn');
   if(__statsCloseBtn) __statsCloseBtn.addEventListener('click', ()=>{ hideModal('statsModal'); });
+
+  const __statsGeneralBtn = document.getElementById('statsGeneralBtn');
+  if(__statsGeneralBtn) __statsGeneralBtn.addEventListener('click', ()=>{
+    statsView = 'general';
+    renderStatsScreen();
+  });
+  const __statsMineBtn = document.getElementById('statsMineBtn');
+  if(__statsMineBtn) __statsMineBtn.addEventListener('click', ()=>{
+    statsView = 'mine';
+    renderStatsScreen();
+  });
 
   const __statsToggleBtn = document.getElementById('statsToggleBtn');
   if(__statsToggleBtn) __statsToggleBtn.addEventListener('click', ()=>{
