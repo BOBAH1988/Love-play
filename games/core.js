@@ -5127,7 +5127,10 @@ function playHitSound(){
       if (db) {
         db.collection('users').doc(user.uid).get().then(function (doc) {
           const data = doc.exists ? (doc.data() || {}) : {};
-          const accessLevel = data.accessLevel || 'guest';
+          const firestoreLevel = data.accessLevel || 'guest';
+          // Эффективный уровень: админ по email всегда имеет уровень admin
+          const isAdmin = firestoreLevel === 'admin' || isAdminEmail(user.email);
+          const accessLevel = isAdmin ? 'admin' : firestoreLevel;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
@@ -5144,7 +5147,6 @@ function playHitSound(){
             }
           }
           // «Уровень доступа» — только для админа, текст «Администратор»
-          const isAdmin = accessLevel === 'admin' || isAdminEmail(user.email);
           if (accessLevelRow) {
             accessLevelRow.style.display = isAdmin ? '' : 'none';
             if (accessLevelEl) {
