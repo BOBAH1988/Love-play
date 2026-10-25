@@ -5159,7 +5159,34 @@ function playHitSound(){
               accessLevelEl.style.color = '#2b0f2e';
             }
           }
-        }).catch(function () {});
+        }).catch(function (err) {
+          console.error('account level load error', err);
+          // Fallback: используем window.__userAccessLevel из onAuthStateChanged
+          const accessLevel = window.__userAccessLevel || 'guest';
+          const isAdmin = accessLevel === 'admin' || isAdminEmail(user.email);
+          const levelForDisplay = (isAdmin && accessLevel === 'guest') ? 'admin' : accessLevel;
+          const levelEl = document.getElementById('accountProfileLevel');
+          const levelRow = document.getElementById('accountProfileLevelRow');
+          const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
+          const accessLevelEl = document.getElementById('accountProfileAccessLevel');
+          const levelName = LEVEL_LABELS_LOCAL[levelForDisplay] || levelForDisplay;
+          if (levelEl) {
+            levelEl.style.color = '#2b0f2e';
+            if (['starter','plus','premium','admin'].indexOf(levelForDisplay) >= 0) {
+              levelEl.textContent = levelName;
+              if (levelRow) levelRow.style.display = '';
+            } else {
+              if (levelRow) levelRow.style.display = 'none';
+            }
+          }
+          if (accessLevelRow) {
+            accessLevelRow.style.display = isAdmin ? '' : 'none';
+            if (accessLevelEl) {
+              accessLevelEl.textContent = isAdmin ? 'Администратор' : '';
+              accessLevelEl.style.color = '#2b0f2e';
+            }
+          }
+        });
       } else {
         // Fallback: используем уже установленный window.__userAccessLevel из onAuthStateChanged
         const accessLevel = window.__userAccessLevel || 'guest';
