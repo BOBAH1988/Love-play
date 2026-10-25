@@ -362,7 +362,7 @@ MIGRATIONS[2] = (s) => { s.newField = s.oldField; delete s.oldField; };
 `sw.js`. Начальный текст в `index.html` также должен соответствовать текущей
 версии, чтобы правильная надпись была доступна до первого вызова меню.
 
-**Текущая версия проекта:** `v1.1.692` (`veselye-igry-cache-v1.1.692`).
+**Текущая версия проекта:** `v1.1.693` (`veselye-igry-cache-v1.1.693`).
 
 При каждой смене `CACHE_NAME` нужно в том же изменении обновить
 `window.APP_BUILD`, начальный текст `#projectVersion`, запись о текущей
@@ -1643,7 +1643,7 @@ CSS-transition не запускается, если элемент был `disp
 
 ### Критические исправления
 
-| 2026-10-25 | `0000000` | Account optional Name/Gender; active gender toggle color changed to semi-transparent site accent. |
+| 2026-10-25 | `0000000` | Account optional Name/Gender; active gender toggle color semi-transparent; icons 30% smaller. |
 | 2026-10-24 | `abcdef1` | **Исправлено: «Уровень» не отображался в меню аккаунта.** Принудительное отображение строки «Уровень» с текстом уровня (starter/plus/premium/admin/Админ) для любого вошедшего пользователя; убраны условия, которые скрывали строку. Версии: `games/core.js` → `?v=20261024v`, сборка/кэш — v1.1.687. |
 | 2026-10-24 | `6acdf91` | **Исправлено: «Уровень» не показывался при ошибке прав доступа Firestore.** Пустой `.catch()` глотал ошибку чтения документа пользователя, и уровень никогда не заполнялся. Добавлен fallback на `window.__userAccessLevel` (установленный в `onAuthStateChanged`) с тем же отображением: «Уровень» — starter/plus/premium/admin (скрыт для гостя), «Уровень доступа: Администратор» — только для админов. Версии: `games/core.js` → `?v=20261024u`, сборка/кэш — v1.1.686. |
 | 2026-10-24 | `1eae316` | **Исправлено: «Уровень» не отображался из-за ReferenceError.** Константы `ADMIN_EMAILS` и функция `isAdminEmail()` были определены после `openAccount()` (внутри `onAuthStateChanged`), а `const` не хойстится — при вызове `isAdminEmail()` в `openAccount()` возникала ошибка, весь `.then()` блок падал, и строка «Уровень» не показывалась. Перенесены определения перед `openAccount()`. Версии: `games/core.js` → `?v=20261024t`, сборка/кэш — v1.1.685. |
