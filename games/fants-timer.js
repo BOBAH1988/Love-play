@@ -391,7 +391,7 @@ let summaryModalMode = 'fanty';
 // Раскрыт ли полный список «Любимые игры» (кнопка «Показать все»).
 // Флаг сбрасывается при каждом открытии экрана статистики.
 let statsGamesExpanded = false;
-let statsView = 'general'; // 'general' | 'mine'
+let statsView = 'general'; // 'general' | 'mine' | 'all'
 function renderStatsScreen(){
   const body = document.getElementById('statsBody');
   const toggleBtn = document.getElementById('statsToggleBtn');
@@ -399,9 +399,11 @@ function renderStatsScreen(){
   const finishedRow = document.getElementById('statsFinishedRow');
   const generalBtn = document.getElementById('statsGeneralBtn');
   const mineBtn = document.getElementById('statsMineBtn');
+  const allBtn = document.getElementById('statsAllBtn');
 
   if (generalBtn) generalBtn.classList.toggle('on', statsView === 'general');
   if (mineBtn) mineBtn.classList.toggle('on', statsView === 'mine');
+  if (allBtn) allBtn.classList.toggle('on', statsView === 'all');
 
   if (statsView === 'general') {
     if (mineControls) mineControls.style.display = 'none';
@@ -410,73 +412,175 @@ function renderStatsScreen(){
     return;
   }
 
+  if (statsView === 'all') {
+    if (mineControls) mineControls.style.display = 'none';
+    if (finishedRow) finishedRow.style.display = 'none';
+    renderAllStats(body);
+    return;
+  }
+
   if (mineControls) mineControls.style.display = '';
   if(!body || !window.AppStats) return;
 
   const s = window.AppStats.summary();
-
-  if(!s.enabled){
+  renderStatsBody(body, s, finishedRow);
+  return;
+}
+function renderStatsBody(body, s, finishedRow){
+  if(!body) return;
+  if(!s || !s.enabled){
     body.innerHTML = '<div style="color:#8a5c7a;">Сбор статистики приостановлен. '
       + 'Данные за прошлые сессии сохранены.</div>';
-  } else if(s.totalGames === 0){
+    return;
+  }
+  if(s.totalGames === 0){
     body.innerHTML = '<div style="color:#8a5c7a;">Пока нет данных — сыграйте партию, '
       + 'и здесь появится сводка: сколько партий, какие игры чаще, где выходят.</div>';
-  } else {
-    const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-    const row = (label, value) =>
-      '<div style="display:flex; justify-content:space-between; gap:10px; padding:2px 0;">'
-      + '<span>' + label + '</span><b>' + value + '</b></div>';
+    return;
+  }
+  const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const row = (label, value) =>
+    '<div style="display:flex; justify-content:space-between; gap:10px; padding:2px 0;">'
+    + '<span>' + label + '</span><b>' + value + '</b></div>';
 
-    let html = '';
-    html += row('Всего партий', s.totalGames);
-    if (s.finishedGames !== undefined) {
-      html += row('Законченных партий', s.finishedGames);
-    }
-    html += row('Дней в приложении', s.days);
-    html += row('Общее время игры', window.AppStats.formatDuration(s.totalMs));
+  let html = '';
+  html += row('Всего партий', s.totalGames);
+  if (s.finishedGames !== undefined) {
+    html += row('Законченных партий', s.finishedGames);
+  }
+  html += row('Дней в приложении', s.days);
+  const fmt = (window.AppStats && typeof window.AppStats.formatDuration === 'function')
+    ? window.AppStats.formatDuration : function(ms){ return ms + ' мс'; };
+  html += row('Общее время игры', fmt(s.totalMs));
 
-    if(s.games.length){
-      html += '<div style="margin-top:12px; font-weight:700;">Любимые игры</div>';
-      // Показываем первые 5 игр, остальные — по кнопке «Показать все».
-      // Состояние раскрытия живёт в модуле (statsGamesExpanded), а не в DOM:
-      // renderStatsScreen перерисовывает body целиком, и флаг в DOM сгорел бы.
-      const VISIBLE_COUNT = 5;
-      const shown = statsGamesExpanded ? s.games : s.games.slice(0, VISIBLE_COUNT);
-      shown.forEach((g) => {
-        const done = g.finished > 0 ? ' · доиграно ' + g.finished : '';
-        html += '<div style="display:flex; justify-content:space-between; gap:10px; padding:2px 0;">'
-          + '<span>' + g.icon + ' ' + esc(g.title) + '</span>'
-          + '<span style="white-space:nowrap; color:#6b4560;">' + g.started + done + '</span></div>';
-      });
-      if(s.games.length > VISIBLE_COUNT){
-        html += '<button type="button" class="btn btn-secondary" id="statsMoreGamesBtn" '
-          + 'style="margin-top:6px; width:100%;">'
-          + (statsGamesExpanded ? 'Скрыть ▲' : 'Показать все (' + s.games.length + ') ▼')
-          + '</button>';
-      }
-    }
-
-    html += '<div style="margin-top:12px; font-weight:700;">Где выходят</div>';
-    html += row('из настройки', s.exits.setup || 0);
-    html += row('посреди партии', s.exits.midgame || 0);
-
-    if (finishedRow) finishedRow.style.display = s.finishedGames !== undefined ? 'block' : 'none';
-
-    body.innerHTML = html;
-
-    // Кнопка «Показать все / Скрыть» — вешаем после отрисовки, т.к. body
-    // перерисовывается целиком при каждом вызове.
-    const moreBtn = document.getElementById('statsMoreGamesBtn');
-    if(moreBtn) moreBtn.addEventListener('click', ()=>{
-      statsGamesExpanded = !statsGamesExpanded;
-      renderStatsScreen();
+  if(s.games.length){
+    html += '<div style="margin-top:12px; font-weight:700;">Любимые игры</div>';
+    const VISIBLE_COUNT = 5;
+    const shown = statsGamesExpanded ? s.games : s.games.slice(0, VISIBLE_COUNT);
+    shown.forEach((g) => {
+      const done = g.finished > 0 ? ' · доиграно ' + g.finished : '';
+      html += '<div style="display:flex; justify-content:space-between; gap:10px; padding:2px 0;">'
+        + '<span>' + g.icon + ' ' + esc(g.title) + '</span>'
+        + '<span style="white-space:nowrap; color:#6b4560;">' + g.started + done + '</span></div>';
     });
+    if(s.games.length > VISIBLE_COUNT){
+      html += '<button type="button" class="btn btn-secondary" id="statsMoreGamesBtn" '
+        + 'style="margin-top:6px; width:100%;">'
+        + (statsGamesExpanded ? 'Скрыть ▲' : 'Показать все (' + s.games.length + ') ▼')
+        + '</button>';
+    }
   }
 
-  if(toggleBtn){
-    toggleBtn.textContent = s.enabled ? '⏸ Приостановить сбор' : '▶ Возобновить сбор';
-  }
+  html += '<div style="margin-top:12px; font-weight:700;">Где выходят</div>';
+  html += row('из настройки', s.exits.setup || 0);
+  html += row('посреди партии', s.exits.midgame || 0);
+
+  if (finishedRow) finishedRow.style.display = s.finishedGames !== undefined ? 'block' : 'none';
+
+  body.innerHTML = html;
+
+  const moreBtn = document.getElementById('statsMoreGamesBtn');
+  if(moreBtn) moreBtn.addEventListener('click', ()=>{
+    statsGamesExpanded = !statsGamesExpanded;
+    renderStatsScreen();
+  });
 }
+window.__pushGameStatsToCloud = function () {
+  try {
+    const auth = (typeof getAuth === 'function') ? getAuth() : null;
+    const user = auth && auth.currentUser;
+    if (!user) return;
+    const db = (typeof getDb === 'function') ? getDb() : (window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.db);
+    if (!db || typeof db.collection !== 'function') return;
+    const g = window.AppStats && typeof window.AppStats.load === 'function' ? window.AppStats.load() : null;
+    if (!g) return;
+    db.collection('users').doc(user.uid).set({ gameStats: g }, { merge: true }).catch(function (e) { console.error('game stats upload error', e); });
+  } catch (e) {}
+};
+
+function renderAllStats(body) {
+  if (!body) return;
+  const f = window.ComeOnPlayFirebase;
+  const db = f && f.db;
+  if (!db || typeof db.collection !== 'function') {
+    body.innerHTML = '<div style="color:#8a5c7a;">Firebase недоступен — статистика всех пользователей недоступна.</div>';
+    return;
+  }
+  body.innerHTML = '<div style="color:#8a5c7a;">Загрузка статистики всех пользователей…</div>';
+  db.collection('users').get().then(function (snap) {
+    const docs = (snap && Array.isArray(snap.docs)) ? snap.docs : [];
+    let totalGames = 0, finishedGames = 0, totalMs = 0, totalDays = 0, devices = 0, usersWithStats = 0;
+    const gamesMap = {};
+    const exits = { setup: 0, midgame: 0 };
+    docs.forEach(function (doc) {
+      const d = (typeof doc.data === 'function') ? (doc.data() || {}) : {};
+      const gs = d.gameStats;
+      if (!gs || typeof gs !== 'object') return;
+      usersWithStats++;
+      totalGames += (gs.totalGames || 0);
+      totalDays += (Array.isArray(gs.days) ? gs.days.length : (gs.days || 0));
+      devices += (gs.deviceCount || 0);
+      if (gs.exits && typeof gs.exits === 'object') {
+        exits.setup += (gs.exits.setup || 0);
+        exits.midgame += (gs.exits.midgame || 0);
+      }
+      const gsGames = gs.games || {};
+      Object.keys(gsGames).forEach(function (mode) {
+        const r = gsGames[mode] || {};
+        if (!gamesMap[mode]) gamesMap[mode] = { started: 0, finished: 0, totalMs: 0 };
+        gamesMap[mode].started += (r.started || 0);
+        gamesMap[mode].finished += (r.finished || 0);
+        gamesMap[mode].totalMs += (r.totalMs || 0);
+      });
+      // finishedGames считаем по играм, если не задано отдельно
+    });
+    Object.keys(gamesMap).forEach(function (mode) {
+      finishedGames += (gamesMap[mode].finished || 0);
+      totalMs += (gamesMap[mode].totalMs || 0);
+    });
+
+    const rows = Object.keys(gamesMap).map(function (mode) {
+      const r = gamesMap[mode];
+      const reg = (typeof gameByMode === 'function') ? gameByMode(mode) : null;
+      return {
+        mode: mode,
+        title: reg ? String(reg.title).replace(/[«»]/g, '') : mode,
+        icon: reg && reg.menuTitle ? String(reg.menuTitle).split(' ')[0] : '🎮',
+        started: r.started,
+        finished: r.finished,
+        avgMs: r.started > 0 ? Math.round(r.totalMs / r.started) : 0,
+        lastAt: null,
+      };
+    }).sort(function (a, b) { return b.started - a.started; });
+
+    if (totalGames === 0) {
+      body.innerHTML = '<div style="color:#8a5c7a;">Пока нет данных от пользователей.</div>';
+      return;
+    }
+    const s = {
+      enabled: true,
+      firstSeen: null,
+      days: totalDays,
+      totalGames: totalGames,
+      finishedGames: finishedGames,
+      devices: devices,
+      games: rows,
+      exits: exits,
+      totalMs: totalMs,
+      users: usersWithStats,
+    };
+    renderStatsBody(body, s, null);
+    // Дополнительно показываем число пользователей со статистикой.
+    const note = document.createElement('div');
+    note.style.cssText = 'margin-top:8px; color:#8a5c7a; font-size:12px;';
+    note.textContent = 'Пользователей со статистикой: ' + usersWithStats;
+    body.appendChild(note);
+  }).catch(function (err) {
+    body.innerHTML = '<div style="color:#b00020;">Ошибка загрузки статистики всех пользователей: '
+      + String((err && err.message) ? err.message : err) + '</div>';
+  });
+}
+
 
 function renderGeneralStats(body){
   if(!body) return;
@@ -723,11 +827,17 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     statsView = 'general';
     renderStatsScreen();
   });
+  const __statsAllBtn = document.getElementById('statsAllBtn');
+  if(__statsAllBtn) __statsAllBtn.addEventListener('click', ()=>{
+    statsView = 'all';
+    renderStatsScreen();
+  });
   const __statsMineBtn = document.getElementById('statsMineBtn');
   if(__statsMineBtn) __statsMineBtn.addEventListener('click', ()=>{
     statsView = 'mine';
     renderStatsScreen();
   });
+
 
   // Закрытие модалки «О проекте» кликом по фону
   const aboutProjectModal = document.getElementById('aboutProjectModal');

@@ -79,6 +79,15 @@
     try {
       localStorage.setItem(STATS_KEY, JSON.stringify(loadStats()));
     } catch (e) { /* квота или приватный режим — статистика не критична */ }
+    // Синхронизация агрегированной статистики для вкладки «Все» (если доступна).
+    try {
+      if (typeof window.__pushGameStatsToCloud === 'function') {
+        if (window.__gameStatsPushTimer) clearTimeout(window.__gameStatsPushTimer);
+        window.__gameStatsPushTimer = setTimeout(function () {
+          try { window.__pushGameStatsToCloud(); } catch (e) {}
+        }, 1500);
+      }
+    } catch (e) {}
   }
 
   /** Сбор статистики всегда включён (переключатель убран из интерфейса). */
