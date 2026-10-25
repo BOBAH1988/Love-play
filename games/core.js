@@ -5130,6 +5130,18 @@ function playHitSound(){
             if (accessLevelEl) { accessLevelEl.textContent = levelName; accessLevelEl.style.color = '#2b0f2e'; }
           }
         }).catch(function () {});
+      } else {
+        // Fallback: используем уже установленный window.__userAccessLevel из onAuthStateChanged
+        const levelEl = document.getElementById('accountProfileLevel');
+        const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
+        const accessLevelEl = document.getElementById('accountProfileAccessLevel');
+        const levelName = LEVEL_LABELS[window.__userAccessLevel] || window.__userAccessLevel || 'Гость';
+        if (levelEl) { levelEl.textContent = levelName; levelEl.style.color = '#2b0f2e'; }
+        const isAdmin = window.__userAccessLevel === 'admin' || isAdminEmail(user.email);
+        if (accessLevelRow) {
+          accessLevelRow.style.display = isAdmin ? '' : 'none';
+          if (accessLevelEl) { accessLevelEl.textContent = levelName; accessLevelEl.style.color = '#2b0f2e'; }
+        }
       }
     } else {
       if (guest) guest.style.display = '';
