@@ -543,7 +543,7 @@ function renderGeneralStats(body){
     html += row('С именем', withName);
     html += row('Мужчины', male);
     html += row('Женщины', female);
-    html += row('Активных (status: active)', active);
+    html += row('Активных', active);
 
     body.innerHTML = html;
   }).catch(function(err){
