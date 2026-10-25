@@ -5122,11 +5122,12 @@ function playHitSound(){
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
           const accessLevelEl = document.getElementById('accountProfileAccessLevel');
           const levelName = LEVEL_LABELS[data.accessLevel] || data.accessLevel || 'Гость';
-          if (levelEl) levelEl.textContent = levelName;
-          // «Уровень доступа: Админ» видно только администратору
+          if (levelEl) { levelEl.textContent = levelName; levelEl.style.color = '#2b0f2e'; }
+          // «Уровень доступа: Админ» видно только администратору (по Firestore или по email)
+          const isAdmin = data.accessLevel === 'admin' || isAdminEmail(user.email);
           if (accessLevelRow) {
-            accessLevelRow.style.display = (data.accessLevel === 'admin') ? '' : 'none';
-            if (accessLevelEl) accessLevelEl.textContent = levelName;
+            accessLevelRow.style.display = isAdmin ? '' : 'none';
+            if (accessLevelEl) { accessLevelEl.textContent = levelName; accessLevelEl.style.color = '#2b0f2e'; }
           }
         }).catch(function () {});
       }
