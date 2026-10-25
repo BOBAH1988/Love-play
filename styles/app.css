@@ -4568,6 +4568,6 @@
   transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
 .account-gender-btn.on {
-  background: var(--accent); color: #2b0f2e; border-color: var(--accent);
+  background: rgba(var(--accent-rgb), .18); color: #2b0f2e; border-color: rgba(var(--accent-rgb), .45);
 }
 .account-gender-btn:focus { outline: none; box-shadow: 0 0 0 2px rgba(43,15,46,.25); }
