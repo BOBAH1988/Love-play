@@ -5143,7 +5143,7 @@ function playHitSound(){
       if (user && typeof user.reload === 'function') { user.reload().then(function () { const fresh = auth && auth.currentUser; if (fresh) applyVerified(fresh); }).catch(function () {}); }
       const db = getDb();
       if (db) {
-        db.collection('users').doc(user.uid).get().then(function (doc) {
+        db.collection('users').doc(user.uid).get({ source: 'server' }).then(function (doc) {
           const data = doc.exists ? (doc.data() || {}) : {};
           if (accountNameEl) accountNameEl.value = (data.name || '').trim();
           setAccountGender(data.gender === 'M' || data.gender === 'F' ? data.gender : null);
@@ -5429,7 +5429,19 @@ function playHitSound(){
   if (accountProfileNameInput) {
     accountProfileNameInput.addEventListener('blur', saveAccountProfile);
     accountProfileNameInput.addEventListener('change', saveAccountProfile);
+    // Сохраняем имя по мере ввода (с небольшой задержкой), чтобы данные не
+    // терялись при обновлении страницы до события blur.
+    let saveNameTimer = null;
+    accountProfileNameInput.addEventListener('input', function () {
+      if (saveNameTimer) clearTimeout(saveNameTimer);
+      saveNameTimer = setTimeout(saveAccountProfile, 400);
+    });
   }
+  // На случай закрытия/обновления страницы — финальное сохранение профиля.
+  window.addEventListener('pagehide', saveAccountProfile);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') saveAccountProfile();
+  });
   const accountGenderMaleBtn = document.getElementById('accountProfileGenderMale');
   const accountGenderFemaleBtn = document.getElementById('accountProfileGenderFemale');
   if (accountGenderMaleBtn) {
