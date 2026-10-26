@@ -5086,7 +5086,7 @@ function playHitSound(){
       return;
     }
     const ref = db.collection('users').doc(user.uid);
-    ref.get().then(function (doc) {
+    ref.get({ source: 'server' }).then(function (doc) {
       if (doc.exists) return;
       const email = user.email || '';
       const displayName = email.indexOf('@') > 0 ? email.split('@')[0] : email;
