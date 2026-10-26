@@ -5101,11 +5101,13 @@ function playHitSound(){
       const email = user.email || '';
       const displayName = email.indexOf('@') > 0 ? email.split('@')[0] : email;
       if (!doc.exists) {
+        // Админу по email сразу прописываем admin, остальным — starter.
+        const initialAccess = isAdminEmail(user.email) ? 'admin' : 'starter';
         return ref.set({
           email: email,
           displayName: displayName,
           role: 'user',
-          accessLevel: 'starter',
+          accessLevel: initialAccess,
           isAdult: !!isAdult,
           status: 'active',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -5190,7 +5192,7 @@ function playHitSound(){
           const isAdmin = normalizedLevel === 'admin' || isAdminEmail(user.email);
           // Для админа по email, у которого в Firestore нет уровня (guest/full/missing),
           // показываем «Админ» в строке «Уровень».
-          const levelForDisplay = (isAdmin && (normalizedLevel === 'guest' || !rawLevel || firestoreLevel === 'full')) ? 'admin' : normalizedLevel;
+          const levelForDisplay = isAdmin ? 'admin' : normalizedLevel;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
@@ -5221,7 +5223,7 @@ function playHitSound(){
             ? accessLevel
             : (accessLevel === 'full' ? 'premium' : 'starter');
           const isAdmin = normalizedAccess === 'admin' || isAdminEmail(user.email);
-          const levelForDisplay = (isAdmin && (normalizedAccess === 'guest' || !rawAccess || accessLevel === 'full')) ? 'admin' : normalizedAccess;
+          const levelForDisplay = isAdmin ? 'admin' : normalizedAccess;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
           const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
