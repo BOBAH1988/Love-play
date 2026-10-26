@@ -723,7 +723,7 @@ function renderAdminPanel() {
     }
 
     const levels = ['guest', 'starter', 'plus', 'premium', 'admin'];
-    let html = '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:700;">Всего пользователей: ' + users.length + ' <button type="button" class="btn btn-secondary" id="adminPanelRefreshBtn" onclick="if(window.refreshAdminPanel) window.refreshAdminPanel();" style="padding:2px 10px; font-size:13px; width:auto; min-width:0;">Обновить</button></div>';
+    let html = '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:700;">Всего пользователей: ' + users.length + ' <button type="button" class="btn btn-secondary" id="adminPanelRefreshBtn" style="padding:2px 10px; font-size:13px; width:auto; min-width:0;">Обновить</button></div>';
     html += '<div style="display:flex; flex-direction:column; gap:8px;">';
     users.forEach(function (u) {
       const d = u.data || {};
@@ -949,8 +949,16 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
 
   function refreshAdminPanel() { try { renderAdminPanel(); } catch (e) { console.error(e); } }
   window.refreshAdminPanel = refreshAdminPanel;
-  const __adminRefreshBtn = document.getElementById('adminPanelRefreshBtn');
-  if(__adminRefreshBtn) __adminRefreshBtn.addEventListener('click', refreshAdminPanel);
+  // Кнопка «Обновить» рендерится динамически внутри тела панели, поэтому
+  // вешаем делегирование на контейнер, а не на саму кнопку (её при первом
+  // проходе ещё нет в DOM).
+  const __adminPanelBody = document.getElementById('adminPanelBody');
+  if (__adminPanelBody) {
+    __adminPanelBody.addEventListener('click', function (e) {
+      const btn = e.target && (e.target.id === 'adminPanelRefreshBtn' ? e.target : (e.target.closest ? e.target.closest('#adminPanelRefreshBtn') : null));
+      if (btn) { e.preventDefault(); refreshAdminPanel(); }
+    });
+  }
   const __adminRefreshBtnAlias = document.getElementById('adminRefreshBtn');
   if(__adminRefreshBtnAlias) __adminRefreshBtnAlias.addEventListener('click', refreshAdminPanel);
 
