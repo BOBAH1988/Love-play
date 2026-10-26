@@ -4564,6 +4564,9 @@
   border: 1px solid rgba(43,15,46,.15);
   background: rgba(43,15,46,.06); color: #2b0f2e;
   font-size: 14px; line-height: 1; cursor: pointer;
+  padding: 0; margin: 0;
+  box-sizing: border-box;
+  -webkit-appearance: none; appearance: none;
   display: inline-flex; align-items: center; justify-content: center;
   transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
