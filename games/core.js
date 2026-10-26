@@ -5144,7 +5144,7 @@ function playHitSound(){
           if (accountNameEl) accountNameEl.value = (data.name || '').trim();
           setAccountGender(data.gender === 'M' || data.gender === 'F' ? data.gender : null);
           const rawLevel = data.accessLevel;
-          const firestoreLevel = (rawLevel || 'guest').toLowerCase().trim();
+          const firestoreLevel = (rawLevel || 'starter').toLowerCase().trim();
           // Нормализация: устаревшее/неизвестное значение (например, 'full') приводим
           // к одному из валидных уровней ['guest','starter','plus','premium','admin'].
           const normalizedLevel = (['guest','starter','plus','premium','admin'].indexOf(firestoreLevel) >= 0)
@@ -5178,7 +5178,7 @@ function playHitSound(){
           console.error('account level load error', err);
           // Fallback: используем window.__userAccessLevel из onAuthStateChanged
           const rawAccess = window.__userAccessLevel;
-          const accessLevel = (rawAccess || 'guest').toLowerCase().trim();
+          const accessLevel = (rawAccess || 'starter').toLowerCase().trim();
           // Нормализация: устаревшее/неизвестное значение (например, 'full') приводим
           // к одному из валидных уровней ['guest','starter','plus','premium','admin'].
           const normalizedAccess = (['guest','starter','plus','premium','admin'].indexOf(accessLevel) >= 0)
@@ -5207,7 +5207,7 @@ function playHitSound(){
       } else {
         // Fallback: используем уже установленный window.__userAccessLevel из onAuthStateChanged
         const rawAccess = window.__userAccessLevel;
-        const accessLevel = (rawAccess || 'guest').toLowerCase().trim();
+        const accessLevel = (rawAccess || 'starter').toLowerCase().trim();
         // Нормализация: устаревшее/неизвестное значение (например, 'full') приводим
         // к одному из валидных уровней ['guest','starter','plus','premium','admin'].
         const normalizedAccess = (['guest','starter','plus','premium','admin'].indexOf(accessLevel) >= 0)
@@ -5690,12 +5690,14 @@ try { if (typeof global !== 'undefined') global.canLaunchGame = canLaunchGame; }
 function canPlay(game) { return canLaunchGame(game); }
 try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {}
 (function setupGuestAccessHandlers(){
-  function isGuest(){ return (typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'guest'; }
+  function hasUser(){ return !!(typeof window !== 'undefined' && window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser); }
+  function isAdultUser(){ return !!(typeof window !== 'undefined' && window.__userIsAdult === true); }
+  function isGuestLevel(){ return (typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'guest'; }
+  function canAccessCouple(){ return hasUser() && !isGuestLevel() && isAdultUser(); }
   function deny(message){
     try { window.alert(message); } catch(e){}
     try {
-      var hasUser = !!(window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
-      if (!hasUser && window.confirm(message + '\n\nОткрыть окно Аккаунт?')) {
+      if (!hasUser() && window.confirm(message + '\n\nОткрыть окно Аккаунт?')) {
         if (typeof window.__openAccountModal === 'function') window.__openAccountModal();
       }
     } catch(e){}
@@ -5703,21 +5705,29 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
   var coupleList = document.getElementById('gameSelectList');
   if (coupleList) {
     coupleList.addEventListener('click', function(e){
-      if (!isGuest()) return;
+      if (canAccessCouple()) return;
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      deny('Игры для пар доступны только зарегистрированным пользователям.');
+      if (!hasUser() || isGuestLevel()) {
+        deny('Игры для пар доступны только зарегистрированным совершеннолетним пользователям.');
+      } else {
+        try { window.alert('Игры для пар доступны только совершеннолетним пользователям.'); } catch(e){}
+      }
     }, true);
   }
   var luckyBtn = document.getElementById('gameLuckyBtn');
   if (luckyBtn) {
     luckyBtn.addEventListener('click', function(e){
-      if (!isGuest()) return;
+      if (hasUser() && !isGuestLevel() && isAdultUser()) return;
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      deny('Игра «Счастливый билет» недоступна для гостя.');
+      if (!hasUser() || isGuestLevel()) {
+        deny('Игра «Счастливый билет» недоступна для гостя.');
+      } else {
+        try { window.alert('Игра «Счастливый билет» доступна только совершеннолетним пользователям.'); } catch(e){}
+      }
     }, true);
   }
 })();
