@@ -5715,7 +5715,7 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
       const modal = document.getElementById('accessDeniedModal');
       if (modal) {
         const textEl = document.getElementById('accessDeniedText');
-        if (textEl) textEl.textContent = message;
+        if (textEl) textEl.textContent = 'Этот раздел доступен для уровня "Плюс" и выше';
         const accountBtn = document.getElementById('accessDeniedAccountBtn');
         if (accountBtn) accountBtn.style.display = hasUser() ? 'none' : '';
         modal.classList.add('show');
