@@ -515,7 +515,7 @@ function renderAllStats(body) {
     return;
   }
   body.innerHTML = '<div style="color:#8a5c7a;">Загрузка статистики всех пользователей…</div>';
-  db.collection('users').get().then(function (snap) {
+  db.collection('users').get({ source: 'server' }).then(function (snap) {
     const docs = (snap && Array.isArray(snap.docs)) ? snap.docs : [];
     let totalGames = 0, finishedGames = 0, totalMs = 0, totalDays = 0, devices = 0, usersWithStats = 0;
     const gamesMap = {};
@@ -707,7 +707,7 @@ function renderAdminPanel() {
   }
   body.innerHTML = '<div style="color:#8a5c7a;">Загрузка списка пользователей…</div>';
 
-  db.collection('users').get().then(function (snap) {
+  db.collection('users').get({ source: 'server' }).then(function (snap) {
     const docs = (snap && Array.isArray(snap.docs)) ? snap.docs : [];
     const users = docs.map(function (doc) {
       return { uid: doc.id, data: (typeof doc.data === 'function') ? (doc.data() || {}) : {} };
@@ -946,6 +946,12 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(__adminCloseBtn) __adminCloseBtn.addEventListener('click', ()=>{ hideModal('adminPanelModal'); });
   const __adminModal = document.getElementById('adminPanelModal');
   if(__adminModal) __adminModal.addEventListener('click', (e)=>{ if(e.target === __adminModal) hideModal('adminPanelModal'); });
+
+  function refreshAdminPanel() { try { renderAdminPanel(); } catch (e) { console.error(e); } }
+  const __adminRefreshBtn = document.getElementById('adminPanelRefreshBtn');
+  if(__adminRefreshBtn) __adminRefreshBtn.addEventListener('click', refreshAdminPanel);
+  const __adminRefreshBtnAlias = document.getElementById('adminRefreshBtn');
+  if(__adminRefreshBtnAlias) __adminRefreshBtnAlias.addEventListener('click', refreshAdminPanel);
 
   const __statsGeneralBtn = document.getElementById('statsGeneralBtn');
   if(__statsGeneralBtn) __statsGeneralBtn.addEventListener('click', ()=>{

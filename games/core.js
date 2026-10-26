@@ -5086,7 +5086,7 @@ function playHitSound(){
       if (doc.exists) return;
       const email = user.email || '';
       const displayName = email.indexOf('@') > 0 ? email.split('@')[0] : email;
-      ref.set({
+      return ref.set({
         email: email,
         displayName: displayName,
         role: 'user',
@@ -5094,8 +5094,8 @@ function playHitSound(){
         isAdult: !!isAdult,
         status: 'active',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(function (err) { console.error('ensureUserDoc error', err); });
-    }).catch(function (err) { console.error('ensureUserDoc read error', err); });
+      });
+    }).catch(function (err) { console.error('ensureUserDoc error', err); });
   }
 
   // Ярлыки уровней — дублируются из loadGroupGames IIFE, чтобы были видны здесь.
