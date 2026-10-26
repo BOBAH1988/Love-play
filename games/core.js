@@ -5117,8 +5117,6 @@ function playHitSound(){
       const patch = {};
       if (!data.email && email) patch.email = email;
       if (!data.displayName && email) patch.displayName = displayName;
-      if (!data.role) patch.role = 'user';
-      if (!data.accessLevel) patch.accessLevel = 'starter';
       if (data.isAdult === undefined) patch.isAdult = !!isAdult;
       if (!data.status) patch.status = 'active';
       if (Object.keys(patch).length) return ref.set(patch, { merge: true });
@@ -5475,8 +5473,6 @@ function playHitSound(){
       const email = user.email || '';
       if (!data.email && email) patch.email = email;
       if (!data.displayName && email) patch.displayName = email.indexOf('@') > 0 ? email.split('@')[0] : email;
-      if (!data.role) patch.role = 'user';
-      if (!data.accessLevel) patch.accessLevel = 'starter';
       if (data.isAdult === undefined) patch.isAdult = false;
       if (!data.status) patch.status = 'active';
       if (Object.keys(patch).length) {
