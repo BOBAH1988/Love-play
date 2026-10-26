@@ -5176,9 +5176,9 @@ function playHitSound(){
       const emailEl = document.getElementById('accountProfileEmail');
       if (emailEl) emailEl.textContent = user.email || '';
       const verifiedEl = document.getElementById('accountProfileVerified');
-      const verifiedRow = document.getElementById('accountProfileVerifiedRow');
-      const resendBtn = document.getElementById('accountResendVerificationBtn');
-      function applyVerified(u) { const v = !!(u && u.emailVerified); if (verifiedEl) verifiedEl.textContent = v ? 'да' : 'нет'; if (resendBtn) resendBtn.style.display = v ? 'none' : ''; if (verifiedRow) verifiedRow.style.display = v ? 'none' : ''; }
+      // Строка «Email подтверждён» и кнопка повторной отправки скрыты из профиля,
+      // чтобы оставить 2 информационные строки: Email + Уровень (как в админ-панели).
+      function applyVerified(u) { const v = !!(u && u.emailVerified); if (verifiedEl) verifiedEl.textContent = v ? 'да' : 'нет'; }
       applyVerified(user);
       if (user && typeof user.reload === 'function') { user.reload().then(function () { const fresh = auth && auth.currentUser; if (fresh) applyVerified(fresh); }).catch(function () {}); }
       const db = getDb();
