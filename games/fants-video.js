@@ -87,7 +87,7 @@ function openVideoDB(){
     };
     req.onsuccess = ()=> resolve(req.result);
     req.onerror = ()=> reject(req.error);
-  });
+  }).catch(err => { videoDBPromise = null; throw err; });
   return videoDBPromise;
 }
 function loadAllVideoBlobs(){
@@ -96,7 +96,11 @@ function loadAllVideoBlobs(){
     const req = tx.objectStore(VIDEO_DB_STORE).getAll();
     req.onsuccess = ()=> resolve(req.result || []);
     req.onerror = ()=> reject(req.error);
-  }));
+  })).catch(err => {
+    videoDBPromise = null;
+    try { console.warn('[Love-play] loadAllVideoBlobs failed:', err && err.message ? err.message : err); } catch(_) {}
+    return [];
+  });
 }
 function clearAllVideoBlobs(){
   return openVideoDB().then(db => new Promise((resolve, reject)=>{

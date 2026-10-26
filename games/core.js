@@ -3865,6 +3865,14 @@ const EXPECTED_FAILURE_MARKERS = [
   'A network error occurred',
   'Load failed',
   'NetworkError when attempting to fetch resource',
+  // Транзиентные сбои IndexedDB/Webkit (особенно на iOS в PWA после
+  // сворачивания): соединение с базой теряется, чтение без транзакции падает.
+  // Это окружение, а не ошибка приложения — не пугаем игрока окном сбоя
+  // и не забиваем журнал. Источник: WebKit bug, см. firebase-js-sdk#8250.
+  'Attempt to get records from database without an in-progress transaction',
+  'Attempt to get a record from database without an in-progress transaction',
+  'Attempt to get all index records from database without an in-progress transaction',
+  'Connection to Indexed Database server lost',
 ];
 
 /** Ожидаемый ли это сбой (медиа/сеть) — тогда журнал и окно не трогаем. */

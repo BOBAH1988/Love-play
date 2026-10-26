@@ -61,7 +61,7 @@ function openDavayDB(){
     };
     req.onsuccess = ()=> resolve(req.result);
     req.onerror = ()=> reject(req.error);
-  });
+  }).catch(err => { davayDBPromise = null; throw err; });
   return davayDBPromise;
 }
 function saveDavayBlob(file, level){
@@ -79,7 +79,13 @@ function loadAllDavayBlobs(){
     const req = tx.objectStore(DAVAY_DB_STORE).getAll();
     req.onsuccess = ()=> resolve(req.result || []);
     req.onerror = ()=> reject(req.error);
-  }));
+  })).catch(err => {
+    // Транзиентный сбой IndexedDB (WebKit/iOS) — не роняем приложение,
+    // сбрасываем кэшированное соединение, чтобы следующий вызов переоткрыл базу.
+    davayDBPromise = null;
+    try { console.warn('[Love-play] loadAllDavayBlobs failed:', err && err.message ? err.message : err); } catch(_) {}
+    return [];
+  });
 }
 function clearAllDavayBlobs(){
   return openDavayDB().then(db => new Promise((resolve, reject)=>{
