@@ -5080,7 +5080,11 @@ function playHitSound(){
   function ensureUserDoc(user, isAdult) {
     if (!user) return;
     const db = getDb();
-    if (!db) return;
+    if (!db) {
+      // Firebase мог ещё не успеть инициализироваться — повторим чуть позже.
+      setTimeout(function () { ensureUserDoc(user, isAdult); }, 500);
+      return;
+    }
     const ref = db.collection('users').doc(user.uid);
     ref.get().then(function (doc) {
       if (doc.exists) return;

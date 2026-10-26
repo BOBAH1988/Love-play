@@ -718,7 +718,7 @@ function renderAdminPanel() {
     });
 
     if (!users.length) {
-      body.innerHTML = '<div style="color:#8a5c7a;">Пользователей пока нет.</div>';
+      body.innerHTML = '<div style="color:#8a5c7a;">Пользователей пока нет. Войдите под тестовым аккаунтом — его документ создастся автоматически.</div>';
       return;
     }
 
