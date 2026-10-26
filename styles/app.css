@@ -4564,19 +4564,15 @@
   width: 27px; height: 27px; border-radius: 8px;
   border: 1px solid rgba(43,15,46,.15);
   background: rgba(43,15,46,.06); color: #2b0f2e;
-  font-size: 14px; line-height: 1; cursor: pointer;
+  font-size: 14px; line-height: 27px; cursor: pointer;
+  font-variant-emoji: text;
   padding: 0; margin: 0;
   box-sizing: border-box;
   -webkit-appearance: none; appearance: none;
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
   transition: background .15s ease, color .15s ease, border-color .15s ease;
-}
-.account-gender-icon {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  line-height: 1;
-  pointer-events: none;
 }
 .account-gender-btn.on {
   background: rgba(var(--accent-rgb), .18); color: #2b0f2e; border-color: rgba(var(--accent-rgb), .45);
