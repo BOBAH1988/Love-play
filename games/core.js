@@ -5695,6 +5695,17 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
   function isGuestLevel(){ return (typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'guest'; }
   function canAccessCouple(){ return hasUser() && !isGuestLevel() && isAdultUser(); }
   function deny(message){
+    try {
+      const modal = document.getElementById('accessDeniedModal');
+      if (modal) {
+        const textEl = document.getElementById('accessDeniedText');
+        if (textEl) textEl.textContent = message;
+        const accountBtn = document.getElementById('accessDeniedAccountBtn');
+        if (accountBtn) accountBtn.style.display = hasUser() ? 'none' : '';
+        modal.classList.add('show');
+        return;
+      }
+    } catch(e){}
     try { window.alert(message); } catch(e){}
     try {
       if (!hasUser() && window.confirm(message + '\n\nОткрыть окно Аккаунт?')) {
@@ -5702,6 +5713,17 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
       }
     } catch(e){}
   }
+  // Кнопки кастомной модалки отказа в доступе (вместо нативных alert/confirm,
+  // которые в PWA-обёртке на Mac уезжают за пределы экрана).
+  (function wireAccessDeniedModal(){
+    const modal = document.getElementById('accessDeniedModal');
+    if (!modal) return;
+    const closeBtn = document.getElementById('accessDeniedCloseBtn');
+    const accountBtn = document.getElementById('accessDeniedAccountBtn');
+    if (closeBtn) closeBtn.addEventListener('click', function(){ modal.classList.remove('show'); });
+    if (accountBtn) accountBtn.addEventListener('click', function(){ modal.classList.remove('show'); if (typeof window.__openAccountModal === 'function') window.__openAccountModal(); });
+    modal.addEventListener('click', function(e){ if (e.target === modal) modal.classList.remove('show'); });
+  })();
   var coupleList = document.getElementById('gameSelectList');
   if (coupleList) {
     coupleList.addEventListener('click', function(e){
@@ -5712,7 +5734,7 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
       if (!hasUser() || isGuestLevel()) {
         deny('Игры для пар доступны только зарегистрированным совершеннолетним пользователям.');
       } else {
-        try { window.alert('Игры для пар доступны только совершеннолетним пользователям.'); } catch(e){}
+        deny('Игры для пар доступны только совершеннолетним пользователям.');
       }
     }, true);
   }
@@ -5726,7 +5748,7 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
       if (!hasUser() || isGuestLevel()) {
         deny('Игра «Счастливый билет» недоступна для гостя.');
       } else {
-        try { window.alert('Игра «Счастливый билет» доступна только совершеннолетним пользователям.'); } catch(e){}
+        deny('Игра «Счастливый билет» доступна только совершеннолетним пользователям.');
       }
     }, true);
   }
