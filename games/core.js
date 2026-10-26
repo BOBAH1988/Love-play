@@ -4321,6 +4321,12 @@ function renderCustomCardsList(){
   });
 }
 document.getElementById('saveCardBtn').addEventListener('click', ()=>{
+  const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+  if (__access !== 'premium' && __access !== 'admin') {
+    if (typeof playErrorSound === 'function') playErrorSound();
+    if (typeof showToast === 'function') showToast('Свои задания доступны только уровням Премиум и Админ');
+    return;
+  }
   const textEl = document.getElementById('newCardText');
   const text = textEl.value.trim();
   if(text.length<3){
@@ -4429,6 +4435,12 @@ if(importCardsInputEl) importCardsInputEl.addEventListener('change', (e)=>{
   reader.readAsText(file);
 });
 document.getElementById('addCardBtn').addEventListener('click', ()=>{
+  const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+  if (__access !== 'premium' && __access !== 'admin') {
+    if (typeof playErrorSound === 'function') playErrorSound();
+    if (typeof showToast === 'function') showToast('Свои задания доступны только уровням Премиум и Админ');
+    return;
+  }
   populateNewCardLevelSelect();
   renderCustomCardsList();
   showModal('addCardModal');

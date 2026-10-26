@@ -59,6 +59,10 @@ function allPassionMapCustomFilled(){
 }
 
 function getPassionMapTasks(){
+  const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+  if (__access !== 'premium' && __access !== 'admin') {
+    return (typeof PASSIONMAP_TASKS !== 'undefined' && Array.isArray(PASSIONMAP_TASKS)) ? PASSIONMAP_TASKS : [];
+  }
   if(state.passionMapMode === 'custom' && allPassionMapCustomFilled()){
     return state.passionMapCustomTasks.slice(0, PASSIONMAP_TOTAL_DEFAULT);
   }
@@ -396,6 +400,12 @@ function savePassionMapCustomTasksFromEditor(){
 
 const __pmCustomTasksBtn = document.getElementById('passionMapCustomTasksBtn');
 if(__pmCustomTasksBtn) __pmCustomTasksBtn.addEventListener('click', () => {
+  const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+  if (__access !== 'premium' && __access !== 'admin') {
+    if (typeof playErrorSound === 'function') playErrorSound();
+    if (typeof showToast === 'function') showToast('Свои задания доступны только уровням Премиум и Админ');
+    return;
+  }
   renderPassionMapCustomTasksEditor();
   showModal('passionMapCustomTasksModal');
 });
@@ -445,6 +455,12 @@ if(__pmModeStd) __pmModeStd.addEventListener('click', () => {
 });
 const __pmModeCst = document.getElementById('passionMapModeCustomBtn');
 if(__pmModeCst) __pmModeCst.addEventListener('click', () => {
+  const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+  if (__access !== 'premium' && __access !== 'admin') {
+    if (typeof playErrorSound === 'function') playErrorSound();
+    if (typeof showToast === 'function') showToast('Свои задания доступны только уровням Премиум и Админ');
+    return;
+  }
   if(!allPassionMapCustomFilled()){ showToast('Сначала заполните свои задания'); return; }
   state.passionMapMode = 'custom';
   saveState();

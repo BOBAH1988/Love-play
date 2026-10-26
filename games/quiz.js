@@ -30,12 +30,18 @@ function getQuizCardsList(level){
 function renderQuizSetupLevels(){
   const wrap = document.getElementById('quizSetupLevels');
   if(!wrap) return;
+  const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+  const __maxLevel = (__access === 'premium' || __access === 'admin') ? Infinity : (__access === 'plus' ? 3 : 2);
+  if (__maxLevel !== Infinity && (state.quizSelectedLevel || 1) > __maxLevel) { state.quizSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
   (typeof QUIZ_LEVELS !== 'undefined' ? QUIZ_LEVELS : []).forEach(l=>{
+    const __locked = (typeof l.id === 'number' && l.id > __maxLevel);
     const div = document.createElement('div');
-    div.className = 'level-toggle' + (state.quizSelectedLevel === l.id ? ' on' : '');
-    div.innerHTML = `<div class="lname">${l.icon} ${l.name}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
+    div.className = 'level-toggle' + (__locked ? ' locked' : '') + (state.quizSelectedLevel === l.id && !__locked ? ' on' : '');
+    if (__locked) { div.style.opacity = '0.55'; div.style.pointerEvents = 'none'; }
+    div.innerHTML = `<div class="lname">${l.icon} ${l.name}${__locked ? " 🔒" : ""}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
     div.addEventListener('click', ()=>{
+      if (__locked) return;
       state.quizSelectedLevel = l.id;
       saveState();
       renderQuizSetupLevels();
