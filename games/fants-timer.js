@@ -740,8 +740,8 @@ function renderSnap(snap) {
       const created = (d.createdAt && typeof d.createdAt.toDate === 'function')
         ? d.createdAt.toDate().toLocaleDateString('ru-RU') : '';
       html += '<div style="border:1px solid rgba(43,15,46,.12); border-radius:10px; padding:6px 8px; background:rgba(255,255,255,.35);">';
-      html += '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">';
-      html += '<div style="font-weight:700; word-break:break-all; flex:1 1 160px; min-width:0;">' + email + '</div>';
+      html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">';
+      html += '<div style="font-weight:700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex:1 1 160px; min-width:0;">' + email + '</div>';
       if (name) html += '<div style="font-size:12px; color:#5c3a52;">' + name + (genderIcon ? ' ' + genderIcon : '') + (created ? ' · ' + created : '') + '</div>';
       html += '</div>';
       html += '<div style="display:flex; align-items:center; gap:6px;">';
