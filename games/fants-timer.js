@@ -515,7 +515,7 @@ function renderAllStats(body) {
     return;
   }
   body.innerHTML = '<div style="color:#8a5c7a;">Загрузка статистики всех пользователей…</div>';
-  db.collection('users').get({ source: 'server' }).then(function (snap) {
+  Promise.race([db.collection('users').get({ source: 'server' }), new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Таймаут загрузки')); }, 8000); })]).then(function (snap) {
     const docs = (snap && Array.isArray(snap.docs)) ? snap.docs : [];
     let totalGames = 0, finishedGames = 0, totalMs = 0, totalDays = 0, devices = 0, usersWithStats = 0;
     const gamesMap = {};
@@ -707,7 +707,7 @@ function renderAdminPanel() {
   }
   body.innerHTML = '<div style="color:#8a5c7a;">Загрузка списка пользователей…</div>';
 
-  db.collection('users').get({ source: 'server' }).then(function (snap) {
+function renderSnap(snap) {
     let docs = []
     if (snap) {
       if (Array.isArray(snap.docs)) docs = snap.docs.slice();
@@ -766,9 +766,33 @@ function renderAdminPanel() {
         saveUserAccessLevel(uid, level);
       });
     });
-  }).catch(function (err) {
-    body.innerHTML = '<div style="color:#b00020;">Ошибка загрузки пользователей: ' + escHtmlAdmin((err && err.message) ? err.message : err) + '</div>';
-  });
+  }
+
+
+  function showError(err) {
+    body.innerHTML = '<div style="color:#b00020;">Ошибка загрузки пользователей: ' + escHtmlAdmin((err && err.message) ? err.message : err) + '</div>'
+      + '<div style="margin-top:8px;"><button type="button" class="btn btn-secondary" id="adminPanelRefreshBtn" style="padding:2px 10px; font-size:13px; width:auto; min-width:0;">Обновить</button></div>';
+  }
+
+  function load(source) {
+    const p = db.collection('users').get(source ? { source: source } : undefined);
+    return Promise.race([
+      p,
+      new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Таймаут загрузки')); }, 8000); })
+    ]);
+  }
+
+  load('server')
+    .then(renderSnap)
+    .catch(function (err) {
+      console.error('admin panel load error', err);
+      load('cache')
+        .then(renderSnap)
+        .catch(function (e) {
+          console.error('admin panel cache load error', e);
+          showError(e);
+        });
+    });
 }
 
 function showSummary(){
