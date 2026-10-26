@@ -4795,6 +4795,21 @@ function checkKrokodilCards() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Проверка firestore.rules: подколлекция users/{userId}/app/… должна быть
+// доступна для чтения/записи самому пользователю, иначе cloud save
+// (users/{uid}/app/state) возвращает missing or insufficient permissions.
+function checkFirestoreRules() {
+  group('Права Firestore');
+  const rules = read('firestore.rules');
+  const hasAppSubcollection = /match\s+\/users\/\{[^}]+\}\/app\//.test(rules);
+  check(
+    'firestore.rules содержит правило для подколлекции users/{userId}/app/…',
+    hasAppSubcollection,
+    'добавьте блок match /users/{userId}/app/{document=**} с allow read, write для request.auth.uid == userId'
+  );
+}
+
 function main() {
   const html = read('index.html');
   const { missingIds } = checkScripts(html);
@@ -4826,6 +4841,7 @@ function main() {
   checkSchemaVersioning();
   checkStats(html);
   checkGlobalHandlers(html);
+  checkFirestoreRules();
   checkSecrets();
   process.exit(report());
 }
