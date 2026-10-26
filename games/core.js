@@ -5094,19 +5094,34 @@ function playHitSound(){
       return;
     }
     const ref = db.collection('users').doc(user.uid);
-    ref.get({ source: 'server' }).then(function (doc) {
-      if (doc.exists) return;
+    Promise.race([
+      ref.get({ source: 'server' }),
+      new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Таймаут загрузки')); }, 1500); })
+    ]).then(function (doc) {
       const email = user.email || '';
       const displayName = email.indexOf('@') > 0 ? email.split('@')[0] : email;
-      return ref.set({
-        email: email,
-        displayName: displayName,
-        role: 'user',
-        accessLevel: 'starter',
-        isAdult: !!isAdult,
-        status: 'active',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      if (!doc.exists) {
+        return ref.set({
+          email: email,
+          displayName: displayName,
+          role: 'user',
+          accessLevel: 'starter',
+          isAdult: !!isAdult,
+          status: 'active',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+      // Дозаполняем отсутствующие поля, не перезаписывая введённые пользователем
+      // имя/пол и уровень доступа.
+      const data = doc.data() || {};
+      const patch = {};
+      if (!data.email && email) patch.email = email;
+      if (!data.displayName && email) patch.displayName = displayName;
+      if (!data.role) patch.role = 'user';
+      if (!data.accessLevel) patch.accessLevel = 'starter';
+      if (data.isAdult === undefined) patch.isAdult = !!isAdult;
+      if (!data.status) patch.status = 'active';
+      if (Object.keys(patch).length) return ref.set(patch, { merge: true });
     }).catch(function (err) {
        console.error('ensureUserDoc error', err);
        setTimeout(function () { ensureUserDoc(user, isAdult); }, 1000);
@@ -5156,7 +5171,13 @@ function playHitSound(){
       if (user && typeof user.reload === 'function') { user.reload().then(function () { const fresh = auth && auth.currentUser; if (fresh) applyVerified(fresh); }).catch(function () {}); }
       const db = getDb();
       if (db) {
-        db.collection('users').doc(user.uid).get({ source: 'server' }).then(function (doc) {
+        Promise.race([
+          db.collection('users').doc(user.uid).get({ source: 'server' }),
+          new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Таймаут загрузки')); }, 4000); })
+        ]).catch(function (err) {
+          console.error("account profile load error", err);
+          return db.collection("users").doc(user.uid).get({ source: "cache" });
+        }).then(function (doc) {
           const data = doc.exists ? (doc.data() || {}) : {};
           if (accountNameEl) accountNameEl.value = (data.name || '').trim();
           setAccountGender(data.gender === 'M' || data.gender === 'F' ? data.gender : null);
@@ -5436,26 +5457,33 @@ function playHitSound(){
     const name = nameEl ? (nameEl.value || '').trim() : '';
     const gender = maleBtn && maleBtn.classList.contains('on') ? 'M' : (femaleBtn && femaleBtn.classList.contains('on') ? 'F' : null);
     const ref = db.collection('users').doc(user.uid);
-    const payload = { name: name, gender: gender };
-    // Если документа ещё нет (например, тестовый аккаунт), создаём его целиком,
-    // чтобы имя/пол не терялись и аккаунт появлялся в админ-панели.
-    const p = ref.get({ source: 'server' }).then(function (doc) {
-      if (!doc.exists) {
-        const email = user.email || '';
-        payload.email = email;
-        payload.displayName = email.indexOf('@') > 0 ? email.split('@')[0] : email;
-        payload.role = 'user';
-        payload.accessLevel = 'starter';
-        payload.isAdult = false;
-        payload.status = 'active';
-        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    // Сначала быстро сохраняем имя/пол — это главное, что вводит пользователь.
+    // Не ждём чтения документа, чтобы запись не висела на плохой сети и успевала
+    // завершиться до обновления страницы.
+    const p = ref.set({ name: name, gender: gender }, { merge: true });
+    // Затем, по возможности, дозаполняем служебные поля, если документа ещё нет
+    // (тестовый аккаунт) или они отсутствуют. Ошибки здесь не ломают основное
+    // сохранение.
+    p.then(function () {
+      return Promise.race([
+        ref.get({ source: 'server' }),
+        new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Таймаут загрузки')); }, 1500); })
+      ]);
+    }).then(function (doc) {
+      const data = (doc && doc.exists) ? (doc.data() || {}) : {};
+      const patch = {};
+      const email = user.email || '';
+      if (!data.email && email) patch.email = email;
+      if (!data.displayName && email) patch.displayName = email.indexOf('@') > 0 ? email.split('@')[0] : email;
+      if (!data.role) patch.role = 'user';
+      if (!data.accessLevel) patch.accessLevel = 'starter';
+      if (data.isAdult === undefined) patch.isAdult = false;
+      if (!data.status) patch.status = 'active';
+      if (Object.keys(patch).length) {
+        return ref.set(patch, { merge: true }).catch(function (e) { console.error('account profile defaults save error', e); });
       }
-      return ref.set(payload, { merge: true });
     }).catch(function (err) {
-      console.error('account profile save error', err);
-      return ref.set({ name: name, gender: gender }, { merge: true }).catch(function (e) {
-        console.error('account profile save error', e);
-      });
+      console.error('account profile defaults load error', err);
     });
     return p;
   }
@@ -5507,6 +5535,10 @@ function playHitSound(){
         accountProfileSaveBtn.textContent = originalText;
         if (errEl) { errEl.style.color = '#2f6b3f'; errEl.textContent = 'Сохранено'; errEl.style.display = ''; }
         setTimeout(function () { if (errEl) errEl.style.display = 'none'; }, 2000);
+      }).catch(function (e) {
+        accountProfileSaveBtn.disabled = false;
+        accountProfileSaveBtn.textContent = originalText;
+        if (errEl) { errEl.style.color = '#b00020'; errEl.textContent = 'Не удалось сохранить: ' + ((e && e.message) ? e.message : e); errEl.style.display = ''; }
       });
     });
   }
