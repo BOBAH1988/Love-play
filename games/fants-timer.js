@@ -786,6 +786,11 @@ function renderSnap(snap) {
     .then(renderSnap)
     .catch(function (err) {
       console.error('admin panel load error', err);
+      // Если сервер вернул ошибку прав — показываем её явно, а не маскируем пустым списком.
+      if (err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''))) {
+        showError(err);
+        return;
+      }
       load('cache')
         .then(renderSnap)
         .catch(function (e) {
