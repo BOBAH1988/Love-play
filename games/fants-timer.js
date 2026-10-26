@@ -723,7 +723,7 @@ function renderAdminPanel() {
     }
 
     const levels = ['guest', 'starter', 'plus', 'premium', 'admin'];
-    let html = '<div style="margin-bottom:8px; font-weight:700;">Всего пользователей: ' + users.length + '</div>';
+    let html = '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:700;">Всего пользователей: ' + users.length + ' <button type="button" class="btn btn-secondary" id="adminPanelRefreshBtn" onclick="if(window.refreshAdminPanel) window.refreshAdminPanel();" style="padding:2px 10px; font-size:13px; width:auto; min-width:0;">Обновить</button></div>';
     html += '<div style="display:flex; flex-direction:column; gap:8px;">';
     users.forEach(function (u) {
       const d = u.data || {};
@@ -948,6 +948,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   if(__adminModal) __adminModal.addEventListener('click', (e)=>{ if(e.target === __adminModal) hideModal('adminPanelModal'); });
 
   function refreshAdminPanel() { try { renderAdminPanel(); } catch (e) { console.error(e); } }
+  window.refreshAdminPanel = refreshAdminPanel;
   const __adminRefreshBtn = document.getElementById('adminPanelRefreshBtn');
   if(__adminRefreshBtn) __adminRefreshBtn.addEventListener('click', refreshAdminPanel);
   const __adminRefreshBtnAlias = document.getElementById('adminRefreshBtn');
