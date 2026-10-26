@@ -5107,8 +5107,13 @@ function playHitSound(){
         status: 'active',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-    }).catch(function (err) { console.error('ensureUserDoc error', err); });
+    }).catch(function (err) {
+       console.error('ensureUserDoc error', err);
+       setTimeout(function () { ensureUserDoc(user, isAdult); }, 1000);
+     });
   }
+  if (typeof window !== 'undefined') window.ensureUserDoc = ensureUserDoc;
+
 
   // Ярлыки уровней — дублируются из loadGroupGames IIFE, чтобы были видны здесь.
   const LEVEL_LABELS_LOCAL = {
@@ -5356,6 +5361,7 @@ function playHitSound(){
       manualAuthJustDone = true;
       auth.signInWithEmailAndPassword(email, password)
         .then(function (cred) {
+          if (typeof ensureUserDoc === 'function') ensureUserDoc(cred.user);
           return handlePostAuthMigration(cred.user);
         })
         .then(function () { closeAccount(); })
@@ -5421,16 +5427,37 @@ function playHitSound(){
   function saveAccountProfile() {
     const auth = getAuth();
     const user = auth && auth.currentUser;
-    if (!user) return;
+    if (!user) return Promise.resolve();
     const db = getDb();
-    if (!db) return;
+    if (!db) return Promise.resolve();
     const nameEl = document.getElementById('accountProfileName');
     const maleBtn = document.getElementById('accountProfileGenderMale');
     const femaleBtn = document.getElementById('accountProfileGenderFemale');
     const name = nameEl ? (nameEl.value || '').trim() : '';
     const gender = maleBtn && maleBtn.classList.contains('on') ? 'M' : (femaleBtn && femaleBtn.classList.contains('on') ? 'F' : null);
-    db.collection('users').doc(user.uid).set({ name: name, gender: gender }, { merge: true })
-      .catch(function (err) { console.error('account profile save error', err); });
+    const ref = db.collection('users').doc(user.uid);
+    const payload = { name: name, gender: gender };
+    // Если документа ещё нет (например, тестовый аккаунт), создаём его целиком,
+    // чтобы имя/пол не терялись и аккаунт появлялся в админ-панели.
+    const p = ref.get({ source: 'server' }).then(function (doc) {
+      if (!doc.exists) {
+        const email = user.email || '';
+        payload.email = email;
+        payload.displayName = email.indexOf('@') > 0 ? email.split('@')[0] : email;
+        payload.role = 'user';
+        payload.accessLevel = 'starter';
+        payload.isAdult = false;
+        payload.status = 'active';
+        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      return ref.set(payload, { merge: true });
+    }).catch(function (err) {
+      console.error('account profile save error', err);
+      return ref.set({ name: name, gender: gender }, { merge: true }).catch(function (e) {
+        console.error('account profile save error', e);
+      });
+    });
+    return p;
   }
 
   const accountProfileNameInput = document.getElementById('accountProfileName');
@@ -5467,6 +5494,22 @@ function playHitSound(){
     });
   }
 
+  const accountProfileSaveBtn = document.getElementById('accountProfileSaveBtn');
+  if (accountProfileSaveBtn) {
+    accountProfileSaveBtn.addEventListener('click', function () {
+      const errEl = document.getElementById('accountProfileError');
+      if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; errEl.style.color = '#b00020'; }
+      accountProfileSaveBtn.disabled = true;
+      const originalText = accountProfileSaveBtn.textContent;
+      accountProfileSaveBtn.textContent = 'Сохранение…';
+      saveAccountProfile().then(function () {
+        accountProfileSaveBtn.disabled = false;
+        accountProfileSaveBtn.textContent = originalText;
+        if (errEl) { errEl.style.color = '#2f6b3f'; errEl.textContent = 'Сохранено'; errEl.style.display = ''; }
+        setTimeout(function () { if (errEl) errEl.style.display = 'none'; }, 2000);
+      });
+    });
+  }
   window.__openAccountModal = openAccount;
 
   // ===== Синхронизация на Firebase (облако) =====

@@ -708,7 +708,11 @@ function renderAdminPanel() {
   body.innerHTML = '<div style="color:#8a5c7a;">Загрузка списка пользователей…</div>';
 
   db.collection('users').get({ source: 'server' }).then(function (snap) {
-    const docs = (snap && Array.isArray(snap.docs)) ? snap.docs : [];
+    let docs = []
+    if (snap) {
+      if (Array.isArray(snap.docs)) docs = snap.docs.slice();
+      else if (typeof snap.forEach === "function") snap.forEach(function (d) { docs.push(d); });
+    }
     const users = docs.map(function (doc) {
       return { uid: doc.id, data: (typeof doc.data === 'function') ? (doc.data() || {}) : {} };
     }).sort(function (a, b) {
