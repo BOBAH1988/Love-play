@@ -5474,8 +5474,12 @@ function playHitSound(){
     let age = null;
     if (ageEl) {
       const ageVal = parseInt((ageEl.value || '').trim(), 10);
-      if (!isNaN(ageVal) && ageVal >= 18 && ageVal <= 99) age = ageVal;
-      else if ((ageEl.value || '').trim() !== '') {
+      if (!isNaN(ageVal) && ageVal >= 18 && ageVal <= 99) {
+        age = ageVal;
+        // Очищаем ошибку возраста, если значение стало валидным
+        const ageErrEl = document.getElementById('accountProfileError');
+        if (ageErrEl) { ageErrEl.style.display = 'none'; ageErrEl.textContent = ''; }
+      } else if ((ageEl.value || '').trim() !== '') {
         if (showErrorIfInvalid) {
           showError('accountProfileError', 'Возраст должен быть от 18 до 99.');
           return Promise.reject(new Error('Возраст должен быть от 18 до 99.'));
