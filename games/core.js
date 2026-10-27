@@ -5459,7 +5459,7 @@ function playHitSound(){
     });
   }
 
-  function saveAccountProfile() {
+  function saveAccountProfile(showErrorIfInvalid) {
     const auth = getAuth();
     const user = auth && auth.currentUser;
     if (!user) return Promise.resolve();
@@ -5476,8 +5476,13 @@ function playHitSound(){
       const ageVal = parseInt((ageEl.value || '').trim(), 10);
       if (!isNaN(ageVal) && ageVal >= 18 && ageVal <= 99) age = ageVal;
       else if ((ageEl.value || '').trim() !== '') {
-        showError('accountProfileError', 'Возраст должен быть от 18 до 99.');
-        return Promise.reject(new Error('Возраст должен быть от 18 до 99.'));
+        if (showErrorIfInvalid) {
+          showError('accountProfileError', 'Возраст должен быть от 18 до 99.');
+          return Promise.reject(new Error('Возраст должен быть от 18 до 99.'));
+        }
+        // При промежуточном вводе (input) не показываем ошибку и не сохраняем
+        // невалидный возраст — просто пропускаем его, чтобы не стирать
+        // существующее значение в базе.
       }
     }
     const ref = db.collection('users').doc(user.uid);
@@ -5520,30 +5525,30 @@ function playHitSound(){
 
   const accountProfileNameInput = document.getElementById('accountProfileName');
   if (accountProfileNameInput) {
-    accountProfileNameInput.addEventListener('blur', saveAccountProfile);
-    accountProfileNameInput.addEventListener('change', saveAccountProfile);
+    accountProfileNameInput.addEventListener('blur', function () { saveAccountProfile(true); });
+    accountProfileNameInput.addEventListener('change', function () { saveAccountProfile(true); });
     // Сохраняем имя по мере ввода (с небольшой задержкой), чтобы данные не
     // терялись при обновлении страницы до события blur.
     let saveNameTimer = null;
     accountProfileNameInput.addEventListener('input', function () {
       if (saveNameTimer) clearTimeout(saveNameTimer);
-      saveNameTimer = setTimeout(saveAccountProfile, 400);
+      saveNameTimer = setTimeout(function () { saveAccountProfile(false); }, 400);
     });
   }
   const accountProfileAgeInput = document.getElementById('accountProfileAge');
   if (accountProfileAgeInput) {
-    accountProfileAgeInput.addEventListener('blur', saveAccountProfile);
-    accountProfileAgeInput.addEventListener('change', saveAccountProfile);
+    accountProfileAgeInput.addEventListener('blur', function () { saveAccountProfile(true); });
+    accountProfileAgeInput.addEventListener('change', function () { saveAccountProfile(true); });
     let saveAgeTimer = null;
     accountProfileAgeInput.addEventListener('input', function () {
       if (saveAgeTimer) clearTimeout(saveAgeTimer);
-      saveAgeTimer = setTimeout(saveAccountProfile, 400);
+      saveAgeTimer = setTimeout(function () { saveAccountProfile(false); }, 400);
     });
   }
   // На случай закрытия/обновления страницы — финальное сохранение профиля.
-  window.addEventListener('pagehide', saveAccountProfile);
+  window.addEventListener('pagehide', function () { saveAccountProfile(true); });
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') saveAccountProfile();
+    if (document.visibilityState === 'hidden') saveAccountProfile(true);
   });
   const accountGenderMaleBtn = document.getElementById('accountProfileGenderMale');
   const accountGenderFemaleBtn = document.getElementById('accountProfileGenderFemale');
@@ -5551,14 +5556,14 @@ function playHitSound(){
     accountGenderMaleBtn.addEventListener('click', function () {
       const wasOn = accountGenderMaleBtn.classList.contains('on');
       setAccountGender(wasOn ? null : 'M');
-      saveAccountProfile();
+      saveAccountProfile(true);
     });
   }
   if (accountGenderFemaleBtn) {
     accountGenderFemaleBtn.addEventListener('click', function () {
       const wasOn = accountGenderFemaleBtn.classList.contains('on');
       setAccountGender(wasOn ? null : 'F');
-      saveAccountProfile();
+      saveAccountProfile(true);
     });
   }
 
@@ -5570,7 +5575,7 @@ function playHitSound(){
       accountProfileSaveBtn.disabled = true;
       const originalText = accountProfileSaveBtn.textContent;
       accountProfileSaveBtn.textContent = 'Сохранение…';
-      saveAccountProfile().then(function () {
+      saveAccountProfile(true).then(function () {
         accountProfileSaveBtn.disabled = false;
         accountProfileSaveBtn.textContent = originalText;
         if (errEl) { errEl.style.color = '#2f6b3f'; errEl.textContent = 'Сохранено'; errEl.style.display = ''; }
