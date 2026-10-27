@@ -84,7 +84,7 @@ function renderKrokodilSetupLevels(){
     const div = document.createElement('div');
     div.className = 'level-toggle' + (__locked ? ' locked' : '') + (state.krokodilSelectedLevel === l.id && !__locked ? ' on' : '');
     if (__locked) { div.style.opacity = '0.55'; div.style.pointerEvents = 'none'; }
-    div.innerHTML = `<div class="lname">${l.name}</div>${__locked ? '<div class="level-lock">🔒</div>' : ''}<div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
+    div.innerHTML = `<div class="lname">${l.name}${__locked ? '<span class="level-lock">🔒</span>' : ''}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
     div.addEventListener('click', ()=>{
       if (__locked) { return; }
       state.krokodilSelectedLevel = l.id;

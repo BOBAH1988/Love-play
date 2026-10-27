@@ -235,7 +235,7 @@ function checkMarkup(html) {
     return re.test(html);
   });
   const noActionIcons = !/▶ Начать раунд|✅ Угадали|➡️ Пропустить/.test(crocodileSources);
-  const cleanGeneratedLevels = /class="lname">\$\{l\.name\}<\/div>/.test(read('games/krokodil.js'));
+  const cleanGeneratedLevels = /class="lname">\$\{l\.name\}/.test(read('games/krokodil.js'));
   check('кнопки «Крокодила» без декоративных иконок',
     cleanCrocodileButtons && noActionIcons && cleanGeneratedLevels,
     !cleanCrocodileButtons

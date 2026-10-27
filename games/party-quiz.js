@@ -30,7 +30,7 @@ function renderPartyQuizSetupLevels(){
     const div = document.createElement('div');
     div.className = 'level-toggle' + (__locked ? ' locked' : '') + (state.partyQuizSelectedLevel === l.id && !__locked ? ' on' : '');
     if (__locked) { div.style.opacity = '0.55'; div.style.pointerEvents = 'none'; }
-    div.innerHTML = `<div class="lname">${l.icon} ${l.name}${__locked ? ' 🔒' : ''}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
+    div.innerHTML = `<div class="lname"><span>${l.icon} ${l.name}</span>${__locked ? '<span class="level-lock">🔒</span>' : ''}</div><div class="ldesc">${l.desc}</div><div class="level-check"></div>`;
     div.addEventListener('click', ()=>{
       if (__locked) { return; }
       state.partyQuizSelectedLevel = l.id;
