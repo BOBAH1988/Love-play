@@ -4956,9 +4956,10 @@ function playHitSound(){
     const isAdult = !!(typeof window !== 'undefined' && window.__userIsAdult === true);
     const hasUser = !!(typeof window !== 'undefined' && window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
     if (accessLevel === 'guest' || !hasUser) return false;
-    if (!isAdult) return false;
+    // Админ имеет полный доступ ко всем играм, включая 18+
     if (accessLevel === 'admin') return true;
-    return false;
+    if (!isAdult) return false;
+    return true;
   }
   function canPlay(game) { return canLaunchGame(game); }
 
@@ -5845,9 +5846,10 @@ function canLaunchGame(game) {
     }
   } catch (e) {}
   if (accessLevel === 'guest' || !hasUser) return false;
-  if (!isAdult) return false;
+  // Админ имеет полный доступ ко всем играм, включая 18+
   if (accessLevel === 'admin') return true;
-  return false;
+  if (!isAdult) return false;
+  return true;
 }
 try { if (typeof global !== 'undefined') global.canLaunchGame = canLaunchGame; } catch (e) {}
 function canPlay(game) { return canLaunchGame(game); }
@@ -5856,7 +5858,8 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
   function hasUser(){ return !!(typeof window !== 'undefined' && window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser); }
   function isAdultUser(){ return !!(typeof window !== 'undefined' && window.__userIsAdult === true); }
   function isGuestLevel(){ return (typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'guest'; }
-  function canAccessCouple(){ return hasUser() && !isGuestLevel() && isAdultUser(); }
+  function canAccessCouple(){ return hasUser() && (!isGuestLevel() || isAdminUser()) && (isAdultUser() || isAdminUser()); }
+  function isAdminUser(){ return !!(typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'admin'; }
   function deny(message){
     try {
       const modal = document.getElementById('accessDeniedModal');
