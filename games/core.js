@@ -5904,6 +5904,12 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
   function isAdultUser(){ return !!(typeof window !== 'undefined' && window.__userIsAdult === true); }
   function isGuestLevel(){ return (typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'guest'; }
   function canAccessCouple(){ return hasUser() && (!isGuestLevel() || isAdminUser()) && (isAdultUser() || isAdminUser()); }
+  function isCoupleGameAvailable(id){
+    if (!canAccessCouple()) return false;
+    const level = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+    if (level !== 'starter') return true;
+    return id === 'gameQuizBtn' || id === 'gameIdeasBtn' || id === 'gameCompatTestBtn';
+  }
   function isAdminUser(){ return !!(typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'admin'; }
   function deny(message){
     try {
@@ -5925,14 +5931,16 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
     } catch(e){}
   }
   try { window.canAccessCouple = canAccessCouple; } catch(e){}
+  try { window.isCoupleGameAvailable = isCoupleGameAvailable; } catch(e){}
   try { window.__denyAccess = deny; } catch(e){}
   window.updateStaticGameLocks = function() {
     const available = (typeof window.canAccessCouple === 'function') ? window.canAccessCouple() : true;
     const coupleList = document.getElementById('gameSelectList');
     if (coupleList) {
       coupleList.querySelectorAll('.btn-menu-item').forEach(function(btn){
+        const gameAvailable = (typeof isCoupleGameAvailable === 'function') ? isCoupleGameAvailable(btn.id) : available;
         let lock = btn.querySelector('.section-lock');
-        if (available) {
+        if (gameAvailable) {
           if (lock) lock.remove();
           btn.style.opacity = '';
           btn.classList.remove('locked');
@@ -5982,14 +5990,20 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
   var coupleList = document.getElementById('gameSelectList');
   if (coupleList) {
     coupleList.addEventListener('click', function(e){
-      if (canAccessCouple()) return;
+      const targetBtn = e.target && e.target.closest ? e.target.closest('.btn-menu-item') : null;
+      const targetId = targetBtn ? targetBtn.id : null;
+      if (canAccessCouple() && (!targetId || isCoupleGameAvailable(targetId))) return;
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      if (!hasUser() || isGuestLevel()) {
-        deny('Игры для пар доступны только зарегистрированным совершеннолетним пользователям.');
+      if (!canAccessCouple()) {
+        if (!hasUser() || isGuestLevel()) {
+          deny('Игры для пар доступны только зарегистрированным совершеннолетним пользователям.');
+        } else {
+          deny('Игры для пар доступны только совершеннолетним пользователям.');
+        }
       } else {
-        deny('Игры для пар доступны только совершеннолетним пользователям.');
+        deny('Эта игра доступна с уровня «Плюс».');
       }
     }, true);
   }
