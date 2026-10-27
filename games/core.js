@@ -5821,7 +5821,7 @@ function playHitSound(){
             }
             window.__userAccessLevel = accessLevel;
             if (isAdminEmail(user.email)) window.__userAccessLevel = 'admin';
-            window.__userIsAdult = data.isAdult === true;
+            window.__userIsAdult = data.isAdult === true || ["plus","premium","admin"].indexOf(window.__userAccessLevel || "") >= 0;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
             if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
             ensureStatsBtnVisibility();
