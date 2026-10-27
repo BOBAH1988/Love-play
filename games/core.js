@@ -5920,4 +5920,3 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
   }
 })();
 
-// trigger
