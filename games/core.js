@@ -4924,6 +4924,7 @@ function playHitSound(){
   window.updateHomeSectionLocks = function() {
     try { updateHomeTwoPlayerLock(); } catch (e) {}
     if (cachedGroups) render(cachedGroups);
+    if (typeof window.updateStaticGameLocks === 'function') window.updateStaticGameLocks();
   };
 
   try {
@@ -5965,6 +5966,48 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
   }
   try { window.canAccessCouple = canAccessCouple; } catch(e){}
   try { window.__denyAccess = deny; } catch(e){}
+  window.updateStaticGameLocks = function() {
+    const available = (typeof window.canAccessCouple === 'function') ? window.canAccessCouple() : true;
+    const coupleList = document.getElementById('gameSelectList');
+    if (coupleList) {
+      coupleList.querySelectorAll('.btn-menu-item').forEach(function(btn){
+        let lock = btn.querySelector('.section-lock');
+        if (available) {
+          if (lock) lock.remove();
+          btn.style.opacity = '';
+          btn.classList.remove('locked');
+        } else {
+          if (!lock) {
+            lock = document.createElement('span');
+            lock.className = 'section-lock';
+            lock.textContent = '🔒';
+            btn.appendChild(lock);
+          }
+          btn.style.opacity = '0.6';
+          btn.classList.add('locked');
+        }
+      });
+    }
+    const luckyBtn = document.getElementById('gameLuckyBtn');
+    if (luckyBtn) {
+      let lock = luckyBtn.querySelector('.section-lock');
+      if (available) {
+        if (lock) lock.remove();
+        luckyBtn.style.opacity = '';
+        luckyBtn.classList.remove('locked');
+      } else {
+        if (!lock) {
+          lock = document.createElement('span');
+          lock.className = 'section-lock';
+          lock.textContent = '🔒';
+          luckyBtn.appendChild(lock);
+        }
+        luckyBtn.style.opacity = '0.6';
+        luckyBtn.classList.add('locked');
+      }
+    }
+  };
+  try { window.updateStaticGameLocks(); } catch(e){}
   // Кнопки кастомной модалки отказа в доступе (вместо нативных alert/confirm,
   // которые в PWA-обёртке на Mac уезжают за пределы экрана).
   (function wireAccessDeniedModal(){
