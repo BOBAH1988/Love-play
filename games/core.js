@@ -5170,6 +5170,9 @@ function playHitSound(){
     if (user) {
       if (guest) guest.style.display = 'none';
       if (profile) profile.style.display = '';
+      // При открытии окна сбрасываем флаг — пользователь ещё не вводил данные.
+      // Сохранение в базу произойдёт только после реального ввода.
+      profileModified = false;
       const accountNameEl = document.getElementById('accountProfileName');
       if (accountNameEl) accountNameEl.value = '';
       setAccountGender(null);
@@ -5460,6 +5463,9 @@ function playHitSound(){
   }
 
   function saveAccountProfile(showErrorIfInvalid) {
+    // Сохраняем только если пользователь реально ввёл данные. Пустое
+    // открытие/закрытие окна аккаунта не должно стирать данные из базы.
+    if (!profileModified) return Promise.resolve();
     const auth = getAuth();
     const user = auth && auth.currentUser;
     if (!user) return Promise.resolve();
@@ -5527,6 +5533,11 @@ function playHitSound(){
     return p;
   }
 
+  // Флаг: пользователь реально ввёл данные в окне аккаунта. Без него
+  // сохранение не пишется в базу — иначе при открытии/закрытии окна без
+  // ввода пустые поля сотрут уже сохранённые имя/пол/возраст.
+  let profileModified = false;
+
   const accountProfileNameInput = document.getElementById('accountProfileName');
   if (accountProfileNameInput) {
     accountProfileNameInput.addEventListener('blur', function () { saveAccountProfile(true); });
@@ -5535,6 +5546,7 @@ function playHitSound(){
     // терялись при обновлении страницы до события blur.
     let saveNameTimer = null;
     accountProfileNameInput.addEventListener('input', function () {
+      profileModified = true;
       if (saveNameTimer) clearTimeout(saveNameTimer);
       saveNameTimer = setTimeout(function () { saveAccountProfile(false); }, 400);
     });
@@ -5545,6 +5557,7 @@ function playHitSound(){
     accountProfileAgeInput.addEventListener('change', function () { saveAccountProfile(true); });
     let saveAgeTimer = null;
     accountProfileAgeInput.addEventListener('input', function () {
+      profileModified = true;
       if (saveAgeTimer) clearTimeout(saveAgeTimer);
       saveAgeTimer = setTimeout(function () { saveAccountProfile(false); }, 400);
     });
@@ -5559,6 +5572,7 @@ function playHitSound(){
   if (accountGenderMaleBtn) {
     accountGenderMaleBtn.addEventListener('click', function () {
       const wasOn = accountGenderMaleBtn.classList.contains('on');
+      profileModified = true;
       setAccountGender(wasOn ? null : 'M');
       saveAccountProfile(true);
     });
@@ -5566,6 +5580,7 @@ function playHitSound(){
   if (accountGenderFemaleBtn) {
     accountGenderFemaleBtn.addEventListener('click', function () {
       const wasOn = accountGenderFemaleBtn.classList.contains('on');
+      profileModified = true;
       setAccountGender(wasOn ? null : 'F');
       saveAccountProfile(true);
     });
