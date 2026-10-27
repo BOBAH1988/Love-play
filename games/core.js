@@ -5906,10 +5906,16 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
   function isGuestLevel(){ return (typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'guest'; }
   function canAccessCouple(){ return hasUser() && (!isGuestLevel() || isAdminUser()) && (isAdultUser() || isAdminUser()); }
   function isCoupleGameAvailable(id){
-    if (!canAccessCouple()) return false;
     const level = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
-    if (level !== 'starter') return true;
-    return id === 'gameQuizBtn' || id === 'gameIdeasBtn' || id === 'gameCompatTestBtn';
+    const starterAllowed = (id === 'gameQuizBtn' || id === 'gameIdeasBtn' || id === 'gameCompatTestBtn');
+    // Эти игры доступны уже на уровне starter, без подтверждения 18+.
+    if (starterAllowed) {
+      return level === 'starter' || level === 'plus' || level === 'premium' || level === 'admin';
+    }
+    // Остальные игры для пар требуют подтверждения 18+ и уровня не ниже plus.
+    if (!canAccessCouple()) return false;
+    if (level === 'starter') return false;
+    return true;
   }
   function isAdminUser(){ return !!(typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'admin'; }
   function deny(message){
