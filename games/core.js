@@ -5907,7 +5907,7 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
   var luckyBtn = document.getElementById('gameLuckyBtn');
   if (luckyBtn) {
     luckyBtn.addEventListener('click', function(e){
-      if (hasUser() && !isGuestLevel() && isAdultUser()) return;
+      if (hasUser() && (!isGuestLevel() || isAdminUser()) && (isAdultUser() || isAdminUser())) return;
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
