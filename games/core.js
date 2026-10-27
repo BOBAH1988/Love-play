@@ -4951,13 +4951,21 @@ function playHitSound(){
 
   function canLaunchGame(game) {
     if (!game || game.enabled !== true) return false;
+    const userLevel = (typeof window !== 'undefined' && window.__userAccessLevel) || 'guest';
+    const isAdmin = userLevel === 'admin';
+    // Проверка уровня доступа: игра требует уровень не ниже своего accessLevel
+    const ACCESS_RANK = { guest: 0, starter: 1, plus: 2, premium: 3, admin: 4 };
+    const gameAccessLevel = game.accessLevel || 'guest';
+    const userRank = ACCESS_RANK[userLevel] || 0;
+    const gameRank = ACCESS_RANK[gameAccessLevel] || 0;
+    if (!isAdmin && userRank < gameRank) return false;
+    // Проверка 18+
     if ((game.ageRating || 'all') !== '18+') return true;
-    const accessLevel = (typeof window !== 'undefined' && window.__userAccessLevel) || 'guest';
     const isAdult = !!(typeof window !== 'undefined' && window.__userIsAdult === true);
     const hasUser = !!(typeof window !== 'undefined' && window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
-    if (accessLevel === 'guest' || !hasUser) return false;
+    if (userLevel === 'guest' || !hasUser) return false;
     // Админ имеет полный доступ ко всем играм, включая 18+
-    if (accessLevel === 'admin') return true;
+    if (isAdmin) return true;
     if (!isAdult) return false;
     return true;
   }
@@ -5005,7 +5013,19 @@ function playHitSound(){
           lockLabel.style.display = 'block';
           lockLabel.style.fontSize = '12px';
           lockLabel.style.opacity = '0.85';
-          lockLabel.textContent = '18+. Требуется подтверждение возраста';
+          // Определяем причину недоступности
+          const userLevel = (typeof window !== 'undefined' && window.__userAccessLevel) || 'guest';
+          const isAdmin = userLevel === 'admin';
+          const ACCESS_RANK = { guest: 0, starter: 1, plus: 2, premium: 3, admin: 4 };
+          const gameAccessLevel = game.accessLevel || 'guest';
+          const userRank = ACCESS_RANK[userLevel] || 0;
+          const gameRank = ACCESS_RANK[gameAccessLevel] || 0;
+          if (!isAdmin && userRank < gameRank) {
+            const levelNames = { guest: 'Гость', starter: 'Старт', plus: 'Плюс', premium: 'Премиум', admin: 'Админ' };
+            lockLabel.textContent = '🔒 Нужен уровень ' + (levelNames[gameAccessLevel] || gameAccessLevel);
+          } else {
+            lockLabel.textContent = '🔒 18+. Требуется подтверждение возраста';
+          }
           textSpan.appendChild(lockLabel);
         }
         btn.appendChild(textSpan);
@@ -5834,20 +5854,32 @@ function playHitSound(){
 
 function canLaunchGame(game) {
   if (!game || game.enabled !== true) return false;
+  var userLevel = 'guest';
+  try {
+    if (typeof window !== 'undefined') {
+      userLevel = window.__userAccessLevel || 'guest';
+    }
+  } catch (e) {}
+  var isAdmin = userLevel === 'admin';
+  // Проверка уровня доступа: игра требует уровень не ниже своего accessLevel
+  var ACCESS_RANK = { guest: 0, starter: 1, plus: 2, premium: 3, admin: 4 };
+  var gameAccessLevel = game.accessLevel || 'guest';
+  var userRank = ACCESS_RANK[userLevel] || 0;
+  var gameRank = ACCESS_RANK[gameAccessLevel] || 0;
+  if (!isAdmin && userRank < gameRank) return false;
+  // Проверка 18+
   if ((game.ageRating || 'all') !== '18+') return true;
-  var accessLevel = 'guest';
   var isAdult = false;
   var hasUser = false;
   try {
     if (typeof window !== 'undefined') {
-      accessLevel = window.__userAccessLevel || 'guest';
       isAdult = window.__userIsAdult === true;
       hasUser = !!(window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
     }
   } catch (e) {}
-  if (accessLevel === 'guest' || !hasUser) return false;
+  if (userLevel === 'guest' || !hasUser) return false;
   // Админ имеет полный доступ ко всем играм, включая 18+
-  if (accessLevel === 'admin') return true;
+  if (isAdmin) return true;
   if (!isAdult) return false;
   return true;
 }
