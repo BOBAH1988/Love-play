@@ -5910,7 +5910,9 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
     const starterAllowed = (id === 'gameQuizBtn' || id === 'gameIdeasBtn' || id === 'gameCompatTestBtn');
     // Эти игры доступны уже на уровне starter, без подтверждения 18+.
     if (starterAllowed) {
-      return level === 'starter' || level === 'plus' || level === 'premium' || level === 'admin';
+      // Доступны любому вошедшему пользователю (в т.ч. тестовому аккаунту),
+      // без требования 18+.
+      return hasUser();
     }
     // Остальные игры для пар требуют подтверждения 18+ и уровня не ниже plus.
     if (!canAccessCouple()) return false;
@@ -5999,7 +6001,7 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
     coupleList.addEventListener('click', function(e){
       const targetBtn = e.target && e.target.closest ? e.target.closest('.btn-menu-item') : null;
       const targetId = targetBtn ? targetBtn.id : null;
-      if (canAccessCouple() && (!targetId || isCoupleGameAvailable(targetId))) return;
+      if (isCoupleGameAvailable(targetId)) return;
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
