@@ -764,6 +764,7 @@ function showSetupView(name){
   if(name === 'kidsView' && typeof renderKidsPlayers === 'function') renderKidsPlayers();
   else if(name === 'businessView' && typeof renderBusinessPlayers === 'function') renderBusinessPlayers();
   else if((name === 'companyView' || name === 'twoPlayerView') && typeof renderPartyPlayers === 'function') renderPartyPlayers();
+  if((name=="twoPlayerView"||name=="companyView") && typeof window.updateStaticGameLocks=="function") window.updateStaticGameLocks();
   // Хаб снова ВИДИМЫЙ экран (не просто переключили класс у невидимого блока) —
   // значит, «родитель» для любой игры, запущенной отсюда, именно хаб. Это
   // закрывает целый класс багов «выход ведёт в меню ПРОШЛОЙ игры»: точка входа
