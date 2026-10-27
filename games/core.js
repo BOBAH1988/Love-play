@@ -784,7 +784,7 @@ function showSetupView(name){
     if(!state.pausedMode) rememberReturnScreen('setup', name);
   }
 }
-document.getElementById('homeTwoPlayerBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('twoPlayerView'); });
+document.getElementById('homeTwoPlayerBtn').addEventListener('click', ()=>{ if (typeof window.canAccessCouple === 'function' && !window.canAccessCouple()) { if (typeof window.__denyAccess === 'function') window.__denyAccess('Игры для пар доступны только зарегистрированным совершеннолетним пользователям.'); return; } playSuccessSound(); showSetupView('twoPlayerView'); });
 document.getElementById('homeCompanyBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('companyView'); });
 document.getElementById('homeKidsBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('kidsView'); });
 document.getElementById('homeBusinessBtn').addEventListener('click', ()=>{ playSuccessSound(); showSetupView('businessView'); });
@@ -4831,11 +4831,15 @@ function playHitSound(){
     learning: 'learningView'
   };
 
+  let cachedGroups = null;
   function render(groups) {
+    if (groups) cachedGroups = groups;
+    const list = cachedGroups;
+    if (!list || !list.length) return;
     const container = document.getElementById('homeGroupsDynamic');
     if (!container) return;
     container.innerHTML = '';
-    groups.forEach(function (group) {
+    list.forEach(function (group) {
       const slug = group.slug;
       const viewId = GROUP_VIEWS[slug] || (slug + 'View');
       const btn = document.createElement('button');
@@ -4863,8 +4867,28 @@ function playHitSound(){
       textSpan.appendChild(desc);
       btn.appendChild(textSpan);
 
+      var groupAvailable = true;
+      try {
+        if (typeof canLaunchGame === 'function') {
+          groupAvailable = canLaunchGame({ enabled: true, accessLevel: group.accessLevel, ageRating: group.ageRating });
+        }
+      } catch (e) {}
+
+      if (!groupAvailable) {
+        btn.classList.add('locked');
+        var lockSpan = document.createElement('span');
+        lockSpan.className = 'section-lock';
+        lockSpan.textContent = '🔒';
+        btn.appendChild(lockSpan);
+        btn.style.opacity = '0.6';
+      }
+
       btn.addEventListener('click', function () {
         try { playSuccessSound(); } catch (e) {}
+        if (!groupAvailable) {
+          if (typeof window.__denyAccess === 'function') window.__denyAccess('Этот раздел недоступен.');
+          return;
+        }
         try { showSetupView(viewId); } catch (e) {}
       });
 
@@ -4876,7 +4900,31 @@ function playHitSound(){
       if (el) el.style.display = 'none';
     });
     container.style.display = '';
+    try { updateHomeTwoPlayerLock(); } catch (e) {}
   }
+
+  function updateHomeTwoPlayerLock() {
+    const btn = document.getElementById('homeTwoPlayerBtn');
+    if (!btn) return;
+    const available = (typeof window.canAccessCouple === 'function') ? window.canAccessCouple() : true;
+    const oldLock = btn.querySelector('.section-lock');
+    if (oldLock) oldLock.remove();
+    if (!available) {
+      btn.classList.add('locked');
+      const lock = document.createElement('span');
+      lock.className = 'section-lock';
+      lock.textContent = '🔒';
+      btn.appendChild(lock);
+      btn.style.opacity = '0.6';
+    } else {
+      btn.classList.remove('locked');
+      btn.style.opacity = '';
+    }
+  }
+  window.updateHomeSectionLocks = function() {
+    try { updateHomeTwoPlayerLock(); } catch (e) {}
+    if (cachedGroups) render(cachedGroups);
+  };
 
   try {
     if (typeof db === 'undefined' || !db || typeof db.collection !== 'function') return;
@@ -5813,11 +5861,13 @@ function playHitSound(){
             if (isAdminEmail(user.email)) window.__userAccessLevel = 'admin';
             window.__userIsAdult = data.isAdult === true;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+            if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
             ensureStatsBtnVisibility();
           }).catch(function () {
             window.__userAccessLevel = isAdminEmail(user.email) ? 'admin' : 'starter';
             window.__userIsAdult = false;
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+            if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
             ensureStatsBtnVisibility();
           });
           // Молчаливая синхронизация при автовходе. При ручном входе/регистрации
@@ -5837,12 +5887,14 @@ function playHitSound(){
           window.__userAccessLevel = isAdminEmail(user.email) ? 'admin' : 'starter';
           window.__userIsAdult = false;
           if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+            if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
           ensureStatsBtnVisibility();
         }
       } else {
         window.__userAccessLevel = 'guest';
         window.__userIsAdult = false;
         if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+            if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
         ensureStatsBtnVisibility();
       }
       // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
@@ -5911,6 +5963,8 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
       }
     } catch(e){}
   }
+  try { window.canAccessCouple = canAccessCouple; } catch(e){}
+  try { window.__denyAccess = deny; } catch(e){}
   // Кнопки кастомной модалки отказа в доступе (вместо нативных alert/confirm,
   // которые в PWA-обёртке на Mac уезжают за пределы экрана).
   (function wireAccessDeniedModal(){
