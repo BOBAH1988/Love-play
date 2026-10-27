@@ -5193,6 +5193,8 @@ function playHitSound(){
           const data = doc.exists ? (doc.data() || {}) : {};
           if (accountNameEl) accountNameEl.value = (data.name || '').trim();
           setAccountGender(data.gender === 'M' || data.gender === 'F' ? data.gender : null);
+          const accountAgeEl = document.getElementById('accountProfileAge');
+          if (accountAgeEl) accountAgeEl.value = data.age ? String(data.age) : '';
           const rawLevel = data.accessLevel;
           const firestoreLevel = (rawLevel || 'starter').toLowerCase().trim();
           // Нормализация: устаревшее/неизвестное значение (например, 'full') приводим
@@ -5466,13 +5468,23 @@ function playHitSound(){
     const nameEl = document.getElementById('accountProfileName');
     const maleBtn = document.getElementById('accountProfileGenderMale');
     const femaleBtn = document.getElementById('accountProfileGenderFemale');
+    const ageEl = document.getElementById('accountProfileAge');
     const name = nameEl ? (nameEl.value || '').trim() : '';
     const gender = maleBtn && maleBtn.classList.contains('on') ? 'M' : (femaleBtn && femaleBtn.classList.contains('on') ? 'F' : null);
+    let age = null;
+    if (ageEl) {
+      const ageVal = parseInt((ageEl.value || '').trim(), 10);
+      if (!isNaN(ageVal) && ageVal >= 18 && ageVal <= 99) age = ageVal;
+      else if ((ageEl.value || '').trim() !== '') {
+        showError('accountProfileError', 'Возраст должен быть от 18 до 99.');
+        return Promise.reject(new Error('Возраст должен быть от 18 до 99.'));
+      }
+    }
     const ref = db.collection('users').doc(user.uid);
-    // Сначала быстро сохраняем имя/пол — это главное, что вводит пользователь.
+    // Сначала быстро сохраняем имя/пол/возраст — это главное, что вводит пользователь.
     // Не ждём чтения документа, чтобы запись не висела на плохой сети и успевала
     // завершиться до обновления страницы.
-    const p = ref.set({ name: name, gender: gender }, { merge: true });
+    const p = ref.set({ name: name, gender: gender, age: age }, { merge: true });
     // Затем, по возможности, дозаполняем служебные поля, если документа ещё нет
     // (тестовый аккаунт) или они отсутствуют. Ошибки здесь не ломают основное
     // сохранение.
@@ -5508,6 +5520,16 @@ function playHitSound(){
     accountProfileNameInput.addEventListener('input', function () {
       if (saveNameTimer) clearTimeout(saveNameTimer);
       saveNameTimer = setTimeout(saveAccountProfile, 400);
+    });
+  }
+  const accountProfileAgeInput = document.getElementById('accountProfileAge');
+  if (accountProfileAgeInput) {
+    accountProfileAgeInput.addEventListener('blur', saveAccountProfile);
+    accountProfileAgeInput.addEventListener('change', saveAccountProfile);
+    let saveAgeTimer = null;
+    accountProfileAgeInput.addEventListener('input', function () {
+      if (saveAgeTimer) clearTimeout(saveAgeTimer);
+      saveAgeTimer = setTimeout(saveAccountProfile, 400);
     });
   }
   // На случай закрытия/обновления страницы — финальное сохранение профиля.

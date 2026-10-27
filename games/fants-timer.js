@@ -740,7 +740,7 @@ function renderSnap(snap) {
       html += '<div style="border:1px solid rgba(43,15,46,.12); border-radius:10px; padding:6px 8px; background:rgba(255,255,255,.35);">';
       html += '<div style="display:flex; align-items:center; gap:8px; justify-content:space-between; margin-bottom:4px;">';
       html += '<div style="font-weight:700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + email + '</div>';
-      if (name) html += '<div style="font-size:12px; color:#5c3a52; text-align:right;">' + name + (genderIcon ? ' ' + genderIcon : '') + '</div>';
+      if (name) html += '<div style="font-size:12px; color:#5c3a52; text-align:right;">' + name + (genderIcon ? ' ' + genderIcon : '') + (d.age ? ' ' + d.age : '') + '</div>';
       html += '</div>';
       html += '<div style="display:flex; align-items:center; gap:6px;">';
       html += '<select class="admin-level-select" data-uid="' + escHtmlAdmin(u.uid) + '" style="flex:1; min-width:0; padding:4px 6px; border-radius:8px; border:1px solid rgba(43,15,46,.2); background:#fff; color:#2b0f2e;">';
