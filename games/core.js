@@ -5481,10 +5481,18 @@ function playHitSound(){
       }
     }
     const ref = db.collection('users').doc(user.uid);
-    // Сначала быстро сохраняем имя/пол/возраст — это главное, что вводит пользователь.
+    // Сохраняем только заполненные поля — пустые значения не должны стирать
+    // уже сохранённое в базе имя/пол/возраст при закрытии окна аккаунта
+    // (pagehide / visibilitychange вызывают saveAccountProfile).
+    const profileData = {};
+    if (name !== '') profileData.name = name;
+    if (gender !== null) profileData.gender = gender;
+    if (age !== null) profileData.age = age;
+    if (!Object.keys(profileData).length) return Promise.resolve();
+    // Сначала быстро сохраняем введённое — это главное, что вводит пользователь.
     // Не ждём чтения документа, чтобы запись не висела на плохой сети и успевала
     // завершиться до обновления страницы.
-    const p = ref.set({ name: name, gender: gender, age: age }, { merge: true });
+    const p = ref.set(profileData, { merge: true });
     // Затем, по возможности, дозаполняем служебные поля, если документа ещё нет
     // (тестовый аккаунт) или они отсутствуют. Ошибки здесь не ломают основное
     // сохранение.
