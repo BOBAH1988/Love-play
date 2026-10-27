@@ -325,6 +325,12 @@ function showPartyQuizSummaryModal(){
   showModal('partyQuizSummaryModal');
 }
 function goToPartyQuizGame(){
+  const __guest = (typeof window !== 'undefined' && (window.__userAccessLevel || 'guest') === 'guest');
+  if (__guest && (state.partyQuizSelectedLevel || 1) > 2) {
+    if (typeof playErrorSound === 'function') playErrorSound();
+    showToast('Уровни «18+» и «Пошлые» недоступны для гостя.');
+    return;
+  }
   abandonPausedSession('davay');
   abandonPausedSession('td');
   abandonPausedSession('bingo');

@@ -132,6 +132,12 @@ document.getElementById('memesCard').addEventListener('click', ()=>{
   speakMemesCard();
 });
 function goToMemesGame(){
+  const __guest = (typeof window !== 'undefined' && (window.__userAccessLevel || 'guest') === 'guest');
+  if (__guest && (state.memesSelectedLevel || 1) > 2) {
+    if (typeof playErrorSound === 'function') playErrorSound();
+    showToast('Уровни «18+» и «Пошлые» недоступны для гостя.');
+    return;
+  }
   goToGame('memesSetup', 'memesGame');
   drawMemesCard();
   updateMuteBtn();
