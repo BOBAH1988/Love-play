@@ -4325,7 +4325,7 @@ document.getElementById('saveCardBtn').addEventListener('click', ()=>{
   const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
   if (__access !== 'premium' && __access !== 'admin') {
     if (typeof playErrorSound === 'function') playErrorSound();
-    if (typeof showToast === 'function') showToast('Свои задания доступны только уровням Премиум и Админ');
+    if (typeof showToast === 'function') showToast('Свои задания доступны только уровню Премиум');
     return;
   }
   const textEl = document.getElementById('newCardText');
@@ -4439,7 +4439,7 @@ document.getElementById('addCardBtn').addEventListener('click', ()=>{
   const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
   if (__access !== 'premium' && __access !== 'admin') {
     if (typeof playErrorSound === 'function') playErrorSound();
-    if (typeof showToast === 'function') showToast('Свои задания доступны только уровням Премиум и Админ');
+    if (typeof showToast === 'function') showToast('Свои задания доступны только уровню Премиум');
     return;
   }
   populateNewCardLevelSelect();

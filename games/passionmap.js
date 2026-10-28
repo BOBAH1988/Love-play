@@ -403,7 +403,7 @@ if(__pmCustomTasksBtn) __pmCustomTasksBtn.addEventListener('click', () => {
   const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
   if (__access !== 'premium' && __access !== 'admin') {
     if (typeof playErrorSound === 'function') playErrorSound();
-    if (typeof showToast === 'function') showToast('Свои задания доступны только уровням Премиум и Админ');
+    if (typeof showToast === 'function') showToast('Свои задания доступны только уровню Премиум');
     return;
   }
   renderPassionMapCustomTasksEditor();
@@ -458,7 +458,7 @@ if(__pmModeCst) __pmModeCst.addEventListener('click', () => {
   const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
   if (__access !== 'premium' && __access !== 'admin') {
     if (typeof playErrorSound === 'function') playErrorSound();
-    if (typeof showToast === 'function') showToast('Свои задания доступны только уровням Премиум и Админ');
+    if (typeof showToast === 'function') showToast('Свои задания доступны только уровню Премиум');
     return;
   }
   if(!allPassionMapCustomFilled()){ showToast('Сначала заполните свои задания'); return; }
