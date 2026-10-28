@@ -5389,9 +5389,10 @@ function playHitSound(){
     const btn = document.getElementById('accountRegisterSubmitBtn');
     const terms = document.getElementById('accountConsentTerms');
     const data = document.getElementById('accountConsentData');
-    if (btn) btn.disabled = !(terms && terms.checked && data && data.checked);
+    const adult = document.getElementById('accountConsentAdult');
+    if (btn) btn.disabled = !(terms && terms.checked && data && data.checked && adult && adult.checked);
   }
-  ['accountConsentTerms', 'accountConsentData'].forEach(function (id) {
+  ['accountConsentTerms', 'accountConsentData', 'accountConsentAdult'].forEach(function (id) {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', updateRegisterSubmitState);
   });
@@ -5449,8 +5450,13 @@ function playHitSound(){
       if (!auth) return;
       const terms = document.getElementById('accountConsentTerms');
       const data = document.getElementById('accountConsentData');
+      const adult = document.getElementById('accountConsentAdult');
       if (!terms || !terms.checked || !data || !data.checked) {
         showError('accountError', 'Необходимо принять правила и согласие на обработку данных');
+        return;
+      }
+      if (!adult || !adult.checked) {
+        showError('accountError', 'Необходимо подтвердить возраст 18+');
         return;
       }
       const email = (document.getElementById('accountRegisterEmail').value || '').trim();
