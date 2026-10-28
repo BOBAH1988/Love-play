@@ -137,8 +137,8 @@ function renderStocksGame(){
         '<td class="' + cls + '">' + sign + change.toFixed(2) + '%</td>' +
         '<td>' + owned + ' шт.</td>' +
         '<td style="white-space:nowrap;">' +
-          '<button class="btn btn-secondary btn-square" data-act="buy" data-ticker="' + t + '">+</button> ' +
-          '<button class="btn btn-secondary btn-square" data-act="sell" data-ticker="' + t + '">-</button>' +
+          '<button class="btn btn-secondary btn-square" style="padding:2px 8px;font-size:14px;line-height:1;" data-act="buy" data-ticker="' + t + '">+</button> ' +
+          '<button class="btn btn-secondary btn-square" style="padding:2px 8px;font-size:14px;line-height:1;" data-act="sell" data-ticker="' + t + '">-</button>' +
         '</td>' +
       '</tr>';
     }).join('');
