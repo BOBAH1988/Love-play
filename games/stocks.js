@@ -77,7 +77,7 @@ function renderStocksSetup(){
   });
   const scale = state.stocksTimeScale || 'week';
   document.querySelectorAll('#stocksScaleGroup .starter-btn').forEach(btn => {
-    btn.classList.toggle('selected', btn.dataset.value === scale);
+    btn.classList.toggle('on', btn.dataset.value === scale);
   });
   const range = document.getElementById('stocksCashRange');
   if(range){ range.value = state.stocksCash || 100000; }
@@ -91,7 +91,7 @@ function startStocksGame(){
   });
   if(selected.length === 0){ showToast('Выберите хотя бы одну акцию'); return; }
   state.stocksSelected = selected;
-  const scaleBtn = document.querySelector('#stocksScaleGroup .starter-btn.selected');
+  const scaleBtn = document.querySelector('#stocksScaleGroup .starter-btn.on');
   state.stocksTimeScale = scaleBtn ? scaleBtn.dataset.value : (state.stocksTimeScale || 'week');
   const range = document.getElementById('stocksCashRange');
   state.stocksCash = range ? Number(range.value) : (state.stocksCash || 100000);
@@ -214,8 +214,8 @@ function exitStocksGame(){
 document.querySelectorAll('#stocksScaleGroup .starter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     playSuccessSound();
-    document.querySelectorAll('#stocksScaleGroup .starter-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
+    document.querySelectorAll('#stocksScaleGroup .starter-btn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
     state.stocksTimeScale = btn.dataset.value;
     saveState();
   });
