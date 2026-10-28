@@ -111,8 +111,10 @@ function renderStocksSetup(){
     if(!q) return;
     const arrow = q.change >= 0 ? '▲' : '▼';
     const color = q.change >= 0 ? '#2e7d32' : '#c62828';
-    span.textContent = ' ' + stocksMoney(q.price) + ' ';
-    span.insertAdjacentHTML('beforeend', '<span style="color:' + color + ';font-weight:bold;">' + arrow + '</span>');
+    span.style.opacity = '';
+    span.style.fontSize = '';
+    span.innerHTML = ' <span style="opacity:0.5;font-size:12px;">' + stocksMoney(q.price) + '</span> ' +
+      '<span style="color:' + color + ';font-weight:bold;">' + arrow + '</span>';
   });
 }
 function startStocksGame(){
