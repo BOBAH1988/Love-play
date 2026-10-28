@@ -6035,6 +6035,8 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
         } else {
           deny('Игры для пар доступны только совершеннолетним пользователям.');
         }
+      } else if (targetId === 'gameDavayBtn') {
+        deny('Эта игра доступна с уровня «Премиум».');
       } else {
         deny('Эта игра доступна с уровня «Плюс».');
       }
