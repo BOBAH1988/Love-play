@@ -2,17 +2,17 @@
 // Загружается через <script src="games/stocks.js"></script> в index.html.
 
 const STOCKS_CATALOG = [
-  { ticker:'AAPL', name:'Apple', base:180, vol:0.06 },
-  { ticker:'MSFT', name:'Microsoft', base:420, vol:0.05 },
-  { ticker:'GOOGL', name:'Alphabet', base:170, vol:0.06 },
-  { ticker:'AMZN', name:'Amazon', base:185, vol:0.07 },
-  { ticker:'TSLA', name:'Tesla', base:250, vol:0.12 },
-  { ticker:'NVDA', name:'NVIDIA', base:900, vol:0.10 },
-  { ticker:'META', name:'Meta', base:500, vol:0.08 },
-  { ticker:'NFLX', name:'Netflix', base:650, vol:0.09 },
+  { ticker:'AAPL', name:'Apple', base:16200, vol:0.06 },
+  { ticker:'MSFT', name:'Microsoft', base:37800, vol:0.05 },
+  { ticker:'GOOGL', name:'Alphabet', base:15300, vol:0.06 },
+  { ticker:'AMZN', name:'Amazon', base:16650, vol:0.07 },
+  { ticker:'TSLA', name:'Tesla', base:22500, vol:0.12 },
+  { ticker:'NVDA', name:'NVIDIA', base:81000, vol:0.10 },
+  { ticker:'META', name:'Meta', base:45000, vol:0.08 },
+  { ticker:'NFLX', name:'Netflix', base:58500, vol:0.09 },
   // Китайские компании
-  { ticker:'BABA', name:'Alibaba', base:80, vol:0.09 },
-  { ticker:'TCEHY', name:'Tencent', base:40, vol:0.08 },
+  { ticker:'BABA', name:'Alibaba', base:7200, vol:0.09 },
+  { ticker:'TCEHY', name:'Tencent', base:3600, vol:0.08 },
   // Российские компании
   { ticker:'SBER', name:'Сбербанк', base:300, vol:0.05 },
   { ticker:'GAZP', name:'Газпром', base:160, vol:0.06 },
