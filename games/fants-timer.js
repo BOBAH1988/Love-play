@@ -1236,17 +1236,16 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     return `<div class="rules-group"><button type="button" class="rules-group-head"><span>${g.icon} ${g.name}</span><span class="rules-chev">▸</span></button><div class="rules-group-body">${items}</div></div>`;
   }).join('');
 
-  // Раскрытие групп
-  list.querySelectorAll('.rules-group-head').forEach(h=>{
-    h.addEventListener('click', ()=> h.closest('.rules-group').classList.toggle('open'));
-  });
-
-  // Открытие правил конкретной игры
-  list.querySelectorAll('.rules-item').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
+  // Раскрытие групп и открытие правил — делегирование на контейнер, чтобы
+  // работало надёжно (кнопки создаются через innerHTML).
+  list.addEventListener('click', (e)=>{
+    const head = e.target.closest('.rules-group-head');
+    if(head){ head.closest('.rules-group').classList.toggle('open'); return; }
+    const btn = e.target.closest('.rules-item');
+    if(btn){
       const modal = document.getElementById(btn.dataset.rulesModal);
       if(modal) modal.classList.add('show');
-    });
+    }
   });
 
   // Закрытие хаба
