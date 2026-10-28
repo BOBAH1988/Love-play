@@ -30,6 +30,16 @@ let stocksCash = 0;
 let stocksRealizedProfit = 0;
 let stocksPeriod = 0;
 let stocksSelectedTickers = [];
+let stocksSetupQuotes = {};   // тикер -> { price, change } на момент настройки
+
+function stocksGenerateQuotes(){
+  stocksSetupQuotes = {};
+  STOCKS_CATALOG.forEach(s => {
+    const change = (Math.random() * 2 - 1) * s.vol * 0.5;
+    const price = Math.round(s.base * (1 + change) * 100) / 100;
+    stocksSetupQuotes[s.ticker] = { price: price, change: change };
+  });
+}
 
 function stocksMoney(n){
   return Math.round(n).toLocaleString('ru-RU') + ' ₽';
@@ -47,12 +57,14 @@ function stocksInitSession(){
   stocksHoldings = {};
   stocksSelectedTickers.forEach(t => {
     const s = stocksFind(t);
-    const p = s ? s.base : 100;
+    const base = s ? s.base : 100;
+    const q = stocksSetupQuotes[t];
+    const p = q ? q.price : base;
     stocksPrices[t] = p;
     stocksPrevPrices[t] = p;
     stocksHoldings[t] = 0;
   });
-  stocksCash = Number(state.stocksCash) || 100000;
+  stocksCash = Number(state.stocksCash) || 500000;
   stocksRealizedProfit = 0;
   stocksPeriod = 0;
 }
@@ -89,9 +101,19 @@ function renderStocksSetup(){
     btn.classList.toggle('on', btn.dataset.value === scale);
   });
   const range = document.getElementById('stocksCashRange');
-  if(range){ range.value = state.stocksCash || 100000; }
+  if(range){ range.value = state.stocksCash || 500000; }
   const out = document.getElementById('stocksCashValue');
-  if(out){ out.textContent = stocksMoney(state.stocksCash || 100000); }
+  if(out){ out.textContent = stocksMoney(state.stocksCash || 500000); }
+  stocksGenerateQuotes();
+  document.querySelectorAll('.stock-quote').forEach(span => {
+    const t = span.dataset.ticker;
+    const q = stocksSetupQuotes[t];
+    if(!q) return;
+    const arrow = q.change >= 0 ? '▲' : '▼';
+    const color = q.change >= 0 ? '#2e7d32' : '#c62828';
+    span.textContent = ' ' + stocksMoney(q.price) + ' ';
+    span.insertAdjacentHTML('beforeend', '<span style="color:' + color + ';font-weight:bold;">' + arrow + '</span>');
+  });
 }
 function startStocksGame(){
   const selected = [];
@@ -103,7 +125,7 @@ function startStocksGame(){
   const scaleBtn = document.querySelector('#stocksScaleGroup .starter-btn.on');
   state.stocksTimeScale = scaleBtn ? scaleBtn.dataset.value : (state.stocksTimeScale || 'week');
   const range = document.getElementById('stocksCashRange');
-  state.stocksCash = range ? Number(range.value) : (state.stocksCash || 100000);
+  state.stocksCash = range ? Number(range.value) : (state.stocksCash || 500000);
   saveState();
   stocksInitSession();
   renderStocksGame();
