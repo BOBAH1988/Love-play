@@ -290,6 +290,12 @@ window.GAME_REGISTRY = [
     screens: ['creditGame'],
   },
   {
+    mode: 'stocks', title: '«Биржа акций»', group: 'business', noPause: true, menuTitle: '📈 Биржа акций',
+    back: 'exitStocksGame',
+    screens: ['stocksGame'],
+  },
+
+  {
     // «Тест IQ» — 30 заданий с разбором по пяти направлениям. НЕ считает IQ:
     // у набора нет референсной группы и норм, поэтому в реестре это
     // «тренировочный тест», а не измерение интеллекта.

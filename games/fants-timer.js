@@ -1202,6 +1202,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🏢','Бизнес тесты','bizTestsRulesModal'],
       ['🏦','Вклады','depositsRulesModal'],
       ['💳','Кредит','creditRulesModal'],
+  ['📈','Биржа акций','stocksRulesModal'],
     ]},
     { icon:'📱', name:'Игры для одного', games:[
       ['🪢','Виселица','partyHangmanRulesModal'],
@@ -1345,6 +1346,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     bizTestsSummary:'businessView', bizTestsHistory:'businessView',
     depositsSetup:'businessView', depositsGame:'businessView',
     creditSetup:'businessView', creditGame:'businessView',
+     stocksSetup:'businessView', stocksGame:'businessView',
     flashSetup:'learningView', flashGame:'learningView',
     flashTimeSetup:'learningView', flashTimeGame:'learningView',
     flagsSetup:'learningView', flagsGame:'learningView',
@@ -1391,6 +1393,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     // «Вклады»: экран настроек, чтобы стрелка «←» из него вела в хаб,
     // а не гоняла экран сам на себе.
     'depositsSetup',
+    // «Биржа акций» — экран настроек уводит в хаб.
+    'stocksSetup',
     // «Кредит» — то же самое: его экран настроек тоже уводит в хаб.
     'creditSetup',
     // Обучающая группа: экраны настроек «Столиц» и «Арифметики». Без них
@@ -1472,6 +1476,8 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     'funTestsHistory':'exitFunTestsHistory',
     'funTestsSummary':'exitFunTestsSummary',
     'funTestsSetup':'exitFunTestsSetup',
+     // «Биржа акций»: «←» с экрана настроек ведёт в хаб.
+     'stocksSetup':'exitStocksSetup',
   };
   window.handleNestedBack = function(activeIds){
     const ids = activeIds || getActiveGameScreenIds();

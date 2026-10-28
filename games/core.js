@@ -388,6 +388,8 @@ let state = {
   // умолчанию пусто: навязывать их в дефолте означало бы исподтишка удорожать
   // кредит до того, как игрок что-то выбрал.
   creditServices:[],
+  // «Биржа акций» (бизнес-игры) — симулятор биржи: выбранные акции, период и капитал.
+  stocksSelected:['AAPL','MSFT','GOOGL'], stocksTimeScale:'week', stocksCash:100000,
   // Тест IQ (обучающие игры) — одна игра, один тест: 30 заданий и разбор по
   // пяти направлениям. iqTestOrder — перемешанный порядок заданий ЭТОЙ партии
   // (без него пять заданий одного направления шли подряд и направление
@@ -1118,6 +1120,12 @@ document.getElementById('gameCreditBtn').addEventListener('click', ()=>{
   if(blockedByDavayPause()) return;
   playSuccessSound();
   callGameEntry('goToCreditSetup');
+});
+// «Биржа акций» (бизнес-игры) — симулятор биржи.
+document.getElementById('gameStocksBtn').addEventListener('click', ()=>{
+  if(blockedByDavayPause()) return;
+  playSuccessSound();
+  callGameEntry('goToStocksSetup');
 });
 // «Тест IQ» (обучающие игры) — 30 заданий и разбор по направлениям.
 document.getElementById('gameIqTestBtn').addEventListener('click', ()=>{
@@ -2194,6 +2202,10 @@ function performFullReset(){
   state.creditDown = 0;
   state.creditGain = 0;
   state.creditServices = [];
+  // «Биржа акций» — сброс к дефолтам
+  state.stocksSelected = ['AAPL','MSFT','GOOGL'];
+  state.stocksTimeScale = 'week';
+  state.stocksCash = 100000;
   // Тест IQ — общий сброс чистит партию и историю
   state.iqTestIndex = 0;
   state.iqTestOrder = [];
