@@ -1461,9 +1461,11 @@ function renderPhotoSetupLevels(){
   const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
   const __allowed = (__access === 'premium' || __access === 'admin')
     ? [1,2,3,4,5,6,7,8,9,10,11,12]
-    : (__access === 'plus' || __access === 'starter' || __access === 'guest'
-        ? [4,5,7,8,9,10,11,12]
-        : [4,5,7,8,9,10,11,12]);
+    : (__access === 'plus'
+        ? [5,7,8,9,10,11,12]
+        : (__access === 'starter' || __access === 'guest'
+            ? [4,5,7,8,9,10,11,12]
+            : [4,5,7,8,9,10,11,12]));
   if (__allowed.indexOf(state.photoSelectedLevel || 1) < 0) { state.photoSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
   PHOTO_LEVELS.forEach(l=>{
