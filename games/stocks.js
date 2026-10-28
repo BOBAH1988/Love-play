@@ -30,7 +30,8 @@ let stocksCash = 0;
 let stocksRealizedProfit = 0;
 let stocksPeriod = 0;
 let stocksSelectedTickers = [];
-let stocksSetupQuotes = {};   // тикер -> { price, change } на момент настройки
+let stocksSetupQuotes = {};
+let stocksInitialCash = 0;   // тикер -> { price, change } на момент настройки
 
 function stocksGenerateQuotes(){
   stocksSetupQuotes = {};
@@ -65,6 +66,7 @@ function stocksInitSession(){
     stocksHoldings[t] = 0;
   });
   stocksCash = Number(state.stocksCash) || 100000;
+  stocksInitialCash = stocksCash;
   stocksRealizedProfit = 0;
   stocksPeriod = 0;
 }
@@ -226,6 +228,43 @@ function stocksNextPeriod(){
   showToast('Период ' + stocksPeriod);
 }
 
+function stocksCashOut(){
+  const details = [];
+  stocksSelectedTickers.forEach(t => {
+    const owned = stocksHoldings[t] || 0;
+    if(owned > 0){
+      const price = stocksPrices[t];
+      const s = stocksFind(t);
+      const base = s ? s.base : price;
+      const profit = (price - base) * owned;
+      stocksHoldings[t] = 0;
+      stocksCash += price * owned;
+      stocksRealizedProfit += profit;
+      details.push({ ticker:t, shares:owned, price:price, profit:profit });
+    }
+  });
+  const tax = stocksRealizedProfit > 0 ? stocksRealizedProfit * STOCKS_TAX_RATE : 0;
+  const net = stocksRealizedProfit - tax;
+  let html = '';
+  html += '<div class="deposit-sub">Периодов прошло: ' + stocksPeriod + '</div>';
+  html += '<div class="deposit-total" style="margin:8px 0;">' + stocksMoney(stocksCash) + '</div>';
+  html += '<div class="deposit-sub">Заработано чистыми: ' + stocksMoney(net) + '</div>';
+  html += '<div class="deposit-sub">Налог 13%: ' + stocksMoney(tax) + '</div>';
+  html += '<div class="deposit-sub" style="margin-top:8px;font-weight:bold;">По акциям:</div>';
+  html += '<table class="deposit-table"><thead><tr><th>Тикер</th><th>Шт.</th><th>Цена</th><th>Прибыль</th></tr></thead><tbody>';
+  details.forEach(d => {
+    html += '<tr><td>' + d.ticker + '</td><td>' + d.shares + '</td><td>' + stocksMoney(d.price) + '</td><td>' + stocksMoney(d.profit) + '</td></tr>';
+  });
+  if(details.length === 0) html += '<tr><td colspan="4">Сделок не было</td></tr>';
+  html += '</tbody></table>';
+  html += '<div class="deposit-sub" style="margin-top:8px;">Стартовый капитал: ' + stocksMoney(stocksInitialCash) + '</div>';
+  const body = document.getElementById('stocksSummaryBody');
+  if(body) body.innerHTML = html;
+  const modal = document.getElementById('stocksSummaryModal');
+  if(modal) modal.classList.add('show');
+}
+
+
 function stocksResetPortfolio(){
   if(!confirm('Сбросить портфель и начать заново?')) return;
   stocksInitSession();
@@ -267,6 +306,12 @@ if(stocksCashRange){
 document.getElementById('stocksStartBtn')?.addEventListener('click', () => { startStocksGame(); });
 document.getElementById('stocksNextBtn')?.addEventListener('click', () => { stocksNextPeriod(); });
 document.getElementById('stocksResetBtn')?.addEventListener('click', () => { stocksResetPortfolio(); });
+document.getElementById('stocksCashOutBtn')?.addEventListener('click', () => { stocksCashOut(); });
+document.getElementById('closeStocksSummaryBtn')?.addEventListener('click', () => {
+  const modal = document.getElementById('stocksSummaryModal');
+  if(modal) modal.classList.remove('show');
+  exitStocksGame();
+});
 document.getElementById('stocksSetupExitBtn')?.addEventListener('click', () => {
   state.inProgress = false; state.pausedMode = null; state.lastSectionOnPause = null; saveState();
   if(typeof exitGame === 'function') exitGame('stocksSetup', null);
