@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-28 · v1.1.771';
+  window.APP_BUILD = '2026-10-28 · v1.1.772';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -419,7 +419,7 @@
       </div>
       <div class="game-select-list" id="homeGroupsDynamic" style="display:none;"></div>
       <div class="app-footer">
-        Project by Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.771</span>
+        Project by Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.772</span>
       </div>
 
 
@@ -4097,7 +4097,7 @@
    </div>
 
 
-   </div>
+
 
 
   </div>
@@ -4595,8 +4595,10 @@
 
      <div class="field" style="display:flex;gap:8px;flex-wrap:wrap;">
        <button class="btn btn-primary" id="stocksNextBtn">Следующий период ▶</button>
-       <button class="btn btn-secondary" id="stocksCashOutBtn">Вывести деньги</button>
-       <button class="btn btn-secondary" id="stocksResetBtn">Сбросить портфель</button>
+     </div>
+     <div class="field" style="display:flex;gap:8px;">
+       <button class="btn btn-secondary" id="stocksCashOutBtn" style="flex:1;">Вывести деньги</button>
+       <button class="btn btn-secondary" id="stocksResetBtn" style="flex:1;">Сброс</button>
      </div>
 
      <button class="btn btn-secondary" id="stocksGameExitBtn" style="margin-top:10px;">Выход</button>
@@ -5733,7 +5735,7 @@
 <script src="games/biz-tests.js?v=20261025b"></script>
 <script src="games/deposits.js?v=20261003p"></script>
 <script src="games/credit.js?v=20261004c"></script>
-<script src="games/stocks.js?v=20261028b"></script>
+<script src="games/stocks.js?v=20261028c"></script>
 <script src="games/iq-test.js?v=20261026b"></script>
 <script src="games/know-more.js?v=20261024o"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
