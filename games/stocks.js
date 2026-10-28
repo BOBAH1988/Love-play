@@ -9,7 +9,16 @@ const STOCKS_CATALOG = [
   { ticker:'TSLA', name:'Tesla', base:250, vol:0.12 },
   { ticker:'NVDA', name:'NVIDIA', base:900, vol:0.10 },
   { ticker:'META', name:'Meta', base:500, vol:0.08 },
-  { ticker:'NFLX', name:'Netflix', base:650, vol:0.09 }
+  { ticker:'NFLX', name:'Netflix', base:650, vol:0.09 },
+  // Китайские компании
+  { ticker:'BABA', name:'Alibaba', base:80, vol:0.09 },
+  { ticker:'TCEHY', name:'Tencent', base:40, vol:0.08 },
+  // Российские компании
+  { ticker:'SBER', name:'Сбербанк', base:300, vol:0.05 },
+  { ticker:'GAZP', name:'Газпром', base:160, vol:0.06 },
+  { ticker:'LKOH', name:'Лукойл', base:7000, vol:0.05 },
+  { ticker:'YNDX', name:'Яндекс', base:4000, vol:0.09 },
+  { ticker:'GMKN', name:'Норникель', base:15000, vol:0.06 }
 ];
 
 const STOCKS_TAX_RATE = 0.13;
