@@ -229,6 +229,7 @@ function stocksNextPeriod(){
 }
 
 function stocksCashOut(){
+  try {
   const details = [];
   stocksSelectedTickers.forEach(t => {
     const owned = stocksHoldings[t] || 0;
@@ -262,6 +263,10 @@ function stocksCashOut(){
   if(body) body.innerHTML = html;
   const modal = document.getElementById('stocksSummaryModal');
   if(modal) modal.classList.add('show');
+  } catch (e) {
+    showToast('Ошибка: ' + e.message);
+    console.error(e);
+  }
 }
 
 
