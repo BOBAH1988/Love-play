@@ -12,11 +12,12 @@ function getPartyFantsCardsList(level){
 function renderPartyFantsSetupLevels(){
   const wrap = document.getElementById('partyFantsSetupLevels');
   if(!wrap) return;
-  const __guest = (typeof window !== 'undefined' && (window.__userAccessLevel || 'guest') === 'guest');
-  if (__guest && (state.partyFantsSelectedLevel || 1) > 2) { state.partyFantsSelectedLevel = 1; try { saveState(); } catch(e){} }
+  const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+  const __maxLevel = (__access === 'premium' || __access === 'admin') ? Infinity : (__access === 'plus' ? 3 : 2);
+  if (__maxLevel !== Infinity && (state.partyFantsSelectedLevel || 1) > __maxLevel) { state.partyFantsSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
   (typeof PARTY_FANTS_LEVELS !== 'undefined' ? PARTY_FANTS_LEVELS : []).forEach(l=>{
-    const __locked = __guest && (typeof l.id === "number" && l.id > 2);
+    const __locked = (typeof l.id === 'number' && l.id > __maxLevel);
     const div = document.createElement('div');
     div.className = 'level-toggle' + (__locked ? ' locked' : '') + (state.partyFantsSelectedLevel === l.id && !__locked ? ' on' : '');
     if (__locked) { div.style.opacity = '0.55'; div.style.pointerEvents = 'none'; }

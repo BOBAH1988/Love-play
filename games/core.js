@@ -5920,6 +5920,10 @@ try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {
       // без требования 18+.
       return hasUser();
     }
+    // «Давай попробуем» доступна только уровням premium и admin.
+    if (id === 'gameDavayBtn') {
+      return level === 'premium' || level === 'admin';
+    }
     // Остальные игры для пар требуют подтверждения 18+ и уровня не ниже plus.
     if (!canAccessCouple()) return false;
     if (level === 'starter') return false;

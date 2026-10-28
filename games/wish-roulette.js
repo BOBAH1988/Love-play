@@ -43,11 +43,13 @@ function wrRenderSetupLevels(){
   const wrap = document.getElementById('wrSetupLevels');
   if(!wrap) return;
   const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
-  const __maxLevel = (__access === 'premium' || __access === 'admin') ? Infinity : (__access === 'plus' ? 3 : 2);
-  if (__maxLevel !== Infinity && (state.wrSelectedLevel || 1) > __maxLevel) { state.wrSelectedLevel = 1; try { saveState(); } catch(e){} }
+  const __allowed = (__access === 'premium' || __access === 'admin')
+    ? [1,2,3,4,5,6]
+    : (__access === 'plus' ? [1,2,3,5,6] : [1,2]);
+  if (__allowed.indexOf(state.wrSelectedLevel || 1) < 0) { state.wrSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
   WR_LEVELS.forEach(l => {
-    const __locked = (typeof l.id === 'number' && l.id > __maxLevel);
+    const __locked = (typeof l.id === 'number' && __allowed.indexOf(l.id) < 0);
     const div = document.createElement('div');
     div.className = 'level-toggle' + (__locked ? ' locked' : '') + (state.wrSelectedLevel === l.id && !__locked ? ' on' : '');
     if (__locked) { div.style.opacity = '0.55'; div.style.pointerEvents = 'none'; }

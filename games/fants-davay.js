@@ -1459,11 +1459,15 @@ function renderPhotoSetupLevels(){
   const wrap = document.getElementById('photoSetupLevels');
   if(!wrap) return;
   const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
-  const __maxLevel = (__access === 'premium' || __access === 'admin') ? Infinity : (__access === 'plus' ? 3 : 2);
-  if (__maxLevel !== Infinity && (state.photoSelectedLevel || 1) > __maxLevel) { state.photoSelectedLevel = 1; try { saveState(); } catch(e){} }
+  const __allowed = (__access === 'premium' || __access === 'admin')
+    ? [1,2,3,4,5,6,7,8]
+    : (__access === 'plus'
+        ? [1,2,3,4,5,7,8]
+        : [4,5,7,8]);
+  if (__allowed.indexOf(state.photoSelectedLevel || 1) < 0) { state.photoSelectedLevel = 1; try { saveState(); } catch(e){} }
   wrap.innerHTML = '';
   PHOTO_LEVELS.forEach(l=>{
-    const __locked = (typeof l.id === 'number' && l.id > __maxLevel);
+    const __locked = (typeof l.id === 'number' && __allowed.indexOf(l.id) < 0);
     const div = document.createElement('div');
     div.className = 'level-toggle' + (__locked ? ' locked' : '') + (state.photoSelectedLevel === l.id && !__locked ? ' on' : '');
     div.dataset.id = l.id;
