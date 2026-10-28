@@ -1202,7 +1202,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       ['🏢','Бизнес тесты','bizTestsRulesModal'],
       ['🏦','Вклады','depositsRulesModal'],
       ['💳','Кредит','creditRulesModal'],
-  ['📈','Биржа акций','stocksRulesModal'],
+      ['📈','Биржа акций','stocksRulesModal'],
     ]},
     { icon:'📱', name:'Игры для одного', games:[
       ['🪢','Виселица','partyHangmanRulesModal'],

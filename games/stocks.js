@@ -314,6 +314,7 @@ if(stocksCashRange){
 }
 
 document.getElementById('stocksStartBtn')?.addEventListener('click', () => { startStocksGame(); });
+document.getElementById('stocksRulesBtn')?.addEventListener('click', () => { showModal('stocksRulesModal'); });
 document.getElementById('stocksNextBtn')?.addEventListener('click', () => { stocksNextPeriod(); });
 document.getElementById('stocksResetBtn')?.addEventListener('click', () => { stocksResetPortfolio(); });
 document.getElementById('stocksCashOutBtn')?.addEventListener('click', () => { stocksCashOut(); });
