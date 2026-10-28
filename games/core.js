@@ -1460,17 +1460,29 @@ document.addEventListener('visibilitychange', ()=>{
 /* ============ SETUP SCREEN ============ */
 function renderLevelToggles(){
   const wrap = document.getElementById('levelToggles');
+  if(!wrap) return;
+  const __access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+  const __premium = (__access === 'premium' || __access === 'admin');
+  // Уровень «Фантазии» (id 6) доступен только уровням premium/admin.
+  if (!__premium && state.activeLevels.includes(6)) {
+    state.activeLevels = state.activeLevels.filter(id => id !== 6);
+    if (!state.activeLevels.length) state.activeLevels = [3,4,5];
+    try { saveState(); } catch(e){}
+  }
   wrap.innerHTML = '';
   LEVELS.forEach(l=>{
+    const __locked = (l.id === 6 && !__premium);
     const div = document.createElement('div');
-    div.className = 'level-toggle' + (state.activeLevels.includes(l.id) ? ' on' : '');
+    div.className = 'level-toggle' + (__locked ? ' locked' : '') + (state.activeLevels.includes(l.id) && !__locked ? ' on' : '');
     div.dataset.id = l.id;
+    if (__locked) { div.style.opacity = '0.55'; div.style.pointerEvents = 'none'; }
     div.innerHTML = `
-      <div class="lname">${l.icon} ${l.name}</div>
+      <div class="lname">${l.icon} ${l.name}${__locked ? ' 🔒' : ''}</div>
       <div class="ldesc">${l.desc}</div>
       <div class="level-check"></div>
     `;
     div.addEventListener('click', ()=>{
+      if (__locked) return;
       const id = l.id;
       const idx = state.activeLevels.indexOf(id);
       if(idx>=0){
