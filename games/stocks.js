@@ -146,8 +146,8 @@ function renderStocksGame(){
         '<td class="' + cls + '">' + sign + change.toFixed(2) + '%</td>' +
         '<td>' + owned + ' шт.</td>' +
         '<td style="white-space:nowrap;">' +
-          '<button class="btn btn-secondary btn-square" style="padding:2px 8px;font-size:14px;line-height:1;" data-act="buy" data-ticker="' + t + '">+10</button> ' +
-          '<button class="btn btn-secondary btn-square" style="padding:2px 8px;font-size:14px;line-height:1;" data-act="sell" data-ticker="' + t + '">-10</button>' +
+          '<button class="btn btn-secondary btn-square" style="padding:2px 8px;font-size:14px;line-height:1;" data-act="buy" data-ticker="' + t + '">+</button> ' +
+          '<button class="btn btn-secondary btn-square" style="padding:2px 8px;font-size:14px;line-height:1;" data-act="sell" data-ticker="' + t + '">-</button>' +
         '</td>' +
       '</tr>';
     }).join('');
@@ -164,11 +164,9 @@ function renderStocksGame(){
 function stocksBuy(ticker){
   const price = stocksPrices[ticker];
   if(!price) return;
-  const qty = 10;
-  const cost = price * qty;
-  if(stocksCash < cost){ showToast('Недостаточно средств'); return; }
-  stocksCash -= cost;
-  stocksHoldings[ticker] = (stocksHoldings[ticker] || 0) + qty;
+  if(stocksCash < price){ showToast('Недостаточно средств'); return; }
+  stocksCash -= price;
+  stocksHoldings[ticker] = (stocksHoldings[ticker] || 0) + 1;
   playSuccessSound();
   renderStocksGame();
 }
@@ -176,14 +174,12 @@ function stocksBuy(ticker){
 function stocksSell(ticker){
   const price = stocksPrices[ticker];
   if(!price) return;
-  const owned = stocksHoldings[ticker] || 0;
-  if(owned <= 0){ showToast('Нет акций для продажи'); return; }
-  const qty = Math.min(10, owned);
+  if((stocksHoldings[ticker] || 0) <= 0){ showToast('Нет акций для продажи'); return; }
   const s = stocksFind(ticker);
   const base = s ? s.base : price;
-  const profit = (price - base) * qty;
-  stocksHoldings[ticker] = owned - qty;
-  stocksCash += price * qty;
+  const profit = price - base;
+  stocksHoldings[ticker] -= 1;
+  stocksCash += price;
   stocksRealizedProfit += profit;
   playSuccessSound();
   renderStocksGame();
