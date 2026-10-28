@@ -1855,3 +1855,33 @@ function exitPlaceholderGame(){
   if(typeof releaseWakeLockNow === 'function') releaseWakeLockNow();
 }
 
+// Доступные уровни «Предложи партнёру» для текущего пользователя.
+window.isPhotoLevelAllowed = function(id){
+  const access = (typeof window !== 'undefined') ? (window.__userAccessLevel || 'guest') : 'guest';
+  const premium = (access === 'premium' || access === 'admin');
+  let allowed;
+  if (premium) allowed = [1,2,3,4,5,6,7,8,9,10,11,12];
+  else if (access === 'plus') allowed = [5,7,8,9,10,11,12];
+  else allowed = [4,5,7,8,9,10,11,12];
+  return allowed.indexOf(id) >= 0;
+};
+
+// Следующий доступный уровень (по кругу).
+window.nextPhotoLevel = function(from){
+  let cur = from || 1;
+  for (let i = 0; i < 12; i++) {
+    cur = (cur >= 12) ? 1 : cur + 1;
+    if (window.isPhotoLevelAllowed(cur)) return cur;
+  }
+  return from;
+};
+
+// Предыдущий доступный уровень (по кругу).
+window.prevPhotoLevel = function(from){
+  let cur = from || 1;
+  for (let i = 0; i < 12; i++) {
+    cur = (cur <= 1) ? 12 : cur - 1;
+    if (window.isPhotoLevelAllowed(cur)) return cur;
+  }
+  return from;
+};

@@ -222,7 +222,7 @@ function renderCard(card){
     document.getElementById('cardLevelUpBtn').addEventListener('click', ()=>{
       if(isPlaceholderMode()){
         playLevelUpSound();
-        drawPhotoCard(photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1);
+        drawPhotoCard(window.nextPhotoLevel ? window.nextPhotoLevel(photoLevel) : (photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1));
         return;
       }
       levelUp();
@@ -2167,7 +2167,7 @@ document.getElementById('levelUpBtn').addEventListener('click', ()=>{
   // videoLevelUpBtn/davayLevelUpBtn), поэтому здесь нет веток под эти режимы.
   if(isPlaceholderMode()){
     playLevelUpSound();
-    const nextLevel = photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1;
+    const nextLevel = window.nextPhotoLevel ? window.nextPhotoLevel(photoLevel) : (photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1);
     drawPhotoCard(nextLevel);
     showToast(`Уровень: ${nextLevel}`);
     return;
@@ -2178,7 +2178,7 @@ document.getElementById('levelDownBtn').addEventListener('click', ()=>{
   // См. примечание у levelUpBtn — в Видеорулетке/"Давай попробуем" кнопка скрыта.
   if(isPlaceholderMode()){
     playNeutralSound();
-    const prevLevel = photoLevel > 1 ? photoLevel - 1 : PHOTO_LEVELS.length;
+    const prevLevel = window.prevPhotoLevel ? window.prevPhotoLevel(photoLevel) : (photoLevel > 1 ? photoLevel - 1 : PHOTO_LEVELS.length);
     drawPhotoCard(prevLevel);
     showToast(`Уровень: ${prevLevel}`);
   }

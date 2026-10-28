@@ -3525,7 +3525,7 @@ function renderPhotoCard(card, level){
         const b = document.getElementById('levelDownBtn');
         if(b) b.click();
       });
-      const prevLevel = photoLevel > 1 ? photoLevel - 1 : PHOTO_LEVELS.length;
+      const prevLevel = (typeof window.prevPhotoLevel === "function") ? window.prevPhotoLevel(photoLevel) : (photoLevel > 1 ? photoLevel - 1 : PHOTO_LEVELS.length);
       const prevLvl = PHOTO_LEVELS.find(l => l.id === prevLevel);
       navPrevBtn.dataset.tt = prevLvl ? `${prevLvl.icon} ${prevLvl.name}` : 'Предыдущий вариант';
     }
@@ -3535,7 +3535,7 @@ function renderPhotoCard(card, level){
         const b = document.getElementById('levelUpBtn');
         if(b) b.click();
       });
-      const nextLevel = photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1;
+      const nextLevel = (typeof window.nextPhotoLevel === "function") ? window.nextPhotoLevel(photoLevel) : (photoLevel < PHOTO_MAX_LEVEL ? photoLevel + 1 : 1);
       const nextLvl = PHOTO_LEVELS.find(l => l.id === nextLevel);
       navNextBtn.dataset.tt = nextLvl ? `${nextLvl.icon} ${nextLvl.name}` : 'Следующий вариант';
     }
