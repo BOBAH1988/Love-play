@@ -26,6 +26,7 @@ const STOCKS_TAX_RATE = 0.13;
 let stocksPrices = {};
 let stocksPrevPrices = {};
 let stocksHoldings = {};
+let stocksCostBasis = {};   // тикер -> суммарная стоимость покупки текущих акций
 let stocksCash = 0;
 let stocksRealizedProfit = 0;
 let stocksPeriod = 0;
@@ -64,6 +65,7 @@ function stocksInitSession(){
     stocksPrices[t] = p;
     stocksPrevPrices[t] = p;
     stocksHoldings[t] = 0;
+    stocksCostBasis[t] = 0;
   });
   stocksCash = Number(state.stocksCash) || 100000;
   stocksInitialCash = stocksCash;
@@ -193,6 +195,7 @@ function stocksBuy(ticker){
   if(stocksCash < price){ showToast('Недостаточно средств'); return; }
   stocksCash -= price;
   stocksHoldings[ticker] = (stocksHoldings[ticker] || 0) + 1;
+  stocksCostBasis[ticker] = (stocksCostBasis[ticker] || 0) + price;
   playSuccessSound();
   renderStocksGame();
 }
@@ -201,10 +204,11 @@ function stocksSell(ticker){
   const price = stocksPrices[ticker];
   if(!price) return;
   if((stocksHoldings[ticker] || 0) <= 0){ showToast('Нет акций для продажи'); return; }
-  const s = stocksFind(ticker);
-  const base = s ? s.base : price;
-  const profit = price - base;
+  const owned = stocksHoldings[ticker];
+  const avgCost = (stocksCostBasis[ticker] || 0) / owned;
+  const profit = price - avgCost;
   stocksHoldings[ticker] -= 1;
+  stocksCostBasis[ticker] = (stocksCostBasis[ticker] || 0) - avgCost;
   stocksCash += price;
   stocksRealizedProfit += profit;
   playSuccessSound();
@@ -232,13 +236,14 @@ function stocksCashOut(){
   try {
   const details = [];
   stocksSelectedTickers.forEach(t => {
-    const owned = stocksHoldings[t] || 0;
+    const owned = stocksHoldings[t];
     if(owned > 0){
       const price = stocksPrices[t];
-      const s = stocksFind(t);
-      const base = s ? s.base : price;
-      const profit = (price - base) * owned;
+      const cost = stocksCostBasis[t] || 0;
+      const avgCost = owned > 0 ? cost / owned : 0;
+      const profit = (price - avgCost) * owned;
       stocksHoldings[t] = 0;
+      stocksCostBasis[t] = 0;
       stocksCash += price * owned;
       stocksRealizedProfit += profit;
       details.push({ ticker:t, shares:owned, price:price, profit:profit });
