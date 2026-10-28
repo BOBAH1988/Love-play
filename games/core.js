@@ -1520,6 +1520,8 @@ document.querySelectorAll('#modeGroup .mode-btn').forEach(btn=>{
     if(state.gameMode === 'romantic') state.activeLevels = [1,2,3,4];
     else if(state.gameMode === 'hot') state.activeLevels = [3,4,5,6];
     else if(state.gameMode === 'custom') state.activeLevels = [];
+    const __premium = ((typeof window !== 'undefined' ? (window.__userAccessLevel || 'guest') : 'guest') === 'premium' || (typeof window !== 'undefined' && window.__userAccessLevel === 'admin'));
+    if (!__premium) state.activeLevels = state.activeLevels.filter(id => id !== 6);
     renderModeGroup();
     renderLevelToggles();
   });
@@ -1961,7 +1963,7 @@ function performFullReset(){
    // Настройки звука — к дефолтам. muted (общий выключатель звука) сознательно
    // НЕ трогаем: это настройка устройства, а не прогресс партии, и «внезапно
    // зазвучало» после сброса — неприятный сюрприз.
-   state.autoSpeak = true;
+   state.activeLevels = [3,4,5,6].filter(id => ((window.__userAccessLevel || "guest") === "premium" || (window.__userAccessLevel || "guest") === "admin") ? true : id !== 6);
    state.gameMode = 'hot';
    state.activeLevels = [3,4,5,6];
    state.levelCap = 3;
