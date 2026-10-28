@@ -64,7 +64,7 @@ function stocksInitSession(){
     stocksPrevPrices[t] = p;
     stocksHoldings[t] = 0;
   });
-  stocksCash = Number(state.stocksCash) || 500000;
+  stocksCash = Number(state.stocksCash) || 100000;
   stocksRealizedProfit = 0;
   stocksPeriod = 0;
 }
@@ -101,9 +101,9 @@ function renderStocksSetup(){
     btn.classList.toggle('on', btn.dataset.value === scale);
   });
   const range = document.getElementById('stocksCashRange');
-  if(range){ range.value = state.stocksCash || 500000; }
+  if(range){ range.value = state.stocksCash || 100000; }
   const out = document.getElementById('stocksCashValue');
-  if(out){ out.textContent = stocksMoney(state.stocksCash || 500000); }
+  if(out){ out.textContent = stocksMoney(state.stocksCash || 100000); }
   stocksGenerateQuotes();
   document.querySelectorAll('.stock-quote').forEach(span => {
     const t = span.dataset.ticker;
@@ -127,7 +127,7 @@ function startStocksGame(){
   const scaleBtn = document.querySelector('#stocksScaleGroup .starter-btn.on');
   state.stocksTimeScale = scaleBtn ? scaleBtn.dataset.value : (state.stocksTimeScale || 'week');
   const range = document.getElementById('stocksCashRange');
-  state.stocksCash = range ? Number(range.value) : (state.stocksCash || 500000);
+  state.stocksCash = range ? Number(range.value) : (state.stocksCash || 100000);
   saveState();
   stocksInitSession();
   renderStocksGame();
