@@ -29,6 +29,7 @@ let stocksHoldings = {};
 let stocksCostBasis = {};   // тикер -> суммарная стоимость покупки текущих акций
 let stocksCash = 0;
 let stocksRealizedProfit = 0;
+let stocksRealizedByTicker = {};   // тикер -> зафиксированная прибыль по закрытым сделкам
 let stocksPeriod = 0;
 let stocksSelectedTickers = [];
 let stocksSetupQuotes = {};
@@ -70,6 +71,7 @@ function stocksInitSession(){
   stocksCash = Number(state.stocksCash) || 100000;
   stocksInitialCash = stocksCash;
   stocksRealizedProfit = 0;
+  stocksRealizedByTicker = {};
   stocksPeriod = 0;
 }
 
@@ -211,6 +213,7 @@ function stocksSell(ticker){
   stocksCostBasis[ticker] = (stocksCostBasis[ticker] || 0) - avgCost;
   stocksCash += price;
   stocksRealizedProfit += profit;
+  stocksRealizedByTicker[ticker] = (stocksRealizedByTicker[ticker] || 0) + profit;
   playSuccessSound();
   renderStocksGame();
 }
@@ -236,23 +239,29 @@ function stocksCashOut(){
   try {
   const details = [];
   stocksSelectedTickers.forEach(t => {
-    const owned = stocksHoldings[t];
-    if(owned > 0){
+    const owned = stocksHoldings[t] || 0;
+    const realized = stocksRealizedByTicker[t] || 0;
+    if(owned > 0 || realized !== 0){
       const price = stocksPrices[t];
       const cost = stocksCostBasis[t] || 0;
       const avgCost = owned > 0 ? cost / owned : 0;
-      const profit = (price - avgCost) * owned;
-      stocksHoldings[t] = 0;
-      stocksCostBasis[t] = 0;
-      stocksCash += price * owned;
-      stocksRealizedProfit += profit;
+      const unrealized = owned > 0 ? (price - avgCost) * owned : 0;
+      const profit = realized + unrealized;
+      if(owned > 0){
+        stocksHoldings[t] = 0;
+        stocksCostBasis[t] = 0;
+        stocksCash += price * owned;
+        stocksRealizedProfit += unrealized;
+      }
       details.push({ ticker:t, shares:owned, price:price, profit:profit });
     }
   });
   const tax = stocksRealizedProfit > 0 ? stocksRealizedProfit * STOCKS_TAX_RATE : 0;
   const net = stocksRealizedProfit - tax;
+  const scale = state.stocksTimeScale || 'week';
+  const periodUnit = scale === 'day' ? 'дней' : (scale === 'month' ? 'месяцев' : 'недель');
   let html = '';
-  html += '<div class="deposit-sub">Периодов прошло: ' + stocksPeriod + '</div>';
+  html += '<div class="deposit-sub">Периодов прошло: ' + stocksPeriod + ' (' + periodUnit + ')</div>';
   html += '<div class="deposit-total" style="margin:8px 0;">' + stocksMoney(stocksCash) + '</div>';
   html += '<div class="deposit-sub">Заработано чистыми: ' + stocksMoney(net) + '</div>';
   html += '<div class="deposit-sub">Налог 13%: ' + stocksMoney(tax) + '</div>';
@@ -261,7 +270,10 @@ function stocksCashOut(){
   details.forEach(d => {
     html += '<tr><td>' + d.ticker + '</td><td>' + d.shares + '</td><td>' + stocksMoney(d.price) + '</td><td>' + stocksMoney(d.profit) + '</td></tr>';
   });
-  if(details.length === 0) html += '<tr><td colspan="4">Сделок не было</td></tr>';
+  if(details.length === 0){
+    if(stocksRealizedProfit !== 0) html += '<tr><td colspan="4">Все позиции закрыты</td></tr>';
+    else html += '<tr><td colspan="4">Сделок не было</td></tr>';
+  }
   html += '</tbody></table>';
   html += '<div class="deposit-sub" style="margin-top:8px;">Стартовый капитал: ' + stocksMoney(stocksInitialCash) + '</div>';
   const body = document.getElementById('stocksSummaryBody');

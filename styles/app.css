@@ -4401,6 +4401,8 @@
   }
   .deposit-sub{ font-size:13px; color:#e8c9dd; line-height:1.45; }
   .deposit-sub + .deposit-sub{ margin-top:3px; }
+  #stocksSummaryModal .deposit-sub,
+  #stocksSummaryModal .deposit-note{ color:#3d1a3a; }
   .deposit-note{
     font-size:13px; line-height:1.45; color:#e8c9dd; text-align:left;
     background:rgba(255,255,255,.05); border-radius:12px;
