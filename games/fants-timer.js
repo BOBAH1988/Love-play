@@ -1243,8 +1243,13 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     if(head){ head.closest('.rules-group').classList.toggle('open'); return; }
     const btn = e.target.closest('.rules-item');
     if(btn){
-      const modal = document.getElementById(btn.dataset.rulesModal);
-      if(modal) modal.classList.add('show');
+      const modalId = btn.dataset.rulesModal;
+      const modal = modalId ? document.getElementById(modalId) : null;
+      if(modal){
+        closeHub();
+        if(typeof showModal === 'function') showModal(modalId);
+        else modal.classList.add('show');
+      }
     }
   });
 

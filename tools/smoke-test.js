@@ -8204,6 +8204,12 @@ test('«Кредит»: правила говорят, что расчёт уч�
   assert(hubHtml.includes('Кредит'), 'пункт должен называться «Кредит»');
 });
 
+test('Сценарий: правила «Биржа акций» доступны в общем хабе правил', () => {
+  const hubHtml = document.getElementById('rulesHubList').innerHTML;
+  assert(hubHtml.includes('stocksRulesModal'), 'в хабе правил должен быть пункт «Биржа акций»');
+  assert(hubHtml.includes('Биржа акций'), 'пункт должен называться «Биржа акций»');
+});
+
 tests.forEach(t => {
   name = t.name;
   try {

@@ -110,7 +110,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-10-28 · v1.1.778';
+  window.APP_BUILD = '2026-10-28 · v1.1.780';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -419,7 +419,7 @@
       </div>
       <div class="game-select-list" id="homeGroupsDynamic" style="display:none;"></div>
       <div class="app-footer">
-        Project by Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.778</span>
+        Project by Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> - <span id="projectVersion">v 1.1.780</span>
       </div>
 
 
@@ -4072,6 +4072,7 @@
       </ul>
       <button class="btn btn-primary" id="closeCreditRulesBtn">Понятно</button>
     </div>
+  </div>
    <!-- ===== ПРАВИЛА "БИРЖА АКЦИЙ" ===== -->
    <!-- 📍 логика: games/stocks.js -->
    <div class="modal-overlay" id="stocksRulesModal">
@@ -4103,7 +4104,6 @@
 
 
 
-  </div>
 
 
   <!-- ===== ПРАВИЛА "ТЕСТ IQ" ===== -->
@@ -4570,10 +4570,6 @@
      </div>
 
      <div class="deposit-note">Налог на прибыль при продаже — 13%. Расчёт учебный, не финансовый совет.</div>
-
-     <div class="toggle-row" style="margin-top:10px;">
-       <button type="button" class="toggle-pill" id="stocksRulesBtn">Правила</button>
-     </div>
 
      <button class="btn btn-primary" id="stocksStartBtn">Начать торговлю</button>
      <button class="btn btn-secondary" id="stocksSetupExitBtn" style="margin-top:10px;">Выход</button>
@@ -5688,7 +5684,7 @@
       <script src="games/fants-video.js?v=20261002h"></script>
 <script src="games/fants-davay.js?v=20260925h"></script>
 <script src="games/qr.js?v=20260929a"></script>
-<script src="games/fants-timer.js?v=20261026m"></script>
+<script src="games/fants-timer.js?v=20261028a"></script>
 <!-- Реестр игр: единое описание паузы/продолжения/завершения для всех игр.
      Идёт после частей core.js — от него зависят resumeBtn, finishGameBtn
      и определение группы для «Продолжить игру». -->
@@ -5742,7 +5738,7 @@
 <script src="games/biz-tests.js?v=20261025b"></script>
 <script src="games/deposits.js?v=20261003p"></script>
 <script src="games/credit.js?v=20261004c"></script>
-<script src="games/stocks.js?v=20261028g"></script>
+<script src="games/stocks.js?v=20261028h"></script>
 <script src="games/iq-test.js?v=20261026b"></script>
 <script src="games/know-more.js?v=20261024o"></script>
 <script src="games/whattoplay.js?v=20260921j"></script>
