@@ -82,6 +82,11 @@ function goToStocksSetup(){
 }
 
 function exitStocksSetup(){
+  const selected = [];
+  document.querySelectorAll('#stocksChecks input[type="checkbox"]').forEach(cb => {
+    if(cb.checked) selected.push(cb.dataset.ticker);
+  });
+  if(selected.length) state.stocksSelected = selected;
   state.inProgress = false;
   state.pausedMode = null;
   state.lastSectionOnPause = null;
@@ -101,6 +106,14 @@ function renderStocksSetup(){
   checks.forEach(cb => {
     const t = cb.dataset.ticker;
     cb.checked = (state.stocksSelected || []).includes(t);
+    cb.addEventListener('change', () => {
+      const selected = [];
+      document.querySelectorAll('#stocksChecks input[type="checkbox"]').forEach(c => {
+        if(c.checked) selected.push(c.dataset.ticker);
+      });
+      state.stocksSelected = selected;
+      saveState();
+    });
   });
   const scale = state.stocksTimeScale || 'week';
   document.querySelectorAll('#stocksScaleGroup .starter-btn').forEach(btn => {
@@ -261,7 +274,7 @@ function stocksCashOut(){
   const scale = state.stocksTimeScale || 'week';
   const periodUnit = scale === 'day' ? 'дней' : (scale === 'month' ? 'месяцев' : 'недель');
   let html = '';
-  html += '<div class="deposit-sub">Периодов прошло: ' + stocksPeriod + ' (' + periodUnit + ')</div>';
+  html += '<div class="deposit-sub">Периодов прошло: ' + stocksPeriod + ' ' + periodUnit + '</div>';
   html += '<div class="deposit-total" style="margin:8px 0;">' + stocksMoney(stocksCash) + '</div>';
   html += '<div class="deposit-sub">Заработано чистыми: ' + stocksMoney(net) + '</div>';
   html += '<div class="deposit-sub">Налог 13%: ' + stocksMoney(tax) + '</div>';
@@ -270,10 +283,7 @@ function stocksCashOut(){
   details.forEach(d => {
     html += '<tr><td>' + d.ticker + '</td><td>' + d.shares + '</td><td>' + stocksMoney(d.price) + '</td><td>' + stocksMoney(d.profit) + '</td></tr>';
   });
-  if(details.length === 0){
-    if(stocksRealizedProfit !== 0) html += '<tr><td colspan="4">Все позиции закрыты</td></tr>';
-    else html += '<tr><td colspan="4">Сделок не было</td></tr>';
-  }
+  html += '<tr><td colspan="4">Все позиции закрыты</td></tr>';
   html += '</tbody></table>';
   html += '<div class="deposit-sub" style="margin-top:8px;">Стартовый капитал: ' + stocksMoney(stocksInitialCash) + '</div>';
   const body = document.getElementById('stocksSummaryBody');
@@ -335,6 +345,9 @@ document.getElementById('closeStocksSummaryBtn')?.addEventListener('click', () =
   exitStocksGame();
 });
 document.getElementById('stocksSetupExitBtn')?.addEventListener('click', () => {
+  const selected = [];
+  document.querySelectorAll('#stocksChecks input[type="checkbox"]').forEach(cb => { if(cb.checked) selected.push(cb.dataset.ticker); });
+  if(selected.length) state.stocksSelected = selected;
   state.inProgress = false; state.pausedMode = null; state.lastSectionOnPause = null; saveState();
   if(typeof exitGame === 'function') exitGame('stocksSetup', null);
   showSetupView('businessView');
