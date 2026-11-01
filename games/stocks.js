@@ -183,10 +183,17 @@ function renderStocksGame(){
       const sign = change >= 0 ? '+' : '';
       const cls = change >= 0 ? 'stock-up' : 'stock-down';
       const owned = stocksHoldings[t] || 0;
+      const costBasis = stocksCostBasis[t] || 0;
+      const avgCost = owned > 0 ? costBasis / owned : 0;
+      const totalPct = (owned > 0 && avgCost > 0) ? ((price - avgCost) / avgCost * 100) : null;
+      const totalCls = totalPct === null ? '' : (totalPct >= 0 ? 'stock-up' : 'stock-down');
+      const totalSign = totalPct === null ? '' : (totalPct >= 0 ? '+' : '');
+      const totalText = totalPct === null ? '—' : (totalSign + totalPct.toFixed(2) + '%');
       return '<tr>' +
         '<td><b>' + t + '</b><br><span style="font-size:11px;opacity:.7">' + (s ? s.name : '') + '</span></td>' +
         '<td>' + stocksMoney(price) + '</td>' +
         '<td class="' + cls + '">' + sign + change.toFixed(2) + '%</td>' +
+        '<td class="' + totalCls + '">' + totalText + '</td>' +
         '<td>' + owned + ' шт.</td>' +
         '<td style="white-space:nowrap;">' +
           '<button class="btn btn-secondary btn-square" style="padding:2px 8px;font-size:14px;line-height:1;" data-act="buy" data-ticker="' + t + '">+</button> ' +
@@ -275,6 +282,20 @@ function stocksCashOut(){
   const periodUnit = scale === 'day' ? 'дней' : (scale === 'month' ? 'месяцев' : 'недель');
   let html = '';
   html += '<div class="deposit-sub">Периодов прошло: ' + stocksPeriod + ' ' + periodUnit + '</div>';
+  const daysPassed = stocksPeriod * (scale === 'day' ? 1 : (scale === 'week' ? 5 : 20));
+  const yearsWord = (n) => n % 10 === 1 && n % 100 !== 11 ? 'год' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'года' : 'лет');
+  const daysWord = (n) => n % 10 === 1 && n % 100 !== 11 ? 'день' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'дня' : 'дней');
+  let daysText;
+  if(daysPassed > 365){
+    const years = Math.floor(daysPassed / 365);
+    const rem = daysPassed % 365;
+    const parts = [years + ' ' + yearsWord(years)];
+    if(rem > 0) parts.push(rem + ' ' + daysWord(rem));
+    daysText = parts.join(' и ');
+  } else {
+    daysText = daysPassed + ' ' + daysWord(daysPassed);
+  }
+  html += '<div class="deposit-sub">Прошло: ' + daysText + '</div>';
   html += '<div class="deposit-total" style="margin:8px 0;">' + stocksMoney(stocksCash) + '</div>';
   html += '<div class="deposit-sub">Заработано чистыми: ' + stocksMoney(net) + '</div>';
   html += '<div class="deposit-sub">Налог 13%: ' + stocksMoney(tax) + '</div>';
@@ -283,7 +304,9 @@ function stocksCashOut(){
   details.forEach(d => {
     html += '<tr><td>' + d.ticker + '</td><td>' + d.shares + '</td><td>' + stocksMoney(d.price) + '</td><td>' + stocksMoney(d.profit) + '</td></tr>';
   });
-  html += '<tr><td colspan="4">Все позиции закрыты</td></tr>';
+  if(details.length === 0){
+    html += '<tr><td colspan="4">Сделок не было</td></tr>';
+  }
   html += '</tbody></table>';
   html += '<div class="deposit-sub" style="margin-top:8px;">Стартовый капитал: ' + stocksMoney(stocksInitialCash) + '</div>';
   const body = document.getElementById('stocksSummaryBody');
