@@ -16,6 +16,24 @@
 let screenSeenActive = 'setup';
 
 
+/* ============ ГИДРАТАЦИЯ УРОВНЯ ДОСТУПА ИЗ КЭША ============
+ * При запуске PWA уровень доступа и флаг 18+ восстанавливаются из
+ * localStorage синхронно, ДО первого рендера главной. Иначе
+ * window.__userAccessLevel остаётся undefined (→ «гость») ~3 секунды,
+ * пока Firestore не подтвердит уровень, и на каждом открытии PWA мелькает
+ * гостевой экран. onAuthStateChanged затем подтвердит/исправит значение.
+ */
+(function hydrateUserLevelFromCache() {
+  try {
+    var cached = localStorage.getItem('__userAccessLevel');
+    if (cached && ['guest','starter','plus','premium','admin'].indexOf(cached) >= 0) {
+      window.__userAccessLevel = cached;
+    }
+    window.__userIsAdult = localStorage.getItem('__userIsAdult') === 'true';
+  } catch (e) {}
+})();
+
+
 /* ============ ДАННЫЕ КАРТ ============ */
 const LEVELS = [
   {id:1, key:'meet', name:'Знакомство', desc:'Лёгкие вопросы для начала', color:'#8fd9c4', icon:'🤝'},
@@ -5485,25 +5503,6 @@ function playHitSound(){
       if (!auth) return;
       const email = (document.getElementById('accountLoginEmail').value || '').trim();
       const password = document.getElementById('accountLoginPassword').value || '';
-       showError('accountError', '');
-       manualAuthJustDone = true;
-       auth.signInWithEmailAndPassword(email, password)
-         .then(function (cred) {
-           if (typeof ensureUserDoc === 'function') ensureUserDoc(cred.user);
-           return handlePostAuthMigration(cred.user);
-         })
-         .then(function () {
-           const auth2 = getAuth();
-           const user2 = auth2 && auth2.currentUser;
-           if (user2 && typeof window !== 'undefined' && typeof window.updateUserAccessLevel === 'function') {
-             window.updateUserAccessLevel(user2);
-           }
-           closeAccount();
-         })
-         .catch(function (err) {
-           manualAuthJustDone = false;
-           showError('accountError', mapError(err));
-         });
       showError('accountError', '');
       manualAuthJustDone = true;
       auth.signInWithEmailAndPassword(email, password)
@@ -5730,6 +5729,15 @@ function playHitSound(){
   let cloudSaveTimer = null;
   window.__cloudApplying = false;
 
+  // Кэшируем уровень доступа и флаг 18+ в localStorage, чтобы при следующем
+  // запуске PWA не мигал «гостевой» экран, пока Firestore подтверждает уровень.
+  function persistUserLevel() {
+    try {
+      localStorage.setItem('__userAccessLevel', window.__userAccessLevel || 'guest');
+      localStorage.setItem('__userIsAdult', window.__userIsAdult === true ? 'true' : 'false');
+    } catch (e) {}
+  }
+
   function cloudRefFor(user) {
     const db = getDb();
     if (!db || !user) return null;
@@ -5857,7 +5865,7 @@ function playHitSound(){
   window.addEventListener('focus', syncOnFocus);
 
 
-  window.__userIsAdult = false;
+  if (typeof window.__userIsAdult === 'undefined') window.__userIsAdult = false;
 
   const auth = getAuth();
   if (auth && typeof auth.onAuthStateChanged === 'function') {
@@ -5942,6 +5950,7 @@ function playHitSound(){
             if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
         ensureStatsBtnVisibility();
       }
+      persistUserLevel();
       // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
       // Кнопка статистики — только админу.
       ensureStatsBtnVisibility();
