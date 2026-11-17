@@ -215,6 +215,12 @@ document.getElementById('videoRandomBtn').addEventListener('click', ()=>{
 function updateVideoPiPBtn(){
   const btn = document.getElementById('videoPiPBtn');
   if(!btn) return;
+  // API не поддерживается — скрываем кнопку, чтобы не вводить игрока в заблуждение.
+  if(!document.pictureInPictureEnabled || !videoPiPSupported()){
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = '';
   const active = !!document.pictureInPictureElement;
   videoPiPActive = active;
   btn.classList.toggle('active', active);
@@ -222,6 +228,12 @@ function updateVideoPiPBtn(){
     ? 'Выйти из картинки в картинке'
     : 'Включить картинку в картинке');
   btn.dataset.tt = active ? 'Картинка в картинке вкл' : 'Картинка в картинке выкл';
+}
+
+// Поддерживает ли браузер Picture-in-Picture для этого видео.
+function videoPiPSupported(){
+  const video = document.getElementById('videoPlayer');
+  return !!(video && video.requestPictureInPicture);
 }
 
 function toggleVideoPictureInPicture(){
@@ -235,7 +247,11 @@ function toggleVideoPictureInPicture(){
     showToast('Картинка в картинке не поддерживается на этом устройстве');
     return;
   }
-  video.requestPictureInPicture().catch(()=>{});
+  // iOS и некоторые браузеры требуют пользовательского взаимодействия с видео
+  // перед PiP, и могут отвергнуть запрос (NotAllowedError, NotSupportedError).
+  video.requestPictureInPicture().catch(err=>{
+    showToast('Картинку в картинке не удалось включить — попробуйте сначала запустить видео');
+  });
 }
 document.getElementById('videoPiPBtn').addEventListener('click', toggleVideoPictureInPicture);
 
