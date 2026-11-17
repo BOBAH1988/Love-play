@@ -247,11 +247,27 @@ function toggleVideoPictureInPicture(){
     showToast('Картинка в картинке не поддерживается на этом устройстве');
     return;
   }
-  // iOS и некоторые браузеры требуют пользовательского взаимодействия с видео
-  // перед PiP, и могут отвергнуть запрос (NotAllowedError, NotSupportedError).
-  video.requestPictureInPicture().catch(err=>{
-    showToast('Картинку в картинке не удалось включить — попробуйте сначала запустить видео');
-  });
+  // Видео должно быть в состоянии воспроизведения, иначе браузер
+  // (особенно iOS Safari) отвергнет запрос PiP. Сначала запускаем видео,
+  // если оно на паузе, и только потом вызываем requestPictureInPicture.
+  const enterPiP = ()=>{
+    video.requestPictureInPicture().catch(err=>{
+      // Повторная попытка через 400 мс — на некоторых устройствах нужно время,
+      // чтобы видео перешло в playing после вызова play().
+      setTimeout(()=>{
+        if(!document.pictureInPictureElement){
+          video.requestPictureInPicture().catch(err2=>{
+            showToast('Картинку в картинке не удалось включить — попробуйте ещё раз');
+          });
+        }
+      }, 400);
+    });
+  };
+  if(video.paused){
+    video.play().then(enterPiP).catch(()=>{ enterPiP(); });
+  } else {
+    enterPiP();
+  }
 }
 document.getElementById('videoPiPBtn').addEventListener('click', toggleVideoPictureInPicture);
 
