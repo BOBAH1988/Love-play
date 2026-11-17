@@ -1,3 +1,4 @@
+// @ts-check
 // games/core.js — Общий каркас приложения: состояние (state), сохранение/загрузка, утилиты, wake lock, а также сама первая игра приложения — "Фанты для двоих" (экран настройки, подбор карт, экран игры, избранное, свои задания, свайпы). Здесь же живёт общая для ВСЕХ игр логика паузы и итогов (кнопки #resetHiddenBtn, #finishGameBtn, #closeSummaryBtn, updateResumeUI, blockedByDavayPause) — она исторически вплетена в этот файл и вызывает функции завершения других игр (finishXGame и т.д.) по имени, поэтому все games/*.js должны быть загружены ДО первого клика пользователя (порядок загрузки между ними не важен), а games/init.js — ПОСЛЕ всех остальных games/*.js (см. его собственный комментарий).
 // Загружается через <script src="games/core.js"></script> в index.html.
 
@@ -540,7 +541,12 @@ let state = {
    // (бот туда стреляет), soloBsBotBoard — поле бота (стреляем мы); ходит
    // тот, чей ход в soloBsCurrentPlayer ('player'|'bot').
    soloBsPlayerBoard:[], soloBsBotBoard:[], soloBsCurrentPlayer:'player', soloBsWinner:null, soloBsShots:{player:0,bot:0}, soloBsWins:{player:0,bot:0}
- };
+  };
+
+// Ключи дефолтного state — «белый список» полей, которые разрешено восстанавливать
+// из сохранения. Любые посторонние/устаревшие поля в старом сейве игнорируются,
+// чтобы мусор не накапливался в localStorage бесконечно.
+const STATE_KEYS = Object.keys(state);
 
 /* currentPlayer 1 = мужчина (М), currentPlayer 2 = женщина (Ж) */
 function pickStartingPlayerValue(v){
@@ -606,7 +612,13 @@ function loadState(){
       // переименовать или удалить поле, и тогда Object.assign подставил бы
       // устаревший дефолт поверх уже мигрированного значения.
       const migrationsApplied = applyMigrations(s);
-      state = Object.assign(state, s);
+      // Восстанавливаем только поля из белого списка STATE_KEYS: посторонние и
+      // устаревшие поля из старого сейва не попадают в текущее состояние.
+      const restored = {};
+      for(const key of STATE_KEYS){
+        if(key in s) restored[key] = s[key];
+      }
+      state = Object.assign(state, restored);
       // Единый звук видео (см. setSharedVideoSound): старые сейвы могли
       // хранить разные значения в davaySoundOn/videoSoundOn. Master —
       // davaySoundOn: именно его показывает кнопка «Звук» на странице
@@ -648,9 +660,13 @@ function loadState(){
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){
-    // Квота localStorage исчерпана — уведомляем пользователя, чтобы он
-    // знал, почему прогресс может не сохраниться.
-    if(e && e.name === 'QuotaExceededError' && typeof showToast === 'function'){
+    if(e && e.name === 'QuotaExceededError'){
+      // Освобождаем место: удаляем журнал ошибок (не критичен) и пробуем
+      // сохранить состояние ещё раз. Если и это не помогло — сообщаем игроку.
+      try{ localStorage.removeItem(ERROR_LOG_KEY); }catch(_){}
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); return; }catch(_){}
+    }
+    if(typeof showToast === 'function'){
       showToast('⚠️ Хранилище переполнено — очистите историю/сброс');
     }
   }
@@ -1262,6 +1278,18 @@ function stopInterval(id){
   return null;
 }
 
+/* ============ ЦЕНТРАЛИЗОВАННАЯ ОСТАНОВКА ТАЙМЕРОВ СЕССИИ ============ */
+// Очищает глобальные таймеры core.js, которые могли остаться от предыдущей
+// партии. Таймеры конкретных игр очищаются в своих exit-функциях; этот хелпер
+// ловит общие (сохранение профиля, автосохранение, тост, проверка обновления).
+function clearSessionTimers(){
+  if(typeof saveNameTimer !== 'undefined' && saveNameTimer){ clearTimeout(saveNameTimer); saveNameTimer = null; }
+  if(typeof saveAgeTimer !== 'undefined' && saveAgeTimer){ clearTimeout(saveAgeTimer); saveAgeTimer = null; }
+  if(typeof cloudSaveTimer !== 'undefined' && cloudSaveTimer){ clearTimeout(cloudSaveTimer); cloudSaveTimer = null; }
+  if(typeof reloadFallbackTimer !== 'undefined' && reloadFallbackTimer){ clearTimeout(reloadFallbackTimer); reloadFallbackTimer = null; }
+  if(typeof showToast !== 'undefined' && showToast._tm){ clearTimeout(showToast._tm); showToast._tm = null; }
+}
+
 /* ============ УНИВЕРСАЛЬНОЕ ПОКАЗАТЬ / СКРЫТЬ МОДАЛКУ ============ */
 // Самый частый паттерн в проекте (~200 вхождений в 37 файлах):
 //   showModal('xxxModal');   // открыть
@@ -1404,6 +1432,7 @@ function exitGame(gameId, setupId){
   // AGENTS.md): забытый inProgress блокирует настройки в хабе, забытый
   // pausedMode оставляет висеть чужое меню «Пауза». Раньше этим занималась
   // каждая игра по отдельности, и в восьми из них сброс был пропущен.
+  const wasInProgress = state.inProgress;
   state.inProgress = false;
   state.pausedMode = null;
   state.lastSectionOnPause = null;
@@ -1421,12 +1450,15 @@ function exitGame(gameId, setupId){
   if(typeof updateResumeUI === 'function') updateResumeUI();
   // Останавливаем все звуки (Web Audio API + SpeechSynthesis)
   stopAllSounds();
+  // Сбрасываем таймеры текущей сессии, чтобы при возврате не осталось
+  // «висящих» интервалов от прошлой партии.
+  if(typeof clearSessionTimers === 'function') clearSessionTimers();
   // Статистика: партия прервана. Если игра вообще не начиналась (выход из
   // настройки), считаем это выходом «из настройки» — он не означает, что
   // игра не понравилась.
   try{
     if(window.AppStats){
-      window.AppStats.gameExit(state.inProgress ? 'midgame' : 'setup');
+      window.AppStats.gameExit(wasInProgress ? 'midgame' : 'setup');
     }
   }catch(e){}
 }

@@ -1,3 +1,4 @@
+// @ts-check
 /// <reference lib="webworker" />
 /* sw.js — Service Worker PWA-приложения «Давай играй».
  * Директива выше подключает типы Service Worker (waitUntil/respondWith/
@@ -46,7 +47,7 @@
  * Создано для статического хостинга (https). При http/file:// воркер
  * регистрироваться не будет — это ограничение самого сервис-воркера.
  */
-const CACHE_NAME = 'veselye-igry-cache-v1.1.785';
+const CACHE_NAME = 'veselye-igry-cache-v1.1.787';
 
 // Предел ожидания сетевого ответа, мс.
 //
