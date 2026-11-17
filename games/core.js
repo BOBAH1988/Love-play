@@ -5485,6 +5485,25 @@ function playHitSound(){
       if (!auth) return;
       const email = (document.getElementById('accountLoginEmail').value || '').trim();
       const password = document.getElementById('accountLoginPassword').value || '';
+       showError('accountError', '');
+       manualAuthJustDone = true;
+       auth.signInWithEmailAndPassword(email, password)
+         .then(function (cred) {
+           if (typeof ensureUserDoc === 'function') ensureUserDoc(cred.user);
+           return handlePostAuthMigration(cred.user);
+         })
+         .then(function () {
+           const auth2 = getAuth();
+           const user2 = auth2 && auth2.currentUser;
+           if (user2 && typeof window !== 'undefined' && typeof window.updateUserAccessLevel === 'function') {
+             window.updateUserAccessLevel(user2);
+           }
+           closeAccount();
+         })
+         .catch(function (err) {
+           manualAuthJustDone = false;
+           showError('accountError', mapError(err));
+         });
       showError('accountError', '');
       manualAuthJustDone = true;
       auth.signInWithEmailAndPassword(email, password)
