@@ -147,11 +147,7 @@ function updateKidsBattleshipTurnLabel(){
   const p0 = bsPlayerName(0);
   const p1 = bsPlayerName(1);
   const activeName = idx === 0 ? p0 : p1;
-  const inactiveName = idx === 0 ? p1 : p0;
-  // Имена игроков разного цвета (синий/розовый), активный — золотом, чтобы
-  // сразу было видно, кому телефон передан (чей ход).
-  const inactiveColor = idx === 0 ? '#7db8e8' : '#e0b0ff';
-  el.innerHTML = `Ходит: <span class="bs-name" style="color:#ffd166;font-weight:900;">${activeName}</span> <span class="bs-name" style="color:${inactiveColor};">${inactiveName}</span>`;
+  el.innerHTML = `Ходит: <span class="bs-name" style="color:#ffd166;font-weight:900;">${activeName}</span>`;
 }
 
 function updateKidsBattleshipStatus(text){

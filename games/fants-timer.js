@@ -1409,6 +1409,12 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
   // Реестр игр (games/game-registry.js) оперирует ГРУППАМИ, хаб — ВИДАМИ.
   // Соответствие нужно всем, кто берёт группу из реестра (пауза, возврат).
   const GROUP_TO_VIEW = { two:'twoPlayerView', party:'companyView', kids:'kidsView', solo:'soloView', business:'businessView', learning:'learningView' };
+  // Известные разделы хаба. Если sectionForScreenId вернёт неверный раздел,
+  // «←» уводит игрока не туда — защищаемся, ведя в главный хаб.
+  const KNOWN_SECTIONS = new Set(['homeView','twoPlayerView','companyView','kidsView','soloView','businessView','learningView']);
+  function validSection(sectionId){
+    return KNOWN_SECTIONS.has(sectionId) ? sectionId : 'homeView';
+  }
   function sectionForScreenId(sid){
     if(SECTION_FOR_SCREEN[sid]) return SECTION_FOR_SCREEN[sid];
     // ЭВристики по подстрокам — только запасной путь для экранов, которых нет
@@ -1422,23 +1428,10 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       const g = gameByScreen(sid);
       if(g && g.group) return GROUP_TO_VIEW[g.group] || 'twoPlayerView';
     }
-    if(sid.includes('Saper')) return 'kidsView';
-    if(sid.includes('Memory')) return sid.includes('Solo') ? 'soloView' : 'kidsView';
-    if(sid.includes('Flash')) return sid.includes('Kids') ? 'kidsView' : 'learningView';
-    if(sid.includes('Krokodil')) return sid.includes('Kids') ? 'kidsView' : 'companyView';
-    if(sid.includes('Memes')) return sid.includes('Kids') ? 'kidsView' : 'companyView';
-    if(sid.includes('Xo') || sid.includes('Battleship') || sid.includes('Bs')) return 'soloView';
-    if(sid.includes('Quiz')) return sid.includes('Kids') ? 'kidsView' : (sid.includes('Party') ? 'companyView' : 'twoPlayerView');
-    if(sid.includes('Td') || sid.includes('TruthDare')) return sid.includes('Kids') ? 'kidsView' : (sid.includes('Party') ? 'companyView' : 'twoPlayerView');
-    if(sid.includes('Fants')) return sid.includes('Party') ? 'companyView' : 'twoPlayerView';
-    if(sid.includes('Znayu')) return sid.includes('Fam') ? 'companyView' : 'twoPlayerView';
-    if(sid.includes('Lucky') || sid.includes('Hangman') || sid.includes('Twister') || sid.includes('Roulette') || sid.includes('Never')) return 'companyView';
-    if(sid.includes('Business') || sid.includes('bizObs')) return 'businessView';
-    if(sid.includes('What') || sid.includes('whatToPlay')) return 'soloView';
-    // Ничего не нашли. Раньше здесь был молчаливый return 'twoPlayerView' —
-    // он и прятал опечатки. Теперь это видно сразу в консоли разработчика, а
-    // в самом приложении ведём в хаб: раздел покажет updateResumeUI() по
-    // активной паузе, то есть игрок попадёт куда-то осмысленное.
+    // Ничего не нашли: экран не в SECTION_FOR_SCREEN и не в реестре игр.
+    // Раньше здесь была эвристика по подстрокам имени — она угадывала раздел
+    // и вела «←» не туда (баг «выход из игры не в тот блок», повторялся 3 раза).
+    // Теперь не угадываем: ведём в главный хаб и пишем предупреждение в консоль.
     if(typeof console !== 'undefined' && console.warn){
       console.warn('sectionForScreenId: экран #' + sid + ' не описан ни в SECTION_FOR_SCREEN, ни в реестре игр — раздел хаба определён приблизительно. Добавь экран в карту (games/fants-timer.js).');
     }
@@ -1626,7 +1619,7 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
       return;
     }
     const mainScreenId = screenIds.includes('game') ? 'game' : screenIds[0];
-    const sectionId = sectionForScreenId(mainScreenId);
+    const sectionId = validSection(sectionForScreenId(mainScreenId));
     if(typeof state !== 'undefined'){
       state.lastSectionOnPause = sectionId;
       saveState();
@@ -1725,6 +1718,11 @@ document.getElementById('rulesModal').addEventListener('click', (e)=>{
     new MutationObserver(updateBackBtn).observe(homeViewEl, {attributes:true, attributeFilter:['class']});
     updateBackBtn();
   }
+
+  // Общая функция определения раздела экрана — используется и кнопкой «←»,
+  // и клавиатурной стрелкой (через window.resolveSection в core.js), чтобы
+  // не дублировать ветвления и не разносить логику возврата по разным файлам.
+  window.resolveSection = sectionForScreenId;
 })();
 
 (document.getElementById('davaySetupRulesBtn')||{addEventListener:function(){}}).addEventListener('click', ()=>{
