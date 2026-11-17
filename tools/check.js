@@ -2186,10 +2186,10 @@ function checkStyles(html) {
   // «Следующее», как когда-то случилось с 🔀.
   const ordLevelUp = videoOrder('videoLevelUpBtn');
   const ordNextLevel = videoOrder('videoNextBtn');
-  check('в «Дополнительно» первыми идут ⬆️ и 🔥, затем 🔊',
-    ordNextLevel === 8 && ordLevelUp === 9 && ordMute === 10 && ordRandom === 11
-      && ordLoop === 12 && videoOrder('videoFullscreenBtn') === 13 && videoOrder('dislikeBtn') === 14,
-    `порядки: ⬆️ ${ordNextLevel} → 🔥 ${ordLevelUp} → 🔊 ${ordMute} → 🔀 ${ordRandom} → 🔁 ${ordLoop}`);
+  check('в «Дополнительно» первыми идут ⬆️ и 🔥, затем 🔊, затем 🔲 PiP',
+    ordNextLevel === 8 && ordLevelUp === 9 && ordMute === 10 && videoOrder('videoPiPBtn') === 11
+      && ordRandom === 12 && ordLoop === 13 && videoOrder('videoFullscreenBtn') === 14 && videoOrder('dislikeBtn') === 15,
+    `порядки: ⬆️ ${ordNextLevel} → 🔥 ${ordLevelUp} → 🔊 ${ordMute} → 🔲 ${videoOrder('videoPiPBtn')} → 🔀 ${ordRandom} → 🔁 ${ordLoop}`);
   check('🔥 «Горячее» скрыта вне «Видеорулетки»',
     /#videoHotBtn\{display:none;\}/.test(css)
       && /#game\.video-mode #videoHotBtn\{display:flex;\}/.test(css),

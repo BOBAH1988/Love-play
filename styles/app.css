@@ -2566,15 +2566,15 @@
   #game.video-mode #videoNextBtn{order:8; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
   #game.video-mode #videoLevelUpBtn{order:9; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
   #game.video-mode #videoMuteBtn{order:10; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
-  /* Место кнопки 🔀 задаёт именно `order`, а не разметка: в раскрытом блоке
+  /* Место кнопки 🔲 PiP задаёт именно `order`, а не разметка: в раскрытом блоке
      «Дополнительно» `.row2` становится `display:contents`, и все кнопки
      попадают в один flex-контейнер `.controls`. Без своего правила кнопка
      получала order:0 и вставала первой — раньше «Готово» в верхнем ряду. */
-  #game.video-mode #videoRandomBtn{order:11; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
-  #game.video-mode #videoLoopBtn{order:12; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
-  #game.video-mode #videoFullscreenBtn{order:13; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
-  #game.video-mode #videoPiPBtn{order:15; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
-  #game.video-mode #dislikeBtn{order:14; flex:0 0 32px; width:32px; height:32px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoPiPBtn{order:11; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoRandomBtn{order:12; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoLoopBtn{order:13; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoFullscreenBtn{order:14; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
+  #game.video-mode #dislikeBtn{order:15; flex:0 0 32px; width:32px; height:32px; padding:0; font-size:20.8px;}
   /* Включённое состояние кнопок-переключателей блока «Дополнительно» — общая
      подсветка у 🔁 (автоповтор), 🔀 (случайный порядок) и ⭐ (избранное).
      Класс `active` ставит JS (`updateVideoLoopBtn`/`updateVideoRandomBtn`),
