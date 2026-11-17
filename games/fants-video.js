@@ -73,21 +73,32 @@ function videoCardId(c){
 const VIDEO_DB_NAME = 'LovePlayVideoDB';
 const VIDEO_DB_STORE = 'videos';
 let videoDBPromise = null;
+let videoDBOpenFailed = false; // IndexedDB уже отказовала (приватный режим и др.) — не ломиться повторно
 
 function openVideoDB(){
+  if(videoDBOpenFailed) return Promise.reject(new Error('IndexedDB недоступен в этом режиме'));
   if(videoDBPromise) return videoDBPromise;
   videoDBPromise = new Promise((resolve, reject)=>{
-    if(!('indexedDB' in window)){ reject(new Error('IndexedDB не поддерживается')); return; }
-    const req = indexedDB.open(VIDEO_DB_NAME, 1);
-    req.onupgradeneeded = ()=>{
-      const db = req.result;
-      if(!db.objectStoreNames.contains(VIDEO_DB_STORE)){
-        db.createObjectStore(VIDEO_DB_STORE, {keyPath:'id', autoIncrement:true});
-      }
-    };
-    req.onsuccess = ()=> resolve(req.result);
-    req.onerror = ()=> reject(req.error);
-  }).catch(err => { videoDBPromise = null; throw err; });
+    try{
+      if(!('indexedDB' in window)){ reject(new Error('IndexedDB не поддерживается')); return; }
+      const req = indexedDB.open(VIDEO_DB_NAME, 1);
+      req.onupgradeneeded = ()=>{
+        const db = req.result;
+        if(!db.objectStoreNames.contains(VIDEO_DB_STORE)){
+          db.createObjectStore(VIDEO_DB_STORE, {keyPath:'id', autoIncrement:true});
+        }
+      };
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error);
+    }catch(err){
+      videoDBOpenFailed = true;
+      reject(err);
+    }
+  }).catch(err => {
+    videoDBPromise = null;
+    videoDBOpenFailed = true;
+    throw err;
+  });
   return videoDBPromise;
 }
 function loadAllVideoBlobs(){

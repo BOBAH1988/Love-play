@@ -42,6 +42,8 @@ function getDavayCardsList(){
 const DAVAY_DB_NAME = 'LovePlayDavayDB';
 const DAVAY_DB_STORE = 'davayVideos';
 let davayDBPromise = null;
+let davayDBOpenFailed = false; // IndexedDB уже отказовала (приватный режим и др.) — не ломиться повторно
+let davayDBUnavailableShown = false; // тост «локальные видео недоступны» показан один раз
 let importedDavayCards = [];
 let importedDavayVideosLoaded = false;
 // Отметка state.videoResetAt, при которой каталог был прочитан из базы: если
@@ -49,19 +51,29 @@ let importedDavayVideosLoaded = false;
 let importedDavayCatalogLoadedAt = 0;
 
 function openDavayDB(){
+  if(davayDBOpenFailed) return Promise.reject(new Error('IndexedDB недоступен в этом режиме'));
   if(davayDBPromise) return davayDBPromise;
   davayDBPromise = new Promise((resolve, reject)=>{
-    if(!('indexedDB' in window)){ reject(new Error('IndexedDB не поддерживается')); return; }
-    const req = indexedDB.open(DAVAY_DB_NAME, 1);
-    req.onupgradeneeded = ()=>{
-      const db = req.result;
-      if(!db.objectStoreNames.contains(DAVAY_DB_STORE)){
-        db.createObjectStore(DAVAY_DB_STORE, {keyPath:'id', autoIncrement:true});
-      }
-    };
-    req.onsuccess = ()=> resolve(req.result);
-    req.onerror = ()=> reject(req.error);
-  }).catch(err => { davayDBPromise = null; throw err; });
+    try{
+      if(!('indexedDB' in window)){ reject(new Error('IndexedDB не поддерживается')); return; }
+      const req = indexedDB.open(DAVAY_DB_NAME, 1);
+      req.onupgradeneeded = ()=>{
+        const db = req.result;
+        if(!db.objectStoreNames.contains(DAVAY_DB_STORE)){
+          db.createObjectStore(DAVAY_DB_STORE, {keyPath:'id', autoIncrement:true});
+        }
+      };
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error);
+    }catch(err){
+      davayDBOpenFailed = true;
+      reject(err);
+    }
+  }).catch(err => {
+    davayDBPromise = null;
+    davayDBOpenFailed = true;
+    throw err;
+  });
   return davayDBPromise;
 }
 function saveDavayBlob(file, level){
@@ -80,10 +92,17 @@ function loadAllDavayBlobs(){
     req.onsuccess = ()=> resolve(req.result || []);
     req.onerror = ()=> reject(req.error);
   })).catch(err => {
-    // Транзиентный сбой IndexedDB (WebKit/iOS) — не роняем приложение,
-    // сбрасываем кэшированное соединение, чтобы следующий вызов переоткрыл базу.
+    // Транзиентный сбой IndexedDB (WebKit/iOS, приватный режим) — не роняем
+    // приложение, сбрасываем кэшированное соединение, чтобы следующий вызов
+    // переоткрыл базу. Сообщаем игроку один раз, чтобы не гадать, куда делись
+    // свои видео.
     davayDBPromise = null;
+    davayDBOpenFailed = true;
     try { console.warn('[Love-play] loadAllDavayBlobs failed:', err && err.message ? err.message : err); } catch(_) {}
+    if(!davayDBUnavailableShown && typeof showToast === 'function'){
+      davayDBUnavailableShown = true;
+      showToast('⚠️ Локальные видео недоступны (режим приватности браузера). Облачное видео работает.');
+    }
     return [];
   });
 }
