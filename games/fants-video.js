@@ -212,11 +212,39 @@ document.getElementById('videoRandomBtn').addEventListener('click', ()=>{
     : 'Случайный порядок выкл');
 });
 
+function updateVideoPiPBtn(){
+  const btn = document.getElementById('videoPiPBtn');
+  if(!btn) return;
+  const active = !!document.pictureInPictureElement;
+  videoPiPActive = active;
+  btn.classList.toggle('active', active);
+  btn.setAttribute('aria-label', active
+    ? 'Выйти из картинки в картинке'
+    : 'Включить картинку в картинке');
+  btn.dataset.tt = active ? 'Картинка в картинке вкл' : 'Картинка в картинке выкл';
+}
+
+function toggleVideoPictureInPicture(){
+  const video = document.getElementById('videoPlayer');
+  if(!video) return;
+  if(document.pictureInPictureElement){
+    document.exitPictureInPicture().catch(()=>{});
+    return;
+  }
+  if(!video.requestPictureInPicture){
+    showToast('Картинка в картинке не поддерживается на этом устройстве');
+    return;
+  }
+  video.requestPictureInPicture().catch(()=>{});
+}
+document.getElementById('videoPiPBtn').addEventListener('click', toggleVideoPictureInPicture);
+
 // Флаги "мы сейчас в полноэкранном режиме видео" — чтобы при переходе на
 // следующее/предыдущее видео (свайп или кнопка) снова включать полный экран
 // автоматически, а не только для одного ролика.
 let videoFullscreenActive = false; // обычный Fullscreen API (карточка целиком)
 let videoNativeFullscreenActive = false; // нативный полноэкранный режим iOS (только видео)
+let videoPiPActive = false; // картинка-в-картинке (Picture-in-Picture)
 const isIOSDevice = /iP(hone|ad|od)/.test(navigator.userAgent)
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
@@ -977,6 +1005,12 @@ function setupVideoPlayerElement(video, card, level, reuse){
   }, {once:true});
   if(!reuse){
     video.addEventListener('webkitendfullscreen', ()=>{ videoNativeFullscreenActive = false; });
+    // Пользователь мог закрыть окно PiP системной кнопкой «Закрыть» — тогда
+    // leavepictureinpicture приходит на этот же элемент, и мы обновляем состояние.
+    video.addEventListener('leavepictureinpicture', ()=>{
+      videoPiPActive = false;
+      updateVideoPiPBtn();
+    });
   }
 }
 function renderVideoCard(card, level){
@@ -1002,6 +1036,7 @@ function renderVideoCard(card, level){
     updateVideoRandomBtn();
     updateVideoFavoritesBtn();
     updateFavoriteBtn();
+    updateVideoPiPBtn();
     return;
   }
   // Создаём новый <video> сразу: общий fade-экран ждёт 220 мс и на видео
@@ -1027,6 +1062,7 @@ function renderVideoCard(card, level){
     updateVideoLoopBtn();
     updateVideoRandomBtn();
     updateVideoFavoritesBtn();
+    updateVideoPiPBtn();
   }, true);
   updateFavoriteBtn();
 }

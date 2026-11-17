@@ -2571,6 +2571,7 @@
   #game.video-mode #videoRandomBtn{order:11; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
   #game.video-mode #videoLoopBtn{order:12; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
   #game.video-mode #videoFullscreenBtn{order:13; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
+  #game.video-mode #videoPiPBtn{order:15; flex:0 0 44px; width:44px; padding:0; font-size:20.8px;}
   #game.video-mode #dislikeBtn{order:14; flex:0 0 40px; width:40px; padding:0; font-size:20.8px;}
   /* Включённое состояние кнопок-переключателей блока «Дополнительно» — общая
      подсветка у 🔁 (автоповтор), 🔀 (случайный порядок) и ⭐ (избранное).
