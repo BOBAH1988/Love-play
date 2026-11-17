@@ -1061,7 +1061,11 @@ function renderVideoCard(card, level){
   // плеер без выхода из полного экрана, и видео идут одно за другим уже в
   // развёрнутом виде.
   const existingVideo = document.getElementById('videoPlayer');
-  if(videoNativeFullscreenActive && existingVideo){
+  // Если видео открыто в нативном полном экране iOS или в картинке-в-картинке
+  // (Picture-in-Picture), не пересобираем карточку через innerHTML — иначе
+  // PiP окно потеряет связь с DOM-узлом и закроется. Просто меняем src у
+  // существующего <video>, PiP продолжит показывать следующее видео.
+  if((videoNativeFullscreenActive || document.pictureInPictureElement) && existingVideo){
     setupVideoPlayerElement(existingVideo, card, level, true);
     updateVideoMuteBtn();
     updateVideoLoopBtn();

@@ -2441,13 +2441,13 @@
   }
   .video-extra-toggle .video-extra-arrow{display:inline-block; font-size:10px; transition:transform .2s ease;}
   .controls.video-extra-open .video-extra-toggle .video-extra-arrow{transform:rotate(180deg);}
-  #game.video-mode #doneBtn{order:1; flex:1; min-width:0; font-size:14px; padding:0 6px;}
+  #game.video-mode #doneBtn{order:1; flex:1; min-width:0; font-size:14px; padding:0 8px;}
   /* 🔥 «Горячее» — сразу после «Следующее»: самый частый шаг по уровням в один тап. */
-  #game.video-mode #videoHotBtn{order:2; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20px;}
-  #game.video-mode #favoriteBtn{order:3; flex:0 0 auto; width:auto; padding:0 6px; font-size:18px;}
+  #game.video-mode #videoHotBtn{order:2; flex:0 0 44px; width:44px; padding:0; font-size:20px;}
+  #game.video-mode #favoriteBtn{order:3; flex:0 0 auto; width:auto; padding:0 10px; font-size:18px;}
   /* ⤴ «Поделиться видео» — сразу после сердечка. */
-  #game.video-mode #videoShareBtn{order:4; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:18px;}
-  #game.video-mode #pauseBtn{order:6; flex:0 0 auto; width:auto; padding:0 6px; font-size:9px;}
+  #game.video-mode #videoShareBtn{order:4; flex:0 0 44px; width:44px; padding:0; font-size:18px;}
+  #game.video-mode #pauseBtn{order:6; flex:0 0 auto; width:auto; padding:0 10px; font-size:11px;}
   /* В "Давай попробуем" вместо "Следующее" — заголовок и три кнопки ответов;
      "Избранное" (сердечко) хранит видео, на которые оба игрока независимо
      ответили "Да". */
