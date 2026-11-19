@@ -1955,3 +1955,36 @@ window.prevPhotoLevel = function(from){
   }
   return from;
 };
+
+// Кнопка «Тест» — только для уровня «Админ»: это служебная проверка ссылки,
+// обычным игрокам она не нужна. Строка скрыта в разметке (hidden) и
+// показывается, когда onAuthStateChanged выставит window.__userAccessLevel.
+function updateTestVideoVisibility(){
+  const row = document.getElementById('davayTestRow');
+  if(!row) return;
+  const isAdmin = (typeof window !== 'undefined' && window.__userAccessLevel === 'admin');
+  row.hidden = !isAdmin;
+  if(!isAdmin){
+    const wrap = document.getElementById('davayTestVideoWrap');
+    if(wrap) wrap.setAttribute('hidden', '');
+    const btn = document.getElementById('davayTestVideoBtn');
+    if(btn) btn.setAttribute('aria-expanded', 'false');
+  }
+}
+window.updateTestVideoVisibility = updateTestVideoVisibility;
+document.addEventListener('DOMContentLoaded', updateTestVideoVisibility);
+// Уровень доступа приходит из Firestore асинхронно — к моменту DOMContentLoaded
+// он ещё «guest». До десяти секунд дожидаемся реального значения, иначе кнопка
+// у админа так и осталась бы скрытой.
+(function waitForAccessLevel(){
+  let tries = 40;
+  const tick = ()=>{
+    if(window.__userAccessLevel && window.__userAccessLevel !== 'guest'){
+      updateTestVideoVisibility();
+      return;
+    }
+    updateTestVideoVisibility();
+    if(--tries > 0) setTimeout(tick, 250);
+  };
+  tick();
+})();

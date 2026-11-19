@@ -6029,6 +6029,8 @@ function playHitSound(){
       // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
       // Кнопка статистики — только админу.
       ensureStatsBtnVisibility();
+      // Проверка ролика по ссылке («Тест» на «Давай попробуем») — только админ.
+      if(typeof window.updateTestVideoVisibility === 'function') window.updateTestVideoVisibility();
     });
   }
 })();
