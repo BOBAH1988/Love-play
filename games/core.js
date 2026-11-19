@@ -5467,6 +5467,14 @@ function playHitSound(){
     showModal('accountModal');
   }
 
+  // Ссылка «установить пароль» из письма: /?cop_reset_token=...&cop_reset_kind=...
+  // Токен одноразовый и лежит в адресной строке до отправки нового пароля.
+  const pendingReset = (function () {
+    const lib = apiLib();
+    const found = lib && typeof lib.resetTokenFromUrl === 'function' ? lib.resetTokenFromUrl() : null;
+    return found || null;
+  })();
+
   function openAccountServer() {
     const session = apiSession();
     if (!session || !session.user) {
@@ -5475,28 +5483,34 @@ function playHitSound(){
       if (guest) guest.style.display = '';
       if (profile) profile.style.display = 'none';
       showError('accountError', '');
+      switchTab(pendingReset ? 'reset' : 'login');
       showModal('accountModal');
       return;
     }
     showServerProfile(session);
-    switchTab('login');
-    const profileEl = document.getElementById('accountProfileSaveBtn');
-    if (profileEl) profileEl.disabled = false;
   }
 
   // Вход и регистрация через сервер. Экран общий, отличаются только запросы.
-  function serverLogin(email, password) {
-    showError('accountError', '');
-    manualAuthJustDone = true;
-    return fetch((window.ComeOnPlayApi && window.ComeOnPlayApi.baseUrl ? window.ComeOnPlayApi.baseUrl : '') + '/api/auth/login', {
+  function serverBase() {
+    const lib = apiLib();
+    if (lib && typeof lib.request === 'function') return '';
+    return '';
+  }
+
+  /**
+   * Один вызов API с разбором ошибок сервера в те же коды, что отдавал
+   * Firebase Auth. Поэтому mapError продолжает работать без правок.
+   */
+  function serverCall(path, body, fallbackMessage) {
+    return fetch(serverBase() + path, {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: email, password: password })
+      body: JSON.stringify(body || {})
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
         if (!res.ok) {
-          const err = new Error(data.error || 'Не удалось войти');
+          const err = new Error(data.error || fallbackMessage);
           err.code = data.code || '';
           throw err;
         }
@@ -5505,22 +5519,18 @@ function playHitSound(){
     });
   }
 
+  function serverLogin(email, password) {
+    showError('accountError', '');
+    manualAuthJustDone = true;
+    return serverCall('/api/auth/login', { email: email, password: password }, 'Не удалось войти');
+  }
+
   function serverRegister(email, password) {
-    return fetch((window.ComeOnPlayApi && window.ComeOnPlayApi.baseUrl ? window.ComeOnPlayApi.baseUrl : '') + '/api/auth/register', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: email, password: password, isAdult: true })
-    }).then(function (res) {
-      return res.json().catch(function () { return {}; }).then(function (data) {
-        if (!res.ok) {
-          const err = new Error(data.error || 'Не удалось зарегистрироваться');
-          err.code = data.code || '';
-          throw err;
-        }
-        return data;
-      });
-    });
+    return serverCall('/api/auth/register', { email: email, password: password, isAdult: true }, 'Не удалось зарегистрироваться');
+  }
+
+  function serverForgot(email) {
+    return serverCall('/api/auth/password/forgot', { email: email }, 'Не удалось отправить письмо');
   }
 
   function serverLogout() {
@@ -5563,6 +5573,14 @@ function playHitSound(){
   function switchTab(tab) {
     const loginForm = document.getElementById('accountLoginForm');
     const regForm = document.getElementById('accountRegisterForm');
+    const resetForm = document.getElementById('accountResetForm');
+    if (resetForm) resetForm.style.display = tab === 'reset' ? '' : 'none';
+    if (tab === 'reset') {
+      if (loginForm) loginForm.style.display = 'none';
+      if (regForm) regForm.style.display = 'none';
+      showError('accountError', '');
+      return;
+    }
     if (tab === 'login') {
       if (loginForm) loginForm.style.display = '';
       if (regForm) regForm.style.display = 'none';
@@ -5589,9 +5607,17 @@ function playHitSound(){
   const forgotBtn = document.getElementById('accountForgotPasswordBtn');
   if (forgotBtn) forgotBtn.addEventListener('click', function () {
     const auth = getAuth();
-    if (!auth) return;
     const email = (document.getElementById('accountLoginEmail').value || '').trim();
     if (!email) { showError('accountError', 'Введите email для восстановления пароля'); return; }
+    if (apiOnServer()) {
+      showError('accountError', '');
+      serverForgot(email).then(function () {
+        const el = document.getElementById('accountError');
+        if (el) { el.style.color = '#1b5e20'; el.textContent = 'Если почта зарегистрирована, письмо отправлено на ' + email; el.style.display = 'block'; }
+      }).catch(function (err) { showError('accountError', mapError(err)); });
+      return;
+    }
+    if (!auth) return;
     showError('accountError', '');
     auth.sendPasswordResetEmail(email)
       .then(function () {
@@ -5649,6 +5675,35 @@ function playHitSound(){
   const privacyClose = document.getElementById('privacyCloseBtn');
   if (privacyClose) privacyClose.addEventListener('click', function () { closeLegalModal('privacyModal'); });
 
+  const resetForm = document.getElementById('accountResetForm');
+  if (resetForm) {
+    resetForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!pendingReset) { showError('accountError', 'Ссылка недействительна — запросите новую'); return; }
+      const p1 = (document.getElementById('accountResetPassword').value || '');
+      const p2 = (document.getElementById('accountResetPasswordConfirm').value || '');
+      if (p1.length < 6) { showError('accountError', 'Слишком короткий пароль (минимум 6 символов)'); return; }
+      if (p1 !== p2) { showError('accountError', 'Пароли не совпадают'); return; }
+      showError('accountError', '');
+      const lib = apiLib();
+      if (!lib || !lib.resetPassword) { showError('accountError', 'Сервер недоступен'); return; }
+      lib.resetPassword(p1, pendingReset.token, pendingReset.kind).then(function () {
+        // Токен израсходован: убираем его из адреса, чтобы ссылка не осталась в истории.
+        try {
+          const clean = location.pathname + location.hash;
+          history.replaceState(null, '', clean);
+        } catch (err) {}
+        showError('accountError', '');
+        const el = document.getElementById('accountError');
+        if (el) { el.style.color = '#1b5e20'; el.textContent = 'Пароль обновлён. Вход выполнен.'; el.style.display = 'block'; }
+        return (lib.refreshSession ? lib.refreshSession() : Promise.resolve(null));
+      }).then(function (session) {
+        applyServerLevel(session);
+        closeAccount();
+      }).catch(function (err) { showError('accountError', mapError(err)); });
+    });
+  }
+
   const loginForm = document.getElementById('accountLoginForm');
   if (loginForm) {
     loginForm.addEventListener('submit', function (e) {
@@ -5658,6 +5713,28 @@ function playHitSound(){
       const email = (document.getElementById('accountLoginEmail').value || '').trim();
       const password = document.getElementById('accountLoginPassword').value || '';
       showError('accountError', '');
+      if (apiOnServer()) {
+        const lib = apiLib();
+        serverLogin(email, password)
+          .then(function (data) {
+            return lib && lib.refreshSession ? lib.refreshSession().then(function () { return data; }) : data;
+          })
+          .then(function (data) {
+            applyServerLevel(data);
+            manualAuthJustDone = false;
+            closeAccount();
+            if (typeof scheduleCloudSave === 'function') scheduleCloudSave();
+          })
+          .catch(function (err) {
+            manualAuthJustDone = false;
+            showError('accountError', mapError(err));
+            if (err && err.code === 'auth/password-not-set') {
+              const el = document.getElementById('accountError');
+              if (el) el.style.color = '#b00020';
+            }
+          });
+        return;
+      }
       manualAuthJustDone = true;
       auth.signInWithEmailAndPassword(email, password)
         .then(function (cred) {
@@ -5696,6 +5773,24 @@ function playHitSound(){
       showError('accountError', '');
       if (password.length < 6) { showError('accountError', 'Слишком короткий пароль (минимум 6 символов)'); return; }
       if (password !== confirm) { showError('accountError', 'Пароли не совпадают'); return; }
+      if (apiOnServer()) {
+        const lib = apiLib();
+        serverRegister(email, password)
+          .then(function (reg) {
+            return lib && lib.refreshSession ? lib.refreshSession().then(function () { return reg; }) : reg;
+          })
+          .then(function (reg) {
+            manualAuthJustDone = true;
+            applyServerLevel(reg);
+            handlePostAuthMigration(reg && reg.user ? { uid: reg.user.uid } : null);
+            openAccount();
+          })
+          .catch(function (err) {
+            manualAuthJustDone = false;
+            showError('accountError', mapError(err));
+          });
+        return;
+      }
       auth.createUserWithEmailAndPassword(email, password)
         .then(function (cred) {
           ensureUserDoc(cred.user, isAdult);
@@ -5721,6 +5816,13 @@ function playHitSound(){
   const logoutBtn = document.getElementById('accountLogoutBtn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', function () {
+      if (apiOnServer()) {
+        serverLogout().then(function () {
+          applyServerLevel(null);
+          closeAccount();
+        });
+        return;
+      }
       const auth = getAuth();
       if (!auth) return;
       auth.signOut().then(function () {
@@ -6082,6 +6184,26 @@ function playHitSound(){
       if (adminBtn) adminBtn.style.display = isAdmin ? '' : 'none';
     }
     ensureStatsBtnVisibility.attempts = 100;
+
+    // В серверном режиме Firebase не участвует: уровень и профиль берутся
+    // из сессии собственного сервера, а не из localStorage-кэша.
+    if (apiOnServer()) {
+      ensureStatsBtnVisibility();
+      const lib = apiLib();
+      const loadSession = (lib && lib.refreshSession) ? lib.refreshSession() : Promise.resolve(null);
+      loadSession.then(function (session) {
+        applyServerLevel(session);
+        ensureStatsBtnVisibility();
+        // Состояние подтягиваем при загрузке, чтобы игра началась с последнего
+        // сохранённого, а не с пустого локального.
+        if (session && session.user) {
+          pullCloudState(session).then(function (cloud) {
+            if (cloud) applyCloudState(cloud);
+          }).catch(function () {});
+        }
+      }).catch(function () { applyServerLevel(null); });
+      return;
+    }
 
     auth.onAuthStateChanged(function (user) {
       if (user) {

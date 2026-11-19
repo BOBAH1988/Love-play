@@ -185,6 +185,24 @@ export function createRoutes({ store, config, onRequestAccess, onResetPassword, 
       return { status: 200, body: sessionPayload(user) };
     }
 
+    /* ---------- ссылка из письма ---------- */
+
+    if (is('GET', '/api/auth/reset')) {
+      const token = String(url.searchParams.get('token') || '');
+      // Проверяем токен, но не тратим: он одноразовый и нужен для отправки
+      // нового пароля. Иначе перезагрузка страницы ломала бы ссылку.
+      const tokenRow = token ? store.findAuthToken(sha256(token)) : null;
+      if (!tokenRow) {
+        res.writeHead(400, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+        res.end(resetPageHtml({ ok: false, message: 'Ссылка недействительна или устарела. Запросите новую на странице входа.' }));
+        return null;
+      }
+      const appUrl = `${config.publicUrl}/?cop_reset_token=${encodeURIComponent(token)}&cop_reset_kind=${tokenRow.kind}`;
+      res.writeHead(302, { location: appUrl, 'cache-control': 'no-store' });
+      res.end();
+      return null;
+    }
+
     /* ---------- реестр игр ---------- */
 
     if (is('GET', '/api/games')) {
@@ -296,6 +314,18 @@ export function createRoutes({ store, config, onRequestAccess, onResetPassword, 
 }
 
 /** Суммирование gameStats по всем пользователям — то, что сейчас считается в браузере. */
+function resetPageHtml({ ok, message }) {
+  const body = ok
+    ? '<p>Переходим в приложение…</p>'
+    : `<p>${message}</p><p><a href="${'/'.replace('/', '/')}">Открыть приложение</a></p>`;
+  return `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">`
+    + `<meta name="viewport" content="width=device-width,initial-scale=1">`
+    + `<title>«Давай играй»: пароль</title>`
+    + `<style>body{font-family:-apple-system,"Segoe UI",Arial,sans-serif;background:#f6f1f7;`
+    + `color:#2b0f2e;padding:32px 20px;max-width:520px;margin:0 auto;line-height:1.5}`
+    + `a{color:#6a2c7d}</style></head><body><h1>Смена пароля</h1>${body}</body></html>`;
+}
+
 export function aggregateUserStats(docs) {
   let totalGames = 0, finishedGames = 0, totalMs = 0, totalDays = 0, devices = 0, usersWithStats = 0;
   const games = {};

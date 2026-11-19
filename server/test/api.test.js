@@ -267,3 +267,28 @@ console.log = (...args) => {
   origLog(...args);
 };
 function lastResetToken() { return captureToken; }
+
+test('ссылка из письма открывается повторно, пока пароль не установлен', async () => {
+  await api('/api/auth/register', {
+    method: 'POST', body: { email: 'link@example.test', password: 'пароль123', isAdult: true },
+  });
+  await api('/api/auth/password/forgot', { method: 'POST', body: { email: 'link@example.test' } });
+  const token = lastResetToken();
+  assert.ok(token);
+
+  const viaHttp = async (path) => {
+    const res = await fetch(base + path, { redirect: 'manual' });
+    return { status: res.status, location: res.headers.get('location') };
+  };
+
+  const first = await viaHttp('/api/auth/reset?token=' + token);
+  assert.equal(first.status, 302);
+  assert.match(first.location, /cop_reset_token=/);
+
+  // Повторное открытие ссылки не расходует токен: иначе перезагрузка ломала бы вход.
+  const second = await viaHttp('/api/auth/reset?token=' + token);
+  assert.equal(second.status, 302);
+
+  const broken = await viaHttp('/api/auth/reset?token=неверный');
+  assert.equal(broken.status, 400);
+});

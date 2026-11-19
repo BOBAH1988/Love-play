@@ -289,6 +289,14 @@ export function createStore(db, { adminEmails = [] } = {}) {
       q.insertToken.run(tokenHash, String(uid), kind, ts, ts + ttlMs);
     },
 
+    /** Только проверка: ссылка из письма должна открываться повторно. */
+    findAuthToken(tokenHash) {
+      const row = q.tokenByHash.get(String(tokenHash));
+      if (!row || row.used_at) return null;
+      if (row.expires_at < now()) return null;
+      return row;
+    },
+
     takeAuthToken(tokenHash, kind) {
       const row = q.tokenByHash.get(String(tokenHash));
       if (!row || row.used_at) return null;

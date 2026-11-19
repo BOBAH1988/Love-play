@@ -59,6 +59,8 @@ export function createApp(overrides = {}) {
     try {
       if (url.pathname.startsWith('/api/')) {
         const result = await route(req, res, url);
+        // Маршрут может ответить сам (редирект по ссылке из письма, HTML-страница).
+        if (!result || res.headersSent) return;
         const payload = JSON.stringify(result.body ?? {});
         res.writeHead(result.status || 200, {
           'content-type': 'application/json; charset=utf-8',
