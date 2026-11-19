@@ -927,6 +927,57 @@ document.getElementById('davaySetupSoundBtn').addEventListener('click', ()=>{
   setDavaySoundOn(!davaySoundOn);
 });
 
+// ===== «Тест»: проверка ролика по ссылке =====
+// Ссылка хранится в state.davayTestVideoUrl и запускается первой в
+// «Видеорулетке» (см. showTestVideoCard в games/fants-video.js).
+function isTestVideoUrl(url){
+  return /^https?:\/\/\S+/i.test(String(url || '').trim());
+}
+function updateTestVideoUI(){
+  const btn = document.getElementById('davayTestVideoBtn');
+  const input = document.getElementById('davayTestVideoUrl');
+  if(!btn) return;
+  const url = String(state.davayTestVideoUrl || '').trim();
+  const valid = isTestVideoUrl(url);
+  btn.classList.toggle('on', valid);
+  btn.setAttribute('aria-pressed', valid ? 'true' : 'false');
+  if(input && input.value !== url) input.value = url;
+}
+const testVideoBtn = document.getElementById('davayTestVideoBtn');
+const testVideoWrap = document.getElementById('davayTestVideoWrap');
+const testVideoInput = document.getElementById('davayTestVideoUrl');
+const testVideoClear = document.getElementById('davayTestVideoClear');
+if(testVideoBtn && testVideoWrap){
+  testVideoBtn.addEventListener('click', ()=>{
+    const closed = testVideoWrap.hasAttribute('hidden');
+    if(closed) testVideoWrap.removeAttribute('hidden');
+    else testVideoWrap.setAttribute('hidden', '');
+    testVideoBtn.setAttribute('aria-expanded', closed ? 'true' : 'false');
+    if(closed && testVideoInput) testVideoInput.focus();
+  });
+}
+if(testVideoInput){
+  const applyTestUrl = ()=>{
+    const url = testVideoInput.value.trim();
+    state.davayTestVideoUrl = isTestVideoUrl(url) ? url : '';
+    saveState();
+    updateTestVideoUI();
+  };
+  testVideoInput.addEventListener('input', applyTestUrl);
+  testVideoInput.addEventListener('change', applyTestUrl);
+  testVideoInput.addEventListener('paste', ()=>{ setTimeout(applyTestUrl, 0); });
+}
+if(testVideoClear){
+  testVideoClear.addEventListener('click', ()=>{
+    if(testVideoInput) testVideoInput.value = '';
+    state.davayTestVideoUrl = '';
+    saveState();
+    updateTestVideoUI();
+    if(testVideoInput) testVideoInput.focus();
+  });
+}
+updateTestVideoUI();
+
 // Ссылка-вход «Давай попробуем» на конкретный ролик. Ключ выбирается так же,
 // как у «Видеорулетки»: путь на Диске переживает смену подписанного адреса,
 // имя/id нужны для старых и локальных записей.

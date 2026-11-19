@@ -804,6 +804,24 @@ function updateVideoLevelBtn(){
   const quickBtn = document.getElementById('videoHotBtn');
   if(quickBtn) quickBtn.disabled = false;
 }
+// ===== Проверка ролика по ссылке (кнопка «Тест») =====
+// Если на странице «Давай попробуем» задана ссылка, «Видеорулетка» начинает
+// с неё, а дальше идёт обычная очередь. Карточка синтетическая: записи в
+// индексе и папки на Диске у неё нет — только URL.
+function getTestVideoCard(){
+  const url = String((typeof state !== 'undefined' && state.davayTestVideoUrl) || '').trim();
+  if(!/^https?:\/\/\S+/i.test(url)) return null;
+  return { id: 'test-video-url', video: url, url, level: videoLevel || 1, source: 'test' };
+}
+function showTestVideoCard(){
+  const card = getTestVideoCard();
+  if(!card) return false;
+  currentVideoCard = card;
+  videoHistory.push(card);
+  videoHistoryPos = videoHistory.length - 1;
+  renderVideoCard(card, card.level);
+  return true;
+}
 function drawVideoCard(level, announceEmpty){
   videoLevel = level;
   updateVideoLevelBtn();
@@ -944,6 +962,13 @@ function playNextOwnVideo(level){
 }
 
 function showVideoErrorFallback(card, level, errorCode){
+  // Проверочная ссылка (кнопка «Тест») не открылась: подставлять другой ролик
+  // нельзя — игрок решит, что ссылка рабочая. Показываем заглушку и причину.
+  if(card && card.source === 'test'){
+    renderVideoPlaceholderCard();
+    showToast('Видео по ссылке не открылось — проверьте адрес');
+    return;
+  }
   // Своё видео не открылось — запоминаем его как битое и показываем другое
   // СВОЁ. Демо-ролик здесь намеренно не используется: он остаётся только для
   // случая «своих видео нет вовсе».
@@ -1260,6 +1285,9 @@ async function goToVideoGame(entry){
   // Первый ролик (и все последующие при быстром переходе) не ждёт
   // чтения IndexedDB, пока каталог уже был загруж ранее.
   const tryDraw = async () => {
+    // Ссылка для проверки (кнопка «Тест») идёт первой; остальную очередь
+    // игрок увидит свайпом или кнопкой «Следующее».
+    if(showTestVideoCard()){ refreshYandexLinks(true).catch(()=>{}); return; }
     let entryCard = entry && entry.key ? findVideoCardByEntryKey(entry.key) : null;
     if(!entryCard && entry && entry.key && typeof importYandexVideos === 'function'){
       // Вход по ссылке, а ролика нет в каталоге: чаще всего это новый телефон,

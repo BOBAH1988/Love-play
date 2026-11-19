@@ -229,6 +229,9 @@ let state = {
   videoUsed:{}, videoHidden:[], videoLiked:[], videoFavoritesOnly:false, videoAutoAdvance:false,
   videoRandomMode:false, videoSoundOn:false,
   videoDbMigrated:false, videoResetAt:0,
+  // Ссылка для проверки ролика: маленькая кнопка «Тест» на странице
+  // «Давай попробуем». Пока ссылка задана, «Видеорулетка» начинает с неё.
+  davayTestVideoUrl:'',
   davayUsed:{}, davayHidden:[], davayLiked:[], davayFavoritesOnly:false, davayAutoAdvance:false,
   davayFavYes:[], davayFavLater:[], davayFavNo:[],
   davayQuizActivePlayer:0, davayQuizQueue:[], davayQuizIndex:0, davayQuizAnswers:{},
@@ -2173,6 +2176,7 @@ function performFullReset(){
   state.videoFavoritesOnly = false;
   state.videoAutoAdvance = false;
   state.videoRandomMode = false;
+  state.davayTestVideoUrl = '';
   // Давай попробуем
   state.davayUsed = {};
   state.davayHidden = [];
