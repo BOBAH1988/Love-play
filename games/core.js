@@ -5842,30 +5842,88 @@ function playHitSound(){
     return Promise.resolve();
   }
 
+  // Локальный сейв, который игрок реально наработал ДО входа. state в
+  // localStorage пишется на каждой загрузке приложения (loadState→saveState),
+  // поэтому просто наличие ключа ничего не значит: на новом устройстве в
+  // localStorage уже лежит дефолтный state. Отличить «опытного» игрока от
+  // новичка позволяет поле lastActiveAt — оно обновляется при сохранении.
+  function hasMeaningfulLocalData() {
+    if (!hasLocalData()) return false;
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { return false; }
+    if (!raw || typeof raw !== 'object') return false;
+    return (Number(raw.lastActiveAt) || 0) > 0;
+  }
+
+  // Выбор при ПЕРВОМ входе в аккаунт: перенести прогресс с устройства в
+  // аккаунт или начать с данных сервера. Кастомная модалка вместо
+  // window.confirm: нативный диалог в PWA-оболочке и на мобильных выглядит
+  // как «сбросить всё» и не даёт прочитать, что произойдёт. Возвращает
+  // Promise<boolean>: true — отправить локальные данные в аккаунт.
+  let __authChoiceResolve = null;
+  function showAuthChoiceModal(){
+    const modal = document.getElementById('authChoiceModal');
+    if(!modal) return Promise.resolve(true); // модалки нет — ведём себя как раньше
+    __authChoiceResolve = null;
+    return new Promise(resolve=>{
+      __authChoiceResolve = resolve;
+      modal.classList.add('show');
+    });
+  }
+  function closeAuthChoiceModal(useLocal){
+    const modal = document.getElementById('authChoiceModal');
+    if(modal) modal.classList.remove('show');
+    if(typeof __authChoiceResolve === 'function'){
+      const r = __authChoiceResolve;
+      __authChoiceResolve = null;
+      r(!!useLocal);
+    }
+  }
+  const __acModal = document.getElementById('authChoiceModal');
+  if(__acModal){
+    const keepLocal = document.getElementById('authChoiceUseLocal');
+    const useCloud = document.getElementById('authChoiceUseCloud');
+    if(keepLocal) keepLocal.addEventListener('click', ()=>closeAuthChoiceModal(true));
+    if(useCloud) useCloud.addEventListener('click', ()=>closeAuthChoiceModal(false));
+  }
+
+  // Последняя активность этого устройства — по ней видно, пользовался ли
+  // человек приложением до входа. Ставится при каждой загрузке приложения
+  // (loadState), а не при каждом saveState: иначе самый первый запуск на
+  // новом устройстве (loadState→saveState при инициализации) тоже оставлял бы
+  // отметку «здесь был прогресс», и новичку снова показывался бы выбор.
+  function touchLastActive(){
+    state.lastActiveAt = Date.now();
+  }
+  if(typeof window !== 'undefined') window.touchLastActive = touchLastActive;
+  touchLastActive();
+
+  // Вход в СУЩЕСТВУЮЩИЙ аккаунт: данные всегда берутся с сервера, без
+  // вопросов и без предложения сброса. Признак «первого входа» — в аккаунте
+  // ещё нет облачного сейва (создан ли он только что регистрацией или
+  // никогда не синхронизировался). Только тогда, и только если на устройстве
+  // есть реальный прогресс, спрашиваем, перенести его или начать с сервера.
   function handlePostAuthMigration(user) {
     if (!user) return Promise.resolve();
-    const localHas = hasLocalData();
+    const localHas = hasMeaningfulLocalData();
     return pullCloudState(user).then(function (cloud) {
       const cloudHas = !!(cloud && Object.keys(stripMeta(cloud)).length);
-      const localSig = JSON.stringify(stripMeta(serializeState() || {}));
-      const cloudSig = cloudHas ? JSON.stringify(stripMeta(cloud)) : null;
-
-      if (localHas && cloudHas && localSig !== cloudSig) {
-        const migrate = window.confirm('На устройстве и в аккаунте найдены разные данные.\n\nПеренести данные с устройства в аккаунт (перезаписать данные аккаунта)?\nOK — перенести, Отмена — использовать данные аккаунта.');
-        if (migrate) return uploadLocalToCloud(user);
+      if (cloudHas) {
+        // Существующий пользователь: сервер — источник правды.
         return applyCloudAndReload(user, cloud);
       }
-      if (localHas && !cloudHas) {
-        const migrate = window.confirm('Перенести данные с этого устройства в аккаунт?\nOK — перенести, Отмена — начать с нуля.');
-        if (migrate) return uploadLocalToCloud(user);
+      if (!localHas) {
+        // Ни на устройстве, ни в аккаунте нет прогресса — просто заводим облако.
+        return uploadLocalToCloud(user);
+      }
+      return showAuthChoiceModal().then(function (useLocal) {
+        if (useLocal) return uploadLocalToCloud(user);
+        // Игрок выбрал сервер: стираем локальный сейв, чтобы дефолтное
+        // состояние не выглядело как «свой прогресс» при следующих входах.
         try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
         try { window.location.reload(); } catch (e) {}
         return Promise.resolve();
-      }
-      if (!localHas && cloudHas) {
-        return applyCloudAndReload(user, cloud);
-      }
-      return uploadLocalToCloud(user);
+      });
     }).catch(function (err) { console.error('migration error', err); return null; }).finally(function () {
       manualAuthJustDone = false;
     });
