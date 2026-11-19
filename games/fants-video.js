@@ -393,8 +393,27 @@ document.getElementById('videoFullscreenBtn').addEventListener('click', toggleVi
 // Выход из псевдополного экрана: кнопка ⛶ остаётся под карточкой, поэтому
 // сверху показывается отдельный крестик (см. .video-fs-exit).
 // В псевдополном экране нативных контролов нет, пауза — тапом по видео.
+// Свайп по карточке (переключение ролика) заканчивается click-ом, и без
+// защиты пауза срабатывала бы на каждом перелистывании.
+let fsTouchStart = null;
+let fsTouchMoved = false;
+document.addEventListener('touchstart', (e) => {
+  if(!isPseudoFullscreenActive()) return;
+  const t = e.touches && e.touches[0];
+  fsTouchStart = t ? {x: t.clientX, y: t.clientY} : null;
+  fsTouchMoved = false;
+}, {passive:true});
+document.addEventListener('touchend', (e) => {
+  if(!isPseudoFullscreenActive() || !fsTouchStart) return;
+  const t = e.changedTouches && e.changedTouches[0];
+  if(t && (Math.abs(t.clientX - fsTouchStart.x) > 10 || Math.abs(t.clientY - fsTouchStart.y) > 10)){
+    fsTouchMoved = true;
+  }
+  fsTouchStart = null;
+}, {passive:true});
 document.addEventListener('click', (e) => {
   if(!isPseudoFullscreenActive()) return;
+  if(fsTouchMoved){ fsTouchMoved = false; return; }
   const video = e.target && e.target.closest ? e.target.closest('#videoPlayer, #davayPlayer') : null;
   if(!video) return;
   if(video.paused){ const p = video.play(); if(p && p.catch) p.catch(()=>{}); }
