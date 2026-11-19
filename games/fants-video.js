@@ -160,7 +160,10 @@ let videoSoundOn = false;
 function updateVideoMuteBtn(){
   const btn = document.getElementById('videoMuteBtn');
   if(!btn) return;
-  btn.textContent = videoSoundOn ? '🔊' : '🔇';
+  // Иконка — пара SVG в разметке; какая видна, решает атрибут data-sound.
+  // Раньше здесь подменялся текст эмодзи, и в блоке «Дополнительно» иконки
+  // были из разных наборов.
+  btn.dataset.sound = videoSoundOn ? '1' : '0';
   btn.setAttribute('aria-label', videoSoundOn ? 'Выключить звук видео' : 'Включить звук видео');
   // Подсказка называет состояние — как у 🔀/🔁 рядом в блоке «Дополнительно».
   btn.dataset.tt = videoSoundOn ? 'Звук вкл' : 'Звук выкл';

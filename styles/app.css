@@ -4655,3 +4655,23 @@
   fill:none; stroke:currentColor; stroke-width:1.7;
   stroke-linecap:round; stroke-linejoin:round;
 }
+
+/* ===== Иконки в блоке «Дополнительно» («Видеорулетка») =====
+   Линейные SVG 20×20 вместо эмодзи: тот же стиль, что у главного меню —
+   штрих currentColor 1.7, скруглённые концы. Размер кнопки остаётся 40×40. */
+.row2 .btn.btn-square.btn-ico{
+  display:inline-flex; align-items:center; justify-content:center; padding:0;
+}
+.row2 .btn.btn-square.btn-ico > svg{
+  width:20px; height:20px; display:none;
+  fill:none; stroke:currentColor; stroke-width:1.7;
+  stroke-linecap:round; stroke-linejoin:round;
+}
+.row2 .btn.btn-square.btn-ico > svg:only-of-type{ display:block; }
+#videoMuteBtn[data-sound="1"] .ic-sound,
+#videoMuteBtn[data-sound="0"] .ic-muted{ display:block; }
+/* Выключенное состояние переключателей приглушает иконку, как подпись */
+#videoMuteBtn[data-sound="0"] svg,
+#videoRandomBtn:not(.active) svg,
+#videoLoopBtn:not(.active) svg{ opacity:.75; }
+#videoRandomBtn.active, #videoLoopBtn.active{ border-color:rgba(255,255,255,.5); }
