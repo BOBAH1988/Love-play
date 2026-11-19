@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261120d">
+<link rel="stylesheet" href="styles/app.css?v=20261120f">
   <link rel="stylesheet" href="styles/account.css?v=20261120e">
   <link rel="stylesheet" href="styles/theme-dark.css?v=20261120i">
 <script>
@@ -112,7 +112,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-11-19 · v1.1.808';
+  window.APP_BUILD = '2026-11-19 · v1.1.809';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -193,21 +193,21 @@
   <div class="modal-overlay" id="globalMenuModal">
     <div class="modal-card menu-modal-card">
       <div class="modal-title menu-modal-title">
-        <span>⚙️ Меню</span>
+        <span>Меню</span>
         <button type="button" class="modal-close-btn" id="globalMenuCloseBtn" aria-label="Закрыть">✕</button>
       </div>
       <div class="menu-list">
-         <button type="button" class="btn btn-secondary btn-menu-item" id="menuAccountBtn"><span class="menu-icon">👤</span>Аккаунт</button>
-         <button type="button" class="btn btn-secondary btn-menu-item" id="menuStatsBtn" style="display:none"><span class="menu-icon">📊</span>Статистика</button>
-         <button type="button" class="btn btn-secondary btn-menu-item" id="menuAdminBtn" style="display:none"><span class="menu-icon">🛠️</span>Админ панель</button>
-         <button type="button" class="btn btn-secondary btn-menu-item" id="menuAutoSpeakBtn"><span class="menu-icon">▶</span>Автовоспроизведение</button>
-         <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn"><span class="menu-icon">🔊</span>Звук</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuInstallBtn"><span class="menu-icon">📲</span>Установить приложение</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon">📖</span>Правила игр</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuAboutBtn"><span class="menu-icon">💡</span>О проекте</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon">🗑️</span>Сбросить весь прогресс</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon">📤</span>Экспортировать данные</button>
-        <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon">📥</span>Импортировать данные</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuAccountBtn" style="display:none"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 19.5c1.2-3.2 3.6-4.8 6.5-4.8s5.3 1.6 6.5 4.8"/></svg></span>Аккаунт</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuStatsBtn" style="display:none"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 20h20"/><path d="M6 20v-6"/><path d="M12 20V6"/><path d="M18 20v-9"/></svg></span>Статистика</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuAdminBtn" style="display:none"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h9"/><path d="M17 7h3"/><circle cx="15" cy="7" r="2"/><path d="M4 17h3"/><path d="M11 17h9"/><circle cx="9" cy="17" r="2"/></svg></span>Админ панель</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuAutoSpeakBtn" data-speak="on"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic-play"><path d="M8 5.5l10.5 6.5L8 18.5z"/></svg><svg viewBox="0 0 24 24" class="ic-pause"><path d="M9.5 5v14"/><path d="M15 5v14"/></svg></span>Автовоспроизведение</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuMuteBtn" data-muted="0"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic-sound"><path d="M4 9v6h3l5 4V5L7 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M18.6 5.8a9 9 0 0 1 0 12.4"/></svg><svg viewBox="0 0 24 24" class="ic-muted"><path d="M4 9v6h3l5 4V5L7 9H4z"/><path d="M16 9.5l5 5"/><path d="M21 9.5l-5 5"/></svg></span>Звук</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuInstallBtn"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v10"/><path d="M8 9.5l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Установить приложение</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuRulesBtn"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 3H20v18H6.5A2.5 2.5 0 0 1 4 18.5v-13A2.5 2.5 0 0 1 6.5 3z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/></svg></span>Правила игр</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuAboutBtn"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.6h.01"/></svg></span>О проекте</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuResetBtn"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></span>Сбросить весь прогресс</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuExportBtn"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V6"/><path d="M8 9.5l4-4 4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Экспортировать данные</button>
+        <button type="button" class="btn btn-secondary btn-menu-item" id="menuImportBtn"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="M8 10l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Импортировать данные</button>
       </div>
     </div>
   </div>
@@ -449,7 +449,7 @@
       </div>
       <div class="game-select-list" id="homeGroupsDynamic" style="display:none;"></div>
       <div class="app-footer">
-        Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> -         <span id="projectVersion">v 1.1.808</span>
+        Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> -         <span id="projectVersion">v 1.1.809</span>
       </div>
 
 
@@ -5732,7 +5732,7 @@
 <script src="cards/cards_shop.js?v=20260928p"></script>
 <script src="cards/flags.js?v=20261022y"></script>
 <script src="cards/capitals.js?v=20261022y"></script>
-<script src="games/core.js?v=20261120a"></script>
+<script src="games/core.js?v=20261120b"></script>
 <!-- Части бывшего core.js: вынесены при разделении монолита (6700 строк).
      Порядок сохранён как в исходном файле — функции глобальные и вызывают
      друг друга по имени, поэтому важна только очерёдность загрузки. -->

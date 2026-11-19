@@ -3139,16 +3139,19 @@ function updateMuteBtn(){
   }
   const menuMuteBtn = document.getElementById('menuMuteBtn');
   if(menuMuteBtn){
-    const icon = menuMuteBtn.querySelector('.menu-icon');
-    if(icon) icon.textContent = state.muted ? '🔇' : '🔊';
+    // Иконка переключается атрибутом: в разметке лежат два SVG (звук/без звука),
+    // CSS показывает нужный. Раньше здесь подменялся текст эмодзи.
+    menuMuteBtn.dataset.muted = state.muted ? '1' : '0';
+    menuMuteBtn.setAttribute('aria-label', state.muted ? 'Включить звук' : 'Выключить звук');
   }
 }
 function updateAutoSpeakBtn(){
   const menuAutoSpeakBtn = document.getElementById('menuAutoSpeakBtn');
   if(menuAutoSpeakBtn){
-    const icon = menuAutoSpeakBtn.querySelector('.menu-icon');
-    // ▶ — режим включён, ⏸ — выключен (те же глифы, что у кнопок таймера «▶ Старт»/«⏸ Пауза»)
-    if(icon) icon.textContent = state.autoSpeak ? '▶' : '⏸';
+    // play — режим включён, pause — выключен; какие SVG видны, решает CSS
+    // по атрибуту data-speak.
+    menuAutoSpeakBtn.dataset.speak = state.autoSpeak ? 'on' : 'off';
+    menuAutoSpeakBtn.setAttribute('aria-pressed', state.autoSpeak ? 'true' : 'false');
   }
 }
 document.getElementById('muteBtn').addEventListener('click', ()=>{

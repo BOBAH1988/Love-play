@@ -4620,3 +4620,38 @@
 #statsModal { align-items: flex-start; padding-top: 6vh; }
 #statsModal .modal-card { min-height: 360px; }
 #statsBody { min-height: 220px; max-height: 56vh; overflow-y: auto; transition: opacity 0.18s ease; }
+
+/* ===== Иконки главного меню =====
+   Один стиль вместо разноцветных эмодзи: линейные SVG 18×18, штрих
+   наследует цвет текста (currentColor), скруглённые концы. Эмодзи в меню
+   выглядели как набор из разных наборов иконок и не сочетались с тёмной
+   темой. Стили ограничены .menu-list, чтобы не задеть иконки разделов
+   на главной (#homeMenuList), где эмодзи — часть содержания. */
+.menu-list .menu-icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; min-width:22px; height:22px;
+  font-size:0; color:rgba(255,255,255,.85);
+}
+.menu-list .menu-icon svg{
+  width:18px; height:18px; display:none;
+  fill:none; stroke:currentColor; stroke-width:1.7;
+  stroke-linecap:round; stroke-linejoin:round;
+}
+.menu-list .menu-icon > svg:only-of-type{ display:block; }
+/* Пункты с двумя состояниями: видна одна иконка из пары */
+#menuMuteBtn .ic-sound, #menuMuteBtn .ic-muted,
+#menuAutoSpeakBtn .ic-play, #menuAutoSpeakBtn .ic-pause{ display:none; }
+#menuMuteBtn[data-muted="0"] .ic-sound,
+#menuMuteBtn[data-muted="1"] .ic-muted,
+#menuAutoSpeakBtn[data-speak="on"] .ic-play,
+#menuAutoSpeakBtn[data-speak="off"] .ic-pause{ display:block; }
+/* Активное состояние звука/автовоспроизведения — лёгкая подсветка */
+#menuMuteBtn[data-muted="1"] .menu-icon,
+#menuAutoSpeakBtn[data-speak="off"] .menu-icon{ color:rgba(255,255,255,.55); }
+/* Шестерёнка в заголовке меню — та же линия, что у пунктов */
+.menu-title-ico{ display:inline-flex; align-items:center; }
+.menu-title-ico svg{
+  width:16px; height:16px; display:block;
+  fill:none; stroke:currentColor; stroke-width:1.7;
+  stroke-linecap:round; stroke-linejoin:round;
+}
