@@ -77,3 +77,15 @@ div.modal-overlay > .modal-card{
   color:#ff8a9b; border-color:rgba(255,138,155,.5); background:rgba(255,138,155,.06);
 }
 #accountModal .account-logout:hover{ background:rgba(255,138,155,.14); }
+
+/* Иконки пола и значение уровня: core.js выставляет им цвет инлайном
+   (#2b0f2e), поэтому обычные правила не срабатывают — перекрываем. */
+#accountModal .account-gender-btn{
+  color:#fff; background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25);
+}
+#accountModal .account-gender-btn.on{
+  color:#fff; background:rgba(255,94,142,.35); border-color:rgba(255,94,142,.75);
+}
+#accountModal .account-gender-btn:hover{ border-color:rgba(255,255,255,.45); }
+#accountModal .account-chip b,
+#accountModal #accountProfileLevel{ color:#fff !important; }
