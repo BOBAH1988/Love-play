@@ -1012,8 +1012,8 @@
   }
   /* Полноэкранный режим карточки с видео: заполняем весь экран целиком —
      вертикально, если телефон вертикально, и горизонтально, если горизонтально.
-     Ниже (по ориентации) видео вписывается без чёрных полос по одной оси:
-     в портрете — целиком по высоте, как в TikTok, в ландшафте — на весь экран. */
+     object-fit:contain, чтобы видео не обрезалось, а просто вписывалось
+     в текущую ориентацию экрана. */
   #card:fullscreen, #card:-webkit-full-screen{
     width:100%;
     height:100%;
@@ -1036,22 +1036,6 @@
   }
   #card:fullscreen .card-split-media video, #card:-webkit-full-screen .card-split-media video{
     object-fit:contain;
-  }
-  /* Поведение как в TikTok: в вертикальном положении телефонa видео занимает
-     всю высоту экрана без чёрных полос сверху и снизу (широкое видео при этом
-     подрезается по бокам — объект-фит cover), в горизонтальном — на весь экран
-     с сохранением пропорций (contain, чёрные поля максимум по одной оси).
-     Правила идут последними, чтобы перекрыть общий object-fit:contain выше;
-     повторяющийся селектор :fullscreen нужен для того же приоритета. */
-  @media (orientation:portrait){
-    #card:fullscreen .card-split-media video, #card:-webkit-full-screen .card-split-media video{
-      object-fit:cover;
-    }
-  }
-  @media (orientation:landscape){
-    #card:fullscreen .card-split-media video, #card:-webkit-full-screen .card-split-media video{
-      object-fit:contain;
-    }
   }
 /* В "Видеорулетке" уровней нет — прячем пустую полоску прогресса над карточкой */
    #game.video-mode #levelProgress, #game.davay-mode #levelProgress{display:none;}

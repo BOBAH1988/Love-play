@@ -1065,10 +1065,7 @@ function renderVideoCard(card, level){
   // (Picture-in-Picture), не пересобираем карточку через innerHTML — иначе
   // PiP окно потеряет связь с DOM-узлом и закроется. Просто меняем src у
   // существующего <video>, PiP продолжит показывать следующее видео.
-  // То же самое касается обычного Fullscreen API: на Android/iOS пересборка
-  // через innerHTML уничтожила бы элемент, на котором висит полный экран, —
-  // браузер молча выходит из режима. Пока карточка развёрнута, меняем только src.
-  if((videoNativeFullscreenActive || isCardFullscreenActive() || document.pictureInPictureElement) && existingVideo){
+  if((videoNativeFullscreenActive || document.pictureInPictureElement) && existingVideo){
     setupVideoPlayerElement(existingVideo, card, level, true);
     updateVideoMuteBtn();
     updateVideoLoopBtn();
