@@ -495,6 +495,14 @@ function renderStatsBody(body, s, finishedRow){
 }
 window.__pushGameStatsToCloud = function () {
   try {
+    const lib = (typeof window !== 'undefined' && window.ComeOnPlayApi) || null;
+    const g = window.AppStats && typeof window.AppStats.load === 'function' ? window.AppStats.load() : null;
+    if (lib && typeof lib.onServer === 'function' && lib.onServer() && lib.stats && g) {
+      lib.stats.push(g).catch(function (e) { console.error('server game stats upload error', e); });
+      return;
+    }
+  } catch (e) {}
+  try {
     const auth = (typeof getAuth === 'function') ? getAuth() : null;
     const user = auth && auth.currentUser;
     if (!user) return;
@@ -683,11 +691,21 @@ function escHtmlAdmin(t) {
 
 function saveUserAccessLevel(uid, level) {
   const body = document.getElementById('adminPanelBody');
+  const statusEl = body ? body.querySelector('.admin-level-status[data-uid="' + uid + '"]') : null;
+  if (statusEl) { statusEl.textContent = 'Сохранение…'; statusEl.style.color = '#8a5c7a'; }
+  const lib = (typeof window !== 'undefined' && window.ComeOnPlayApi) || null;
+  if (lib && typeof lib.onServer === 'function' && lib.onServer() && lib.admin) {
+    lib.admin.setLevel(uid, level).then(function () {
+      if (statusEl) { statusEl.textContent = 'Сохранено: ' + (ADMIN_LEVEL_LABELS[level] || level); statusEl.style.color = '#2e7d32'; }
+      if (typeof showToast === 'function') showToast('Уровень обновлён');
+    }).catch(function (err) {
+      if (statusEl) { statusEl.textContent = 'Ошибка: ' + ((err && err.message) ? err.message : err); statusEl.style.color = '#b00020'; }
+    });
+    return;
+  }
   const f = window.ComeOnPlayFirebase;
   const db = f && f.db;
   if (!db || typeof db.collection !== 'function') return;
-  const statusEl = body ? body.querySelector('.admin-level-status[data-uid="' + uid + '"]') : null;
-  if (statusEl) { statusEl.textContent = 'Сохранение…'; statusEl.style.color = '#8a5c7a'; }
   db.collection('users').doc(uid).update({ accessLevel: level }).then(function () {
     if (statusEl) { statusEl.textContent = 'Сохранено: ' + (ADMIN_LEVEL_LABELS[level] || level); statusEl.style.color = '#2e7d32'; }
     if (typeof showToast === 'function') showToast('Уровень обновлён');

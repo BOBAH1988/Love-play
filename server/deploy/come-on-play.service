@@ -1,0 +1,30 @@
+# systemd-юнит бэкенда «Давай играй».
+# Файл — /etc/systemd/system/come-on-play.service
+# Секреты (SMTP, PUBLIC_URL) — в /etc/come-on-play.env, права 600.
+
+[Unit]
+Description=Come on Play backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=comeonplay
+Group=comeonplay
+WorkingDirectory=/srv/come-on-play/server
+EnvironmentFile=/etc/come-on-play.env
+ExecStart=/usr/bin/node src/index.js
+Restart=on-failure
+RestartSec=3
+# Ограничения на случай ошибки в коде: сервер не съест память машины.
+MemoryMax=512M
+TasksMax=64
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# Запись нужна только базе и логам.
+ReadWritePaths=/srv/come-on-play/server/data
+
+[Install]
+WantedBy=multi-user.target

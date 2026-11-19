@@ -1,0 +1,17 @@
+{
+  "name": "come-on-play-server",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Собственный бэкенд «Давай играй»: аккаунты, уровни доступа, реестр игр, статистика",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "migrate": "node src/migrate.js",
+    "verify": "node src/verify-cli.js",
+    "test": "node --test test/",
+    "check": "node --check src/index.js && node --test test/"
+  }
+}

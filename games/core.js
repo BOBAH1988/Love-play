@@ -5187,6 +5187,25 @@ function playHitSound(){
   function getAuth() { const f = getFirebase(); return f && f.auth; }
   function getDb() { const f = getFirebase(); return f && f.db; }
 
+  // Собственный бэкенд (api.js). Пока режим 'firebase', эти обёртки
+  // возвращают null и весь код ниже работает с Firestore как раньше.
+  // Режимы 'dual' и 'server' включается через window.COP_BACKEND.mode.
+  function apiLib() {
+    return (typeof window !== 'undefined' && window.ComeOnPlayApi) || null;
+  }
+  function apiOnServer() {
+    const lib = apiLib();
+    return !!(lib && typeof lib.onServer === 'function' && lib.onServer());
+  }
+  function apiUsesServer() {
+    const lib = apiLib();
+    return !!(lib && typeof lib.usesServer === 'function' && lib.usesServer());
+  }
+  function apiSession() {
+    const lib = apiLib();
+    return lib && typeof lib.currentSession === 'function' ? lib.currentSession() : null;
+  }
+
   function showError(id, msg) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -5271,7 +5290,11 @@ function playHitSound(){
 
   function openAccount() {
     const auth = getAuth();
-    const user = auth && auth.currentUser;
+    const user = apiSession() || (auth && auth.currentUser);
+    if (apiSession() && apiOnServer()) {
+      openAccountServer();
+      return;
+    }
     const guest = document.getElementById('accountGuestView');
     const profile = document.getElementById('accountProfileView');
     if (user) {
@@ -5405,6 +5428,137 @@ function playHitSound(){
   }
 
   function closeAccount() { hideModal('accountModal'); }
+
+  // ===== Экран аккаунта на собственном сервере (api.js, режим 'server') =====
+  // Firestore здесь не участвует. Профиль, уровень и статистика приходят из
+  // GET /api/me — тем же набором полей, что раньше лежал в документе users/{uid}.
+  let serverProfile = null;
+
+  function showServerProfile(session) {
+    const guest = document.getElementById('accountGuestView');
+    const profile = document.getElementById('accountProfileView');
+    if (guest) guest.style.display = 'none';
+    if (profile) profile.style.display = '';
+    profileModified = false;
+    const accountNameEl = document.getElementById('accountProfileName');
+    if (accountNameEl) accountNameEl.value = '';
+    setAccountGender(null);
+    const emailEl = document.getElementById('accountProfileEmail');
+    if (emailEl) emailEl.textContent = (session && session.user && session.user.email) || '';
+    const verifiedEl = document.getElementById('accountProfileVerified');
+    if (verifiedEl) verifiedEl.textContent = (session.user && session.user.emailVerified) ? 'да' : 'нет';
+    const level = (session && session.accessLevel) || 'starter';
+    const levelEl = document.getElementById('accountProfileLevel');
+    const levelRow = document.getElementById('accountProfileLevelRow');
+    const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
+    const accessLevelEl = document.getElementById('accountProfileAccessLevel');
+    const isAdmin = level === 'admin';
+    if (levelEl) {
+      levelEl.style.color = '#2b0f2e';
+      levelEl.textContent = (LEVEL_LABELS_LOCAL && LEVEL_LABELS_LOCAL[level]) || level;
+      if (levelRow) levelRow.style.display = '';
+    }
+    if (accessLevelRow) accessLevelRow.style.display = isAdmin ? '' : 'none';
+    if (accessLevelEl) accessLevelEl.textContent = isAdmin ? 'Администратор' : '';
+    if (session.legacyAuth) {
+      showError('accountProfileError',
+        'Пароль от старого входа не переносится. Выйдите и запросите письмо — ссылка придёт на почту.');
+    }
+    showModal('accountModal');
+  }
+
+  function openAccountServer() {
+    const session = apiSession();
+    if (!session || !session.user) {
+      const guest = document.getElementById('accountGuestView');
+      const profile = document.getElementById('accountProfileView');
+      if (guest) guest.style.display = '';
+      if (profile) profile.style.display = 'none';
+      showError('accountError', '');
+      showModal('accountModal');
+      return;
+    }
+    showServerProfile(session);
+    switchTab('login');
+    const profileEl = document.getElementById('accountProfileSaveBtn');
+    if (profileEl) profileEl.disabled = false;
+  }
+
+  // Вход и регистрация через сервер. Экран общий, отличаются только запросы.
+  function serverLogin(email, password) {
+    showError('accountError', '');
+    manualAuthJustDone = true;
+    return fetch((window.ComeOnPlayApi && window.ComeOnPlayApi.baseUrl ? window.ComeOnPlayApi.baseUrl : '') + '/api/auth/login', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: email, password: password })
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (!res.ok) {
+          const err = new Error(data.error || 'Не удалось войти');
+          err.code = data.code || '';
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+
+  function serverRegister(email, password) {
+    return fetch((window.ComeOnPlayApi && window.ComeOnPlayApi.baseUrl ? window.ComeOnPlayApi.baseUrl : '') + '/api/auth/register', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: email, password: password, isAdult: true })
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (!res.ok) {
+          const err = new Error(data.error || 'Не удалось зарегистрироваться');
+          err.code = data.code || '';
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+
+  function serverLogout() {
+    return fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+      .catch(function () {})
+      .then(function () {
+        if (window.ComeOnPlayApi && window.ComeOnPlayApi.refreshSession) {
+          return window.ComeOnPlayApi.refreshSession();
+        }
+        return null;
+      });
+  }
+
+  function applyServerLevel(session) {
+    const level = (session && session.accessLevel) || 'guest';
+    window.__userAccessLevel = level;
+    window.__userIsAdult = !!(session && session.isAdult);
+    try {
+      localStorage.setItem('__userAccessLevel', level);
+      localStorage.setItem('__userIsAdult', window.__userIsAdult ? 'true' : 'false');
+    } catch (e) {}
+    if (typeof window.renderGroupGames === "function") window.renderGroupGames();
+    if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
+    const btn = document.getElementById('menuStatsBtn');
+    const adminBtn = document.getElementById('menuAdminBtn');
+    const isAdmin = level === 'admin';
+    if (btn) btn.style.display = isAdmin ? '' : 'none';
+    if (adminBtn) adminBtn.style.display = isAdmin ? '' : 'none';
+  }
+
+  function markServerStatsDirty() {
+    try {
+      serverProfile = { dirty: true };
+    } catch (e) {}
+  }
+  if (typeof window !== 'undefined') window.__serverProfileChanged = markServerStatsDirty;
+
+  window.__openAccountModal = openAccount;
 
   function switchTab(tab) {
     const loginForm = document.getElementById('accountLoginForm');
@@ -5744,6 +5898,27 @@ function playHitSound(){
     return db.collection('users').doc(user.uid).collection('app').doc('state');
   }
 
+  // Собственный сервер: то же самое, но через /api/me/state.
+  // В режиме 'dual' сервер только получает копию, чтение идёт из Firebase.
+  function serverSession() {
+    const lib = apiLib();
+    if (!lib || typeof lib.usesServer !== 'function' || !lib.usesServer()) return null;
+    const s = apiSession();
+    return s && s.user ? s : null;
+  }
+
+  function serverSaveState(user) {
+    const lib = apiLib();
+    if (!lib || !lib.state || !serverSession()) return;
+    if (!apiOnServer()) return;
+    const data = serializeState();
+    if (!data) return;
+    if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(function () {
+      lib.state.push(data).catch(function (err) { console.error('server state save error', err); });
+    }, 1200);
+  }
+
   function hasLocalData() {
     try { return !!localStorage.getItem(STORAGE_KEY); } catch (e) { return false; }
   }
@@ -5763,6 +5938,8 @@ function playHitSound(){
 
   function scheduleCloudSave() {
     if (applyingCloud || window.__cloudApplying) return;
+    const srv = serverSession();
+    if (srv) { serverSaveState(srv); return; }
     const auth = getAuth();
     const user = auth && auth.currentUser;
     if (!user) return;
@@ -5780,6 +5957,10 @@ function playHitSound(){
   window.__scheduleCloudSave = scheduleCloudSave;
 
   function pullCloudState(user) {
+    const lib = apiLib();
+    if (lib && lib.state && apiOnServer() && serverSession()) {
+      return lib.state.pull().catch(function (err) { console.error('server state load error', err); return null; });
+    }
     const ref = cloudRefFor(user);
     if (!ref) return Promise.resolve(null);
     return ref.get().then(function (doc) {
@@ -5805,6 +5986,11 @@ function playHitSound(){
   }
 
   function uploadLocalToCloud(user) {
+    const lib = apiLib();
+    if (lib && lib.state && apiOnServer() && serverSession()) {
+      const data = serializeState();
+      return data ? lib.state.push(data).catch(function () {}) : Promise.resolve();
+    }
     const ref = cloudRefFor(user);
     if (!ref) return Promise.resolve();
     const data = serializeState();
