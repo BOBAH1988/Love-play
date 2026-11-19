@@ -68,9 +68,11 @@ div.modal-overlay > .modal-card{
 
 /* Инлайновые тёмные цвета в разметке модалок (правила, сброс, ошибки,
    статистика и т.п.) — перекрываем шрифтовыми цветами для тёмного фона. */
-.modal-card [style*="color:#2b0f2e"],
-.modal-card [style*="color:#5c3a52"],
-.modal-card [style*="color:rgba(43,15,46"]{ color:rgba(255,255,255,.9) !important; }
+.modal-card [style*="color:#2b0f2e"]:not(input):not(select):not(option):not(textarea),
+.modal-card [style*="color:#5c3a52"]:not(input):not(select):not(option):not(textarea),
+.modal-card [style*="color:rgba(43,15,46"]:not(input):not(select):not(option):not(textarea){
+  color:rgba(255,255,255,.9) !important;
+}
 .modal-card [style*="color:#b00020"]{ color:#ff8a9b !important; }
 .modal-card [style*="color:#1b5e20"]{ color:#9be7a8 !important; }
 #accountModal .account-logout{
@@ -93,5 +95,10 @@ div.modal-overlay > .modal-card{
 /* core.js выставляет цвет текста через element.style.color — в атрибуте он
    сериализуется как rgb(43, 15, 46) / rgba(43, 15, 46, …), поэтому прежние
    селекторы по #2b0f2e его не находили (например, «Статистика»). */
-.modal-card [style*="rgb(43, 15, 46)"],
-.modal-card [style*="rgb(43,15,46)"]{ color:rgba(255,255,255,.9) !important; }
+.modal-card [style*="rgb(43, 15, 46)"]:not(input):not(select):not(option):not(textarea),
+.modal-card [style*="rgb(43,15,46)"]:not(input):not(select):not(option):not(textarea){
+  color:rgba(255,255,255,.9) !important;
+}
+/* Поля выбора/ввода в админ-панели и подобных окнах задают свой светлый фон
+   инлайном — текст в них должен остаться тёмным. */
+.modal-card select, .modal-card option{ color:#2b0f2e; }
