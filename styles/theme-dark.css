@@ -39,3 +39,41 @@ div.modal-overlay > .modal-card{
   background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.28);
 }
 .modal-card .btn-ghost{ color:#ffb3cc; }
+
+/* --- Контраст текста внутри тёмных окон ---
+   Многие окна задают цвет текста инлайном (style="color:#2b0f2e") или
+   правилами из account.css — на тёмном фоне это нечитаемо. Поднимаем
+   светлые цвета для текстовых элементов; кнопки и бейджи сохраняют свои. */
+#accountModal .account-hero-title,
+#accountModal .account-hero-sub,
+#accountModal .account-section-title,
+#accountModal .account-field-label,
+#accountModal .account-check,
+#accountModal .account-chip,
+#accountModal .account-note,
+#accountModal .account-field input,
+#accountModal .account-field input::placeholder,
+#accountModal .account-tab{ color:rgba(255,255,255,.92); }
+#accountModal .account-hero-sub,
+#accountModal .account-field-label,
+#accountModal .account-section-title{ color:rgba(255,255,255,.65); }
+#accountModal .account-field input::placeholder{ color:rgba(255,255,255,.4); }
+#accountModal .account-tab.is-on{ color:#2b0f2e; }
+#accountModal .account-field,
+#accountModal .account-row-gender,
+#accountModal .account-consents{ background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.14); }
+#accountModal .account-field:focus-within{ background:rgba(255,255,255,.12); border-color:rgba(255,94,142,.75); }
+#accountModal .account-tabs{ background:rgba(255,255,255,.08); }
+#accountModal .account-field input{ color:#fff !important; }
+
+/* Инлайновые тёмные цвета в разметке модалок (правила, сброс, ошибки,
+   статистика и т.п.) — перекрываем шрифтовыми цветами для тёмного фона. */
+.modal-card [style*="color:#2b0f2e"],
+.modal-card [style*="color:#5c3a52"],
+.modal-card [style*="color:rgba(43,15,46"]{ color:rgba(255,255,255,.9) !important; }
+.modal-card [style*="color:#b00020"]{ color:#ff8a9b !important; }
+.modal-card [style*="color:#1b5e20"]{ color:#9be7a8 !important; }
+#accountModal .account-logout{
+  color:#ff8a9b; border-color:rgba(255,138,155,.5); background:rgba(255,138,155,.06);
+}
+#accountModal .account-logout:hover{ background:rgba(255,138,155,.14); }
