@@ -4720,3 +4720,16 @@ body.video-pseudo-fs-active .video-fs-exit{
   color:#fff; font-size:18px; line-height:1; cursor:pointer;
   -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
 }
+
+/* Смена ролика в псевдополном экране — слайдом, без затемнения и нативных
+   кнопок плеера (они на iOS оставались поверх кадра после короткого видео). */
+@keyframes videoSlideIn{
+  from{ transform:translateX(100%); opacity:.6; }
+  to{ transform:translateX(0); opacity:1; }
+}
+body.video-pseudo-fs-active #videoPlayer.video-slide-in,
+body.video-pseudo-fs-active #davayPlayer.video-slide-in{
+  animation:videoSlideIn .24s ease-out;
+}
+/* Нативные контролы в этом режиме не нужны — пауза тапом по видео. */
+body.video-pseudo-fs-active video::-webkit-media-controls{ display:none !important; }

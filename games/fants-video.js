@@ -318,10 +318,10 @@ function enterPseudoFullscreen(){
   const cardEl = document.getElementById('card');
   if(!cardEl) return;
   document.body.classList.add('video-pseudo-fs-active');
+  // Нативные контролы НЕ включаем: на iOS после короткого ролика они
+  // оставляют затемнённый экран с кнопками. Пауза — тапом по видео.
   const video = getActiveGameVideoEl();
-  // В системном плеере iOS кнопки есть, а в нашем полноэкранном режиме их
-  // не было бы: включаем нативные контролы, чтобы можно было поставить паузу.
-  if(video) video.controls = true;
+  if(video) video.controls = false;
 }
 function exitPseudoFullscreen(){
   document.body.classList.remove('video-pseudo-fs-active');
@@ -392,6 +392,14 @@ function toggleVideoFullscreen(){
 document.getElementById('videoFullscreenBtn').addEventListener('click', toggleVideoFullscreen);
 // Выход из псевдополного экрана: кнопка ⛶ остаётся под карточкой, поэтому
 // сверху показывается отдельный крестик (см. .video-fs-exit).
+// В псевдополном экране нативных контролов нет, пауза — тапом по видео.
+document.addEventListener('click', (e) => {
+  if(!isPseudoFullscreenActive()) return;
+  const video = e.target && e.target.closest ? e.target.closest('#videoPlayer, #davayPlayer') : null;
+  if(!video) return;
+  if(video.paused){ const p = video.play(); if(p && p.catch) p.catch(()=>{}); }
+  else video.pause();
+});
 const videoFsCloseBtn = document.getElementById('videoFsCloseBtn');
 if(videoFsCloseBtn) videoFsCloseBtn.addEventListener('click', exitPseudoFullscreen);
 
@@ -965,9 +973,15 @@ function hideVideoCardLoading(){
 // элементу (reuse=true), а не только к только что вставленному через
 // innerHTML (reuse=false). См. причину в renderVideoCard ниже.
 function setupVideoPlayerElement(video, card, level, reuse){
-  // В псевдополном экране карточка перерисовывается при смене ролика —
-  // нативные контролы нужно включить заново.
-  if(typeof isPseudoFullscreenActive === 'function' && isPseudoFullscreenActive()) video.controls = true;
+  // В псевдополном экране ролик меняется без пересборки карточки:
+  // контролы держим выключенными, а появление нового кадра оформляем
+  // слайдом справа налево — как перелистывание.
+  if(typeof isPseudoFullscreenActive === 'function' && isPseudoFullscreenActive()){
+    video.controls = false;
+    video.classList.remove('video-slide-in');
+    void video.offsetWidth;
+    video.classList.add('video-slide-in');
+  }
   // Антихотлинк Яндекса: запрос видео с чужим доменом в Referer получает 403,
   // без Referer — 206. Ставим политику и на элементе тоже (не только в теге и
   // <meta>): элемент может быть переиспользован, а свойство надёжнее атрибута.
