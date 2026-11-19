@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>План: свой бэкенд для «Давай играй»</title>
+<style>
+:root{
+  --bg:#F0F4F8; --ink:#111111; --muted:#666769; --accent:#3A7CB8; --line:#D5D9DC;
+  --alarm:#B3261E;
+  --mono:"SF Mono",Consolas,"DejaVu Sans Mono",monospace;
+  --sans:-apple-system,"Segoe UI","Noto Sans","DejaVu Sans",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--sans); font-size:16px; line-height:1.55;
+  padding:32px 20px 64px;
+}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:30px;line-height:1.2;margin:0 0 8px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:15px;margin:0 0 24px;max-width:70ch}
+h2{
+  font-size:21px;margin:44px 0 6px;letter-spacing:-.005em;
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+}
+h2 .n{
+  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);
+  border:1px solid var(--line);background:#fff;border-radius:4px;padding:1px 7px;
+}
+h3{font-size:15px;margin:26px 0 8px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:700}
+p{margin:0 0 12px;max-width:78ch}
+a{color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:.92em}
+
+/* шапка: цифры */
+.strip{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:0 0 8px;
+}
+.strip div{background:#fff;padding:12px 14px}
+.strip b{display:block;font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:-.02em}
+.strip span{display:block;color:var(--muted);font-size:12px;line-height:1.35;margin-top:3px}
+.blank{border-bottom:1.5px dashed var(--muted);color:var(--muted);min-width:34px;display:inline-block;text-align:center}
+.strip b.blank{font-weight:400;color:var(--muted);border-bottom:none}
+
+/* чек-листы */
+ul.check{list-style:none;margin:0 0 4px;padding:0}
+ul.check>li{
+  position:relative;padding:9px 0 9px 32px;border-bottom:1px solid var(--line);
+  break-inside:avoid;
+}
+ul.check>li:last-child{border-bottom:none}
+ul.check input[type=checkbox]{
+  position:absolute;left:0;top:13px;width:16px;height:16px;
+  accent-color:var(--accent);cursor:pointer;
+}
+ul.check .why{display:block;color:var(--muted);font-size:13.5px;line-height:1.45;margin-top:2px}
+ul.check .why .mono{color:var(--muted)}
+.crit>li::after{
+  content:"";position:absolute;left:-8px;top:11px;bottom:10px;width:3px;
+  background:var(--alarm);border-radius:2px;
+}
+.crit>li{padding-left:36px}
+.crit>li .crit-mark{
+  color:var(--alarm);font-family:var(--mono);font-size:11px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:1px;
+}
+
+/* фазы */
+.phase{border-left:2px solid var(--accent);padding:2px 0 2px 14px;margin:22px 0 6px}
+.phase .tag{
+  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.phase .goal{color:var(--muted);font-size:14px;margin-top:2px}
+
+/* таблицы */
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:10px 0 18px;background:#fff}
+caption{caption-side:top;text-align:left;color:var(--muted);font-size:13px;padding:0 0 6px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#E7EDF3;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);font-weight:700}
+thead{display:table-header-group}
+tr{break-inside:avoid}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr.drop td{color:var(--muted)}
+tr.drop td:first-child{text-decoration:line-through}
+.pick{background:#EAF2FA}
+.pick td:first-child::after{content:" ← берём";color:var(--accent);font-weight:700;font-family:var(--mono);font-size:12px}
+tfoot td{background:#E7EDF3;font-weight:700}
+
+/* структурный центр */
+.axis{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:14px 0 10px;
+}
+.axis>div{background:#fff;padding:14px}
+.axis .head{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.axis .title{font-weight:700;margin:4px 0 6px;font-size:15px}
+.axis p{font-size:13.5px;color:var(--muted);margin:0 0 6px}
+.axis .gate{
+  grid-column:1/-1;background:#FBEEEC;border-top:2px solid var(--alarm);
+  padding:12px 14px;font-size:14px;
+}
+.axis .gate b{color:var(--alarm);font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:3px}
+
+/* врезки */
+.note{background:#fff;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:4px;padding:12px 14px;margin:12px 0 18px;font-size:14.5px}
+.note.warn{border-left-color:var(--alarm)}
+.note .h{font-weight:700;margin-bottom:4px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cols2>div{background:#fff;border:1px solid var(--line);border-radius:4px;padding:12px 14px}
+.cols2 .h{font-weight:700;margin-bottom:6px;font-size:14.5px}
+.cols2 .bad .h{color:var(--alarm)}
+.cols2 .good .h{color:var(--accent)}
+.cols2 ul{margin:0;padding-left:18px;font-size:14px}
+.cols2 li{margin-bottom:6px}
+section{break-inside:avoid-page}
+footer{
+  margin-top:52px;padding-top:16px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:13px;line-height:1.5;
+}
+footer p{margin:0 0 8px;max-width:88ch}
+.questions{counter-reset:q;margin:8px 0 0;padding:0;list-style:none}
+.questions li{
+  counter-increment:q;position:relative;padding:8px 0 8px 30px;
+  border-bottom:1px solid var(--line);font-size:14.5px;
+}
+.questions li::before{
+  content:counter(q);position:absolute;left:0;top:8px;
+  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);
+  border:1px solid var(--line);border-radius:3px;padding:0 5px;background:#fff;
+}
+.questions .why{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+
+@media (max-width:760px){
+  .strip{grid-template-columns:1fr 1fr}
+  .axis{grid-template-columns:1fr}
+  .axis .head{display:block}
+  .cols2{grid-template-columns:1fr}
+  table{font-size:13.5px}
+  th,td{padding:6px 8px}
+}
+@media print{
+  body{background:#fff;padding:0;font-size:11.5pt}
+  .wrap{max-width:none}
+  h2{margin-top:26px}
+  .note,.cols2>div,table{box-shadow:none}
+  a{color:var(--ink)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Свой бэкенд для «Давай играй»: план выхода из Firebase</h1>
+<p class="sub">Рабочий документ для исполнения, а не для чтения. Ветка <span class="mono">backend</span> создана от <span class="mono">main</span> на коммите <span class="mono">v1.1.797</span> (17.11.2026) — изменения начинаются с неё. Дальше всё, что нужно решить до первой строки кода, лежит здесь.</p>
+
+<div class="strip">
+  <div><b>4</b><span>коллекции Firestore сейчас</span></div>
+  <div><b>3</b><span>экрана на запрос «прочитать всех пользователей»</span></div>
+  <div><b class="blank">—</b><span>срок «ближайшее время» (заполнить)</span></div>
+  <div><b class="blank">—</b><span>бюджет на сервер, ₽/мес</span></div>
+  <div><b class="blank">—</b><span>пользователей сейчас</span></div>
+</div>
+
+<div class="note warn">
+  <div class="h">Что сломается, если просто выключить Firebase</div>
+  Вход в аккаунт, уровни доступа, подтверждение 18+, реестр игр и групп игр, админ-панель,
+  статистика по всем пользователям и «Заявки на доступ». Плюс само приложение грузится
+  с трёх скриптов <span class="mono">gstatic.com</span> — без интернета к Google оно вообще не стартует.
+  Ещё: открытый доступ <span class="mono">accessRequests</span> (читать и писать может любой авторизованный) не переезжает в новый сервер как есть.
+</div>
+
+<h2><span class="n">01</span>Порядок: что должно быть верно раньше чего</h2>
+<p>Ось «до / во время / после» — потому что главный риск здесь не в коде, а в передаче между этапами: старый и новый бэкенд какое-то время работают одновременно, и пользователь не должен это заметить.</p>
+
+<section>
+<div class="axis">
+  <div>
+    <div class="head">До</div>
+    <div class="title">Двойная запись</div>
+    <p>Клиент пишет в оба бэкенда, читает пока из Firebase. Миграция данных идёт в фоне и повторяется, пока расхождения не станут нулевыми.</p>
+    <p>Здесь же — вход по e-mail и паролю на своём сервере и перенос самих аккаунтов: пароли Firebase отдать не может, значит пользователь либо меняет пароль, либо входит по ссылке на почту.</p>
+  </div>
+  <div>
+    <div class="head">Во время</div>
+    <div class="title">Переключение чтения</div>
+    <p>Читаем уже из своего. Firebase остаётся горячим резервом и источником сравнения. Так проверяется, что мы не потеряли ни одной записи доступа.</p>
+  </div>
+  <div>
+    <div class="head">После</div>
+    <div class="title">Отключение и уборка</div>
+    <p>Убираем теги <span class="mono">gstatic.com</span>, конфиг Firebase и правила Firestore. Сайт снова ставится офлайн, как обещает PWA.</p>
+  </div>
+  <div class="gate">
+    <b>Точка невозврата</b>
+    Истечение домена Firebase и удаление проекта — только после того, как неделю нет ошибок в логах и есть проверенная копия экспорта Firestore у вас на руках. До этого момента возврат — это правка одной строки в клиенте.
+  </div>
+</div>
+</section>
+
+<h2><span class="n">02</span>Этап 0: инвентаризация и сервер</h2>
+<p>Здесь пока больше вопросов, чем ответов. Это нормально: пункты с прочерком заполняются за десять минут, а не додумываются.</p>
+
+<div class="phase"><span class="tag">за неделю до первого кода</span><div class="goal">Понять, что именно вы переносите, и на чём это будет крутиться.</div></div>
+<section>
+<ul class="check crit">
+  <li>
+    <span class="crit-mark">блокирует</span>
+    <input type="checkbox"> Выбрать сервер и оплатить, не разворачивая пока приложение
+    <span class="why">Нужно решить тремя параметрами: страна и юрисдикция (см. 152-ФЗ ниже), ОС и память. Для этого проекта хватает 2 vCPU / 4 ГБ / 40 ГБ SSD — это оценка, а не подобранный тариф. Нужен и бэкап сервера у провайдера, и собственный раз в сутки; один бэкап — это не бэкап.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Определить домен приложения и домен API
+    <span class="why">Если приложение остаётся на <span class="mono">bobah1988.github.io</span>, API живёт на другом домене — понадобится CORS и cookies с <span class="mono">SameSite</span>. Проще отдать и само приложение со своего сервера: тогда CORS исчезает, а GitHub Pages остаётся как архив.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Составить таблицу «что сейчас держится на Firebase» и сверить с кодом
+    <span class="why">Готовая заготовка ниже — под неё уже прошерстён проект. Добавьте туда сервисы, о которых я не знаю: почта для писем, оплата, SMS, карты, аналитика.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Экспортировать Firestore в JSON до любых изменений
+    <span class="why">Это единственная копия данных, которая не зависит ни от одного сервиса. Хранить в двух местах, одну — офлайн. Формат нужен для проверки миграции и как страховка.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Проверить, кто и что владеет аккаунтом Firebase и доменом
+    <span class="why">Домен <span class="mono">come-on-play-b4fa1.firebaseapp.com</span>, проект, адрес с паролем — если оплата или аккаунт привязаны к другому человеку, доступ потеряется в самый неудобный момент.</span>
+  </li>
+</ul>
+</section>
+
+<h3>Что держится на Firebase сейчас (по коду)</h3>
+<table>
+  <caption>Единственная внешняя система, ради которой нужен бэкенд. Колонка «где» — файл и строка, чтобы не искать заново.</caption>
+  <thead>
+    <tr><th>Что</th><th>Кто вызывает</th><th>Что переносим</th><th>Куда</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Вход, e-mail, пароль</td><td><span class="mono">core.js:5186</span></td><td>Аккаунты: почта, имя, пол, дата рождения, уровень</td><td>таблица пользователей</td></tr>
+    <tr><td>Уровни доступа и 18+</td><td><span class="mono">core.js:5028, 5051</span></td><td>Роль и возраст — перенос как есть</td><td>таблица пользователей</td></tr>
+    <tr><td>Реестр игр и групп</td><td><span class="mono">core.js:~5160</span></td><td>Документы <span class="mono">games</span> и <span class="mono">gameGroups</span> с флагом <span class="mono">enabled</span> и <span class="mono">accessLevel</span></td><td>таблица игр + публичное чтение</td></tr>
+    <tr><td>Личная статистика</td><td><span class="mono">fants-timer.js:495–506</span></td><td>Поле <span class="mono">gameStats</span> в документе пользователя; пишется через <span class="mono">set(…, merge)</span></td><td>таблица статистики</td></tr>
+    <tr><td>Статистика всех пользователей</td><td><span class="mono">fants-timer.js:508–600</span></td><td>Читает <b>все</b> документы пользователей и складывает в браузере</td><td>серверный агрегат</td></tr>
+    <tr><td>Общая статистика (24ч/7д/30д)</td><td><span class="mono">fants-timer.js:600–690</span></td><td>Тоже выгрузка всех пользователей в админку</td><td>серверный агрегат</td></tr>
+    <tr><td>Админ-панель</td><td><span class="mono">fants-timer.js:690+</span></td><td>Список пользователей, смена уровня</td><td>защищённые методы</td></tr>
+    <tr><td>Заявки на доступ</td><td><span class="mono">firestore.rules:44</span></td><td>Правило «читать и писать может любой авторизованный» — так не переносим</td><td>таблица заявок + проверка</td></tr>
+    <tr><td>SDK приложения</td><td><span class="mono">index.html:128–130</span></td><td>Скрипты <span class="mono">gstatic.com</span> грузятся до запуска</td><td>локально, в SW</td></tr>
+  </tbody>
+</table>
+<p>Поиск по проекту дал ещё три внешних адреса: <span class="mono">disk.yandex.ru</span> и <span class="mono">cloud-api.yandex.net</span> (файлы, если это ваши — проверить, нужны ли на сервере), <span class="mono">clck.ru</span> (сокращение ссылок). Если картинки и файлы сейчас лежат в Яндекс.Диске, это второй кандидат на перенос — но не в первую очередь.</p>
+
+<h2><span class="n">03</span>Этап 1: каркас бэкенда</h2>
+<p>Технология выбирается под ваш навык, а не под тренд: это небольшая система, её будете держать вы. Ниже — сравнение по осям, которые здесь действительно решают.</p>
+
+<table>
+  <caption>Варианты стека. Требование №1 — вход по e-mail и паролю с bcrypt/argon2, сессия в httpOnly-cookie, без внешнего сервиса авторизации.</caption>
+  <thead>
+    <tr><th>Стек</th><th>Что это на самом деле</th><th>Кому подходит</th><th>Чего не даёт</th></tr>
+  </thead>
+  <tbody>
+    <tr class="pick">
+      <td>Node.js + Fastify + SQLite</td>
+      <td>Тот же язык, что в проекте. Один файл базы, бэкап — копия файла. Запись в один поток, этого хватает на десятки тысяч пользователей.</td>
+      <td>Один разработчик, знакомый с JS</td>
+      <td>Нет привычных миграций «из коробки» — вести вручную</td>
+    </tr>
+    <tr>
+      <td>Python + FastAPI + PostgreSQL</td>
+      <td>Самый предсказуемый путь на странице и для сервера, и для будущих доработок.</td>
+      <td>Если знаете Python лучше, чем JS</td>
+      <td>Второй язык в проекте, второй набор инструментов</td>
+    </tr>
+    <tr>
+      <td>Node.js + PostgreSQL</td>
+      <td>То же, что выше по языку, но отдельная база — если понадобятся сложные отчёты по статистике.</td>
+      <td>Если ожидаете больше агрегатов и отчётов</td>
+      <td>Дольше ставить, чинить и бэкапить</td>
+    </tr>
+    <tr class="drop">
+      <td>Supabase / PocketBase</td>
+      <td>Готовый бэкенд «под ключ», почти копия Firebase — противоречит самой цели «уйти от зависимости от других систем».</td>
+      <td>Не подходит для этой задачи</td>
+      <td>Смена одной зависимости на другую, со своим хостингом и аккаунтом</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="phase"><span class="tag">2–3 недели</span><div class="goal">Работает вход, чтение реестра игр и запись личной статистики. Ещё ничего не переключено.</div></div>
+<section>
+<ul class="check">
+  <li>
+    <input type="checkbox"> Развернуть сервер: firewall, SSH по ключу, отдельный пользователь, автоматические обновления
+    <span class="why">Открытыми наружу должны быть только 80 и 443. Панель управления на сервер не ставится: она сама становится дверью.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Поднять обратный прокси (Caddy) с автоматическим HTTPS
+    <span class="why">Приложение и API на одном домене решает CORS. Если домен приложения останется чужим — сразу закладывайте список разрешённых источников, а не <span class="mono">*</span>.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Схема базы: пользователи, статистика, игры, группы игр, заявки
+    <span class="why">Номера строк соответствуют таблице в разделе 02. Поля — те же имена, что в Firestore, чтобы миграция была копированием, а не переписыванием.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Вход и регистрация с собственным хешированием пароля
+    <span class="why">argon2id или bcrypt. Сессия — httpOnly, Secure, SameSite=Lax, срок жизни две недели, отзыв по кнопке «Выйти на всех устройствах». Ни одного стороннего SDK авторизации.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Права проверяются на сервере, а не в браузере
+    <span class="why">Сейчас уровень доступа лежит в <span class="mono">window.__userAccessLevel</span>, и его можно подменить в консоли разработчика. Кто такие <span class="mono">starter / plus / premium / admin</span> и какое правило у каждой игры, должен знать сервер. Иначе перенос воспроизведёт ту же дыру.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Клиентский переход с Firestore на собственное API — расставить функции в одном месте
+    <span class="why">Сейчас обращения размазаны: <span class="mono">core.js</span> в трёх местах и <span class="mono">fants-timer.js</span> в шести. Первый шаг — не менять вызовы, а сделать адаптер <span class="mono">api.js</span> с методами <span class="mono">login / getGames / saveStats / listUsers</span>, чтобы переключение было в одном файле.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Лимиты запросов и лог ошибок
+    <span class="why">Сейчас <span class="mono">accessRequests</span> открыт на чтение и запись — на своём сервере это отличный способ залить базу мусором. Ограничение на IP и на аккаунт, лог ошибок в файл с ротацией на неделю.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Проверить шаблон: <span class="mono">node tools/check.js</span> и <span class="mono">node tools/smoke-test.js</span> проходят после правок клиента
+    <span class="why">Проект уже проверяет себя 298 и 147 сценариями. После каждого шага переноса — оба, иначе сломанное найдётся у пользователя, а не у вас.</span>
+  </li>
+</ul>
+</section>
+
+<h2><span class="n">04</span>Этап 2: миграция данных</h2>
+<div class="phase"><span class="tag">1–2 недели</span><div class="goal">Данные перенесены, расхождения нулевые, аккаунты работают без Firebase Auth.</div></div>
+<section>
+<ul class="check crit">
+  <li>
+    <span class="crit-mark">самый скользкий шаг</span>
+    <input type="checkbox"> Решить, как переносятся пароли — и выяснить это до объявления переезда
+    <span class="why">Firebase не отдаёт хеши паролей. Варианты: (а) «забыли пароль» по ссылке на почту для всех — просто и честно; (б) поддерживать оба способа входа, пока активные не сменят пароль. Вариант (в) — оставить Google-вход — оставляет зависимость, ради которой всё и затевается.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Скрипт переноса: Firestore → своя база, с журналом числа записей
+    <span class="why">Считаем по каждой коллекции: прочитано, записано, пропущено. Совпадение чисел — минимальный признак, а не доказательство.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Сверка после переноса по содержимому, а не только по количеству
+    <span class="why">Хоть один несовпавший документ — повторить перенос. Идентификаторы пользователей сохранить как есть: на них ссылаются статистика и заявки.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Двойная запись и допуск расхождений
+    <span class="why">Пока живут оба бэкенда, клиент пишет в оба; расхождения показываются в админке. Ноль на экране — критерий, а не ощущение.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Проверить <span class="mono">gameStats</span>, которую <span class="mono">set(…, merge)</span> сливал поверх
+    <span class="why">Слияние в Firestore — не перезапись. Если переносить простым <span class="mono">INSERT</span>, поздние записи затрут ранние, а структура <span class="mono">games / totalMs / exits</span> в статистике разная. Это самый вероятный источник потерь.</span>
+  </li>
+</ul>
+</section>
+
+<h2><span class="n">05</span>Этап 3: переключение и выход</h2>
+<div class="phase"><span class="tag">1 неделя + 7 дней наблюдения</span><div class="goal">Firebase не нужен ни для чего.</div></div>
+<section>
+<ul class="check">
+  <li>
+    <input type="checkbox"> Переключить чтение на свой сервер, оставить Firebase как резерв на две недели
+    <span class="why">Откат — одна строка в клиенте, если сломалось что-то в админке.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Убрать скрипты <span class="mono">gstatic.com</span> и <span class="mono">firebase-config.js</span> из <span class="mono">index.html</span>
+    <span class="why">До этой строки приложение без интернета к Google не открывается — офлайн-режим PWA не работает по факту. Вероятно, здесь офлайн и начнёт работать впервые.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Обновить Service Worker и версию приложения
+    <span class="mono">CACHE_NAME</span> и <span class="mono">APP_BUILD</span> поднимаются вместе, <span class="mono">sw.js</span> не версионируется — это правило уже записано в AGENTS.md, здесь его легко нарушить.
+    <span class="why">Проверяется автоматически в <span class="mono">tools/check.js</span>.</span>
+  </li>
+  <li>
+    <input type="checkbox"> Удалить <span class="mono">firestore.rules</span> и проект Firebase — после недели без ошибок
+    <span class="why">Отметка в календаре и одно подтверждение со стороны: не по ощущению «вроде всё хорошо».</span>
+  </li>
+  <li>
+    <input type="checkbox"> Сверить документацию: README и правила игры
+    <span class="why">В проекте это обязательный шаг перед коммитом. Регистрация, уровни и 18+ меняются заметно, значит — правила игры и журнал изменений.</span>
+  </li>
+</ul>
+</section>
+
+<h2><span class="n">06</span>Ресурсы</h2>
+<table>
+  <caption>Оценка, а не смета. Стоимость сервера без даты проверки — не стоимость.</caption>
+  <thead>
+    <tr><th>Что</th><th class="num">Экономно</th><th class="num">Комфортно</th><th>Чем платим</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Сервер</td><td class="num">— ₽/мес</td><td class="num">— ₽/мес</td><td>Тариф уточнить у провайдера на выбранной площадке</td></tr>
+    <tr><td>Домен</td><td class="num">—</td><td class="num">—</td><td>Уже есть или отдельный</td></tr>
+    <tr><td>Бэкапы</td><td class="num">включено провайдером</td><td class="num">хранение 30 дней</td><td>Хранение копий — отдельная строка</td></tr>
+    <tr><td>Почта для паролей</td><td class="num">— ₽/мес</td><td class="num">— ₽/мес</td><td>Нужен собственный SMTP, иначе восстановление пароля невозможно</td></tr>
+    <tr><td>Время разработки</td><td class="num">5–7 недель</td><td class="num">3–4 недели</td><td>Один человек, самостоятельная работа; с подрядчиком — плюс согласования</td></tr>
+    <tr><td>Время после запуска</td><td class="num">1–2 ч/мес</td><td class="num">2–4 ч/мес</td><td>Обновления ОС, просмотр логов, проверка бэкапа</td></tr>
+  </tbody>
+</table>
+<p>Строка «время после запуска» — главная. Свой сервер — это не разовое дело: раз в месяц нужно зайти и посмотреть, живы ли бэкап и обновления. Если этого не будет, сервер сломается через полгода, а не через год.</p>
+
+<h2><span class="n">07</span>Что ломается и что тогда делать</h2>
+<section>
+<div class="cols2">
+  <div>
+    <div class="h">Реальные риски</div>
+    <ul>
+      <li><b>Пароли не переносятся.</b> Классика. План: письмо о новом входе заранее, ветка «забыли пароль» готова к дню переезда.</li>
+      <li><b>Потеря статистики при слиянии.</b> Проверять сверкой содержимого, а не числа строк.</li>
+      <li><b>Сервер упал ночью.</b> Мониторинг — проверка ответа раз в пять минут и письмо вам. Без этого об отказе узнают пользователи.</li>
+      <li><b>152-ФЗ.</b> Храните почты, имена и даты рождения — это персональные данные. Если сервер за границей, это отдельная юридическая проблема. Российская площадка снимает вопрос.</li>
+    </ul>
+  </div>
+  <div class="bad">
+    <div class="h">Порог: решаю сам / зову человека</div>
+    <ul>
+      <li><b>Сам:</b> упавшая база, отчёт об ошибке, обновление.</li>
+      <li><b>Сам, но с паузой:</b> любое действие с доменом и с аккаунтом Firebase.</li>
+      <li><b>Зову человека:</b> перенос параллельно, если миграция дважды дала расхождения, — не чинить на живой базе.</li>
+      <li><b>Стоп-сигнал:</b> если после переключения чтения появились ошибки в админке — вернуть чтение из Firebase до разбора.</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<h2><span class="n">08</span>Что говорить и чего не говорить</h2>
+<section>
+<div class="cols2">
+  <div class="good">
+    <div class="h">Работает</div>
+    <ul>
+      <li>«Данные переезжают на собственный сервер. Возможно, придётся заново войти — пришлём письмо со ссылкой».</li>
+      <li>«Статистика сохранится. Если что-то пропадёт, напишите — восстановим».</li>
+      <li>«Если у вас есть вопросы — вот адрес».</li>
+    </ul>
+  </div>
+  <div class="bad">
+    <div class="h">Тихо всё портит</div>
+    <ul>
+      <li>«Всё будет как раньше» — пароли придётся менять, и об этом лучше сказать до, а не после.</li>
+      <li>«Техническое обновление» — люди не понимают, почему пропал вход и уровень доступа.</li>
+      <li>Обещать срок, если он не проверен. Малейшая ошибка в дате — и доверие к переезду уходит.</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<h2><span class="n">09</span>Что я сделал в репозитории</h2>
+<section>
+<p>Ветка <span class="mono">backend</span> создана от <span class="mono">main</span> и переключена. Кода в ней пока нет — это было бы преждевременным решением до выбора стека. Первый коммит в ней — этот документ:</p>
+<ul class="check">
+  <li><input type="checkbox"> <span class="mono">plan-backend.html</span> — в корне ветки <span class="mono">backend</span>
+    <span class="why">Этот файл. Открывается в предпросмотре и печатается.</span></li>
+  <li><input type="checkbox"> После ответа на вопросы в подвале — коммит «добавить план переезда бэкенда»
+    <span class="why">Сообщение на русском, по правилам проекта. В игру сам план не включается: <span class="mono">index.html</span> и <span class="mono">sw.js</span> не тронуты, версия не поднималась — ломать кэш незачем.</span></li>
+</ul>
+</section>
+
+<h2><span class="n">10</span>Что уточнить — три вопроса, ответы на которые меняют содержание</h2>
+<ol class="questions">
+  <li>Срок «ближайшее время» — это две недели или два-три месяца?
+    <span class="why">От этого зависит, делаете ли вы всё подряд и успеваете ли к дате, или закладываете майский период с двойной записью.</span></li>
+  <li>Самый болезненный сервис для замены — почта, оплата, файлы или база?
+    <span class="why">По коду я вижу базу и вход. Но в проекте упоминаются Диск и ещё пара сервисов — что из них держит вас сильнее всего?</span></li>
+  <li>Сервер — в России или за границей, и вы уже выбрали хостинг?
+    <span class="why">Персональные данные (почта, имя, дата рождения) на зарубежном сервере — если это так, юридическая часть встаёт впереди технической, и порядок в разделе 02 придётся перевернуть.</span></li>
+</ol>
+
+<footer>
+  <p><b>Проверено.</b> Код проекта, ветка <span class="mono">backend</span> от <span class="mono">main</span> (17.11.2026), <span class="mono">firebase-config.js</span>, <span class="mono">firestore.rules</span>, места вызова Firebase в <span class="mono">games/core.js</span> и <span class="mono">games/fants-timer.js</span>, внешние адреса в проекте. Сегодня — 19.11.2026.</p>
+  <p><b>Не проверено.</b> Цены и тарифы хостинга, требования юрисдикции к персональным данным, состояние аккаунта Firebase и доменов. Это заполняется до траты денег, а не по памяти.</p>
+  <p><b>Отметки в чек-листах не сохраняются</b>: предпросмотр HTML работает в песочнице без хранилища. Файл рассчитан на чтение и печать — распечатайте его, если будете вести план на бумаге.</p>
+</footer>
+
+</div>
+</body>
+</html>
