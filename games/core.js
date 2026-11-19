@@ -5873,6 +5873,14 @@ function playHitSound(){
     if (gender !== null) profileData.gender = gender;
     if (age !== null) profileData.age = age;
     if (!Object.keys(profileData).length) return Promise.resolve();
+    // Собственный сервер: профиль сохраняется в своей базе. Firebase при этом
+    // не вызывается — пользователь в режиме 'server' не авторизован через него.
+    const lib = apiLib();
+    if (lib && lib.profile && apiOnServer() && serverSession()) {
+      return lib.profile.save(profileData).catch(function (err) {
+        console.error('server profile save error', err);
+      });
+    }
     // Сначала быстро сохраняем введённое — это главное, что вводит пользователь.
     // Не ждём чтения документа, чтобы запись не висела на плохой сети и успевала
     // завершиться до обновления страницы.
