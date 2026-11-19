@@ -737,20 +737,20 @@ function renderSnap(snap) {
        const genderIcon = gender === 'M' ? '♂' : (gender === 'F' ? '♀' : '');
       let level = String(d.accessLevel || 'starter').toLowerCase().trim();
       if (levels.indexOf(level) < 0) level = 'starter';
-      html += '<div style="border:1px solid rgba(43,15,46,.12); border-radius:10px; padding:6px 8px; background:rgba(255,255,255,.35);">';
+      html += '<div style="border:1px solid rgba(255,255,255,.16); border-radius:10px; padding:6px 8px; background:rgba(255,255,255,.07);">';
       html += '<div style="display:flex; align-items:center; gap:8px; justify-content:space-between; margin-bottom:4px;">';
       html += '<div style="font-weight:700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + email + '</div>';
-      if (name) html += '<div style="font-size:12px; color:#5c3a52; text-align:right;">' + name + (genderIcon ? ' ' + genderIcon : '') + (d.age ? ' ' + d.age : '') + '</div>';
+      if (name) html += '<div style="font-size:12px; color:rgba(255,255,255,.7); text-align:right;">' + name + (genderIcon ? ' ' + genderIcon : '') + (d.age ? ' ' + d.age : '') + '</div>';
       html += '</div>';
       html += '<div style="display:flex; align-items:center; gap:6px;">';
-      html += '<select class="admin-level-select" data-uid="' + escHtmlAdmin(u.uid) + '" style="flex:1; min-width:0; padding:4px 6px; border-radius:8px; border:1px solid rgba(43,15,46,.2); background:#fff; color:#2b0f2e;">';
+      html += '<select class="admin-level-select" data-uid="' + escHtmlAdmin(u.uid) + '" style="flex:1; min-width:0; padding:4px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.1); color:#fff;">';
       levels.forEach(function (lvl) {
-        html += '<option value="' + lvl + '"' + (lvl === level ? ' selected' : '') + ' style="background:#fff; color:#2b0f2e;">' + (ADMIN_LEVEL_LABELS[lvl] || lvl) + '</option>';
+        html += '<option value="' + lvl + '"' + (lvl === level ? ' selected' : '') + ' style="background:#3a1740; color:#fff;">' + (ADMIN_LEVEL_LABELS[lvl] || lvl) + '</option>';
       });
       html += '</select>';
       html += '<button type="button" class="btn btn-primary admin-save-level-btn" data-uid="' + escHtmlAdmin(u.uid) + '" style="padding:4px 10px; font-size:13px; width:auto; min-width:0;">ОК</button>';
       html += '</div>';
-      html += '<div class="admin-level-status" data-uid="' + escHtmlAdmin(u.uid) + '" style="font-size:12px; margin-top:2px; color:#8a5c7a;"></div>';
+      html += '<div class="admin-level-status" data-uid="' + escHtmlAdmin(u.uid) + '" style="font-size:12px; margin-top:2px; color:rgba(255,255,255,.6);"></div>';
       html += '</div>';
     });
     html += '</div>';
