@@ -4675,3 +4675,48 @@
 #videoRandomBtn:not(.active) svg,
 #videoLoopBtn:not(.active) svg{ opacity:.75; }
 #videoRandomBtn.active, #videoLoopBtn.active{ border-color:rgba(255,255,255,.5); }
+
+/* ===== Псевдополный экран видео (iPhone/iPad) =====
+   Системный плеер iOS всегда вписывает ролик целиком, поэтому в вертикальном
+   положении сверху и снизу оставались чёрные полосы. Вместо системного
+   плеера разворачиваем саму карточку на весь экран: кадрирование задаёт CSS,
+   и оно работает в PWA. В портрете видео заполняет экран по высоте с
+   подрезкой боков (cover, как в TikTok), в ландшафте — целиком (contain). */
+/* .card-area задаёт perspective для 3D-анимации карточки; перспектива
+   делает её контейнером для position:fixed, и «полный экран» ограничивался
+   её размерами. В псевдополном экране перспектива не нужна. */
+body.video-pseudo-fs-active .card-area{ perspective:none; }
+/* У видео-режима свой margin-top:18px (#game.video-mode .card) — в
+   полноэкранном режиме он сдвигал карточку вниз и обрезал низ. */
+body.video-pseudo-fs-active #game.video-mode .card,
+body.video-pseudo-fs-active #game.davay-mode .card{ margin:0; }
+body.video-pseudo-fs-active #card{
+  position:fixed; inset:0; z-index:500;
+  width:100%; height:100%;
+  max-width:none; max-height:none;
+  margin:0; border-radius:0; padding:0;
+  background:#000;
+}
+body.video-pseudo-fs-active #card .card-inner{ width:100%; height:100%; }
+body.video-pseudo-fs-active #card .card-split-media{
+  width:100%; height:100%; border-radius:0; background:#000;
+}
+body.video-pseudo-fs-active #card .card-split-media video{
+  width:100%; height:100%; object-fit:contain; background:#000;
+}
+@media (orientation:portrait){
+  body.video-pseudo-fs-active #card .card-split-media video{ object-fit:cover; }
+}
+body.video-pseudo-fs-active{ overflow:hidden; }
+
+/* Кнопка выхода из псевдополного экрана: сам ⛶ остаётся под карточкой,
+   поэтому поверх видео нужна отдельная кнопка. Видна только в этом режиме. */
+.video-fs-exit{ display:none; }
+body.video-pseudo-fs-active .video-fs-exit{
+  display:flex; align-items:center; justify-content:center;
+  position:fixed; top:calc(12px + env(safe-area-inset-top, 0px)); right:12px;
+  z-index:520; width:40px; height:40px; padding:0; border-radius:50%;
+  border:1px solid rgba(255,255,255,.35); background:rgba(0,0,0,.55);
+  color:#fff; font-size:18px; line-height:1; cursor:pointer;
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+}

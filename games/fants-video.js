@@ -300,7 +300,33 @@ function getActiveGameVideoEl(){
 }
 function isCardFullscreenActive(){
   return !!(document.fullscreenElement || document.webkitFullscreenElement
-    || videoNativeFullscreenActive || davayNativeFullscreenActive);
+    || videoNativeFullscreenActive || davayNativeFullscreenActive
+    || isPseudoFullscreenActive());
+}
+
+// ===== Псевдополный экран (iPhone/iPad) =====
+// Системный плеер iOS не даёт управлять кадрированием: ролик всегда вписан
+// целиком, в портрете остаются чёрные полосы. Поэтому на iOS разворачиваем
+// не видео в системном плеере, а саму карточку — кадрирование делает CSS
+// (в портрете cover с подрезкой боков, в ландшафте contain).
+// Состояние держим на <body>, а не на карточке: renderVideoCard пересоздаёт
+// содержимое и сбрасывает классы #card при смене ролика.
+function isPseudoFullscreenActive(){
+  return document.body.classList.contains('video-pseudo-fs-active');
+}
+function enterPseudoFullscreen(){
+  const cardEl = document.getElementById('card');
+  if(!cardEl) return;
+  document.body.classList.add('video-pseudo-fs-active');
+  const video = getActiveGameVideoEl();
+  // В системном плеере iOS кнопки есть, а в нашем полноэкранном режиме их
+  // не было бы: включаем нативные контролы, чтобы можно было поставить паузу.
+  if(video) video.controls = true;
+}
+function exitPseudoFullscreen(){
+  document.body.classList.remove('video-pseudo-fs-active');
+  const video = getActiveGameVideoEl();
+  if(video) video.controls = false;
 }
 function enterCardFullscreen(){
   const videoEl = document.getElementById('videoPlayer');
@@ -308,18 +334,14 @@ function enterCardFullscreen(){
   const video = videoEl || davayEl;
   const cardEl = document.getElementById('card');
   if(!video || !cardEl || isCardFullscreenActive()) return;
-  // На iPhone/iPad свайпы во время полного экрана работать не будут — это
-  // системный полноэкранный плеер видео, страница туда "не достаёт" жестами.
-  // На остальных устройствах разворачиваем всю карточку (не только видео),
-  // тогда свайпы продолжают работать и полный экран сохраняется при
-  // переключении на следующее/предыдущее видео.
-  if(isIOSDevice && video.webkitEnterFullscreen){
-    try{
-      video.webkitEnterFullscreen();
-      if(videoEl) videoNativeFullscreenActive = true;
-      if(davayEl) davayNativeFullscreenActive = true;
-      return;
-    } catch(err){ /* падаем ниже на стандартный способ */ }
+  // На остальных устройствах разворачиваем всю карточку (не только видео):
+  // свайпы продолжают работать, и полный экран сохраняется при переключении
+  // на следующее/предыдущее видео.
+  if(isIOSDevice){
+    // Системный плеер iOS не умеет заполнять экран по высоте — используем
+    // псевдополный экран с CSS-кадрированием (см. enterPseudoFullscreen).
+    enterPseudoFullscreen();
+    return;
   }
   try{
     if(cardEl.requestFullscreen){
@@ -337,6 +359,10 @@ function enterCardFullscreen(){
   } catch(err){ /* полный экран недоступен — просто остаёмся в обычном виде */ }
 }
 function exitCardFullscreen(){
+  if(isPseudoFullscreenActive()){
+    exitPseudoFullscreen();
+    return;
+  }
   try{
     if(document.fullscreenElement && document.exitFullscreen){
       document.exitFullscreen();
@@ -357,13 +383,18 @@ function toggleVideoFullscreen(){
   const video = document.getElementById('videoPlayer');
   const cardEl = document.getElementById('card');
   if(!video || !cardEl) return;
-  if(!(isIOSDevice && video.webkitEnterFullscreen) && !cardEl.requestFullscreen && !cardEl.webkitRequestFullscreen){
+  if(!isIOSDevice && !cardEl.requestFullscreen && !cardEl.webkitRequestFullscreen){
     showToast('Полный экран не поддерживается на этом устройстве');
     return;
   }
   enterCardFullscreen();
 }
 document.getElementById('videoFullscreenBtn').addEventListener('click', toggleVideoFullscreen);
+// Выход из псевдополного экрана: кнопка ⛶ остаётся под карточкой, поэтому
+// сверху показывается отдельный крестик (см. .video-fs-exit).
+const videoFsCloseBtn = document.getElementById('videoFsCloseBtn');
+if(videoFsCloseBtn) videoFsCloseBtn.addEventListener('click', exitPseudoFullscreen);
+
 
 function updateVideoFavoritesBtn(){
   // Кнопка ⭐ «смотреть избранное» удалена из «Видеорулетки»: логика избранного
@@ -934,6 +965,9 @@ function hideVideoCardLoading(){
 // элементу (reuse=true), а не только к только что вставленному через
 // innerHTML (reuse=false). См. причину в renderVideoCard ниже.
 function setupVideoPlayerElement(video, card, level, reuse){
+  // В псевдополном экране карточка перерисовывается при смене ролика —
+  // нативные контролы нужно включить заново.
+  if(typeof isPseudoFullscreenActive === 'function' && isPseudoFullscreenActive()) video.controls = true;
   // Антихотлинк Яндекса: запрос видео с чужим доменом в Referer получает 403,
   // без Referer — 206. Ставим политику и на элементе тоже (не только в теге и
   // <meta>): элемент может быть переиспользован, а свойство надёжнее атрибута.
@@ -1363,6 +1397,7 @@ function exitVideoGame(){
   if(state.pausedMode) state.pausedMode = null;
   saveState();
   if(document.fullscreenElement) document.exitFullscreen();
+  if(isPseudoFullscreenActive()) exitPseudoFullscreen();
   videoFullscreenActive = false;
   videoNativeFullscreenActive = false;
   // Останавливаем видео полностью, иначе оно продолжает играть в фоне после выхода
