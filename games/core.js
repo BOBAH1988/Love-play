@@ -1285,9 +1285,25 @@ document.addEventListener('mouseover', e=>{
   const el = e.target.closest('[data-tt]');
   if(el) fixTooltipPosition(el);
 });
+// Тост живёт 1200 мс; на телефоне плашка кнопки (data-tt) жила дольше —
+// пока палец на кнопке и ещё мгновение, плюс на части браузеров :active
+// «залипал» до следующего касания. Теперь по касанию подсказка включается
+// классом .tt-on ровно на 1000 мс — вдвое короче прежнего поведения, — а
+// повторное касание другой кнопки снимает её с предыдущей.
+let ttArmTimer = null;
+let ttArmedEl = null;
+function hideTooltipNow(){
+  if(ttArmTimer){ clearTimeout(ttArmTimer); ttArmTimer = null; }
+  if(ttArmedEl){ ttArmedEl.classList.remove('tt-on'); ttArmedEl = null; }
+}
 document.addEventListener('touchstart', e=>{
   const el = e.target.closest('[data-tt]');
-  if(el) fixTooltipPosition(el);
+  if(!el) return;
+  fixTooltipPosition(el);
+  hideTooltipNow();
+  el.classList.add('tt-on');
+  ttArmedEl = el;
+  ttArmTimer = setTimeout(hideTooltipNow, 1000);
 }, {passive:true});
 
 /* ============ УНИВЕРСАЛЬНАЯ ОСТАНОВКА РЕЧИ (TTS) ============ */
