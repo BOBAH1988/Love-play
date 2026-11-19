@@ -1,0 +1,142 @@
+/* styles/account.css — оформление окна «Аккаунт» (#accountModal).
+   Вынесено в отдельный файл: правила аккаунта должны применяться независимо
+   от большого styles/app.css. Подключается отдельным <link> сразу после него.
+   Разметка — #accountModal в index.html, логика — games/core.js. */
+
+#accountModal .account-card{
+  max-width:440px; padding:0; overflow:hidden;
+  display:flex; flex-direction:column; max-height:88vh;
+}
+#accountModal #accountGuestView,
+#accountModal #accountProfileView{
+  overflow-y:auto; overscroll-behavior:contain; padding:22px 20px 24px;
+  -webkit-overflow-scrolling:touch;
+}
+#accountModal .modal-close-btn{ top:12px; right:12px; }
+
+.account-hero{
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:6px 8px 18px; text-align:center;
+}
+.account-avatar{
+  width:72px; height:72px; border-radius:24px; margin-bottom:4px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; font-weight:800; color:#fff;
+  background:linear-gradient(135deg,#ff5e8e,#a25bff 60%,#5b8cff);
+  box-shadow:0 10px 26px rgba(255,94,142,.42), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.account-avatar-guest{
+  background:linear-gradient(135deg,rgba(255,94,142,.22),rgba(162,91,255,.22));
+  color:#ff5e8e; box-shadow:inset 0 0 0 1px rgba(255,94,142,.35);
+}
+.account-hero-title{ font-size:21px; font-weight:800; color:#2b0f2e; line-height:1.2; }
+.account-hero-sub{ font-size:13px; line-height:1.4; color:rgba(43,15,46,.66); max-width:320px; word-break:break-word; }
+.account-hero-chips{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:6px; }
+.account-chip{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 11px; border-radius:999px; font-size:12px; font-weight:700;
+  color:#2b0f2e; background:rgba(255,94,142,.14);
+  border:1px solid rgba(255,94,142,.38);
+}
+.account-chip b{ font-weight:800; }
+.account-chip-admin{ background:rgba(43,15,46,.1); border-color:rgba(43,15,46,.28); }
+
+.account-tabs{
+  display:flex; gap:4px; padding:4px; margin-bottom:16px;
+  background:rgba(43,15,46,.06); border-radius:14px;
+}
+.account-tab{
+  flex:1; padding:10px 8px; border:none; border-radius:11px; cursor:pointer;
+  background:transparent; color:rgba(43,15,46,.62);
+  font:inherit; font-size:14px; font-weight:700;
+  transition:background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.account-tab.is-on{
+  background:#fff; color:#2b0f2e; box-shadow:0 2px 10px rgba(43,15,46,.12);
+}
+.account-tab:focus-visible{ outline:2px solid #ff5e8e; outline-offset:1px; }
+
+.account-field{
+  display:block; position:relative; margin-bottom:12px;
+  padding:8px 14px 9px; border-radius:14px;
+  background:rgba(43,15,46,.045); border:1px solid rgba(43,15,46,.12);
+  transition:border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  cursor:text;
+}
+.account-field:focus-within{
+  background:#fff; border-color:rgba(255,94,142,.65);
+  box-shadow:0 0 0 4px rgba(255,94,142,.16);
+}
+.account-field-label{
+  display:block; font-size:11px; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; color:rgba(43,15,46,.55); margin-bottom:2px;
+}
+.account-field input{
+  width:100%; border:none; outline:none; background:transparent;
+  color:#2b0f2e; font:inherit; font-size:16px; padding:2px 0;
+}
+.account-field input::placeholder{ color:rgba(43,15,46,.35); }
+
+.account-row-between{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; flex-wrap:wrap; margin:2px 2px 14px;
+}
+.account-check{
+  display:flex; align-items:center; gap:8px; font-size:13px;
+  line-height:1.4; color:#2b0f2e; cursor:pointer;
+}
+.account-check input{ width:17px; height:17px; accent-color:#ff5e8e; margin:0; flex:0 0 auto; }
+.account-check-top{ align-items:flex-start; }
+.account-check-top input{ margin-top:2px; }
+.account-check a, .account-note a{ color:#c2245c; font-weight:600; }
+.account-consents{
+  display:flex; flex-direction:column; gap:9px; margin:4px 0 14px;
+  padding:12px; border-radius:14px; background:rgba(43,15,46,.04);
+}
+.account-consents .account-check{ font-size:12.5px; }
+
+.account-submit{
+  width:100%; padding:13px 16px; border-radius:14px;
+  font-size:15.5px; font-weight:700; margin-bottom:8px;
+}
+.account-link{
+  border:none; background:none; padding:2px; cursor:pointer;
+  color:#c2245c; font:inherit; font-size:13px; font-weight:600;
+  text-decoration:underline; text-underline-offset:2px;
+}
+.account-link:hover{ color:#ff5e8e; }
+.account-note{ margin-top:10px; font-size:11.5px; line-height:1.45; color:rgba(43,15,46,.6); }
+.account-error{
+  margin-top:10px; padding:9px 12px; border-radius:12px; font-size:13.5px;
+  line-height:1.4; background:rgba(176,0,32,.08); border:1px solid rgba(176,0,32,.2);
+}
+
+.account-section-title{
+  font-size:12px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+  color:rgba(43,15,46,.55); margin:4px 2px 10px;
+}
+.account-row-split{ display:flex; gap:10px; align-items:flex-start; }
+.account-row-gender{
+  flex:0 0 auto; padding:8px 14px 9px; margin-bottom:12px;
+  border-radius:14px; background:rgba(43,15,46,.045);
+  border:1px solid rgba(43,15,46,.12);
+}
+.account-gender-group{ display:flex; gap:6px; margin-top:2px; }
+.account-field-age{ flex:1 1 auto; min-width:0; }
+
+.account-logout{
+  width:100%; margin-top:4px; padding:12px 16px; border-radius:14px;
+  border:1px solid rgba(176,0,32,.35); background:transparent; cursor:pointer;
+  color:#b00020; font:inherit; font-size:14.5px; font-weight:700;
+  transition:background .18s ease;
+}
+.account-logout:hover{ background:rgba(176,0,32,.07); }
+
+@media (max-width:420px){
+  #accountModal{ padding:10px; }
+  #accountModal .account-card{ max-height:94vh; border-radius:20px; }
+  #accountModal #accountGuestView,
+  #accountModal #accountProfileView{ padding:18px 15px 20px; }
+  .account-avatar{ width:62px; height:62px; font-size:28px; border-radius:21px; }
+  .account-hero-title{ font-size:19px; }
+}
