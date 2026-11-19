@@ -63,7 +63,8 @@ function drawFlagsQueue(){
   }
   const total = Math.min(wanted, pool.length);
   if(wanted > pool.length){
-    showToast(`На этом уровне ${pool.length} стран — столько и будет в партии`);
+    // force: прежний тост с этим же текстом мог остаться от прошлой партии.
+    showToast(`На этом уровне ${pool.length} стран — столько и будет в партии`, 1200, true);
   }
   const chosen = pool.slice(0, total);
   state.flagsUsed[level] = used.concat(chosen.map(flagsCardKey));

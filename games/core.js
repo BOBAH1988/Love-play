@@ -1213,8 +1213,28 @@ function shuffle(arr){
   }
   return a;
 }
-function showToast(msg, duration){
+// Скрывает тост целиком: и класс .show, и таймер автогашения. Нужен всюду,
+// где тост не должен пережить смену экрана (выход из игры, перезапуск партии).
+// Раньше clearSessionTimers только сбрасывал таймер, и уведомление «Вопросы
+// этого уровня показаны заново 🔀» (его показывает drawFlagsQueue во «Флагах»)
+// оставалось на экране навсегда — гасить его больше было некому.
+function hideToast(){
+  if(showToast._tm){ clearTimeout(showToast._tm); showToast._tm = null; }
   const t = document.getElementById('toast');
+  if(t) t.classList.remove('show');
+  restoreGameLevelLabelAfterToast();
+}
+// force = true — показать сообщение, даже если такой же тост уже на экране
+// (drawFlagsQueue зовётся заново на каждой партии, и прежний тост «показаны
+// заново» мог остаться висеть).
+function showToast(msg, duration, force){
+  const t = document.getElementById('toast');
+  if(!force && showToast._tm && t.classList.contains('show') && t.innerHTML === msg.replace(/\n/g, '<br>')){
+    // Тот же текст уже виден — только продлеваем показ, без перезапуска анимации.
+    clearTimeout(showToast._tm);
+    showToast._tm = setTimeout(()=>{ hideToast(); }, duration || 1200);
+    return;
+  }
   t.innerHTML = msg.replace(/\n/g, '<br>');
   t.classList.add('show');
   const levelLabel = document.getElementById('gameLevelLabel');
@@ -1305,7 +1325,9 @@ function clearSessionTimers(){
   if(typeof saveAgeTimer !== 'undefined' && saveAgeTimer){ clearTimeout(saveAgeTimer); saveAgeTimer = null; }
   if(typeof cloudSaveTimer !== 'undefined' && cloudSaveTimer){ clearTimeout(cloudSaveTimer); cloudSaveTimer = null; }
   if(typeof reloadFallbackTimer !== 'undefined' && reloadFallbackTimer){ clearTimeout(reloadFallbackTimer); reloadFallbackTimer = null; }
-  if(typeof showToast !== 'undefined' && showToast._tm){ clearTimeout(showToast._tm); showToast._tm = null; }
+  if(typeof showToast !== 'undefined' && (showToast._tm || (document.getElementById('toast') || {}).classList?.contains('show'))){
+    hideToast();
+  }
 }
 
 /* ============ УНИВЕРСАЛЬНОЕ ПОКАЗАТЬ / СКРЫТЬ МОДАЛКУ ============ */
