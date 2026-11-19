@@ -39,7 +39,6 @@
   border:1px solid rgba(255,94,142,.38);
 }
 .account-chip b{ font-weight:800; }
-.account-chip-admin{ background:rgba(43,15,46,.1); border-color:rgba(43,15,46,.28); }
 
 .account-tabs{
   display:flex; gap:4px; padding:4px; margin-bottom:16px;

@@ -5357,22 +5357,12 @@ function playHitSound(){
           const levelForDisplay = isAdmin ? 'admin' : normalizedLevel;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
-          const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
-          const accessLevelEl = document.getElementById('accountProfileAccessLevel');
           // «Уровень» — реальный уровень из настроек доступа: starter/plus/premium/admin (скрыт для гостя)
           if (levelEl) {
             const levelName = (LEVEL_LABELS_LOCAL && LEVEL_LABELS_LOCAL[levelForDisplay]) || levelForDisplay || 'Админ';
             levelEl.style.color = '#2b0f2e';
             levelEl.textContent = levelName;
             if (levelRow) levelRow.style.display = '';
-          }
-          // «Уровень доступа» — только для админа, текст «Администратор»
-          if (accessLevelRow) {
-            accessLevelRow.style.display = isAdmin ? '' : 'none';
-            if (accessLevelEl) {
-              accessLevelEl.textContent = isAdmin ? 'Администратор' : '';
-              accessLevelEl.style.color = '#2b0f2e';
-            }
           }
         }).catch(function (err) {
           console.error('account level load error', err);
@@ -5388,20 +5378,11 @@ function playHitSound(){
           const levelForDisplay = isAdmin ? 'admin' : normalizedAccess;
           const levelEl = document.getElementById('accountProfileLevel');
           const levelRow = document.getElementById('accountProfileLevelRow');
-          const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
-          const accessLevelEl = document.getElementById('accountProfileAccessLevel');
           if (levelEl) {
             const levelName = (LEVEL_LABELS_LOCAL && LEVEL_LABELS_LOCAL[levelForDisplay]) || levelForDisplay || 'Админ';
             levelEl.style.color = '#2b0f2e';
             levelEl.textContent = levelName;
             if (levelRow) levelRow.style.display = '';
-          }
-          if (accessLevelRow) {
-            accessLevelRow.style.display = isAdmin ? '' : 'none';
-            if (accessLevelEl) {
-              accessLevelEl.textContent = isAdmin ? 'Администратор' : '';
-              accessLevelEl.style.color = '#2b0f2e';
-            }
           }
         });
       } else {
@@ -5417,20 +5398,11 @@ function playHitSound(){
         const levelForDisplay = isAdmin ? 'admin' : (['starter','plus','premium','admin'].indexOf(normalizedAccess) >= 0 ? normalizedAccess : 'guest');
         const levelEl = document.getElementById('accountProfileLevel');
         const levelRow = document.getElementById('accountProfileLevelRow');
-        const accessLevelRow = document.getElementById('accountProfileAccessLevelRow');
-        const accessLevelEl = document.getElementById('accountProfileAccessLevel');
         const levelName = (LEVEL_LABELS_LOCAL && LEVEL_LABELS_LOCAL[levelForDisplay]) || levelForDisplay || 'Админ';
         if (levelEl) {
           levelEl.style.color = '#2b0f2e';
           levelEl.textContent = levelName;
           if (levelRow) levelRow.style.display = '';
-        }
-        if (accessLevelRow) {
-          accessLevelRow.style.display = isAdmin ? '' : 'none';
-          if (accessLevelEl) {
-            accessLevelEl.textContent = isAdmin ? 'Администратор' : '';
-            accessLevelEl.style.color = '#2b0f2e';
-          }
         }
       }
     } else {

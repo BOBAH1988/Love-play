@@ -89,3 +89,9 @@ div.modal-overlay > .modal-card{
 #accountModal .account-gender-btn:hover{ border-color:rgba(255,255,255,.45); }
 #accountModal .account-chip b,
 #accountModal #accountProfileLevel{ color:#fff !important; }
+
+/* core.js выставляет цвет текста через element.style.color — в атрибуте он
+   сериализуется как rgb(43, 15, 46) / rgba(43, 15, 46, …), поэтому прежние
+   селекторы по #2b0f2e его не находили (например, «Статистика»). */
+.modal-card [style*="rgb(43, 15, 46)"],
+.modal-card [style*="rgb(43,15,46)"]{ color:rgba(255,255,255,.9) !important; }
