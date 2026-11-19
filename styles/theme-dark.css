@@ -1,0 +1,41 @@
+/* ===== Тёмная тема модальных окон =====
+   Белые окна на тёмно-фиолетовом фоне смотрелись отдельным миром. Все
+   .modal-card получают тот же градиент, что «Правила» и «О проекте»
+   (те уже тёмные и переопределяют фон сами). Файл подключён после
+   app.css, поэтому правила общих модалок гарантированно применяются. */
+div.modal-overlay > .modal-card{
+  background:linear-gradient(160deg,var(--bg1,#2b0f2e),var(--bg2,#4a1240) 55%,#1a0a20);
+  color:#fff !important;
+}
+.modal-title{ color:#fff; }
+.modal-close-btn{ color:rgba(255,255,255,.65); }
+.modal-close-btn:hover{ color:#fff; }
+.modal-card .intro-text{ color:rgba(255,255,255,.85); }
+.modal-rules{ color:rgba(255,255,255,.88); }
+.modal-card p{ color:rgba(255,255,255,.85); }
+.modal-card strong{ color:#fff; }
+.modal-card a{ color:#ffb3cc; }
+.modal-card .pause-title-sub{ color:rgba(255,255,255,.8); }
+.modal-card .field > label{ color:rgba(255,255,255,.75); }
+.modal-card .field input[type=text],
+.modal-card .select-input,
+.modal-card .textarea-input{
+  background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.22);
+}
+.modal-card .field input[type=text]::placeholder,
+.modal-card .select-input::placeholder,
+.modal-card .textarea-input::placeholder{ color:rgba(255,255,255,.45); }
+.modal-card input[type="checkbox"],
+.modal-card input[type="number"],
+.modal-card input[type="email"],
+.modal-card input[type="password"]{ color-scheme:dark; }
+.modal-card .starter-btn{
+  background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.22);
+}
+.modal-card .starter-btn.on{
+  background:#ff5e8e; border-color:#ff5e8e; color:#2b0f2e;
+}
+.modal-card .btn-secondary{
+  background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.28);
+}
+.modal-card .btn-ghost{ color:#ffb3cc; }
