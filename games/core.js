@@ -3089,7 +3089,9 @@ function updateResumeUI(){
   // паузу этой игры.
   const partyTitleText = document.getElementById('partyGamesTitleText');
   const partyDesc = document.getElementById('partyGamesDesc');
-  if(partyTitleText) partyTitleText.textContent = isPartyPause ? (gameMenuTitle(state.pausedMode) || '🎉 Игры для компании') : '🎉 Игры для компании';
+  // У заголовка группы иконка вынесена в отдельный <span class="group-title-text">:
+  // текст пишем в него, иначе textContent стёр бы SVG-иконку группы.
+  if(partyTitleText) (partyTitleText.querySelector('.group-title-text') || partyTitleText).textContent = isPartyPause ? (gameMenuTitle(state.pausedMode) || 'Игры для компании') : 'Игры для компании';
   if(partyDesc) partyDesc.textContent = isPartyPause
     ? 'Счёт и игроки сохранены — продолжите партию или закончите её кнопкой выше.'
     : 'Шумные и весёлые игры для компании';
@@ -3097,7 +3099,7 @@ function updateResumeUI(){
   // описание блока "Игры с детьми" тоже меняются на паузу этой игры.
   const kidsTitleText = document.getElementById('kidsGamesTitleText');
   const kidsDesc = document.getElementById('kidsGamesDesc');
-  if(kidsTitleText) kidsTitleText.textContent = isKidsPause ? (gameMenuTitle(state.pausedMode) || '🧸 Игры с детьми') : '🧸 Игры с детьми';
+  if(kidsTitleText) (kidsTitleText.querySelector('.group-title-text') || kidsTitleText).textContent = isKidsPause ? (gameMenuTitle(state.pausedMode) || 'Игры с детьми') : 'Игры с детьми';
   if(kidsDesc) kidsDesc.textContent = isKidsPause
     ? 'Поле и счёт сохранены — продолжите партию или закончите её кнопкой выше.'
     : 'Давай играй, чтобы играть вместе с ребёнком';
@@ -4958,12 +4960,35 @@ function playHitSound(){
 }
 // Динамический вывод групп игр из Firestore на главном экране.
 (function loadHomeGroups() {
-  const GROUP_ICONS = {
-    kids: '🧸',
-    business: '💼',
-    solo: '📱',
-    learning: '📚'
+  // Иконки групп — те же линейные SVG, что в заголовках блоков и на главной.
+  // Эмодзи в GROUP_ICONS выглядели «старыми иконками» на iOS/Android/Windows.
+  const GROUP_ICON_PATHS = {
+    pair:    ['M12 20.5s-7.6-4.6-7.6-10A4.4 4.4 0 0 1 12 7.6a4.4 4.4 0 0 1 7.6 2.9c0 5.4-7.6 10-7.6 10z'],
+    party:   ['M6.5 3.5h11l-1.3 7.2a4.2 4.2 0 0 1-8.4 0z', 'M12 15.2v4.3', 'M8.6 21h6.8', 'M17.6 4.4l.9-.9', 'M19.4 7.1l1.2-.2', 'M15.4 3.2l.2-1.2'],
+    kids:    ['M12 3.2a6.6 6.6 0 0 1 6.6 6.6c0 3.6-2.9 6.6-6.6 6.6s-6.6-3-6.6-6.6A6.6 6.6 0 0 1 12 3.2z', 'M10.7 17.2h2.6l-1.3 1.9z', 'M12 19.1c0 1.1-1.4 1.1-1.4 2.2'],
+    biz:     ['M5.5 7.5h13a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z', 'M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5', 'M3.5 13h17', 'M10.5 13v2h3v-2'],
+    solo:    ['M8.5 2.5h7A2.5 2.5 0 0 1 18 5v14a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 6 19V5a2.5 2.5 0 0 1 2.5-2.5z', 'M10.5 5.5h3', 'M12 18.2h.01'],
+    learn:   ['M12 6.5C10.2 5 7.6 4.5 4 4.7v13.6c3.6-.2 6.2.3 8 1.8 1.8-1.5 4.4-2 8-1.8V4.7c-3.6-.2-6.2.3-8 1.8z', 'M12 6.5v13.6']
   };
+  const GROUP_ICONS = { kids: 'kids', business: 'biz', solo: 'solo', learning: 'learn', two: 'pair', party: 'party' };
+  function buildGroupIcon(slug) {
+    const key = GROUP_ICONS[slug] || slug;
+    const paths = GROUP_ICON_PATHS[key];
+    const span = document.createElement('span');
+    span.className = 'menu-icon';
+    if (!paths) { span.textContent = '📁'; return span; }
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    paths.forEach(function (d) {
+      const p = document.createElementNS(ns, 'path');
+      p.setAttribute('d', d);
+      svg.appendChild(p);
+    });
+    span.appendChild(svg);
+    return span;
+  }
   const GROUP_VIEWS = {
     kids: 'kidsView',
     business: 'businessView',
@@ -4987,9 +5012,7 @@ function playHitSound(){
       btn.className = 'btn btn-menu-item';
       btn.dataset.groupSlug = slug || '';
 
-      const iconSpan = document.createElement('span');
-      iconSpan.className = 'menu-icon';
-      iconSpan.textContent = GROUP_ICONS[slug] || '📁';
+      const iconSpan = buildGroupIcon(slug);
       btn.appendChild(iconSpan);
 
       const textSpan = document.createElement('span');

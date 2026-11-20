@@ -281,6 +281,33 @@
     margin: 6px 0 4px;
     letter-spacing:.3px;
   }
+  /* Иконка группы в заголовке блока (💕 🎉 🧸 💼 📱 📚 больше нет):
+     тот же линейный глиф, что у групп на главной, в цвете своей группы.
+     Выравнивание по базовой линии текста, кегль иконки — 1em, чтобы она
+     росла вместе с заголовком. */
+  h1.title .group-title-ico{
+    display:inline-flex; align-items:center; justify-content:center;
+    vertical-align:-0.16em;
+    margin-right:.34em;
+  }
+  h1.title .group-title-ico svg{
+    width:1em; height:1em; display:block;
+    fill:none; stroke:currentColor; stroke-width:1.7;
+    stroke-linecap:round; stroke-linejoin:round;
+  }
+  h1.title .group-title-ico svg path{
+    fill:none !important;
+    stroke:currentColor !important;
+    stroke-width:1.7;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  h1.title .group-title-ico[data-group="pair"]{ color:#ff9fc4; }
+  h1.title .group-title-ico[data-group="party"]{ color:#ffb877; }
+  h1.title .group-title-ico[data-group="kids"]{ color:#7fe0c8; }
+  h1.title .group-title-ico[data-group="biz"]{ color:#f2cf8c; }
+  h1.title .group-title-ico[data-group="solo"]{ color:#b7adff; }
+  h1.title .group-title-ico[data-group="learn"]{ color:#8cc6f0; }
   #homeTitle{
     margin-top:0;
     margin-bottom:16px;
@@ -779,6 +806,17 @@
     fill:none; stroke:currentColor; stroke-width:1.7;
     stroke-linecap:round; stroke-linejoin:round;
   }
+  /* iOS: свойства линии дублируем на самих фигурах — так же, как на главной. */
+  .game-select-list .btn-menu-item .menu-icon svg path,
+  .game-select-list .btn-menu-item .menu-icon svg circle,
+  .game-select-list .btn-menu-item .menu-icon svg rect{
+    fill:none !important;
+    stroke:currentColor !important;
+    stroke-width:1.7;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;
+  }
   /* Цвет иконки — тон группы игры, чтобы список читался как одна палитра. */
   #twoPlayerView .btn-menu-item,
   #companyView .btn-menu-item,
@@ -861,10 +899,25 @@
     width:44px; min-width:44px; height:44px;
     font-size:0; line-height:1; color:var(--group-color);
   }
+  /* Свойства линии заданы на САМОМ path, а не только на svg.
+     На iOS (WKWebView) presentation-атрибуты и наследование fill со svg
+     вели себя непредсказуемо: глифы либо заливались чёрным, либо терялись.
+     Явные fill/stroke на внутренних элементах рисуются одинаково везде. */
   #homeMenuList .btn-menu-item .menu-icon svg{
     width:34px; height:34px; display:block;
     fill:none; stroke:currentColor; stroke-width:1.7;
     stroke-linecap:round; stroke-linejoin:round;
+    overflow:visible;
+  }
+  #homeMenuList .btn-menu-item .menu-icon svg path,
+  #homeMenuList .btn-menu-item .menu-icon svg circle,
+  #homeMenuList .btn-menu-item .menu-icon svg rect{
+    fill:none !important;
+    stroke:currentColor !important;
+    stroke-width:1.7;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;
   }
   /* Текст занимает оставшееся место и центрируется (для .game-select-list).
      В #homeMenuList отменяем text-align:center чтобы не было двойного центрирования. */
