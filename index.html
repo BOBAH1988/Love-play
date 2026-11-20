@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261120s">
+<link rel="stylesheet" href="styles/app.css?v=20261120t">
   <link rel="stylesheet" href="styles/account.css?v=20261120e">
   <link rel="stylesheet" href="styles/theme-dark.css?v=20261120i">
 <script>
@@ -112,7 +112,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-11-20 · v1.1.826';
+  window.APP_BUILD = '2026-11-20 · v1.1.827';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -440,16 +440,16 @@
 
 
       <div class="game-select-list" id="homeMenuList">
-        <button type="button" class="btn btn-menu-item" id="homeTwoPlayerBtn"><span class="menu-icon">💕</span> Игры для пар 18+</button>
-        <button type="button" class="btn btn-menu-item" id="homeCompanyBtn"><span class="menu-icon">🎉</span> Игры для компании</button>
-        <button type="button" class="btn btn-menu-item" id="homeKidsBtn"><span class="menu-icon">🧸</span> Игры с детьми</button>
-        <button type="button" class="btn btn-menu-item" id="homeBusinessBtn"><span class="menu-icon">💼</span> Бизнес игры</button>
-        <button type="button" class="btn btn-menu-item" id="homeSoloBtn"><span class="menu-icon">📱</span> Игры для одного</button>
-        <button type="button" class="btn btn-menu-item" id="homeLearningBtn"><span class="menu-icon">📚</span> Обучающие игры</button>
+        <button type="button" class="btn btn-menu-item" id="homeTwoPlayerBtn" data-group="pair"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5s-7.6-4.6-7.6-10A4.4 4.4 0 0 1 12 7.6a4.4 4.4 0 0 1 7.6 2.9c0 5.4-7.6 10-7.6 10z"/></svg></span> Игры для пар 18+</button>
+        <button type="button" class="btn btn-menu-item" id="homeCompanyBtn" data-group="party"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 15.5 8.5 20l9.9-9.9a2.5 2.5 0 0 0-3.5-3.5z"/><path d="M4 15.5 3 21l5.5-1"/><path d="M15.5 4.5 19.5 8.5"/></svg></span> Игры для компании</button>
+        <button type="button" class="btn btn-menu-item" id="homeKidsBtn" data-group="kids"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10" r=".9"/><circle cx="15" cy="10" r=".9"/><path d="M8.8 14.2c.9 1.3 2 2 3.2 2s2.3-.7 3.2-2"/></svg></span> Игры с детьми</button>
+        <button type="button" class="btn btn-menu-item" id="homeBusinessBtn" data-group="biz"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/><path d="M3 13h18"/><path d="M10.5 13v2h3v-2"/></svg></span> Бизнес игры</button>
+        <button type="button" class="btn btn-menu-item" id="homeSoloBtn" data-group="solo"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 5.5h3"/><path d="M12 18.2h.01"/></svg></span> Игры для одного</button>
+        <button type="button" class="btn btn-menu-item" id="homeLearningBtn" data-group="learn"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.6 4.5 4 4.7v13.6c3.6-.2 6.2.3 8 1.8 1.8-1.5 4.4-2 8-1.8V4.7c-3.6-.2-6.2.3-8 1.8z"/><path d="M12 6.5v13.6"/></svg></span> Обучающие игры</button>
       </div>
       <div class="game-select-list" id="homeGroupsDynamic" style="display:none;"></div>
       <div class="app-footer">
-        Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> -         <span id="projectVersion">v 1.1.826</span>
+        Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> -         <span id="projectVersion">v 1.1.827</span>
       </div>
 
 
