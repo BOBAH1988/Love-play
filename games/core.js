@@ -5556,7 +5556,8 @@ function playHitSound(){
       auth.signInWithEmailAndPassword(email, password)
         .then(function (cred) {
           if (typeof ensureUserDoc === 'function') ensureUserDoc(cred.user);
-          return handlePostAuthMigration(cred.user);
+          // Вход в существующий аккаунт: без окна выбора, только сервер.
+          return handlePostAuthMigration(cred.user, false);
         })
         .then(function () { closeAccount(); })
         .catch(function (err) {
@@ -5596,9 +5597,10 @@ function playHitSound(){
           if (cred.user && typeof cred.user.sendEmailVerification === 'function') {
             cred.user.sendEmailVerification().catch(function (e) { console.error('sendEmailVerification', e); });
           }
-          // Миграция локальных данных в новый аккаунт (или начало с нуля).
+          // Регистрация: только здесь можно предложить перенос прогресса
+          // устройства или старт с чистого листа.
           manualAuthJustDone = true;
-          return handlePostAuthMigration(cred.user);
+          return handlePostAuthMigration(cred.user, true);
         })
         .then(function () {
           openAccount();
@@ -5940,13 +5942,36 @@ function playHitSound(){
   // ещё нет облачного сейва (создан ли он только что регистрацией или
   // никогда не синхронизировался). Только тогда, и только если на устройстве
   // есть реальный прогресс, спрашиваем, перенести его или начать с сервера.
-  function handlePostAuthMigration(user) {
+  // Точка входа после авторизации. Перенос локального прогресса предлагается
+  // ТОЛЬКО при регистрации (isNewAccount=true). Любой вход в существующий
+  // аккаунт — это всегда данные сервера: окно «Прогресс на этом устройстве» и
+  // вариант «начать с чистого листа» тут недопустимы, потому что пользователь
+  // уже имеет аккаунт и его прогресс — в облаке.
+  //
+  // Раньше новый аккаунт определяли по отсутствию облачного сейва. Это
+  // неверно: у существующего пользователя сейв может не создаться (вход с
+  // другого устройства, неудачная выгрузка, очищенный кэш) — и вместо
+  // подгрузки с сервера ему показывался выбор, вплоть до чистого листа.
+  function handlePostAuthMigration(user, isNewAccount) {
     if (!user) return Promise.resolve();
+    if (!isNewAccount) {
+      // Существующий аккаунт: сервер — источник правды. Сейва нет — значит
+      // аккаунт ещё ни разу не сохранялся; локальные наработки выгружаем,
+      // но ничего не спрашиваем и не стираем.
+      return pullCloudState(user).then(function (cloud) {
+        if (cloud) return applyCloudAndReload(user, cloud);
+        return uploadLocalToCloud(user);
+      }).catch(function (err) { console.error('migration error', err); return null; }).finally(function () {
+        manualAuthJustDone = false;
+      });
+    }
+    // Регистрация нового аккаунта: только здесь возможен выбор «перенести
+    // прогресс устройства или начать с нуля».
     const localHas = hasMeaningfulLocalData();
     return pullCloudState(user).then(function (cloud) {
-      const cloudHas = !!(cloud && Object.keys(stripMeta(cloud)).length);
-      if (cloudHas) {
-        // Существующий пользователь: сервер — источник правды.
+      if (cloud) {
+        // Аккаунт только что создан, но облако уже есть (повторный вход
+        // сразу после регистрации) — сервер важнее.
         return applyCloudAndReload(user, cloud);
       }
       if (!localHas) {
