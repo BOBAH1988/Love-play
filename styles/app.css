@@ -2580,6 +2580,11 @@
      ⛶ полный экран и 🚫 «не показывать». Иконки на 30% крупнее прежних 16px
      (20.8px): блок раскрывают редко, и мелкие глифы в нём легко спутать. */
   #game.video-mode #videoNextBtn{order:8; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
+  /* 📁 «Каталог уровней». Место задаёт `order`, как у соседей: `.row2` в
+     раскрытом блоке становится `display:contents`, и без правила кнопка
+     получала order:0 и вставала перед «Следующее» в верхнем ряду. Стоит
+     рядом с ⬆/🔥 — это же переключение уровня, только по списку. */
+  #game.video-mode #videoCatalogBtn{order:7; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
   #game.video-mode #videoLevelUpBtn{order:9; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
   #game.video-mode #videoMuteBtn{order:10; flex:0 0 36px; width:36px; height:36px; padding:0; font-size:20.8px;}
   /* Место кнопки 🔲 PiP задаёт именно `order`, а не разметка: в раскрытом блоке

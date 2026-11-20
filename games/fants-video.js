@@ -186,6 +186,13 @@ function updateVideoLoopBtn(){
     : 'Включить автопереключение на следующее видео');
   btn.dataset.tt = state.videoAutoAdvance ? 'Автоповтор вкл' : 'Автоповтор выкл';
 }
+document.getElementById('videoCatalogBtn').addEventListener('click', openVideoLevelCatalog);
+document.getElementById('videoLevelCatalogCloseBtn').addEventListener('click', ()=>hideModal('videoLevelCatalogModal'));
+document.getElementById('videoLevelCatalogModal').addEventListener('click', (e)=>{
+  // Клик по фону окна закрывает каталог, клик внутри карточки — нет.
+  if(e.target && e.target.id === 'videoLevelCatalogModal') hideModal('videoLevelCatalogModal');
+});
+
 document.getElementById('videoLoopBtn').addEventListener('click', ()=>{
   state.videoAutoAdvance = !state.videoAutoAdvance;
   saveState();
@@ -197,22 +204,51 @@ document.getElementById('videoLoopBtn').addEventListener('click', ()=>{
     : 'Автоповтор выкл');
 });
 
+// Случайный порядок — три состояния, переключаются одной кнопкой по кругу:
+//   'off'     — выкл: ролики идут по порядку папки подуровня выбранного уровня;
+//   'level'   — вкл на уровне: разброс по всем папкам этого уровня;
+//   'all'     — вкл: разброс по роликам всех уровней сразу.
+// Раньше это был флаг: включённым он всегда означал «все уровни». Теперь
+// средний вариант — самый частый (играешь уровень, но не застреваешь в
+// одной папке подуровня), поэтому включаем именно его.
+const VIDEO_RANDOM_STATES = ['off', 'level', 'all'];
+function videoRandomMode(){
+  // Старые сохранения хранят boolean: true был «по всем папкам».
+  const v = state.videoRandomMode;
+  if(v === true) return 'all';
+  return (v === 'level' || v === 'all') ? v : 'off';
+}
+function setVideoRandomMode(mode){
+  state.videoRandomMode = mode === true ? 'all'
+    : (mode === 'level' || mode === 'all') ? mode : 'off';
+}
 function updateVideoRandomBtn(){
   const btn = document.getElementById('videoRandomBtn');
   if(!btn) return;
-  btn.classList.toggle('active', !!state.videoRandomMode);
-  btn.setAttribute('aria-label', state.videoRandomMode
-    ? 'Выключить случайный порядок'
-    : 'Включить случайный порядок');
-  btn.dataset.tt = state.videoRandomMode ? 'Случайный порядок вкл' : 'Случайный порядок выкл';
+  const mode = videoRandomMode();
+  btn.classList.toggle('active', mode !== 'off');
+  // Среднее состояние показываем точкой на иконке, а не только подписью:
+  // иконка и так выключена/включена, и без метки «уровень» не отличить.
+  btn.dataset.mode = mode;
+  const label = mode === 'level'
+    ? 'Случайный порядок: этот уровень'
+    : mode === 'all'
+      ? 'Случайный порядок: все уровни'
+      : 'Случайный порядок выкл';
+  btn.setAttribute('aria-label', label);
+  btn.dataset.tt = label;
 }
 document.getElementById('videoRandomBtn').addEventListener('click', ()=>{
-  state.videoRandomMode = !state.videoRandomMode;
+  const cur = videoRandomMode();
+  const next = VIDEO_RANDOM_STATES[(VIDEO_RANDOM_STATES.indexOf(cur) + 1) % VIDEO_RANDOM_STATES.length];
+  setVideoRandomMode(next);
   saveState();
   updateVideoRandomBtn();
-  showToast(state.videoRandomMode
-    ? 'Случайный порядок вкл 🎲'
-    : 'Случайный порядок выкл');
+  showToast(next === 'level'
+    ? 'Случайный порядок: этот уровень 🎲'
+    : next === 'all'
+      ? 'Случайный порядок: все уровни 🎲'
+      : 'Случайный порядок выкл');
 });
 
 function updateVideoPiPBtn(){
@@ -804,6 +840,70 @@ function updateVideoLevelBtn(){
   const quickBtn = document.getElementById('videoHotBtn');
   if(quickBtn) quickBtn.disabled = false;
 }
+// Каталог уровней: плавающее окно со списком уровней каталога видео.
+// Отдельная функция от «Уровней заданий» на странице настройки: там плашки
+// меняют state.davaySelectedLevel и применяются к следующему запуску, а здесь
+// уровень переключается прямо в текущей партии (как кнопки ⬆/🔥). Внешне —
+// те же плашки .level-toggle, чтобы список читался как единый каталог.
+// Уровни без своих роликов показываем неактивными: выбор такого уровня
+// проваливался бы в демо-ролик, и это выглядело бы как сломанная кнопка.
+function videoLevelHasCards(level){
+  const hidden = state.videoHidden || [];
+  return getDavayCardsList().some(c=>c.level===level && !hidden.includes(videoCardId(c)));
+}
+function renderVideoLevelCatalog(){
+  const wrap = document.getElementById('videoLevelCatalogList');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const levels = (typeof DAVAY_LEVELS !== 'undefined' && DAVAY_LEVELS.length)
+    ? DAVAY_LEVELS
+    : Array.from({length: VIDEO_MAX_LEVEL}, (_, i)=>({id:i+1, name:'Уровень ' + (i+1), desc:'', icon:''}));
+  levels.forEach(l=>{
+    const has = videoLevelHasCards(l.id);
+    const div = document.createElement('div');
+    div.className = 'level-toggle' + (l.id === videoLevel ? ' on' : '') + (has ? '' : ' is-empty');
+    div.dataset.id = String(l.id);
+    div.setAttribute('role', 'button');
+    div.setAttribute('tabindex', has ? '0' : '-1');
+    div.setAttribute('aria-label', `${l.name}${has ? '' : ' — нет видео'}`);
+    div.innerHTML = `
+      <div class="lname">${l.icon ? l.icon + ' ' : ''}${l.name}${has ? '' : ' · нет видео'}</div>
+      <div class="ldesc">${l.desc || ''}</div>
+      <div class="level-check"></div>
+    `;
+    div.addEventListener('click', ()=>chooseVideoLevel(l.id));
+    div.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); chooseVideoLevel(l.id); }
+    });
+    wrap.appendChild(div);
+  });
+}
+function openVideoLevelCatalog(){
+  renderVideoLevelCatalog();
+  showModal('videoLevelCatalogModal');
+}
+// Смена уровня из каталога. Переключатель случайного порядка играет ролики
+// из всех уровней сразу — его выключаем, иначе выбор уровня ничего не менял бы.
+// Если фильтр «только избранное» активен, уровень ищем среди избранного.
+function chooseVideoLevel(level){
+  if(!videoLevelHasCards(level)){
+    showToast('На этом уровне пока нет видео 📭');
+    return;
+  }
+  hideModal('videoLevelCatalogModal');
+  // В состоянии 'all' играют ролики всех уровней — тогда выбор уровня ничего
+  // не менял бы, поэтому возвращаемся к «разбросу по выбранному уровню».
+  if(videoRandomMode() === 'all'){
+    setVideoRandomMode('level');
+    updateVideoRandomBtn();
+  }
+  state.videoFavoritesOnly = false;
+  videoSubLevel = 1;
+  if(drawVideoCard(level) === false){
+    currentVideoCard && renderVideoCard(currentVideoCard, videoLevel);
+  }
+  showToast('Уровень: ' + davayLevelInfo(level).name);
+}
 function drawVideoCard(level, announceEmpty){
   videoLevel = level;
   updateVideoLevelBtn();
@@ -812,12 +912,13 @@ function drawVideoCard(level, announceEmpty){
   // Видео берутся из общего каталога "Давай попробуем" — своей отдельной
   // колоды у "Видеорулетки" больше нет.
   let all = getDavayCardsList().filter(c=>c.level===level && !hidden.includes(videoCardId(c)));
-  if(state.videoRandomMode){
+  const randomMode = videoRandomMode();
+  if(randomMode === 'all'){
     all = getDavayCardsList().filter(c=>!hidden.includes(videoCardId(c)));
   }
   if(state.videoFavoritesOnly){
     all = all.filter(c=>liked.includes(videoCardId(c)));
-  } else if(videoSubLevel > 0 && !state.videoRandomMode){
+  } else if(videoSubLevel > 0 && randomMode !== 'all'){
     // Играем только папку выбранного подуровня («Level N-1 …», см. videoSubLevel).
     // Фолбэк: если роликов с таким подуровнем нет (например, все видео — свои,
     // добавленные с телефона без папки на Диске), играем весь уровень, а не
@@ -848,13 +949,14 @@ function drawVideoCard(level, announceEmpty){
     selectable = all;
   }
   if(!state.videoUsed) state.videoUsed = {};
-  const usedKey = state.videoRandomMode ? '*' : String(level);
+  // В состоянии 'all' пул общий по всем уровням, у остальных — по уровню.
+  const usedKey = randomMode === 'all' ? '*' : String(level);
   let used = state.videoUsed[usedKey] || [];
   let pool = selectable.filter(c=>!used.includes(videoCardId(c)));
   if(pool.length===0){
     pool = selectable;
     used = [];
-    showToast(state.videoRandomMode ? 'Видео показаны заново 🔀' : 'Видео этого уровня показаны заново 🔀');
+    showToast(randomMode === 'all' ? 'Видео показаны заново 🔀' : 'Видео этого уровня показаны заново 🔀');
   }
   const card = pool[Math.floor(Math.random()*pool.length)];
   used.push(videoCardId(card));
@@ -1316,7 +1418,7 @@ function showVideoCardDirect(card){
   videoSubLevel = sub > 0 ? sub : 1;
   updateVideoLevelBtn();
   if(!state.videoUsed) state.videoUsed = {};
-  const usedKey = state.videoRandomMode ? '*' : String(videoLevel);
+  const usedKey = videoRandomMode() === 'all' ? '*' : String(videoLevel);
   const used = state.videoUsed[usedKey] || [];
   if(!used.includes(videoCardId(card))) used.push(videoCardId(card));
   state.videoUsed[usedKey] = used;

@@ -1953,9 +1953,10 @@ function checkStyles(html) {
   check('игры не пишут звук напрямую, только через общий переключатель',
     !/davaySoundOn\s*=\s*!!on/.test(sndDavay) && !/videoSoundOn\s*=\s*!!on/.test(sndVideo),
     'в играх снова прямая запись звука — настройка разъедется между играми');
-  // Подсказка [data-tt] у кнопок-переключателей обязана называть состояние:
-  // у 🔀 при выключенном режиме текст был без «выкл» — игрок не понимал,
-  // включён случайный порядок или нет. У 🔁 «Автоповтор вкл/выкл» — образец.
+  // Подсказка [data-tt] у кнопок-переключателей обязана называть состояние.
+  // У 🔀 теперь три состояния (выкл / этот уровень / все уровни), поэтому
+  // проверка отдельная: подсказка строится по `videoRandomMode()` и различает
+  // все три, а не только «вкл/выкл».
   const tooltipReportsState = (fnName, cond) => {
     const fn = sndVideo.match(new RegExp(`function ${fnName}\\(\\)\\{([\\s\\S]*?)\\n\\}`));
     return !!fn && new RegExp(`${cond}\\s*\\?\\s*'[^']*вкл'\\s*:\\s*'[^']*выкл'`).test(fn[1]);
@@ -1963,9 +1964,21 @@ function checkStyles(html) {
   check('подсказка 🔊 сообщает состояние (вкл/выкл)',
     tooltipReportsState('updateVideoMuteBtn', 'videoSoundOn'),
     'подсказка 🔊 не зависит от режима — игрок не увидит, включён звук или нет');
-  check('подсказка 🔀 сообщает состояние (вкл/выкл)',
-    tooltipReportsState('updateVideoRandomBtn', 'state\\.videoRandomMode'),
-    'подсказка 🔀 не зависит от режима — игрок не увидит, включён случайный порядок или нет');
+  {
+    const fn = sndVideo.match(/function updateVideoRandomBtn\(\)\{([\s\S]*?)\n\}/);
+    const body = fn ? fn[1] : '';
+    const hasOff = /'[^']*выкл'/.test(body);
+    const hasLevel = /'[^']*этот уровень'/.test(body);
+    const hasAll = /'[^']*все уровни'/.test(body);
+    const hasModes = /mode\s*===\s*'level'/.test(body) && /mode\s*===\s*'all'/.test(body);
+    check('подсказка 🔀 различает три состояния (выкл / уровень / все уровни)',
+      hasOff && hasLevel && hasAll && hasModes,
+      'подсказка 🔀 не различает состояния — игрок не увидит, какой разброс включён');
+    const states = sndVideo.match(/const VIDEO_RANDOM_STATES = \[([^\]]*)\]/);
+    check('🔀 переключается по кругу: выкл → уровень → все уровни',
+      !!states && ['off', 'level', 'all'].every(m => states[1].includes(`'${m}'`)),
+      'порядок состояний 🔀 сломан — нажатие не пройдёт все три режима');
+  }
   check('подсказка 🔁 сообщает состояние (вкл/выкл)',
     tooltipReportsState('updateVideoLoopBtn', 'state\\.videoAutoAdvance'),
     'подсказка 🔁 не зависит от режима — игрок не увидит, включён автоповтор или нет');
