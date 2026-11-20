@@ -798,28 +798,31 @@
     width:32px; min-width:32px; flex-shrink:0;
     font-size:1.7em; line-height:1;
   }
-  /* Иконки групп на главной — линия, как в остальном интерфейсе.
-     Эмодзи в системных наборах рисуются по-разному на iOS/Android/Windows
-     и выглядели «наклейками»; линейные SVG одного стиля (stroke 1.7,
-     round-концы) сочетаются с тёмной темой и подсвечиваются цветом группы. */
+  /* Иконки групп на главной — заливные пиктограммы в цветном медальоне.
+     Тонкий контур читался слабо на тёмной кнопке; заливка одного цвета
+     (fill:currentColor) плюс мягкая подложка дают плотное, «иконочное»
+     пятно, которое узнаётся издалека и не зависит от системных шрифтов
+     эмодзи. Тон медальона совпадает с цветом группы — как у карточек. */
   #homeMenuList .btn-menu-item{
-    --group-color:rgba(255,255,255,.9);
+    --group-color:#ff9fc4;
+    --group-tint:rgba(255,159,196,.18);
   }
-  #homeMenuList .btn-menu-item[data-group="pair"]{ --group-color:#ff9fc4; }
-  #homeMenuList .btn-menu-item[data-group="party"]{ --group-color:#ffb877; }
-  #homeMenuList .btn-menu-item[data-group="kids"]{ --group-color:#7fe0c8; }
-  #homeMenuList .btn-menu-item[data-group="biz"]{ --group-color:#f2cf8c; }
-  #homeMenuList .btn-menu-item[data-group="solo"]{ --group-color:#b7adff; }
-  #homeMenuList .btn-menu-item[data-group="learn"]{ --group-color:#8cc6f0; }
+  #homeMenuList .btn-menu-item[data-group="party"]{ --group-color:#ffb877; --group-tint:rgba(255,184,119,.18); }
+  #homeMenuList .btn-menu-item[data-group="kids"]{ --group-color:#7fe0c8; --group-tint:rgba(127,224,200,.18); }
+  #homeMenuList .btn-menu-item[data-group="biz"]{ --group-color:#f2cf8c; --group-tint:rgba(242,207,140,.18); }
+  #homeMenuList .btn-menu-item[data-group="solo"]{ --group-color:#b7adff; --group-tint:rgba(183,173,255,.18); }
+  #homeMenuList .btn-menu-item[data-group="learn"]{ --group-color:#8cc6f0; --group-tint:rgba(140,198,240,.18); }
   #homeMenuList .btn-menu-item .menu-icon{
+    width:40px; min-width:40px; height:40px;
     display:inline-flex; align-items:center; justify-content:center;
-    width:36px; min-width:36px; height:36px;
-    font-size:0; color:var(--group-color);
+    font-size:0; line-height:1;
+    border-radius:12px;
+    background:var(--group-tint);
+    color:var(--group-color);
   }
   #homeMenuList .btn-menu-item .menu-icon svg{
-    width:26px; height:26px; display:block;
-    fill:none; stroke:currentColor; stroke-width:1.7;
-    stroke-linecap:round; stroke-linejoin:round;
+    width:22px; height:22px; display:block;
+    fill:currentColor; stroke:none;
   }
   /* Текст занимает оставшееся место и центрируется (для .game-select-list).
      В #homeMenuList отменяем text-align:center чтобы не было двойного центрирования. */
