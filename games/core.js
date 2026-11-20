@@ -17,12 +17,15 @@ let screenSeenActive = 'setup';
 
 
 /* ============ ГИДРАТАЦИЯ УРОВНЯ ДОСТУПА ИЗ КЭША ============
- * При запуске PWA уровень доступа и флаг 18+ восстанавливаются из
- * localStorage синхронно, ДО первого рендера главной. Иначе
- * window.__userAccessLevel остаётся undefined (→ «гость») ~3 секунды,
- * пока Firestore не подтвердит уровень, и на каждом открытии PWA мелькает
- * гостевой экран. onAuthStateChanged затем подтвердит/исправит значение.
+ * При запуске PWA уровень доступа, флаг 18+ и признак входа восстанавливаются
+ * из localStorage синхронно, ДО первого рендера главной. Иначе
+ * window.__userAccessLevel остаётся undefined (→ «гость»), пока Firestore не
+ * подтвердит уровень, и на каждом открытии PWA мелькает гостевой экран.
+ * onAuthStateChanged затем подтвердит/исправит значение и обновит кэш
+ * (persistUserLevel в каждой ветке — иначе в кэш попадал только промежуточный
+ * уровень, и «гость» показывался при каждом запуске).
  */
+window.__authResolved = false;
 (function hydrateUserLevelFromCache() {
   try {
     var cached = localStorage.getItem('__userAccessLevel');
@@ -30,8 +33,27 @@ let screenSeenActive = 'setup';
       window.__userAccessLevel = cached;
     }
     window.__userIsAdult = localStorage.getItem('__userIsAdult') === 'true';
+    // Кэш прошлого запуска: пока Firebase восстанавливает сессию,
+    // auth.currentUser ещё null, и без этого признака разделы запираются
+    // как гостевые, хотя уровень уже известен.
+    window.__userSignedInCached = localStorage.getItem('__userSignedIn') === 'true';
+    window.__userCachedUid = localStorage.getItem('__userUid') || '';
   } catch (e) {}
 })();
+
+
+/* ============ «ЕСТЬ ЛИ ВХОД» С УЧЁТОМ КЭША ============
+ * Пока не пришёл первый onAuthStateChanged (window.__authResolved), сессия
+ * Firebase ещё не восстановлена. В эти секунды опираемся на кэш прошлого
+ * запуска — иначе игрок на секунды видит себя гостем, хотя его уровень уже
+ * прочитан из localStorage.
+ */
+window.__hasUser = function () {
+  try {
+    if (window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser) return true;
+  } catch (e) {}
+  return window.__authResolved !== true && window.__userSignedInCached === true;
+};
 
 
 /* ============ ДАННЫЕ КАРТ ============ */
@@ -5089,7 +5111,7 @@ function playHitSound(){
     // Проверка 18+
     if ((game.ageRating || 'all') !== '18+') return true;
     const isAdult = !!(typeof window !== 'undefined' && window.__userIsAdult === true);
-    const hasUser = !!(typeof window !== 'undefined' && window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
+    const hasUser = !!(typeof window !== 'undefined' && typeof window.__hasUser === 'function' && window.__hasUser());
     if (userLevel === 'guest' || !hasUser) return false;
     // Админ имеет полный доступ ко всем играм, включая 18+
     if (isAdmin) return true;
@@ -5326,6 +5348,19 @@ function playHitSound(){
       setAccountGender(null);
       const emailEl = document.getElementById('accountProfileEmail');
       if (emailEl) emailEl.textContent = user.email || '';
+      // Уровень показывается сразу из кэша прошлого запуска: иначе строка
+      // «Уровень» пустует до ответа Firestore (до 4 секунд).
+      (function prefillLevelFromCache() {
+        const cachedLevel = window.__userAccessLevel;
+        if (!cachedLevel) return;
+        const levelEl = document.getElementById('accountProfileLevel');
+        const levelRow = document.getElementById('accountProfileLevelRow');
+        if (!levelEl) return;
+        const displayLevel = isAdminEmail(user.email) ? 'admin' : cachedLevel;
+        levelEl.style.color = '#2b0f2e';
+        levelEl.textContent = (LEVEL_LABELS_LOCAL && LEVEL_LABELS_LOCAL[displayLevel]) || displayLevel;
+        if (levelRow) levelRow.style.display = '';
+      })();
       const verifiedEl = document.getElementById('accountProfileVerified');
       // Строка «Email подтверждён» и кнопка повторной отправки скрыты из профиля,
       // чтобы оставить 2 информационные строки: Email + Уровень (как в админ-панели).
@@ -5744,10 +5779,21 @@ function playHitSound(){
 
   // Кэшируем уровень доступа и флаг 18+ в localStorage, чтобы при следующем
   // запуске PWA не мигал «гостевой» экран, пока Firestore подтверждает уровень.
+  // Вызывать только когда уровень уже разрешён (после ответа Firestore или
+  // когда пользователя нет): иначе в кэш уйдёт промежуточный «гость».
   function persistUserLevel() {
     try {
       localStorage.setItem('__userAccessLevel', window.__userAccessLevel || 'guest');
       localStorage.setItem('__userIsAdult', window.__userIsAdult === true ? 'true' : 'false');
+      let currentUser = null;
+      try {
+        const fb = window.ComeOnPlayFirebase;
+        currentUser = (fb && fb.auth && fb.auth.currentUser) || null;
+      } catch (e) {}
+      localStorage.setItem('__userSignedIn', currentUser ? 'true' : 'false');
+      localStorage.setItem('__userUid', currentUser ? currentUser.uid : '');
+      window.__userSignedInCached = !!currentUser;
+      window.__userCachedUid = currentUser ? currentUser.uid : '';
     } catch (e) {}
   }
 
@@ -5969,8 +6015,15 @@ function playHitSound(){
     ensureStatsBtnVisibility.attempts = 100;
 
     auth.onAuthStateChanged(function (user) {
+      // Сессия восстановлена: дальше hasUser() опирается только на Firebase.
+      window.__authResolved = true;
       if (user) {
         ensureUserDoc(user);
+        // Кэш уровня принадлежит другому аккаунту — не показываем чужой уровень.
+        if (window.__userCachedUid && window.__userCachedUid !== user.uid) {
+          window.__userAccessLevel = 'guest';
+          window.__userIsAdult = false;
+        }
         const db = getDb();
         if (db) {
           db.collection('users').doc(user.uid).get().then(function (doc) {
@@ -5984,12 +6037,14 @@ function playHitSound(){
             window.__userAccessLevel = accessLevel;
             if (isAdminEmail(user.email)) window.__userAccessLevel = 'admin';
             window.__userIsAdult = data.isAdult === true || ["plus","premium","admin"].indexOf(window.__userAccessLevel || "") >= 0;
+            persistUserLevel();
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
             if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
             ensureStatsBtnVisibility();
           }).catch(function () {
             window.__userAccessLevel = isAdminEmail(user.email) ? 'admin' : 'starter';
             window.__userIsAdult = false;
+            persistUserLevel();
             if (typeof window.renderGroupGames === "function") window.renderGroupGames();
             if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
             ensureStatsBtnVisibility();
@@ -6010,6 +6065,7 @@ function playHitSound(){
         } else {
           window.__userAccessLevel = isAdminEmail(user.email) ? 'admin' : 'starter';
           window.__userIsAdult = false;
+          persistUserLevel();
           if (typeof window.renderGroupGames === "function") window.renderGroupGames();
             if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
           ensureStatsBtnVisibility();
@@ -6017,11 +6073,11 @@ function playHitSound(){
       } else {
         window.__userAccessLevel = 'guest';
         window.__userIsAdult = false;
+        persistUserLevel();
         if (typeof window.renderGroupGames === "function") window.renderGroupGames();
             if (typeof window.updateHomeSectionLocks === "function") window.updateHomeSectionLocks();
         ensureStatsBtnVisibility();
       }
-      persistUserLevel();
       // Кнопка аккаунта остаётся «Аккаунт»; профиль открывается в модалке.
       // Кнопка статистики — только админу.
       ensureStatsBtnVisibility();
@@ -6051,7 +6107,7 @@ function canLaunchGame(game) {
   try {
     if (typeof window !== 'undefined') {
       isAdult = window.__userIsAdult === true;
-      hasUser = !!(window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser);
+      hasUser = !!(typeof window.__hasUser === 'function' ? window.__hasUser() : (window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser));
     }
   } catch (e) {}
   if (userLevel === 'guest' || !hasUser) return false;
@@ -6064,7 +6120,7 @@ try { if (typeof global !== 'undefined') global.canLaunchGame = canLaunchGame; }
 function canPlay(game) { return canLaunchGame(game); }
 try { if (typeof global !== 'undefined') global.canPlay = canPlay; } catch (e) {}
 (function setupGuestAccessHandlers(){
-  function hasUser(){ return !!(typeof window !== 'undefined' && window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser); }
+  function hasUser(){ return !!(typeof window.__hasUser === 'function' ? window.__hasUser() : (typeof window !== 'undefined' && window.ComeOnPlayFirebase && window.ComeOnPlayFirebase.auth && window.ComeOnPlayFirebase.auth.currentUser)); }
   function isAdultUser(){ return !!(typeof window !== 'undefined' && window.__userIsAdult === true); }
   function isGuestLevel(){ return (typeof window !== 'undefined') && (window.__userAccessLevel || 'guest') === 'guest'; }
   function canAccessCouple(){ return hasUser() && (!isGuestLevel() || isAdminUser()) && (isAdultUser() || isAdminUser()); }
