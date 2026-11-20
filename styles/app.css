@@ -4734,37 +4734,3 @@ body.video-pseudo-fs-active #davayPlayer.video-slide-in{
 /* Нативные контролы в этом режиме не нужны — пауза тапом по видео. */
 body.video-pseudo-fs-active video::-webkit-media-controls{ display:none !important; }
 
-/* ===== «Тест» на странице «Давай попробуем» =====
-   Маленькая кнопка под строкой пилюль; открывает поле для ссылки на ролик.
-   Подсвечена, когда ссылка задана (её проверит «Видеорулетка»). */
-.test-video-row{ display:flex; margin-top:8px; }
-.test-video-btn{
-  flex:0 0 auto; padding:7px 16px; border-radius:12px;
-  border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.1);
-  color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer;
-  transition:background .18s ease, border-color .18s ease, color .18s ease;
-}
-.test-video-btn:hover{ background:rgba(255,255,255,.16); }
-.test-video-btn.on{
-  background:var(--accent); border-color:var(--accent); color:#2b0f2e;
-  box-shadow:0 4px 14px rgba(var(--accent-rgb),.35);
-}
-.test-video-wrap{
-  display:flex; gap:8px; align-items:center; margin-top:8px;
-}
-.test-video-wrap[hidden]{ display:none; }
-.test-video-wrap input{
-  flex:1; min-width:0; padding:11px 14px; border-radius:12px;
-  border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.1);
-  color:#fff; font:inherit; font-size:14px; outline:none;
-}
-.test-video-wrap input::placeholder{ color:rgba(255,255,255,.45); }
-.test-video-wrap input:focus{ border-color:rgba(var(--accent-rgb),.7); background:rgba(255,255,255,.14); }
-.test-video-clear{
-  flex:0 0 40px; width:40px; height:40px; padding:0; border-radius:12px;
-  border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08);
-  color:#fff; font-size:15px; cursor:pointer;
-}
-.test-video-clear:hover{ background:rgba(255,255,255,.16); }
-/* Строка «Тест» на «Давай попробуем» видна только админу (hidden в разметке). */
-.test-video-row[hidden]{ display:none; }

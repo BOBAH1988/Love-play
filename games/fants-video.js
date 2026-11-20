@@ -48,15 +48,14 @@ function playFallbackVideoCard(level, announceEmpty){
 // больше не показывает (getFallbackVideoCard используется только при ошибке
 // воспроизведения конкретного файла, см. renderVideoCard) — так поведение
 // совпадает с "Давай попробуем", у которой то же самое пустое состояние.
-function renderVideoPlaceholderCard(message){
+function renderVideoPlaceholderCard(){
   clearInterval(timerInterval);
   timerInterval = null;
   currentCard = null;
-  const text = message || 'Видео пока нет — добавьте их на странице «Давай попробуем» кнопкой «Добавить свое видео»';
   fadeSwapCard((card)=>{
     card.className = 'card card-empty';
     card.style.borderTop = '';
-    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">${text}</div></div>`;
+    card.innerHTML = `<div class="card-inner"><div class="card-icon">🎬</div><div class="card-text">Видео пока нет — добавьте их на странице «Давай попробуем» кнопкой «Добавить свое видео»</div></div>`;
   });
 }
 
@@ -805,47 +804,6 @@ function updateVideoLevelBtn(){
   const quickBtn = document.getElementById('videoHotBtn');
   if(quickBtn) quickBtn.disabled = false;
 }
-// ===== Проверка ролика по ссылке (кнопка «Тест») =====
-// Если на странице «Давай попробуем» задана ссылка, «Видеорулетка» начинает
-// с неё, а дальше идёт обычная очередь. Карточка синтетическая: записи в
-// индексе и папки на Диске у неё нет — только URL.
-function getTestVideoCard(){
-  const url = String((typeof state !== 'undefined' && state.davayTestVideoUrl) || '').trim();
-  if(!/^https?:\/\/\S+/i.test(url)) return null;
-  return { id: 'test-video-url', video: url, url, level: videoLevel || 1, source: 'test' };
-}
-// Нативный HLS есть только у Safari (macOS) и у всех браузеров на iOS/iPadOS.
-// Chrome умеет отвечать canPlayType «maybe», но поток не проигрывает, поэтому
-// одной проверки canPlayType мало — смотрим ещё и движок.
-function canPlayHlsNative(){
-  const ua = navigator.userAgent || '';
-  const isSafari = /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|EdgiOS|OPR|YaBrowser|Android/i.test(ua);
-  if(typeof isIOSDevice !== 'undefined' && isIOSDevice) return true;
-  if(!isSafari) return false;
-  const probe = document.createElement('video');
-  return !!(probe.canPlayType && probe.canPlayType('application/vnd.apple.mpegurl'));
-}
-function showTestVideoCard(){
-  const card = getTestVideoCard();
-  if(!card) return false;
-  // IPTV-потоки (.m3u8) браузер воспроизводит только там, где есть встроенная
-  // поддержка HLS — Safari и все браузеры на iOS. Chrome/Android без потока
-  // показывают чёрный экран, поэтому честно предупреждаем и не притворяемся,
-  // что ролик пошёл.
-  const isHls = /\.m3u8(?:[?#]|$)/i.test(card.video);
-  if(isHls){
-    if(!canPlayHlsNative()){
-      renderVideoPlaceholderCard('IPTV-поток .m3u8 этот браузер не воспроизводит. Откройте на iPhone/iPad или в Safari.');
-      showToast('Формат .m3u8 поддерживается только в Safari/iOS');
-      return true;
-    }
-  }
-  currentVideoCard = card;
-  videoHistory.push(card);
-  videoHistoryPos = videoHistory.length - 1;
-  renderVideoCard(card, card.level);
-  return true;
-}
 function drawVideoCard(level, announceEmpty){
   videoLevel = level;
   updateVideoLevelBtn();
@@ -986,13 +944,6 @@ function playNextOwnVideo(level){
 }
 
 function showVideoErrorFallback(card, level, errorCode){
-  // Проверочная ссылка (кнопка «Тест») не открылась: подставлять другой ролик
-  // нельзя — игрок решит, что ссылка рабочая. Показываем заглушку и причину.
-  if(card && card.source === 'test'){
-    renderVideoPlaceholderCard();
-    showToast('Видео по ссылке не открылось — проверьте адрес');
-    return;
-  }
   // Своё видео не открылось — запоминаем его как битое и показываем другое
   // СВОЁ. Демо-ролик здесь намеренно не используется: он остаётся только для
   // случая «своих видео нет вовсе».
@@ -1309,9 +1260,6 @@ async function goToVideoGame(entry){
   // Первый ролик (и все последующие при быстром переходе) не ждёт
   // чтения IndexedDB, пока каталог уже был загруж ранее.
   const tryDraw = async () => {
-    // Ссылка для проверки (кнопка «Тест») идёт первой; остальную очередь
-    // игрок увидит свайпом или кнопкой «Следующее».
-    if(showTestVideoCard()){ refreshYandexLinks(true).catch(()=>{}); return; }
     let entryCard = entry && entry.key ? findVideoCardByEntryKey(entry.key) : null;
     if(!entryCard && entry && entry.key && typeof importYandexVideos === 'function'){
       // Вход по ссылке, а ролика нет в каталоге: чаще всего это новый телефон,
