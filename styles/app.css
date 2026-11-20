@@ -765,6 +765,35 @@
     font-size:1.7em; line-height:1; flex-shrink:0;
     width:auto; min-width:32px; white-space:nowrap;
   }
+  /* Иконки игр — тот же линейный стиль, что у групп на главной: один path,
+     stroke 1.7, круглые концы, тон группы в цвете. Раньше здесь были
+     эмодзи, и в системных наборах они рисовались по-разному на iOS, Android
+     и Windows — список игр выглядел собранным из чужих наборов. */
+  .game-select-list .btn-menu-item .menu-icon{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:36px; min-width:36px; height:36px;
+    font-size:0; line-height:1; color:var(--group-color, rgba(255,255,255,.9));
+  }
+  .game-select-list .btn-menu-item .menu-icon svg{
+    width:26px; height:26px; display:block;
+    fill:none; stroke:currentColor; stroke-width:1.7;
+    stroke-linecap:round; stroke-linejoin:round;
+  }
+  /* Цвет иконки — тон группы игры, чтобы список читался как одна палитра. */
+  #twoPlayerView .btn-menu-item,
+  #companyView .btn-menu-item,
+  #kidsView .btn-menu-item,
+  #businessView .btn-menu-item,
+  #soloView .btn-menu-item,
+  #learningView .btn-menu-item{
+    --group-color:rgba(255,255,255,.9);
+  }
+  #twoPlayerView{ --group-color:#ff9fc4; }
+  #companyView{ --group-color:#ffb877; }
+  #kidsView{ --group-color:#7fe0c8; }
+  #businessView{ --group-color:#f2cf8c; }
+  #soloView{ --group-color:#b7adff; }
+  #learningView{ --group-color:#8cc6f0; }
   /* Главная страница (хаб) — 3 крупные кнопки формата игры, всегда в один
      столбец (не сетка), чтобы они читались как главный выбор, а не как
      рядовые пункты списка игр. */
