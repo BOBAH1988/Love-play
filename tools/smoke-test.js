@@ -351,40 +351,43 @@ test('«Оцени бизнес»: при одном участнике вопр
   }
 });
 
-test('«Игры для компании»: карточки используют общий ультрамариновый градиент', () => {
+test('«Игры для компании»: карточки используют общий градиент группы', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
   const ids = [
     'krokodilCard', 'twisterCard', 'memesCard', 'partyNeverCard',
     'partyFantsCard', 'partyTdCard', 'famZnayuCard', 'partyQuizCard',
   ];
-  const gradient = 'linear-gradient\\(160deg,\\s*#5b4bd6,\\s*#34278f\\s+55%,\\s*#171547\\)';
-  const allUseUltramarine = ids.every((id) => {
+  const gradient = 'linear-gradient\\(160deg,\\s*var\\(--grp-party-1\\),\\s*var\\(--grp-party-2\\)\\s+55%,\\s*var\\(--grp-party-3\\)\\)';
+  const allUseGroupTone = ids.every((id) => {
     const re = new RegExp(`#${id}\\s*\\{[^}]*background:\\s*${gradient}`);
     return re.test(css);
   });
-  assert(allUseUltramarine, 'все восемь карточек группы «Игры для компании» должны использовать ультрамариновый градиент');
-  assert(!/#4a90c2|#2c5a7a/.test(css), 'старый тёмно-синий градиент не должен оставаться в стилях');
+  assert(allUseGroupTone, 'все восемь карточек группы «Игры для компании» должны брать градиент из токенов --grp-party-*');
+  assert(!/#4a90c2|#2c5a7a|#5b4bd6/.test(css), 'старые синие градиенты не должны оставаться в стилях');
 });
 
-test('«Игры для одного»: карточка «Викторины» использует ярко-синий градиент', () => {
+test('«Игры для одного»: карточка «Викторины» использует индиго группы', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
-  const card = /#soloQuizCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2f80ed,\s*#1557c0\s+55%,\s*#08275f\)/.test(css);
+  const card = /#soloQuizCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*var\(--grp-solo-1\),\s*var\(--grp-solo-2\)\s+55%,\s*var\(--grp-solo-3\)\)/.test(css);
   const text = /#soloQuizCard\s*\{[^}]*color:\s*#fff;/.test(css) &&
     /#soloQuizCard\s+\.znayu-question-text\s*\{[^}]*color:\s*#fff;/.test(css);
-  assert(card, 'карточка одиночной «Викторины» должна иметь ярко-синий градиент');
-  assert(text, 'текст одиночной «Викторины» должен быть белым на синей карточке');
+  assert(card, 'карточка одиночной «Викторины» должна брать градиент из токенов --grp-solo-*');
+  assert(text, 'текст одиночной «Викторины» должен быть белым на тёмной карточке');
   assert(!/pwa-standalone[^{}]*#soloQuizCard|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#soloQuizCard/.test(css),
     'PWA не должна отдельно перекрашивать карточку одиночной «Викторины»');
 });
 
-test('«Игры с детьми»: карточки и витрина используют тёмно-бирюзовый фон', () => {
+test('«Игры с детьми»: карточки и витрина используют общий фон группы', () => {
   const css = fs.readFileSync(path.join(ROOT, 'styles/app.css'), 'utf8');
-  const group = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(css);
-  const shop = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(css);
-  assert(group, 'детская «Викторина» должна входить в общий тёмно-бирюзовый блок группы');
-  assert(shop, 'витрина «Магазина» должна использовать тот же тёмно-бирюзовый градиент');
+  const kidsGrad = 'linear-gradient\\(160deg,\\s*var\\(--grp-kids-1\\),\\s*var\\(--grp-kids-2\\)\\s+55%,\\s*var\\(--grp-kids-3\\)\\)';
+  const group = new RegExp(`#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\\{[^}]*background:\\s*${kidsGrad}`).test(css);
+  const shop = new RegExp(`\\.shop-showcase-item\\s*\\{[^}]*background:\\s*${kidsGrad}`).test(css);
+  assert(group, 'детская «Викторина» должна входить в общий блок группы с токенами --grp-kids-*');
+  assert(shop, 'витрина «Магазина» должна использовать тот же градиент группы');
   assert(!/#kidsQuizCard\s*\{[^}]*\bbackground\s*:/.test(css),
-    'у детской «Викторины» не должно быть отдельного более светлого фона');
+    'у детской «Викторины» не должно быть отдельного фона');
+  assert(!/#kidsTdCard[^{}]*#flashCard/.test(css),
+    '«Время»/«Английский» — обучающая карточка, а не детская');
   assert(!/pwa-standalone[^{}]*#kids[A-Za-z0-9_-]*Card|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#kids[A-Za-z0-9_-]*Card/.test(css),
     'PWA не должна перекрашивать карточки группы «Игры с детьми»');
 });

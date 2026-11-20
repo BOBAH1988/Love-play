@@ -38,6 +38,21 @@
     /* Тень при поднятии (hover) и "всплывание" успеха */
     --btn-raise-shadow: 0 4px 16px hsl(var(--accent-rgb) / .32);
     --btn-success-shadow: 0 0 0 3px #fff, 0 0 0 6px hsl(var(--accent-rgb) / .55);
+
+    /* ---- Палитра групп игр (фон полноэкранных карточек) ----
+       Каждая группа — три ступени одного тона: светлый стоп → средний (55%) →
+       тёмный стоп, идущие по нарастанию глубины так же, как у эталонной
+       группы «Для пар». Поэтому переход с одной группы на другую не «мигает»
+       разной насыщенностью: драматургия градиента везде одна, меняется тон.
+       Тон подобран так, чтобы группа узнавалась по цвету (пара — малина,
+       компания — янтарь, дети — мята, один — индиго, обучение — лазурь,
+       бизнес — золото) и при этом не спорила с общим тёмно-фиолетовым фоном. */
+    --grp-pair-1:#e0559a;   --grp-pair-2:#8a2f66;   --grp-pair-3:#3a0f2a;
+    --grp-party-1:#f0793c;  --grp-party-2:#a83a12;  --grp-party-3:#3a1306;
+    --grp-kids-1:#2f8f80;   --grp-kids-2:#146b60;   --grp-kids-3:#053029;
+    --grp-solo-1:#6d5cf0;   --grp-solo-2:#3b2ea8;   --grp-solo-3:#140f38;
+    --grp-learn-1:#3f86c6;  --grp-learn-2:#22548a;  --grp-learn-3:#07213a;
+    --grp-biz-1:#b98a33;    --grp-biz-2:#7d5a1a;    --grp-biz-3:#2b1d05;
   }
   /* Увядание анимации для пользователей, предпочитающих уменьшить движение */
   @media (prefers-reduced-motion: reduce){
@@ -1201,7 +1216,7 @@
   .shop-showcase-item{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:2px; padding:7px 2px 6px; border-radius:12px;
-    background:linear-gradient(160deg, #2b837f, #176e76 55%, #0d3741);
+    background:linear-gradient(160deg, var(--grp-kids-1), var(--grp-kids-2) 55%, var(--grp-kids-3));
     border:2px solid rgba(255,255,255,.25); color:#fff; text-align:center;
     cursor:pointer; min-height:74px;
   }
@@ -1671,7 +1686,7 @@
      Фон тёмный, поэтому текст (включая заголовок хода и плашку типа
      Правда/Действие) перекрашен в белый. */
   #card, #tdCard, #timerCard, #wishlistCard, #znayuCard, #ideasCard, #sexQuestCard, #passionMapCard, #compatTestCard, #knowMoreCard{
-    background:linear-gradient(160deg, #e0559a, #8a2f66 55%, var(--bg2));
+    background:linear-gradient(160deg, var(--grp-pair-1), var(--grp-pair-2) 55%, var(--grp-pair-3));
     color:#fff;
   }
   #card .card-text, #tdCard .card-text, #timerCard .card-text,
@@ -1879,13 +1894,13 @@
      у «Викторины» свой более тёмный оттенок. Кнопки ответов у обеих карточек
      одинаковые и оформляются общим компонентом ниже. */
   #quizCard{
-    background:linear-gradient(160deg, #b03e7d, #5e1f47 55%, var(--bg2));
+    background:linear-gradient(160deg, var(--grp-pair-2), var(--grp-pair-3) 55%, var(--grp-pair-3));
     color:#fff;
   }
   /* Карточка «Викторины» из группы «Игры для одного» — ярко-синий градиент.
      Остальные одиночные игры используют поля/сетки, поэтому их фон не меняем. */
   #soloQuizCard{
-    background:linear-gradient(160deg, #2f80ed, #1557c0 55%, #08275f);
+    background:linear-gradient(160deg, var(--grp-solo-1), var(--grp-solo-2) 55%, var(--grp-solo-3));
     color:#fff;
   }
   #soloQuizCard .znayu-question-text{ color:#fff; }
@@ -1899,22 +1914,40 @@
      каждой карточки по её id. Как и у остальных карточек, отдельного
      переопределения в standalone нет. */
   #soloTestCard{
-    background:linear-gradient(160deg, #2f80ed, #1557c0 55%, #08275f);
+    background:linear-gradient(160deg, var(--grp-solo-1), var(--grp-solo-2) 55%, var(--grp-solo-3));
     color:#fff;
   }
   #soloTestCard .znayu-question-text{ color:#fff; }
   /* Карточки «Игр с детьми» — один общий тёмно-бирюзовый градиент.
      Детская «Викторина» использует его же, без отдельного светлого фона;
      кнопки ответов по-прежнему оформляет общий белый компонент. */
-  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #kidsQuizCard, #flashCard, #whatToPlayCard, .shop-register-card, #funTestsCard{
-    background:linear-gradient(160deg, #2b837f, #176e76 55%, #0d3741);
+  #kidsTdCard, #kidsKrokodilCard, #kidsMemesCard, #kidsQuizCard, #whatToPlayCard, #funTestsCard{
+    background:linear-gradient(160deg, var(--grp-kids-1), var(--grp-kids-2) 55%, var(--grp-kids-3));
     color:#fff;
   }
-  /* Обучающие игры: одинаковая синяя подложка внутри группы. Ответы всех
-     карточек используют общий компонент, как викторины и бизнес-игры. */
+  /* Обучающие игры: одинаковая лазурная подложка внутри группы. Ответы всех
+     карточек используют общий компонент, как викторины и бизнес-игры.
+     «Время»/«Английский» (#flashCard) — обучающая карточка, поэтому она
+     здесь, а не в бирюзовой группе «Игр с детьми»: раньше она попадала
+     сразу в два списка, и цвет зависел от порядка правил. */
   #flagsCard, #capitalsCard, #flashCard, #timesTableCard, #iqTestCard{
-    background:linear-gradient(160deg, #8aa9c9, #6f8fb0 55%, #4f6b8a);
+    background:linear-gradient(160deg, var(--grp-learn-1), var(--grp-learn-2) 55%, var(--grp-learn-3));
+    color:#fff;
   }
+  #flagsCard .znayu-question-text, #capitalsCard .znayu-question-text,
+  #timesTableCard .znayu-question-text, #iqTestCard .znayu-question-text{
+    color:#fff;
+  }
+  /* Бизнес игры: стенд «Оцени бизнес» и «Бизнес тесты» получают золотой фон
+     группы — раньше у бизнеса своего цвета не было и карточки выглядели
+     базовыми белыми на фоне игрального раздела. Касса «Магазина»
+     (.shop-register-card) сюда НЕ входит: она маленькая и живёт внутри
+     игрового поля, ей нужен компактный вид, а не полноэкранная сцена. */
+  #bizObsCard, #bizTestsCard{
+    background:linear-gradient(160deg, var(--grp-biz-1), var(--grp-biz-2) 55%, var(--grp-biz-3));
+    color:#fff;
+  }
+  #bizObsCard .znayu-question-text, #bizTestsCard .znayu-question-text{ color:#fff; }
   /* Задание «Таблицы умножения» — пример (7 × 8 = ?) занимает место вопроса
      (.znayu-question-text, как у «Флагов»/«Столиц»), но крупнее обычного
      текста вопроса: на нём держится вся карточка. */
@@ -1930,13 +1963,13 @@
      ультрамариновый градиент вместо обычного плоского бело-чёрного
      оформления и белый текст, чтобы слово выделялось на карточке. */
   #krokodilCard{
-    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
+    background:linear-gradient(160deg, var(--grp-party-1), var(--grp-party-2) 55%, var(--grp-party-3));
     color:#fff;
   }
   #krokodilCard .card-text{color:#fff;}
   /* Карточка "Твистера" — та же заливка и цвет текста, что у "Крокодила". */
   #twisterCard{
-    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
+    background:linear-gradient(160deg, var(--grp-party-1), var(--grp-party-2) 55%, var(--grp-party-3));
     color:#fff;
   }
   #twisterCard .card-text{color:#fff;}
@@ -1944,13 +1977,13 @@
   /* Карточка "Мемасиков" — то же оформление, что у "Крокодила" (ультрамариновый
      градиент + белый текст по центру), но без иконки — просто текст ситуации. */
   #memesCard{
-    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
+    background:linear-gradient(160deg, var(--grp-party-1), var(--grp-party-2) 55%, var(--grp-party-3));
     color:#fff;
   }
   #memesCard .card-text{color:#fff;}
   /* Карточка "Я никогда не" (компания) — тот же стандарт, что у "Мемасиков". */
   #partyNeverCard{
-    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
+    background:linear-gradient(160deg, var(--grp-party-1), var(--grp-party-2) 55%, var(--grp-party-3));
     color:#fff;
   }
   #partyNeverCard .card-text{color:#fff;}
@@ -2044,7 +2077,7 @@
      "Мемасиков" (ультрамариновый градиент, белый текст по центру), без иконки —
      задание достаточно длинное само по себе, как у "Мемасиков". */
   #partyFantsCard{
-    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
+    background:linear-gradient(160deg, var(--grp-party-1), var(--grp-party-2) 55%, var(--grp-party-3));
     color:#fff;
   }
   #partyFantsCard .card-text{color:#fff;}
@@ -2057,7 +2090,7 @@
   /* Карточка "Правда/Действие" (компания) — тот же карточный стандарт, плюс
      значок сверху, показывающий, что выбрал игрок: Правда или Действие. */
   #partyTdCard{
-    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
+    background:linear-gradient(160deg, var(--grp-party-1), var(--grp-party-2) 55%, var(--grp-party-3));
     color:#fff;
   }
   #partyTdCard .card-text{color:#fff;}
@@ -2081,12 +2114,12 @@
   /* Карточки группы «Компания» сохраняют общий ультрамариновый фон. Отдельного
      цвета кнопок нет: все .znayu-answer-btn оформляет общий компонент ниже. */
   #famZnayuCard{
-    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
+    background:linear-gradient(160deg, var(--grp-party-1), var(--grp-party-2) 55%, var(--grp-party-3));
     color:#fff;
   }
   #famZnayuCard .card-text{color:#fff;}
   #partyQuizCard{
-    background:linear-gradient(160deg, #5b4bd6, #34278f 55%, #171547);
+    background:linear-gradient(160deg, var(--grp-party-1), var(--grp-party-2) 55%, var(--grp-party-3));
     color:#fff;
   }
   /* Вопрос «Викторины» выделяется тёплым золотым; стиль кнопок ответов

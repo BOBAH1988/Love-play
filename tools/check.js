@@ -1202,64 +1202,82 @@ function checkStyles(html) {
           ? 'фон кнопок ответов и «Не хочу отвечать» должен быть непрозрачным: полупрозрачный белый смешивается с тёмным фоном карточки и выглядит затемнённым'
           : 'общий .znayu-answer-btn должен иметь непрозрачный светлый фон, непрозрачный тёмный текст, общую рамку и PWA-safe сброс нативного затемнения');
 
-    // Карточки игр компании используют общий ультрамариновый градиент.
-    // Проверяем все восемь карточек: одна забытая карточка снова сделает группу
-    // визуально неоднородной, а отдельный старый градиент — вернёт старый оттенок.
-    const companyCardIds = [
-      'krokodilCard', 'twisterCard', 'memesCard', 'partyNeverCard',
-      'partyFantsCard', 'partyTdCard', 'famZnayuCard', 'partyQuizCard',
-    ];
-    const ultramarineGradient = 'linear-gradient\\(160deg,\\s*#5b4bd6,\\s*#34278f\\s+55%,\\s*#171547\\)';
-    const companyCardsUseUltramarine = companyCardIds.every((id) => {
-      const re = new RegExp(`#${id}\\s*\\{[^}]*background:\\s*${ultramarineGradient}`);
-      return re.test(cssWithoutComments);
+    // Палитра групп задана токенами в :root (--grp-<группа>-1/2/3), а каждая
+    // карточка ссылается на свой тон. Проверяется и наличие токенов, и то,
+    // что карточка каждой группы действительно берёт градиент из токенов —
+    // иначе группа снова расползётся по разным оттенкам.
+    const groupTokens = {
+      pair: ['#e0559a', '#8a2f66', '#3a0f2a'],
+      party: ['#f0793c', '#a83a12', '#3a1306'],
+      kids: ['#2f8f80', '#146b60', '#053029'],
+      solo: ['#6d5cf0', '#3b2ea8', '#140f38'],
+      learn: ['#3f86c6', '#22548a', '#07213a'],
+      biz: ['#b98a33', '#7d5a1a', '#2b1d05'],
+    };
+    const missingTokens = Object.keys(groupTokens).filter((g) => {
+      const [a, b, c] = groupTokens[g];
+      const re = new RegExp(`--grp-${g}-1:\\s*${a};[\\s\\S]*?--grp-${g}-2:\\s*${b};[\\s\\S]*?--grp-${g}-3:\\s*${c};`);
+      return !re.test(cssWithoutComments);
     });
-    const oldCompanyBlue = /#4a90c2|#2c5a7a/.test(cssWithoutComments);
-    check('фон карточек игр компании использует ультрамариновый градиент',
-      companyCardsUseUltramarine && !oldCompanyBlue,
-      !companyCardsUseUltramarine
-        ? 'ожидается градиент #5b4bd6 → #34278f → #171547 у всех карточек группы'
-        : 'старый синий градиент #4a90c2/#2c5a7a ещё используется');
+    check('палитра групп задана токенами --grp-* в :root',
+      missingTokens.length === 0,
+      'не найдены или изменены токены групп: ' + missingTokens.join(', '));
 
-    const soloQuizUsesBrightBlue = /#soloQuizCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2f80ed,\s*#1557c0\s+55%,\s*#08275f\)/.test(cssWithoutComments);
+    const groupGradient = (g) =>
+      new RegExp(`background:\\s*linear-gradient\\(160deg,\\s*var\\(--grp-${g}-1\\),\\s*var\\(--grp-${g}-2\\)\\s+55%,\\s*var\\(--grp-${g}-3\\)\\)`);
+    const groupCards = {
+      pair: ['card', 'tdCard', 'timerCard', 'wishlistCard', 'znayuCard', 'ideasCard',
+        'sexQuestCard', 'passionMapCard', 'compatTestCard', 'knowMoreCard'],
+      party: ['krokodilCard', 'twisterCard', 'memesCard', 'partyNeverCard',
+        'partyFantsCard', 'partyTdCard', 'famZnayuCard', 'partyQuizCard'],
+      kids: ['kidsTdCard', 'kidsKrokodilCard', 'kidsMemesCard', 'kidsQuizCard',
+        'whatToPlayCard', 'funTestsCard'],
+      solo: ['soloQuizCard', 'soloTestCard'],
+      learn: ['flagsCard', 'capitalsCard', 'flashCard', 'timesTableCard', 'iqTestCard'],
+      biz: ['bizObsCard', 'bizTestsCard'],
+    };
+    const groupCardRegressions = [];
+    Object.keys(groupCards).forEach((g) => {
+      groupCards[g].forEach((id) => {
+        const re = new RegExp(`#${id}[^{}]*\\{[^}]*${groupGradient(g).source}`);
+        if (!re.test(cssWithoutComments)) groupCardRegressions.push(`#${id} (${g})`);
+      });
+    });
+    check('каждая карточка берёт градиент своей группы из токенов',
+      groupCardRegressions.length === 0,
+      'без группового градиента: ' + groupCardRegressions.join(', '));
+
+    // Одна карточка — одна группа. «Время»/«Английский» (#flashCard) долго
+    // стояли сразу в бирюзовом (детском) и в лазурном (обучающем) списках:
+    // цвет зависел от порядка правил. Теперь она только в обучающих.
+    const flashCardInKids = /#kidsTdCard[^{}]*#flashCard/.test(cssWithoutComments);
+    check('карточка «Время»/«Английский» — только в обучающей группе',
+      !flashCardInKids,
+      'у #flashCard два цвета группы: уберите её из списка детских карточек');
+
     const soloQuizHasWhiteText = /#soloQuizCard\s*\{[^}]*color:\s*#fff;/.test(cssWithoutComments) &&
       /#soloQuizCard\s+\.znayu-question-text\s*\{[^}]*color:\s*#fff;/.test(cssWithoutComments);
     const soloPwaCardStyle = /pwa-standalone[^{}]*#soloQuizCard|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#soloQuizCard/.test(cssWithoutComments);
-    check('фон карточки «Викторины» для одного — ярко-синий градиент',
-      soloQuizUsesBrightBlue && soloQuizHasWhiteText && !soloPwaCardStyle,
-      !soloQuizUsesBrightBlue
-        ? 'ожидается градиент #2f80ed → #1557c0 → #08275f для #soloQuizCard'
-        : !soloQuizHasWhiteText
-          ? 'вопрос и текст карточки должны быть белыми на синем фоне'
-          : 'в standalone не должно быть отдельного переопределения #soloQuizCard');
+    check('фон карточки «Викторины» для одного — индиго группы «Для одного»',
+      soloQuizHasWhiteText && !soloPwaCardStyle,
+      !soloQuizHasWhiteText
+        ? 'вопрос и текст карточки должны быть белыми на тёмном фоне'
+        : 'в standalone не должно быть отдельного переопределения #soloQuizCard');
 
-    // Карточка «Пройди тест» (для одного) — тот же ярко-синий градиент, что
-    // у «Викторины» из того же раздела. По просьбе владельца: игра показывала
-    // на карточке вопрос с вариантами ответа, но оставалась базовой светлой
-    // .card, то есть выглядела «без стиля и фона». Проверяем, что фон есть и
-    // что отдельного переопределения в standalone не появилось: правило
-    // #id ... .znayu-answer-btn для карточки запрещено, а перекраска самой
-    // карточки в standalone уже ловилась выше для «Викторины».
-    const soloTestUsesBrightBlue = /#soloTestCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2f80ed,\s*#1557c0\s+55%,\s*#08275f\)/.test(cssWithoutComments);
     const soloTestHasWhiteText = /#soloTestCard\s*\{[^}]*color:\s*#fff;/.test(cssWithoutComments) &&
       /#soloTestCard\s+\.znayu-question-text\s*\{[^}]*color:\s*#fff;/.test(cssWithoutComments);
     const soloTestPwaCardStyle = /pwa-standalone[^{}]*#soloTestCard|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#soloTestCard/.test(cssWithoutComments);
     check('фон карточки «Пройди тест» — как у «Викторины» для одного',
-      soloTestUsesBrightBlue && soloTestHasWhiteText && !soloTestPwaCardStyle,
-      !soloTestUsesBrightBlue
-        ? 'ожидается градиент #2f80ed → #1557c0 → #08275f для #soloTestCard'
-        : !soloTestHasWhiteText
-          ? 'вопрос и текст карточки должны быть белыми на синем фоне'
-          : 'в standalone не должно быть отдельного переопределения #soloTestCard');
+      soloTestHasWhiteText && !soloTestPwaCardStyle,
+      !soloTestHasWhiteText
+        ? 'вопрос и текст карточки должны быть белыми на тёмном фоне'
+        : 'в standalone не должно быть отдельного переопределения #soloTestCard');
 
     // Детская «Викторина» и витрина «Магазина» используют единый
-    // тёмно-бирюзовый фон группы, одинаковый в браузере и PWA. Standalone
+    // фон группы, одинаковый в браузере и PWA. Standalone
     // не должен перекрашивать карточки детей отдельными правилами.
-    const kidsQuizInTurquoiseGroup = /#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(cssWithoutComments);
-    // «Весёлые тесты» — игра для детей, её карточка обязана быть в том же
-    // общем бирюзовом блоке, а не с отдельным фоном: правило группы «Игры с
-    // детьми» — один фон на всех, одинаковый в браузере и PWA.
-    const funTestsInTurquoiseGroup = /#kidsTdCard[^{}]*#funTestsCard[^{}]*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(cssWithoutComments);
+    const kidsQuizInTurquoiseGroup = new RegExp(`#kidsTdCard[^{}]*#kidsQuizCard[^{}]*\\{[^}]*${groupGradient('kids').source}`).test(cssWithoutComments);
+    const funTestsInTurquoiseGroup = new RegExp(`#kidsTdCard[^{}]*#funTestsCard[^{}]*\\{[^}]*${groupGradient('kids').source}`).test(cssWithoutComments);
     // «Отдельный фон» — это когда #funTestsCard СТОИТ В НАЧАЛЕ селектора
     // отдельного правила. В списке общего блока он стоит в конце через
     // запятую, и прежняя регулярка считала общий блок «отдельным».
@@ -1274,7 +1292,7 @@ function checkStyles(html) {
         : separateFunTestsBackground
           ? 'у #funTestsCard не должно быть отдельного background — включите её в общий блок'
           : 'в standalone не должно быть отдельного переопределения #funTestsCard');
-    const shopUsesTurquoise = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#2b837f,\s*#176e76\s+55%,\s*#0d3741/.test(cssWithoutComments);
+    const shopUsesTurquoise = /\.shop-showcase-item\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*var\(--grp-kids-1\),\s*var\(--grp-kids-2\)\s+55%,\s*var\(--grp-kids-3\)\)/.test(cssWithoutComments);
     const separateKidsQuizBackground = /#kidsQuizCard\s*\{[^}]*\bbackground\s*:/.test(cssWithoutComments);
     const pwaKidsCardStyle = /pwa-standalone[^{}]*#kids[A-Za-z0-9_-]*Card|@media\s*\(display-mode:\s*standalone\)\s*\{[^{}]*#kids[A-Za-z0-9_-]*Card/.test(cssWithoutComments);
     check('фон группы «Игры с детьми» одинаков в браузере и PWA',
@@ -3570,12 +3588,12 @@ function checkBizTests(html, timerSrc) {
       new RegExp(`<section id="${sid}"`).test(html) && new RegExp(`${sid}:'businessView'`).test(timerSrc),
       `нет секции #${sid} или записи ${sid}:'businessView' в SECTION_FOR_SCREEN`);
   }
-  // Карточка игры остаётся светлой, как у соседних игр группы: группового
-  // градиента у «Бизнес игр» нет, и отдельный фон у одной игры выбивается.
+  // Карточка игры в общем фоне своей группы: у «Бизнес игр» теперь есть
+  // золотой градиент --grp-biz-*, и отдельный фон у одной игры выбивался бы.
   const appCss = read('styles/app.css');
-  check('карточка «Бизнес тестов» остаётся светлой, как в группе',
-    !/#bizTestsCard\s*\{[^}]*background/.test(appCss),
-    'у группы «Бизнес игры» нет своего градиента, отдельный фон #bizTestsCard сделает карточку чужеродной');
+  check('карточка «Бизнес тестов» — в общем золотом фоне группы «Бизнес игры»',
+    /#bizObsCard[^{}]*#bizTestsCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*var\(--grp-biz-1\),\s*var\(--grp-biz-2\)\s+55%,\s*var\(--grp-biz-3\)\)/.test(appCss),
+    'ожидается #bizTestsCard в общем блоке с #bizObsCard и градиентом --grp-biz-1 → --grp-biz-2 → --grp-biz-3');
   // Пороги профильных шкал должны быть достижимы: верхний уровень не может
   // лежать выше максимальной суммы (число вопросов на шкалу × 3).
   const profBad = [];
@@ -4388,12 +4406,13 @@ function checkIqTest(html, timerSrc) {
       new RegExp(`<section id="${sid}"`).test(html) && new RegExp(`${sid}:'learningView'`).test(timerSrc),
       `нет секции #${sid} или записи ${sid}:'learningView' в SECTION_FOR_SCREEN`);
   }
-  // Карточка включается в ОБЩИЙ блок обучающих игр: у группы своя сине-серая
-  // подложка, и отдельный фон у одной игры выбился бы из раздела.
+  // Карточка включается в ОБЩИЙ блок обучающих игр: у группы своя лазурная
+  // подложка из токенов --grp-learn-*, и отдельный фон у одной игры выбился
+  // бы из раздела.
   const appCss = read('styles/app.css');
   check('карточка «Теста IQ» в общем фоне группы «Обучающие игры»',
-    /#flagsCard[^{}]*#iqTestCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*#8aa9c9,\s*#6f8fb0\s+55%,\s*#4f6b8a/.test(appCss),
-    'ожидается #iqTestCard в общем блоке с градиентом #8aa9c9 → #6f8fb0 → #4f6b8a вместе с «Флагами» и «Столицами»');
+    /#flagsCard[^{}]*#iqTestCard\s*\{[^}]*background:\s*linear-gradient\(160deg,\s*var\(--grp-learn-1\),\s*var\(--grp-learn-2\)\s+55%,\s*var\(--grp-learn-3\)\)/.test(appCss),
+    'ожидается #iqTestCard в общем блоке с градиентом --grp-learn-1 → --grp-learn-2 → --grp-learn-3 вместе с «Флагами» и «Столицами»');
   // Отдельным считается правило, где #iqTestCard СТОИТ В НАЧАЛЕ селектора.
   // В общем блоке он идёт последним через запятую, и прежняя регулярка
   // считала общий блок «отдельным» — то есть проверка ругалась на то, что
