@@ -213,8 +213,8 @@ test('«Арифметика»: выбор темы — все 4 темы раб
     'тост «скоро появится» для тем Сложение/Вычитание должен быть убран');
   assert(/state\.timesTableTopic/.test(src),
     'выбранная тема должна храниться в state.timesTableTopic');
-  assert(/🔢 Арифметика/.test(html),
-    'заголовок настроек и подпись на игровом экране — «🔢 Арифметика»');
+  assert(/<div class="game-level-label"[^>]*><span class="group-title-ico">/.test(html),
+    'заголовок настроек и подпись на игровом экране — SVG-иконка + «Арифметика»');
   assert(!/<span class="times-x">✕<\/span>Арафметика/.test(html) && !/✕ Арафметика/.test(html),
     'старых названия «Арафметика» и иконки ✕ в разметке остаться не должно');
 });
@@ -442,10 +442,10 @@ test('«Арифметика»: темы «Сложение» и «Вычита�
   const js = fs.readFileSync(path.join(ROOT, 'games/times-table.js'), 'utf8');
   assert(/<h1 class="title">🔢 Арифметика<\/h1>/.test(html),
     'заголовок экрана настроек — «🔢 Арифметика»');
-  assert(/<div class="game-level-label">🔢 Арифметика<\/div>/.test(html),
-    'подпись на экране-заглушке — «🔢 Арифметика»');
-  assert(/🔢 Арифметика/.test(js),
-    'renderTimesTableGame() рендерит подпись «🔢 Арифметика»');
+  assert(/<div class="game-level-label"[^>]*>[\s\S]{0,400}?Арифметика<\/div>/.test(html),
+    'подпись на экране-заглушке — иконка + «Арифметика»');
+  assert(/Арифметика/.test(js),
+    'renderTimesTableGame() рендерит подпись «Арифметика»');
   assert(/🔢 Правила игры «Арифметика»/.test(html),
     'заголовок модалки правил — «🔢 Правила игры «Арифметика»»');
   assert(!/Арафметика/.test(html) && !/Арафметика/.test(js),

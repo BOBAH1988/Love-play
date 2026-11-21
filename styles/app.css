@@ -3699,6 +3699,29 @@
      и на safe-area (47px) выше кнопок. Безопасное вычитание делает
      --screen-top-pad: контент начинается через 8px под заголовком и в
      браузере, и в PWA. В браузере safe-area равна 0. */
+  /* Иконка игры в закреплённом заголовке экрана настройки/игры.
+     Тот же линейный глиф, что в списках игр: 1em, цвет наследует от
+     заголовка (белый), чтобы не спорить с текстом на тёмном фоне. */
+  .game-level-label .group-title-ico{
+    display:inline-flex; align-items:center; justify-content:center;
+    vertical-align:-0.14em;
+    margin-right:.3em;
+    flex-shrink:0;
+  }
+  .game-level-label .group-title-ico svg{
+    width:1em; height:1em; display:block;
+    fill:none; stroke:currentColor; stroke-width:1.7;
+    stroke-linecap:round; stroke-linejoin:round;
+  }
+  .game-level-label .group-title-ico svg path,
+  .game-level-label .group-title-ico svg circle,
+  .game-level-label .group-title-ico svg rect{
+    fill:none !important;
+    stroke:currentColor !important;
+    stroke-width:1.7;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
   .game-level-label{
     position:absolute;
     /* Линия FAB-кнопок: 12px + safe-area (в браузере safe-area = 0 → 12px). */

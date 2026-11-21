@@ -102,7 +102,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<link rel="stylesheet" href="styles/app.css?v=20261121h">
+<link rel="stylesheet" href="styles/app.css?v=20261121i">
   <link rel="stylesheet" href="styles/account.css?v=20261120e">
   <link rel="stylesheet" href="styles/theme-dark.css?v=20261120i">
 <script>
@@ -112,7 +112,7 @@
   // ВАЖНО: держать в согласии с CACHE_NAME в sw.js. Рассинхрон уже случался:
   // кэш дошёл до v212, а здесь осталось v174, и отчёт показывал неверную
   // версию. Проверяется автоматически (tools/check.js, «Версии и кэш»).
-  window.APP_BUILD = '2026-11-20 · v1.1.833';
+  window.APP_BUILD = '2026-11-20 · v1.1.834';
 </script>
 <!-- Стили экрана обновления — инлайном, ДО styles/app.css: на свежей странице
      после «Обновить» CSS ещё едет по сети, а индикация нужна сразу. Содержимое
@@ -449,7 +449,7 @@
       </div>
       <div class="game-select-list" id="homeGroupsDynamic" style="display:none;"></div>
       <div class="app-footer">
-        Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> -         <span id="projectVersion">v 1.1.833</span>
+        Vladimir Sokolov <span class="footer-year">2026</span> - <a class="app-footer-link" href="mailto:79042044926@ya.ru?subject=%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a> -         <span id="projectVersion">v 1.1.834</span>
       </div>
 
 
@@ -747,7 +747,7 @@
 <!-- ===== ФЛАГИ: ИГРА =====
        📍 логика: games/flags.js | карточки: cards/flags.js -->
    <section id="flagsGame" class="screen">
-     <div class="game-level-label">🇷🇺 Флаги</div>
+     <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.4 21V3.6M5.4 4.4h11.4l-2.2 3.6 2.2 3.6H5.4"/></svg></span>Флаги</div>
      <div class="krokodil-score-row two-player" id="flagsScoreRow"></div>
      <div class="wishlist-progress-row" id="flagsProgressRow">
        <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="flagsProgressFill"></div></div>
@@ -768,7 +768,7 @@
 <!-- ===== СТОЛИЦЫ: ИГРА =====
      📍 логика: games/capitals.js | карточки: cards/capitals.js -->
  <section id="capitalsGame" class="screen">
-   <div class="game-level-label">🏛️ Столицы</div>
+   <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 20.6h17.2M5.4 20.6v-7.8M9.8 20.6v-7.8M14.2 20.6v-7.8M18.6 20.6v-7.8M3.4 12.8h17.2M12 3.2 20.6 12.8H3.4z"/></svg></span>Столицы</div>
    <div class="krokodil-score-row two-player" id="capitalsScoreRow"></div>
    <div class="wishlist-progress-row" id="capitalsProgressRow">
      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="capitalsProgressFill"></div></div>
@@ -789,7 +789,7 @@
 <!-- ===== АРИФМЕТИКА: ИГРА =====
      📍 логика: games/times-table.js -->
  <section id="timesTableGame" class="screen">
-   <div class="game-level-label">🔢 Арифметика</div>
+   <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 4.4h15.2v15.2H4.4zM4.4 9.4h15.2M4.4 14.4h15.2M9.4 4.4v15.2M14.4 4.4v15.2"/></svg></span>Арифметика</div>
    <div class="krokodil-score-row two-player" id="timesTableScoreRow"></div>
    <div class="wishlist-progress-row" id="timesTableProgressRow">
      <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="timesTableProgressFill"></div></div>
@@ -968,7 +968,7 @@
   <!-- ===== ПРАВДА/ДЕЙСТВИЕ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-td.js | карточки: cards/cards_kids_td.js -->
   <section id="kidsTdGame" class="screen">
-    <div class="game-level-label">🗣️ Правда/Действие</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 6.2h6.2a1.4 1.4 0 0 1 1.4 1.4v10a1.4 1.4 0 0 1-1.4 1.4H4.4a1.4 1.4 0 0 1-1.4-1.4V7.6a1.4 1.4 0 0 1 1.4-1.4zM17.6 6.2h2A1.4 1.4 0 0 1 21 7.6v10a1.4 1.4 0 0 1-1.4 1.4h-2a1.4 1.4 0 0 1-1.4-1.4V7.6a1.4 1.4 0 0 1 1.4-1.4zM12 12h2.8"/></svg></span>Правда/Действие</div>
     <div class="td-turn-label" id="kidsTdTurnLabel">Выбирает: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsTdScoreRow"></div>
 
@@ -1059,7 +1059,7 @@
   <!-- ===== ВИКТОРИНА (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-quiz.js | карточки: cards/cards_kids_quiz.js -->
   <section id="kidsQuizGame" class="screen">
-    <div class="game-level-label">🎯 Викторина</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2a8.8 8.8 0 1 1 0 17.6 8.8 8.8 0 0 1 0-17.6zM12 3.2v17.6M3.2 12h17.6M12 12m-3.4 0a3.4 3.4 0 1 0 6.8 0a3.4 3.4 0 1 0-6.8 0"/></svg></span>Викторина</div>
     <div class="td-turn-label" id="kidsQuizTurnLabel">Отвечает: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsQuizScoreRow"></div>
     <div class="wishlist-progress-row" id="kidsQuizProgressRow">
@@ -1331,7 +1331,7 @@
   <!-- 📍 логика: games/ideas.js | карточки: cards/cards_ideas.js -->
   <section id="ideasGame" class="screen">
     <!-- Название игры закреплено вверху экрана — как уровень в «Предложи партнеру» -->
-    <div class="game-level-label">💬 Вопросы про это</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16a1.6 1.6 0 0 1 1.6 1.6v7A1.6 1.6 0 0 1 20 16.2H10.5L6 19.8v-3.6H4a1.6 1.6 0 0 1-1.6-1.6v-7A1.6 1.6 0 0 1 4 6zM9 10.6c.5-1.2 1.6-1.8 3-1.8s2.5.6 3 1.8M12 5.6v-.4"/></svg></span>Вопросы про это</div>
     <div class="card-area">
       <div class="card" id="ideasCard">
         <div class="card-inner">
@@ -1402,7 +1402,7 @@
   <!-- ===== СЕКС-КВЕСТ: ИГРА ===== -->
   <!-- 📍 логика: games/sexquest.js | карточки: cards/cards_sexquest.js -->
   <section id="sexQuestGame" class="screen">
-    <div class="game-level-label">🧩 Пройди квест</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.4h16v12.2H4zM4 11h16M9.4 6.4v12.2M14.6 6.4v12.2M7 8.6h.01M12 13.4h.01M7 16.8h.01M16.8 16.8h.01"/></svg></span>Пройди квест</div>
     <div class="sexquest-status-row">
       <span id="sexQuestProgressLabel">1 / 12</span>
     </div>
@@ -1478,7 +1478,7 @@
   <!-- ===== КАРТА СТРАСТИ: ИГРА ===== -->
   <!-- 📍 логика: games/passionmap.js | карточки: cards/cards_passionmap.js -->
   <section id="passionMapGame" class="screen">
-    <div class="game-level-label">🎀 Карта страсти</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3.6 3.4 5.8v14.6L9 18.2l6 2.2 5.6-2.2V3.6L15 5.8zM9 3.6v14.6M15 5.8v14.6"/></svg></span>Карта страсти</div>
     <div class="card-area">
       <div class="card" id="passionMapCard">
         <div class="card-inner">
@@ -1582,7 +1582,7 @@
   <!-- ===== УЗНАЙ БОЛЬШЕ: ИГРА ===== -->
   <!-- 📍 логика: games/know-more.js | карточки: cards/cards_know_more.js -->
   <section id="knowMoreGame" class="screen">
-    <div class="game-level-label">🧭 Узнай больше</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.4a8.6 8.6 0 1 1 0 17.2 8.6 8.6 0 0 1 0-17.2zM15.6 8.4l-2 5.2-5.2 2 2-5.2z"/></svg></span>Узнай больше</div>
     <div class="td-turn-label" id="knowMoreTurnLabel">Исследует: Он · Отвечает: Она</div>
     <div class="wishlist-progress-row" id="knowMoreProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="knowMoreProgressFill"></div></div>
@@ -1620,7 +1620,7 @@
   <!-- ===== ВО ЧТО ПОИГРАТЬ? (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/whattoplay.js | карточки: cards/cards_whattoplay.js -->
   <section id="whatToPlayGame" class="screen">
-    <div class="game-level-label">🎲 Во что поиграть?</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.4 20.6 12 12 20.6 3.4 12zM9 9h.01M15 9h.01M12 12h.01M9 15h.01M15 15h.01M12 18h.01"/></svg></span>Во что поиграть?</div>
     <div class="card-area">
       <div class="card" id="whatToPlayCard">
         <div class="card-inner">
@@ -1691,7 +1691,7 @@
   <!-- ===== КРОКОДИЛ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-krokodil.js | карточки: cards/cards_kids_krokodil.js -->
   <section id="kidsKrokodilGame" class="screen">
-    <div class="game-level-label">🐊 Крокодил</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.2 9.6c1.8-2.2 4.6-3 7.6-2.6l8.4 1.1c1.6.2 2.6 1 2.6 1.9 0 .7-.8 1.3-2.2 1.5l-8.6 1.3c-2.6.4-5.4-.2-7.2-1.7"/><path d="M4.4 11.1c2.4 2.6 6 3.4 9.2 2.8l7.4-1.3"/><path d="M7.4 11.6l.7 1.5.8-1.4M10.8 11.9l.7 1.5.8-1.4M14.2 11.5l.7 1.4.8-1.3"/><path d="M5.6 7.4c.6-.7 1.5-1 2.4-.8"/><path d="M6.6 8.6h.01"/><path d="M9.4 14.2l-1.2 2M12.4 14l.6 2.2M4.6 13.8l-2 .8"/></svg></span>Крокодил</div>
     <div class="td-turn-label" id="kidsKrokodilTurnLabel">Показывает: Игрок 1</div>
     <div class="krokodil-score-row two-player" id="kidsKrokodilScoreRow"></div>
 
@@ -1750,7 +1750,7 @@
   <!-- ===== МЕМАСИКИ (ДЕТИ): ИГРА ===== -->
   <!-- 📍 логика: games/kids-memes.js | карточки: cards/cards_kids_memes.js -->
   <section id="kidsMemesGame" class="screen">
-    <div class="game-level-label">😂 Мемасики</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.4a8.6 8.6 0 1 1 0 17.2 8.6 8.6 0 0 1 0-17.2zM8.6 9.6h.01M15.4 9.6h.01M8.2 13.6c1 1.6 2.3 2.4 3.8 2.4s2.8-.8 3.8-2.4"/></svg></span>Мемасики</div>
     <div class="card-area">
       <div class="card" id="kidsMemesCard">
         <div class="card-inner">
@@ -2070,7 +2070,7 @@
   <!-- ===== ОЦЕНИ БИЗНЕС (БИЗНЕС): ИГРА ===== -->
   <!-- 📍 логика: games/business-observer.js -->
   <section id="bizObsGame" class="screen">
-    <div class="game-level-label">🔍 Оцени бизнес</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3.6a7.4 7.4 0 1 1 0 14.8 7.4 7.4 0 0 1 0-14.8zM16.4 16.4 21 21M8.2 11V9.4M11 11V7.6M13.8 11v-2"/></svg></span>Оцени бизнес</div>
     <div class="td-turn-label" id="bizObsTurnLabel">Отвечает: Предприниматель</div>
     <div class="krokodil-score-row two-player" id="bizObsScoreRow"></div>
     <div class="wishlist-progress-row" id="bizObsProgressRow">
@@ -2714,7 +2714,7 @@
   <!-- ===== ПРАВДА ИЛИ ДЕЙСТВИЕ: ИГРА ===== -->
   <!-- 📍 логика: games/truth-dare.js | карточки: cards/cards_kids_td.js -->
   <section id="tdGame" class="screen">
-    <div class="game-level-label">❓ Правда/Действие</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 6.2h6.2a1.4 1.4 0 0 1 1.4 1.4v10a1.4 1.4 0 0 1-1.4 1.4H4.4a1.4 1.4 0 0 1-1.4-1.4V7.6a1.4 1.4 0 0 1 1.4-1.4zM17.6 6.2h2A1.4 1.4 0 0 1 21 7.6v10a1.4 1.4 0 0 1-1.4 1.4h-2a1.4 1.4 0 0 1-1.4-1.4V7.6a1.4 1.4 0 0 1 1.4-1.4zM12 12h2.8"/></svg></span>Правда/Действие</div>
     <!-- Единая система: turn-label между FAB, имена по краям (two-player) -->
     <div class="td-turn-label" id="tdTurnLabel">Выбирает: Men</div>
     <div class="krokodil-score-row two-player" id="tdScoreRow">
@@ -2939,7 +2939,7 @@
   <!-- ===== КРОКОДИЛ: ИГРА ===== -->
   <!-- 📍 логика: games/krokodil.js | карточки: cards/cards_krokodil.js -->
   <section id="krokodilGame" class="screen">
-    <div class="game-level-label">🐊 Крокодил</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.2 9.6c1.8-2.2 4.6-3 7.6-2.6l8.4 1.1c1.6.2 2.6 1 2.6 1.9 0 .7-.8 1.3-2.2 1.5l-8.6 1.3c-2.6.4-5.4-.2-7.2-1.7"/><path d="M4.4 11.1c2.4 2.6 6 3.4 9.2 2.8l7.4-1.3"/><path d="M7.4 11.6l.7 1.5.8-1.4M10.8 11.9l.7 1.5.8-1.4M14.2 11.5l.7 1.4.8-1.3"/><path d="M5.6 7.4c.6-.7 1.5-1 2.4-.8"/><path d="M6.6 8.6h.01"/><path d="M9.4 14.2l-1.2 2M12.4 14l.6 2.2M4.6 13.8l-2 .8"/></svg></span>Крокодил</div>
     <div class="td-turn-label" id="krokodilTurnLabel">Показывает: Первый</div>
     <div class="krokodil-score-row two-player" id="krokodilScoreRow"></div>
 
@@ -3000,7 +3000,7 @@
   <!-- ===== МЕМАСИКИ: ИГРА ===== -->
   <!-- 📍 логика: games/memes.js | карточки: cards/cards_memes.js -->
   <section id="memesGame" class="screen">
-    <div class="game-level-label">😂 Мемасики</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.4a8.6 8.6 0 1 1 0 17.2 8.6 8.6 0 0 1 0-17.2zM8.6 9.6h.01M15.4 9.6h.01M8.2 13.6c1 1.6 2.3 2.4 3.8 2.4s2.8-.8 3.8-2.4"/></svg></span>Мемасики</div>
     <div class="card-area">
       <div class="card" id="memesCard">
         <div class="card-inner">
@@ -3041,7 +3041,7 @@
   <!-- ===== Я НИКОГДА НЕ (КОМПАНИЯ): ИГРА ===== -->
   <!-- 📍 логика: games/party-never.js | карточки: cards/cards_party_never.js -->
   <section id="partyNeverGame" class="screen">
-    <div class="game-level-label">🙊 Я никогда не</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16a1.6 1.6 0 0 1 1.6 1.6v8.8A1.6 1.6 0 0 1 20 18H4a1.6 1.6 0 0 1-1.6-1.6V7.6A1.6 1.6 0 0 1 4 6zM8.6 10.2h.01M15.4 10.2h.01M8.6 14.4h6.8M3.2 3.4 20.8 20.6"/></svg></span>Я никогда не</div>
     <div class="card-area">
       <div class="card" id="partyNeverCard">
         <div class="card-inner">
@@ -3099,7 +3099,7 @@
   <!-- ===== ФАНТЫ (КОМПАНИЯ): ИГРА ===== -->
   <!-- 📍 логика: games/party-fants.js | карточки: cards/cards_party_fants.js -->
   <section id="partyFantsGame" class="screen">
-    <div class="game-level-label">🎉 Фанты</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.6-4.6-7.6-10A4.4 4.4 0 0 1 12 7.6a4.4 4.4 0 0 1 7.6 2.9c0 5.4-7.6 10-7.6 10zM9.4 10.8c.7-.8 1.6-1.2 2.6-1.2s1.9.4 2.6 1.2"/></svg></span>Фанты</div>
     <div class="td-turn-label" id="partyFantsTurnLabel">Ходит: Первый</div>
     <div class="krokodil-score-row multi-player" id="partyFantsScoreRow"></div>
 
@@ -3150,7 +3150,7 @@
   <!-- ===== ПРАВДА/ДЕЙСТВИЕ (КОМПАНИЯ): ИГРА ===== -->
   <!-- 📍 логика: games/party-td.js | карточки: cards/cards_party_td.js -->
   <section id="partyTdGame" class="screen">
-    <div class="game-level-label">🗣️ Правда/Действие</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 6.2h6.2a1.4 1.4 0 0 1 1.4 1.4v10a1.4 1.4 0 0 1-1.4 1.4H4.4a1.4 1.4 0 0 1-1.4-1.4V7.6a1.4 1.4 0 0 1 1.4-1.4zM17.6 6.2h2A1.4 1.4 0 0 1 21 7.6v10a1.4 1.4 0 0 1-1.4 1.4h-2a1.4 1.4 0 0 1-1.4-1.4V7.6a1.4 1.4 0 0 1 1.4-1.4zM12 12h2.8"/></svg></span>Правда/Действие</div>
     <div class="td-turn-label" id="partyTdTurnLabel">Выбирает: Первый</div>
     <div class="krokodil-score-row multi-player" id="partyTdScoreRow"></div>
 
@@ -3222,7 +3222,7 @@
   <!-- ===== ЗНАЮ ТЕБЯ (КОМПАНИЯ, СЕМЬЯМИ): ИГРА ===== -->
   <!-- 📍 логика: games/fam-znayu.js | карточки: cards/cards_fam_znayu.js -->
   <section id="famZnayuGame" class="screen">
-    <div class="game-level-label">🧠 Знаю тебя</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.4a4.4 4.4 0 1 1 0 8.8 4.4 4.4 0 0 1 0-8.8zM4.4 20.4c.8-3.6 3.8-5.6 7.6-5.6s6.8 2 7.6 5.6"/></svg></span>Знаю тебя</div>
     <div class="td-turn-label" id="famZnayuFamilyLabel">Первая семья из 2</div>
     <div class="wishlist-player-row" id="famZnayuPlayerRow">
       <button type="button" class="btn btn-secondary" id="famZnayuPlayer1Btn">Первый</button>
@@ -3278,7 +3278,7 @@
   <!-- ===== СЧАСТЛИВЫЙ БИЛЕТ: ИГРА ===== -->
   <!-- 📍 логика: games/lucky.js | карточки: cards/cards_lucky.js -->
   <section id="luckyGame" class="screen">
-    <div class="game-level-label">🎫 Счастливый билет</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.4h16v3.2H4zM5.2 10.6h13.6v9.2H5.2zM9.4 4.4h5.2v3h-5.2zM12 10.6v9.2"/></svg></span>Счастливый билет</div>
     <div class="lucky-level-label" id="luckyLevelLabel">Уровень: 🤝 Знакомство</div>
     <div class="td-turn-label" id="luckyTurnLabel">Ходит: Первая команда</div>
     <div class="krokodil-score-row multi-player" id="luckyScoreRow"></div>
@@ -3349,7 +3349,7 @@
   <!-- ===== ВИКТОРИНА (КОМПАНИЯ): ИГРА ===== -->
   <!-- 📍 логика: games/party-quiz.js | карточки: cards/cards_party_quiz.js -->
   <section id="partyQuizGame" class="screen">
-    <div class="game-level-label">🎯 Викторина</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2a8.8 8.8 0 1 1 0 17.6 8.8 8.8 0 0 1 0-17.6zM12 3.2v17.6M3.2 12h17.6M12 12m-3.4 0a3.4 3.4 0 1 0 6.8 0a3.4 3.4 0 1 0-6.8 0"/></svg></span>Викторина</div>
     <div class="td-turn-label" id="partyQuizTurnLabel">Отвечает: Первый</div>
     <div class="krokodil-score-row multi-player" id="partyQuizScoreRow"></div>
     <div class="wishlist-progress-row" id="partyQuizProgressRow">
@@ -3394,7 +3394,7 @@
        дальше — по кругу списка partyPlayers. Каждый ход озвучивается вслух. -->
   <!-- 📍 логика: games/twister.js -->
   <section id="twisterGame" class="screen">
-    <div class="game-level-label">🌀 Твистер</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 6.6a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM17.4 6.6a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM6.6 13a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM17.4 13a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z"/></svg></span>Твистер</div>
     <div class="card-area">
       <div class="card" id="twisterCard">
         <div class="card-inner">
@@ -3486,7 +3486,7 @@
   <!-- ===== ВИКТОРИНА (ОДИН): ИГРА ===== -->
   <!-- 📍 логика: games/solo-quiz.js | карточки: cards/cards_party_quiz.js -->
   <section id="soloQuizGame" class="screen">
-    <div class="game-level-label">🎯 Викторина</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2a8.8 8.8 0 1 1 0 17.6 8.8 8.8 0 0 1 0-17.6zM12 3.2v17.6M3.2 12h17.6M12 12m-3.4 0a3.4 3.4 0 1 0 6.8 0a3.4 3.4 0 1 0-6.8 0"/></svg></span>Викторина</div>
     <div class="krokodil-score-row" id="soloQuizScoreRow">✅ Верно: 0</div>
     <div class="wishlist-progress-row" id="soloQuizProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="soloQuizProgressFill"></div></div>
@@ -3771,7 +3771,7 @@
   <!-- ===== ПЛЕЙЛИСТ ЖЕЛАНИЙ: ИГРА ===== -->
   <!-- 📍 логика: games/wishlist.js | карточки: cards/cards_wishlist.js -->
   <section id="wishlistGame" class="screen">
-    <div class="game-level-label">💌 Твои желания</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 6.6h17.2v11a1.4 1.4 0 0 1-1.4 1.4H4.8a1.4 1.4 0 0 1-1.4-1.4zM3.4 6.6 12 13.5l8.6-6.9M12 13.5 7.4 19M12 13.5 16.6 19"/></svg></span>Твои желания</div>
     <div class="wishlist-player-row" id="wishlistPlayerRow">
       <button type="button" class="btn btn-secondary" id="wishlistPlayer1Btn">Парень</button>
       <button type="button" class="btn btn-secondary" id="wishlistPlayer2Btn">Девушка</button>
@@ -3827,7 +3827,7 @@
   <!-- ===== ТАЙНЫЕ ОТВЕТЫ: ИГРА ===== -->
   <!-- 📍 логика: games/znayu.js | карточки: cards/cards_znayu.js -->
   <section id="znayuGame" class="screen">
-    <div class="game-level-label">💑 Тайные ответы</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6h15a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19.5 18h-15A1.5 1.5 0 0 1 3 16.5v-9A1.5 1.5 0 0 1 4.5 6zM3.4 7.2 12 13.2l8.6-6"/></svg></span>Тайные ответы</div>
     <div class="wishlist-player-row" id="znayuPlayerRow">
       <button type="button" class="btn btn-secondary" id="znayuPlayer1Btn">Парень</button>
       <button type="button" class="btn btn-secondary" id="znayuPlayer2Btn">Девушка</button>
@@ -3890,7 +3890,7 @@
   <!-- ===== ВИКТОРИНА (ПАРЫ 18+): ИГРА ===== -->
   <!-- 📍 логика: games/quiz.js | карточки: cards/cards_quiz.js -->
   <section id="quizGame" class="screen">
-    <div class="game-level-label">🎯 Викторина</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2a8.8 8.8 0 1 1 0 17.6 8.8 8.8 0 0 1 0-17.6zM12 3.2v17.6M3.2 12h17.6M12 12m-3.4 0a3.4 3.4 0 1 0 6.8 0a3.4 3.4 0 1 0-6.8 0"/></svg></span>Викторина</div>
     <div class="krokodil-score-row two-player" id="quizScoreRow"></div>
     <div class="wishlist-progress-row" id="quizProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="quizProgressFill"></div></div>
@@ -3948,7 +3948,7 @@
 
   <!-- ===== ПРОЙДИТЕ ТЕСТ: ИГРА ===== -->
   <section id="compatTestGame" class="screen">
-    <div class="game-level-label">💖 Пройдите тест</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.6-4.6-7.6-10A4.4 4.4 0 0 1 12 7.6a4.4 4.4 0 0 1 7.6 2.9c0 5.4-7.6 10-7.6 10zM9.2 11.4l1.9 1.9 3.7-3.7"/></svg></span>Пройдите тест</div>
     <div class="td-turn-label" id="compatTestTurnLabel">Отвечает: Игрок 1</div>
     <div class="wishlist-progress-row" id="compatTestProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="compatTestProgressFill"></div></div>
@@ -4212,7 +4212,7 @@
 
   <!-- ===== ТЕСТ IQ: ИГРА ===== -->
   <section id="iqTestGame" class="screen">
-    <div class="game-level-label">🧠 Тест IQ</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.4 4.6h5.2a1.6 1.6 0 0 1 1.6 1.6v11.6a1.6 1.6 0 0 1-1.6 1.6H9.4a1.6 1.6 0 0 1-1.6-1.6V6.2a1.6 1.6 0 0 1 1.6-1.6zM3.4 8.4h2.4M3.4 12h2.4M3.4 15.6h2.4M18.2 8.4h2.4M18.2 12h2.4M18.2 15.6h2.4M12 8.4h.01M12 12h.01M12 15.6h.01"/></svg></span>Тест IQ</div>
     <div class="wishlist-progress-row" id="iqTestProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="iqTestProgressFill"></div></div>
       <div class="wishlist-progress-label" id="iqTestProgressLabel">0 / 30</div>
@@ -4272,7 +4272,7 @@
 
   <!-- ===== БИЗНЕС ТЕСТЫ: ИГРА ===== -->
   <section id="bizTestsGame" class="screen">
-    <div class="game-level-label">🏢 Бизнес тесты</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.4h16v11H4zM4 13.4h16M9.4 9.4V6.6a2.6 2.6 0 0 1 5.2 0v2.8"/></svg></span>Бизнес тесты</div>
     <div class="wishlist-progress-row" id="bizTestsProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="bizTestsProgressFill"></div></div>
       <div class="wishlist-progress-label" id="bizTestsProgressLabel">0 / 10</div>
@@ -4387,7 +4387,7 @@
   <!-- ===== ВКЛАДЫ: РАСЧЁТ ===== -->
   <!-- 📍 логика: games/deposits.js -->
   <section id="depositsGame" class="screen">
-    <div class="game-level-label">🏦 Вклады</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 9 12 3.6 20.4 9M5.2 9v9.4M9.4 9v9.4M14.6 9v9.4M18.8 9v9.4M3.6 18.4h16.8"/></svg></span>Вклады</div>
 
     <div class="deposit-total-box">
       <div class="deposit-total-label">На счёте в конце срока</div>
@@ -4537,7 +4537,7 @@
   <!-- ===== КРЕДИТ: РАСЧЁТ ===== -->
   <!-- 📍 логика: games/credit.js -->
   <section id="creditGame" class="screen">
-    <div class="game-level-label">💳 Кредит</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.6h18v10.8H3zM3 10.6h18M6.6 15.4h3.8"/></svg></span>Кредит</div>
 
     <div class="deposit-total-box">
       <div class="deposit-total-label">Переплата по процентам за весь срок</div>
@@ -4624,7 +4624,7 @@
    <!-- ===== БИРЖА АКЦИЙ: ТОРГОВЛЯ ===== -->
    <!-- 📍 логика: games/stocks.js -->
    <section id="stocksGame" class="screen">
-     <div class="game-level-label">📈 Биржа акций</div>
+     <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 20.4h17.2M4.6 16.6l4.4-4.6 3.4 2.8 6.4-7M14.4 7.6h4.4v4.4"/></svg></span>Биржа акций</div>
 
      <div class="deposit-total-box">
        <div class="deposit-total-label">Стоимость портфеля</div>
@@ -4676,7 +4676,7 @@
 
   <!-- ===== ВЕСЁЛЫЕ ТЕСТЫ: ИГРА ===== -->
   <section id="funTestsGame" class="screen">
-    <div class="game-level-label">🎪 Весёлые тесты</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.6 18 3.6 20 9H4zM4 9v10.6a1.8 1.8 0 0 0 1.8 1.8h12.4a1.8 1.8 0 0 0 1.8-1.8V9M8.6 13.4h6.8"/></svg></span>Весёлые тесты</div>
     <div class="wishlist-progress-row" id="funTestsProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="funTestsProgressFill"></div></div>
       <div class="wishlist-progress-label" id="funTestsProgressLabel">0 / 10</div>
@@ -4767,7 +4767,7 @@
 
   <!-- ===== ПРОЙДИ ТЕСТ (ОДИН): ИГРА ===== -->
   <section id="soloTestGame" class="screen">
-    <div class="game-level-label">🧪 Пройди тест</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 3.6h8l3.2 3.2v13.6H6.4z"/><path d="M14.4 3.6v3.2h3.2"/><path d="M8.8 10.2l1 1 1.6-1.6"/><path d="M13.4 11h2.4"/><path d="M8.8 14.4l1 1 1.6-1.6"/><path d="M13.4 15.2h2.4"/></svg></span>Пройди тест</div>
     <div class="wishlist-progress-row" id="soloTestProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="soloTestProgressFill"></div></div>
       <div class="wishlist-progress-label" id="soloTestProgressLabel">0 / 10</div>
@@ -5815,7 +5815,7 @@
 <script src="games/whattoplay.js?v=20260921j"></script>
 <script src="games/flags.js?v=20261119a"></script>
 <script src="games/capitals.js?v=20261022z"></script>
-<script src="games/times-table.js?v=20260925d"></script>
+<script src="games/times-table.js?v=20261121a"></script>
       <script src="games/init.js?v=20260925a"></script>
 <!-- Регистрация Service Worker: даёт офлайн-режим и кнопку «Установить».
      Работает только на https (или localhost); на file:// браузер его игнорирует.

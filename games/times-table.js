@@ -558,7 +558,7 @@ function renderTimesTableGame(){
   const wrap = document.getElementById('timesTableGame');
   if(!wrap) return;
   wrap.innerHTML = `
-    <div class="game-level-label">🔢 Арифметика</div>
+    <div class="game-level-label"><span class="group-title-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 4.4h15.2v15.2H4.4zM4.4 9.4h15.2M4.4 14.4h15.2M9.4 4.4v15.2M14.4 4.4v15.2"/></svg></span>Арифметика</div>
     <div class="krokodil-score-row two-player" id="timesTableScoreRow"></div>
     <div class="wishlist-progress-row" id="timesTableProgressRow">
       <div class="wishlist-progress-track"><div class="wishlist-progress-fill" id="timesTableProgressFill"></div></div>
